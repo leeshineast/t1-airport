@@ -5092,10 +5092,30 @@ async function loadMpFromDB(){
     var saved = localStorage.getItem('t1_me');
     if(saved){
       me = JSON.parse(saved);
+      // 헤더 업데이트
       var uAv=document.getElementById('uAv'); if(uAv) uAv.textContent=me.initial;
       var uNm=document.getElementById('uNm'); if(uNm) uNm.textContent=me.name;
+      var wrAv=document.getElementById('wrAv');if(wrAv)wrAv.textContent=me.initial;
+      var wrNm=document.getElementById('wrNm');if(wrNm)wrNm.textContent=me.name+' ('+me.team+')';
+      // 날짜 표시
+      var now2=new Date();
+      var ds2=now2.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+      var dd2=document.getElementById('dashDate');if(dd2)dd2.textContent=ds2;
+      var md2=document.getElementById('mpDate');if(md2)md2.textContent=ds2;
+      // 권한별 메뉴 표시
+      if(me.role==='admin'||me.role==='manager'){
+        var ab2=document.getElementById('adminBtn');if(ab2)ab2.style.display='block';
+      }
+      if(me.role==='admin'){
+        var ib2=document.getElementById('mainIndBtn');if(ib2)ib2.style.display='block';
+        var uw2=document.getElementById('pdfUploadWrap');if(uw2)uw2.style.cssText='display:flex;gap:6px;align-items:center';
+        var lb2=document.getElementById('leaderEditBtn');if(lb2)lb2.style.display='block';
+        var eb2=document.getElementById('mainIndCmpEditBtn');if(eb2)eb2.style.display='block';
+      }
+      // Gemini 키 복구
+      try{var gKey=localStorage.getItem('t1_gemini_key');if(gKey){GEMINI_API_KEY=gKey;}}catch(e){}
       go('main');
-      setTimeout(function(){ initAppData(); }, 200);
+      setTimeout(function(){ initAppData(); updateStaff(); updateFloorChart(); updateMpSummary(); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); }, 300);
       return;
     }
   }catch(e){}
