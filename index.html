@@ -2115,7 +2115,8 @@ function openNW(){showM('noticeW');}
 function closeNW(){hideM('noticeW');}
 async function pubNotice(){const t=document.getElementById('nT').value.trim();const b=document.getElementById('nB').value.trim();if(!t){toast('제목을 입력해주세요');return;}if(!b){toast('내용을 입력해주세요');return;}
   // DB 저장 (전체 공유)
-  await sb.from('notices').insert({title:t,content:b,author:me?me.name:''});
+  var res2=await sb.from('notices').insert({title:t,content:b,author:me?me.name:''});
+  if(res2.error){toast('공지 저장 오류: '+res2.error.message);return;}
   loadNoticesFromDB();
   document.getElementById('noticeT').textContent=t;document.getElementById('noticeB').innerHTML=b.replace(/\n/g,'<br>');const now=new Date();document.getElementById('noticeD').textContent=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0')+' 등록';try{localStorage.removeItem('nsk_'+new Date().toDateString());}catch(e){}document.getElementById('noSkip').checked=false;closeNW();document.getElementById('nT').value='';document.getElementById('nB').value='';setTimeout(()=>showM('noticeM'),500);toast('✓ 공지사항 전체 발송 완료!');}
 
