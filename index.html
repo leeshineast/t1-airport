@@ -4,7 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="T1 환경미화">
 <meta name="theme-color" content="#1B3A6B">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.json">
 <title>T1 환경미화사업부</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -2152,7 +2156,11 @@ async function uploadPdf(input){
     else pdfList.push({b64:b64,name:name});
     pdfB64=b64; pdfFileName=name;
     const ok=await savePdfToStorage(b64, name);
-    if(!ok) addAiMsg('⚠️ '+name+' 서버 저장 실패. 이번 세션에서만 사용 가능합니다.');
+    if(!ok){
+      addAiMsg('⚠️ <strong>'+name+'</strong> 서버 저장 실패.<br>브라우저 콘솔(F12→Console)에서 오류를 확인해주세요.<br>이번 세션에서는 임시로 사용 가능합니다.');
+    } else {
+      addAiMsg('💾 <strong>'+name+'</strong> 서버에 영구 저장 완료!');
+    }
     loaded++;
     const msgs=document.getElementById('chatMsgs');
     const last=msgs&&msgs.lastElementChild;
@@ -3611,7 +3619,11 @@ async function savePdfToStorage(b64, name){
       headers:{'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY,'Content-Type':'application/pdf','x-upsert':'true'},
       body:blob
     });
-    if(!res.ok){const t=await res.text();throw new Error(t);}
+    if(!res.ok){
+      const t=await res.text();
+      console.error('Storage 업로드 실패:', res.status, t);
+      throw new Error('HTTP '+res.status+': '+t);
+    }
 
     // 사규 목록 테이블에 기록
     await sb.from('regulation_files').upsert({
@@ -4864,6 +4876,17 @@ function checkShiftReset(){
 }
 setInterval(checkShiftReset, 60000);
 checkShiftReset();
+</script>
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load', function(){
+    navigator.serviceWorker.register('sw.js').then(function(reg){
+      console.log('SW 등록 완료:', reg.scope);
+    }).catch(function(err){
+      console.log('SW 등록 실패:', err);
+    });
+  });
+}
 </script>
 </body>
 </html>

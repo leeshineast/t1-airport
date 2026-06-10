@@ -1,0 +1,24 @@
+{
+  "name": "T1 환경미화사업부",
+  "short_name": "T1 환경미화",
+  "description": "인천공항 T1 환경미화사업부 운영관리 시스템",
+  "start_url": "/t1-airport/",
+  "scope": "/t1-airport/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#1B3A6B",
+  "theme_color": "#1B3A6B",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect width='192' height='192' rx='20' fill='%231B3A6B'/><text x='96' y='130' font-size='100' text-anchor='middle' fill='white'>T1</text></svg>",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'><rect width='512' height='512' rx='50' fill='%231B3A6B'/><text x='256' y='340' font-size='260' text-anchor='middle' fill='white'>T1</text></svg>",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}
