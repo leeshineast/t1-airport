@@ -2137,15 +2137,20 @@ function subInd(){
   if(!desc){err.textContent='발생 경위를 입력해주세요';err.style.display='block';return;}
   indData.unshift({date,per,loc,type,desc});
   // DB 저장 (전체 공유)
-  sb.from('industrial_accident').insert({
-    date: date,
-    worker: per,
-    team: me?me.team:'',
-    type: type,
-    location: loc,
-    description: desc,
-    action: ''
-  }).then(function(res){ if(!res.error) loadAccidentsFromDB(); });
+  // DB 저장 즉시 실행
+  (async function(){
+    var res = await sb.from('industrial_accident').insert({
+      date: date,
+      worker: per,
+      team: me?me.team:'',
+      type: type,
+      location: loc,
+      description: desc,
+      action: ''
+    });
+    if(res.error){ console.error('산업재해 저장 오류:', res.error); toast('저장 오류: '+res.error.message); }
+    else { await loadAccidentsFromDB(); }
+  })();
   const yr=new Date().getFullYear();
   const yc=indData.filter(d=>d.date.startsWith(yr)).length;
   const dateStr=date.replace('T',' ').slice(0,16);
@@ -2972,18 +2977,20 @@ function subVeh(){
   var dept=(dept2||(me?me.team:'T1환경미화사업부'));
   var record={date:date,dept:dept,name:name,before:before,after:after,dist:dist,start:start,end:end,dest:dest,purpose:purpose,etc:etc};
   // DB 저장 (전체 공유) - localStorage 미사용
-  sb.from('vehicle_log').insert({
-    date: record.date,
-    driver: record.name,
-    team: record.dept||'T1환경미화사업부',
-    vehicle: record.dest,
-    purpose: record.purpose,
-    start_km: record.before,
-    end_km: record.after
-  }).then(function(res){
+  // DB 저장 즉시 실행
+  (async function(){
+    var res = await sb.from('vehicle_log').insert({
+      date: record.date,
+      driver: record.name,
+      team: record.dept||'T1환경미화사업부',
+      vehicle: record.dest,
+      purpose: record.purpose,
+      start_km: record.before,
+      end_km: record.after
+    });
     if(res.error){ console.error('차량 저장 오류:', res.error); toast('저장 오류: '+res.error.message); }
-    else { loadVehicleFromDB(); }
-  });
+    else { await loadVehicleFromDB(); }
+  })();
   toast('운행 기록이 저장되었습니다');
   ['vhDate','vhDept','vhName','vhBefore','vhAfter','vhStart','vhEnd','vhDest','vhPurpose','vhEtc'].forEach(function(id){
     var e=document.getElementById(id);if(e){e.value='';e.style.borderColor='';e.style.background='';}
@@ -5043,7 +5050,8 @@ async function loadFacilityFromDB(){
       facilityUploadDate=row.upload_date||'';
     });
     renderFacilityDash();
-  }catch(e){}
+    renderFacilitySummary();  // 상세보기 화면도 갱신
+  }catch(e){console.error('시설현황 로드 오류:', e);}
 }
 
 // 인력현황 - DB 저장 (일별 누적)
