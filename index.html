@@ -1292,6 +1292,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div class="pg-hd"><div><h1>운행 기록 작성</h1></div></div>
     <div class="card"><div class="cb">
       <div class="fg"><label class="f-lbl">📅 사용일자 *</label><input type="date" id="vhDate" class="ri" style="margin-bottom:0"></div>
+      <div class="fg"><label class="f-lbl">🏢 소속 *</label><input type="text" id="vhDept" class="ri" placeholder="예: 오전1팀" style="margin-bottom:0"></div>
       <div class="fg"><label class="f-lbl">👤 성명 *</label><input type="text" id="vhName" class="ri" placeholder="홍길동" style="margin-bottom:0"></div>
       <div class="fg"><label class="f-lbl">🚗 주행 전 계기판 (km) *</label><input type="number" id="vhBefore" class="ri" placeholder="예: 12382" style="margin-bottom:0" oninput="calcDist()"><div id="vhAutoHint" style="display:none;margin-top:6px;font-size:11px;color:var(--teal2);font-weight:600;background:var(--teal-bg);border-radius:var(--r2);padding:7px 10px">⚡ 자동입력됨</div></div>
       <div class="fg"><label class="f-lbl">🚗 주행 후 계기판 (km) *</label><input type="number" id="vhAfter" class="ri" placeholder="예: 12443" style="margin-bottom:0" oninput="calcDist()"></div>
@@ -1402,11 +1403,8 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 
     <!-- 다운로드 -->
     <div class="card"><div class="cb">
-      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:7px;align-items:center;margin-bottom:13px">
-        <input type="date" id="dlFrom" style="padding:9px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;outline:none">
-        <span style="color:var(--g4);font-size:12px">~</span>
-        <input type="date" id="dlTo" style="padding:9px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;outline:none">
-      </div>
+      <!-- 전체 다운로드 -->
+
       <div style="display:flex;flex-direction:column;gap:9px">
         <div class="dl-item" onclick="dlCSV('all')">
           <div class="dl-ico">📋</div>
@@ -1508,7 +1506,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   </div>
 </div>
 <div id="regOk" class="modal-bg"><div class="modal"><div style="padding:26px 20px;text-align:center"><div style="font-size:46px;margin-bottom:11px">✅</div><div style="font-size:16px;font-weight:800;color:var(--g7);margin-bottom:7px">신청 완료!</div><div style="font-size:13px;color:var(--g4);line-height:1.65;margin-bottom:20px">관리자 승인 후 로그인하실 수 있습니다.</div><button onclick="closeRegOk()" class="btn-prim">로그인으로 돌아가기</button></div></div></div>
-<div id="indModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--danger),#b03030)"><h3>🚑 산업재해 등록</h3><button class="m-x" onclick="closeInd()">×</button></div><div style="padding:15px 17px;max-height:60vh;overflow-y:auto"><div class="fg"><label class="f-lbl">발생 일시</label><input type="datetime-local" id="indDate" class="ri" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">재해자</label><input type="text" id="indPer" class="ri" placeholder="예: 오전1팀 홍길동" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">발생 장소</label><input type="text" id="indLoc" class="ri" placeholder="예: 3F 동편 화장실" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">재해 유형</label><div class="rg" id="indTG"><div class="rp" onclick="pickIT(this)">골절</div><div class="rp" onclick="pickIT(this)">타박상</div><div class="rp" onclick="pickIT(this)">열상</div><div class="rp" onclick="pickIT(this)">요통</div><div class="rp" onclick="pickIT(this)">기타</div></div></div><div class="fg"><label class="f-lbl">발생 경위 및 조치</label><textarea id="indDesc" class="f-ta show" rows="3" placeholder="발생 경위, 응급조치 등"></textarea></div><div id="indErr" style="display:none;background:var(--danger-bg);border-radius:var(--r2);padding:8px 11px;font-size:11px;color:var(--danger);font-weight:600;margin-bottom:10px"></div><button onclick="subInd()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--danger),#b03030);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">등록 완료</button></div></div></div>
+<div id="indModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--danger),#b03030)"><h3>🚑 산업재해 등록</h3><button class="m-x" onclick="closeInd()">×</button></div><div style="padding:15px 17px;max-height:60vh;overflow-y:auto"><div class="fg"><label class="f-lbl">결정통지일자</label><input type="date" id="indDate" class="ri" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">재해자</label><input type="text" id="indPer" class="ri" placeholder="예: 오전1팀 홍길동" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">발생 장소</label><input type="text" id="indLoc" class="ri" placeholder="예: 3F 동편 화장실" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">재해 유형</label><div class="rg" id="indTG"><div class="rp" onclick="pickIT(this)">골절</div><div class="rp" onclick="pickIT(this)">타박상</div><div class="rp" onclick="pickIT(this)">열상</div><div class="rp" onclick="pickIT(this)">요통</div><div class="rp" onclick="pickIT(this)">기타</div></div></div><div class="fg"><label class="f-lbl">발생 경위 및 조치</label><textarea id="indDesc" class="f-ta show" rows="3" placeholder="발생 경위, 응급조치 등"></textarea></div><div id="indErr" style="display:none;background:var(--danger-bg);border-radius:var(--r2);padding:8px 11px;font-size:11px;color:var(--danger);font-weight:600;margin-bottom:10px"></div><button onclick="subInd()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--danger),#b03030);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">등록 완료</button></div></div></div>
 <div id="noticeM" class="modal-bg"><div class="modal" style="max-width:350px"><div style="background:linear-gradient(135deg,var(--navy),var(--teal2));padding:15px 17px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">📢</span><div><div style="color:white;font-size:14px;font-weight:800">전체 공지사항</div><div style="color:rgba(255,255,255,.6);font-size:10px" id="noticeD"></div></div></div><button onclick="closeN()" style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:26px;height:26px;color:white;font-size:15px;cursor:pointer">×</button></div><div style="padding:17px;max-height:46vh;overflow-y:auto"><div style="font-size:15px;font-weight:800;color:var(--g7);margin-bottom:9px" id="noticeT"></div><div style="font-size:13px;color:var(--g5);line-height:1.7" id="noticeB"></div></div><div style="padding:11px 17px 17px;display:flex;gap:9px;border-top:1px solid var(--g2)"><label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--g4);cursor:pointer;flex:1"><input type="checkbox" id="noSkip" style="accent-color:var(--teal)"> 오늘 다시 보지 않기</label><button onclick="closeN()" style="padding:9px 17px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer">확인</button></div></div></div>
 <div id="noticeW" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📢 공지사항 작성</h3><button class="m-x" onclick="closeNW()">×</button></div><div style="padding:15px 17px"><div class="fg"><label class="f-lbl">제목</label><input type="text" id="nT" class="ri" placeholder="공지사항 제목" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">내용</label><textarea id="nB" class="f-ta show" rows="5" placeholder="공지사항 내용"></textarea></div><button onclick="pubNotice()" class="btn-prim">전체 발송</button></div></div></div>
 
@@ -1772,6 +1770,8 @@ function finishLogin(){
     var nb=document.getElementById('pdfNoBanner');if(nb)nb.style.display='none';
     var nm=document.getElementById('pdfNm');if(nm)nm.textContent=pdfFileName;
   }
+  // 세션 저장 (새로고침 시 자동 로그인)
+  try{ localStorage.setItem('t1_me', JSON.stringify(me)); }catch(e){}
   go('main'); initAppData(); loadMpFromDB();
   updateStaff();
   loadMpData();
@@ -2005,21 +2005,25 @@ function subHO(){
   const card=document.createElement('div');
   card.className='ho-card';
   card.innerHTML=`<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px"><span class="t-pill ${pMap[sNm]}">${sNm}</span><span style="color:var(--g3)">→</span><span class="t-pill ${pMap[toNm]}">${toNm}</span><span class="chip chip-warn"><span class="chip-dot"></span>대기</span></div><span class="ho-time">${ts}</span></div><div class="w-row"><div class="w-av" style="background:${avC[sNm]}">${me?me.initial:'?'}</div><span class="w-nm">${me?me.name:'작성자'} · ${me?me.team:''} 작성</span></div><div class="ho-body">${fields}</div><div class="conf-row"><button class="btn-conf" onclick="confHO(this)">✔ 인수 확인</button></div>`;
-  // ① hoAllList에 카드 추가
-  const list=document.getElementById('hoAllList');
-  if(list)list.insertBefore(card,list.firstChild);
+  // ① DB에 저장 (전체 공유)
+  const hoData = {
+    shift: sNm,
+    to_shift: toNm,
+    author: me?me.name:'작성자',
+    team: me?me.team:'',
+    facility: fT!=='없음'?fT:'',
+    complaint: cT!=='없음'?cT:'',
+    danger: dT!=='없음'?dT:'',
+    accident: aT!=='없음'?aT:'',
+    equipment: eT!=='이상없음'?eT:'',
+    notice: document.getElementById('hN')?document.getElementById('hN').value:'',
+    special: document.getElementById('hEtc')?document.getElementById('hEtc').value:'',
+    confirmed: false,
+    created_at: new Date().toISOString()
+  };
+  saveHandoverToDB(hoData);
   // 미확인 카운트 증가
   const pb=document.getElementById('dHO');if(pb)pb.textContent=parseInt(pb.textContent||0)+1;
-  // Sheets 저장
-  if(!IS_LOCAL){
-    const now2=new Date();
-    const ds=now2.toISOString().slice(0,16).replace('T',' ');
-    sheetWrite('인수인계',[ds,sNm,toNm,fT,cT,
-      (document.getElementById('hN')?document.getElementById('hN').value:''),
-      dT,aT,eT,
-      (document.getElementById('hEtc')?document.getElementById('hEtc').value:''),
-      me?me.name:'','대기']);
-  }
   // ② 전체 탭(0)으로 이동
   hoTab(0);
 }
@@ -2036,10 +2040,14 @@ function showNotice(){try{const sk=localStorage.getItem('nsk_'+new Date().toDate
 function closeN(){try{if(document.getElementById('noSkip').checked)try{localStorage.setItem('nsk_'+new Date().toDateString(),'1');}catch(e){}}catch(e){}hideM('noticeM');}
 function openNW(){showM('noticeW');}
 function closeNW(){hideM('noticeW');}
-function pubNotice(){const t=document.getElementById('nT').value.trim();const b=document.getElementById('nB').value.trim();if(!t){toast('제목을 입력해주세요');return;}if(!b){toast('내용을 입력해주세요');return;}document.getElementById('noticeT').textContent=t;document.getElementById('noticeB').innerHTML=b.replace(/\n/g,'<br>');const now=new Date();document.getElementById('noticeD').textContent=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0')+' 등록';try{localStorage.removeItem('nsk_'+new Date().toDateString());}catch(e){}document.getElementById('noSkip').checked=false;closeNW();document.getElementById('nT').value='';document.getElementById('nB').value='';setTimeout(()=>showM('noticeM'),500);toast('✓ 공지사항 전체 발송 완료!');}
+async function pubNotice(){const t=document.getElementById('nT').value.trim();const b=document.getElementById('nB').value.trim();if(!t){toast('제목을 입력해주세요');return;}if(!b){toast('내용을 입력해주세요');return;}
+  // DB 저장 (전체 공유)
+  await sb.from('notices').insert({title:t,content:b,author:me?me.name:''});
+  loadNoticesFromDB();
+  document.getElementById('noticeT').textContent=t;document.getElementById('noticeB').innerHTML=b.replace(/\n/g,'<br>');const now=new Date();document.getElementById('noticeD').textContent=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0')+' 등록';try{localStorage.removeItem('nsk_'+new Date().toDateString());}catch(e){}document.getElementById('noSkip').checked=false;closeNW();document.getElementById('nT').value='';document.getElementById('nB').value='';setTimeout(()=>showM('noticeM'),500);toast('✓ 공지사항 전체 발송 완료!');}
 
 // ─ 산업재해 ─
-function openInd(){if(!me||me.role!=='admin'){toast('최고관리자만 등록 가능합니다');return;}const now=new Date();const local=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16);document.getElementById('indDate').value=local;['indPer','indLoc','indDesc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});document.querySelectorAll('#indTG .rp').forEach(p=>p.classList.remove('on'));document.getElementById('indErr').style.display='none';showM('indModal');}
+function openInd(){if(!me||(me.role!=='admin'&&me.role!=='manager'&&me.role!=='leader')){toast('팀장 이상만 등록 가능합니다');return;}const now=new Date();const local=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16);document.getElementById('indDate').value=local;['indPer','indLoc','indDesc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});document.querySelectorAll('#indTG .rp').forEach(p=>p.classList.remove('on'));document.getElementById('indErr').style.display='none';showM('indModal');}
 function closeInd(){hideM('indModal');}
 function pickIT(el){document.querySelectorAll('#indTG .rp').forEach(p=>p.classList.remove('on'));el.classList.add('on');}
 function subInd(){
@@ -2055,6 +2063,16 @@ function subInd(){
   if(!type){err.textContent='재해 유형을 선택해주세요';err.style.display='block';return;}
   if(!desc){err.textContent='발생 경위를 입력해주세요';err.style.display='block';return;}
   indData.unshift({date,per,loc,type,desc});
+  // DB 저장 (전체 공유)
+  sb.from('industrial_accident').insert({
+    date: date,
+    worker: per,
+    team: me?me.team:'',
+    type: type,
+    location: loc,
+    description: desc,
+    action: ''
+  }).then(function(res){ if(!res.error) loadAccidentsFromDB(); });
   const yr=new Date().getFullYear();
   const yc=indData.filter(d=>d.date.startsWith(yr)).length;
   const dateStr=date.replace('T',' ').slice(0,16);
@@ -2234,9 +2252,6 @@ async function sendChat(){if(chatLoading)return;const inp=document.getElementByI
 
 // ─ 다운로드 ─
 async function dlCSV(type){
-  var from=document.getElementById('dlFrom').value;
-  var to=document.getElementById('dlTo').value;
-  if(!from||!to){toast('날짜 범위를 선택해주세요');return;}
   toast('📥 다운로드 준비 중...');
   try{
     var rows=[];var headers=[];
@@ -2266,7 +2281,7 @@ async function dlCSV(type){
     var csv=[headers.join(',')].concat(rows.map(function(r){return r.map(function(v){return '"'+(String(v||'')).replace(/"/g,'""')+'"';}).join(',');})).join('\n');
     var blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
     var a=document.createElement('a');a.href=URL.createObjectURL(blob);
-    a.download='T1_'+type+'_'+from+'_'+to+'.csv';a.click();
+    a.download='T1_'+type+'_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
     toast('✅ 다운로드 완료');
   }catch(e){toast('오류: '+e.message);}
 }
@@ -2832,6 +2847,7 @@ function subVeh(){
   var purpose=document.getElementById('vhPurpose').value.trim();
   var etc=document.getElementById('vhEtc').value.trim();
   if(!date){toast('사용일자를 입력해주세요');return;}
+  var dept2=document.getElementById('vhDept')?document.getElementById('vhDept').value.trim():'';
   if(!name){toast('성명을 입력해주세요');return;}
   if(!before){toast('주행 전 계기판을 입력해주세요');return;}
   if(!after){toast('주행 후 계기판을 입력해주세요');return;}
@@ -2841,11 +2857,25 @@ function subVeh(){
   if(!dest){toast('목적지를 입력해주세요');return;}
   if(!purpose){toast('목적을 입력해주세요');return;}
   var dist=after-before;
-  var record={date:date,dept:'T1환경미화사업부',name:name,before:before,after:after,dist:dist,start:start,end:end,dest:dest,purpose:purpose,etc:etc};
+  var dept=(dept2||(me?me.team:'T1환경미화사업부'));
+  var record={date:date,dept:dept,name:name,before:before,after:after,dist:dist,start:start,end:end,dest:dest,purpose:purpose,etc:etc};
   vehData.unshift(record);
-  try{localStorage.setItem('t1_veh',JSON.stringify(vehData));}catch(e){}
+  // DB 저장 (전체 공유)
+  sb.from('vehicle_log').insert({
+    date: record.date,
+    driver: record.name,
+    team: record.dept||'T1환경미화사업부',
+    vehicle: record.dest,
+    purpose: record.purpose,
+    start_km: record.before,
+    end_km: record.after,
+    start_time: record.start,
+    end_time: record.end,
+    distance: record.dist,
+    note: record.etc||''
+  }).then(function(res){ if(!res.error) loadVehicleFromDB(); });
   toast('운행 기록이 저장되었습니다');
-  ['vhDate','vhName','vhBefore','vhAfter','vhStart','vhEnd','vhDest','vhPurpose','vhEtc'].forEach(function(id){
+  ['vhDate','vhDept','vhName','vhBefore','vhAfter','vhStart','vhEnd','vhDest','vhPurpose','vhEtc'].forEach(function(id){
     var e=document.getElementById(id);if(e){e.value='';e.style.borderColor='';e.style.background='';}
   });
   var hw=document.getElementById('vhDistWrap');if(hw)hw.style.display='none';
@@ -2915,6 +2945,11 @@ function dlVeh(){
   toast('차량운행기록부 다운로드 완료 ('+filtered.length+'건)');
 }
 function loadVehData(){
+  // 소속/성명 자동 입력
+  setTimeout(function(){
+    var deptF=document.getElementById('vhDept'); if(deptF&&me&&me.team) deptF.value=me.team;
+    var nameF=document.getElementById('vhName'); if(nameF&&me&&me.name) nameF.value=me.name;
+  },100);
   try{var s=localStorage.getItem('t1_veh');if(s){vehData=JSON.parse(s);renderVehList(vehData);}}catch(e){}
   var today=new Date().toISOString().split('T')[0];
   var vd=document.getElementById('vhDate');if(vd)vd.value=today;
@@ -4688,6 +4723,59 @@ async function saveNoticeDB(content){
 }
 
 // ── 인수인계 ──
+var hoAll=[];
+
+function renderHoList(data){
+  var list=document.getElementById('hoAllList');
+  if(!list) return;
+  if(!data||!data.length){
+    list.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">인수인계 내역이 없습니다</div>';
+    return;
+  }
+  var pMap={'오전팀':'pill-am','오후팀':'pill-pm','야간팀':'pill-nt'};
+  var avC={'오전팀':'var(--navy)','오후팀':'var(--teal2)','야간팀':'#6B21A8'};
+  var html='';
+  data.forEach(function(r){
+    var sNm=r.shift||'오전팀';
+    var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[sNm]);
+    var isDone=r.confirmed;
+    var ts=r.created_at?new Date(r.created_at).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+    var author=r.author||'작성자';
+    var initial=author[0]||'?';
+    var fields='';
+    if(r.facility) fields+='<div class="ho-f"><div class="ho-lbl">🔧 시설물 고장</div><div class="ho-val">'+r.facility+'</div></div>';
+    if(r.complaint) fields+='<div class="ho-f"><div class="ho-lbl">📢 민원</div><div class="ho-val">'+r.complaint+'</div></div>';
+    if(r.danger) fields+='<div class="ho-f"><div class="ho-lbl">⚠️ 위험구역</div><div class="ho-val">'+r.danger+'</div></div>';
+    if(r.accident) fields+='<div class="ho-f"><div class="ho-lbl">🚨 안전사고</div><div class="ho-val">'+r.accident+'</div></div>';
+    if(r.equipment) fields+='<div class="ho-f"><div class="ho-lbl">🚛 장비·차량</div><div class="ho-val">'+r.equipment+'</div></div>';
+    if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📋 공지</div><div class="ho-val">'+r.notice+'</div></div>';
+    if(!fields) fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
+    var confBtn=isDone?'<div style="font-size:11px;color:var(--success);font-weight:700;padding:6px 0">✅ '+( r.confirmed_by||'')+'님 확인완료</div>':'<div class="conf-row"><button class="btn-conf" onclick="confHODB('+r.id+',this)">✔ 인수 확인</button></div>';
+    html+='<div class="ho-card">'
+      +'<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px">'
+      +'<span class="t-pill '+(pMap[sNm]||'pill-am')+'">'+sNm+'</span>'
+      +'<span style="color:var(--g3)">→</span>'
+      +'<span class="t-pill '+(pMap[toNm]||'pill-pm')+'">'+toNm+'</span>'
+      +'<span class="chip '+(isDone?'chip-ok':'chip-warn')+'"><span class="chip-dot"></span>'+(isDone?'확인완료':'대기')+'</span>'
+      +'</div><span class="ho-time">'+ts+'</span></div>'
+      +'<div class="w-row"><div class="w-av" style="background:'+(avC[sNm]||'var(--navy)')+'">'+initial+'</div>'
+      +'<span class="w-nm">'+author+(r.team?' · '+r.team:'')+'</span></div>'
+      +'<div class="ho-body">'+fields+'</div>'
+      +confBtn+'</div>';
+  });
+  list.innerHTML=html;
+}
+
+function updateHoPending(){
+  var cnt=hoAll.filter(function(r){return !r.confirmed;}).length;
+  var el=document.getElementById('dHO'); if(el) el.textContent=cnt;
+}
+
+async function confHODB(id, btn){
+  if(btn) btn.disabled=true;
+  await confirmHandoverDB(id);
+}
+
 async function loadHandoverFromDB(){
   try{
     var res=await sb.from('handover').select('*').order('created_at',{ascending:false}).limit(50);
@@ -4838,7 +4926,21 @@ async function loadMpFromDB(){
 }
 
 // ─ 초기화 ─
-go('login');
+// 세션 복구 (새로고침 시 자동 로그인)
+(function(){
+  try{
+    var saved = localStorage.getItem('t1_me');
+    if(saved){
+      me = JSON.parse(saved);
+      var uAv=document.getElementById('uAv'); if(uAv) uAv.textContent=me.initial;
+      var uNm=document.getElementById('uNm'); if(uNm) uNm.textContent=me.name;
+      go('main');
+      setTimeout(function(){ initAppData(); loadMpFromDB(); }, 100);
+      return;
+    }
+  }catch(e){}
+  go('login');
+})();
 loadFacilityData();
 loadVehData();
 loadMpData();
