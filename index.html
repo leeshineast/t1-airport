@@ -2648,11 +2648,11 @@ function confirmMp(){
 
   try{
     var today=new Date().toISOString().slice(0,10);
-    var shiftSaved=JSON.parse(localStorage.getItem('t1_mp_shifts')||'{}');
+    var shiftSaved={};  // localStorage 제거 - DB 저장 사용
     if(!shiftSaved[today]) shiftSaved[today]=[];
     if(shiftSaved[today].indexOf(shKey)===-1) shiftSaved[today].push(shKey);
     shiftSaved[today].sort(function(a,b){var o={'오전':0,'오후':1,'야간':2};return (o[a]||0)-(o[b]||0);});
-    localStorage.setItem('t1_mp_shifts',JSON.stringify(shiftSaved));
+    // localStorage 미사용 - DB 저장
   }catch(e){}
 
   var total=0;
@@ -2682,31 +2682,17 @@ function recalcMpData(){
   });
 }
 function saveMpData(){
-  var today=new Date().toISOString().slice(0,10);
-  try{
-    var saved=JSON.parse(localStorage.getItem('t1_mp')||'{}');
-    saved[today]={total:mpData,byShift:mpDataByShift,byLeader:mpDataByLeader};
-    var keys=Object.keys(saved).sort().reverse();
-    if(keys.length>30) keys.slice(30).forEach(function(k){delete saved[k];});
-    localStorage.setItem('t1_mp',JSON.stringify(saved));
-  }catch(e){}
+  // DB 저장 (전체 공유) - 각 팀별로 upsert
+  var today2=new Date().toISOString().slice(0,10);
+  Object.keys(mpDataByLeader).forEach(function(shift){
+    Object.keys(mpDataByLeader[shift]).forEach(function(teamCode){
+      saveMpToDB(shift, teamCode, mpDataByLeader[shift][teamCode]);
+    });
+  });
 }
 function loadMpData(){
-  var today=new Date().toISOString().slice(0,10);
-  try{
-    var saved=JSON.parse(localStorage.getItem('t1_mp')||'{}');
-    if(saved[today]){
-      mpDataByShift=saved[today].byShift||{오전:null,오후:null,야간:null};
-      mpDataByLeader=saved[today].byLeader||{오전:{},오후:{},야간:{}};
-      mpData=saved[today].total||[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-    } else {
-      mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-      mpDataByShift={오전:null,오후:null,야간:null};
-      mpDataByLeader={오전:{},오후:{},야간:{}};
-    }
-    updateFloorChart();
-    updateMpSummary();
-  }catch(e){}
+  // DB에서 최신 데이터 로드 (전체 공유)
+  loadMpFromDB();
 }
 function updateMpSummary(){
   var el=document.getElementById('mpDaySummary');
@@ -2858,8 +2844,7 @@ function subVeh(){
   var dist=after-before;
   var dept=(dept2||(me?me.team:'T1환경미화사업부'));
   var record={date:date,dept:dept,name:name,before:before,after:after,dist:dist,start:start,end:end,dest:dest,purpose:purpose,etc:etc};
-  vehData.unshift(record);
-  // DB 저장 (전체 공유)
+  // DB 저장 (전체 공유) - localStorage 미사용
   sb.from('vehicle_log').insert({
     date: record.date,
     driver: record.name,
@@ -2948,7 +2933,8 @@ function loadVehData(){
     var deptF=document.getElementById('vhDept'); if(deptF&&me&&me.team) deptF.value=me.team;
     var nameF=document.getElementById('vhName'); if(nameF&&me&&me.name) nameF.value=me.name;
   },100);
-  try{var s=localStorage.getItem('t1_veh');if(s){vehData=JSON.parse(s);renderVehList(vehData);}}catch(e){}
+  // DB에서 로드 (전체 공유)
+  loadVehicleFromDB();
   var today=new Date().toISOString().split('T')[0];
   var vd=document.getElementById('vhDate');if(vd)vd.value=today;
   var now=new Date();var tm=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0');
@@ -3237,14 +3223,14 @@ function saveKpi(){
   if(note) entry.kpiNote=note.value;
   if(!kpiData[y]) kpiData[y]={};
   kpiData[y][m]=entry;
-  try{ localStorage.setItem('t1_kpi',JSON.stringify(kpiData)); }catch(e){}
-  saveKpiToDB(y, m, entry);
+  saveKpiToDB(y, m, entry); // DB 저장 (전체 공유)
   toast('✅ '+y+'년 '+m+'월 지표 저장 완료');
   renderKpiDashboard();
 }
 
 function loadKpiData(){
-  try{ var s=localStorage.getItem('t1_kpi'); if(s) kpiData=JSON.parse(s); }catch(e){}
+  // DB에서 로드 (전체 공유) - localStorage 제거
+  loadKpiFromDB();
   // 연도 셀렉트 초기화
   var now=new Date();
   var cy=now.getFullYear();
@@ -4493,26 +4479,15 @@ function saveExtraFamily(){
   toast('✅ 별도 가족실 '+v+'개소 저장');
 }
 function saveFacilityData(){
-  try{
-    localStorage.setItem('t1_facility', JSON.stringify({data:facilityData,date:facilityUploadDate}));
-  }catch(e){}
-  // DB에도 저장
+  // DB 저장 (전체 공유)
   Object.keys(facilityData).forEach(function(type){
     saveFacilityToDB(type, facilityData[type], facilityUploadDate);
   });
+  renderFacilityDash();
 }
 
 function loadFacilityData(){
-  try{
-    var s=localStorage.getItem('t1_facility');
-    if(s){
-      var parsed=JSON.parse(s);
-      facilityData=parsed.data||{};
-      facilityUploadDate=parsed.date||'';
-      renderFacilityDash();
-    }
-  }catch(e){}
-  // DB에서도 로드 (더 최신 데이터 우선)
+  // DB에서 로드 (전체 공유)
   loadFacilityFromDB();
 }
 
@@ -4709,6 +4684,12 @@ async function loadNoticesFromDB(){
     var res=await sb.from('notices').select('*').order('created_at',{ascending:false}).limit(1);
     if(res.data&&res.data.length){
       var n=res.data[0];
+      var t=document.getElementById('noticeT');
+      var b=document.getElementById('noticeB');
+      var d=document.getElementById('noticeD');
+      if(t) t.textContent=n.title||'공지사항';
+      if(b) b.innerHTML=(n.content||'').replace(/\n/g,'<br>');
+      if(d) d.textContent=n.created_at?n.created_at.slice(0,10)+' 등록':'';
       showNotice(n.content);
     }
   }catch(e){}
@@ -4804,14 +4785,44 @@ async function confirmHandoverDB(id){
 }
 
 // ── 산업재해 ──
+function renderIndList(data){
+  var el=document.getElementById('indList');
+  if(!el) return;
+  if(!data||!data.length){
+    el.innerHTML='<p style="text-align:center;padding:22px;color:var(--g3);font-size:12px">등록된 이력이 없습니다</p>';
+    return;
+  }
+  var h='';
+  data.forEach(function(r){
+    var date=r.date||r.created_at||'';
+    if(date&&date.length>10) date=date.slice(0,10);
+    h+='<div style="padding:12px 16px;border-bottom:1px solid var(--g1)">';
+    h+='<div style="display:flex;justify-content:space-between;margin-bottom:5px">';
+    h+='<span style="font-size:12px;font-weight:700;color:var(--danger)">'+date+'</span>';
+    h+='<span style="font-size:11px;background:var(--danger-bg);color:var(--danger);padding:2px 8px;border-radius:20px;font-weight:700">'+(r.type||'기타')+'</span>';
+    h+='</div>';
+    h+='<div style="font-size:13px;font-weight:600;color:var(--g7);margin-bottom:3px">'+(r.worker||'')+'</div>';
+    h+='<div style="font-size:11px;color:var(--g4)">📍 '+(r.location||'')+'</div>';
+    if(r.description) h+='<div style="font-size:11px;color:var(--g5);margin-top:4px">'+(r.description)+'</div>';
+    h+='</div>';
+  });
+  el.innerHTML=h;
+}
+
 async function loadAccidentsFromDB(){
   try{
-    var res=await sb.from('industrial_accident').select('*').order('date',{ascending:false});
+    var res=await sb.from('industrial_accident').select('*').order('created_at',{ascending:false});
     if(res.error) return;
     indData=res.data||[];
     renderIndList(indData);
-    updateIndCmp();
-  }catch(e){}
+    // 대시보드 카운트 업데이트
+    var yr=new Date().getFullYear().toString();
+    var thisMonth=new Date().toISOString().slice(0,7);
+    var yc=indData.filter(function(d){return (d.date||'').startsWith(yr);}).length;
+    var mc=indData.filter(function(d){return (d.date||'').startsWith(thisMonth);}).length;
+    ['mainIndTot','aIndT'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=yc;});
+    var dAcc=document.getElementById('dAcc');if(dAcc)dAcc.textContent=mc;
+  }catch(e){console.error(e);}
 }
 
 async function saveAccidentToDB(data){
@@ -4889,10 +4900,10 @@ async function saveKpiToDB(y, m, entry){
 async function saveFacilityToDB(type, data, date){
   try{
     await sb.from('facility_data').upsert({
-      upload_date:date||new Date().toISOString().slice(0,10),
-      facility_type:type,
+      updated_at:new Date().toISOString(),
+      type:type,
       data:data
-    },{onConflict:'facility_type'});
+    },{onConflict:'type'});
   }catch(e){console.error(e);}
 }
 
@@ -4901,8 +4912,8 @@ async function loadFacilityFromDB(){
     var res=await sb.from('facility_data').select('*');
     if(res.error||!res.data||!res.data.length) return;
     res.data.forEach(function(row){
-      facilityData[row.facility_type]=row.data;
-      facilityUploadDate=row.upload_date;
+      facilityData[row.type]=row.data;
+      facilityUploadDate=row.updated_at?row.updated_at.slice(0,10):'';
     });
     renderFacilityDash();
   }catch(e){}
@@ -4916,8 +4927,8 @@ async function saveMpToDB(shift, teamCode, values){
       date:today,
       shift:shift,
       team_code:teamCode,
-      user_name:me?me.name:'',
-      values:values
+      values:values,
+      data:values||{}
     },{onConflict:'date,shift,team_code',ignoreDuplicates:false});
   }catch(e){console.error(e);}
 }
