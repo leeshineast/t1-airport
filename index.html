@@ -2006,20 +2006,19 @@ function subHO(){
   card.className='ho-card';
   card.innerHTML=`<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px"><span class="t-pill ${pMap[sNm]}">${sNm}</span><span style="color:var(--g3)">→</span><span class="t-pill ${pMap[toNm]}">${toNm}</span><span class="chip chip-warn"><span class="chip-dot"></span>대기</span></div><span class="ho-time">${ts}</span></div><div class="w-row"><div class="w-av" style="background:${avC[sNm]}">${me?me.initial:'?'}</div><span class="w-nm">${me?me.name:'작성자'} · ${me?me.team:''} 작성</span></div><div class="ho-body">${fields}</div><div class="conf-row"><button class="btn-conf" onclick="confHO(this)">✔ 인수 확인</button></div>`;
   // ① DB에 저장 (전체 공유)
-  const hoData = {
+  var hoData = {
     shift: sNm,
     to_shift: toNm,
     author: me?me.name:'작성자',
     team: me?me.team:'',
-    facility: fT!=='없음'?fT:'',
-    complaint: cT!=='없음'?cT:'',
-    danger: dT!=='없음'?dT:'',
-    accident: aT!=='없음'?aT:'',
-    equipment: eT!=='이상없음'?eT:'',
-    notice: document.getElementById('hN')?document.getElementById('hN').value:'',
-    special: document.getElementById('hEtc')?document.getElementById('hEtc').value:'',
-    confirmed: false,
-    created_at: new Date().toISOString()
+    facility: fT!=='없음'?fT:null,
+    complaint: cT!=='없음'?cT:null,
+    danger: dT!=='없음'?dT:null,
+    accident: aT!=='없음'?aT:null,
+    equipment: eT!=='이상없음'?eT:null,
+    notice: document.getElementById('hN')?document.getElementById('hN').value||null:null,
+    special: document.getElementById('hEtc')?document.getElementById('hEtc').value||null:null,
+    confirmed: false
   };
   saveHandoverToDB(hoData);
   // 미확인 카운트 증가
@@ -2868,12 +2867,11 @@ function subVeh(){
     vehicle: record.dest,
     purpose: record.purpose,
     start_km: record.before,
-    end_km: record.after,
-    start_time: record.start,
-    end_time: record.end,
-    distance: record.dist,
-    note: record.etc||''
-  }).then(function(res){ if(!res.error) loadVehicleFromDB(); });
+    end_km: record.after
+  }).then(function(res){
+    if(res.error){ console.error('차량 저장 오류:', res.error); toast('저장 오류: '+res.error.message); }
+    else { loadVehicleFromDB(); }
+  });
   toast('운행 기록이 저장되었습니다');
   ['vhDate','vhDept','vhName','vhBefore','vhAfter','vhStart','vhEnd','vhDest','vhPurpose','vhEtc'].forEach(function(id){
     var e=document.getElementById(id);if(e){e.value='';e.style.borderColor='';e.style.background='';}
@@ -4827,9 +4825,24 @@ async function saveAccidentToDB(data){
 // ── 차량운행 ──
 async function loadVehicleFromDB(){
   try{
-    var res=await sb.from('vehicle_log').select('*').order('use_date',{ascending:false});
+    var res=await sb.from('vehicle_log').select('*').order('created_at',{ascending:false});
     if(res.error) return;
-    vehData=res.data||[];
+    // DB 컬럼 → 앱 필드명 변환
+    vehData=(res.data||[]).map(function(r){
+      return {
+        date: r.date,
+        name: r.driver,
+        dept: r.team,
+        dest: r.vehicle,
+        purpose: r.purpose,
+        before: r.start_km,
+        after: r.end_km,
+        dist: (r.end_km||0)-(r.start_km||0),
+        start: '',
+        end: '',
+        etc: ''
+      };
+    });
     renderVehList(vehData);
   }catch(e){}
 }
