@@ -1825,18 +1825,19 @@ function finishLogin(){
   loadKpiData();
   renderLeaderStatus();
   updateMyTeamGrp();
-  if(u.role==='admin'){
+  if(me&&me.role==='admin'){
     var lb=document.getElementById('leaderEditBtn');if(lb)lb.style.display='block';
     var eb=document.getElementById('mainIndCmpEditBtn');if(eb)eb.style.display='block';
     setTimeout(function(){rstShiftTab(0);},500);
     loadPendingUsers();
     loadUserList();
   }
-  var ldl=document.getElementById('leaderDateLbl');if(ldl)ldl.textContent=now.toLocaleDateString('ko-KR');
-  var ldl2=document.getElementById('leaderDateLbl2');if(ldl2)ldl2.textContent=now.toLocaleDateString('ko-KR');
-  var vn=document.getElementById('vhName');if(vn)vn.value=u.name;
+  var now2=new Date();
+  var ldl=document.getElementById('leaderDateLbl');if(ldl)ldl.textContent=now2.toLocaleDateString('ko-KR');
+  var ldl2=document.getElementById('leaderDateLbl2');if(ldl2)ldl2.textContent=now2.toLocaleDateString('ko-KR');
+  var vn=document.getElementById('vhName');if(vn)vn.value=me?me.name:'';
   setTimeout(function(){try{showNotice();}catch(e){}},1500);
-  toast('어서오세요, '+u.name+'님!');
+  toast('어서오세요, '+(me?me.name:'')+'님!');
   if(!IS_LOCAL){loadHoList();}
   // Supabase에서 데이터 로드
   loadNoticesFromDB();
@@ -3882,7 +3883,9 @@ async function savePdfToStorage(b64, name){
     const blob=new Blob([ab],{type:'application/pdf'});
 
     // Storage 업로드 (파일명 중복 시 덮어쓰기)
-    const path='pdfs/'+name;
+    // 파일명 특수문자 제거 (Storage InvalidKey 방지)
+    const safeName=name.replace(/[★☆◆■●▲▼□○×÷]/g,'').replace(/[^a-zA-Z0-9가-힣._\-]/g,'_').replace(/__+/g,'_');
+    const path='pdfs/'+safeName;
     const STORAGE_URL=SUPABASE_URL+'/storage/v1/object/regulations/'+encodeURIComponent(path);
     const ANON_KEY=SUPABASE_KEY;
 
