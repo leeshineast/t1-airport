@@ -209,88 +209,97 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     // DataCloneError 원인인 BroadcastChannel/postMessage 완전 제거
     const sb = (function(){
       const BASE = SUPABASE_URL + '/rest/v1';
-      const H = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json', 'Prefer': 'return=representation' };
+      const H = {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      };
 
-      function buildUrl(table, params){
-        var url = BASE + '/' + table;
-        var qs = Object.entries(params || {}).map(function(kv){ return kv[0] + '=' + encodeURIComponent(kv[1]); });
-        if(qs.length) url += '?' + qs.join('&');
-        return url;
+      async function run(method, table, params, body, upsertCol){
+        try{
+          var url = BASE + '/' + table;
+          var qs = [];
+          if(params){
+            Object.entries(params).forEach(function([k,v]){
+              qs.push(k + '=' + encodeURIComponent(v));
+            });
+          }
+          if(method==='GET' && qs.length) url += '?' + qs.join('&');
+          if(method!=='GET' && qs.length) url += '?' + qs.join('&');
+
+          var headers = Object.assign({}, H);
+          if(upsertCol){
+            headers['Prefer'] = 'return=representation,resolution=merge-duplicates';
+            url += (url.includes('?')?'&':'?') + 'on_conflict=' + encodeURIComponent(upsertCol);
+          }
+          if(method==='DELETE') headers['Prefer'] = 'return=representation';
+
+          var opts = { method: method, headers: headers };
+          if(body) opts.body = JSON.stringify(body);
+
+          var resp = await fetch(url, opts);
+          var text = await resp.text();
+          var data = text ? JSON.parse(text) : null;
+
+          if(!resp.ok){
+            var msg = (data&&data.message) ? data.message : 'HTTP '+resp.status;
+            var code = (data&&data.code) ? String(data.code) : String(resp.status);
+            console.error('[DB오류]', method, table, resp.status, msg, data);
+            return { data: null, error: { message: msg, code: code } };
+          }
+          return { data: data, error: null };
+        }catch(e){
+          console.error('[DB fetch오류]', method, table, e);
+          return { data: null, error: { message: String(e.message||e), code: 'fetch_error' } };
+        }
       }
 
-      function chain(table, params, opts){
-        params = params || {};
-        opts = opts || {};
+      function builder(table){
+        var _params = {};
+        var _method = 'GET';
+        var _body = null;
+        var _upsertCol = null;
+        var _select = null;
+
         var obj = {
-          eq: function(col, val){ params[col] = 'eq.' + val; return obj; },
-          order: function(col, o){ params['order'] = col + (o && o.ascending === false ? '.desc' : '.asc'); return obj; },
-          limit: function(n){ params['limit'] = n; return obj; },
-          maybeSingle: async function(){
-            params['limit'] = 1;
-            var r = await obj._run('GET');
-            if(r.error) return r;
-            return { data: Array.isArray(r.data) ? (r.data[0] || null) : r.data, error: null };
-          },
-          select: function(cols){ opts._select = cols || '*'; return obj; },
-          insert: function(body){ opts._method = 'POST'; opts._body = body; return obj; },
-          update: function(body){ opts._method = 'PATCH'; opts._body = body; return obj; },
-          delete: function(){ opts._method = 'DELETE'; return obj; },
-          neq: function(col, val){ params[col] = 'neq.' + val; return obj; },
-          gte: function(col, val){ params[col] = 'gte.' + val; return obj; },
-          lte: function(col, val){ params[col] = 'lte.' + val; return obj; },
+          select: function(cols){ _select = cols||'*'; return obj; },
+          eq:     function(col,val){ _params[col]='eq.'+val; return obj; },
+          neq:    function(col,val){ _params[col]='neq.'+val; return obj; },
+          order:  function(col,o){ _params['order']=col+(o&&o.ascending===false?'.desc':'.asc'); return obj; },
+          limit:  function(n){ _params['limit']=n; return obj; },
+          insert: function(body){ _method='POST'; _body=body; return obj; },
+          update: function(body){ _method='PATCH'; _body=body; return obj; },
+          delete: function(){ _method='DELETE'; return obj; },
           upsert: function(body, uopts){
-            opts._method = 'POST';
-            opts._body = body;
-            opts._upsert = uopts;
+            _method='POST';
+            _body=body;
+            _upsertCol=(uopts&&uopts.onConflict)||null;
             return obj;
           },
-          _run: async function(method){
-            try {
-              method = method || opts._method || 'GET';
-              var url = BASE + '/' + table;
-              var qs = [];
-              Object.entries(params).forEach(function(kv){
-                var k = kv[0], v = kv[1];
-                // 값이 eq./neq./gt. 등 연산자로 시작하면 그대로, 아니면 일반 파라미터
-                qs.push(k + '=' + encodeURIComponent(v));
-              });
-              if(opts._select && method === 'GET') qs.push('select=' + opts._select);
-              if(qs.length) url += '?' + qs.join('&');
-
-              var headers = Object.assign({}, H);
-              if(opts._upsert && opts._upsert.onConflict){
-                headers['Prefer'] = 'return=representation,resolution=merge-duplicates';
-                url += (url.includes('?') ? '&' : '?') + 'on_conflict=' + encodeURIComponent(opts._upsert.onConflict);
-              }
-              if(method === 'DELETE') headers['Prefer'] = 'return=representation';
-
-              var fetchOpts = { method: method, headers: headers };
-              if(opts._body) fetchOpts.body = JSON.stringify(opts._body);
-
-              var resp = await fetch(url, fetchOpts);
-              var text = await resp.text();
-              var data = text ? JSON.parse(text) : null;
-
-              if(!resp.ok){
-                var msg = (data && data.message) ? data.message : ('HTTP ' + resp.status);
-                var code = (data && data.code) ? String(data.code) : String(resp.status);
-                return { data: null, error: { message: msg, code: code } };
-              }
-              return { data: data, error: null };
-            } catch(e) {
-              return { data: null, error: { message: String(e.message || e), code: 'fetch_error' } };
-            }
+          maybeSingle: async function(){
+            _params['limit']=1;
+            var r = await run('GET', table, _params, null, null);
+            if(r.error) return r;
+            return { data: Array.isArray(r.data)?(r.data[0]||null):r.data, error: null };
           },
           then: function(resolve, reject){
-            return obj._run().then(resolve, reject);
+            var p;
+            if(_method==='GET'){
+              var qp = Object.assign({}, _params);
+              if(_select) qp['select'] = _select;
+              p = run('GET', table, qp, null, null);
+            } else {
+              p = run(_method, table, _params, _body, _upsertCol);
+            }
+            return p.then(resolve, reject);
           }
         };
-        // thenable: await sb.from().select() 바로 가능하게
         return obj;
       }
 
       return {
-        from: function(table){ return chain(table, {}, {}); }
+        from: function(table){ return builder(table); }
       };
     })();
   </script>
@@ -1705,10 +1714,22 @@ function go(name){
     }
   });
   window.scrollTo(0,0);
-  // 관리자 화면 진입 시 자동 새로고침
+  // 화면 진입 시 자동 새로고침
   if(name==='admin'){
     loadPendingUsers();
     loadUserList();
+  }
+  if(name==='ho'){
+    loadHandoverFromDB();
+  }
+  if(name==='veh'){
+    loadVehicleFromDB();
+  }
+  if(name==='facility'){
+    loadFacilityFromDB();
+  }
+  if(name==='kpi'){
+    loadKpiFromDB();
   }
 }
 
@@ -1772,7 +1793,7 @@ function finishLogin(){
   }
   // 세션 저장 (새로고침 시 자동 로그인)
   try{ localStorage.setItem('t1_me', JSON.stringify(me)); }catch(e){}
-  go('main'); initAppData(); loadMpFromDB();
+  go('main'); setTimeout(function(){ initAppData(); }, 100);
   updateStaff();
   loadMpData();
   updateFloorChart();
@@ -1904,7 +1925,60 @@ function tabSwitch(prefix,n,count){
   }
 }
 function mpTab(n){tabSwitch('mp',n,4);if(n===2){renderLeaderStatus();updateMyTeamGrp();}}
-function hoTab(n){tabSwitch('ho',n,5);}
+function hoTab(n){
+  tabSwitch('ho',n,5);
+  // 탭 전환 시 해당 팀 데이터 로드
+  if(n===0) loadHandoverFromDB(); // 전체
+  else if(n===1) loadHandoverByShift('오전팀');
+  else if(n===2) loadHandoverByShift('오후팀');
+  else if(n===3) loadHandoverByShift('야간팀');
+}
+
+async function loadHandoverByShift(shift){
+  var listId = shift==='오전팀'?'hoAmList':shift==='오후팀'?'hoPmList':'hoNtList';
+  var el = document.getElementById(listId);
+  if(!el) return;
+  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">불러오는 중...</div>';
+  try{
+    var res = await sb.from('handover').select('*').eq('shift',shift).order('created_at',{ascending:false}).limit(30);
+    if(res.error || !res.data || !res.data.length){
+      el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">인수인계 내역이 없습니다</div>';
+      return;
+    }
+    // renderHoList 재사용
+    var pMap={'오전팀':'pill-am','오후팀':'pill-pm','야간팀':'pill-nt'};
+    var avC={'오전팀':'var(--navy)','오후팀':'var(--teal2)','야간팀':'#6B21A8'};
+    var html='';
+    res.data.forEach(function(r){
+      var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[r.shift]);
+      var isDone=r.confirmed;
+      var ts=r.created_at?new Date(r.created_at).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+      var author=r.author||'작성자';
+      var fields='';
+      if(r.facility) fields+='<div class="ho-f"><div class="ho-lbl">🔧 시설물</div><div class="ho-val">'+r.facility+'</div></div>';
+      if(r.complaint) fields+='<div class="ho-f"><div class="ho-lbl">📢 민원</div><div class="ho-val">'+r.complaint+'</div></div>';
+      if(r.danger) fields+='<div class="ho-f"><div class="ho-lbl">⚠️ 위험</div><div class="ho-val">'+r.danger+'</div></div>';
+      if(r.accident) fields+='<div class="ho-f"><div class="ho-lbl">🚨 사고</div><div class="ho-val">'+r.accident+'</div></div>';
+      if(r.equipment) fields+='<div class="ho-f"><div class="ho-lbl">🚛 장비</div><div class="ho-val">'+r.equipment+'</div></div>';
+      if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📋 공지</div><div class="ho-val">'+r.notice+'</div></div>';
+      if(!fields) fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
+      var confBtn=isDone?'<div style="font-size:11px;color:var(--success);font-weight:700;padding:6px 0">✅ '+(r.confirmed_by||'')+'님 확인완료</div>':'<div class="conf-row"><button class="btn-conf" onclick="confHODB('+r.id+',this)">✔ 인수 확인</button></div>';
+      html+='<div class="ho-card">'
+        +'<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px">'
+        +'<span class="t-pill '+(pMap[r.shift]||'pill-am')+'">'+r.shift+'</span>'
+        +'<span style="color:var(--g3)">→</span>'
+        +'<span class="t-pill '+(pMap[toNm]||'pill-pm')+'">'+(toNm||'')+'</span>'
+        +'<span class="chip '+(isDone?'chip-ok':'chip-warn')+'"><span class="chip-dot"></span>'+(isDone?'확인완료':'대기')+'</span>'
+        +'</div><span class="ho-time">'+ts+'</span></div>'
+        +'<div class="w-row"><div class="w-av" style="background:'+(avC[r.shift]||'var(--navy)')+'">'+author[0]+'</div>'
+        +'<span class="w-nm">'+author+(r.team?' · '+r.team:'')+'</span></div>'
+        +'<div class="ho-body">'+fields+'</div>'+confBtn+'</div>';
+    });
+    el.innerHTML=html;
+  }catch(e){
+    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:12px">로드 오류: '+e.message+'</div>';
+  }
+}
 function adTab(n){tabSwitch('ad',n,5);}
 
 // ─ 인력현황 ─
@@ -2605,7 +2679,60 @@ function tabSwitch(prefix,n,count){
   }
 }
 function mpTab(n){tabSwitch('mp',n,4);if(n===2){renderLeaderStatus();updateMyTeamGrp();}}
-function hoTab(n){tabSwitch('ho',n,5);}
+function hoTab(n){
+  tabSwitch('ho',n,5);
+  // 탭 전환 시 해당 팀 데이터 로드
+  if(n===0) loadHandoverFromDB(); // 전체
+  else if(n===1) loadHandoverByShift('오전팀');
+  else if(n===2) loadHandoverByShift('오후팀');
+  else if(n===3) loadHandoverByShift('야간팀');
+}
+
+async function loadHandoverByShift(shift){
+  var listId = shift==='오전팀'?'hoAmList':shift==='오후팀'?'hoPmList':'hoNtList';
+  var el = document.getElementById(listId);
+  if(!el) return;
+  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">불러오는 중...</div>';
+  try{
+    var res = await sb.from('handover').select('*').eq('shift',shift).order('created_at',{ascending:false}).limit(30);
+    if(res.error || !res.data || !res.data.length){
+      el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">인수인계 내역이 없습니다</div>';
+      return;
+    }
+    // renderHoList 재사용
+    var pMap={'오전팀':'pill-am','오후팀':'pill-pm','야간팀':'pill-nt'};
+    var avC={'오전팀':'var(--navy)','오후팀':'var(--teal2)','야간팀':'#6B21A8'};
+    var html='';
+    res.data.forEach(function(r){
+      var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[r.shift]);
+      var isDone=r.confirmed;
+      var ts=r.created_at?new Date(r.created_at).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+      var author=r.author||'작성자';
+      var fields='';
+      if(r.facility) fields+='<div class="ho-f"><div class="ho-lbl">🔧 시설물</div><div class="ho-val">'+r.facility+'</div></div>';
+      if(r.complaint) fields+='<div class="ho-f"><div class="ho-lbl">📢 민원</div><div class="ho-val">'+r.complaint+'</div></div>';
+      if(r.danger) fields+='<div class="ho-f"><div class="ho-lbl">⚠️ 위험</div><div class="ho-val">'+r.danger+'</div></div>';
+      if(r.accident) fields+='<div class="ho-f"><div class="ho-lbl">🚨 사고</div><div class="ho-val">'+r.accident+'</div></div>';
+      if(r.equipment) fields+='<div class="ho-f"><div class="ho-lbl">🚛 장비</div><div class="ho-val">'+r.equipment+'</div></div>';
+      if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📋 공지</div><div class="ho-val">'+r.notice+'</div></div>';
+      if(!fields) fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
+      var confBtn=isDone?'<div style="font-size:11px;color:var(--success);font-weight:700;padding:6px 0">✅ '+(r.confirmed_by||'')+'님 확인완료</div>':'<div class="conf-row"><button class="btn-conf" onclick="confHODB('+r.id+',this)">✔ 인수 확인</button></div>';
+      html+='<div class="ho-card">'
+        +'<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px">'
+        +'<span class="t-pill '+(pMap[r.shift]||'pill-am')+'">'+r.shift+'</span>'
+        +'<span style="color:var(--g3)">→</span>'
+        +'<span class="t-pill '+(pMap[toNm]||'pill-pm')+'">'+(toNm||'')+'</span>'
+        +'<span class="chip '+(isDone?'chip-ok':'chip-warn')+'"><span class="chip-dot"></span>'+(isDone?'확인완료':'대기')+'</span>'
+        +'</div><span class="ho-time">'+ts+'</span></div>'
+        +'<div class="w-row"><div class="w-av" style="background:'+(avC[r.shift]||'var(--navy)')+'">'+author[0]+'</div>'
+        +'<span class="w-nm">'+author+(r.team?' · '+r.team:'')+'</span></div>'
+        +'<div class="ho-body">'+fields+'</div>'+confBtn+'</div>';
+    });
+    el.innerHTML=html;
+  }catch(e){
+    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:12px">로드 오류: '+e.message+'</div>';
+  }
+}
 function adTab(n){
   tabSwitch('ad',n,5);
   if(n===0) loadPendingUsers();
@@ -4900,10 +5027,10 @@ async function saveKpiToDB(y, m, entry){
 async function saveFacilityToDB(type, data, date){
   try{
     await sb.from('facility_data').upsert({
-      updated_at:new Date().toISOString(),
-      type:type,
+      upload_date:new Date().toISOString().slice(0,10),
+      facility_type:type,
       data:data
-    },{onConflict:'type'});
+    },{onConflict:'facility_type'});
   }catch(e){console.error(e);}
 }
 
@@ -4912,8 +5039,8 @@ async function loadFacilityFromDB(){
     var res=await sb.from('facility_data').select('*');
     if(res.error||!res.data||!res.data.length) return;
     res.data.forEach(function(row){
-      facilityData[row.type]=row.data;
-      facilityUploadDate=row.updated_at?row.updated_at.slice(0,10):'';
+      facilityData[row.facility_type]=row.data;
+      facilityUploadDate=row.upload_date||'';
     });
     renderFacilityDash();
   }catch(e){}
@@ -4959,15 +5086,12 @@ async function loadMpFromDB(){
       var uAv=document.getElementById('uAv'); if(uAv) uAv.textContent=me.initial;
       var uNm=document.getElementById('uNm'); if(uNm) uNm.textContent=me.name;
       go('main');
-      setTimeout(function(){ initAppData(); loadMpFromDB(); }, 100);
+      setTimeout(function(){ initAppData(); }, 200);
       return;
     }
   }catch(e){}
   go('login');
 })();
-loadFacilityData();
-loadVehData();
-loadMpData();
 loadIndPrev();
 loadLeaders();
 loadMpInputLog();
@@ -4976,16 +5100,18 @@ loadKpiData();
 
 // DB 자동 로드 (로그인 후 호출되지만 앱 시작시 미리 캐싱)
 async function initAppData(){
+  // 모든 DB 데이터 동시 로드 (전체 공유)
   await Promise.all([
     loadHandoverFromDB(),
     loadAccidentsFromDB(),
     loadVehicleFromDB(),
     loadKpiFromDB(),
     loadFacilityFromDB(),
-    loadNoticesFromDB()
+    loadNoticesFromDB(),
+    loadMpFromDB()
   ]);
-  // 사규 자동 로드 (Storage에서)
-  await autoLoadPdf();
+  // 사규 자동 로드
+  autoLoadPdf();
 }
 
 // 시간대별 인력현황 자동 초기화 체크
