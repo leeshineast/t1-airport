@@ -2402,15 +2402,71 @@ async function dlCSV(type){
       }
     }
 
-    // ── 인력현황 ──
+    // ── 인력현황 (메인화면 표 형태) ──
     if(type==='mp'||type==='all'){
       var r=await sb.from('mp_data').select('*').order('date',{ascending:true});
       if(r.data&&r.data.length){
-        var mpRows=[['날짜','근무조','팀코드','데이터']];
+        // 날짜별로 그룹화
+        var mpByDate={};
         r.data.forEach(function(d){
-          mpRows.push([d.date||'',d.shift||'',d.team_code||'',JSON.stringify(d.values||{})]);
+          if(!mpByDate[d.date]) mpByDate[d.date]={};
+          if(!mpByDate[d.date][d.shift]) mpByDate[d.date][d.shift]={};
+          mpByDate[d.date][d.shift][d.team_code]=d.values;
         });
-        var ws1=XLSX.utils.aoa_to_sheet(mpRows);
+
+        var cols=['B2F','B1F','1F','2F','3F','4F','집하장'];
+        var rows2=[['구역','B2F','B1F','1F','2F','3F','4F','집하장','소계']];
+        var zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
+
+        Object.keys(mpByDate).sort().forEach(function(date){
+          var dayData=mpByDate[date];
+          // 날짜 헤더
+          rows2.push([date+' 인력현황','','','','','','','','']);
+          // 합산
+          var totals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+          Object.keys(dayData).forEach(function(shift){
+            Object.keys(dayData[shift]).forEach(function(team){
+              var vals=dayData[shift][team];
+              if(!vals) return;
+              for(var ri=0;ri<4;ri++)
+                for(var ci=0;ci<7;ci++)
+                  totals[ri][ci]+=(vals[ri]&&vals[ri][ci])||0;
+            });
+          });
+          // L/S 동편
+          var ls1Row=['L/S 동편'];var ls1Sum=0;
+          for(var ci=0;ci<7;ci++){ls1Row.push(totals[0][ci]||0);ls1Sum+=totals[0][ci]||0;}
+          ls1Row.push(ls1Sum);rows2.push(ls1Row);
+          // L/S 서편
+          var ls2Row=['L/S 서편'];var ls2Sum=0;
+          for(var ci=0;ci<7;ci++){ls2Row.push(totals[1][ci]||0);ls2Sum+=totals[1][ci]||0;}
+          ls2Row.push(ls2Sum);rows2.push(ls2Row);
+          // L/S 소계
+          var lsSub=['L/S 소계'];var lsSum=0;
+          for(var ci=0;ci<7;ci++){var lv=(totals[0][ci]||0)+(totals[1][ci]||0);lsSub.push(lv);lsSum+=lv;}
+          lsSub.push(lsSum);rows2.push(lsSub);
+          // A/S 동편
+          var as1Row=['A/S 동편'];var as1Sum=0;
+          for(var ci=0;ci<7;ci++){as1Row.push(totals[2][ci]||0);as1Sum+=totals[2][ci]||0;}
+          as1Row.push(as1Sum);rows2.push(as1Row);
+          // A/S 서편
+          var as2Row=['A/S 서편'];var as2Sum=0;
+          for(var ci=0;ci<7;ci++){as2Row.push(totals[3][ci]||0);as2Sum+=totals[3][ci]||0;}
+          as2Row.push(as2Sum);rows2.push(as2Row);
+          // A/S 소계
+          var asSub=['A/S 소계'];var asSum=0;
+          for(var ci=0;ci<7;ci++){var av=(totals[2][ci]||0)+(totals[3][ci]||0);asSub.push(av);asSum+=av;}
+          asSub.push(asSum);rows2.push(asSub);
+          // 전체 총계
+          var totalRow=['전체 총계'];var totalSum=0;
+          for(var ci=0;ci<7;ci++){var tv=lsSub[ci+1]+asSub[ci+1];totalRow.push(tv);totalSum+=tv;}
+          totalRow.push(totalSum);rows2.push(totalRow);
+          rows2.push(['','','','','','','','','']); // 빈줄
+        });
+
+        var ws1=XLSX.utils.aoa_to_sheet(rows2);
+        // 열 너비 설정
+        ws1['!cols']=[{wch:12},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8}];
         wb.SheetNames.push('인력현황');wb.Sheets['인력현황']=ws1;
       }
     }
