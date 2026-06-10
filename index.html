@@ -4964,13 +4964,8 @@ async function loadAccidentsFromDB(){
     if(res.error) return;
     indData=res.data||[];
     renderIndList(indData);
-    // 대시보드 카운트 업데이트
-    var yr=new Date().getFullYear().toString();
-    var thisMonth=new Date().toISOString().slice(0,7);
-    var yc=indData.filter(function(d){return (d.date||'').startsWith(yr);}).length;
-    var mc=indData.filter(function(d){return (d.date||'').startsWith(thisMonth);}).length;
-    ['mainIndTot','aIndT'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=yc;});
-    var dAcc=document.getElementById('dAcc');if(dAcc)dAcc.textContent=mc;
+    // 카운트 업데이트
+    updateIndCmp();
   }catch(e){console.error(e);}
 }
 
