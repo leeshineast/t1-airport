@@ -303,6 +303,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       };
     })();
   </script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -1417,19 +1418,19 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div style="display:flex;flex-direction:column;gap:9px">
         <div class="dl-item" onclick="dlCSV('all')">
           <div class="dl-ico">📋</div>
-          <div><div class="dl-title">일별 운영현황 전체</div><div class="dl-sub">인력+인수인계+민원+사고 (.csv)</div></div>
+          <div><div class="dl-title">일별 운영현황 전체</div><div class="dl-sub">인력+인수인계+민원+사고 (.xlsx)</div></div>
         </div>
         <div class="dl-item" onclick="dlCSV('mp')">
           <div class="dl-ico">👥</div>
-          <div><div class="dl-title">인력현황</div><div class="dl-sub">구역별 층별 현황 (.csv)</div></div>
+          <div><div class="dl-title">인력현황</div><div class="dl-sub">구역별 층별 현황 (.xlsx)</div></div>
         </div>
         <div class="dl-item" onclick="dlCSV('ho')">
           <div class="dl-ico">🔄</div>
-          <div><div class="dl-title">인수인계</div><div class="dl-sub">전체 인계 이력 (.csv)</div></div>
+          <div><div class="dl-title">인수인계</div><div class="dl-sub">전체 인계 이력 (.xlsx)</div></div>
         </div>
         <div class="dl-item" onclick="dlCSV('veh')">
           <div class="dl-ico">🚗</div>
-          <div><div class="dl-title">차량운행기록</div><div class="dl-sub">운행 이력 (.csv)</div></div>
+          <div><div class="dl-title">차량운행기록</div><div class="dl-sub">운행 이력 (.xlsx)</div></div>
         </div>
       </div>
     </div></div>
@@ -2345,38 +2346,87 @@ async function sendChat(){if(chatLoading)return;const inp=document.getElementByI
 
 // ─ 다운로드 ─
 async function dlCSV(type){
-  toast('📥 다운로드 준비 중...');
+  if(!me||me.role!=='admin'){toast('최고관리자만 다운로드할 수 있습니다');return;}
+  toast('📥 엑셀 다운로드 준비 중...');
   try{
-    var rows=[];var headers=[];
-    if(type==='mp'||type==='all'){
-      var r=await sb.from('mp_data').select('*').order('date',{ascending:true});
-      if(r.data&&r.data.length){
-        if(type==='mp'){headers=['날짜','조','층','데이터'];rows=r.data.map(function(d){return[d.date,d.shift,d.floor||'',JSON.stringify(d.data)];});}
-        else{r.data.forEach(function(d){rows.push([d.date,'인력',d.shift,d.floor||'',JSON.stringify(d.data)]);});}
-      }
-    }
+    var wb={SheetNames:[],Sheets:{}};
+    var today=new Date().toISOString().slice(0,10);
+
+    // ── 인수인계 ──
     if(type==='ho'||type==='all'){
       var r2=await sb.from('handover').select('*').order('created_at',{ascending:false});
       if(r2.data&&r2.data.length){
-        if(type==='ho'){headers=['날짜','조','작성자','시설','민원','공지','확인여부'];rows=r2.data.map(function(d){return[new Date(d.created_at).toLocaleDateString('ko-KR'),d.shift,d.author,d.facility||'',d.complaint||'',d.notice||'',d.confirmed?'확인':'대기'];});}
-        else{r2.data.forEach(function(d){rows.push([new Date(d.created_at).toLocaleDateString('ko-KR'),'인수인계',d.shift,d.author,d.confirmed?'확인':'대기','','']);});}
+        var hoRows=[['날짜','인계조','인수조','작성자','팀','시설물','민원','위험구역','안전사고','장비차량','공지','확인여부','확인자']];
+        r2.data.forEach(function(d){
+          hoRows.push([
+            d.created_at?d.created_at.slice(0,10):'',
+            d.shift||'',d.to_shift||'',d.author||'',d.team||'',
+            d.facility||'',d.complaint||'',d.danger||'',
+            d.accident||'',d.equipment||'',d.notice||'',
+            d.confirmed?'확인':'대기',d.confirmed_by||''
+          ]);
+        });
+        var ws2=XLSX.utils.aoa_to_sheet(hoRows);
+        wb.SheetNames.push('인수인계');wb.Sheets['인수인계']=ws2;
       }
     }
+
+    // ── 차량운행 ──
     if(type==='veh'||type==='all'){
       var r3=await sb.from('vehicle_log').select('*').order('created_at',{ascending:false});
       if(r3.data&&r3.data.length){
-        if(type==='veh'){headers=['날짜','운전자','팀','차량','목적','시작km','종료km'];rows=r3.data.map(function(d){return[d.date,d.driver,d.team||'',d.vehicle||'',d.purpose||'',d.start_km||'',d.end_km||''];});}
-        else{r3.data.forEach(function(d){rows.push([d.date,'차량',d.driver,d.vehicle||'',d.purpose||'','','']);});}
+        var vRows=[['날짜','운전자','소속팀','목적지','목적','출발전km','도착후km','주행거리']];
+        r3.data.forEach(function(d){
+          vRows.push([
+            d.date||'',d.driver||'',d.team||'',
+            d.vehicle||'',d.purpose||'',
+            d.start_km||0,d.end_km||0,
+            (d.end_km||0)-(d.start_km||0)
+          ]);
+        });
+        var ws3=XLSX.utils.aoa_to_sheet(vRows);
+        wb.SheetNames.push('차량운행');wb.Sheets['차량운행']=ws3;
       }
     }
-    if(type==='all'&&!headers.length) headers=['날짜','구분','항목1','항목2','항목3','항목4','항목5'];
-    if(!rows.length){toast('다운로드할 데이터가 없습니다');return;}
-    var csv=[headers.join(',')].concat(rows.map(function(r){return r.map(function(v){return '"'+(String(v||'')).replace(/"/g,'""')+'"';}).join(',');})).join('\n');
-    var blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
-    var a=document.createElement('a');a.href=URL.createObjectURL(blob);
-    a.download='T1_'+type+'_'+new Date().toISOString().slice(0,10)+'.csv';a.click();
-    toast('✅ 다운로드 완료');
-  }catch(e){toast('오류: '+e.message);}
+
+    // ── 산업재해 ──
+    if(type==='ind'||type==='all'){
+      var r4=await sb.from('industrial_accident').select('*').order('created_at',{ascending:false});
+      if(r4.data&&r4.data.length){
+        var iRows=[['결정통지일자','재해자','소속팀','재해유형','발생장소','발생경위및조치']];
+        r4.data.forEach(function(d){
+          iRows.push([d.date||'',d.worker||'',d.team||'',d.type||'',d.location||'',d.description||'']);
+        });
+        var ws4=XLSX.utils.aoa_to_sheet(iRows);
+        wb.SheetNames.push('산업재해');wb.Sheets['산업재해']=ws4;
+      }
+    }
+
+    // ── 인력현황 ──
+    if(type==='mp'||type==='all'){
+      var r=await sb.from('mp_data').select('*').order('date',{ascending:true});
+      if(r.data&&r.data.length){
+        var mpRows=[['날짜','근무조','팀코드','데이터']];
+        r.data.forEach(function(d){
+          mpRows.push([d.date||'',d.shift||'',d.team_code||'',JSON.stringify(d.values||{})]);
+        });
+        var ws1=XLSX.utils.aoa_to_sheet(mpRows);
+        wb.SheetNames.push('인력현황');wb.Sheets['인력현황']=ws1;
+      }
+    }
+
+    if(wb.SheetNames.length===0){toast('다운로드할 데이터가 없습니다');return;}
+
+    // SheetJS로 xlsx 생성
+    var wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+    var blob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    var a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download='T1_'+type+'_'+today+'.xlsx';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    toast('✅ 엑셀 다운로드 완료');
+  }catch(e){console.error(e);toast('오류: '+e.message);}
 }
 function _dlCSV_old(type){if(!me||me.role!=='admin'){toast('다운로드 권한이 없습니다');return;}toast(type+' 다운로드 중...');setTimeout(()=>{const rows=[['T1환경미화사업부 '+type],['날짜','구역','B2F','B1F','1F','2F','3F','4F','집하장','소계']];const zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];const from=new Date('2026-05-01'),to=new Date('2026-05-31');for(let d=new Date(from);d<=to&&rows.length<200;d.setDate(d.getDate()+1)){zones.forEach(z=>{const vs=[2,5,8,7,6,5,2].map(v=>v+Math.floor(Math.random()*3));rows.push([d.toISOString().slice(0,10),z,...vs,vs.reduce((a,b)=>a+b,0)]);});}const csv='\uFEFF'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='T1_'+type+'.csv';a.click();URL.revokeObjectURL(url);toast('✓ 다운로드 완료!');},600);}
 
