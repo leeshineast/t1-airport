@@ -1734,6 +1734,38 @@ function go(name){
 }
 
 // ─ 로그인 ─
+
+// ── 역할별 UI 적용 (로그인/세션복구 공통) ──
+function applyRoleUI(){
+  if(!me) return;
+  // 헤더
+  var uAv=document.getElementById('uAv');if(uAv)uAv.textContent=me.initial;
+  var uNm=document.getElementById('uNm');if(uNm)uNm.textContent=me.name;
+  var wrAv=document.getElementById('wrAv');if(wrAv)wrAv.textContent=me.initial;
+  var wrNm=document.getElementById('wrNm');if(wrNm)wrNm.textContent=me.name+' ('+(me.team||'')+')';
+  // 날짜
+  var now=new Date();
+  var ds=now.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  var dd=document.getElementById('dashDate');if(dd)dd.textContent=ds;
+  var md=document.getElementById('mpDate');if(md)md.textContent=ds;
+  // 관리자 메뉴 (admin + manager 모두)
+  var isAdmin=me.role==='admin';
+  var isMgr=me.role==='manager'||me.role==='admin';
+  var ab=document.getElementById('adminBtn');
+  if(ab) ab.style.display=isMgr?'block':'none';
+  // 산업재해 등록 버튼 (admin만)
+  var ib=document.getElementById('mainIndBtn');
+  if(ib) ib.style.display=isAdmin?'block':'none';
+  // 사규 업로드 버튼 (admin만)
+  var uw=document.getElementById('pdfUploadWrap');
+  if(uw) uw.style.cssText=isAdmin?'display:flex;gap:6px;align-items:center':'display:none';
+  // 조장편집 버튼
+  var lb=document.getElementById('leaderEditBtn');if(lb)lb.style.display=isAdmin?'block':'none';
+  var eb=document.getElementById('mainIndCmpEditBtn');if(eb)eb.style.display=isAdmin?'block':'none';
+  // Gemini API 키 복구
+  try{var gk=localStorage.getItem('t1_gemini_key');if(gk){GEMINI_API_KEY=gk;var btn=document.getElementById('apiKeyBtn');if(btn){btn.textContent='🔑 API키 ✅';btn.style.background='rgba(26,158,117,.3)';}}}catch(e){}
+}
+
 async function doLogin(){
   var id=document.getElementById('lid').value.trim();
   var pw=document.getElementById('lpw').value;
@@ -1767,25 +1799,7 @@ async function doLogin(){
 }
 
 function finishLogin(){
-  var u=me;
-  // 헤더 업데이트
-  var uAv=document.getElementById('uAv');if(uAv)uAv.textContent=u.initial;
-  var uNm=document.getElementById('uNm');if(uNm)uNm.textContent=u.name;
-  var wrAv=document.getElementById('wrAv');if(wrAv)wrAv.textContent=u.initial;
-  var wrNm=document.getElementById('wrNm');if(wrNm)wrNm.textContent=u.name+' ('+u.team+')';
-  var now=new Date();
-  var ds=now.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
-  var dd=document.getElementById('dashDate');if(dd)dd.textContent=ds;
-  var md=document.getElementById('mpDate');if(md)md.textContent=ds;
-  if(u.role==='admin'){
-    var ab=document.getElementById('adminBtn');if(ab)ab.style.display='block';
-    var ib=document.getElementById('mainIndBtn');if(ib)ib.style.display='block';
-    var uw=document.getElementById('pdfUploadWrap');if(uw)uw.style.cssText='display:flex;gap:6px;align-items:center';
-  }
-  try{
-    var savedKey=localStorage.getItem('t1_gemini_key');
-    if(savedKey){GEMINI_API_KEY=savedKey;var btn2=document.getElementById('apiKeyBtn');if(btn2){btn2.textContent='🔑 API키 ✅';btn2.style.background='rgba(26,158,117,.3)';}}
-  }catch(e){}
+  applyRoleUI();
   if(pdfB64){
     var b=document.getElementById('pdfBanner');if(b)b.style.display='block';
     var nb=document.getElementById('pdfNoBanner');if(nb)nb.style.display='none';
@@ -5092,30 +5106,9 @@ async function loadMpFromDB(){
     var saved = localStorage.getItem('t1_me');
     if(saved){
       me = JSON.parse(saved);
-      // 헤더 업데이트
-      var uAv=document.getElementById('uAv'); if(uAv) uAv.textContent=me.initial;
-      var uNm=document.getElementById('uNm'); if(uNm) uNm.textContent=me.name;
-      var wrAv=document.getElementById('wrAv');if(wrAv)wrAv.textContent=me.initial;
-      var wrNm=document.getElementById('wrNm');if(wrNm)wrNm.textContent=me.name+' ('+me.team+')';
-      // 날짜 표시
-      var now2=new Date();
-      var ds2=now2.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
-      var dd2=document.getElementById('dashDate');if(dd2)dd2.textContent=ds2;
-      var md2=document.getElementById('mpDate');if(md2)md2.textContent=ds2;
-      // 권한별 메뉴 표시
-      if(me.role==='admin'||me.role==='manager'){
-        var ab2=document.getElementById('adminBtn');if(ab2)ab2.style.display='block';
-      }
-      if(me.role==='admin'){
-        var ib2=document.getElementById('mainIndBtn');if(ib2)ib2.style.display='block';
-        var uw2=document.getElementById('pdfUploadWrap');if(uw2)uw2.style.cssText='display:flex;gap:6px;align-items:center';
-        var lb2=document.getElementById('leaderEditBtn');if(lb2)lb2.style.display='block';
-        var eb2=document.getElementById('mainIndCmpEditBtn');if(eb2)eb2.style.display='block';
-      }
-      // Gemini 키 복구
-      try{var gKey=localStorage.getItem('t1_gemini_key');if(gKey){GEMINI_API_KEY=gKey;}}catch(e){}
+      applyRoleUI();
       go('main');
-      setTimeout(function(){ initAppData(); updateStaff(); updateFloorChart(); updateMpSummary(); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); }, 300);
+      setTimeout(function(){ applyRoleUI(); initAppData(); updateStaff(); updateFloorChart(); updateMpSummary(); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); }, 500);
       return;
     }
   }catch(e){}
