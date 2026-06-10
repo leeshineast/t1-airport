@@ -3883,8 +3883,10 @@ async function savePdfToStorage(b64, name){
     const blob=new Blob([ab],{type:'application/pdf'});
 
     // Storage 업로드 (파일명 중복 시 덮어쓰기)
-    // 파일명 특수문자 제거 (Storage InvalidKey 방지)
-    const safeName=name.replace(/[★☆◆■●▲▼□○×÷]/g,'').replace(/[^a-zA-Z0-9가-힣._\-]/g,'_').replace(/__+/g,'_');
+    // 파일명을 영문+타임스탬프로 변환 (Storage 한글/특수문자 불허)
+    const ts=Date.now();
+    const ext=name.lastIndexOf('.')>=0?name.slice(name.lastIndexOf('.')):'';
+    const safeName='sagu_'+ts+ext;  // 예: sagu_1234567890.pdf
     const path='pdfs/'+safeName;
     const STORAGE_URL=SUPABASE_URL+'/storage/v1/object/regulations/'+encodeURIComponent(path);
     const ANON_KEY=SUPABASE_KEY;
