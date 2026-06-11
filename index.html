@@ -1711,9 +1711,25 @@ function go(name){
     loadHandoverFromDB();
   }
   if(name==='veh'){
+    // 날짜 자동 세팅
+    var todayStr=new Date().toISOString().slice(0,10);
+    var vhDate=document.getElementById('vhDate'); if(vhDate&&!vhDate.value) vhDate.value=todayStr;
+    // 소속 자동 세팅
+    var vhDept=document.getElementById('vhDept'); if(vhDept&&me&&!vhDept.value) vhDept.value=me.team||'';
+    // 출발 전 km: 마지막 도착 km 자동세팅
+    if(vehData.length>0){
+      var lastAfter=vehData[0].after||vehData[0].end_km||0;
+      var vhBefore=document.getElementById('vhBefore');
+      if(vhBefore&&!vhBefore.value&&lastAfter>0){
+        vhBefore.value=lastAfter;
+        var hint=document.getElementById('vhAutoHint'); if(hint) hint.style.display='block';
+      }
+    }
+    vhTab(0);
     loadVehicleFromDB();
   }
   if(name==='facility'){
+    facTab(0);
     loadFacilityFromDB();
   }
   if(name==='kpi'){
@@ -3658,6 +3674,133 @@ async function saveAccidentToDB(data){
 }
 
 // ── 차량운행 ──
+var vehData = [];
+
+/* 탭 전환 */
+function vhTab(idx){
+  ['vhP0','vhP1','vhP2'].forEach(function(id,i){
+    var el=document.getElementById(id);
+    if(el) el.style.display=(i===idx?'block':'none');
+  });
+  ['vhT0','vhT1','vhT2'].forEach(function(id,i){
+    var el=document.getElementById(id); if(!el) return;
+    if(i===idx){ el.style.color='var(--teal)';el.style.fontWeight='700';el.style.borderBottom='2.5px solid var(--teal)'; }
+    else { el.style.color='var(--g3)';el.style.fontWeight='600';el.style.borderBottom='none'; }
+  });
+  if(idx===1) renderVehList(vehData);
+}
+
+/* 주행거리 자동계산 */
+function calcDist(){
+  var b=parseFloat(document.getElementById('vhBefore').value)||0;
+  var a=parseFloat(document.getElementById('vhAfter').value)||0;
+  var d=a-b;
+  var wrap=document.getElementById('vhDistWrap');
+  var distEl=document.getElementById('vhDist');
+  if(a>0&&b>0&&d>=0){
+    if(wrap) wrap.style.display='flex';
+    if(distEl) distEl.textContent=d;
+  } else {
+    if(wrap) wrap.style.display='none';
+  }
+  // 다음 운행 출발 전 km 자동입력: 마지막 도착 km 세팅
+  var hint=document.getElementById('vhAutoHint');
+  if(hint) hint.style.display='none';
+}
+
+/* 운행 기록 저장 */
+async function subVeh(){
+  var date=document.getElementById('vhDate').value;
+  var dept=document.getElementById('vhDept').value.trim();
+  var name=document.getElementById('vhName').value.trim();
+  var before=parseFloat(document.getElementById('vhBefore').value);
+  var after=parseFloat(document.getElementById('vhAfter').value);
+  var start=document.getElementById('vhStart').value;
+  var end=document.getElementById('vhEnd').value;
+  var dest=document.getElementById('vhDest').value.trim();
+  var purpose=document.getElementById('vhPurpose').value.trim();
+  var etc=document.getElementById('vhEtc').value.trim();
+  if(!date||!dept||!name||isNaN(before)||isNaN(after)||!dest||!purpose){
+    toast('필수 항목을 모두 입력해주세요');return;
+  }
+  if(after<before){toast('도착 후 km가 출발 전 km보다 작습니다');return;}
+  var data={
+    date:date, driver:name, team:dept,
+    vehicle:dest, purpose:purpose,
+    start_km:before, end_km:after,
+    start_time:start||null, end_time:end||null, note:etc||null
+  };
+  await saveVehicleToDB(data);
+  // 폼 초기화 (날짜·소속 유지, 출발 전 km = 이전 도착 km 자동세팅)
+  var prevAfter=after;
+  document.getElementById('vhName').value='';
+  document.getElementById('vhBefore').value=prevAfter;
+  document.getElementById('vhAfter').value='';
+  document.getElementById('vhStart').value='';
+  document.getElementById('vhEnd').value='';
+  document.getElementById('vhDest').value='';
+  document.getElementById('vhPurpose').value='';
+  document.getElementById('vhEtc').value='';
+  var hint=document.getElementById('vhAutoHint'); if(hint) hint.style.display='block';
+  var wrap=document.getElementById('vhDistWrap'); if(wrap) wrap.style.display='none';
+  toast('✅ 운행 기록이 저장되었습니다');
+}
+
+/* 운행 이력 렌더링 */
+function renderVehList(data){
+  var list=document.getElementById('vhList');
+  if(!list) return;
+  // 통계
+  var total=data.length;
+  var totalDist=data.reduce(function(s,d){return s+(d.dist||0);},0);
+  var now=new Date(); var ym=now.getFullYear()+'-'+(String(now.getMonth()+1).padStart(2,'0'));
+  var monthDist=data.filter(function(d){return (d.date||'').startsWith(ym);}).reduce(function(s,d){return s+(d.dist||0);},0);
+  var cntEl=document.getElementById('vhStatCount'); if(cntEl) cntEl.textContent=total;
+  var distEl=document.getElementById('vhStatDist'); if(distEl) distEl.textContent=totalDist;
+  var mEl=document.getElementById('vhStatMonth'); if(mEl) mEl.textContent=monthDist;
+  if(data.length===0){
+    list.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">아직 운행 기록이 없습니다</div>';
+    return;
+  }
+  var html='';
+  data.forEach(function(d){
+    var dist=d.dist||((d.after||0)-(d.before||0));
+    html+='<div class="card" style="margin-bottom:9px"><div class="cb">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">';
+    html+='<div style="font-size:12px;font-weight:700;color:var(--g7)">'+( d.date||'')+'</div>';
+    html+='<div style="font-size:13px;font-weight:900;color:var(--teal2)">'+dist+'km</div>';
+    html+='</div>';
+    html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;font-size:11px;color:var(--g5)">';
+    html+='<div>👤 '+( d.name||d.driver||'')+'</div><div>🏢 '+(d.dept||d.team||'')+'</div>';
+    html+='<div>📍 '+(d.dest||d.vehicle||'')+'</div><div>📋 '+(d.purpose||'')+'</div>';
+    html+='<div>🚗 출발: '+(d.before||d.start_km||0)+'km</div><div>🚗 도착: '+(d.after||d.end_km||0)+'km</div>';
+    if(d.start||d.start_time) html+='<div>🕐 '+(d.start||d.start_time)+'→'+(d.end||d.end_time||'')+'</div><div></div>';
+    if(d.etc||d.note) html+='<div style="grid-column:1/-1;color:var(--g4)">📝 '+(d.etc||d.note)+'</div>';
+    html+='</div></div></div>';
+  });
+  list.innerHTML=html;
+}
+
+/* 다운로드 기간 버튼 */
+function setVhRange(btn, type){
+  document.querySelectorAll('.rp').forEach(function(el){el.style.background='';el.style.color='';});
+  btn.style.background='var(--teal)'; btn.style.color='white';
+  var now=new Date();
+  var from=document.getElementById('vhDlFrom');
+  var to=document.getElementById('vhDlTo');
+  if(!from||!to) return;
+  var y=now.getFullYear(); var m=String(now.getMonth()+1).padStart(2,'0');
+  if(type==='month'){
+    from.value=y+'-'+m; to.value=y+'-'+m;
+  } else if(type==='last'){
+    var lm=new Date(y,now.getMonth()-1,1);
+    var ly=lm.getFullYear(); var lmo=String(lm.getMonth()+1).padStart(2,'0');
+    from.value=ly+'-'+lmo; to.value=ly+'-'+lmo;
+  } else {
+    from.value=''; to.value='';
+  }
+}
+
 async function loadVehicleFromDB(){
   try{
     var res=await sb.from('vehicle_log').select('*').order('created_at',{ascending:false});
@@ -3679,6 +3822,15 @@ async function loadVehicleFromDB(){
       };
     });
     renderVehList(vehData);
+    // 출발 전 km 자동입력: 마지막 도착 km
+    if(vehData.length>0){
+      var lastAfter=vehData[0].after||vehData[0].end_km||0;
+      var bEl=document.getElementById('vhBefore');
+      if(bEl&&!bEl.value&&lastAfter>0){
+        bEl.value=lastAfter;
+        var hint=document.getElementById('vhAutoHint'); if(hint) hint.style.display='block';
+      }
+    }
   }catch(e){}
 }
 
@@ -4010,6 +4162,127 @@ async function saveKpiToDB(y, m, entry){
 }
 
 // ── 시설현황 ──
+var facilityData = {};
+var facilityUploadDate = '';
+var _facFiles = [];
+
+/* 탭 전환 */
+function facTab(idx){
+  ['facP0','facP1'].forEach(function(id,i){
+    var el=document.getElementById(id);
+    if(el) el.style.display=(i===idx?'block':'none');
+  });
+  ['facT0','facT1'].forEach(function(id,i){
+    var el=document.getElementById(id); if(!el) return;
+    if(i===idx){ el.style.color='var(--teal)';el.style.fontWeight='700';el.style.borderBottom='2.5px solid var(--teal)'; }
+    else { el.style.color='var(--g3)';el.style.fontWeight='600';el.style.borderBottom='none'; }
+  });
+  if(idx===0) renderFacilityDash();
+}
+
+/* 파일 선택 처리 */
+function handleFacUpload(files){
+  _facFiles=Array.from(files);
+  var listWrap=document.getElementById('facFileList');
+  var items=document.getElementById('facFileItems');
+  var btn=document.getElementById('facProcessBtn');
+  if(!_facFiles.length){ if(listWrap) listWrap.style.display='none'; return; }
+  if(listWrap) listWrap.style.display='block';
+  if(items) items.innerHTML=_facFiles.map(function(f){
+    return '<div style="font-size:11px;color:var(--g5);padding:3px 0;border-bottom:1px solid var(--g2)">📄 '+f.name+'</div>';
+  }).join('');
+  if(btn){ btn.disabled=false; btn.style.background='var(--teal)'; btn.style.cursor='pointer'; }
+}
+
+/* 엑셀 처리 */
+async function processFacFiles(){
+  if(!_facFiles.length){ toast('파일을 먼저 선택해주세요'); return; }
+  var prog=document.getElementById('facProgress');
+  var progText=document.getElementById('facProgressText');
+  var progBar=document.getElementById('facProgressBar');
+  if(prog) prog.style.display='block';
+  var today=new Date().toISOString().slice(0,10);
+  facilityUploadDate=today;
+  for(var i=0;i<_facFiles.length;i++){
+    var f=_facFiles[i];
+    if(progText) progText.textContent='처리 중: '+f.name+' ('+(i+1)+'/'+_facFiles.length+')';
+    if(progBar) progBar.style.width=Math.round((i/_facFiles.length)*100)+'%';
+    try{
+      var ab=await f.arrayBuffer();
+      var wb=XLSX.read(ab,{type:'array'});
+      var fname=f.name.toLowerCase();
+      var type='기타';
+      if(fname.includes('화장실')||fname.includes('toilet')) type='화장실';
+      else if(fname.includes('흡연')||fname.includes('smoking')) type='흡연실';
+      else if(fname.includes('샤워')||fname.includes('shower')) type='샤워실';
+      else if(fname.includes('창고')||fname.includes('storage')) type='창고';
+      else if(fname.includes('유아')||fname.includes('baby')) type='유아휴게실';
+      else if(fname.includes('휴게')||fname.includes('rest')) type='휴게시설';
+      // 첫 번째 시트 파싱
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      facilityData[type]=rows;
+      await saveFacilityToDB(type,rows,today);
+    }catch(e){ console.error(f.name+' 처리 오류:',e); toast('⚠️ '+f.name+' 처리 실패'); }
+  }
+  if(progBar) progBar.style.width='100%';
+  if(progText) progText.textContent='처리 완료!';
+  setTimeout(function(){ if(prog) prog.style.display='none'; },1500);
+  toast('✅ 시설현황 업로드 완료');
+  facTab(0);
+}
+
+/* 현황 탭 렌더링 */
+function renderFacilityDash(){
+  var wrap=document.getElementById('facSummaryWrap'); if(!wrap) return;
+  var dateEl=document.getElementById('facUploadDate');
+  if(dateEl && facilityUploadDate) dateEl.textContent='최종 업로드: '+facilityUploadDate;
+  var types=Object.keys(facilityData);
+  if(!types.length){
+    wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">엑셀 파일을 업로드하면 집계가 표시됩니다</div>';
+    return;
+  }
+  var ICONS={화장실:'🚻',흡연실:'🚬',샤워실:'🚿',창고:'📦',유아휴게실:'👶',휴게시설:'😴',기타:'📋'};
+  var html='';
+  types.forEach(function(type){
+    var rows=facilityData[type]||[];
+    var dataRows=rows.filter(function(r){ return r.some(function(c){return c!=='';});}).length;
+    html+='<div class="card" style="margin-bottom:11px"><div class="cb">';
+    html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">';
+    html+='<div style="font-size:14px;font-weight:800;color:var(--g7)">'+(ICONS[type]||'📋')+' '+type+'</div>';
+    html+='<div style="font-size:11px;color:var(--g4)">총 '+(dataRows>0?dataRows-1:0)+'개 항목</div>';
+    html+='</div>';
+    // 헤더행 표시
+    if(rows.length>0){
+      var header=rows[0];
+      html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:10px">';
+      html+='<thead><tr style="background:var(--g1)">';
+      header.forEach(function(h){
+        if(h!=='') html+='<th style="padding:5px 6px;text-align:left;font-weight:600;color:var(--g5);white-space:nowrap;border-bottom:1px solid var(--g2)">'+h+'</th>';
+      });
+      html+='</tr></thead><tbody>';
+      // 데이터 행 (최대 5개 미리보기)
+      var shown=0;
+      for(var ri=1;ri<rows.length&&shown<5;ri++){
+        var row=rows[ri];
+        if(!row.some(function(c){return c!=='';})) continue;
+        html+='<tr style="border-bottom:1px solid var(--g2)">';
+        row.forEach(function(c,ci){
+          if(header[ci]!=='') html+='<td style="padding:5px 6px;color:var(--g6);white-space:nowrap">'+c+'</td>';
+        });
+        html+='</tr>';
+        shown++;
+      }
+      if(rows.length-1>5) html+='<tr><td colspan="'+header.filter(function(h){return h!=='';}).length+'" style="padding:6px;text-align:center;color:var(--g4);font-size:10px">... 외 '+(rows.length-6)+'개 항목</td></tr>';
+      html+='</tbody></table></div>';
+    }
+    html+='</div></div>';
+  });
+  wrap.innerHTML=html;
+}
+
+function renderFacilitySummary(){ renderFacilityDash(); }
+
 async function saveFacilityToDB(type, data, date){
   try{
     await sb.from('facility_data').upsert({
