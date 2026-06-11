@@ -2928,11 +2928,10 @@ function confirmMp(){
   toast('✓ '+shKey+' '+( myTeam||'' )+' 인력현황 입력! 금일 누계: '+total+'명');
   document.querySelectorAll('#mpBody .mp-inp').forEach(function(i){i.value='';});
   var el=document.getElementById('mpTot');if(el){el.textContent='0';el.style.color='var(--g3)';}
-  // DB 저장
+  // DB 저장 후 전체 데이터 다시 로드해서 화면 갱신
   var saveTeam=myTeam||('_'+shKey);
-  saveMpToDB(shKey, saveTeam, mpDataByLeader[shKey]&&mpDataByLeader[shKey][saveTeam]||newVals);
-  updateFloorChart();
-  updateMpSummary();
+  saveMpToDB(shKey, saveTeam, mpDataByLeader[shKey]&&mpDataByLeader[shKey][saveTeam]||newVals)
+    .then(function(){ loadMpFromDB(); });
 }
 
 // 전체 합산 재계산
@@ -3053,7 +3052,10 @@ async function saveIndCmp(){
 async function loadIndPrev(){
   try{
     var res=await sb.from('notices').select('content').eq('title','__ind_prev_year__').limit(1);
-    if(res.data&&res.data.length) indPrevYear=parseInt(res.data[0].content)||0;
+    if(res.data&&res.data.length){
+      indPrevYear=parseInt(res.data[0].content)||0;
+      updateIndCmp();
+    }
   }catch(e){}
 }
 function updateIndCmp(){
@@ -5098,10 +5100,41 @@ async function loadAccidentsFromDB(){
     var res=await sb.from('industrial_accident').select('*').order('created_at',{ascending:false});
     if(res.error) return;
     indData=res.data||[];
+    // 관리자 페이지 목록 갱신
     renderIndList(indData);
+    // 메인화면 목록 갱신
+    renderMainIndList(indData);
     // 카운트 업데이트
     updateIndCmp();
-  }catch(e){console.error(e);}
+    var yr=new Date().getFullYear().toString();
+    var thisMonth=new Date().toISOString().slice(0,7);
+    var yc=indData.filter(function(d){return d.date&&d.date.startsWith(yr);}).length;
+    var mc=indData.filter(function(d){return d.date&&d.date.startsWith(thisMonth);}).length;
+    ['mainIndYear','aIndY'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=yc;});
+    ['mainIndTot','aIndT'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=indData.length;});
+    var mcEl=document.getElementById('mainIndMonth');if(mcEl)mcEl.textContent=mc;
+  }catch(e){}
+}
+
+function renderMainIndList(data){
+  var el=document.getElementById('mainIndList'); if(!el) return;
+  if(!data||!data.length){
+    el.innerHTML='<p style="text-align:center;padding:16px;color:var(--g3);font-size:12px">등록된 산업재해 이력이 없습니다</p>';
+    return;
+  }
+  var h='';
+  data.slice(0,5).forEach(function(r){
+    var date=r.date||r.created_at||'';
+    if(date&&date.length>10) date=date.slice(0,10);
+    h+='<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--g1)">';
+    h+='<div style="width:3px;background:var(--danger);border-radius:2px;flex-shrink:0"></div>';
+    h+='<div style="flex:1">';
+    h+='<div style="font-size:11px;color:var(--danger);font-weight:700">'+date+' · '+(r.type||'기타')+'</div>';
+    h+='<div style="font-size:12px;font-weight:600;color:var(--g7)">'+(r.worker||r.per||'')+'</div>';
+    h+='<div style="font-size:11px;color:var(--g4)">📍 '+(r.location||r.loc||'')+'</div>';
+    h+='</div></div>';
+  });
+  el.innerHTML=h;
 }
 
 async function saveAccidentToDB(data){
@@ -5216,23 +5249,24 @@ async function loadMpFromDB(){
   try{
     var today=new Date().toISOString().slice(0,10);
     var res=await sb.from('mp_data').select('*').eq('date',today);
-    if(res.error){ console.error('[loadMpFromDB 오류]',res.error); return; }
-    if(!res.data||!res.data.length){
-      console.log('[loadMpFromDB] 오늘 데이터 없음', today);
-      return;
-    }
-    console.log('[loadMpFromDB 성공]', res.data.length+'건', today);
+    if(res.error||!res.data||!res.data.length) return;
     mpDataByLeader={오전:{},오후:{},야간:{}};
     res.data.forEach(function(row){
+      if(!row.shift||!row.team_code||!row.values) return;
       if(!mpDataByLeader[row.shift]) mpDataByLeader[row.shift]={};
+      // values가 jsonb 배열로 저장됨 - 타입 보정
       var vals=row.values;
-      if(vals) mpDataByLeader[row.shift][row.team_code]=vals;
+      if(typeof vals==='string') try{ vals=JSON.parse(vals); }catch(e){}
+      // 2차원 배열 형태 검증
+      if(Array.isArray(vals) && Array.isArray(vals[0])){
+        mpDataByLeader[row.shift][row.team_code]=vals;
+      }
     });
     recalcMpData();
     updateFloorChart();
     updateMpSummary();
     updateStaff();
-  }catch(e){ console.error('[loadMpFromDB catch]',e); }
+  }catch(e){}
 }
 
 // ─ 초기화 ─
@@ -5266,7 +5300,8 @@ async function initAppData(){
     loadKpiFromDB(),
     loadFacilityFromDB(),
     loadNoticesFromDB(),
-    loadMpFromDB()
+    loadMpFromDB(),
+    loadIndPrev()
   ]);
   // 사규 자동 로드
   autoLoadPdf();
