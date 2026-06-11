@@ -2488,7 +2488,19 @@ async function dlCSV(type){
 function _dlCSV_old(type){if(!me||me.role!=='admin'){toast('다운로드 권한이 없습니다');return;}toast(type+' 다운로드 중...');setTimeout(()=>{const rows=[['T1환경미화사업부 '+type],['날짜','구역','B2F','B1F','1F','2F','3F','4F','집하장','소계']];const zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];const from=new Date('2026-05-01'),to=new Date('2026-05-31');for(let d=new Date(from);d<=to&&rows.length<200;d.setDate(d.getDate()+1)){zones.forEach(z=>{const vs=[2,5,8,7,6,5,2].map(v=>v+Math.floor(Math.random()*3));rows.push([d.toISOString().slice(0,10),z,...vs,vs.reduce((a,b)=>a+b,0)]);});}const csv='\uFEFF'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='T1_'+type+'.csv';a.click();URL.revokeObjectURL(url);toast('✓ 다운로드 완료!');},600);}
 
 // ─ 현재 근무인원 ─
-function updateStaff(){const now=new Date();const t=now.getHours()*60+now.getMinutes();const amOn=t>=7*60&&t<16*60+30;const pmOn=t>=12*60+30&&t<22*60;const ntOn=t>=21*60+30||t<7*60;let teams=[],cnt=0;if(amOn){teams.push('오전팀');cnt+=120;}if(pmOn){teams.push('오후팀');cnt+=134;}if(ntOn){teams.push('야간팀');cnt+=99;}const vE=document.getElementById('curStaff');const uE=document.getElementById('curUnit');if(vE)vE.textContent=cnt>0?cnt:'—';if(uE)uE.textContent=cnt>0?'명 ('+teams.join('+')+')'    :'근무팀 없음';}
+function updateStaff(){
+  // DB 입력값 기반 실인원 표시
+  var total=0;
+  for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) total+=mpData[ri][ci];
+  var shifts=[];
+  if(mpDataByLeader['오전']&&Object.keys(mpDataByLeader['오전']).length) shifts.push('오전');
+  if(mpDataByLeader['오후']&&Object.keys(mpDataByLeader['오후']).length) shifts.push('오후');
+  if(mpDataByLeader['야간']&&Object.keys(mpDataByLeader['야간']).length) shifts.push('야간');
+  var vE=document.getElementById('curStaff');
+  var uE=document.getElementById('curUnit');
+  if(vE) vE.textContent=total>0?total:'—';
+  if(uE) uE.textContent=total>0?'명 ('+(shifts.length>0?shifts.join('+')+'합계':'입력됨')+')':'미입력';
+}
 setInterval(updateStaff,60000);
 
 
@@ -3020,20 +3032,27 @@ function updateFloorChart(){
 // ═══ 산업재해 전년대비 ═══
 function openIndCmpEdit(){
   if(!me||me.role!=='admin'){toast('최고관리자만 입력 가능합니다');return;}
-  try{var s=localStorage.getItem('t1_ind_prev');if(s){var el=document.getElementById('indCmpInput');if(el)el.value=s;}}catch(e){}
+  var el=document.getElementById('indCmpInput');
+  if(el) el.value=indPrevYear>0?indPrevYear:'';
   showM('indCmpModal');
 }
 function closeIndCmpEdit(){hideM('indCmpModal');}
-function saveIndCmp(){
+async function saveIndCmp(){
   var v=parseInt(document.getElementById('indCmpInput').value)||0;
   indPrevYear=v;
-  try{localStorage.setItem('t1_ind_prev',v);}catch(e){}
+  // Supabase notices 테이블에 key=ind_prev_year 로 공유 저장
+  try{
+    await sb.from('notices').upsert({title:'__ind_prev_year__',content:String(v),author:'system'},{onConflict:'title'});
+  }catch(e){}
   closeIndCmpEdit();
   updateIndCmp();
-  toast('전년 산업재해 현황 저장 완료 ('+v+'건)');
+  toast('전년 산업재해 현황 저장 완료 ('+v+'건) - 전체 공유됨');
 }
-function loadIndPrev(){
-  try{var s=localStorage.getItem('t1_ind_prev');if(s)indPrevYear=parseInt(s)||0;}catch(e){}
+async function loadIndPrev(){
+  try{
+    var res=await sb.from('notices').select('content').eq('title','__ind_prev_year__').limit(1);
+    if(res.data&&res.data.length) indPrevYear=parseInt(res.data[0].content)||0;
+  }catch(e){}
 }
 function updateIndCmp(){
   var yr=new Date().getFullYear();
@@ -4788,6 +4807,9 @@ async function subReg(){
   }
 
   var roleMap={'팀장':'manager','조장':'leader','기타':'staff'};
+  var isT1 = (team==='T1운영');
+  var finalRole = isT1 ? 'admin' : (roleMap[roleVal]||'staff');
+  var finalStatus = 'pending'; // T1운영 포함 모든 가입은 관리자 승인 필요
 
   try{
     err.textContent='처리 중...';
@@ -4799,8 +4821,8 @@ async function subReg(){
       email:em,
       password:pw,
       team:fullTeam||team,
-      role:roleMap[roleVal]||'staff',
-      status:'pending'
+      role:finalRole,
+      status:finalStatus
     }).select();
 
     err.style.color='';
@@ -5179,30 +5201,33 @@ async function loadFacilityFromDB(){
 async function saveMpToDB(shift, teamCode, values){
   try{
     var today=new Date().toISOString().slice(0,10);
-    await sb.from('mp_data').upsert({
+    var res=await sb.from('mp_data').upsert({
       date:today,
       shift:shift,
       team_code:teamCode,
-      values:values,
       data:values||{}
     },{onConflict:'date,shift,team_code',ignoreDuplicates:false});
-  }catch(e){console.error(e);}
+    if(res&&res.error) console.error('[saveMpToDB 오류]',res.error.message, res.error.code);
+  }catch(e){console.error('[saveMpToDB catch]',e);}
 }
 
 async function loadMpFromDB(){
   try{
     var today=new Date().toISOString().slice(0,10);
     var res=await sb.from('mp_data').select('*').eq('date',today);
-    if(res.error||!res.data||!res.data.length) return;
+    if(res.error){ console.error('[loadMpFromDB]',res.error); return; }
+    if(!res.data||!res.data.length) return;
     mpDataByLeader={오전:{},오후:{},야간:{}};
     res.data.forEach(function(row){
       if(!mpDataByLeader[row.shift]) mpDataByLeader[row.shift]={};
-      mpDataByLeader[row.shift][row.team_code]=row.values;
+      // data 컬럼 우선, 없으면 values 컬럼 (하위 호환)
+      var vals=row.data||row.values;
+      if(vals) mpDataByLeader[row.shift][row.team_code]=vals;
     });
     recalcMpData();
     updateFloorChart();
     updateMpSummary();
-  }catch(e){}
+  }catch(e){ console.error('[loadMpFromDB catch]',e); }
 }
 
 // ─ 초기화 ─
@@ -5257,6 +5282,8 @@ function checkShiftReset(){
   });
 }
 setInterval(checkShiftReset, 60000);
+// 인력현황 30초마다 자동 갱신 (다른 조장 입력값 실시간 반영)
+setInterval(function(){ if(me) loadMpFromDB(); }, 30000);
 checkShiftReset();
 </script>
 <script>
