@@ -2885,9 +2885,7 @@ function confirmMp(){
   var sh=document.querySelector('#shiftGrp .rp.on')?document.querySelector('#shiftGrp .rp.on').textContent:'미선택';
   var shKey=sh.trim();
 
-  // 디버그: me.team 및 teamCode 확인
-  var _dbgInfo=getMyLeaderTeam?getMyLeaderTeam():{shift:'',team:''};
-  toast('🔍 저장키: ['+shKey+'] 팀: ['+( _dbgInfo.team||'없음')+'] me.team: ['+(me&&me.team||'없음')+']');
+
 
   // 입력값 수집
   var newVals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
@@ -5205,16 +5203,20 @@ async function loadFacilityFromDB(){
 async function saveMpToDB(shift, teamCode, values){
   try{
     var today=new Date().toISOString().slice(0,10);
-    var res=await sb.from('mp_data').upsert({
-      date:today,
-      shift:shift,
-      team_code:teamCode,
-      values:values,
-      data:values||{}
-    },{onConflict:'date,shift,team_code',ignoreDuplicates:false});
-    if(res&&res.error) console.error('[saveMpToDB 오류]',res.error.message, res.error.code);
-    else console.log('[saveMpToDB 성공]', shift, teamCode, today);
-  }catch(e){console.error('[saveMpToDB catch]',e);}
+    // 기존 row 확인
+    var chk=await sb.from('mp_data').select('id').eq('date',today).eq('shift',shift).eq('team_code',teamCode).maybeSingle();
+    var payload={date:today,shift:shift,team_code:teamCode,values:values,data:values||{}};
+    var res;
+    if(chk.data&&chk.data.id){
+      // 업데이트
+      res=await sb.from('mp_data').update({values:values,data:values||{}}).eq('id',chk.data.id);
+    } else {
+      // 신규 삽입
+      res=await sb.from('mp_data').insert(payload);
+    }
+    if(res&&res.error) toast('⚠️ 저장오류: '+res.error.message);
+    else toast('✅ DB저장완료: '+shift+' '+teamCode);
+  }catch(e){ toast('⚠️ 저장예외: '+String(e.message||e)); }
 }
 
 async function loadMpFromDB(){
