@@ -4967,7 +4967,7 @@ async function savePermEdit(){
 // ── 공지사항 ──
 async function loadNoticesFromDB(){
   try{
-    var res=await sb.from('notices').select('*').order('created_at',{ascending:false}).limit(1);
+    var res=await sb.from('notices').select('*').neq('title','__ind_prev_year__').order('created_at',{ascending:false}).limit(1);
     if(res.data&&res.data.length){
       var n=res.data[0];
       var t=document.getElementById('noticeT');
@@ -5241,7 +5241,6 @@ async function saveMpToDB(shift, teamCode, values){
       {onConflict:'date,shift,team_code'}
     );
     if(res&&res.error) toast('⚠️ 저장오류: '+res.error.message);
-    else toast('✅ DB저장완료: '+shift+' '+teamCode);
   }catch(e){ toast('⚠️ 저장예외: '+String(e.message||e)); }
 }
 
@@ -5263,12 +5262,6 @@ async function loadMpFromDB(){
       }
     });
     recalcMpData();
-    // 로드 결과 토스트 확인용
-    var dbgTotal=0;
-    for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) dbgTotal+=mpData[ri][ci];
-    var dbgTeams=[];
-    Object.keys(mpDataByLeader).forEach(function(s){Object.keys(mpDataByLeader[s]).forEach(function(t){dbgTeams.push(s+'/'+t);});});
-    toast('📊 DB로드: '+dbgTeams.length+'팀, 합계'+dbgTotal+'명 ['+dbgTeams.slice(0,3).join(',')+']');
     updateFloorChart();
     updateMpSummary();
     updateStaff();
