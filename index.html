@@ -2885,6 +2885,10 @@ function confirmMp(){
   var sh=document.querySelector('#shiftGrp .rp.on')?document.querySelector('#shiftGrp .rp.on').textContent:'미선택';
   var shKey=sh.trim();
 
+  // 디버그: me.team 및 teamCode 확인
+  var _dbgInfo=getMyLeaderTeam?getMyLeaderTeam():{shift:'',team:''};
+  toast('🔍 저장키: ['+shKey+'] 팀: ['+( _dbgInfo.team||'없음')+'] me.team: ['+(me&&me.team||'없음')+']');
+
   // 입력값 수집
   var newVals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
   document.querySelectorAll('#mpBody tr').forEach(function(row,ri){
@@ -5205,9 +5209,11 @@ async function saveMpToDB(shift, teamCode, values){
       date:today,
       shift:shift,
       team_code:teamCode,
+      values:values,
       data:values||{}
     },{onConflict:'date,shift,team_code',ignoreDuplicates:false});
     if(res&&res.error) console.error('[saveMpToDB 오류]',res.error.message, res.error.code);
+    else console.log('[saveMpToDB 성공]', shift, teamCode, today);
   }catch(e){console.error('[saveMpToDB catch]',e);}
 }
 
@@ -5215,18 +5221,23 @@ async function loadMpFromDB(){
   try{
     var today=new Date().toISOString().slice(0,10);
     var res=await sb.from('mp_data').select('*').eq('date',today);
-    if(res.error){ console.error('[loadMpFromDB]',res.error); return; }
-    if(!res.data||!res.data.length) return;
+    if(res.error){ console.error('[loadMpFromDB 오류]',res.error); return; }
+    if(!res.data||!res.data.length){
+      console.log('[loadMpFromDB] 오늘 데이터 없음', today);
+      return;
+    }
+    console.log('[loadMpFromDB 성공]', res.data.length+'건', today);
     mpDataByLeader={오전:{},오후:{},야간:{}};
     res.data.forEach(function(row){
       if(!mpDataByLeader[row.shift]) mpDataByLeader[row.shift]={};
-      // data 컬럼 우선, 없으면 values 컬럼 (하위 호환)
-      var vals=row.data||row.values;
+      // values 우선, 없으면 data 컬럼
+      var vals=row.values||row.data;
       if(vals) mpDataByLeader[row.shift][row.team_code]=vals;
     });
     recalcMpData();
     updateFloorChart();
     updateMpSummary();
+    updateStaff();
   }catch(e){ console.error('[loadMpFromDB catch]',e); }
 }
 
