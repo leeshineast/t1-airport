@@ -370,7 +370,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <div style="padding:14px 13px 6px"><h1 style="font-size:18px;font-weight:800;color:var(--g7)">운영현황</h1><p style="font-size:11px;color:var(--g4);margin-top:2px" id="dashDate"></p></div>
   <div class="stat-row">
     <div class="stat-box"><div class="s-lbl">현재 근무</div><div class="s-val c-navy" id="curStaff">—</div><div class="s-unit" id="curUnit">계산중</div></div>
-    <div class="stat-box"><div class="s-lbl">미확인 인계</div><div class="s-val c-warn" id="dHO">0</div><div class="s-unit">건</div></div>
+    <div class="stat-box" style="cursor:pointer" onclick="go('ho')"><div class="s-lbl">미확인 인계</div><div class="s-val c-warn" id="dHO">0</div><div class="s-unit" id="dHOUnit" style="font-size:9px">건 확인필요</div><div style="font-size:9px;color:var(--teal2);margin-top:2px">탭하여 확인 →</div></div>
     <div class="stat-box"><div class="s-lbl">안전사고</div><div style="display:flex;align-items:baseline;gap:4px"><div class="s-val c-danger" id="dAcc" style="font-size:21px">0</div><div style="font-size:9px;color:var(--danger);font-weight:700">금일</div></div><div style="font-size:10px;color:var(--g4)">누적 <span id="dAccT" style="font-weight:700;color:var(--g5)">0</span>건</div></div>
     <div class="stat-box"><div class="s-lbl">민원</div><div style="display:flex;align-items:baseline;gap:4px"><div class="s-val c-warn" id="dComp" style="font-size:21px">0</div><div style="font-size:9px;color:var(--warn);font-weight:700">금일</div></div><div style="font-size:10px;color:var(--g4)">누적 <span id="dCompT" style="font-weight:700;color:var(--g5)">0</span>건</div></div>
   </div>
@@ -1713,14 +1713,15 @@ function go(name){
   if(name==='veh'){
     // 날짜 자동 세팅
     var todayStr=new Date().toISOString().slice(0,10);
-    var vhDate=document.getElementById('vhDate'); if(vhDate&&!vhDate.value) vhDate.value=todayStr;
-    // 소속 자동 세팅
-    var vhDept=document.getElementById('vhDept'); if(vhDept&&me&&!vhDept.value) vhDept.value=me.team||'';
+    var vhDate=document.getElementById('vhDate'); if(vhDate) vhDate.value=todayStr;
+    // 소속·이름 항상 로그인 정보로 세팅
+    var vhDept=document.getElementById('vhDept'); if(vhDept&&me) vhDept.value=me.team||'';
+    var vhName=document.getElementById('vhName'); if(vhName&&me) vhName.value=me.name||'';
     // 출발 전 km: 마지막 도착 km 자동세팅
     if(vehData.length>0){
       var lastAfter=vehData[0].after||vehData[0].end_km||0;
       var vhBefore=document.getElementById('vhBefore');
-      if(vhBefore&&!vhBefore.value&&lastAfter>0){
+      if(vhBefore&&lastAfter>0){
         vhBefore.value=lastAfter;
         var hint=document.getElementById('vhAutoHint'); if(hint) hint.style.display='block';
       }
@@ -3590,11 +3591,6 @@ function renderHoList(data){
   list.innerHTML=html;
 }
 
-function updateHoPending(){
-  var cnt=hoAll.filter(function(r){return !r.confirmed;}).length;
-  var el=document.getElementById('dHO'); if(el) el.textContent=cnt;
-}
-
 async function confHODB(id, btn){
   if(btn) btn.disabled=true;
   await confirmHandoverDB(id);
@@ -3838,7 +3834,7 @@ async function saveVehicleToDB(data){
   try{
     var res=await sb.from('vehicle_log').insert(data);
     if(res.error) toast('저장 오류: '+res.error.message);
-    else loadVehicleFromDB();
+    else { loadVehicleFromDB(); setTimeout(function(){ vhTab(1); },300); }
   }catch(e){}
 }
 
@@ -4229,6 +4225,7 @@ async function processFacFiles(){
   if(progText) progText.textContent='처리 완료!';
   setTimeout(function(){ if(prog) prog.style.display='none'; },1500);
   toast('✅ 시설현황 업로드 완료');
+  renderFacilityMainDash();
   facTab(0);
 }
 
@@ -4246,35 +4243,47 @@ function renderFacilityDash(){
   var html='';
   types.forEach(function(type){
     var rows=facilityData[type]||[];
-    var dataRows=rows.filter(function(r){ return r.some(function(c){return c!=='';});}).length;
+    // 헤더 제외한 실데이터 행 수
+    var dataRows=rows.slice(1).filter(function(r){return r.some(function(c){return c!=='';});});
+    var cnt=dataRows.length;
+    // 헤더 컬럼 파악
+    var header=rows[0]||[];
+    // 숫자형 컬럼 합계 계산
+    var numSums={};
+    header.forEach(function(h,hi){
+      if(!h||h==='') return;
+      var vals=dataRows.map(function(r){return parseFloat(r[hi]);}).filter(function(v){return !isNaN(v);});
+      if(vals.length>0) numSums[h]=vals.reduce(function(a,b){return a+b;},0);
+    });
     html+='<div class="card" style="margin-bottom:11px"><div class="cb">';
     html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">';
     html+='<div style="font-size:14px;font-weight:800;color:var(--g7)">'+(ICONS[type]||'📋')+' '+type+'</div>';
-    html+='<div style="font-size:11px;color:var(--g4)">총 '+(dataRows>0?dataRows-1:0)+'개 항목</div>';
+    html+='<div style="background:var(--teal-bg);border-radius:20px;padding:4px 11px;font-size:11px;font-weight:700;color:var(--teal2)">'+cnt+'개 시설</div>';
     html+='</div>';
-    // 헤더행 표시
-    if(rows.length>0){
-      var header=rows[0];
-      html+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:10px">';
-      html+='<thead><tr style="background:var(--g1)">';
-      header.forEach(function(h){
-        if(h!=='') html+='<th style="padding:5px 6px;text-align:left;font-weight:600;color:var(--g5);white-space:nowrap;border-bottom:1px solid var(--g2)">'+h+'</th>';
+    // 숫자 합계가 있으면 요약 그리드 표시
+    var numKeys=Object.keys(numSums);
+    if(numKeys.length>0){
+      html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:9px">';
+      numKeys.slice(0,6).forEach(function(k){
+        html+='<div style="background:var(--g1);border-radius:var(--r2);padding:8px;text-align:center">';
+        html+='<div style="font-size:9px;color:var(--g4);margin-bottom:2px">'+k+'</div>';
+        html+='<div style="font-size:16px;font-weight:800;color:var(--navy)">'+Math.round(numSums[k])+'</div>';
+        html+='</div>';
       });
-      html+='</tr></thead><tbody>';
-      // 데이터 행 (최대 5개 미리보기)
-      var shown=0;
-      for(var ri=1;ri<rows.length&&shown<5;ri++){
-        var row=rows[ri];
-        if(!row.some(function(c){return c!=='';})) continue;
-        html+='<tr style="border-bottom:1px solid var(--g2)">';
-        row.forEach(function(c,ci){
-          if(header[ci]!=='') html+='<td style="padding:5px 6px;color:var(--g6);white-space:nowrap">'+c+'</td>';
+      html+='</div>';
+    }
+    // 텍스트 요약: 첫 3행 미리보기
+    if(cnt>0){
+      var previewCols=header.filter(function(h){return h&&h!=='';}).slice(0,3);
+      html+='<div style="font-size:10px;color:var(--g5);border-top:1px solid var(--g2);padding-top:8px">';
+      dataRows.slice(0,3).forEach(function(row){
+        var parts=previewCols.map(function(k,i){
+          var hi=header.indexOf(k); return k+': '+(row[hi]||'-');
         });
-        html+='</tr>';
-        shown++;
-      }
-      if(rows.length-1>5) html+='<tr><td colspan="'+header.filter(function(h){return h!=='';}).length+'" style="padding:6px;text-align:center;color:var(--g4);font-size:10px">... 외 '+(rows.length-6)+'개 항목</td></tr>';
-      html+='</tbody></table></div>';
+        html+='<div style="padding:3px 0;border-bottom:1px solid var(--g2)">'+parts.join(' · ')+'</div>';
+      });
+      if(cnt>3) html+='<div style="padding:4px 0;color:var(--g3)">... 외 '+(cnt-3)+'개 시설</div>';
+      html+='</div>';
     }
     html+='</div></div>';
   });
@@ -4303,6 +4312,7 @@ async function loadFacilityFromDB(){
     });
     renderFacilityDash();
     renderFacilitySummary();  // 상세보기 화면도 갱신
+    renderFacilityMainDash(); // 메인 대시보드 갱신
   }catch(e){console.error('시설현황 로드 오류:', e);}
 }
 
@@ -4332,6 +4342,8 @@ async function loadMpFromDB(){
     });
     renderMpSummary();
     updateMpMainTotal();
+    updateFloorChart();
+    updateStaff();
   }catch(e){console.error('loadMpFromDB 오류:',e);}
 }
 
@@ -4407,6 +4419,391 @@ function checkShiftReset(){
 }
 setInterval(checkShiftReset, 60000);
 checkShiftReset();
+
+// ══════════════════════════════════════════
+// ① 현재근무/전일근무 - DB 실데이터 기반
+// ══════════════════════════════════════════
+function updateStaff(){
+  var today=new Date().toISOString().slice(0,10);
+  var yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+  function sumDay(date){
+    var d=mpDB[date]||{};
+    var t=0;
+    Object.keys(d).forEach(function(shift){
+      Object.keys(d[shift]).forEach(function(team){
+        var r=d[shift][team]; if(!r) return;
+        MP_FLOORS_KEYS.forEach(function(fk){
+          MP_ZONES.forEach(function(z){
+            t+=(r[z+'_toilet_'+fk]||0)+(r[z+'_common_'+fk]||0);
+          });
+        });
+        t+=(r.jh_collect||0)+(r.jh_drive||0)+(r.office||0)+(r.goods||0);
+      });
+    });
+    return t;
+  }
+  var todayTotal=sumDay(today);
+  var yestTotal=sumDay(yesterday);
+  var vE=document.getElementById('curStaff');
+  var uE=document.getElementById('curUnit');
+  if(vE) vE.textContent=todayTotal>0?todayTotal:'—';
+  if(uE) uE.textContent=todayTotal>0?'명 (금일 입력)':'미입력';
+  // 전일근무 표시 (stat-box 2번째 - 미확인인계 대신 전일 추가 표시)
+  var prevEl=document.getElementById('prevStaff');
+  var prevUnit=document.getElementById('prevUnit');
+  if(prevEl) prevEl.textContent=yestTotal>0?yestTotal:'—';
+  if(prevUnit) prevUnit.textContent=yestTotal>0?'명 (전일)':'미입력';
+}
+setInterval(updateStaff,60000);
+
+// ══════════════════════════════════════════
+// ② 층별 인력현황 - DB 기반 동적 렌더링
+// ══════════════════════════════════════════
+function updateFloorChart(){
+  var today=new Date().toISOString().slice(0,10);
+  var d=mpDB[today]||{};
+  // 전체 합산
+  var zones=['ls_east','ls_west','as_east','as_west'];
+  var floors=['b2f','b1f','1f','2f','3f','4f'];
+  var floorLabels=['B2F','B1F','1F','2F','3F','4F'];
+  var result={};
+  zones.forEach(function(z){ result[z]={}; floors.forEach(function(f){ result[z][f]=0; }); result[z].jh=0; });
+  Object.keys(d).forEach(function(shift){
+    Object.keys(d[shift]).forEach(function(team){
+      var r=d[shift][team]; if(!r) return;
+      zones.forEach(function(z){
+        floors.forEach(function(f){
+          result[z][f]+=(r[z+'_toilet_'+f]||0)+(r[z+'_common_'+f]||0);
+        });
+      });
+      result['ls_east'].jh+=(r.jh_collect||0)+(r.jh_drive||0);
+      result['as_east'].jh+=(r.office||0)+(r.goods||0);
+    });
+  });
+  function rowSum(zone){ return floors.reduce(function(s,f){return s+result[zone][f];},0)+(result[zone].jh||0); }
+  function colSum(floor){ return zones.reduce(function(s,z){return s+result[z][floor];},0); }
+  var lsEastRow=floorLabels.map(function(f,i){return result['ls_east'][floors[i]];});
+  var lsWestRow=floorLabels.map(function(f,i){return result['ls_west'][floors[i]];});
+  var asEastRow=floorLabels.map(function(f,i){return result['as_east'][floors[i]];});
+  var asWestRow=floorLabels.map(function(f,i){return result['as_west'][floors[i]];});
+  var lsJh=(result['ls_east'].jh||0)+(result['ls_west'].jh||0);
+  var asJh=(result['as_east'].jh||0)+(result['as_west'].jh||0);
+  function makeRow(label, vals, jh, cls){
+    var sum=vals.reduce(function(a,b){return a+b;},0)+(jh||0);
+    var td=vals.map(function(v){return '<td>'+(v||0)+'</td>';}).join('');
+    return '<tr'+(cls?' class="'+cls+'"':'')+'><td class="lbl">'+label+'</td>'+td+'<td>'+(jh||0)+'</td><td style="font-weight:800;color:var(--teal2)">'+sum+'</td></tr>';
+  }
+  var lsSub=floorLabels.map(function(f,i){return lsEastRow[i]+lsWestRow[i];});
+  var asSub=floorLabels.map(function(f,i){return asEastRow[i]+asWestRow[i];});
+  var totRow=floorLabels.map(function(f,i){return lsSub[i]+asSub[i];});
+  var totJh=lsJh+asJh;
+  var grandTotal=totRow.reduce(function(a,b){return a+b;},0)+totJh;
+  var tbody='';
+  tbody+=makeRow('L/S 동편',lsEastRow,result['ls_east'].jh,'');
+  tbody+=makeRow('L/S 서편',lsWestRow,result['ls_west'].jh,'');
+  tbody+='<tr class="sub"><td class="lbl">L/S 소계</td>'+lsSub.map(function(v){return '<td>'+v+'</td>';}).join('')+'<td>'+lsJh+'</td><td>'+lsSub.reduce(function(a,b){return a+b;},0)+lsJh+'</td></tr>';
+  tbody+=makeRow('A/S 동편',asEastRow,result['as_east'].jh,'');
+  tbody+=makeRow('A/S 서편',asWestRow,result['as_west'].jh,'');
+  tbody+='<tr class="sub"><td class="lbl">A/S 소계</td>'+asSub.map(function(v){return '<td>'+v+'</td>';}).join('')+'<td>'+asJh+'</td><td>'+asSub.reduce(function(a,b){return a+b;},0)+asJh+'</td></tr>';
+  tbody+='<tr class="tot"><td class="lbl">전체 총계</td>'+totRow.map(function(v){return '<td>'+v+'</td>';}).join('')+'<td>'+totJh+'</td><td>'+grandTotal+'</td></tr>';
+  var tbl=document.getElementById('dHome');
+  if(tbl){ var tb=tbl.querySelector('tbody'); if(tb) tb.innerHTML=tbody; }
+}
+
+// ══════════════════════════════════════════
+// ③ 전년 산재 현황
+// ══════════════════════════════════════════
+var _indPrevCount=null;
+function loadIndPrev(){
+  try{ var s=localStorage.getItem('t1_ind_prev'); if(s) _indPrevCount=parseInt(s); }catch(e){}
+  updateIndCmp();
+}
+function updateIndCmp(){
+  var el=document.getElementById('mainIndCmp');
+  var sub=document.getElementById('mainIndCmpSub');
+  if(_indPrevCount===null){
+    if(el) el.textContent='—';
+    if(sub) sub.textContent='전년 건수 미입력';
+    return;
+  }
+  // 금년 합계
+  var now=new Date(); var y=now.getFullYear();
+  var yearTotal=indData.filter(function(r){ return (r.date||'').startsWith(y+''); }).length;
+  var diff=yearTotal-_indPrevCount;
+  if(el) el.textContent=_indPrevCount+'건';
+  if(sub){
+    if(diff>0) sub.textContent='▲ 금년 '+diff+'건 증가';
+    else if(diff<0) sub.textContent='▼ 금년 '+Math.abs(diff)+'건 감소';
+    else sub.textContent='금년 동일';
+  }
+}
+function openIndCmpEdit(){
+  var v=window.prompt('전년도 산업재해 건수를 입력하세요:',_indPrevCount!==null?_indPrevCount:'');
+  if(v===null) return;
+  var n=parseInt(v);
+  if(isNaN(n)||n<0){toast('올바른 숫자를 입력해주세요');return;}
+  _indPrevCount=n;
+  try{localStorage.setItem('t1_ind_prev',n);}catch(e){}
+  updateIndCmp();
+  toast('전년 건수 저장됨: '+n+'건');
+}
+
+// ══════════════════════════════════════════
+// ④ 미확인 인계 직관적 표시
+// ══════════════════════════════════════════
+function updateHoPending(){
+  var cnt=hoAll.filter(function(r){return !r.confirmed;}).length;
+  var el=document.getElementById('dHO'); if(el) el.textContent=cnt;
+  // 알림 배너
+  var alert=document.getElementById('dashHOAlert');
+  var msg=document.getElementById('dashHOAlertMsg');
+  if(alert){
+    if(cnt>0){
+      alert.style.display='flex';
+      if(msg) msg.textContent=cnt+'건의 인수인계가 확인 대기 중입니다. 탭하여 확인하세요.';
+    } else {
+      alert.style.display='none';
+    }
+  }
+  // stat-box 단위 텍스트도 업데이트
+  var unit=document.getElementById('dHOUnit');
+  if(unit) unit.textContent=cnt>0?'건 확인필요':'건 (모두확인)';
+}
+
+// ══════════════════════════════════════════
+// ⑤ 시설현황 대시보드 요약 (facilityDashWrap)
+// ══════════════════════════════════════════
+function renderFacilityMainDash(){
+  var wrap=document.getElementById('facilityDashWrap'); if(!wrap) return;
+  var types=Object.keys(facilityData);
+  if(!types.length) return; // 기본 문구 유지
+  var ICONS={화장실:'🚻',흡연실:'🚬',샤워실:'🚿',창고:'📦',유아휴게실:'👶',휴게시설:'😴',기타:'📋'};
+  var html='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">';
+  types.forEach(function(type){
+    var rows=(facilityData[type]||[]);
+    var cnt=Math.max(0,rows.filter(function(r){return r.some(function(c){return c!=='';});}).length-1);
+    html+='<div style="background:var(--teal-bg);border-radius:var(--r2);padding:10px 8px;text-align:center;cursor:pointer" onclick="go(\'facility\')">';
+    html+='<div style="font-size:18px;margin-bottom:3px">'+(ICONS[type]||'📋')+'</div>';
+    html+='<div style="font-size:10px;font-weight:700;color:var(--teal2)">'+type+'</div>';
+    html+='<div style="font-size:14px;font-weight:900;color:var(--navy)">'+cnt+'</div>';
+    html+='<div style="font-size:9px;color:var(--g4)">항목</div>';
+    html+='</div>';
+  });
+  html+='</div>';
+  if(facilityUploadDate) html+='<div style="font-size:10px;color:var(--g4);margin-top:8px;text-align:right">업로드: '+facilityUploadDate+'</div>';
+  wrap.innerHTML=html;
+}
+
+// ══════════════════════════════════════════
+// ⑥ 조장 편집 모달
+// ══════════════════════════════════════════
+var _leaderEditShift='오전';
+function openLeaderEdit(){
+  var body=document.getElementById('leaderEditBody'); if(!body) return;
+  var shifts=['오전','오후','야간'];
+  var html='';
+  shifts.forEach(function(shift){
+    html+='<div style="font-size:12px;font-weight:700;color:var(--g6);margin:11px 0 6px">'+shift+'</div>';
+    (LEADERS[shift]||[]).forEach(function(l,i){
+      html+='<div style="display:flex;align-items:center;gap:7px;margin-bottom:6px">';
+      html+='<span style="font-size:11px;color:var(--g4);min-width:50px">'+l.team+'</span>';
+      html+='<input type="text" class="ri" value="'+l.name+'" data-shift="'+shift+'" data-idx="'+i+'" style="flex:1;margin-bottom:0;font-size:12px;padding:7px 9px">';
+      html+='</div>';
+    });
+  });
+  body.innerHTML=html;
+  showM('leaderEditModal');
+}
+function closeLeaderEdit(){ closeM('leaderEditModal'); }
+function saveLeaderEdit(){
+  var inputs=document.querySelectorAll('#leaderEditBody input[data-shift]');
+  inputs.forEach(function(inp){
+    var shift=inp.dataset.shift; var idx=parseInt(inp.dataset.idx);
+    if(LEADERS[shift]&&LEADERS[shift][idx]) LEADERS[shift][idx].name=inp.value.trim()||LEADERS[shift][idx].name;
+  });
+  saveLeaders();
+  closeLeaderEdit();
+  renderLeaderStatus();
+  toast('✅ 조장 명단이 저장되었습니다');
+}
+
+// ══════════════════════════════════════════
+// ⑦ 조장 입력값 수정 (관리자)
+// ══════════════════════════════════════════
+var _leaderDataShift=0;
+var _editingLeader=null;
+function rstShiftTab(idx){
+  _leaderDataShift=idx;
+  ['rstT0','rstT1','rstT2'].forEach(function(id,i){
+    var el=document.getElementById(id); if(!el) return;
+    var on=(i===idx);
+    el.style.background=on?'var(--navy)':'var(--g2)';
+    el.style.color=on?'white':'var(--g5)';
+    el.style.fontWeight=on?'700':'600';
+  });
+  renderRstLeaderList();
+}
+function renderRstLeaderList(){
+  var list=document.getElementById('rstLeaderList'); if(!list) return;
+  var shifts=['오전','오후','야간'];
+  var shift=shifts[_leaderDataShift];
+  var leaders=LEADERS[shift]||[];
+  var today=new Date().toISOString().slice(0,10);
+  var html='';
+  leaders.forEach(function(l){
+    var hasData=mpDB[today]&&mpDB[today][shift]&&mpDB[today][shift][l.team];
+    html+='<div onclick="openLeaderDataEdit(\''+shift+'\',\''+l.team+'\')" style="padding:7px 13px;background:'+(hasData?'var(--teal-bg)':'var(--g1)')+';border:1.5px solid '+(hasData?'var(--teal)':'var(--g2)')+';border-radius:20px;font-size:12px;font-weight:600;color:'+(hasData?'var(--teal2)':'var(--g4)')+';cursor:pointer;white-space:nowrap">'+(hasData?'✅ ':'')+l.name+'</div>';
+  });
+  list.innerHTML=html||'<div style="font-size:11px;color:var(--g3)">조장 없음</div>';
+}
+function openLeaderDataEdit(shift, teamCode){
+  _editingLeader={shift:shift, team:teamCode};
+  var title=document.getElementById('leaderDataModalTitle');
+  if(title){
+    var l=(LEADERS[shift]||[]).find(function(x){return x.team===teamCode;});
+    title.textContent=(l?l.name:teamCode)+' 입력값 수정';
+  }
+  var today=new Date().toISOString().slice(0,10);
+  var d=(mpDB[today]&&mpDB[today][shift]&&mpDB[today][shift][teamCode])||{};
+  var floors=['b2f','b1f','1f','2f','3f','4f'];
+  var fLabels=['B2F','B1F','1F','2F','3F','4F'];
+  var rows=[
+    {label:'L/S 동편 화장실', key:'ls_east_toilet'},
+    {label:'L/S 동편 공용', key:'ls_east_common'},
+    {label:'L/S 서편 화장실', key:'ls_west_toilet'},
+    {label:'L/S 서편 공용', key:'ls_west_common'},
+    {label:'A/S 동편 화장실', key:'as_east_toilet'},
+    {label:'A/S 동편 공용', key:'as_east_common'},
+    {label:'A/S 서편 화장실', key:'as_west_toilet'},
+    {label:'A/S 서편 공용', key:'as_west_common'},
+  ];
+  var html='';
+  rows.forEach(function(row){
+    html+='<tr><td style="font-size:10px;color:var(--g5);padding:5px 4px;white-space:nowrap">'+row.label+'</td>';
+    floors.forEach(function(f){
+      html+='<td style="padding:3px"><input type="number" min="0" value="'+(d[row.key+'_'+f]||0)+'" data-key="'+row.key+'_'+f+'" style="width:36px;padding:4px;border:1px solid var(--g2);border-radius:6px;font-size:12px;text-align:center"></td>';
+    });
+    html+='</tr>';
+  });
+  // 집하장
+  html+='<tr><td style="font-size:10px;color:var(--g5);padding:5px 4px">집하장 수거</td>';
+  html+='<td colspan="6" style="padding:3px"><input type="number" min="0" value="'+(d.jh_collect||0)+'" data-key="jh_collect" style="width:50px;padding:4px;border:1px solid var(--g2);border-radius:6px;font-size:12px;text-align:center"></td></tr>';
+  html+='<tr><td style="font-size:10px;color:var(--g5);padding:5px 4px">집하장 운반</td>';
+  html+='<td colspan="6" style="padding:3px"><input type="number" min="0" value="'+(d.jh_drive||0)+'" data-key="jh_drive" style="width:50px;padding:4px;border:1px solid var(--g2);border-radius:6px;font-size:12px;text-align:center"></td></tr>';
+  var body=document.getElementById('leaderDataEditBody'); if(body) body.innerHTML=html;
+  showM('leaderDataModal');
+}
+function closeLeaderDataEdit(){ closeM('leaderDataModal'); }
+async function saveLeaderDataEdit(){
+  if(!_editingLeader) return;
+  var today=new Date().toISOString().slice(0,10);
+  var shift=_editingLeader.shift; var team=_editingLeader.team;
+  if(!mpDB[today]) mpDB[today]={};
+  if(!mpDB[today][shift]) mpDB[today][shift]={};
+  var d=mpDB[today][shift][team]||{};
+  document.querySelectorAll('#leaderDataEditBody input[data-key]').forEach(function(inp){
+    d[inp.dataset.key]=parseInt(inp.value)||0;
+  });
+  mpDB[today][shift][team]=d;
+  await saveMpToDB(shift, team, d);
+  updateMpMainTotal();
+  updateFloorChart();
+  renderRstLeaderList();
+  closeLeaderDataEdit();
+  toast('✅ 입력값이 수정되었습니다');
+}
+
+// ══════════════════════════════════════════
+// ⑧ 데이터 초기화 모달
+// ══════════════════════════════════════════
+function openDataReset(){
+  if(!me||me.role!=='admin'){toast('최고관리자만 사용 가능합니다');return;}
+  // 체크박스 초기화
+  ['rst_mp','rst_ho','rst_ind','rst_veh','rst_kpi','rst_users','rst_all'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.checked=false;
+  });
+  var inp=document.getElementById('rstConfirmInput'); if(inp) inp.value='';
+  var btn=document.getElementById('rstExecBtn'); if(btn){btn.disabled=true;btn.style.background='var(--g3)';}
+  showM('dataResetModal');
+}
+function closeDataReset(){ closeM('dataResetModal'); }
+function rstCheckChange(){
+  var allCk=document.getElementById('rst_all');
+  if(allCk&&allCk.checked){
+    ['rst_mp','rst_ho','rst_ind','rst_veh','rst_kpi','rst_users'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.checked=true;
+    });
+  }
+  rstCheckConfirm();
+}
+function rstCheckConfirm(){
+  var inp=document.getElementById('rstConfirmInput');
+  var btn=document.getElementById('rstExecBtn');
+  var anyChecked=['rst_mp','rst_ho','rst_ind','rst_veh','rst_kpi','rst_users','rst_all'].some(function(id){
+    var el=document.getElementById(id); return el&&el.checked;
+  });
+  var confirmed=inp&&inp.value.trim()==='초기화';
+  if(btn){
+    btn.disabled=!(anyChecked&&confirmed);
+    btn.style.background=(anyChecked&&confirmed)?'var(--danger)':'var(--g3)';
+    btn.style.cursor=(anyChecked&&confirmed)?'pointer':'not-allowed';
+  }
+}
+async function executeDataReset(){
+  var inp=document.getElementById('rstConfirmInput');
+  if(!inp||inp.value.trim()!=='초기화'){toast('확인 문구를 입력해주세요');return;}
+  var tables={
+    rst_mp:'mp_data', rst_ho:'handover', rst_ind:'industrial_accident',
+    rst_veh:'vehicle_log', rst_kpi:'kpi_data', rst_users:'users'
+  };
+  var done=[];
+  for(var id in tables){
+    var el=document.getElementById(id);
+    if(el&&el.checked){
+      try{
+        await sb.from(tables[id]).delete().neq('id',0);
+        done.push(tables[id]);
+      }catch(e){ console.error('초기화 오류:',tables[id],e); }
+    }
+  }
+  closeDataReset();
+  toast('✅ 초기화 완료: '+done.join(', '));
+  setTimeout(function(){ location.reload(); },1200);
+}
+
+// ══════════════════════════════════════════
+// ⑨ 차량 다운로드 버튼
+// ══════════════════════════════════════════
+function dlVeh(){
+  var from=document.getElementById('vhDlFrom');
+  var to=document.getElementById('vhDlTo');
+  var fromVal=from?from.value:'';
+  var toVal=to?to.value:'';
+  var filtered=vehData.filter(function(d){
+    if(!fromVal&&!toVal) return true;
+    var dm=(d.date||'').slice(0,7);
+    if(fromVal&&dm<fromVal) return false;
+    if(toVal&&dm>toVal) return false;
+    return true;
+  });
+  if(!filtered.length){toast('해당 기간에 데이터가 없습니다');return;}
+  var rows=[['날짜','소속','운전자','목적지','목적','출발전km','도착후km','주행거리','출발시간','도착시간','비고']];
+  filtered.forEach(function(d){
+    rows.push([
+      d.date||'', d.dept||d.team||'', d.name||d.driver||'',
+      d.dest||d.vehicle||'', d.purpose||'',
+      d.before||d.start_km||0, d.after||d.end_km||0,
+      d.dist||((d.after||d.end_km||0)-(d.before||d.start_km||0)),
+      d.start||d.start_time||'', d.end||d.end_time||'',
+      d.etc||d.note||''
+    ]);
+  });
+  var wb=XLSX.utils.book_new();
+  var ws=XLSX.utils.aoa_to_sheet(rows);
+  XLSX.utils.book_append_sheet(wb,'차량운행',ws);
+  XLSX.writeFile(wb,'차량운행기록_'+(fromVal||'전체')+'~'+(toVal||'전체')+'.xlsx');
+  toast('📥 다운로드 완료 ('+filtered.length+'건)');
+}
 </script>
 <script>
 if('serviceWorker' in navigator){
