@@ -5205,13 +5205,11 @@ async function saveMpToDB(shift, teamCode, values){
     var today=new Date().toISOString().slice(0,10);
     // 기존 row 확인
     var chk=await sb.from('mp_data').select('id').eq('date',today).eq('shift',shift).eq('team_code',teamCode).maybeSingle();
-    var payload={date:today,shift:shift,team_code:teamCode,values:values,data:values||{}};
+    var payload={date:today,shift:shift,team_code:teamCode,values:values};
     var res;
     if(chk.data&&chk.data.id){
-      // 업데이트
-      res=await sb.from('mp_data').update({values:values,data:values||{}}).eq('id',chk.data.id);
+      res=await sb.from('mp_data').update({values:values}).eq('id',chk.data.id);
     } else {
-      // 신규 삽입
       res=await sb.from('mp_data').insert(payload);
     }
     if(res&&res.error) toast('⚠️ 저장오류: '+res.error.message);
@@ -5232,8 +5230,7 @@ async function loadMpFromDB(){
     mpDataByLeader={오전:{},오후:{},야간:{}};
     res.data.forEach(function(row){
       if(!mpDataByLeader[row.shift]) mpDataByLeader[row.shift]={};
-      // values 우선, 없으면 data 컬럼
-      var vals=row.values||row.data;
+      var vals=row.values;
       if(vals) mpDataByLeader[row.shift][row.team_code]=vals;
     });
     recalcMpData();
