@@ -5263,10 +5263,16 @@ async function loadMpFromDB(){
       }
     });
     recalcMpData();
+    // 로드 결과 토스트 확인용
+    var dbgTotal=0;
+    for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) dbgTotal+=mpData[ri][ci];
+    var dbgTeams=[];
+    Object.keys(mpDataByLeader).forEach(function(s){Object.keys(mpDataByLeader[s]).forEach(function(t){dbgTeams.push(s+'/'+t);});});
+    toast('📊 DB로드: '+dbgTeams.length+'팀, 합계'+dbgTotal+'명 ['+dbgTeams.slice(0,3).join(',')+']');
     updateFloorChart();
     updateMpSummary();
     updateStaff();
-  }catch(e){}
+  }catch(e){ toast('❌ loadMpFromDB 오류: '+String(e)); }
 }
 
 // ─ 초기화 ─
