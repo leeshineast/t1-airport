@@ -823,16 +823,16 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <!-- 전체현황 -->
   <div id="mpP1" style="display:none">
     <div class="pg-hd"><div><h1>전체 현황</h1></div></div>
-    <div class="card"><div class="tbl-w"><table class="mp-tbl">
+    <div class="card"><div class="tbl-w"><table class="mp-tbl" id="mpFullTable">
       <thead><tr><th style="text-align:left;min-width:76px;padding-left:8px">구역</th><th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th><th style="background:var(--teal2)">소계</th></tr></thead>
       <tbody>
-        <tr><td class="lbl">L/S 동편</td><td>5</td><td>12</td><td>18</td><td>15</td><td>14</td><td>10</td><td>4</td><td style="font-weight:800;color:var(--teal2)">78</td></tr>
-        <tr><td class="lbl">L/S 서편</td><td>4</td><td>10</td><td>16</td><td>13</td><td>12</td><td>9</td><td>3</td><td style="font-weight:800;color:var(--teal2)">67</td></tr>
-        <tr class="sub"><td class="lbl">L/S 소계</td><td>9</td><td>22</td><td>34</td><td>28</td><td>26</td><td>19</td><td>7</td><td>145</td></tr>
-        <tr><td class="lbl">A/S 동편</td><td>4</td><td>10</td><td>14</td><td>12</td><td>11</td><td>8</td><td>3</td><td style="font-weight:800;color:var(--teal2)">62</td></tr>
-        <tr><td class="lbl">A/S 서편</td><td>3</td><td>9</td><td>13</td><td>11</td><td>10</td><td>7</td><td>2</td><td style="font-weight:800;color:var(--teal2)">55</td></tr>
-        <tr class="sub"><td class="lbl">A/S 소계</td><td>7</td><td>19</td><td>27</td><td>23</td><td>21</td><td>15</td><td>5</td><td>117</td></tr>
-        <tr class="tot"><td class="lbl">전체 총계</td><td>16</td><td>41</td><td>61</td><td>51</td><td>47</td><td>34</td><td>12</td><td>262</td></tr>
+        <tr><td class="lbl">L/S 동편</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
+        <tr><td class="lbl">L/S 서편</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
+        <tr class="sub"><td class="lbl">L/S 소계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+        <tr><td class="lbl">A/S 동편</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
+        <tr><td class="lbl">A/S 서편</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
+        <tr class="sub"><td class="lbl">A/S 소계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+        <tr class="tot"><td class="lbl">전체 총계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
       </tbody>
     </table></div></div>
     <div style="height:20px"></div>
@@ -3003,12 +3003,19 @@ function updateFloorChart(){
     var trs=allTbl.querySelectorAll('tr');
     newRows.forEach(function(rowData,ri){if(!trs[ri])return;var tds=trs[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
   }
-  // 메인 테이블
+  // 공통 테이블 갱신 함수
+  var allRows=[[ZONES[0]].concat(mpData[0]).concat([totals[0]]),[ZONES[1]].concat(mpData[1]).concat([totals[1]]),['L/S 소계'].concat(lsSub).concat([lsTotal]),[ZONES[2]].concat(mpData[2]).concat([totals[2]]),[ZONES[3]].concat(mpData[3]).concat([totals[3]]),['A/S 소계'].concat(asSub).concat([asTotal]),['전체 총계'].concat(colTot).concat([grandTotal])];
+  // 메인 테이블 (#dHome = #flP_all 안)
   var mainTbl=document.querySelector('#dHome tbody');
   if(mainTbl){
-    var newRows2=[[ZONES[0]].concat(mpData[0]).concat([totals[0]]),[ZONES[1]].concat(mpData[1]).concat([totals[1]]),['L/S 소계'].concat(lsSub).concat([lsTotal]),[ZONES[2]].concat(mpData[2]).concat([totals[2]]),[ZONES[3]].concat(mpData[3]).concat([totals[3]]),['A/S 소계'].concat(asSub).concat([asTotal]),['전체 총계'].concat(colTot).concat([grandTotal])];
     var trs2=mainTbl.querySelectorAll('tr');
-    newRows2.forEach(function(rowData,ri){if(!trs2[ri])return;var tds=trs2[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
+    allRows.forEach(function(rowData,ri){if(!trs2[ri])return;var tds=trs2[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
+  }
+  // 인력현황 탭 > 전체현황 테이블 (#mpFullTable)
+  var mpTbl=document.querySelector('#mpFullTable tbody');
+  if(mpTbl){
+    var trs3=mpTbl.querySelectorAll('tr');
+    allRows.forEach(function(rowData,ri){if(!trs3[ri])return;var tds=trs3[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
   }
   // 층별 패널
   var fps=[{id:'B2F',ci:0},{id:'B1F',ci:[1,6],merged:true},{id:'1F',ci:2},{id:'2F',ci:3},{id:'3F',ci:4},{id:'4F',ci:5}];
