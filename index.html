@@ -5203,15 +5203,10 @@ async function loadFacilityFromDB(){
 async function saveMpToDB(shift, teamCode, values){
   try{
     var today=new Date().toISOString().slice(0,10);
-    // 기존 row 확인
-    var chk=await sb.from('mp_data').select('id').eq('date',today).eq('shift',shift).eq('team_code',teamCode).maybeSingle();
-    var payload={date:today,shift:shift,team_code:teamCode,values:values};
-    var res;
-    if(chk.data&&chk.data.id){
-      res=await sb.from('mp_data').update({values:values}).eq('id',chk.data.id);
-    } else {
-      res=await sb.from('mp_data').insert(payload);
-    }
+    var res=await sb.from('mp_data').upsert(
+      {date:today, shift:shift, team_code:teamCode, values:values},
+      {onConflict:'date,shift,team_code'}
+    );
     if(res&&res.error) toast('⚠️ 저장오류: '+res.error.message);
     else toast('✅ DB저장완료: '+shift+' '+teamCode);
   }catch(e){ toast('⚠️ 저장예외: '+String(e.message||e)); }
