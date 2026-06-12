@@ -1001,7 +1001,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">2</div>
         <span style="font-size:13px;font-weight:800;color:var(--g7)">업무 진행 사항 및 특이사항</span>
       </div>
-      <textarea class="f-ta show" id="hEtc" rows="3" placeholder="업무 진행 내용, 특이사항 등 자유롭게 작성"></textarea>
+      <textarea class="f-ta show" id="hEtc" rows="3" placeholder="업무 진행 내용, 특이사항 등 자유롭게 작성" style="display:block"></textarea>
     </div></div>
 
     <!-- 3. 시설물 고장 -->
@@ -2202,7 +2202,8 @@ function subHO(){
   // 폼 초기화
   document.querySelectorAll('#hoSG .rp').forEach(p=>p.classList.remove('on'));
   document.getElementById('hoW').style.display='none';
-  ['hF','hC','hD','hA','hE','hEtc'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';e.classList.remove('show');}});
+  ['hF','hC','hD','hA','hE'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';e.classList.remove('show');}});
+  var hEtcEl=document.getElementById('hEtc');if(hEtcEl)hEtcEl.value='';
   ['hN'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   document.querySelectorAll('#hoP4 .fg').forEach(g=>{const ps=g.querySelectorAll('.rp');ps.forEach(p=>p.classList.remove('on','on-d'));if(ps[0])ps[0].classList.add('on');});
   // 카드 생성
@@ -2214,14 +2215,15 @@ function subHO(){
   if(dT!=='없음')fields+=`<div class="ho-f"><div class="ho-lbl">⚠️ 위험구역</div><div class="ho-val">${dT}</div></div>`;
   if(aT!=='없음')fields+=`<div class="ho-f"><div class="ho-lbl">🚨 안전사고</div><div class="ho-val">${aT}</div></div>`;
   if(eT!=='이상없음')fields+=`<div class="ho-f"><div class="ho-lbl">🚛 장비·차량</div><div class="ho-val">${eT}</div></div>`;
+  var etcVal=document.getElementById('hEtc')?document.getElementById('hEtc').value:'';
+  if(etcVal) fields='<div class="ho-f"><div class="ho-lbl">📝 업무내용</div><div class="ho-val">'+etcVal+'</div></div>'+fields;
   if(!fields)fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
   const card=document.createElement('div');
   card.className='ho-card';
   card.innerHTML=`<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px"><span class="t-pill ${pMap[sNm]}">${sNm}</span><span style="color:var(--g3)">→</span><span class="t-pill ${pMap[toNm]}">${toNm}</span><span class="chip chip-warn"><span class="chip-dot"></span>대기</span></div><span class="ho-time">${ts}</span></div><div class="w-row"><div class="w-av" style="background:${avC[sNm]}">${me?me.initial:'?'}</div><span class="w-nm">${me?me.name:'작성자'} · ${me?me.team:''} 작성</span></div><div class="ho-body">${fields}</div><div class="conf-row"><button class="btn-conf" onclick="confHO(this)">✔ 인수 확인</button></div>`;
   // ① DB에 저장 (전체 공유)
   var hoData = {
-    shift: raw, // 선택한 팀 (1팀~10팀)
-    shift_group: sNm, // 근무조 (오전/오후/야간팀)
+    shift: sNm, // 근무조 (오전/오후/야간팀)
     to_shift: toNm,
     author: me?me.name:'작성자',
     team: me?me.team:'',
