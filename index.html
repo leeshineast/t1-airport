@@ -368,16 +368,45 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div class="user-chip" onclick="showInfo()"><div class="u-av" id="uAv">관</div><span id="uNm">관리자</span></div>
   </div>
   <div style="padding:14px 13px 6px"><h1 style="font-size:18px;font-weight:800;color:var(--g7)">운영현황</h1><p style="font-size:11px;color:var(--g4);margin-top:2px" id="dashDate"></p></div>
-  <!-- 현재근무/전일근무 한 줄 -->
-  <div class="stat-row" style="margin-bottom:0">
-    <div class="stat-box" style="flex:1"><div class="s-lbl">현재 근무</div><div class="s-val c-navy" id="curStaff">—</div><div class="s-unit" id="curUnit">미입력</div></div>
-    <div class="stat-box" style="flex:1"><div class="s-lbl">전일 근무</div><div class="s-val c-navy" id="prevStaff">—</div><div class="s-unit" id="prevUnit">미입력</div></div>
-  </div>
-  <!-- 미확인인계/안전사고/민원 한 줄 -->
+  <!-- 인력현황 통합 카드 -->
   <div class="stat-row">
-    <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('ho')"><div class="s-lbl">미확인 인계</div><div class="s-val c-warn" id="dHO">0</div><div class="s-unit" id="dHOUnit" style="font-size:9px">건 확인필요</div></div>
-    <div class="stat-box" style="flex:1"><div class="s-lbl">안전사고</div><div style="display:flex;align-items:baseline;gap:3px"><div class="s-val c-danger" id="dAcc" style="font-size:20px">0</div><div style="font-size:9px;color:var(--danger);font-weight:700">금일</div></div><div style="font-size:10px;color:var(--g4)">누적 <span id="dAccT" style="font-weight:700;color:var(--g5)">0</span>건</div></div>
-    <div class="stat-box" style="flex:1"><div class="s-lbl">민원</div><div style="display:flex;align-items:baseline;gap:3px"><div class="s-val c-warn" id="dComp" style="font-size:20px">0</div><div style="font-size:9px;color:var(--warn);font-weight:700">금일</div></div><div style="font-size:10px;color:var(--g4)">누적 <span id="dCompT" style="font-weight:700;color:var(--g5)">0</span>건</div></div>
+    <div class="stat-box" style="flex:1">
+      <div class="s-lbl" style="font-weight:800;color:var(--g7);margin-bottom:8px">👥 인력현황</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--g1)">
+        <span style="font-size:12px;color:var(--g5)">현재 근무</span>
+        <span style="font-size:18px;font-weight:900;color:var(--navy)" id="curStaff">—</span>
+        <span style="font-size:11px;color:var(--g4)" id="curUnit">미입력</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0">
+        <span style="font-size:12px;color:var(--g5)">전일 근무</span>
+        <span style="font-size:18px;font-weight:900;color:var(--g5)" id="prevStaff">—</span>
+        <span style="font-size:11px;color:var(--g4)" id="prevUnit">미입력</span>
+      </div>
+    </div>
+    <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('ho')">
+      <div class="s-lbl">미확인 인계</div>
+      <div class="s-val c-warn" id="dHO">0</div>
+      <div class="s-unit" id="dHOUnit" style="font-size:9px">건 확인필요</div>
+    </div>
+  </div>
+  <!-- 안전사고/민원 한 줄 -->
+  <div class="stat-row">
+    <div class="stat-box" style="flex:1">
+      <div class="s-lbl">안전사고</div>
+      <div style="display:flex;align-items:baseline;gap:3px">
+        <div class="s-val c-danger" id="dAcc" style="font-size:20px">0</div>
+        <div style="font-size:9px;color:var(--danger);font-weight:700">금일</div>
+      </div>
+      <div style="font-size:10px;color:var(--g4)">누적 <span id="dAccT" style="font-weight:700;color:var(--g5)">0</span>건</div>
+    </div>
+    <div class="stat-box" style="flex:1">
+      <div class="s-lbl">민원</div>
+      <div style="display:flex;align-items:baseline;gap:3px">
+        <div class="s-val c-warn" id="dComp" style="font-size:20px">0</div>
+        <div style="font-size:9px;color:var(--warn);font-weight:700">금일</div>
+      </div>
+      <div style="font-size:10px;color:var(--g4)">누적 <span id="dCompT" style="font-weight:700;color:var(--g5)">0</span>건</div>
+    </div>
   </div>
   <div class="alert-warn" id="dashHOAlert" style="display:none"><span>🔔</span><div><strong style="display:block;font-weight:700;margin-bottom:1px">인수인계 확인 대기</strong><span id="dashHOAlertMsg"></span></div></div>
 
