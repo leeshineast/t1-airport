@@ -1849,9 +1849,11 @@ function finishLogin(){
   }
   // 세션 저장 (새로고침 시 자동 로그인)
   try{ localStorage.setItem('t1_me', JSON.stringify(me)); }catch(e){}
+  // 메모리 초기화 먼저 (어제 데이터 화면 노출 방지)
+  mpDataByLeader={오전:{},오후:{},야간:{}};
+  mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
   go('main'); setTimeout(function(){ initAppData(); }, 100);
   updateStaff();
-  loadMpData();
   updateFloorChart();
   updateMpSummary();
   loadIndPrev();
@@ -4178,7 +4180,11 @@ async function executeDataReset(){
   var done=[];
   // 인력현황
   if(document.getElementById('rst_mp')&&document.getElementById('rst_mp').checked){
-    try{ await sb.from('mp_data').delete().neq('id',0); }catch(e){}
+    try{
+      // 오늘 데이터만 삭제 (이력 보존)
+      var todayKst=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+      await sb.from('mp_data').delete().eq('date',todayKst);
+    }catch(e){}
     mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
     mpDataByShift={오전:null,오후:null,야간:null};
     mpDataByLeader={오전:{},오후:{},야간:{}};
@@ -5420,6 +5426,9 @@ async function loadMpFromDB(){
     if(saved){
       me = JSON.parse(saved);
       applyRoleUI();
+      // 메모리 초기화 먼저 (어제 데이터 화면 노출 방지)
+      mpDataByLeader={오전:{},오후:{},야간:{}};
+      mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
       go('main');
       setTimeout(function(){ applyRoleUI(); initAppData(); updateStaff(); updateFloorChart(); updateMpSummary(); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); }, 500);
       return;
