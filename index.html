@@ -369,8 +369,9 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   </div>
   <div style="padding:14px 13px 6px"><h1 style="font-size:18px;font-weight:800;color:var(--g7)">운영현황</h1><p style="font-size:11px;color:var(--g4);margin-top:2px" id="dashDate"></p></div>
   <div class="stat-row">
-    <div class="stat-box"><div class="s-lbl">현재 근무</div><div class="s-val c-navy" id="curStaff">—</div><div class="s-unit" id="curUnit">계산중</div></div>
-    <div class="stat-box"><div class="s-lbl">미확인 인계</div><div class="s-val c-warn" id="dHO">0</div><div class="s-unit">건</div></div>
+    <div class="stat-box"><div class="s-lbl">현재 근무</div><div class="s-val c-navy" id="curStaff">—</div><div class="s-unit" id="curUnit">미입력</div></div>
+    <div class="stat-box"><div class="s-lbl">전일 근무</div><div class="s-val c-navy" id="prevStaff">—</div><div class="s-unit" id="prevUnit">전일</div></div>
+    <div class="stat-box" style="cursor:pointer" onclick="go('ho')"><div class="s-lbl">미확인 인계</div><div class="s-val c-warn" id="dHO">0</div><div class="s-unit" id="dHOUnit" style="font-size:9px">건 확인필요</div></div>
     <div class="stat-box"><div class="s-lbl">안전사고</div><div style="display:flex;align-items:baseline;gap:4px"><div class="s-val c-danger" id="dAcc" style="font-size:21px">0</div><div style="font-size:9px;color:var(--danger);font-weight:700">금일</div></div><div style="font-size:10px;color:var(--g4)">누적 <span id="dAccT" style="font-weight:700;color:var(--g5)">0</span>건</div></div>
     <div class="stat-box"><div class="s-lbl">민원</div><div style="display:flex;align-items:baseline;gap:4px"><div class="s-val c-warn" id="dComp" style="font-size:21px">0</div><div style="font-size:9px;color:var(--warn);font-weight:700">금일</div></div><div style="font-size:10px;color:var(--g4)">누적 <span id="dCompT" style="font-weight:700;color:var(--g5)">0</span>건</div></div>
   </div>
