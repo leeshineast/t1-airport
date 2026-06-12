@@ -5585,16 +5585,19 @@ async function uploadRegFiles(){
     try{
       var path=today+'/'+file.name;
       var uploadUrl=SUPABASE_URL_REG+'/storage/v1/object/regulations/'+encodeURIComponent(path);
+      // FormData 방식으로 업로드 (더 안정적)
+      var formData=new FormData();
+      formData.append('',file,file.name);
       var r=await fetch(uploadUrl,{
         method:'POST',
         headers:{
           'apikey':ANON_KEY_REG,
           'Authorization':'Bearer '+ANON_KEY_REG,
-          'Content-Type':'application/pdf',
           'x-upsert':'true'
         },
         body:file
       });
+      var rText=await r.text();
       if(r.ok){
         await sb.from('regulation_files').upsert({
           name:file.name, path:path,
@@ -5603,7 +5606,8 @@ async function uploadRegFiles(){
         },{onConflict:'name'});
         done++;
       } else {
-        toast('⚠️ '+file.name+' 업로드 실패');
+        console.error('업로드 실패:', r.status, rText);
+        toast('⚠️ '+file.name+' 업로드 실패 ('+r.status+'): '+rText.slice(0,50));
       }
     }catch(e){ toast('⚠️ '+file.name+' 오류: '+e.message); }
   }
