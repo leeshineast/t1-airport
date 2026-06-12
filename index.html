@@ -1098,8 +1098,10 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 
       <div class="fg">
         <label class="f-lbl">1. VOC 및 민원 발생건수 <span style="font-size:10px;color:var(--g4)">(건 · 가중치20 · 분기/연합산)</span></label>
-        <input type="number" id="kpi1" class="ri" placeholder="예: 8 (분기 VOC+민원 건수)" min="0" style="margin-bottom:0">
+        <input type="number" id="kpi1" class="ri" placeholder="예: 8 (분기 VOC+민원 건수)" min="0" style="margin-bottom:6px">
         <div id="kpi1Bar" style="display:none;margin-top:7px"></div>
+        <label class="f-lbl" style="font-size:11px;color:var(--g5);margin-top:4px">📝 민원 내용 메모 <span style="color:var(--g4)">(선택)</span></label>
+        <textarea id="kpi1Memo" class="ri" rows="3" placeholder="민원 내용을 간략히 작성하세요&#10;예) 3F 화장실 청결 민원 1건, 1F 로비 민원 1건..." style="resize:vertical;font-size:12px;line-height:1.6;margin-bottom:0"></textarea>
       </div>
 
       <div class="fg">
@@ -3559,6 +3561,8 @@ function loadKpiInputForm(y, m){
   if(lbl) lbl.value=entry.kpi6Label||'ATP 측정';
   var note=document.getElementById('kpiNote');
   if(note) note.value=entry.kpiNote||'';
+  var memo=document.getElementById('kpi1Memo');
+  if(memo) memo.value=entry.kpi1Memo||'';
 }
 
 function saveKpi(){
@@ -3596,6 +3600,8 @@ function saveKpi(){
   if(lbl) entry.kpi6Label=lbl.value;
   var note=document.getElementById('kpiNote');
   if(note) entry.kpiNote=note.value;
+  var memo=document.getElementById('kpi1Memo');
+  if(memo) entry.kpi1Memo=memo.value;
   if(!kpiData[y]) kpiData[y]={};
   kpiData[y][m]=entry;
   saveKpiToDB(y, m, entry); // DB 저장 (전체 공유)
@@ -5341,7 +5347,7 @@ async function loadKpiFromDB(){
       kpiData[y][m]={
         kpi1:row.kpi1,kpi2:row.kpi2,kpi3:row.kpi3,
         kpi4:row.kpi4,kpi5:row.kpi5,kpi6:row.kpi6,
-        atpDetail:row.atp_detail,kpiNote:row.note
+        atpDetail:row.atp_detail,kpiNote:row.note,kpi1Memo:row.kpi1_memo
       };
     });
     renderKpiDashboard();
@@ -5354,7 +5360,7 @@ async function saveKpiToDB(y, m, entry){
       year:parseInt(y),month:m,
       kpi1:entry.kpi1||null,kpi2:entry.kpi2||null,kpi3:entry.kpi3||null,
       kpi4:entry.kpi4||null,kpi5:entry.kpi5||null,kpi6:entry.kpi6||null,
-      atp_detail:entry.atpDetail||null,note:entry.kpiNote||null
+      atp_detail:entry.atpDetail||null,note:entry.kpiNote||null,kpi1_memo:entry.kpi1Memo||null
     };
     await sb.from('kpi_data').upsert(data,{onConflict:'year,month'});
   }catch(e){console.error(e);}
