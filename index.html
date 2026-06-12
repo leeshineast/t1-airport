@@ -5494,8 +5494,7 @@ async function initAppData(){
 // ══════════════════════════════════════════════
 var regFiles = [];
 var _regUploadFiles = [];
-var SUPABASE_URL_REG = 'https://smfjrnhiodyjobclnwvd.supabase.co';
-var ANON_KEY_REG = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtZmpybmhpb2R5am9iY2xud3ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODA1NDQsImV4cCI6MjA5NjU1NjU0NH0.TkrYpOXNQ0ICak6xWHbD6sOCzLqNOqAfr7FsnFY2Gns';
+// SUPABASE_URL, SUPABASE_KEY → SUPABASE_URL, SUPABASE_KEY 사용
 
 function regTab(idx){
   ['regP0','regP1','regP2'].forEach(function(id,i){
@@ -5551,7 +5550,7 @@ function viewReg(path, name){
   var frame=document.getElementById('regPdfFrame');
   var title=document.getElementById('regViewerTitle');
   if(!frame) return;
-  var url=SUPABASE_URL_REG+'/storage/v1/object/public/regulations/'+encodeURIComponent(path);
+  var url=SUPABASE_URL+'/storage/v1/object/public/regulations/'+encodeURIComponent(path);
   if(title) title.textContent='📄 '+name;
   frame.src=url;
   regTab(1);
@@ -5584,15 +5583,15 @@ async function uploadRegFiles(){
     if(progBar) progBar.style.width=Math.round(i/_regUploadFiles.length*100)+'%';
     try{
       var path=today+'/'+file.name;
-      var uploadUrl=SUPABASE_URL_REG+'/storage/v1/object/regulations/'+encodeURIComponent(path);
+      var uploadUrl=SUPABASE_URL+'/storage/v1/object/regulations/'+encodeURIComponent(path);
       // FormData 방식으로 업로드 (더 안정적)
       var formData=new FormData();
       formData.append('',file,file.name);
       var r=await fetch(uploadUrl,{
         method:'POST',
         headers:{
-          'apikey':ANON_KEY_REG,
-          'Authorization':'Bearer '+ANON_KEY_REG,
+          'apikey':SUPABASE_KEY,
+          'Authorization':'Bearer '+SUPABASE_KEY,
           'x-upsert':'true'
         },
         body:file
@@ -5645,8 +5644,8 @@ async function loadRegManage(){
 async function deleteReg(id, path){
   if(!confirm('이 사규를 삭제하시겠습니까?')) return;
   try{
-    var delUrl=SUPABASE_URL_REG+'/storage/v1/object/regulations/'+encodeURIComponent(path);
-    await fetch(delUrl,{method:'DELETE',headers:{'apikey':ANON_KEY_REG,'Authorization':'Bearer '+ANON_KEY_REG}});
+    var delUrl=SUPABASE_URL+'/storage/v1/object/regulations/'+encodeURIComponent(path);
+    await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
     await sb.from('regulation_files').delete().eq('id',id);
     toast('✅ 삭제 완료');
     loadRegManage();
