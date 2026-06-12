@@ -5158,7 +5158,7 @@ function renderNoticeList(data){
   var html='';
   data.forEach(function(n,i){
     var date=n.created_at?n.created_at.slice(0,10):'';
-    html+='<div style="padding:13px;border-bottom:1px solid var(--g2);cursor:pointer" onclick="openNoticeDetail(''+i+'')" >';
+    html+='<div style="padding:13px;border-bottom:1px solid var(--g2);cursor:pointer" onclick="openNoticeDetail('+i+')" >';
     html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
     html+='<div style="font-size:13px;font-weight:700;color:var(--g7)">'+(n.title||'공지사항')+'</div>';
     html+='<div style="font-size:10px;color:var(--g4)">'+date+'</div>';
@@ -5704,7 +5704,8 @@ async function loadRegManage(){
     res.data.forEach(function(f){
       html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g2)">';
       html+='<span style="font-size:11px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+f.name+'</span>';
-      html+='<button onclick="deleteReg(\'' +f.id+ '\',\''+f.path.replace(/'/g,"\\'")+'\')" style="padding:4px 10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>';
+      // data-* 속성으로 전달 (onclick 내 따옴표 오류 방지)
+      html+='<button data-id="'+f.id+'" data-path="'+encodeURIComponent(f.path)+'" onclick="deleteRegById(this)" style="padding:4px 10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>';
       html+='</div>';
     });
     html+='</div></div>';
@@ -5712,6 +5713,11 @@ async function loadRegManage(){
   }catch(e){}
 }
 
+function deleteRegById(btn){
+  var id=btn.getAttribute('data-id');
+  var path=decodeURIComponent(btn.getAttribute('data-path'));
+  deleteReg(id, path);
+}
 async function deleteReg(id, path){
   if(!confirm('이 사규를 삭제하시겠습니까?')) return;
   try{
