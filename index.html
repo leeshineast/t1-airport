@@ -762,10 +762,11 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div class="menu-desc">시설물 조사 데이터 집계</div>
       <span class="menu-arrow">조회하기 →</span>
     </button>
-    <button class="menu-btn" id="adminBtn" onclick="go('admin')" style="display:none">
+    <button class="menu-btn" id="adminBtn" onclick="go('admin')" style="display:none;position:relative">
       <span class="menu-icon">⚙️</span>
       <div class="menu-title">관리자</div>
       <div class="menu-desc">승인·사용자·공지·다운로드</div>
+      <div id="pendBadge" style="display:none;position:absolute;top:8px;right:8px;background:var(--danger);color:white;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:800;line-height:18px;text-align:center"></div>
       <span class="menu-arrow">관리하기 →</span>
     </button>
   </div>
@@ -860,9 +861,8 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 
   <div id="mpP3" style="display:none">
     <div class="pg-hd"><div><h1>일별 이력</h1></div></div>
-    <div class="card"><div class="cb" style="padding:0">
-      <div class="hist-item"><div class="h-dot"></div><div><div class="h-h4">2026-05-26 · 야간 마감</div><div class="h-p">총계 387명 · L/S 198명 · A/S 189명</div></div></div>
-      <div class="hist-item"><div class="h-dot"></div><div><div class="h-h4">2026-05-25 · 야간 마감</div><div class="h-p">총계 371명 · L/S 192명 · A/S 179명</div></div></div>
+    <div class="card"><div class="cb" style="padding:0" id="mpHistList">
+      <div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">불러오는 중...</div>
     </div></div>
     <div style="height:20px"></div>
   </div>
@@ -1730,6 +1730,13 @@ function go(name){
     loadFacilityFromDB();
   }
   if(name==='kpi'){
+    // 권한에 따라 입력 탭 숨김 (조장은 분기별/연간 조회만)
+    var _kpiT0=document.getElementById('kpiT0');
+    var _kpiP0=document.getElementById('kpiP0');
+    var _canKpi=(me&&(me.role==='admin'||me.role==='manager'));
+    if(_kpiT0) _kpiT0.style.display=_canKpi?'':'none';
+    if(_kpiP0&&!_canKpi) _kpiP0.style.display='none';
+    if(!_canKpi) kpiTab(1);
     loadKpiFromDB();
   }
 }
@@ -1756,7 +1763,7 @@ function applyRoleUI(){
   if(ab) ab.style.display=isMgr?'block':'none';
   // 산업재해 등록 버튼 (admin만)
   var ib=document.getElementById('mainIndBtn');
-  if(ib) ib.style.display=isAdmin?'block':'none';
+  if(ib) ib.style.display=isMgr?'block':'none';
   // 사규 업로드 버튼 (admin만)
   var uw=document.getElementById('pdfUploadWrap');
   if(uw) uw.style.cssText=isAdmin?'display:flex;gap:6px;align-items:center':'display:none';
@@ -1831,6 +1838,7 @@ function finishLogin(){
     setTimeout(function(){rstShiftTab(0);},500);
     loadPendingUsers();
     loadUserList();
+    loadPendingBadge();
   }
   var now2=new Date();
   var ldl=document.getElementById('leaderDateLbl');if(ldl)ldl.textContent=now2.toLocaleDateString('ko-KR');
@@ -1940,7 +1948,7 @@ function tabSwitch(prefix,n,count){
     if(p)p.style.display=i===n?'block':'none';
   }
 }
-function mpTab(n){tabSwitch('mp',n,4);if(n===2){renderLeaderStatus();updateMyTeamGrp();}}
+function mpTab(n){tabSwitch('mp',n,4);if(n===2){renderLeaderStatus();updateMyTeamGrp();}if(n===3){loadMpHistory();}}
 function hoTab(n){
   tabSwitch('ho',n,5);
   // 탭 전환 시 해당 팀 데이터 로드
@@ -2817,7 +2825,7 @@ function tabSwitch(prefix,n,count){
     if(p) p.style.display=i===n?'block':'none';
   }
 }
-function mpTab(n){tabSwitch('mp',n,4);if(n===2){renderLeaderStatus();updateMyTeamGrp();}}
+function mpTab(n){tabSwitch('mp',n,4);if(n===2){renderLeaderStatus();updateMyTeamGrp();}if(n===3){loadMpHistory();}}
 function hoTab(n){
   tabSwitch('ho',n,5);
   // 탭 전환 시 해당 팀 데이터 로드
@@ -3476,6 +3484,9 @@ function loadKpiInputForm(y, m){
 }
 
 function saveKpi(){
+  if(!me||!(me.role==='admin'||me.role==='manager')){
+    toast('⚠️ KPI 입력은 팀장 이상만 가능합니다');return;
+  }
   var y=document.getElementById('kpiYear').value;
   var m=parseInt(document.getElementById('kpiMonth').value);
   if(!y||!m){toast('연월을 선택해주세요');return;}
@@ -4862,6 +4873,22 @@ async function subReg(){
 }
 
 // ── 가입 승인 목록 로드 ──
+async function loadPendingBadge(){
+  if(!me||me.role!=='admin') return;
+  try{
+    var res=await sb.from('users').select('id').eq('status','pending');
+    var cnt=(res.data||[]).length;
+    var badge=document.getElementById('pendBadge');
+    if(badge){
+      if(cnt>0){ badge.style.display='block'; badge.textContent=cnt; }
+      else { badge.style.display='none'; }
+    }
+    // 메인 stat-box에도 표시
+    var pendEl=document.getElementById('pendCount');
+    if(pendEl) pendEl.textContent=cnt>0?cnt+'명 승인대기':'';
+  }catch(e){}
+}
+
 async function loadPendingUsers(){
   var el=document.getElementById('pendList');
   if(!el) return;
@@ -4891,6 +4918,7 @@ async function approveUser(id, name){
   toast('✅ '+name+'님 승인 완료');
   loadPendingUsers();
   loadUserList();
+  loadPendingBadge();
 }
 
 async function rejectUser(id, name){
@@ -4899,6 +4927,7 @@ async function rejectUser(id, name){
   if(res.error){toast('오류: '+res.error.message);return;}
   toast('✅ '+name+'님 신청 거부');
   loadPendingUsers();
+  loadPendingBadge();
 }
 
 // ── 사용자 목록 로드 ──
@@ -4988,7 +5017,22 @@ async function loadNoticesFromDB(){
   }catch(e){}
 }
 
-async function saveNoticeDB(content){
+async function saveNoticeDB(noticeContent){
+  try{
+    // 기존 공지 있으면 update, 없으면 insert
+    var chk=await sb.from('notices').select('id').neq('title','__ind_prev_year__').order('created_at',{ascending:false}).limit(1);
+    var res;
+    if(chk.data&&chk.data.length){
+      res=await sb.from('notices').update({content:noticeContent,created_at:new Date().toISOString()}).eq('id',chk.data[0].id);
+    } else {
+      res=await sb.from('notices').insert({title:'공지사항',content:noticeContent,author:me?me.name:'관리자'});
+    }
+    if(res&&res.error) toast('공지 저장 오류: '+res.error.message);
+    else { toast('✅ 공지사항 저장 완료'); loadNoticesFromDB(); }
+  }catch(e){toast('오류: '+e.message);}
+}
+// (구) saveNoticeDB_unused:
+async function _saveNoticeDB_unused(content){
   try{
     await sb.from('notices').insert({content:content,author:me?me.name:''});
   }catch(e){console.error(e);}
@@ -5311,25 +5355,98 @@ async function initAppData(){
   ]);
   // 사규 자동 로드
   autoLoadPdf();
+  // 일별 이력 로드
+  loadMpHistory();
 }
 
 // 시간대별 인력현황 자동 초기화 체크
+// 마지막으로 확인한 날짜 추적
+var _lastCheckedDate = new Date().toISOString().slice(0,10);
+
+// 날짜 변경 처리 공통 함수
+async function handleDayChange(newDate){
+  _lastCheckedDate = newDate;
+  mpDataByLeader={오전:{},오후:{},야간:{}};
+  mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  updateFloorChart(); updateMpSummary(); updateStaff();
+  loadMpFromDB();
+  loadMpHistory();
+  toast('📅 날짜가 변경되어 인력현황이 초기화되었습니다');
+}
+
+// 앱 포커스 복귀 시 날짜 체크 (iOS 백그라운드 대응)
+document.addEventListener('visibilitychange', function(){
+  if(document.visibilityState === 'visible' && me){
+    var today = new Date().toISOString().slice(0,10);
+    if(today !== _lastCheckedDate) handleDayChange(today);
+  }
+});
+
+// 일별 이력 로드 (DB 기반)
+async function loadMpHistory(){
+  var listEl = document.getElementById('mpHistList');
+  if(!listEl) return;
+  try{
+    var res = await sb.from('mp_data').select('date,shift,values').order('date',{ascending:false});
+    if(res.error||!res.data||!res.data.length){
+      listEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">이력이 없습니다</div>';
+      return;
+    }
+    // 날짜별 합산
+    var byDate={};
+    res.data.forEach(function(row){
+      if(!row.values||!Array.isArray(row.values)) return;
+      var d=row.date;
+      if(!byDate[d]) byDate[d]={total:0,ls:0,as:0};
+      for(var ri=0;ri<4;ri++){
+        for(var ci=0;ci<7;ci++){
+          var v=(row.values[ri]&&row.values[ri][ci])||0;
+          byDate[d].total+=v;
+          if(ri<2) byDate[d].ls+=v; else byDate[d].as+=v;
+        }
+      }
+    });
+    var dates=Object.keys(byDate).sort().reverse();
+    if(!dates.length){
+      listEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">이력이 없습니다</div>';
+      return;
+    }
+    var h='';
+    dates.forEach(function(d){
+      var info=byDate[d];
+      h+='<div class="hist-item">';
+      h+='<div class="h-dot"></div>';
+      h+='<div><div class="h-h4">'+d+'</div>';
+      h+='<div class="h-p">총계 '+info.total+'명 &middot; L/S '+info.ls+'명 &middot; A/S '+info.as+'명</div></div>';
+      h+='</div>';
+    });
+    listEl.innerHTML=h;
+  }catch(e){ listEl.innerHTML='<div style="text-align:center;padding:16px;color:var(--g3);font-size:12px">불러오기 실패</div>'; }
+}
+
 function checkShiftReset(){
   var now=new Date();
+  var today=now.toISOString().slice(0,10);
+
+  // 자정 넘어가면 처리
+  if(today !== _lastCheckedDate){
+    handleDayChange(today);
+    return;
+  }
+
   var h=now.getHours(); var m=now.getMinutes();
   var hm=h*100+m;
-  // 오전 07:30, 오후 12:30, 야간 21:30 직전(5분 전) 로컬 초기화 알림
   var shifts=[{name:'오전',time:730},{name:'오후',time:1230},{name:'야간',time:2130}];
   shifts.forEach(function(s){
-    var key='t1_reset_'+s.name+'_'+now.toISOString().slice(0,10);
+    var key='t1_reset_'+s.name+'_'+today;
     if(hm>=s.time && hm<s.time+30 && !localStorage.getItem(key)){
       localStorage.setItem(key,'1');
     }
   });
 }
 setInterval(checkShiftReset, 60000);
-// 인력현황 30초마다 자동 갱신 (다른 조장 입력값 실시간 반영)
-setInterval(function(){ if(me) loadMpFromDB(); }, 30000);
+// 인력현황 60초마다 자동 갱신 (다른 조장 입력값 실시간 반영)
+setInterval(function(){ if(me) loadMpFromDB(); }, 60000);
 checkShiftReset();
 </script>
 <script>
