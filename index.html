@@ -3372,9 +3372,10 @@ function updateMyTeamGrp(){
     grp.innerHTML='<div style="font-size:11px;color:var(--g4);padding:5px">등록된 조장이 없습니다</div>';
     return;
   }
-  var today=new Date().toISOString().slice(0,10);
-  var log=mpInputLog[today]||{};
-  var done=(log[shift]||[]);
+  var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
+  // DB 기준으로 완료 여부 판단 (다른 사용자 입력도 반영)
+  var dbLeaders=mpDataByLeader[shift]||{};
+  var done=Object.keys(dbLeaders);
   var shiftColors={'오전':'var(--navy)','오후':'var(--teal2)','야간':'#6B21A8'};
   var shiftBgs={'오전':'var(--navy-bg)','오후':'var(--teal-bg)','야간':'#F3EEF8'};
   var color=shiftColors[shift]||'var(--teal2)';
@@ -3425,16 +3426,17 @@ function updateMyTeamGrp(){
   grp.innerHTML=h;
 }
 function pickMyTeam(el){
-  // 이전 선택 해제 (on 클래스만, done은 유지)
+  // done(입력완료) 버튼은 선택 불가
+  if(el.classList.contains('done')){
+    toast('이미 입력 완료된 조입니다');
+    return;
+  }
+  // 이전 선택 해제
   document.querySelectorAll('.myteam-btn.on').forEach(function(b){
     if(!b.classList.contains('done')){
       b.classList.remove('on');
       b.style.background='';b.style.color='';b.style.borderColor='';
     }
-  });
-  // 새 선택 - done 여부 관계없이 on 추가
-  document.querySelectorAll('.myteam-btn').forEach(function(b){
-    b.classList.remove('on');
   });
   el.classList.add('on');
 }
@@ -5415,7 +5417,8 @@ async function loadMpFromDB(){
     updateFloorChart();
     updateMpSummary();
     updateStaff();
-  }catch(e){ toast('❌ loadMpFromDB 오류: '+String(e)); }
+    updateMyTeamGrp(); // 다른 조장 입력 완료 상태 반영
+  }catch(e){}
 }
 
 // ─ 초기화 ─
