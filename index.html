@@ -1034,9 +1034,12 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   </div>
 
   <!-- 탭1: PDF 뷰어 -->
-  <div id="regP1" style="display:none;padding:0;height:calc(100vh - 180px)">
-    <div id="regViewerTitle" style="padding:10px 13px;font-size:12px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1)">PDF 뷰어</div>
-    <iframe id="regPdfFrame" src="" style="width:100%;height:calc(100% - 40px);border:none"></iframe>
+  <div id="regP1" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
+    <div id="regViewerTitle" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:12px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
+      <span id="regViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
+      <button onclick="regTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
+    </div>
+    <iframe id="regPdfFrame" src="" style="width:100%;flex:1;border:none;min-height:0"></iframe>
   </div>
 
   <!-- 탭2: 업로드 (관리자만) -->
@@ -5499,7 +5502,12 @@ var _regUploadFiles = [];
 function regTab(idx){
   ['regP0','regP1','regP2'].forEach(function(id,i){
     var el=document.getElementById(id);
-    if(el) el.style.display=(i===idx?'block':'none');
+    if(!el) return;
+    if(i===idx){
+      el.style.display=(id==='regP1')?'flex':'block';
+    } else {
+      el.style.display='none';
+    }
   });
   ['regT0','regT1','regT2'].forEach(function(id,i){
     var el=document.getElementById(id); if(!el) return;
@@ -5548,11 +5556,13 @@ async function loadRegList(){
 
 function viewReg(path, name){
   var frame=document.getElementById('regPdfFrame');
-  var title=document.getElementById('regViewerTitle');
   if(!frame) return;
-  var url=SUPABASE_URL+'/storage/v1/object/public/regulations/'+encodeURIComponent(path);
-  if(title) title.textContent='📄 '+name;
-  frame.src=url;
+  var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/regulations/'+encodeURIComponent(path);
+  // Google Docs 뷰어 - 모바일 검색/핀치줌 지원
+  var viewerUrl='https://docs.google.com/viewer?url='+encodeURIComponent(pdfUrl)+'&embedded=true';
+  var t=document.getElementById('regViewerTitleText');
+  if(t) t.textContent='📄 '+name;
+  frame.src=viewerUrl;
   regTab(1);
 }
 
