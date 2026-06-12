@@ -5371,11 +5371,13 @@ function renderMainIndList(data){
   data.slice(0,10).forEach(function(r){
     var date=r.date||r.created_at||'';
     if(date&&date.length>10) date=date.slice(0,10);
-    h+='<div style="flex-shrink:0;width:140px;background:var(--danger-bg);border-radius:var(--r2);padding:11px;border:1px solid rgba(217,64,64,.15)">';
-    h+='<div style="font-size:9px;font-weight:700;color:var(--danger);margin-bottom:5px">'+date+'</div>';
-    h+='<div style="font-size:12px;font-weight:800;color:var(--g7);margin-bottom:4px">'+(r.worker||r.per||'')+'</div>';
-    h+='<div style="display:inline-block;background:var(--danger);color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-bottom:5px">'+(r.type||'기타')+'</div>';
-    h+='<div style="font-size:10px;color:var(--g5)">📍 '+(r.location||r.loc||'')+'</div>';
+    h+='<div style="flex-shrink:0;width:200px;background:var(--danger-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(217,64,64,.15)">';
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">';
+    h+='<span style="font-size:10px;font-weight:700;color:var(--danger)">'+date+'</span>';
+    h+='<span style="background:var(--danger);color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px">'+(r.type||'기타')+'</span>';
+    h+='</div>';
+    h+='<div style="font-size:12px;font-weight:800;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-bottom:4px">'+(r.worker||r.per||'')+'</div>';
+    h+='<div style="font-size:10px;color:var(--g5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📍 '+(r.location||r.loc||'')+'</div>';
     h+='</div>';
   });
   el.innerHTML=h;
