@@ -973,80 +973,87 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <span style="font-size:11px;font-weight:700;color:var(--teal2)" id="wrNm">관리자</span>
       </div>
     </div>
-    <div class="card"><div class="cb">
 
-      <div class="fg">
-        <label class="f-lbl">🏷️ 인계 팀 <span style="color:var(--danger);font-size:10px">* 필수</span></label>
-        <div class="rg" id="hoSG">
-          <div class="rp" onclick="pickHS(this)">🌅 오전팀</div>
-          <div class="rp" onclick="pickHS(this)">☀️ 오후팀</div>
-          <div class="rp" onclick="pickHS(this)">🌙 야간팀</div>
-        </div>
-        <div id="hoW" style="display:none;font-size:11px;color:var(--danger);margin-top:6px;font-weight:600">⚠️ 인계 팀을 선택해주세요</div>
+    <!-- 1. 인계 팀 선택 -->
+    <div class="card" style="margin-bottom:10px"><div class="cb">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">1</div>
+        <span style="font-size:13px;font-weight:800;color:var(--g7)">인계 팀 선택 <span style="color:var(--danger);font-size:10px">* 필수</span></span>
       </div>
-
-      <div class="fg">
-        <label class="f-lbl">🔧 시설물 고장</label>
-        <div class="rg">
-          <div class="rp on" onclick="togF(this,'hF',false)">없음</div>
-          <div class="rp" onclick="togF(this,'hF',true)">있음</div>
-        </div>
-        <textarea class="f-ta" id="hF" rows="2" placeholder="고장 내용 및 조치사항"></textarea>
+      <div class="rg" id="hoSG" style="flex-wrap:wrap;gap:7px">
+        <div class="rp" onclick="pickHS(this)">1팀</div>
+        <div class="rp" onclick="pickHS(this)">2팀</div>
+        <div class="rp" onclick="pickHS(this)">3팀</div>
+        <div class="rp" onclick="pickHS(this)">4팀</div>
+        <div class="rp" onclick="pickHS(this)">5팀</div>
+        <div class="rp" onclick="pickHS(this)">6팀</div>
+        <div class="rp" onclick="pickHS(this)">7팀</div>
+        <div class="rp" onclick="pickHS(this)">8팀</div>
+        <div class="rp" onclick="pickHS(this)">9팀</div>
+        <div class="rp" onclick="pickHS(this)">10팀</div>
       </div>
-
-      <div class="fg">
-        <label class="f-lbl">📢 민원</label>
-        <div class="rg">
-          <div class="rp on" onclick="togF(this,'hC',false)">없음</div>
-          <div class="rp" onclick="togF(this,'hC',true)">있음</div>
-        </div>
-        <textarea class="f-ta" id="hC" rows="2" placeholder="민원 내용 및 처리결과"></textarea>
-      </div>
-
-      <div class="fg">
-        <label class="f-lbl">📋 공지사항</label>
-        <textarea class="f-ta show" id="hN" rows="2" placeholder="전달할 공지사항"></textarea>
-      </div>
-
-      <div class="fg">
-        <label class="f-lbl">⚠️ 위험구역</label>
-        <div class="rg">
-          <div class="rp on" onclick="togF(this,'hD',false)">없음</div>
-          <div class="rp" onclick="togF(this,'hD',true)">있음</div>
-        </div>
-        <textarea class="f-ta" id="hD" rows="2" placeholder="위험구역 위치 및 내용"></textarea>
-      </div>
-
-      <div class="fg">
-        <label class="f-lbl">🚨 안전사고</label>
-        <div class="rg">
-          <div class="rp on" onclick="togF(this,'hA',false)">없음</div>
-          <div class="rp" onclick="togF(this,'hA',true)">발생</div>
-        </div>
-        <textarea class="f-ta" id="hA" rows="2" placeholder="사고 내용 및 조치사항"></textarea>
-      </div>
-
-      <div class="fg">
-        <label class="f-lbl">🚛 장비·차량</label>
-        <div class="rg">
-          <div class="rp on" onclick="togF(this,'hE',false)">이상없음</div>
-          <div class="rp" onclick="togF(this,'hE',true)">이상있음</div>
-        </div>
-        <textarea class="f-ta" id="hE" rows="2" placeholder="장비/차량 이상내용"></textarea>
-      </div>
-
-      <div class="fg" style="margin-bottom:0">
-        <label class="f-lbl">📝 특이사항</label>
-        <textarea class="f-ta show" id="hEtc" rows="2" placeholder="기타 전달사항"></textarea>
-      </div>
-
+      <div id="hoW" style="display:none;font-size:11px;color:var(--danger);margin-top:6px;font-weight:600">⚠️ 인계 팀을 먼저 선택해주세요</div>
     </div></div>
+
+    <!-- 2. 업무 진행 사항 및 특이사항 -->
+    <div class="card" style="margin-bottom:10px"><div class="cb">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">2</div>
+        <span style="font-size:13px;font-weight:800;color:var(--g7)">업무 진행 사항 및 특이사항</span>
+      </div>
+      <textarea class="f-ta show" id="hEtc" rows="3" placeholder="업무 진행 내용, 특이사항 등 자유롭게 작성"></textarea>
+    </div></div>
+
+    <!-- 3. 시설물 고장 -->
+    <div class="card" style="margin-bottom:10px"><div class="cb">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">3</div>
+        <span style="font-size:13px;font-weight:800;color:var(--g7)">🔧 시설물 고장</span>
+      </div>
+      <div class="rg" style="margin-bottom:8px">
+        <div class="rp on" onclick="togF(this,'hF',false)">없음</div>
+        <div class="rp" onclick="togF(this,'hF',true)">있음</div>
+      </div>
+      <textarea class="f-ta" id="hF" rows="2" placeholder="고장 내용 및 조치사항"></textarea>
+    </div></div>
+
+    <!-- 4. 민원 -->
+    <div class="card" style="margin-bottom:10px"><div class="cb">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">4</div>
+        <span style="font-size:13px;font-weight:800;color:var(--g7)">📢 민원</span>
+      </div>
+      <div class="rg" style="margin-bottom:8px">
+        <div class="rp on" onclick="togF(this,'hC',false)">없음</div>
+        <div class="rp" onclick="togF(this,'hC',true)">있음</div>
+      </div>
+      <textarea class="f-ta" id="hC" rows="2" placeholder="민원 내용 및 처리결과"></textarea>
+    </div></div>
+
+    <!-- 5. 안전사고 -->
+    <div class="card" style="margin-bottom:10px"><div class="cb">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">5</div>
+        <span style="font-size:13px;font-weight:800;color:var(--g7)">🚨 안전사고</span>
+      </div>
+      <div class="rg" style="margin-bottom:8px">
+        <div class="rp on" onclick="togF(this,'hA',false)">없음</div>
+        <div class="rp" onclick="togF(this,'hA',true)">발생</div>
+      </div>
+      <textarea class="f-ta" id="hA" rows="2" placeholder="사고 내용 및 조치사항"></textarea>
+    </div></div>
+
+    <!-- DB 호환용 hidden -->
+    <textarea id="hN" style="display:none"></textarea>
+    <textarea id="hD" style="display:none"></textarea>
+    <textarea id="hE" style="display:none"></textarea>
+
     <div style="padding:0 13px 16px">
-      <button class="btn-prim" onclick="subHO()">인수인계 제출</button>
+      <button class="btn-prim" onclick="subHO()">📋 인수인계 제출</button>
     </div>
     <div style="height:20px"></div>
   </div>
-</div>
+
 
 <!-- ══ AI 챗봇 ══ -->
 <div id="sChat" class="scr">
@@ -2174,9 +2181,11 @@ function subHO(){
   if(myPerms&&myPerms.write===false){toast('⚠️ 쓰기 권한이 없습니다');return;}
   const sel=document.querySelector('#hoSG .rp.on');
   if(!sel){document.getElementById('hoW').style.display='block';toast('⚠️ 인계 팀을 먼저 선택해주세요');return;}
-  const raw=sel.textContent;
-  let sNm='오전팀';
-  if(raw.includes('오후팀'))sNm='오후팀';else if(raw.includes('야간팀'))sNm='야간팀';
+  const raw=sel.textContent.trim(); // '1팀'~'10팀'
+  // 팀번호 → 근무조 매핑
+  var teamNum=parseInt(raw.replace('팀',''));
+  var shiftMap={1:'오전팀',2:'오전팀',3:'오전팀',4:'오전팀',5:'야간팀',6:'오후팀',7:'오후팀',8:'오후팀',9:'오후팀',10:'야간팀'};
+  let sNm=shiftMap[teamNum]||'오전팀';
   const toMap={'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'};
   const pMap={'오전팀':'pill-am','오후팀':'pill-pm','야간팀':'pill-nt'};
   const avC={'오전팀':'var(--navy)','오후팀':'var(--teal2)','야간팀':'#6B21A8'};
@@ -2187,7 +2196,7 @@ function subHO(){
   const cT=(cE&&cE.classList.contains('show')&&cE.value?cE.value:'없음');
   const dT=(dE&&dE.classList.contains('show')&&dE.value?dE.value:'없음');
   const aT=(aE&&aE.classList.contains('show')&&aE.value?aE.value:'없음');
-  const eT=(eE&&eE.classList).contains('show')&&eE.value?eE.value:'이상없음';
+  const eT=(eE&&eE.classList.contains('show')&&eE.value)?eE.value:'이상없음';
   if(aT!=='없음'){const e=document.getElementById('dAcc');if(e)e.textContent=parseInt(e.textContent||0)+1;const t=document.getElementById('dAccT');if(t)t.textContent=parseInt(t.textContent||0)+1;}
   if(cT!=='없음'){const e=document.getElementById('dComp');if(e)e.textContent=parseInt(e.textContent||0)+1;const t=document.getElementById('dCompT');if(t)t.textContent=parseInt(t.textContent||0)+1;}
   toast('✓ 인수인계 제출 완료!');
@@ -2212,7 +2221,8 @@ function subHO(){
   card.innerHTML=`<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px"><span class="t-pill ${pMap[sNm]}">${sNm}</span><span style="color:var(--g3)">→</span><span class="t-pill ${pMap[toNm]}">${toNm}</span><span class="chip chip-warn"><span class="chip-dot"></span>대기</span></div><span class="ho-time">${ts}</span></div><div class="w-row"><div class="w-av" style="background:${avC[sNm]}">${me?me.initial:'?'}</div><span class="w-nm">${me?me.name:'작성자'} · ${me?me.team:''} 작성</span></div><div class="ho-body">${fields}</div><div class="conf-row"><button class="btn-conf" onclick="confHO(this)">✔ 인수 확인</button></div>`;
   // ① DB에 저장 (전체 공유)
   var hoData = {
-    shift: sNm,
+    shift: raw, // 선택한 팀 (1팀~10팀)
+    shift_group: sNm, // 근무조 (오전/오후/야간팀)
     to_shift: toNm,
     author: me?me.name:'작성자',
     team: me?me.team:'',
@@ -5505,7 +5515,10 @@ function renderHoList(data){
       +'<div class="w-row"><div class="w-av" style="background:'+(avC[sNm]||'var(--navy)')+'">'+initial+'</div>'
       +'<span class="w-nm">'+author+(r.team?' · '+r.team:'')+'</span></div>'
       +'<div class="ho-body">'+fields+'</div>'
-      +confBtn+'</div>';
+      +confBtn
+      // 관리자 수정/삭제 버튼
+      +(me&&me.role==='admin'?'<div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--g1)"><button data-id="'+r.id+'" onclick="editHo(this)" style="flex:1;padding:5px;background:var(--teal-bg);color:var(--teal2);border:1px solid var(--teal);border-radius:8px;font-size:10px;font-weight:700;cursor:pointer">✏️ 수정</button><button data-id="'+r.id+'" onclick="deleteHo(this)" style="flex:1;padding:5px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:8px;font-size:10px;font-weight:700;cursor:pointer">🗑️ 삭제</button></div>':'')
+      +'</div>';
     }); // dayData.forEach 끝
   }); // dates.forEach 끝
   list.innerHTML=html;
@@ -5599,6 +5612,46 @@ function updateAccComplaintCount(){
   var dAccT=document.getElementById('dAccT'); if(dAccT) dAccT.textContent=accTotal;
   var dComp=document.getElementById('dComp'); if(dComp) dComp.textContent=compToday;
   var dCompT=document.getElementById('dCompT'); if(dCompT) dCompT.textContent=compTotal;
+}
+
+
+async function deleteHo(btn){
+  if(!confirm('이 인수인계를 삭제하시겠습니까?')) return;
+  var id=btn.getAttribute('data-id');
+  try{
+    var res=await sb.from('handover').delete().eq('id',id);
+    if(res&&res.error){toast('삭제 오류: '+res.error.message);return;}
+    toast('✅ 삭제 완료');
+    loadHandoverFromDB();
+  }catch(e){toast('오류: '+e.message);}
+}
+
+function editHo(btn){
+  var id=btn.getAttribute('data-id');
+  var r=(hoAll||[]).find(function(x){return String(x.id)===String(id);});
+  if(!r){toast('데이터를 찾을 수 없습니다');return;}
+  // 작성 탭으로 이동 후 값 채우기
+  hoTab(4);
+  setTimeout(function(){
+    // 팀 선택
+    var sel=document.querySelector('#hoSG .rp.on');
+    if(sel) sel.classList.remove('on');
+    var teamBtns=document.querySelectorAll('#hoSG .rp');
+    teamBtns.forEach(function(b){ if(b.textContent.trim()===r.shift) b.classList.add('on'); });
+    // 내용 채우기
+    var hF=document.getElementById('hF'); if(hF) hF.value=r.facility||'';
+    var hC=document.getElementById('hC'); if(hC) hC.value=r.complaint||'';
+    var hA=document.getElementById('hA'); if(hA) hA.value=r.accident||'';
+    var hEtc=document.getElementById('hEtc'); if(hEtc) hEtc.value=r.notice||r.etc||'';
+    // 토글 버튼 상태
+    if(r.facility&&r.facility!=='없음'){ var fBtn=document.querySelector('[onclick*="togF"][onclick*="hF"][onclick*="true"]'); if(fBtn) togF(fBtn,'hF',true); }
+    if(r.complaint&&r.complaint!=='없음'){ var cBtn=document.querySelector('[onclick*="togF"][onclick*="hC"][onclick*="true"]'); if(cBtn) togF(cBtn,'hC',true); }
+    if(r.accident&&r.accident!=='없음'){ var aBtn=document.querySelector('[onclick*="togF"][onclick*="hA"][onclick*="true"]'); if(aBtn) togF(aBtn,'hA',true); }
+    // 수정 모드 표시
+    var submitBtn=document.querySelector('#hoP4 .btn-prim');
+    if(submitBtn){ submitBtn.textContent='✏️ 인수인계 수정'; submitBtn._editId=id; }
+    toast('수정할 내용을 변경 후 제출하세요');
+  },100);
 }
 
 async function loadHandoverFromDB(){
