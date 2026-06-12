@@ -1824,6 +1824,7 @@ function finishLogin(){
   updateIndCmp();
   loadVehData();
   loadLeaders();
+  loadPrevStaff();
   loadMpInputLog();
   loadPerms();
   autoLoadPdf();
@@ -2497,17 +2498,53 @@ function _dlCSV_old(type){if(!me||me.role!=='admin'){toast('다운로드 권한�
 
 // ─ 현재 근무인원 ─
 function updateStaff(){
-  // DB 입력값 기반 실인원 표시
-  var total=0;
-  for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) total+=mpData[ri][ci];
-  var shifts=[];
-  if(mpDataByLeader['오전']&&Object.keys(mpDataByLeader['오전']).length) shifts.push('오전');
-  if(mpDataByLeader['오후']&&Object.keys(mpDataByLeader['오후']).length) shifts.push('오후');
-  if(mpDataByLeader['야간']&&Object.keys(mpDataByLeader['야간']).length) shifts.push('야간');
+  // 현재(오늘) 근무 인원
+  var today=new Date().toISOString().slice(0,10);
+  var yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+
+  function calcDayTotal(dayKey){
+    // mpDataByLeader는 오늘 데이터만 메모리에 있음
+    // 오늘은 mpData 합산 사용
+    if(dayKey===today){
+      var t=0;
+      for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) t+=mpData[ri][ci];
+      return t;
+    }
+    return null; // 전일은 DB에서 별도 로드
+  }
+
+  var todayTotal=calcDayTotal(today);
   var vE=document.getElementById('curStaff');
   var uE=document.getElementById('curUnit');
-  if(vE) vE.textContent=total>0?total:'—';
-  if(uE) uE.textContent=total>0?'명 ('+(shifts.length>0?shifts.join('+')+'합계':'입력됨')+')':'미입력';
+  if(vE) vE.textContent=todayTotal>0?todayTotal:'—';
+  if(uE) uE.textContent=todayTotal>0?'명 (금일)':'미입력';
+}
+
+async function loadPrevStaff(){
+  // 전일 근무 인원 - DB에서 직접 조회
+  var yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+  try{
+    var res=await sb.from('mp_data').select('values').eq('date',yesterday);
+    if(res.error||!res.data||!res.data.length){
+      var pE=document.getElementById('prevStaff');
+      if(pE) pE.textContent='—';
+      var pU=document.getElementById('prevUnit');
+      if(pU) pU.textContent='미입력';
+      return;
+    }
+    var total=0;
+    res.data.forEach(function(row){
+      var vals=row.values;
+      if(!vals||!Array.isArray(vals)) return;
+      for(var ri=0;ri<4;ri++)
+        for(var ci=0;ci<7;ci++)
+          total+=(vals[ri]&&vals[ri][ci])||0;
+    });
+    var pE=document.getElementById('prevStaff');
+    var pU=document.getElementById('prevUnit');
+    if(pE) pE.textContent=total>0?total:'—';
+    if(pU) pU.textContent=total>0?'명 (전일)':'미입력';
+  }catch(e){}
 }
 setInterval(updateStaff,60000);
 
@@ -5092,6 +5129,24 @@ async function confHODB(id, btn){
   await confirmHandoverDB(id);
 }
 
+function updateAccComplaintCount(){
+  // 오늘 인수인계 기록에서 안전사고/민원 건수 집계
+  var today=new Date().toISOString().slice(0,10);
+  var todayHo=(hoAll||[]).filter(function(r){
+    var d=r.created_at||r.date||'';
+    return d.slice(0,10)===today;
+  });
+  var accToday=todayHo.filter(function(r){return r.accident&&r.accident!=='없음';}).length;
+  var compToday=todayHo.filter(function(r){return r.complaint&&r.complaint!=='없음';}).length;
+  var accTotal=(hoAll||[]).filter(function(r){return r.accident&&r.accident!=='없음';}).length;
+  var compTotal=(hoAll||[]).filter(function(r){return r.complaint&&r.complaint!=='없음';}).length;
+
+  var dAcc=document.getElementById('dAcc'); if(dAcc) dAcc.textContent=accToday;
+  var dAccT=document.getElementById('dAccT'); if(dAccT) dAccT.textContent=accTotal;
+  var dComp=document.getElementById('dComp'); if(dComp) dComp.textContent=compToday;
+  var dCompT=document.getElementById('dCompT'); if(dCompT) dCompT.textContent=compTotal;
+}
+
 async function loadHandoverFromDB(){
   try{
     var res=await sb.from('handover').select('*').order('created_at',{ascending:false}).limit(50);
@@ -5357,6 +5412,8 @@ async function initAppData(){
   autoLoadPdf();
   // 일별 이력 로드
   loadMpHistory();
+  // 전일 근무 인원 로드
+  loadPrevStaff();
 }
 
 // 시간대별 인력현황 자동 초기화 체크
