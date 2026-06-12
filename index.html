@@ -56,7 +56,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 .reg-hd-t h2{color:white;font-size:15px;font-weight:700}
 .reg-hd-t p{color:rgba(255,255,255,.6);font-size:11px}
 .reg-body{background:white;border-radius:20px 20px 0 0;flex:1;padding:20px 17px 40px;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.ri{width:100%;padding:11px 13px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;color:var(--g6);background:var(--g0);outline:none;font-family:var(--font);margin-bottom:12px}
+.ri{width:100%;max-width:100%;padding:11px 13px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;color:var(--g6);background:var(--g0);outline:none;font-family:var(--font);margin-bottom:12px;box-sizing:border-box}
 .ri:focus{border-color:var(--teal)}
 .t-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px}
 .t-btn{padding:8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;text-align:center;cursor:pointer;color:var(--g4)}
@@ -1387,14 +1387,14 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <div id="vhP0">
     <div class="pg-hd"><div><h1>운행 기록 작성</h1></div></div>
     <div class="card"><div class="cb">
-      <div class="fg"><label class="f-lbl">📅 사용일자 *</label><input type="date" id="vhDate" class="ri" style="margin-bottom:0;width:100%;box-sizing:border-box"></div>
+      <div class="fg"><label class="f-lbl">📅 사용일자 *</label><input type="date" id="vhDate" class="ri" style="margin-bottom:0;width:100%;max-width:100%;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>
       <div class="fg"><label class="f-lbl">🏢 소속 *</label><input type="text" id="vhDept" class="ri" placeholder="예: 오전1팀" style="margin-bottom:0"></div>
       <div class="fg"><label class="f-lbl">👤 성명 *</label><input type="text" id="vhName" class="ri" placeholder="홍길동" style="margin-bottom:0"></div>
-      <div class="fg"><label class="f-lbl">🚗 주행 전 계기판 (km) *</label><input type="number" id="vhBefore" class="ri" placeholder="예: 12382" style="margin-bottom:0" oninput="calcDist()"><div id="vhAutoHint" style="display:none;margin-top:6px;font-size:11px;color:var(--teal2);font-weight:600;background:var(--teal-bg);border-radius:var(--r2);padding:7px 10px">⚡ 자동입력됨</div></div>
-      <div class="fg"><label class="f-lbl">🚗 주행 후 계기판 (km) *</label><input type="number" id="vhAfter" class="ri" placeholder="예: 12443" style="margin-bottom:0" oninput="calcDist()"></div>
+      <div class="fg"><label class="f-lbl">🚗 주행 전 계기판 (km) *</label><input type="number" id="vhBefore" class="ri" placeholder="예: 12382" style="margin-bottom:0" oninput="calcDist();updateKmHint('vhBefore','vhBeforeHint')"><div id="vhBeforeHint" style="display:none;font-size:11px;color:var(--g4);margin-top:3px;padding-left:4px"></div><div id="vhAutoHint" style="display:none;margin-top:6px;font-size:11px;color:var(--teal2);font-weight:600;background:var(--teal-bg);border-radius:var(--r2);padding:7px 10px">⚡ 자동입력됨</div></div>
+      <div class="fg"><label class="f-lbl">🚗 주행 후 계기판 (km) *</label><input type="number" id="vhAfter" class="ri" placeholder="예: 12443" style="margin-bottom:0" oninput="calcDist();updateKmHint('vhAfter','vhAfterHint')"><div id="vhAfterHint" style="display:none;font-size:11px;color:var(--g4);margin-top:3px;padding-left:4px"></div></div>
       <div id="vhDistWrap" style="display:none;background:var(--teal-bg);border-radius:var(--r2);padding:11px 13px;margin-bottom:13px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;font-weight:600;color:var(--teal2)">주행거리 (자동계산)</span><div style="display:flex;align-items:baseline;gap:3px"><span style="font-size:22px;font-weight:900;color:var(--teal2)" id="vhDist">0</span><span style="font-size:12px;color:var(--teal2);font-weight:600">km</span></div></div>
-      <div class="fg"><label class="f-lbl">🕐 출발 시간 *</label><input type="time" id="vhStart" class="ri" style="margin-bottom:0"></div>
-      <div class="fg"><label class="f-lbl">🕐 도착 시간 *</label><input type="time" id="vhEnd" class="ri" style="margin-bottom:0"></div>
+      <div class="fg"><label class="f-lbl">🕐 출발 시간 *</label><input type="time" id="vhStart" class="ri" style="margin-bottom:0;width:100%;max-width:100%;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>
+      <div class="fg"><label class="f-lbl">🕐 도착 시간 *</label><input type="time" id="vhEnd" class="ri" style="margin-bottom:0;width:100%;max-width:100%;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>
       <div class="fg"><label class="f-lbl">📍 목적지(경유지 포함) *</label><input type="text" id="vhDest" class="ri" placeholder="예: 신도시, T2" style="margin-bottom:0"></div>
       <div class="fg"><label class="f-lbl">📋 목적 *</label><input type="text" id="vhPurpose" class="ri" placeholder="예: 직원격려 식사, 업무" style="margin-bottom:0"></div>
       <div class="fg" style="margin-bottom:0"><label class="f-lbl">📝 기타 (주유여부·주차장소 등)</label><input type="text" id="vhEtc" class="ri" placeholder="예: 주유 8만원, H11구역" style="margin-bottom:0"></div>
@@ -3247,6 +3247,19 @@ function updateIndCmp(){
 }
 
 // ═══ 차량운행기록부 ═══
+function updateKmHint(inputId, hintId){
+  var el=document.getElementById(inputId);
+  var hint=document.getElementById(hintId);
+  if(!el||!hint) return;
+  var v=parseInt(el.value);
+  if(!isNaN(v)&&v>0){
+    hint.textContent=v.toLocaleString()+' km';
+    hint.style.display='block';
+  } else {
+    hint.style.display='none';
+  }
+}
+
 function calcDist(){
   var b=parseInt(document.getElementById('vhBefore').value)||0;
   var a=parseInt(document.getElementById('vhAfter').value)||0;
