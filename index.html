@@ -1054,6 +1054,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div style="height:20px"></div>
   </div>
 
+</div>
 
 <!-- ══ AI 챗봇 ══ -->
 <div id="sChat" class="scr">
@@ -2114,8 +2115,6 @@ async function loadHandoverByShift(shift){
     el.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:12px">로드 오류: '+e.message+'</div>';
   }
 }
-function adTab(n){tabSwitch('ad',n,5);}
-
 // ─ 인력현황 ─
 function pickShift(el){
   document.querySelectorAll('#shiftGrp .rp').forEach(function(p){p.classList.remove('on');});
