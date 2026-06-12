@@ -1817,6 +1817,9 @@ function go(name){
   }
   if(name==='veh'){
     loadVehicleFromDB();
+    // 소속/성명 자동입력
+    var _vn=document.getElementById('vhName'); if(_vn&&me&&!_vn.value) _vn.value=me.name||'';
+    var _vd=document.getElementById('vhDept'); if(_vd&&me&&!_vd.value) _vd.value=me.team||'';
   }
   if(name==='facility'){
     loadFacilityFromDB();
@@ -1944,6 +1947,7 @@ function finishLogin(){
   var ldl=document.getElementById('leaderDateLbl');if(ldl)ldl.textContent=now2.toLocaleDateString('ko-KR');
   var ldl2=document.getElementById('leaderDateLbl2');if(ldl2)ldl2.textContent=now2.toLocaleDateString('ko-KR');
   var vn=document.getElementById('vhName');if(vn)vn.value=me?me.name:'';
+  var vd=document.getElementById('vhDept');if(vd)vd.value=me?(me.team||''):'';
   setTimeout(function(){try{showNotice();}catch(e){}},1500);
   toast('어서오세요, '+(me?me.name:'')+'님!');
   if(!IS_LOCAL){loadHoList();}
@@ -3318,7 +3322,10 @@ function subVeh(){
     else { await loadVehicleFromDB(); }
   })();
   toast('운행 기록이 저장되었습니다');
-  ['vhDate','vhDept','vhName','vhBefore','vhAfter','vhStart','vhEnd','vhDest','vhPurpose','vhEtc'].forEach(function(id){
+  // 소속/성명은 초기화하지 않음 (로그인 정보 유지)
+  var _vn2=document.getElementById('vhName'); if(_vn2&&me) _vn2.value=me.name||'';
+  var _vd2=document.getElementById('vhDept'); if(_vd2&&me) _vd2.value=me.team||'';
+  ['vhDate','vhBefore','vhAfter','vhStart','vhEnd','vhDest','vhPurpose','vhEtc'].forEach(function(id){
     var e=document.getElementById(id);if(e){e.value='';e.style.borderColor='';e.style.background='';}
   });
   var hw=document.getElementById('vhDistWrap');if(hw)hw.style.display='none';
