@@ -2555,8 +2555,11 @@ function updateStaff(){
 }
 
 async function loadPrevStaff(){
-  // 전일 근무 인원 - DB에서 직접 조회
-  var yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
+  // 전일 근무 인원 - DB에서 직접 조회 (한국 시간 기준)
+  var kst=new Date(Date.now()+9*3600000); // UTC+9
+  var todayKst=kst.toISOString().slice(0,10);
+  var yKst=new Date(kst.getTime()-86400000);
+  var yesterday=yKst.toISOString().slice(0,10);
   try{
     var res=await sb.from('mp_data').select('values').eq('date',yesterday);
     if(res.error||!res.data||!res.data.length){
@@ -5376,7 +5379,7 @@ async function loadFacilityFromDB(){
 // 인력현황 - DB 저장 (일별 누적)
 async function saveMpToDB(shift, teamCode, values){
   try{
-    var today=new Date().toISOString().slice(0,10);
+    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
     var res=await sb.from('mp_data').upsert(
       {date:today, shift:shift, team_code:teamCode, values:values},
       {onConflict:'date,shift,team_code'}
@@ -5387,7 +5390,7 @@ async function saveMpToDB(shift, teamCode, values){
 
 async function loadMpFromDB(){
   try{
-    var today=new Date().toISOString().slice(0,10);
+    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
     var res=await sb.from('mp_data').select('*').eq('date',today);
     if(res.error||!res.data||!res.data.length) return;
     mpDataByLeader={오전:{},오후:{},야간:{}};
@@ -5453,7 +5456,7 @@ async function initAppData(){
 
 // 시간대별 인력현황 자동 초기화 체크
 // 마지막으로 확인한 날짜 추적
-var _lastCheckedDate = new Date().toISOString().slice(0,10);
+var _lastCheckedDate = new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
 
 // 날짜 변경 처리 공통 함수
 async function handleDayChange(newDate){
@@ -5469,7 +5472,7 @@ async function handleDayChange(newDate){
 // 앱 포커스 복귀 시 날짜 체크 (iOS 백그라운드 대응)
 document.addEventListener('visibilitychange', function(){
   if(document.visibilityState === 'visible' && me){
-    var today = new Date().toISOString().slice(0,10);
+    var today = new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
     if(today !== _lastCheckedDate) handleDayChange(today);
   }
 });
