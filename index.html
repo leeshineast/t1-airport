@@ -689,6 +689,12 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     </div>
   </div>
 
+  <!-- 공지사항 목록 -->
+  <div class="sec-lbl">📢 공지사항</div>
+  <div class="card" style="margin-bottom:13px"><div style="border-radius:var(--r2);overflow:hidden" id="noticeListWrap">
+    <div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">공지사항을 불러오는 중...</div>
+  </div></div>
+
   <!-- 산업재해 현황 -->
   <div class="sec-lbl">산업재해 현황</div>
   <div class="card" style="margin-bottom:11px">
@@ -2122,6 +2128,9 @@ function confHO(btn){
   toast('✓ 인수확인 완료');
 }
 function subHO(){
+  // write 권한 체크
+  var myPerms=me?userPerms[me.name]:null;
+  if(myPerms&&myPerms.write===false){toast('⚠️ 쓰기 권한이 없습니다');return;}
   const sel=document.querySelector('#hoSG .rp.on');
   if(!sel){document.getElementById('hoW').style.display='block';toast('⚠️ 인계 팀을 먼저 선택해주세요');return;}
   const raw=sel.textContent;
@@ -2986,6 +2995,9 @@ function vhTab(n){tabSwitch('vh',n,3);if(n===0)autoFillBefore();}
 // ═══ 인력현황 누적 ═══
 function confirmMp(){
   hideM('mpModal');
+  // write 권한 체크
+  var myPerms=me?userPerms[me.name]:null;
+  if(myPerms&&myPerms.write===false){toast('⚠️ 쓰기 권한이 없습니다');return;}
   var sh=document.querySelector('#shiftGrp .rp.on')?document.querySelector('#shiftGrp .rp.on').textContent:'미선택';
   var shKey=sh.trim();
 
@@ -3515,10 +3527,20 @@ function updatePermChips(userName, perms){
   });
   el.innerHTML=h;
 }
-function loadPerms(){
+async function loadPerms(){
   try{
+    // DB에서 권한 로드
+    var res=await sb.from('users').select('name,permissions').eq('status','active');
+    if(res.data&&res.data.length){
+      res.data.forEach(function(u){
+        if(u.permissions){
+          try{ userPerms[u.name]=JSON.parse(u.permissions); }catch(e){}
+        }
+      });
+    }
+    // localStorage 병합
     var s=localStorage.getItem('t1_perms');
-    if(s) userPerms=JSON.parse(s);
+    if(s){ try{ var lp=JSON.parse(s); Object.assign(userPerms,lp); }catch(e){} }
   }catch(e){}
 }
 
@@ -5097,6 +5119,8 @@ async function savePermEdit(){
   });
   userPerms[currentPermUser]=perms;
   try{localStorage.setItem('t1_perms',JSON.stringify(userPerms));}catch(e){}
+  // DB에도 저장 (전체 공유)
+  sb.from('users').update({permissions:JSON.stringify(perms)}).eq('name',currentPermUser);
   // DB 업데이트
   if(currentPermUserId){
     await sb.from('users').update({permissions:perms}).eq('id',currentPermUserId);
@@ -5109,30 +5133,65 @@ async function savePermEdit(){
 // ── 공지사항 ──
 async function loadNoticesFromDB(){
   try{
-    var res=await sb.from('notices').select('*').neq('title','__ind_prev_year__').order('created_at',{ascending:false}).limit(1);
-    if(res.data&&res.data.length){
-      var n=res.data[0];
-      var t=document.getElementById('noticeT');
-      var b=document.getElementById('noticeB');
-      var d=document.getElementById('noticeD');
-      if(t) t.textContent=n.title||'공지사항';
-      if(b) b.innerHTML=(n.content||'').replace(/\n/g,'<br>');
-      if(d) d.textContent=n.created_at?n.created_at.slice(0,10)+' 등록':'';
-      showNotice(n.content);
-    }
+    var res=await sb.from('notices').select('*').neq('title','__ind_prev_year__').order('created_at',{ascending:false});
+    if(!res.data||!res.data.length) return;
+    // 팝업: 최신 1건
+    var n=res.data[0];
+    var t=document.getElementById('noticeT');
+    var b=document.getElementById('noticeB');
+    var d=document.getElementById('noticeD');
+    if(t) t.textContent=n.title||'공지사항';
+    if(b) b.innerHTML=(n.content||'').replace(/\n/g,'<br>');
+    if(d) d.textContent=n.created_at?n.created_at.slice(0,10)+' 등록':'';
+    showNotice(n.content);
+    // 누적 목록 렌더링
+    renderNoticeList(res.data);
   }catch(e){}
+}
+
+function renderNoticeList(data){
+  var wrap=document.getElementById('noticeListWrap'); if(!wrap) return;
+  if(!data||!data.length){
+    wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">등록된 공지사항이 없습니다</div>';
+    return;
+  }
+  var html='';
+  data.forEach(function(n,i){
+    var date=n.created_at?n.created_at.slice(0,10):'';
+    html+='<div style="padding:13px;border-bottom:1px solid var(--g2);cursor:pointer" onclick="openNoticeDetail(''+i+'')" >';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
+    html+='<div style="font-size:13px;font-weight:700;color:var(--g7)">'+(n.title||'공지사항')+'</div>';
+    html+='<div style="font-size:10px;color:var(--g4)">'+date+'</div>';
+    html+='</div>';
+    html+='<div style="font-size:11px;color:var(--g5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(n.content||'').replace(/\n/g,' ')+'</div>';
+    html+='</div>';
+  });
+  wrap.innerHTML=html;
+  // 공지 데이터 저장 (상세보기용)
+  window._noticeData=data;
+}
+
+function openNoticeDetail(idx){
+  var data=window._noticeData||[];
+  var n=data[idx]; if(!n) return;
+  var t=document.getElementById('noticeT');
+  var b=document.getElementById('noticeB');
+  var d=document.getElementById('noticeD');
+  if(t) t.textContent=n.title||'공지사항';
+  if(b) b.innerHTML=(n.content||'').replace(/\n/g,'<br>');
+  if(d) d.textContent=n.created_at?n.created_at.slice(0,10)+' 등록':'';
+  document.getElementById('noSkip').checked=false;
+  showM('noticeM');
 }
 
 async function saveNoticeDB(noticeContent){
   try{
-    // 기존 공지 있으면 update, 없으면 insert
-    var chk=await sb.from('notices').select('id').neq('title','__ind_prev_year__').order('created_at',{ascending:false}).limit(1);
-    var res;
-    if(chk.data&&chk.data.length){
-      res=await sb.from('notices').update({content:noticeContent,created_at:new Date().toISOString()}).eq('id',chk.data[0].id);
-    } else {
-      res=await sb.from('notices').insert({title:'공지사항',content:noticeContent,author:me?me.name:'관리자'});
-    }
+    // 공지는 항상 새 행으로 insert (누적)
+    var res=await sb.from('notices').insert({
+      title:'공지사항',
+      content:noticeContent,
+      author:me?me.name:'관리자'
+    });
     if(res&&res.error) toast('공지 저장 오류: '+res.error.message);
     else { toast('✅ 공지사항 저장 완료'); loadNoticesFromDB(); }
   }catch(e){toast('오류: '+e.message);}
