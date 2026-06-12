@@ -719,9 +719,9 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           <div style="font-size:9px;color:var(--g4);margin-top:2px">건</div>
         </div>
       </div>
-      <!-- 이력 목록 -->
-      <div id="mainIndList">
-        <div style="text-align:center;padding:16px 0;color:var(--g3);font-size:12px">등록된 산업재해 이력이 없습니다</div>
+      <!-- 이력 목록 - 가로 스크롤 -->
+      <div id="mainIndList" style="display:flex;gap:9px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch">
+        <div style="text-align:center;padding:16px 0;color:var(--g3);font-size:12px;width:100%">등록된 산업재해 이력이 없습니다</div>
       </div>
       <!-- 최고관리자만 등록 버튼 표시 -->
       <div id="mainIndBtn" style="display:none;margin-top:11px">
@@ -1572,7 +1572,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   </div>
 </div>
 <div id="regOk" class="modal-bg"><div class="modal"><div style="padding:26px 20px;text-align:center"><div style="font-size:46px;margin-bottom:11px">✅</div><div style="font-size:16px;font-weight:800;color:var(--g7);margin-bottom:7px">신청 완료!</div><div style="font-size:13px;color:var(--g4);line-height:1.65;margin-bottom:20px">관리자 승인 후 로그인하실 수 있습니다.</div><button onclick="closeRegOk()" class="btn-prim">로그인으로 돌아가기</button></div></div></div>
-<div id="indModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--danger),#b03030)"><h3>🚑 산업재해 등록</h3><button class="m-x" onclick="closeInd()">×</button></div><div style="padding:15px 17px;max-height:60vh;overflow-y:auto"><div class="fg"><label class="f-lbl">결정통지일자</label><input type="date" id="indDate" class="ri" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">재해자</label><input type="text" id="indPer" class="ri" placeholder="예: 오전1팀 홍길동" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">발생 장소</label><input type="text" id="indLoc" class="ri" placeholder="예: 3F 동편 화장실" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">재해 유형</label><div class="rg" id="indTG"><div class="rp" onclick="pickIT(this)">골절</div><div class="rp" onclick="pickIT(this)">타박상</div><div class="rp" onclick="pickIT(this)">열상</div><div class="rp" onclick="pickIT(this)">요통</div><div class="rp" onclick="pickIT(this)">기타</div></div></div><div class="fg"><label class="f-lbl">발생 경위 및 조치</label><textarea id="indDesc" class="f-ta show" rows="3" placeholder="발생 경위, 응급조치 등"></textarea></div><div id="indErr" style="display:none;background:var(--danger-bg);border-radius:var(--r2);padding:8px 11px;font-size:11px;color:var(--danger);font-weight:600;margin-bottom:10px"></div><button onclick="subInd()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--danger),#b03030);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">등록 완료</button></div></div></div>
+<div id="indModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--danger),#b03030)"><h3>🚑 산업재해 등록</h3><button class="m-x" onclick="closeInd()">×</button></div><div style="padding:15px 17px;max-height:60vh;overflow-y:auto"><div class="fg"><label class="f-lbl">결정통지일자</label><input type="date" id="indDate" class="ri" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">재해자</label><input type="text" id="indPer" class="ri" placeholder="예: 오전1팀 홍길동" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">발생 장소</label><input type="text" id="indLoc" class="ri" placeholder="예: 3F 동편 화장실" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">재해 유형</label><div class="rg" id="indTG"><div class="rp" onclick="pickIT(this)">골절</div><div class="rp" onclick="pickIT(this)">타박상</div><div class="rp" onclick="pickIT(this)">열상</div><div class="rp" onclick="pickIT(this)">요통</div><div class="rp" onclick="pickIT(this)">기타</div></div><input type="text" id="indTypeCustom" class="ri" placeholder="재해 유형 직접 입력" style="display:none;margin-top:7px;margin-bottom:0"></div><div class="fg"><label class="f-lbl">발생 경위 및 조치</label><textarea id="indDesc" class="f-ta show" rows="3" placeholder="발생 경위, 응급조치 등"></textarea></div><div id="indErr" style="display:none;background:var(--danger-bg);border-radius:var(--r2);padding:8px 11px;font-size:11px;color:var(--danger);font-weight:600;margin-bottom:10px"></div><button onclick="subInd()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--danger),#b03030);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">등록 완료</button></div></div></div>
 <div id="noticeM" class="modal-bg"><div class="modal" style="max-width:350px"><div style="background:linear-gradient(135deg,var(--navy),var(--teal2));padding:15px 17px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">📢</span><div><div style="color:white;font-size:14px;font-weight:800">전체 공지사항</div><div style="color:rgba(255,255,255,.6);font-size:10px" id="noticeD"></div></div></div><button onclick="closeN()" style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:26px;height:26px;color:white;font-size:15px;cursor:pointer">×</button></div><div style="padding:17px;max-height:46vh;overflow-y:auto"><div style="font-size:15px;font-weight:800;color:var(--g7);margin-bottom:9px" id="noticeT"></div><div style="font-size:13px;color:var(--g5);line-height:1.7" id="noticeB"></div></div><div style="padding:11px 17px 17px;display:flex;gap:9px;border-top:1px solid var(--g2)"><label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--g4);cursor:pointer;flex:1"><input type="checkbox" id="noSkip" style="accent-color:var(--teal)"> 오늘 다시 보지 않기</label><button onclick="closeN()" style="padding:9px 17px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer">확인</button></div></div></div>
 <div id="noticeW" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📢 공지사항 작성</h3><button class="m-x" onclick="closeNW()">×</button></div><div style="padding:15px 17px"><div class="fg"><label class="f-lbl">제목</label><input type="text" id="nT" class="ri" placeholder="공지사항 제목" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">내용</label><textarea id="nB" class="f-ta show" rows="5" placeholder="공지사항 내용"></textarea></div><button onclick="pubNotice()" class="btn-prim">전체 발송</button></div></div></div>
 
@@ -2213,18 +2213,26 @@ async function pubNotice(){const t=document.getElementById('nT').value.trim();co
 // ─ 산업재해 ─
 function openInd(){if(!me||(me.role!=='admin'&&me.role!=='manager'&&me.role!=='leader')){toast('팀장 이상만 등록 가능합니다');return;}const now=new Date();const local=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16);document.getElementById('indDate').value=local;['indPer','indLoc','indDesc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});document.querySelectorAll('#indTG .rp').forEach(p=>p.classList.remove('on'));document.getElementById('indErr').style.display='none';showM('indModal');}
 function closeInd(){hideM('indModal');}
-function pickIT(el){document.querySelectorAll('#indTG .rp').forEach(p=>p.classList.remove('on'));el.classList.add('on');}
+function pickIT(el){
+  document.querySelectorAll('#indTG .rp').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  var customEl=document.getElementById('indTypeCustom');
+  if(customEl) customEl.style.display=(el.textContent==='기타')?'block':'none';
+}
 function subInd(){
   const date=document.getElementById('indDate').value;
   const per=document.getElementById('indPer').value.trim();
   const loc=document.getElementById('indLoc').value.trim();
-  const type=(function(){var _el=document.querySelector('#indTG .rp.on');return _el?_el.textContent:undefined;})()||'';
+  const _typeEl=document.querySelector('#indTG .rp.on');
+  const _typeBase=_typeEl?_typeEl.textContent:'';
+  const _typeCustomEl=document.getElementById('indTypeCustom');
+  const type=(_typeBase==='기타'&&_typeCustomEl&&_typeCustomEl.value.trim())?_typeCustomEl.value.trim():_typeBase;
   const desc=document.getElementById('indDesc').value.trim();
   const err=document.getElementById('indErr');
   if(!date){err.textContent='발생 일시를 입력해주세요';err.style.display='block';return;}
   if(!per){err.textContent='재해자를 입력해주세요';err.style.display='block';return;}
   if(!loc){err.textContent='발생 장소를 입력해주세요';err.style.display='block';return;}
-  if(!type){err.textContent='재해 유형을 선택해주세요';err.style.display='block';return;}
+  if(!type){err.textContent='재해 유형을 선택하거나 직접 입력해주세요';err.style.display='block';return;}
   if(!desc){err.textContent='발생 경위를 입력해주세요';err.style.display='block';return;}
   indData.unshift({date,per,loc,type,desc});
   // DB 저장 (전체 공유)
@@ -5354,20 +5362,21 @@ async function loadAccidentsFromDB(){
 function renderMainIndList(data){
   var el=document.getElementById('mainIndList'); if(!el) return;
   if(!data||!data.length){
-    el.innerHTML='<p style="text-align:center;padding:16px;color:var(--g3);font-size:12px">등록된 산업재해 이력이 없습니다</p>';
+    el.style.display='block';
+    el.innerHTML='<div style="text-align:center;padding:16px 0;color:var(--g3);font-size:12px;width:100%">등록된 산업재해 이력이 없습니다</div>';
     return;
   }
+  el.style.cssText='display:flex;gap:9px;overflow-x:auto;padding-bottom:4px;-webkit-overflow-scrolling:touch';
   var h='';
-  data.slice(0,5).forEach(function(r){
+  data.slice(0,10).forEach(function(r){
     var date=r.date||r.created_at||'';
     if(date&&date.length>10) date=date.slice(0,10);
-    h+='<div style="display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--g1)">';
-    h+='<div style="width:3px;background:var(--danger);border-radius:2px;flex-shrink:0"></div>';
-    h+='<div style="flex:1">';
-    h+='<div style="font-size:11px;color:var(--danger);font-weight:700">'+date+' · '+(r.type||'기타')+'</div>';
-    h+='<div style="font-size:12px;font-weight:600;color:var(--g7)">'+(r.worker||r.per||'')+'</div>';
-    h+='<div style="font-size:11px;color:var(--g4)">📍 '+(r.location||r.loc||'')+'</div>';
-    h+='</div></div>';
+    h+='<div style="flex-shrink:0;width:140px;background:var(--danger-bg);border-radius:var(--r2);padding:11px;border:1px solid rgba(217,64,64,.15)">';
+    h+='<div style="font-size:9px;font-weight:700;color:var(--danger);margin-bottom:5px">'+date+'</div>';
+    h+='<div style="font-size:12px;font-weight:800;color:var(--g7);margin-bottom:4px">'+(r.worker||r.per||'')+'</div>';
+    h+='<div style="display:inline-block;background:var(--danger);color:white;font-size:9px;font-weight:700;padding:2px 7px;border-radius:20px;margin-bottom:5px">'+(r.type||'기타')+'</div>';
+    h+='<div style="font-size:10px;color:var(--g5)">📍 '+(r.location||r.loc||'')+'</div>';
+    h+='</div>';
   });
   el.innerHTML=h;
 }
