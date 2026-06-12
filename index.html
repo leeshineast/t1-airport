@@ -3723,6 +3723,12 @@ function renderKpiQuarter(){
         html+='<span style="font-size:13px;font-weight:700;color:var(--teal2)">'+entry['kpi'+i]+' <span style="font-size:10px;color:var(--g4)">'+unit+'</span></span>';
         html+='</div>';
       }
+      if(entry.kpi1Memo){
+        html+='<div style="margin-top:8px;background:var(--teal-bg);border-radius:8px;padding:8px 10px">';
+        html+='<div style="font-size:10px;font-weight:700;color:var(--teal2);margin-bottom:3px">📋 민원 내용</div>';
+        html+='<div style="font-size:11px;color:var(--g6);line-height:1.6;white-space:pre-wrap">'+entry.kpi1Memo+'</div>';
+        html+='</div>';
+      }
       if(entry.kpiNote){
         html+='<div style="margin-top:7px;font-size:11px;color:var(--g4);font-style:italic">📝 '+entry.kpiNote+'</div>';
       }
