@@ -2089,7 +2089,7 @@ async function loadHandoverByShift(shift){
       var ps=parseShift(r.shift);
       var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[ps.group]);
       var isDone=r.confirmed;
-      var ts=r.created_at?new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
+      var ts=r.created_at?new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
       var author=r.author||'작성자';
       var fields='';
       if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📝 업무내용</div><div class="ho-val">'+r.notice+'</div></div>';
@@ -3018,7 +3018,7 @@ async function loadHandoverByShift(shift){
       var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[r.shift]);
       var ps2=parseShift(r.shift);
       var isDone=r.confirmed;
-      var ts=r.created_at?new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
+      var ts=r.created_at?new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
       var author=r.author||'작성자';
       var fields='';
       if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📝 업무내용</div><div class="ho-val">'+r.notice+'</div></div>';
@@ -5440,6 +5440,15 @@ async function _saveNoticeDB_unused(content){
 }
 
 // ── 인수인계 ──
+
+// shift 파싱: '4팀 (오전팀)' → {team:'4팀', group:'오전팀'}
+function parseShift(shiftStr){
+  if(!shiftStr) return {team:'',group:'오전팀'};
+  var m=shiftStr.match(/^(.+?)\s*\((.+?)\)$/);
+  if(m) return {team:m[1].trim(), group:m[2].trim()};
+  return {team:shiftStr, group:shiftStr};
+}
+
 var hoAll=[];
 
 function renderHoList(data){
@@ -5456,7 +5465,7 @@ function renderHoList(data){
   // 날짜별 그룹핑
   var groups={};
   data.forEach(function(r){
-    var d=r.created_at?r.created_at.slice(0,10):'';
+    var d=r.created_at?new Date(r.created_at).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'}):'';
     if(!groups[d]) groups[d]=[];
     groups[d].push(r);
   });
@@ -5477,7 +5486,7 @@ function renderHoList(data){
     var dayData=groups[dateKey];
     var isToday=(dateKey===todayKst);
     var dateLabel=isToday?'오늘 ('+dateKey+')':dateKey;
-    var dow=['일','월','화','수','목','금','토'][new Date(dateKey).getDay()];
+    var dow=['일','월','화','수','목','금','토'][new Date(dateKey+'T00:00:00+09:00').getDay()];
     dateLabel=dateKey+' ('+dow+')';
 
     // 날짜 헤더
@@ -5492,7 +5501,7 @@ function renderHoList(data){
     var sNm=r.shift||'오전팀';
     var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[sNm]);
     var isDone=r.confirmed;
-    var ts=r.created_at?new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
+    var ts=r.created_at?new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
     var author=r.author||'작성자';
     var initial=author[0]||'?';
     var fields='';
@@ -5548,7 +5557,7 @@ function downloadHoExcel(){
     var allRows=[['날짜','시간','인계팀','인수팀','작성자','소속','시설고장','민원','위험구역','안전사고','장비차량','공지사항','확인여부','확인자']];
     dates.forEach(function(d){
       groups[d].forEach(function(r){
-        var ts=r.created_at?new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false}):'';
+        var ts=r.created_at?new Date(r.created_at).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false}):'';
         allRows.push([
           d, ts,
           r.shift||'', r.to_shift||'',
@@ -5570,7 +5579,7 @@ function downloadHoExcel(){
     dates.slice(0,7).forEach(function(d){
       var rows=[['시간','인계팀','인수팀','작성자','소속','시설고장','민원','위험구역','안전사고','장비차량','공지사항','확인여부']];
       groups[d].forEach(function(r){
-        var ts=r.created_at?new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false}):'';
+        var ts=r.created_at?new Date(r.created_at).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false}):'';
         rows.push([ts, r.shift||'', r.to_shift||'', r.author||'', r.team||'', r.facility||'', r.complaint||'', r.danger||'', r.accident||'', r.equipment||'', r.notice||'', r.confirmed?'✅':'❌']);
       });
       var ws2=XLSX.utils.aoa_to_sheet(rows);
@@ -5597,11 +5606,11 @@ async function confHODB(id, btn){
 
 function updateAccComplaintCount(){
   // 오늘 인수인계 기록에서 안전사고/민원 건수 집계 (KST 기준)
-  var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+  var today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
   var todayHo=(hoAll||[]).filter(function(r){
     var d=r.created_at||r.date||'';
     // created_at을 KST로 변환해서 비교
-    var dKst=d?new Date(new Date(d).getTime()+9*3600000).toISOString().slice(0,10):'';
+    var dKst=d?new Date(d).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'}):'';
     return dKst===today;
   });
   var accToday=todayHo.filter(function(r){return r.accident&&r.accident!=='없음';}).length;
