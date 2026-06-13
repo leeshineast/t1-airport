@@ -1860,7 +1860,7 @@ function applyRoleUI(){
   var wrNm=document.getElementById('wrNm');if(wrNm)wrNm.textContent=me.name+' ('+(me.team||'')+')';
   // 날짜
   var now=new Date();
-  var ds=now.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  var ds=new Date(Date.now()+9*3600000).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
   var dd=document.getElementById('dashDate');if(dd)dd.textContent=ds;
   var md=document.getElementById('mpDate');if(md)md.textContent=ds;
   // 관리자 메뉴 (admin + manager 모두)
@@ -1951,7 +1951,7 @@ function finishLogin(){
     loadUserList();
     loadPendingBadge();
   }
-  var now2=new Date();
+  var now2=new Date(Date.now()+9*3600000);
   var ldl=document.getElementById('leaderDateLbl');if(ldl)ldl.textContent=now2.toLocaleDateString('ko-KR');
   var ldl2=document.getElementById('leaderDateLbl2');if(ldl2)ldl2.textContent=now2.toLocaleDateString('ko-KR');
   var vn=document.getElementById('vhName');if(vn)vn.value=me?me.name:'';
@@ -2089,7 +2089,7 @@ async function loadHandoverByShift(shift){
       var ps=parseShift(r.shift);
       var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[ps.group]);
       var isDone=r.confirmed;
-      var ts=r.created_at?new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+      var ts=r.created_at?new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
       var author=r.author||'작성자';
       var fields='';
       if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📝 업무내용</div><div class="ho-val">'+r.notice+'</div></div>';
@@ -3018,7 +3018,7 @@ async function loadHandoverByShift(shift){
       var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[r.shift]);
       var ps2=parseShift(r.shift);
       var isDone=r.confirmed;
-      var ts=r.created_at?new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+      var ts=r.created_at?new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
       var author=r.author||'작성자';
       var fields='';
       if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📝 업무내용</div><div class="ho-val">'+r.notice+'</div></div>';
@@ -5188,7 +5188,7 @@ async function loadPendingUsers(){
       var div=document.createElement('div');
       div.className='u-row';
       div.style.cssText='flex-direction:column;align-items:flex-start;gap:8px';
-      div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' &middot; '+u.role+'</div></div></div><div style="display:flex;gap:6px"><button class="pend-approve-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--success-bg);color:var(--success);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">✓ 승인</button><button class="pend-reject-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">✕ 거부</button></div></div><div style="font-size:10px;color:var(--g4)">'+u.email+' &middot; '+new Date(u.created_at).toLocaleDateString('ko-KR')+'</div>';
+      div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' &middot; '+u.role+'</div></div></div><div style="display:flex;gap:6px"><button class="pend-approve-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--success-bg);color:var(--success);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">✓ 승인</button><button class="pend-reject-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">✕ 거부</button></div></div><div style="font-size:10px;color:var(--g4)">'+u.email+' &middot; '+new Date(new Date(u.created_at).getTime()+9*3600000).toLocaleDateString('ko-KR')+'</div>';
       div.querySelector('.pend-approve-btn').onclick=function(){approveUser(this.dataset.id,this.dataset.name);};
       div.querySelector('.pend-reject-btn').onclick=function(){rejectUser(this.dataset.id,this.dataset.name);};
       el.appendChild(div);
@@ -5492,7 +5492,7 @@ function renderHoList(data){
     var sNm=r.shift||'오전팀';
     var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[sNm]);
     var isDone=r.confirmed;
-    var ts=r.created_at?new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+    var ts=r.created_at?new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
     var author=r.author||'작성자';
     var initial=author[0]||'?';
     var fields='';
@@ -5548,7 +5548,7 @@ function downloadHoExcel(){
     var allRows=[['날짜','시간','인계팀','인수팀','작성자','소속','시설고장','민원','위험구역','안전사고','장비차량','공지사항','확인여부','확인자']];
     dates.forEach(function(d){
       groups[d].forEach(function(r){
-        var ts=r.created_at?new Date(r.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'';
+        var ts=r.created_at?new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false}):'';
         allRows.push([
           d, ts,
           r.shift||'', r.to_shift||'',
@@ -5570,7 +5570,7 @@ function downloadHoExcel(){
     dates.slice(0,7).forEach(function(d){
       var rows=[['시간','인계팀','인수팀','작성자','소속','시설고장','민원','위험구역','안전사고','장비차량','공지사항','확인여부']];
       groups[d].forEach(function(r){
-        var ts=r.created_at?new Date(r.created_at).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'';
+        var ts=r.created_at?new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false}):'';
         rows.push([ts, r.shift||'', r.to_shift||'', r.author||'', r.team||'', r.facility||'', r.complaint||'', r.danger||'', r.accident||'', r.equipment||'', r.notice||'', r.confirmed?'✅':'❌']);
       });
       var ws2=XLSX.utils.aoa_to_sheet(rows);
@@ -6220,7 +6220,7 @@ function renderNotifList(){
   var h='';
   notifList.forEach(function(n){
     var diff=Math.floor((Date.now()-new Date(n.time).getTime())/1000);
-    var timeStr=diff<60?'방금 전':diff<3600?Math.floor(diff/60)+'분 전':diff<86400?Math.floor(diff/3600)+'시간 전':new Date(n.time).toLocaleDateString('ko-KR');
+    var timeStr=diff<60?'방금 전':diff<3600?Math.floor(diff/60)+'분 전':diff<86400?Math.floor(diff/3600)+'시간 전':new Date(new Date(n.time).getTime()+9*3600000).toLocaleDateString('ko-KR');
     h+='<div style="padding:12px 14px;border-bottom:1px solid var(--g1);display:flex;gap:10px;align-items:flex-start;background:'+(n.read?'white':'#F0FDF9')+'">';
     h+='<div style="width:36px;height:36px;border-radius:50%;background:'+(bgs[n.type]||'var(--g1)')+';display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0">'+n.icon+'</div>';
     h+='<div style="flex:1"><div style="font-size:12px;font-weight:700;color:var(--g7);margin-bottom:2px">'+n.title+'</div>';
