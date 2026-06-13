@@ -6235,8 +6235,19 @@ function renderNotifList(){
 function updateNotifBadge(){
   var badge=document.getElementById('notifBellBadge');
   if(!badge) return;
-  if(notifUnread>0){ badge.style.display='block'; badge.textContent=notifUnread>9?'9+':notifUnread; }
-  else badge.style.display='none';
+  if(notifUnread>0){
+    badge.style.display='block';
+    badge.textContent=notifUnread>9?'9+':notifUnread;
+    // 앱 아이콘 뱃지 (Android PWA / iOS 16.4+ PWA)
+    if(navigator.setAppBadge) navigator.setAppBadge(notifUnread).catch(function(){});
+    // 브라우저 탭 제목
+    document.title='('+notifUnread+') T1 환경미화사업부';
+  } else {
+    badge.style.display='none';
+    // 뱃지 초기화
+    if(navigator.clearAppBadge) navigator.clearAppBadge().catch(function(){});
+    document.title='T1 환경미화사업부';
+  }
 }
 
 function markAllNotifRead(){
@@ -6317,8 +6328,8 @@ function checkShiftReset(){
   });
 }
 setInterval(checkShiftReset, 60000);
-// 인력현황 60초마다 자동 갱신 + 알림 체크
-setInterval(function(){ if(me){ loadMpFromDB(); checkNotifUpdates(); } }, 60000);
+// 인력현황 30초마다 자동 갱신 + 알림 체크
+setInterval(function(){ if(me){ loadMpFromDB(); checkNotifUpdates(); } }, 30000);
 checkShiftReset();
 </script>
 <script>
