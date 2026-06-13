@@ -2086,27 +2086,26 @@ async function loadHandoverByShift(shift){
     var avC={'오전팀':'var(--navy)','오후팀':'var(--teal2)','야간팀':'#6B21A8'};
     var html='';
     res.data.forEach(function(r){
-      var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[r.shift]);
+      var ps=parseShift(r.shift);
+      var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[ps.group]);
       var isDone=r.confirmed;
-      var ts=r.created_at?new Date(r.created_at).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+      var ts=r.created_at?new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
       var author=r.author||'작성자';
       var fields='';
-      if(r.facility) fields+='<div class="ho-f"><div class="ho-lbl">🔧 시설물</div><div class="ho-val">'+r.facility+'</div></div>';
-      if(r.complaint) fields+='<div class="ho-f"><div class="ho-lbl">📢 민원</div><div class="ho-val">'+r.complaint+'</div></div>';
-      if(r.danger) fields+='<div class="ho-f"><div class="ho-lbl">⚠️ 위험</div><div class="ho-val">'+r.danger+'</div></div>';
-      if(r.accident) fields+='<div class="ho-f"><div class="ho-lbl">🚨 사고</div><div class="ho-val">'+r.accident+'</div></div>';
-      if(r.equipment) fields+='<div class="ho-f"><div class="ho-lbl">🚛 장비</div><div class="ho-val">'+r.equipment+'</div></div>';
-      if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📋 공지</div><div class="ho-val">'+r.notice+'</div></div>';
+      if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📝 업무내용</div><div class="ho-val">'+r.notice+'</div></div>';
+      if(r.facility&&r.facility!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🔧 시설물</div><div class="ho-val">'+r.facility+'</div></div>';
+      if(r.complaint&&r.complaint!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">📢 민원</div><div class="ho-val">'+r.complaint+'</div></div>';
+      if(r.accident&&r.accident!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🚨 사고</div><div class="ho-val">'+r.accident+'</div></div>';
       if(!fields) fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
       var confBtn=isDone?'<div style="font-size:11px;color:var(--success);font-weight:700;padding:6px 0">✅ '+(r.confirmed_by||'')+'님 확인완료</div>':'<div class="conf-row"><button class="btn-conf" onclick="confHODB('+r.id+',this)">✔ 인수 확인</button></div>';
       html+='<div class="ho-card">'
         +'<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px">'
-        +'<span class="t-pill '+(pMap[r.shift]||'pill-am')+'">'+r.shift+'</span>'
+        +'<span class="t-pill '+(pMap[ps.group]||'pill-am')+'">'+ps.team+'</span>'
         +'<span style="color:var(--g3)">→</span>'
         +'<span class="t-pill '+(pMap[toNm]||'pill-pm')+'">'+(toNm||'')+'</span>'
         +'<span class="chip '+(isDone?'chip-ok':'chip-warn')+'"><span class="chip-dot"></span>'+(isDone?'확인완료':'대기')+'</span>'
         +'</div><span class="ho-time">'+ts+'</span></div>'
-        +'<div class="w-row"><div class="w-av" style="background:'+(avC[r.shift]||'var(--navy)')+'">'+author[0]+'</div>'
+        +'<div class="w-row"><div class="w-av" style="background:'+(avC[ps.group]||'var(--navy)')+'">'+author[0]+'</div>'
         +'<span class="w-nm">'+author+(r.team?' · '+r.team:'')+'</span></div>'
         +'<div class="ho-body">'+fields+'</div>'+confBtn+'</div>';
     });
@@ -2136,7 +2135,7 @@ function subMp(){
   var selBtn=document.querySelector('.myteam-btn.on:not(.done)');
   if(selBtn) myTeam=selBtn.dataset.team||myTeam;
     if(myTeam){
-      var today=new Date().toISOString().slice(0,10);
+      var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
       try{
         var log=JSON.parse(localStorage.getItem('t1_mp_log')||'{}');
         var shKey=sh.trim();
@@ -2220,10 +2219,10 @@ function subHO(){
   if(!fields)fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
   const card=document.createElement('div');
   card.className='ho-card';
-  card.innerHTML=`<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px"><span class="t-pill ${pMap[sNm]}">${sNm}</span><span style="color:var(--g3)">→</span><span class="t-pill ${pMap[toNm]}">${toNm}</span><span class="chip chip-warn"><span class="chip-dot"></span>대기</span></div><span class="ho-time">${ts}</span></div><div class="w-row"><div class="w-av" style="background:${avC[sNm]}">${me?me.initial:'?'}</div><span class="w-nm">${me?me.name:'작성자'} · ${me?me.team:''} 작성</span></div><div class="ho-body">${fields}</div><div class="conf-row"><button class="btn-conf" onclick="confHO(this)">✔ 인수 확인</button></div>`;
+  card.innerHTML=`<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px"><span class="t-pill ${pMap[sNm]}">${raw}</span><span style="color:var(--g3)">→</span><span class="t-pill ${pMap[toNm]}">${toNm}</span><span class="chip chip-warn"><span class="chip-dot"></span>대기</span></div><span class="ho-time">${ts}</span></div><div class="w-row"><div class="w-av" style="background:${avC[sNm]}">${me?me.initial:'?'}</div><span class="w-nm">${me?me.name:'작성자'} · ${me?me.team:''} 작성</span></div><div class="ho-body">${fields}</div><div class="conf-row"><button class="btn-conf" onclick="confHO(this)">✔ 인수 확인</button></div>`;
   // ① DB에 저장 (전체 공유)
   var hoData = {
-    shift: sNm, // 근무조 (오전/오후/야간팀)
+    shift: raw+' ('+sNm+')', // '4팀 (오전팀)' 형식으로 저장
     to_shift: toNm,
     author: me?me.name:'작성자',
     team: me?me.team:'',
@@ -2485,7 +2484,7 @@ async function dlCSV(type){
   toast('📥 엑셀 다운로드 준비 중...');
   try{
     var wb={SheetNames:[],Sheets:{}};
-    var today=new Date().toISOString().slice(0,10);
+    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
 
     // ── 인수인계 ──
     if(type==='ho'||type==='all'){
@@ -2624,7 +2623,7 @@ function _dlCSV_old(type){if(!me||me.role!=='admin'){toast('다운로드 권한�
 // ─ 현재 근무인원 ─
 function updateStaff(){
   // 현재(오늘) 근무 인원
-  var today=new Date().toISOString().slice(0,10);
+  var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   var yesterday=new Date(Date.now()-86400000).toISOString().slice(0,10);
 
   function calcDayTotal(dayKey){
@@ -2853,7 +2852,7 @@ function saveLeaders(){
 var mpInputLog = {};
 function loadMpInputLog(){
   var validTeams=['1팀A', '1팀B', '1팀C', '2팀A', '2팀B', '3팀A', '3팀B', '4팀A', '4팀B', '6팀A', '6팀B', '6팀C', '7팀A', '7팀B', '8팀A', '8팀B', '9팀A', '9팀B', '5팀A', '5팀B', '10팀A', '10팀B'];
-  var today=new Date().toISOString().slice(0,10);
+  var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   try{
     var s=localStorage.getItem('t1_mp_log');
     if(s){
@@ -2880,7 +2879,7 @@ function saveMpInputLog(){
 
 // 입력 완료 기록에 추가
 function logMpInput(shift, leaderTeam){
-  var today=new Date().toISOString().slice(0,10);
+  var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   if(!mpInputLog[today]) mpInputLog[today]={오전:[],오후:[],야간:[]};
   if(!mpInputLog[today][shift]) mpInputLog[today][shift]=[];
   if(mpInputLog[today][shift].indexOf(leaderTeam)===-1){
@@ -2894,7 +2893,7 @@ function logMpInput(shift, leaderTeam){
 
 // 메인 화면 조장 입력현황 렌더링
 function renderLeaderStatus(){
-  var ldl2=document.getElementById('leaderDateLbl2');if(ldl2)ldl2.textContent=new Date().toLocaleDateString('ko-KR');
+  var ldl2=document.getElementById('leaderDateLbl2');if(ldl2)ldl2.textContent=new Date(Date.now()+9*3600000).toLocaleDateString('ko-KR');
   var el=document.getElementById('leaderStatusWrap');
   if(!el) return;
   var shiftColors={'오전':'var(--navy)','오후':'var(--teal2)','야간':'#6B21A8'};
@@ -3017,26 +3016,25 @@ async function loadHandoverByShift(shift){
     var html='';
     res.data.forEach(function(r){
       var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[r.shift]);
+      var ps2=parseShift(r.shift);
       var isDone=r.confirmed;
-      var ts=r.created_at?new Date(r.created_at).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+      var ts=r.created_at?new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
       var author=r.author||'작성자';
       var fields='';
-      if(r.facility) fields+='<div class="ho-f"><div class="ho-lbl">🔧 시설물</div><div class="ho-val">'+r.facility+'</div></div>';
-      if(r.complaint) fields+='<div class="ho-f"><div class="ho-lbl">📢 민원</div><div class="ho-val">'+r.complaint+'</div></div>';
-      if(r.danger) fields+='<div class="ho-f"><div class="ho-lbl">⚠️ 위험</div><div class="ho-val">'+r.danger+'</div></div>';
-      if(r.accident) fields+='<div class="ho-f"><div class="ho-lbl">🚨 사고</div><div class="ho-val">'+r.accident+'</div></div>';
-      if(r.equipment) fields+='<div class="ho-f"><div class="ho-lbl">🚛 장비</div><div class="ho-val">'+r.equipment+'</div></div>';
-      if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📋 공지</div><div class="ho-val">'+r.notice+'</div></div>';
+      if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📝 업무내용</div><div class="ho-val">'+r.notice+'</div></div>';
+      if(r.facility&&r.facility!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🔧 시설물</div><div class="ho-val">'+r.facility+'</div></div>';
+      if(r.complaint&&r.complaint!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">📢 민원</div><div class="ho-val">'+r.complaint+'</div></div>';
+      if(r.accident&&r.accident!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🚨 사고</div><div class="ho-val">'+r.accident+'</div></div>';
       if(!fields) fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
       var confBtn=isDone?'<div style="font-size:11px;color:var(--success);font-weight:700;padding:6px 0">✅ '+(r.confirmed_by||'')+'님 확인완료</div>':'<div class="conf-row"><button class="btn-conf" onclick="confHODB('+r.id+',this)">✔ 인수 확인</button></div>';
       html+='<div class="ho-card">'
         +'<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px">'
-        +'<span class="t-pill '+(pMap[r.shift]||'pill-am')+'">'+r.shift+'</span>'
+        +'<span class="t-pill '+(pMap[ps2.group]||'pill-am')+'">'+ps2.team+'</span>'
         +'<span style="color:var(--g3)">→</span>'
         +'<span class="t-pill '+(pMap[toNm]||'pill-pm')+'">'+(toNm||'')+'</span>'
         +'<span class="chip '+(isDone?'chip-ok':'chip-warn')+'"><span class="chip-dot"></span>'+(isDone?'확인완료':'대기')+'</span>'
         +'</div><span class="ho-time">'+ts+'</span></div>'
-        +'<div class="w-row"><div class="w-av" style="background:'+(avC[r.shift]||'var(--navy)')+'">'+author[0]+'</div>'
+        +'<div class="w-row"><div class="w-av" style="background:'+(avC[ps2.group]||'var(--navy)')+'">'+author[0]+'</div>'
         +'<span class="w-nm">'+author+(r.team?' · '+r.team:'')+'</span></div>'
         +'<div class="ho-body">'+fields+'</div>'+confBtn+'</div>';
     });
@@ -3091,7 +3089,7 @@ function confirmMp(){
   saveMpData();
 
   try{
-    var today=new Date().toISOString().slice(0,10);
+    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
     var shiftSaved={};  // localStorage 제거 - DB 저장 사용
     if(!shiftSaved[today]) shiftSaved[today]=[];
     if(shiftSaved[today].indexOf(shKey)===-1) shiftSaved[today].push(shKey);
@@ -3126,7 +3124,7 @@ function recalcMpData(){
 }
 function saveMpData(){
   // DB 저장 (전체 공유) - 각 팀별로 upsert
-  var today2=new Date().toISOString().slice(0,10);
+  var today2=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   Object.keys(mpDataByLeader).forEach(function(shift){
     Object.keys(mpDataByLeader[shift]).forEach(function(teamCode){
       saveMpToDB(shift, teamCode, mpDataByLeader[shift][teamCode]);
@@ -3155,7 +3153,7 @@ function updateMpSummary(){
     rows+='<span style="font-size:12px;color:'+shiftColors[s]+';font-weight:600">'+shiftIcons[s]+' '+s+'팀</span>';
     rows+='<span style="font-size:15px;font-weight:800;color:'+shiftColors[s]+'">'+st+'<span style="font-size:10px;font-weight:400;color:var(--g4)">명</span></span></div>';
   });
-  el.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><span style="font-size:12px;font-weight:700;color:var(--g6)">📊 금일 누계 현황</span><span style="font-size:11px;color:var(--g4)">'+new Date().toLocaleDateString('ko-KR')+'</span></div>'+rows;
+  el.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><span style="font-size:12px;font-weight:700;color:var(--g6)">📊 금일 누계 현황</span><span style="font-size:11px;color:var(--g4)">'+new Date(Date.now()+9*3600000).toLocaleDateString('ko-KR')+'</span></div>'+rows;
   el.innerHTML+='<div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;margin-top:2px"><span style="font-size:13px;font-weight:800;color:var(--g7)">금일 총계</span><span style="font-size:22px;font-weight:900;color:var(--teal)">'+total+'<span style="font-size:11px;font-weight:400;color:var(--g4)">명</span></span></div>';
 }
 
@@ -4061,7 +4059,7 @@ function rstShiftTab(n){
   if(!list) return;
   var shift=shifts[n];
   var leaders=LEADERS[shift]||[];
-  var today=new Date().toISOString().slice(0,10);
+  var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   var log=mpInputLog[today]||{};
   var done=(log[shift]||[]);
   if(!leaders.length){
@@ -4456,7 +4454,7 @@ function getMyLeaderTeam(){
 // ─ 시작 시 입력로그 정리 ─
 (function(){
   var validTeams=['1팀A', '1팀B', '1팀C', '2팀A', '2팀B', '3팀A', '3팀B', '4팀A', '4팀B', '6팀A', '6팀B', '6팀C', '7팀A', '7팀B', '8팀A', '8팀B', '9팀A', '9팀B', '5팀A', '5팀B', '10팀A', '10팀B'];
-  var today=new Date().toISOString().slice(0,10);
+  var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   try{
     var s=localStorage.getItem('t1_mp_log');
     if(s){
@@ -4540,7 +4538,7 @@ function processFacFiles(){
         if(progBar) progBar.style.width=pct+'%';
         if(progText) progText.textContent=file.name+' 처리 완료 ('+done+'/'+total+')';
         if(done===total){
-          facilityUploadDate=new Date().toLocaleDateString('ko-KR');
+          facilityUploadDate=new Date(Date.now()+9*3600000).toLocaleDateString('ko-KR');
           saveFacilityData();
           renderFacilitySummary();
           renderFacilityDash();
@@ -5494,7 +5492,7 @@ function renderHoList(data){
     var sNm=r.shift||'오전팀';
     var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[sNm]);
     var isDone=r.confirmed;
-    var ts=r.created_at?new Date(r.created_at).toLocaleDateString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+    var ts=r.created_at?new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
     var author=r.author||'작성자';
     var initial=author[0]||'?';
     var fields='';
@@ -5598,11 +5596,13 @@ async function confHODB(id, btn){
 }
 
 function updateAccComplaintCount(){
-  // 오늘 인수인계 기록에서 안전사고/민원 건수 집계
-  var today=new Date().toISOString().slice(0,10);
+  // 오늘 인수인계 기록에서 안전사고/민원 건수 집계 (KST 기준)
+  var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   var todayHo=(hoAll||[]).filter(function(r){
     var d=r.created_at||r.date||'';
-    return d.slice(0,10)===today;
+    // created_at을 KST로 변환해서 비교
+    var dKst=d?new Date(new Date(d).getTime()+9*3600000).toISOString().slice(0,10):'';
+    return dKst===today;
   });
   var accToday=todayHo.filter(function(r){return r.accident&&r.accident!=='없음';}).length;
   var compToday=todayHo.filter(function(r){return r.complaint&&r.complaint!=='없음';}).length;
@@ -5722,7 +5722,7 @@ async function loadAccidentsFromDB(){
     // 카운트 업데이트
     updateIndCmp();
     var yr=new Date().getFullYear().toString();
-    var thisMonth=new Date().toISOString().slice(0,7);
+    var thisMonth=new Date(Date.now()+9*3600000).toISOString().slice(0,7);
     var yc=indData.filter(function(d){return d.date&&d.date.startsWith(yr);}).length;
     var mc=indData.filter(function(d){return d.date&&d.date.startsWith(thisMonth);}).length;
     ['mainIndYear','aIndY'].forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=yc;});
@@ -5830,7 +5830,7 @@ async function saveKpiToDB(y, m, entry){
 async function saveFacilityToDB(type, data, date){
   try{
     await sb.from('facility_data').upsert({
-      upload_date:new Date().toISOString().slice(0,10),
+      upload_date:new Date(Date.now()+9*3600000).toISOString().slice(0,10),
       facility_type:type,
       data:data
     },{onConflict:'facility_type'});
