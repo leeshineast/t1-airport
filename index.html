@@ -714,6 +714,12 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">공지사항을 불러오는 중...</div>
   </div></div>
 
+  <!-- 특별작업 현황 -->
+  <div id="specialWorkWrap" style="display:none;margin-bottom:13px">
+    <div class="sec-lbl">🔨 특별작업 현황</div>
+    <div class="card"><div style="padding:11px 13px" id="specialWorkList"></div></div>
+  </div>
+
   <!-- 산업재해 현황 -->
   <div class="sec-lbl">산업재해 현황</div>
   <div class="card" style="margin-bottom:11px">
@@ -1041,6 +1047,19 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <div class="rp" onclick="togF(this,'hA',true)">발생</div>
       </div>
       <textarea class="f-ta" id="hA" rows="2" placeholder="사고 내용 및 조치사항"></textarea>
+    </div></div>
+
+    <!-- 6. 특별작업 -->
+    <div class="card" style="margin-bottom:10px"><div class="cb">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--navy);color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">6</div>
+        <span style="font-size:13px;font-weight:800;color:var(--g7)">🔨 특별작업</span>
+      </div>
+      <div class="rg" style="margin-bottom:8px">
+        <div class="rp on" onclick="togF(this,'hSp',false)">없음</div>
+        <div class="rp" onclick="togF(this,'hSp',true)">있음</div>
+      </div>
+      <textarea class="f-ta" id="hSp" rows="2" placeholder="특별작업 내용 및 진행사항"></textarea>
     </div></div>
 
     <!-- DB 호환용 hidden -->
@@ -1815,6 +1834,10 @@ function go(name){
   });
   window.scrollTo(0,0);
   // 화면 진입 시 자동 새로고침
+  if(name==='mp'){
+    // 로그인한 사람 근무조/팀 자동 선택
+    setTimeout(autoSelectMyShiftTeam, 100);
+  }
   if(name==='admin'){
     loadPendingUsers();
     loadUserList();
@@ -1941,6 +1964,7 @@ function finishLogin(){
   loadFacilityData();
   loadMpFromDB();
   loadKpiData();
+  setTimeout(autoSelectMyShiftTeam, 2000); // 로그인 후 자동 선택
   renderLeaderStatus();
   updateMyTeamGrp();
   if(me&&me.role==='admin'){
@@ -2096,6 +2120,7 @@ async function loadHandoverByShift(shift){
       if(r.facility&&r.facility!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🔧 시설물</div><div class="ho-val">'+r.facility+'</div></div>';
       if(r.complaint&&r.complaint!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">📢 민원</div><div class="ho-val">'+r.complaint+'</div></div>';
       if(r.accident&&r.accident!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🚨 사고</div><div class="ho-val">'+r.accident+'</div></div>';
+      if(r.special&&r.special!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🔨 특별작업</div><div class="ho-val">'+r.special+'</div></div>';
       if(!fields) fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
       var confBtn=isDone?'<div style="font-size:11px;color:var(--success);font-weight:700;padding:6px 0">✅ '+(r.confirmed_by||'')+'님 확인완료</div>':'<div class="conf-row"><button class="btn-conf" onclick="confHODB('+r.id+',this)">✔ 인수 확인</button></div>';
       html+='<div class="ho-card">'
@@ -2201,7 +2226,7 @@ function subHO(){
   // 폼 초기화
   document.querySelectorAll('#hoSG .rp').forEach(p=>p.classList.remove('on'));
   document.getElementById('hoW').style.display='none';
-  ['hF','hC','hD','hA','hE'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';e.classList.remove('show');}});
+  ['hF','hC','hD','hA','hE','hSp'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';e.classList.remove('show');}});
   var hEtcEl=document.getElementById('hEtc');if(hEtcEl)hEtcEl.value='';
   ['hN'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   document.querySelectorAll('#hoP4 .fg').forEach(g=>{const ps=g.querySelectorAll('.rp');ps.forEach(p=>p.classList.remove('on','on-d'));if(ps[0])ps[0].classList.add('on');});
@@ -2221,6 +2246,8 @@ function subHO(){
   card.className='ho-card';
   card.innerHTML=`<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px"><span class="t-pill ${pMap[sNm]}">${raw}</span><span style="color:var(--g3)">→</span><span class="t-pill ${pMap[toNm]}">${toNm}</span><span class="chip chip-warn"><span class="chip-dot"></span>대기</span></div><span class="ho-time">${ts}</span></div><div class="w-row"><div class="w-av" style="background:${avC[sNm]}">${me?me.initial:'?'}</div><span class="w-nm">${me?me.name:'작성자'} · ${me?me.team:''} 작성</span></div><div class="ho-body">${fields}</div><div class="conf-row"><button class="btn-conf" onclick="confHO(this)">✔ 인수 확인</button></div>`;
   // ① DB에 저장 (전체 공유)
+  var hSpEl=document.getElementById('hSp');
+  var special=(hSpEl&&hSpEl.classList.contains('show')&&hSpEl.value)?hSpEl.value:'없음';
   var hoData = {
     shift: raw+' ('+sNm+')', // '4팀 (오전팀)' 형식으로 저장
     to_shift: toNm,
@@ -2231,8 +2258,8 @@ function subHO(){
     danger: dT!=='없음'?dT:null,
     accident: aT!=='없음'?aT:null,
     equipment: eT!=='이상없음'?eT:null,
-    notice: document.getElementById('hN')?document.getElementById('hN').value||null:null,
-    special: document.getElementById('hEtc')?document.getElementById('hEtc').value||null:null,
+    notice: document.getElementById('hEtc')?document.getElementById('hEtc').value||null:null,
+    special: (document.getElementById('hSp')&&document.getElementById('hSp').classList.contains('show'))?document.getElementById('hSp').value||null:null,
     confirmed: false
   };
   saveHandoverToDB(hoData);
@@ -3025,6 +3052,7 @@ async function loadHandoverByShift(shift){
       if(r.facility&&r.facility!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🔧 시설물</div><div class="ho-val">'+r.facility+'</div></div>';
       if(r.complaint&&r.complaint!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">📢 민원</div><div class="ho-val">'+r.complaint+'</div></div>';
       if(r.accident&&r.accident!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🚨 사고</div><div class="ho-val">'+r.accident+'</div></div>';
+      if(r.special&&r.special!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🔨 특별작업</div><div class="ho-val">'+r.special+'</div></div>';
       if(!fields) fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
       var confBtn=isDone?'<div style="font-size:11px;color:var(--success);font-weight:700;padding:6px 0">✅ '+(r.confirmed_by||'')+'님 확인완료</div>':'<div class="conf-row"><button class="btn-conf" onclick="confHODB('+r.id+',this)">✔ 인수 확인</button></div>';
       html+='<div class="ho-card">'
@@ -3200,7 +3228,10 @@ function updateFloorChart(){
     var lsS=vals[0]+vals[1],asS=vals[2]+vals[3];
     var bigNum=panel.querySelector('span[style*="font-size:34px"]');if(bigNum)bigNum.textContent=flTot;
     var cards=panel.querySelectorAll('div[style*="font-size:26px"]');vals.forEach(function(v,i){if(cards[i])cards[i].textContent=v;});
-    var subs=panel.querySelectorAll('span[style*="font-size:20px"]');if(subs[0])subs[0].textContent=lsS;if(subs[1])subs[1].textContent=asS;
+    // L/S 소계, A/S 소계 각각 정확히 찾기
+    var subDivs=panel.querySelectorAll('div[style*="navy-bg"] span[style*="20px"], div[style*="teal-bg"] span[style*="20px"]');
+    if(subDivs[0]) subDivs[0].textContent=lsS;
+    if(subDivs[1]) subDivs[1].textContent=asS;
   });
   // 대시보드 카드
   var dashTot=document.getElementById('dashTotStaff');if(dashTot&&grandTotal>0)dashTot.textContent=grandTotal;
@@ -3532,6 +3563,38 @@ function updateMyTeamGrp(){
   });
   grp.innerHTML=h;
 }
+
+// 로그인한 사람 근무조/팀 자동 선택
+function autoSelectMyShiftTeam(){
+  if(!me||!me.team) return;
+  var team=me.team; // 예: '3팀B', '8팀A' 등
+
+  // 팀번호로 근무조 파악
+  var teamNum=parseInt(team.replace(/[^0-9]/g,''));
+  var shiftMap={1:'오전',2:'오전',3:'오전',4:'오전',5:'야간',6:'오후',7:'오후',8:'오후',9:'오후',10:'야간'};
+  var myShift=shiftMap[teamNum]||'오전';
+
+  // 근무조 버튼 자동 선택
+  document.querySelectorAll('#shiftGrp .rp').forEach(function(btn){
+    btn.classList.remove('on');
+    if(btn.textContent.trim()===myShift) btn.classList.add('on');
+  });
+
+  // 팀 버튼 자동 체크 (updateMyTeamGrp 후)
+  updateMyTeamGrp();
+  setTimeout(function(){
+    document.querySelectorAll('.myteam-btn').forEach(function(btn){
+      if(btn.dataset.team===team && !btn.classList.contains('done')){
+        // 이미 선택된 것 해제 후 내 팀 선택
+        document.querySelectorAll('.myteam-btn.on').forEach(function(b){
+          if(!b.classList.contains('done')) b.classList.remove('on');
+        });
+        btn.classList.add('on');
+      }
+    });
+  }, 200);
+}
+
 function pickMyTeam(el){
   // done(입력완료) 버튼은 선택 불가
   if(el.classList.contains('done')){
@@ -5622,6 +5685,27 @@ function updateAccComplaintCount(){
   var dAccT=document.getElementById('dAccT'); if(dAccT) dAccT.textContent=accTotal;
   var dComp=document.getElementById('dComp'); if(dComp) dComp.textContent=compToday;
   var dCompT=document.getElementById('dCompT'); if(dCompT) dCompT.textContent=compTotal;
+
+  // 특별작업 현황 (오늘 건)
+  var todaySpecial=(hoAll||[]).filter(function(r){
+    var d=r.created_at||'';
+    var dKst=d?new Date(d).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'}):'';
+    return dKst===today && r.special && r.special!=='없음';
+  });
+  var spWrap=document.getElementById('specialWorkWrap');
+  var spList=document.getElementById('specialWorkList');
+  if(spWrap) spWrap.style.display=todaySpecial.length?'block':'none';
+  if(spList&&todaySpecial.length){
+    var h='';
+    todaySpecial.forEach(function(r){
+      var ps=parseShift(r.shift);
+      h+='<div style="padding:8px 0;border-bottom:1px solid var(--g1);display:flex;gap:8px;align-items:flex-start">';
+      h+='<span style="font-size:10px;font-weight:700;background:var(--navy);color:white;border-radius:20px;padding:2px 8px;flex-shrink:0">'+ps.team+'</span>';
+      h+='<span style="font-size:12px;color:var(--g6)">'+r.special+'</span>';
+      h+='</div>';
+    });
+    spList.innerHTML=h;
+  }
 }
 
 
@@ -5875,8 +5959,13 @@ async function loadMpFromDB(){
   try{
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
     var res=await sb.from('mp_data').select('*').eq('date',today);
-    if(res.error||!res.data||!res.data.length) return;
+    // 데이터 없어도 반드시 초기화 (이전 날짜 데이터 메모리 잔존 방지)
     mpDataByLeader={오전:{},오후:{},야간:{}};
+    if(res.error||!res.data||!res.data.length){
+      recalcMpData(); updateFloorChart(); updateMpSummary(); updateStaff();
+      updateMyTeamGrp(); renderLeaderStatus();
+      return;
+    }
     res.data.forEach(function(row){
       if(!row.shift||!row.team_code||!row.values) return;
       if(!mpDataByLeader[row.shift]) mpDataByLeader[row.shift]={};
