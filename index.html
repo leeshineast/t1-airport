@@ -5832,9 +5832,16 @@ function updateAccComplaintCount(){
     return dKst===today;
   });
   var accToday=todayHo.filter(function(r){return r.accident&&r.accident!=='없음';}).length;
-  var compToday=todayHo.filter(function(r){return r.complaint&&r.complaint!=='없음';}).length;
+  var hoCompToday=todayHo.filter(function(r){return r.complaint&&r.complaint!=='없음';}).length;
   var accTotal=(hoAll||[]).filter(function(r){return r.accident&&r.accident!=='없음';}).length;
-  var compTotal=(hoAll||[]).filter(function(r){return r.complaint&&r.complaint!=='없음';}).length;
+  var hoCompTotal=(hoAll||[]).filter(function(r){return r.complaint&&r.complaint!=='없음';}).length;
+
+  // ARS 민원(voc_data) 합산
+  var vocToday=(vocData||[]).filter(function(r){ return r.voc_date===today; }).length;
+  var vocTotal=(vocData||[]).length;
+
+  var compToday=hoCompToday+vocToday;
+  var compTotal=hoCompTotal+vocTotal;
 
   var dAcc=document.getElementById('dAcc'); if(dAcc) dAcc.textContent=accToday;
   var dAccT=document.getElementById('dAccT'); if(dAccT) dAccT.textContent=accTotal;
@@ -6167,6 +6174,7 @@ async function loadVocFromDB(){
     vocData=res.data||[];
     renderVocList();
     initVocForm();
+    updateAccComplaintCount(); // 메인 민원 카드 갱신
   }catch(e){ console.error(e); }
 }
 
