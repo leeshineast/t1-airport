@@ -3528,7 +3528,7 @@ function loadVehData(){
   },100);
   // DB에서 로드 (전체 공유)
   loadVehicleFromDB();
-  var today=new Date().toISOString().split('T')[0];
+  var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
   var vd=document.getElementById('vhDate');if(vd)vd.value=today;
   var now=new Date();var tm=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0');
   var vf=document.getElementById('vhDlFrom');var vt=document.getElementById('vhDlTo');
@@ -5402,7 +5402,10 @@ async function loadUserList(){
     (res.data||[]).forEach(function(u){
       var row=document.createElement('div');
       row.className='u-row';
-      var p=u.permissions||{};
+      var p={};
+      try{ p=typeof u.permissions==='string'?JSON.parse(u.permissions):(u.permissions||{}); }catch(e){ p={}; }
+      // userPerms 동기화
+      if(u.name) userPerms[u.name]=p;
       var permChips=['read','write','edit','download'].map(function(k){
         var labels={read:'읽기',write:'쓰기',edit:'수정',download:'다운로드'};
         return '<span style="font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;background:'+(p[k]?'var(--success-bg)':'var(--g1)')+';color:'+(p[k]?'var(--success)':'var(--g3)')+'">'+labels[k]+'</span>';
@@ -5425,7 +5428,6 @@ async function withdrawUserDB(id, name){
 
 // 권한 저장 (DB)
 var currentPermUserId='';
-var origOpenPermEdit=typeof openPermEdit==='function'?openPermEdit:null;
 function openPermEdit(btn, userName, userId){
   currentPermUser=userName;
   currentPermUserId=userId||'';
@@ -6806,7 +6808,7 @@ function initNotifBaseline(){
 
 function checkShiftReset(){
   var now=new Date();
-  var today=now.toISOString().slice(0,10);
+  var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
 
   // 자정 넘어가면 처리
   if(today !== _lastCheckedDate){
