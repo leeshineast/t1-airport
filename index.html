@@ -5444,6 +5444,8 @@ function openPermEdit(btn, userName, userId){
   showM('permModal');
 }
 
+function closePermEdit(){ hideM('permModal'); }
+
 async function savePermEdit(){
   var perms={};
   ['read','write','edit','download'].forEach(function(p){
@@ -5451,13 +5453,15 @@ async function savePermEdit(){
     perms[p]=el?el.checked:false;
   });
   userPerms[currentPermUser]=perms;
-  try{localStorage.setItem('t1_perms',JSON.stringify(userPerms));}catch(e){}
-  // DB에도 저장 (전체 공유)
-  sb.from('users').update({permissions:JSON.stringify(perms)}).eq('name',currentPermUser);
-  // DB 업데이트
-  if(currentPermUserId){
-    await sb.from('users').update({permissions:perms}).eq('id',currentPermUserId);
-  }
+  try{ localStorage.setItem('t1_perms',JSON.stringify(userPerms)); }catch(e){}
+  // DB 저장: id로 찾아서 permissions를 JSON 문자열로 저장
+  try{
+    if(currentPermUserId){
+      await sb.from('users').update({permissions:JSON.stringify(perms)}).eq('id',currentPermUserId);
+    } else {
+      await sb.from('users').update({permissions:JSON.stringify(perms)}).eq('name',currentPermUser);
+    }
+  }catch(e){ toast('⚠️ DB 저장 실패: '+e.message); }
   updatePermChips(currentPermUser,perms);
   closePermEdit();
   toast('✅ '+currentPermUser+' 권한 저장');
