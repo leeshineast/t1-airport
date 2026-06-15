@@ -1916,6 +1916,10 @@ let me=null,wdT=null,indData=[];
 
 // ─ 유틸 ─
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';clearTimeout(t._t);t._t=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(8px)';},2600);}
+// UTC ISO 문자열 → KST 날짜 'YYYY-MM-DD' 반환
+function toKSTDate(isoStr){ if(!isoStr) return ''; return new Date(new Date(isoStr).getTime()+9*3600000).toISOString().slice(0,10); }
+// UTC ISO 문자열 → KST 날짜+시각 'YYYY-MM-DD HH:MM' 반환
+function toKSTDateTime(isoStr){ if(!isoStr) return ''; var d=new Date(new Date(isoStr).getTime()+9*3600000).toISOString(); return d.slice(0,10)+' '+d.slice(11,16); }
 function showM(id){document.getElementById(id).classList.add('on');}
 function hideM(id){document.getElementById(id).classList.remove('on');}
 
@@ -2583,7 +2587,7 @@ async function dlCSV(type){
         var hoRows=[['날짜','인계조','인수조','작성자','팀','시설물','민원','위험구역','안전사고','장비차량','공지','확인여부','확인자']];
         r2.data.forEach(function(d){
           hoRows.push([
-            d.created_at?d.created_at.slice(0,10):'',
+            d.created_at?toKSTDate(d.created_at):'',
             d.shift||'',d.to_shift||'',d.author||'',d.team||'',
             d.facility||'',d.complaint||'',d.danger||'',
             d.accident||'',d.equipment||'',d.notice||'',
@@ -2708,7 +2712,7 @@ async function dlCSV(type){
             d.content||'',
             d.status||'',
             d.note||'',
-            d.created_at?d.created_at.slice(0,16).replace('T',' '):''
+            d.created_at?toKSTDateTime(d.created_at):''
           ]);
         });
         var wsv=XLSX.utils.aoa_to_sheet(vocRows);
@@ -5481,7 +5485,7 @@ async function loadNoticesFromDB(){
     var d=document.getElementById('noticeD');
     if(t) t.textContent=n.title||'공지사항';
     if(b) b.innerHTML=(n.content||'').replace(/\n/g,'<br>');
-    if(d) d.textContent=n.created_at?n.created_at.slice(0,10)+' 등록':'';
+    if(d) d.textContent=n.created_at?toKSTDate(n.created_at)+' 등록':'';
     showNotice(n.content);
     // 누적 목록 렌더링
     renderNoticeList(res.data);
@@ -5496,7 +5500,7 @@ function renderNoticeList(data){
   }
   var html='';
   data.forEach(function(n,i){
-    var date=n.created_at?n.created_at.slice(0,10):'';
+    var date=n.created_at?toKSTDate(n.created_at):'';
     html+='<div style="padding:13px;border-bottom:1px solid var(--g2);cursor:pointer" onclick="openNoticeDetail('+i+')" >';
     html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
     html+='<div style="font-size:13px;font-weight:700;color:var(--g7)">'+(n.title||'공지사항')+'</div>';
@@ -5518,7 +5522,7 @@ function openNoticeDetail(idx){
   var d=document.getElementById('noticeD');
   if(t) t.textContent=n.title||'공지사항';
   if(b) b.innerHTML=(n.content||'').replace(/\n/g,'<br>');
-  if(d) d.textContent=n.created_at?n.created_at.slice(0,10)+' 등록':'';
+  if(d) d.textContent=n.created_at?toKSTDate(n.created_at)+' 등록':'';
   document.getElementById('noSkip').checked=false;
   showM('noticeM');
 }
@@ -5537,7 +5541,7 @@ async function loadAdminNoticeList(){
     }
     var h='';
     res.data.forEach(function(n){
-      var date=n.created_at?n.created_at.slice(0,10):'';
+      var date=n.created_at?toKSTDate(n.created_at):'';
       h+='<div class="card" style="margin:0 13px 9px"><div class="cb" style="padding:11px 13px">';
       h+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
       h+='<div style="flex:1;min-width:0">';
@@ -5728,7 +5732,7 @@ function downloadHoExcel(){
     var wb=XLSX.utils.book_new();
     var groups={};
     hoAll.forEach(function(r){
-      var d=r.created_at?r.created_at.slice(0,10):'미상';
+      var d=r.created_at?toKSTDate(r.created_at):'미상';
       if(!groups[d]) groups[d]=[];
       groups[d].push(r);
     });
