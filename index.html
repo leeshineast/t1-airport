@@ -4645,28 +4645,23 @@ function parseExcelData(filename, rows){
     // ── LS/AS 판별 ──
     var areaVal='';
     keys.forEach(function(k){
-      if((k.indexOf('랜드')!==-1||k.indexOf('LS/')!==-1||k.indexOf('LS/에어')!==-1||k.indexOf('구분')!==-1)&&!areaVal){
+      if((k.indexOf('랜드')!==-1||k.indexOf('LS/')!==-1||k.indexOf('LS/에어')!==-1||k.indexOf('에어 구분')!==-1)&&!areaVal){
         areaVal=String(row[k]);
       }
     });
-    var isLS=areaVal.indexOf('Land')!==-1||areaVal.indexOf('LS')!==-1;
-    var isAS=areaVal.indexOf('Air')!==-1||areaVal.indexOf('AS')!==-1;
+    var isLS=areaVal.indexOf('Land')!==-1||areaVal.indexOf('Landside')!==-1;
+    var isAS=areaVal.indexOf('Air')!==-1||areaVal.indexOf('Airside')!==-1;
     if(isLS) ls++; else if(isAS) as++;
 
-    // ── 층 판별 ──
+    // ── 층 판별: 층구분(공백없음)/층 구분(공백있음)/층+구분/층+Number/층+위치 모두 인식 ──
     var floorVal='';
     keys.forEach(function(k){
-      if(k.indexOf('층')!==-1&&(k.indexOf('구분')!==-1||k.indexOf('Number')!==-1||k.indexOf('위치')!==-1)&&!floorVal){
+      if((k==='층구분'||k.indexOf('층구분')!==-1||k.indexOf('층 구분')!==-1||
+          (k.indexOf('층')!==-1&&(k.indexOf('Number')!==-1||k.indexOf('위치')!==-1||k.indexOf('구분')!==-1)))&&!floorVal){
         floorVal=String(row[k]);
       }
     });
-    // 화장실은 '화장실 층 구분(*)' 컬럼
-    if(!floorVal){
-      keys.forEach(function(k){
-        if(k.indexOf('층 구분')!==-1&&!floorVal) floorVal=String(row[k]);
-      });
-    }
-    if(floorVal&&floorVal!=='undefined') floors[floorVal]=(floors[floorVal]||0)+1;
+    if(floorVal&&floorVal!=='undefined'&&floorVal!=='null') floors[floorVal]=(floors[floorVal]||0)+1;
 
     // ══ 화장실 전용 파싱 ══
     if(type==='화장실'){
@@ -4758,7 +4753,25 @@ function parseExcelData(filename, rows){
         }
       });
     }
-    if(type==='휴게시설'){
+    // ══ 유아휴게실 전용 파싱 ══
+    if(type==='유아휴게실'){
+      // 위치
+      var uLoc='';
+      keys.forEach(function(k){ if(k.indexOf('위치')!==-1&&!uLoc) uLoc=String(row[k]); });
+      // NUMBER
+      var uNum='';
+      keys.forEach(function(k){ if((k.indexOf('NUMBER')!==-1||k.indexOf('Number')!==-1)&&!uNum) uNum=String(row[k]); });
+      // 사용팀
+      var uTeam='';
+      keys.forEach(function(k){ if((k.indexOf('팀')!==-1||k.indexOf('사용')!==-1)&&!uTeam) uTeam=String(row[k]); });
+      // detail에 위치별로 적재
+      var uKey=(uNum||uLoc||'위치미상').slice(0,30);
+      detail[uKey]=(detail[uKey]||0)+1;
+      // 사용팀 별도 보관
+      if(uTeam) detail['__team__'+(uKey)]=(detail['__team__'+(uKey)]||uTeam);
+    }
+
+        if(type==='휴게시설'){
       // 남/여 구분
       var genderV='';
       keys.forEach(function(k){
