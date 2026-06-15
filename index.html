@@ -665,7 +665,10 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           <span style="font-size:11px;font-weight:700;color:var(--navy)">L/S 소계</span>
           <span style="font-size:20px;font-weight:900;color:var(--navy)">26<span style="font-size:10px;color:var(--g4)">명</span></span>
         </div>
-        
+        <div style="background:var(--teal-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(0,169,157,.15);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:11px;font-weight:700;color:var(--teal2)">A/S 소계</span>
+          <span style="font-size:20px;font-weight:900;color:var(--teal2)">21<span style="font-size:10px;color:var(--g4)">명</span></span>
+        </div>
       </div>
     </div>
     <div id="flP_4F" style="display:none">
@@ -1419,7 +1422,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div class="fg"><label class="f-lbl">👤 성명 *</label><input type="text" id="vhName" class="ri" placeholder="홍길동" style="margin-bottom:0"></div>
       <div class="fg"><label class="f-lbl">🚗 주행 전 계기판 (km) *</label><input type="number" id="vhBefore" class="ri" placeholder="예: 12382" style="margin-bottom:0" oninput="calcDist();updateKmHint('vhBefore','vhBeforeHint')"><div id="vhBeforeHint" style="display:none;font-size:11px;color:var(--g4);margin-top:3px;padding-left:4px"></div><div id="vhAutoHint" style="display:none;margin-top:6px;font-size:11px;color:var(--teal2);font-weight:600;background:var(--teal-bg);border-radius:var(--r2);padding:7px 10px">⚡ 자동입력됨</div></div>
       <div class="fg"><label class="f-lbl">🚗 주행 후 계기판 (km) *</label><input type="number" id="vhAfter" class="ri" placeholder="예: 12443" style="margin-bottom:0" oninput="calcDist();updateKmHint('vhAfter','vhAfterHint')"><div id="vhAfterHint" style="display:none;font-size:11px;color:var(--g4);margin-top:3px;padding-left:4px"></div></div>
-      <div id="vhDistWrap" style="display:none;background:var(--teal-bg);border-radius:var(--r2);padding:11px 13px;margin-bottom:13px;display:flex;align-items:center;justify-content:space-between"><span style="font-size:12px;font-weight:600;color:var(--teal2)">주행거리 (자동계산)</span><div style="display:flex;align-items:baseline;gap:3px"><span style="font-size:22px;font-weight:900;color:var(--teal2)" id="vhDist">0</span><span style="font-size:12px;color:var(--teal2);font-weight:600">km</span></div></div>
+      <div id="vhDistWrap" style="display:none;background:var(--teal-bg);border-radius:var(--r2);padding:11px 13px;margin-bottom:13px;align-items:center;justify-content:space-between"><span style="font-size:12px;font-weight:600;color:var(--teal2)">주행거리 (자동계산)</span><div style="display:flex;align-items:baseline;gap:3px"><span style="font-size:22px;font-weight:900;color:var(--teal2)" id="vhDist">0</span><span style="font-size:12px;color:var(--teal2);font-weight:600">km</span></div></div>
       <div class="fg"><label class="f-lbl">🕐 출발 시간 *</label><input type="time" id="vhStart" class="ri" style="margin-bottom:0;width:100%;max-width:100%;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>
       <div class="fg"><label class="f-lbl">🕐 도착 시간 *</label><input type="time" id="vhEnd" class="ri" style="margin-bottom:0;width:100%;max-width:100%;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>
       <div class="fg"><label class="f-lbl">📍 목적지(경유지 포함) *</label><input type="text" id="vhDest" class="ri" placeholder="예: 신도시, T2" style="margin-bottom:0"></div>
@@ -2075,15 +2078,6 @@ function pickR(el){document.querySelectorAll('.r-btn').forEach(b=>b.classList.re
 
 function closeRegOk(){hideM('regOk');goLogin();}
 
-// ─ 탭 전환 (단순 인덱스 방식) ─
-function tabSwitch(prefix,n,count){
-  for(let i=0;i<count;i++){
-    const t=document.getElementById(prefix+'T'+i);
-    const p=document.getElementById(prefix+'P'+i);
-    if(t){t.style.color=i===n?'var(--teal)':'var(--g3)';t.style.borderBottom=i===n?'2.5px solid var(--teal)':'none';t.style.fontWeight=i===n?'700':'600';}
-    if(p)p.style.display=i===n?'block':'none';
-  }
-}
 function mpTab(n){tabSwitch('mp',n,4);if(n===2){renderLeaderStatus();updateMyTeamGrp();}if(n===3){loadMpHistory();}}
 function hoTab(n){
   tabSwitch('ho',n,5);
@@ -3229,7 +3223,7 @@ function updateFloorChart(){
     var bigNum=panel.querySelector('span[style*="font-size:34px"]');if(bigNum)bigNum.textContent=flTot;
     var cards=panel.querySelectorAll('div[style*="font-size:26px"]');vals.forEach(function(v,i){if(cards[i])cards[i].textContent=v;});
     // L/S 소계, A/S 소계 각각 정확히 찾기
-    var subDivs=panel.querySelectorAll('div[style*="navy-bg"] span[style*="20px"], div[style*="teal-bg"] span[style*="20px"]');
+    var subDivs=panel.querySelectorAll('div[style*="--navy-bg"] span[style*="20px"], div[style*="--teal-bg"] span[style*="20px"]');
     if(subDivs[0]) subDivs[0].textContent=lsS;
     if(subDivs[1]) subDivs[1].textContent=asS;
   });
@@ -3977,6 +3971,7 @@ function kpiDashTab(q){
     btn.style.background=active?'var(--teal)':'var(--g2)';
     btn.style.color=active?'white':'var(--g5)';
     btn.style.fontWeight=active?'700':'600';
+    btn.dataset.activeq=active?'1':'0';
   });
   // 월별 선택 셀렉트 표시/숨김
   var mSel=document.getElementById('kpiDashMonthSel');
@@ -4606,8 +4601,16 @@ function processFacFiles(){
           renderFacilitySummary();
           renderFacilityDash();
           toast('✅ '+total+'개 파일 집계 완료!');
-          setTimeout(function(){ facTab(0); },800);
+          setTimeout(function(){
+            if(prog) prog.style.display='none';
+            facTab(0);
+          },800);
         }
+      };
+      reader.onerror=function(){
+        done++;
+        toast('⚠️ '+file.name+' 읽기 실패');
+        if(done===total){ if(prog) prog.style.display='none'; renderFacilitySummary(); facTab(0); }
       };
       reader.readAsArrayBuffer(file);
     });
@@ -6214,6 +6217,7 @@ async function deleteReg(id, path){
 // 시간대별 인력현황 자동 초기화 체크
 // 마지막으로 확인한 날짜 추적
 var _lastCheckedDate = new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
+var _shiftResetDone = {};
 
 // 날짜 변경 처리 공통 함수
 async function handleDayChange(newDate){
@@ -6419,9 +6423,9 @@ function checkShiftReset(){
   var hm=h*100+m;
   var shifts=[{name:'오전',time:730},{name:'오후',time:1230},{name:'야간',time:2130}];
   shifts.forEach(function(s){
-    var key='t1_reset_'+s.name+'_'+today;
-    if(hm>=s.time && hm<s.time+30 && !localStorage.getItem(key)){
-      localStorage.setItem(key,'1');
+    var key=s.name+'_'+today;
+    if(hm>=s.time && hm<s.time+30 && !_shiftResetDone[key]){
+      _shiftResetDone[key]=true;
     }
   });
 }
