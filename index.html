@@ -2182,62 +2182,6 @@ function getSelectedJo(){
 function pickR(el){document.querySelectorAll('.r-btn').forEach(b=>b.classList.remove('on'));el.classList.add('on');}
 
 function closeRegOk(){hideM('regOk');goLogin();}
-
-function mpTab(n){tabSwitch('mp',n,4);if(n===2){renderLeaderStatus();updateMyTeamGrp();}if(n===3){loadMpHistory();}}
-function hoTab(n){
-  tabSwitch('ho',n,5);
-  // 탭 전환 시 해당 팀 데이터 로드
-  if(n===0) loadHandoverFromDB(); // 전체
-  else if(n===1) loadHandoverByShift('오전팀');
-  else if(n===2) loadHandoverByShift('오후팀');
-  else if(n===3) loadHandoverByShift('야간팀');
-}
-
-async function loadHandoverByShift(shift){
-  var listId = shift==='오전팀'?'hoAmList':shift==='오후팀'?'hoPmList':'hoNtList';
-  var el = document.getElementById(listId);
-  if(!el) return;
-  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">불러오는 중...</div>';
-  try{
-    var res = await sb.from('handover').select('*').eq('shift',shift).order('created_at',{ascending:false}).limit(30);
-    if(res.error || !res.data || !res.data.length){
-      el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">인수인계 내역이 없습니다</div>';
-      return;
-    }
-    // renderHoList 재사용
-    var pMap={'오전팀':'pill-am','오후팀':'pill-pm','야간팀':'pill-nt'};
-    var avC={'오전팀':'var(--navy)','오후팀':'var(--teal2)','야간팀':'#6B21A8'};
-    var html='';
-    res.data.forEach(function(r){
-      var ps=parseShift(r.shift);
-      var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[ps.group]);
-      var isDone=r.confirmed;
-      var ts=r.created_at?new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
-      var author=r.author||'작성자';
-      var fields='';
-      if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📝 업무내용</div><div class="ho-val">'+r.notice+'</div></div>';
-      if(r.facility&&r.facility!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🔧 시설물</div><div class="ho-val">'+r.facility+'</div></div>';
-      if(r.complaint&&r.complaint!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">📢 민원</div><div class="ho-val">'+r.complaint+'</div></div>';
-      if(r.accident&&r.accident!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🚨 사고</div><div class="ho-val">'+r.accident+'</div></div>';
-      if(r.special&&r.special!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🔨 특별작업</div><div class="ho-val">'+r.special+'</div></div>';
-      if(!fields) fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
-      var confBtn=isDone?'<div style="font-size:11px;color:var(--success);font-weight:700;padding:6px 0">✅ '+(r.confirmed_by||'')+'님 확인완료</div>':'<div class="conf-row"><button class="btn-conf" onclick="confHODB('+r.id+',this)">✔ 인수 확인</button></div>';
-      html+='<div class="ho-card">'
-        +'<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px">'
-        +'<span class="t-pill '+(pMap[ps.group]||'pill-am')+'">'+ps.team+'</span>'
-        +'<span style="color:var(--g3)">→</span>'
-        +'<span class="t-pill '+(pMap[toNm]||'pill-pm')+'">'+(toNm||'')+'</span>'
-        +'<span class="chip '+(isDone?'chip-ok':'chip-warn')+'"><span class="chip-dot"></span>'+(isDone?'확인완료':'대기')+'</span>'
-        +'</div><span class="ho-time">'+ts+'</span></div>'
-        +'<div class="w-row"><div class="w-av" style="background:'+(avC[ps.group]||'var(--navy)')+'">'+author[0]+'</div>'
-        +'<span class="w-nm">'+author+(r.team?' · '+r.team:'')+'</span></div>'
-        +'<div class="ho-body">'+fields+'</div>'+confBtn+'</div>';
-    });
-    el.innerHTML=html;
-  }catch(e){
-    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:12px">로드 오류: '+e.message+'</div>';
-  }
-}
 // ─ 인력현황 ─
 function pickShift(el){
   document.querySelectorAll('#shiftGrp .rp').forEach(function(p){p.classList.remove('on');});
@@ -3759,40 +3703,6 @@ function getSelectedTeam(){
 
 // ─ 사용자 권한 편집 ─
 var currentPermUser = '';
-function openPermEdit(btn, userName){
-  currentPermUser = userName;
-  document.getElementById('permUserName').textContent = userName + ' 권한 설정';
-  var perms = userPerms[userName] || {read:true, write:true, edit:false, download:false};
-  ['read','write','edit','download'].forEach(function(p){
-    var el=document.getElementById('perm-'+p);
-    if(el) el.checked=perms[p]||false;
-    var lbl=document.getElementById('permLbl-'+p);
-    if(lbl) lbl.style.borderColor=perms[p]?'var(--teal)':'var(--g2)';
-  });
-  // 체크박스 변경 시 라벨 테두리 변경
-  ['read','write','edit','download'].forEach(function(p){
-    var el=document.getElementById('perm-'+p);
-    if(el) el.onchange=function(){
-      var lbl=document.getElementById('permLbl-'+p);
-      if(lbl) lbl.style.borderColor=this.checked?'var(--teal)':'var(--g2)';
-    };
-  });
-  showM('permModal');
-}
-function closePermEdit(){ hideM('permModal'); }
-function savePermEdit(){
-  var perms={};
-  ['read','write','edit','download'].forEach(function(p){
-    var el=document.getElementById('perm-'+p);
-    perms[p]=el?el.checked:false;
-  });
-  userPerms[currentPermUser]=perms;
-  try{ localStorage.setItem('t1_perms', JSON.stringify(userPerms)); }catch(e){}
-  // 권한 칩 업데이트
-  updatePermChips(currentPermUser, perms);
-  closePermEdit();
-  toast('✅ '+currentPermUser+' 권한이 저장되었습니다');
-}
 function updatePermChips(userName, perms){
   var el=document.getElementById('perm-'+userName);
   if(!el) return;
@@ -6090,7 +6000,6 @@ async function loadVehicleFromDB(){
     renderVehList(vehData);
     return vehData;
   }catch(e){ return []; }
-}
 }
 
 async function saveVehicleToDB(data){
