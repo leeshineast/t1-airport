@@ -6145,7 +6145,7 @@ async function saveVoc(){
 
 async function updateVocStatus(id, newStatus){
   try{
-    await sb.from('voc_data').update({status:newStatus}).eq('id',id);
+    await sb.from('voc_data').update({status:newStatus}).eq('id',parseInt(id));
     toast('✅ 상태 변경: '+newStatus);
     loadVocFromDB();
   }catch(e){ toast('⚠️ 변경 실패'); }
@@ -6154,7 +6154,7 @@ async function updateVocStatus(id, newStatus){
 async function deleteVoc(id){
   if(!confirm('이 민원 기록을 삭제하시겠습니까?')) return;
   try{
-    await sb.from('voc_data').delete().eq('id',id);
+    await sb.from('voc_data').delete().eq('id',parseInt(id));
     toast('🗑️ 삭제되었습니다');
     loadVocFromDB();
   }catch(e){ toast('⚠️ 삭제 실패'); }
@@ -6238,9 +6238,9 @@ function renderVocList(){
       h+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
       ['접수','처리중','완료'].forEach(function(s){
         var active=r.status===s;
-        h+='<button onclick="updateVocStatus('+r.id+',''+s+'')" style="padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid '+(active?stColor[s]:'var(--g2)')+';background:'+(active?stBg[s]:'white')+';color:'+(active?stColor[s]:'var(--g4)')+'">'+s+'</button>';
+        h+='<button data-id="'+r.id+'" data-status="'+s+'" onclick="updateVocStatus(this.dataset.id,this.dataset.status)" style="padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid '+(active?stColor[s]:'var(--g2)')+';background:'+(active?stBg[s]:'white')+';color:'+(active?stColor[s]:'var(--g4)')+'">'+s+'</button>';
       });
-      h+='<button onclick="deleteVoc('+r.id+')" style="margin-left:auto;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--g2);background:white;color:var(--g4)">🗑️</button>';
+      h+='<button data-id="'+r.id+'" onclick="deleteVoc(this.dataset.id)" style="margin-left:auto;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--g2);background:white;color:var(--g4)">🗑️</button>';
       h+='</div>';
     }
     h+='</div>';
