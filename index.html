@@ -6272,6 +6272,8 @@ function renderVocList(){
   var h='';
   filtered.forEach(function(r,idx){
     var seq=vocData.indexOf(r)+1; // 전체 기준 연번
+    // 접수일시 (created_at → 한국시간)
+    var _rdt=r.created_at?new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
     h+='<div style="background:white;border-radius:var(--r2);border:1.5px solid var(--g2);padding:13px;margin-bottom:9px">';
     // 헤더 행
     h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
@@ -6286,9 +6288,12 @@ function renderVocList(){
     h+='<div style="font-size:13px;color:var(--g7);line-height:1.6;margin-bottom:8px;white-space:pre-wrap">'+r.content+'</div>';
     // 비고
     if(r.note) h+='<div style="font-size:11px;color:var(--g5);background:var(--g1);border-radius:6px;padding:6px 9px;margin-bottom:8px">📎 '+r.note+'</div>';
+    // 접수일시 (항상 표시)
+    if(_rdt) h+='<div style="font-size:11px;color:var(--g4);margin-bottom:6px">📅 접수일시: '+_rdt+'</div>';
+    // 완료일시 (한국시간)
     if(r.completed_at&&r.status==='완료'){
       var _cdt=new Date(r.completed_at);
-      var _cdtStr=_cdt.toLocaleDateString('ko-KR')+' '+_cdt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+      var _cdtStr=_cdt.toLocaleString('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
       h+='<div style="font-size:11px;color:var(--teal2);font-weight:700;margin-bottom:8px">✅ 완료일시: '+_cdtStr+'</div>';
     }
     // 상태 변경 버튼 (팀장 이상)
