@@ -1636,6 +1636,10 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           <div class="dl-ico">🚗</div>
           <div><div class="dl-title">차량운행기록</div><div class="dl-sub">운행 이력 (.xlsx)</div></div>
         </div>
+        <div class="dl-item" onclick="dlCSV('voc')">
+          <div class="dl-ico">📞</div>
+          <div><div class="dl-title">ARS 민원</div><div class="dl-sub">민원 접수 및 처리현황 (.xlsx)</div></div>
+        </div>
       </div>
     </div></div>
     <div style="height:20px"></div>
@@ -2734,6 +2738,28 @@ async function dlCSV(type){
       }
     }
 
+    // ── ARS 민원 ──
+    if(type==='voc'||type==='all'){
+      var rv=await sb.from('voc_data').select('*').order('voc_date',{ascending:false});
+      if(rv.data&&rv.data.length){
+        var vocRows=[['연번','일자','작성자','민원내용','처리상태','비고','접수일시']];
+        rv.data.forEach(function(d,idx){
+          vocRows.push([
+            idx+1,
+            d.voc_date||'',
+            d.writer||'',
+            d.content||'',
+            d.status||'',
+            d.note||'',
+            d.created_at?d.created_at.slice(0,16).replace('T',' '):''
+          ]);
+        });
+        var wsv=XLSX.utils.aoa_to_sheet(vocRows);
+        wsv['!cols']=[{wch:6},{wch:12},{wch:14},{wch:40},{wch:10},{wch:20},{wch:18}];
+        wb.SheetNames.push('ARS민원');wb.Sheets['ARS민원']=wsv;
+      }
+    }
+
     if(wb.SheetNames.length===0){toast('다운로드할 데이터가 없습니다');return;}
 
     // SheetJS로 xlsx 생성
@@ -3827,7 +3853,12 @@ function loadKpiInputForm(y, m){
   var entry=(kpiData[y]&&kpiData[y][m])||{};
   for(var i=1;i<=5;i++){
     var el=document.getElementById('kpi'+i);
-    if(el) el.value=entry['kpi'+i]!==undefined?entry['kpi'+i]:'';
+    if(!el) continue;
+    if(i===1){
+      el.value=''; // kpi1(VOC)는 항상 비움 — 새로 추가할 건수 입력
+    } else {
+      el.value=entry['kpi'+i]!==undefined?entry['kpi'+i]:''; // kpi2~5는 기존값 로드
+    }
   }
   // ATP 세부 항목 불러오기
   var atpDetail=entry.atpDetail||{};
@@ -3865,19 +3896,26 @@ function saveKpi(){
   var m=parseInt(document.getElementById('kpiMonth').value);
   if(!y||!m){toast('연월을 선택해주세요');return;}
   var isQuarterEnd=[3,6,9,12].indexOf(m)!==-1;
-  // 기존 데이터 유지 (VOC 누적을 위해 기존 entry에서 시작)
-  var entry=Object.assign({},(kpiData[y]&&kpiData[y][m])||{});
+  // kpi1(VOC)만 누적, 나머지는 새 입력값으로 덮어쓰기
+  var prevEntry=(kpiData[y]&&kpiData[y][m])||{};
+  var entry=Object.assign({},prevEntry);
   for(var i=1;i<=5;i++){
     if(i===5&&!isQuarterEnd) continue;
     var el=document.getElementById('kpi'+i);
-    if(el&&el.value==='') continue; // 빈칸은 기존값 유지
-    var newVal=parseFloat(el.value);
     if(i===1){
-      // VOC/민원: 기존값에 누적 (처음 입력이면 그냥 세팅)
-      var existing=entry['kpi1']||0;
-      entry['kpi1']=existing+newVal;
+      // kpi1(VOC/민원): 새 값 입력 시 누적
+      if(el&&el.value!==''){
+        var existing=prevEntry['kpi1']||0;
+        entry['kpi1']=existing+parseFloat(el.value);
+      }
+      // 빈칸이면 기존값 그대로 유지
     } else {
-      entry['kpi'+i]=newVal;
+      // kpi2~5: 입력값으로 완전 덮어쓰기 (빈칸이면 기존값 삭제)
+      if(el&&el.value!==''){
+        entry['kpi'+i]=parseFloat(el.value);
+      } else {
+        delete entry['kpi'+i];
+      }
     }
   }
   // ATP 세부 항목 저장 (분기 마지막 월만)
