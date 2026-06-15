@@ -3911,11 +3911,9 @@ function saveKpi(){
       }
       // 빈칸이면 기존값 그대로 유지
     } else {
-      // kpi2~5: 입력값으로 완전 덮어쓰기 (빈칸이면 기존값 삭제)
+      // kpi2~5: 입력값 있으면 덮어쓰기, 빈칸이면 기존값 유지
       if(el&&el.value!==''){
         entry['kpi'+i]=parseFloat(el.value);
-      } else {
-        delete entry['kpi'+i];
       }
     }
   }
@@ -6189,12 +6187,50 @@ async function saveVoc(){
   }
 }
 
+var _vocCompleteTargetId=null;
+
 async function updateVocStatus(id, newStatus){
+  if(newStatus==='완료'){
+    _vocCompleteTargetId=parseInt(id);
+    var now=new Date(Date.now()+9*3600000);
+    var dEl=document.getElementById('vocCompleteDate');
+    var tEl=document.getElementById('vocCompleteTime');
+    var mEl=document.getElementById('vocCompleteMemo');
+    if(dEl) dEl.value=now.toISOString().slice(0,10);
+    if(tEl) tEl.value=now.toISOString().slice(11,16);
+    if(mEl) mEl.value='';
+    showM('vocCompleteModal');
+    return;
+  }
   try{
-    await sb.from('voc_data').update({status:newStatus}).eq('id',parseInt(id));
+    await sb.from('voc_data').update({status:newStatus,completed_at:null}).eq('id',parseInt(id));
     toast('✅ 상태 변경: '+newStatus);
     loadVocFromDB();
   }catch(e){ toast('⚠️ 변경 실패'); }
+}
+
+async function confirmVocComplete(){
+  if(!_vocCompleteTargetId) return;
+  var dateVal=document.getElementById('vocCompleteDate').value;
+  var timeVal=(document.getElementById('vocCompleteTime').value)||'00:00';
+  var memo=(document.getElementById('vocCompleteMemo').value||'').trim();
+  if(!dateVal){ toast('완료 일자를 입력해주세요'); return; }
+  var completedAt=dateVal+'T'+timeVal+':00+09:00';
+  var updateData={status:'완료',completed_at:completedAt};
+  if(memo){
+    try{
+      var cur=await sb.from('voc_data').select('note').eq('id',_vocCompleteTargetId).maybeSingle();
+      var prev=(cur.data&&cur.data.note)||'';
+      updateData.note=prev?prev+' / 완료: '+memo:'완료: '+memo;
+    }catch(e){}
+  }
+  try{
+    await sb.from('voc_data').update(updateData).eq('id',_vocCompleteTargetId);
+    hideM('vocCompleteModal');
+    toast('✅ 완료 처리되었습니다');
+    _vocCompleteTargetId=null;
+    loadVocFromDB();
+  }catch(e){ toast('⚠️ 처리 실패: '+e.message); }
 }
 
 async function deleteVoc(id){
@@ -6280,6 +6316,11 @@ function renderVocList(){
     h+='<div style="font-size:13px;color:var(--g7);line-height:1.6;margin-bottom:8px;white-space:pre-wrap">'+r.content+'</div>';
     // 비고
     if(r.note) h+='<div style="font-size:11px;color:var(--g5);background:var(--g1);border-radius:6px;padding:6px 9px;margin-bottom:8px">📎 '+r.note+'</div>';
+    if(r.completed_at&&r.status==='완료'){
+      var _cdt=new Date(r.completed_at);
+      var _cdtStr=_cdt.toLocaleDateString('ko-KR')+' '+_cdt.toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+      h+='<div style="font-size:11px;color:var(--teal2);font-weight:700;margin-bottom:8px">✅ 완료일시: '+_cdtStr+'</div>';
+    }
     // 상태 변경 버튼 (팀장 이상)
     if(isAdmin){
       h+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
