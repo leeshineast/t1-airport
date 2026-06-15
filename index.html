@@ -231,7 +231,8 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           var headers = Object.assign({}, H);
           if(upsertCol){
             headers['Prefer'] = 'return=representation,resolution=merge-duplicates';
-            url += (url.includes('?')?'&':'?') + 'on_conflict=' + encodeURIComponent(upsertCol);
+            // on_conflict는 콤마 포함 그대로 전달 (encodeURIComponent 금지)
+            url += (url.includes('?')?'&':'?') + 'on_conflict=' + upsertCol;
           }
           if(method==='DELETE') headers['Prefer'] = 'return=representation';
 
