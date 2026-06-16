@@ -2172,6 +2172,22 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           <input type="checkbox" id="rst_users" style="width:18px;height:18px;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
           <div><div style="font-size:13px;font-weight:700;color:var(--g7)">👤 가입 사용자</div><div style="font-size:10px;color:var(--g4)">승인된 사용자 목록 (테스트 계정 제외)</div></div>
         </label>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
+          <input type="checkbox" id="rst_voc" style="width:18px;height:18px;accent-color:var(--teal);cursor:pointer">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">📞 ARS 민원</div><div style="font-size:10px;color:var(--g4)">전체 민원 접수 이력</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
+          <input type="checkbox" id="rst_lost" style="width:18px;height:18px;accent-color:var(--teal);cursor:pointer">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">🎒 습득물 관리</div><div style="font-size:10px;color:var(--g4)">전체 습득물 이력</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
+          <input type="checkbox" id="rst_waste" style="width:18px;height:18px;accent-color:var(--teal);cursor:pointer">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">♻️ 폐기물 처리현황</div><div style="font-size:10px;color:var(--g4)">전체 폐기물 처리 이력</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
+          <input type="checkbox" id="rst_equipment" style="width:18px;height:18px;accent-color:var(--teal);cursor:pointer">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">🔧 장비현황</div><div style="font-size:10px;color:var(--g4)">업로드된 장비 데이터</div></div>
+        </label>
         <!-- 전체 선택 -->
         <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--danger-bg);border-radius:var(--r2);border:1.5px solid rgba(217,64,64,.3);cursor:pointer;margin-top:4px">
           <input type="checkbox" id="rst_all" style="width:18px;height:18px;accent-color:var(--danger);cursor:pointer" onchange="rstSelectAll(this)">
@@ -4747,7 +4763,7 @@ function resetAllData(){
 function openDataReset(){
   if(!me||me.role!=='admin'){toast('최고관리자만 사용 가능합니다');return;}
   // 체크박스 초기화
-  ['rst_mp','rst_ho','rst_ind','rst_veh','rst_kpi','rst_users','rst_all'].forEach(function(id){
+  ['rst_mp','rst_ho','rst_ind','rst_veh','rst_kpi','rst_users','rst_voc','rst_lost','rst_waste','rst_equipment','rst_all'].forEach(function(id){
     var el=document.getElementById(id);
     if(el) el.checked=false;
   });
@@ -4767,7 +4783,7 @@ function openDataReset(){
 function closeDataReset(){hideM('dataResetModal');}
 
 function rstSelectAll(cb){
-  var ids=['rst_mp','rst_ho','rst_ind','rst_veh','rst_kpi','rst_users'];
+  var ids=['rst_mp','rst_ho','rst_ind','rst_veh','rst_kpi','rst_users','rst_voc','rst_lost','rst_waste','rst_equipment'];
   ids.forEach(function(id){
     var el=document.getElementById(id);
     if(el) el.checked=cb.checked;
@@ -4776,7 +4792,7 @@ function rstSelectAll(cb){
 }
 
 function rstCheckChange(){
-  var ids=['rst_mp','rst_ho','rst_ind','rst_veh','rst_kpi','rst_users'];
+  var ids=['rst_mp','rst_ho','rst_ind','rst_veh','rst_kpi','rst_users','rst_voc','rst_lost','rst_waste','rst_equipment'];
   var lblIds=['rst_lbl_mp','rst_lbl_ho','rst_lbl_ind','rst_lbl_veh','rst_lbl_kpi','rst_lbl_users'];
   var anyChecked=false;
   ids.forEach(function(id,i){
@@ -4806,7 +4822,7 @@ function rstCheckConfirm(){
   var ci=document.getElementById('rstConfirmInput');
   var btn=document.getElementById('rstExecBtn');
   if(!btn) return;
-  var ids=['rst_mp','rst_ho','rst_ind','rst_veh','rst_kpi','rst_users'];
+  var ids=['rst_mp','rst_ho','rst_ind','rst_veh','rst_kpi','rst_users','rst_voc','rst_lost','rst_waste','rst_equipment'];
   var anyChecked=ids.some(function(id){var el=document.getElementById(id);return el&&el.checked;});
   var confirmed=ci&&ci.value.trim()==='초기화';
   if(anyChecked&&confirmed){
@@ -4886,7 +4902,6 @@ async function executeDataReset(){
     try{ await sb.from('users').delete().neq('role','admin'); }catch(e){}
     var uList=document.getElementById('uList');
     if(uList){
-      // 테스트 계정만 남기고 제거
       var rows=uList.querySelectorAll('.u-row');
       rows.forEach(function(r){
         if(!r.textContent.includes('최고관리자')&&!r.textContent.includes('박팀장')&&!r.textContent.includes('정조장'))
@@ -4896,6 +4911,34 @@ async function executeDataReset(){
     var pendList=document.getElementById('pendList');
     if(pendList) pendList.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">대기 중인 신청이 없습니다</div>';
     done.push('가입사용자');
+  }
+  // ARS 민원
+  if(document.getElementById('rst_voc')&&document.getElementById('rst_voc').checked){
+    try{ await sb.from('voc_data').delete().neq('id',0); }catch(e){}
+    vocData=[];
+    var vl=document.getElementById('vocList'); if(vl) vl.innerHTML='';
+    done.push('ARS민원');
+  }
+  // 습득물
+  if(document.getElementById('rst_lost')&&document.getElementById('rst_lost').checked){
+    try{ await sb.from('lost_found').delete().neq('id',0); }catch(e){}
+    lostData=[];
+    var ll=document.getElementById('lostList'); if(ll) ll.innerHTML='';
+    done.push('습득물관리');
+  }
+  // 폐기물
+  if(document.getElementById('rst_waste')&&document.getElementById('rst_waste').checked){
+    try{ await sb.from('waste_data').delete().neq('id',0); }catch(e){}
+    wasteData=[];
+    var wl=document.getElementById('wasteList'); if(wl) wl.innerHTML='';
+    done.push('폐기물처리현황');
+  }
+  // 장비현황
+  if(document.getElementById('rst_equipment')&&document.getElementById('rst_equipment').checked){
+    try{ await sb.from('equipment_data').delete().neq('id',0); }catch(e){}
+    equipmentData=null;
+    var et=document.getElementById('eqTable'); if(et) et.innerHTML='';
+    done.push('장비현황');
   }
   closeDataReset();
   toast('✅ 초기화 완료: '+done.join(', '));
