@@ -436,7 +436,13 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <div class="s-val" id="dLostToday" style="font-size:20px;color:var(--teal2)">0</div>
         <div style="font-size:9px;color:var(--teal2);font-weight:700">금일</div>
       </div>
-      <div style="font-size:10px;color:var(--g4)">미처리(접수중) <span id="dLostPending" style="font-weight:700;color:var(--warn)">0</span>건</div>
+      <div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap">
+        <span style="font-size:10px;color:var(--g4)">접수 <b id="dLostPending" style="color:var(--warn)">0</b></span>
+        <span style="font-size:10px;color:var(--g3)">|</span>
+        <span style="font-size:10px;color:var(--g4)">처리중 <b id="dLostProcess" style="color:var(--navy)">0</b></span>
+        <span style="font-size:10px;color:var(--g3)">|</span>
+        <span style="font-size:10px;color:var(--g4)">완료 <b id="dLostDone" style="color:var(--teal2)">0</b></span>
+      </div>
     </div>
     <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('waste')">
       <div class="s-lbl">폐기물 현황 <span style="font-size:9px;color:var(--g3);font-weight:500">(이번달 kg)</span></div>
@@ -6211,8 +6217,18 @@ function updateAccComplaintCount(){
     var s=r.status||'';
     return s==='접수'||s==='보관중';
   }).length;
+  var lostProcess=(lostData||[]).filter(function(r){
+    var s=r.status||'';
+    return s==='처리중'||s==='확인중';
+  }).length;
+  var lostDone=(lostData||[]).filter(function(r){
+    var s=r.status||'';
+    return s.startsWith('완료');
+  }).length;
   var dLT=document.getElementById('dLostToday'); if(dLT) dLT.textContent=lostToday;
   var dLP=document.getElementById('dLostPending'); if(dLP) dLP.textContent=lostPending;
+  var dLPr=document.getElementById('dLostProcess'); if(dLPr) dLPr.textContent=lostProcess;
+  var dLD=document.getElementById('dLostDone'); if(dLD) dLD.textContent=lostDone;
 
   // 폐기물 성상별 이번달 합계
   var thisMonth=today.slice(0,7);
@@ -6922,9 +6938,28 @@ function renderEquipmentGroup(){
   }
   var headers=equipmentData.headers||[];
   var rows=equipmentData.rows||[];
-  // 장비명 컬럼 인덱스 찾기
-  var nameIdx=headers.findIndex(function(h){ return h.includes('장비명')||h.includes('장비'); });
-  if(nameIdx<0) nameIdx=1; // fallback
+  // 장비명 컬럼 인덱스 찾기 (다양한 헤더명 대응)
+  var nameIdx=headers.findIndex(function(h){
+    var ht=h.trim();
+    return ht==='장비명'||ht==='장비 명'||ht.includes('장비명')||
+           ht==='품명'||ht==='기기명'||ht==='명칭'||ht==='장비';
+  });
+  // fallback: 관리번호/순번 제외하고 문자열 값이 많은 컬럼 자동 감지
+  if(nameIdx<0){
+    var colScores=headers.map(function(h,hi){
+      var ht=h.trim();
+      if(ht.includes('번호')||ht.includes('No')||ht.includes('순번')||ht==='순서') return -1;
+      var textCount=rows.slice(0,20).filter(function(r){
+        var v=String(r[hi]||'').trim();
+        return v&&isNaN(v)&&v.length>1;
+      }).length;
+      return textCount;
+    });
+    var maxScore=Math.max.apply(null,colScores.filter(function(s){return s>=0;}));
+    nameIdx=maxScore>0?colScores.indexOf(maxScore):2;
+  }
+  // 헤더 목록을 그룹 탭 상단에 표시 (디버그용 → 정상 작동 후 제거 가능)
+  var headerHint='<div style="font-size:10px;color:var(--g3);margin-bottom:6px">감지된 장비명 컬럼: <b style="color:var(--teal2)">'+headers[nameIdx]+'</b> ('+nameIdx+'번째) | 전체 헤더: '+headers.join(', ')+'</div>';
   // 그룹화
   var groups={};
   rows.forEach(function(r){
@@ -6935,7 +6970,7 @@ function renderEquipmentGroup(){
   var sorted=Object.keys(groups).sort(function(a,b){ return groups[b].length-groups[a].length; });
   // 확장 상태 (열림/닫힘)
   if(!window._eqGroupOpen) window._eqGroupOpen={};
-  var h='<div style="font-size:11px;color:var(--g4);margin-bottom:10px;text-align:right">총 '+sorted.length+'종 · '+rows.length+'대</div>';
+  var h=headerHint+'<div style="font-size:11px;color:var(--g4);margin-bottom:10px;text-align:right">총 '+sorted.length+'종 · '+rows.length+'대</div>';
   sorted.forEach(function(name,gi){
     var list=groups[name];
     var isOpen=!!window._eqGroupOpen[name];
