@@ -6938,28 +6938,32 @@ function renderEquipmentGroup(){
   }
   var headers=equipmentData.headers||[];
   var rows=equipmentData.rows||[];
-  // 장비명 컬럼 인덱스 찾기 (다양한 헤더명 대응)
-  var nameIdx=headers.findIndex(function(h){
-    var ht=h.trim();
-    return ht==='장비명'||ht==='장비 명'||ht.includes('장비명')||
-           ht==='품명'||ht==='기기명'||ht==='명칭'||ht==='장비';
-  });
-  // fallback: 관리번호/순번 제외하고 문자열 값이 많은 컬럼 자동 감지
-  if(nameIdx<0){
-    var colScores=headers.map(function(h,hi){
-      var ht=h.trim();
-      if(ht.includes('번호')||ht.includes('No')||ht.includes('순번')||ht==='순서') return -1;
-      var textCount=rows.slice(0,20).filter(function(r){
-        var v=String(r[hi]||'').trim();
-        return v&&isNaN(v)&&v.length>1;
-      }).length;
-      return textCount;
-    });
-    var maxScore=Math.max.apply(null,colScores.filter(function(s){return s>=0;}));
-    nameIdx=maxScore>0?colScores.indexOf(maxScore):2;
+  // 장비명 컬럼 인덱스 찾기
+  // 우선순위: 헤더명 정확 매칭 → 부분 매칭 → 순번/번호 제외 후 한글 값 많은 컬럼
+  var nameIdx=-1;
+  var nameCandidates=['장비명','품명','기기명','명칭','장비 명','기계명'];
+  for(var ni=0;ni<nameCandidates.length;ni++){
+    var found=headers.findIndex(function(h){ return h.trim()===nameCandidates[ni]; });
+    if(found>=0){ nameIdx=found; break; }
   }
-  // 헤더 목록을 그룹 탭 상단에 표시 (디버그용 → 정상 작동 후 제거 가능)
-  var headerHint='<div style="font-size:10px;color:var(--g3);margin-bottom:6px">감지된 장비명 컬럼: <b style="color:var(--teal2)">'+headers[nameIdx]+'</b> ('+nameIdx+'번째) | 전체 헤더: '+headers.join(', ')+'</div>';
+  if(nameIdx<0){
+    // 부분 포함 매칭
+    nameIdx=headers.findIndex(function(h){ return h.includes('장비명')||h.includes('품명'); });
+  }
+  if(nameIdx<0){
+    // 순번/번호/NO 계열 컬럼 제외 후, 한글 2자 이상 값이 가장 많은 컬럼
+    var skipPat=/순번|번호|serial|no|날짜|일자|입고|종료|제작|모델|code/i;
+    var best=-1, bestScore=0;
+    headers.forEach(function(h,hi){
+      if(skipPat.test(h)) return;
+      var score=rows.slice(0,30).filter(function(r){
+        var v=String(r[hi]||'').trim();
+        return v&&isNaN(v)&&/[가-힣]/.test(v)&&v.length>=2;
+      }).length;
+      if(score>bestScore){ bestScore=score; best=hi; }
+    });
+    nameIdx=best>=0?best:2;
+  }
   // 그룹화
   var groups={};
   rows.forEach(function(r){
@@ -6970,7 +6974,7 @@ function renderEquipmentGroup(){
   var sorted=Object.keys(groups).sort(function(a,b){ return groups[b].length-groups[a].length; });
   // 확장 상태 (열림/닫힘)
   if(!window._eqGroupOpen) window._eqGroupOpen={};
-  var h=headerHint+'<div style="font-size:11px;color:var(--g4);margin-bottom:10px;text-align:right">총 '+sorted.length+'종 · '+rows.length+'대</div>';
+  var h='<div style="font-size:11px;color:var(--g4);margin-bottom:10px;text-align:right">총 '+sorted.length+'종 · '+rows.length+'대</div>';
   sorted.forEach(function(name,gi){
     var list=groups[name];
     var isOpen=!!window._eqGroupOpen[name];
