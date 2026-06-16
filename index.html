@@ -1982,6 +1982,10 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           <div class="dl-ico">♻️</div>
           <div><div class="dl-title">폐기물 처리현황</div><div class="dl-sub">성상별 처리량 (.xlsx)</div></div>
         </div>
+        <div class="dl-item" onclick="dlCSV('equipment')">
+          <div class="dl-ico">🔧</div>
+          <div><div class="dl-title">장비현황</div><div class="dl-sub">장비 목록 전체 (.xlsx)</div></div>
+        </div>
       </div>
     </div></div>
     <div style="height:20px"></div>
@@ -3158,6 +3162,17 @@ async function dlCSV(type){
           {wch:10},{wch:16}];
         wb.SheetNames.push('폐기물');wb.Sheets['폐기물']=wsw;
       }
+    }
+
+    // ── 장비현황 ──
+    if(type==='equipment'){
+      if(!equipmentData||!equipmentData.rows||!equipmentData.rows.length){
+        toast('업로드된 장비 데이터가 없습니다'); return;
+      }
+      var eqRows=[equipmentData.headers||[]];
+      (equipmentData.rows||[]).forEach(function(r){ eqRows.push(r); });
+      var wse=XLSX.utils.aoa_to_sheet(eqRows);
+      wb.SheetNames.push('장비현황');wb.Sheets['장비현황']=wse;
     }
 
     if(wb.SheetNames.length===0){toast('다운로드할 데이터가 없습니다');return;}
