@@ -436,15 +436,21 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <div class="s-val" id="dLostToday" style="font-size:20px;color:var(--teal2)">0</div>
         <div style="font-size:9px;color:var(--teal2);font-weight:700">금일</div>
       </div>
-      <div style="font-size:10px;color:var(--g4)">미처리 <span id="dLostPending" style="font-weight:700;color:var(--g5)">0</span>건</div>
+      <div style="font-size:10px;color:var(--g4)">미처리(접수중) <span id="dLostPending" style="font-weight:700;color:var(--warn)">0</span>건</div>
     </div>
     <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('waste')">
-      <div class="s-lbl">폐기물 현황</div>
-      <div style="display:flex;align-items:baseline;gap:3px">
-        <div class="s-val" id="dWasteToday" style="font-size:20px;color:var(--teal2)">0</div>
-        <div style="font-size:9px;color:var(--teal2);font-weight:700">금일</div>
+      <div class="s-lbl">폐기물 현황 <span style="font-size:9px;color:var(--g3);font-weight:500">(이번달 kg)</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-top:5px">
+        <div style="font-size:10px;color:var(--g5)">생활 <b id="dW_living" style="color:var(--g7)">0</b></div>
+        <div style="font-size:10px;color:var(--g5)">합성수지 <b id="dW_syn" style="color:var(--g7)">0</b></div>
+        <div style="font-size:10px;color:var(--g5)">음식물 <b id="dW_food" style="color:var(--g7)">0</b></div>
+        <div style="font-size:10px;color:var(--g5)">목재 <b id="dW_wood" style="color:var(--g7)">0</b></div>
+        <div style="font-size:10px;color:var(--g5)">종이 <b id="dW_paper" style="color:var(--g7)">0</b></div>
+        <div style="font-size:10px;color:var(--g5)">플라스틱 <b id="dW_plastic" style="color:var(--g7)">0</b></div>
+        <div style="font-size:10px;color:var(--g5)">캔/고철 <b id="dW_can" style="color:var(--g7)">0</b></div>
+        <div style="font-size:10px;color:var(--g5)">병/유리 <b id="dW_glass" style="color:var(--g7)">0</b></div>
+        <div style="font-size:10px;color:var(--g5)">기타 <b id="dW_etc" style="color:var(--g7)">0</b></div>
       </div>
-      <div style="font-size:10px;color:var(--g4)">이번달 <span id="dWasteMonth" style="font-weight:700;color:var(--g5)">0</span>건</div>
     </div>
   </div>
   <div class="alert-warn" id="dashHOAlert" style="display:none"><span>🔔</span><div><strong style="display:block;font-weight:700;margin-bottom:1px">인수인계 확인 대기</strong><span id="dashHOAlertMsg"></span></div></div>
@@ -1259,7 +1265,8 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <!-- 탭 -->
   <div style="display:flex;border-bottom:2px solid var(--g2)">
     <div id="eqT0" onclick="eqTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">현황 조회</div>
-    <div id="eqT1" onclick="eqTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--g3);cursor:pointer">엑셀 업로드</div>
+    <div id="eqT1" onclick="eqTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--g3);cursor:pointer">장비별 그룹</div>
+    <div id="eqT2" onclick="eqTab(2)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--g3);cursor:pointer">엑셀 업로드</div>
   </div>
 
   <!-- 조회 탭 -->
@@ -1277,8 +1284,13 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div id="eqTable" style="overflow-x:auto"></div>
   </div>
 
-  <!-- 업로드 탭 -->
+  <!-- 장비별 그룹 탭 -->
   <div id="eqP1" style="display:none;padding:13px">
+    <div id="eqGroupList"></div>
+  </div>
+
+  <!-- 업로드 탭 -->
+  <div id="eqP2" style="display:none;padding:13px">
     <div class="card" style="margin-bottom:12px"><div class="cb">
       <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:8px">📋 엑셀 파일 업로드</div>
       <div style="font-size:11px;color:var(--g4);line-height:1.7;margin-bottom:12px">
@@ -6190,21 +6202,31 @@ function updateAccComplaintCount(){
   var dComp=document.getElementById('dComp'); if(dComp) dComp.textContent=compToday;
   var dCompT=document.getElementById('dCompT'); if(dCompT) dCompT.textContent=compTotal;
 
-  // 습득물 요약
+  // 습득물 요약 (금일 접수 건수 / 미처리=접수 상태)
   var lostToday=(lostData||[]).filter(function(r){
     var d=r.created_at||'';
     return d?new Date(d).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'})===today:false;
   }).length;
-  var lostPending=(lostData||[]).filter(function(r){ return r.status==='보관중'; }).length;
+  var lostPending=(lostData||[]).filter(function(r){
+    var s=r.status||'';
+    return s==='접수'||s==='보관중';
+  }).length;
   var dLT=document.getElementById('dLostToday'); if(dLT) dLT.textContent=lostToday;
   var dLP=document.getElementById('dLostPending'); if(dLP) dLP.textContent=lostPending;
 
-  // 폐기물 요약
+  // 폐기물 성상별 이번달 합계
   var thisMonth=today.slice(0,7);
-  var wasteToday=(wasteData||[]).filter(function(r){ return r.waste_date===today; }).length;
-  var wasteMonth=(wasteData||[]).filter(function(r){ return (r.waste_date||'').slice(0,7)===thisMonth; }).length;
-  var dWT=document.getElementById('dWasteToday'); if(dWT) dWT.textContent=wasteToday;
-  var dWM=document.getElementById('dWasteMonth'); if(dWM) dWM.textContent=wasteMonth;
+  var wasteThisMonth=(wasteData||[]).filter(function(r){ return (r.waste_date||'').slice(0,7)===thisMonth; });
+  var wSum=function(key){ return wasteThisMonth.reduce(function(s,r){ return s+(r[key]||0); },0); };
+  var wFields=[
+    ['dW_living','incineration_living'],['dW_syn','incineration_synthetic'],
+    ['dW_food','incineration_food'],['dW_wood','incineration_wood'],
+    ['dW_paper','recycle_paper'],['dW_plastic','recycle_plastic'],
+    ['dW_can','recycle_can'],['dW_glass','recycle_glass'],['dW_etc','recycle_etc']
+  ];
+  wFields.forEach(function(wf){
+    var el=document.getElementById(wf[0]); if(el) el.textContent=wSum(wf[1]);
+  });
 
   // 특별작업 현황 (오늘 건)
   var todaySpecial=(hoAll||[]).filter(function(r){
@@ -6886,7 +6908,77 @@ async function deleteLost(id){
 // ══ 장비현황 ══
 var equipmentData=null; // {headers:[], rows:[[]], uploadDate:'', uploader:''}
 
-function eqTab(n){ tabSwitch('eq',n,2); }
+function eqTab(n){
+  tabSwitch('eq',n,3);
+  if(n===1) renderEquipmentGroup();
+}
+
+function renderEquipmentGroup(){
+  var el=document.getElementById('eqGroupList');
+  if(!el) return;
+  if(!equipmentData||!equipmentData.rows||!equipmentData.rows.length){
+    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--g3);font-size:12px">엑셀 파일을 업로드해주세요</div>';
+    return;
+  }
+  var headers=equipmentData.headers||[];
+  var rows=equipmentData.rows||[];
+  // 장비명 컬럼 인덱스 찾기
+  var nameIdx=headers.findIndex(function(h){ return h.includes('장비명')||h.includes('장비'); });
+  if(nameIdx<0) nameIdx=1; // fallback
+  // 그룹화
+  var groups={};
+  rows.forEach(function(r){
+    var name=String(r[nameIdx]||'기타').trim();
+    if(!groups[name]) groups[name]=[];
+    groups[name].push(r);
+  });
+  var sorted=Object.keys(groups).sort(function(a,b){ return groups[b].length-groups[a].length; });
+  // 확장 상태 (열림/닫힘)
+  if(!window._eqGroupOpen) window._eqGroupOpen={};
+  var h='<div style="font-size:11px;color:var(--g4);margin-bottom:10px;text-align:right">총 '+sorted.length+'종 · '+rows.length+'대</div>';
+  sorted.forEach(function(name,gi){
+    var list=groups[name];
+    var isOpen=!!window._eqGroupOpen[name];
+    h+='<div style="margin-bottom:8px;border:1.5px solid var(--g2);border-radius:var(--r2);overflow:hidden">';
+    // 그룹 헤더
+    h+='<div onclick="eqGroupToggle(this)" data-name="'+name.replace(/"/g,'&quot;')+'" style="display:flex;align-items:center;justify-content:space-between;padding:11px 13px;background:var(--g1);cursor:pointer">';
+    h+='<div style="display:flex;align-items:center;gap:8px">';
+    h+='<span style="font-size:13px;font-weight:800;color:var(--g7)">'+name+'</span>';
+    h+='<span style="background:var(--teal);color:white;border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700">'+list.length+'대</span>';
+    h+='</div>';
+    h+='<span style="font-size:14px;color:var(--g4);font-weight:700">'+(isOpen?'▲':'▼')+'</span>';
+    h+='</div>';
+    // 펼쳐진 목록
+    if(isOpen){
+      h+='<div style="padding:8px 12px;background:white">';
+      list.forEach(function(r,ri){
+        var mgmtIdx=headers.findIndex(function(h){ return h.includes('관리번호')||h.includes('관리'); });
+        var modelIdx=headers.findIndex(function(h){ return h.includes('모델명')||h.includes('모델'); });
+        var serialIdx=headers.findIndex(function(h){ return h.includes('Serial')||h.includes('시리얼'); });
+        var mgmt=mgmtIdx>=0?String(r[mgmtIdx]||''):'';
+        var model=modelIdx>=0?String(r[modelIdx]||''):'';
+        var serial=serialIdx>=0?String(r[serialIdx]||''):'';
+        h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 4px;border-bottom:1px solid var(--g1)">';
+        h+='<div style="display:flex;align-items:center;gap:6px">';
+        h+='<span style="font-size:10px;color:var(--g3);min-width:18px">'+(ri+1)+'</span>';
+        h+='<div><div style="font-size:12px;font-weight:700;color:var(--g7)">'+mgmt+'</div>';
+        if(model) h+='<div style="font-size:10px;color:var(--g4)">'+model+(serial?' · '+serial:'')+'</div>';
+        h+='</div></div>';
+        h+='</div>';
+      });
+      h+='</div>';
+    }
+    h+='</div>';
+  });
+  el.innerHTML=h;
+}
+
+function eqGroupToggle(el){
+  var name=el.getAttribute('data-name');
+  if(!window._eqGroupOpen) window._eqGroupOpen={};
+  window._eqGroupOpen[name]=!window._eqGroupOpen[name];
+  renderEquipmentGroup();
+}
 
 async function loadEquipmentFromDB(){
   try{
@@ -6989,7 +7081,7 @@ function previewEquipmentFile(input){
 
 async function uploadEquipmentData(){
   if(!window._eqPendingData){ toast('파일을 먼저 선택해주세요'); return; }
-  var btn=document.querySelector('#eqP1 .btn-prim');
+  var btn=document.querySelector('#eqP2 .btn-prim');
   if(btn){btn.disabled=true;btn.textContent='업로드 중...';}
   try{
     // 기존 데이터 삭제 후 새로 insert
