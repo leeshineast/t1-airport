@@ -854,6 +854,18 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div class="menu-desc">습득물 접수 · 폐기 · 유실물 처리</div>
       <span class="menu-arrow">관리하기 →</span>
     </button>
+    <button class="menu-btn" onclick="go('equipment')">
+      <span class="menu-icon">🔧</span>
+      <div class="menu-title">장비현황</div>
+      <div class="menu-desc">장비 목록 엑셀 업로드 및 현황 조회</div>
+      <span class="menu-arrow">조회하기 →</span>
+    </button>
+    <button class="menu-btn" onclick="go('waste')">
+      <span class="menu-icon">♻️</span>
+      <div class="menu-title">폐기물 처리현황</div>
+      <div class="menu-desc">소각·재활용 처리량 입력 및 이력</div>
+      <span class="menu-arrow">입력하기 →</span>
+    </button>
     <button class="menu-btn" id="adminBtn" onclick="go('admin')" style="display:none;position:relative">
       <span class="menu-icon">⚙️</span>
       <div class="menu-title">관리자</div>
@@ -1217,6 +1229,148 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <button onclick="confirmLostComplete()" style="flex:1;padding:11px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">완료 확인</button>
   </div>
 </div></div></div>
+
+<!-- ══ 장비현황 ══ -->
+<div id="sEquipment" class="scr" style="display:none">
+  <div class="pg-hd">
+    <div><h1>🔧 장비현황</h1><small>장비 목록 엑셀 업로드 및 현황 조회</small></div>
+    <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">← 메인</button>
+  </div>
+
+  <!-- 탭 -->
+  <div style="display:flex;border-bottom:2px solid var(--g2)">
+    <div id="eqT0" onclick="eqTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">현황 조회</div>
+    <div id="eqT1" onclick="eqTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--g3);cursor:pointer">엑셀 업로드</div>
+  </div>
+
+  <!-- 조회 탭 -->
+  <div id="eqP0" style="padding:13px">
+    <!-- 검색 -->
+    <div style="display:flex;gap:7px;margin-bottom:10px">
+      <input type="text" id="eqSearch" oninput="renderEquipment()" placeholder="🔍 장비명, 모델명 검색..." style="flex:1;padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white">
+      <button onclick="loadEquipmentFromDB()" style="padding:9px 13px;background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--g5);cursor:pointer">🔄</button>
+    </div>
+    <!-- 업로드 정보 -->
+    <div id="eqUploadInfo" style="font-size:11px;color:var(--g4);margin-bottom:8px;text-align:right"></div>
+    <!-- 통계 -->
+    <div id="eqStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px"></div>
+    <!-- 테이블 -->
+    <div id="eqTable" style="overflow-x:auto"></div>
+  </div>
+
+  <!-- 업로드 탭 -->
+  <div id="eqP1" style="display:none;padding:13px">
+    <div class="card" style="margin-bottom:12px"><div class="cb">
+      <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:8px">📋 엑셀 파일 업로드</div>
+      <div style="font-size:11px;color:var(--g4);line-height:1.7;margin-bottom:12px">
+        • 첫 번째 행이 <b>헤더(컬럼명)</b>이어야 합니다<br>
+        • .xlsx / .xls 파일 지원<br>
+        • 업로드 시 기존 데이터를 덮어씁니다
+      </div>
+      <input type="file" id="eqFileInput" accept=".xlsx,.xls" onchange="previewEquipmentFile(this)" style="width:100%;padding:10px;border:2px dashed var(--g2);border-radius:var(--r2);font-size:12px;background:var(--g1)">
+    </div></div>
+    <!-- 미리보기 -->
+    <div id="eqPreview" style="display:none">
+      <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:8px">미리보기 (상위 5행)</div>
+      <div id="eqPreviewTable" style="overflow-x:auto;margin-bottom:12px"></div>
+      <button onclick="uploadEquipmentData()" class="btn-prim" style="width:100%">🔧 장비현황 업로드</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 폐기물 처리현황 ══ -->
+<div id="sWaste" class="scr" style="display:none">
+  <div class="pg-hd">
+    <div><h1>♻️ 폐기물 처리현황</h1><small>소각·재활용 처리량 입력 및 이력</small></div>
+    <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">← 메인</button>
+  </div>
+
+  <!-- 탭 -->
+  <div style="display:flex;border-bottom:2px solid var(--g2)">
+    <div id="wasteT0" onclick="wasteTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">이력 조회</div>
+    <div id="wasteT1" onclick="wasteTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--g3);cursor:pointer">입력</div>
+  </div>
+
+  <!-- 이력 조회 탭 -->
+  <div id="wasteP0" style="padding-bottom:20px">
+    <div style="padding:12px 13px;background:var(--g1);border-bottom:1px solid var(--g2)">
+      <div style="display:flex;gap:7px;align-items:center">
+        <input type="month" id="wasteFilterMonth" onchange="renderWasteList()" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
+        <select id="wasteFilterTeam" onchange="renderWasteList()" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
+          <option value="">전체 팀</option>
+        </select>
+        <button onclick="loadWasteFromDB()" style="padding:8px 13px;background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--g5);cursor:pointer">🔄</button>
+        <button onclick="downloadWasteExcel()" style="padding:8px 13px;background:var(--teal-bg);border:1.5px solid var(--teal);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--teal2);cursor:pointer">📥</button>
+      </div>
+    </div>
+    <!-- 월간 합계 -->
+    <div id="wasteMonthSummary" style="margin:10px 13px"></div>
+    <!-- 목록 -->
+    <div id="wasteList" style="padding:0 13px"></div>
+  </div>
+
+  <!-- 입력 탭 -->
+  <div id="wasteP1" style="display:none;padding:13px">
+    <!-- 기본 정보 -->
+    <div class="card" style="margin-bottom:10px"><div class="cb">
+      <div class="fg"><label class="f-lbl">일자 <span style="color:var(--danger)">*</span></label>
+        <input type="date" id="wasteDate" class="ri" style="margin-bottom:0">
+      </div>
+      <div class="fg" style="margin-top:10px"><label class="f-lbl">근무조 <span style="color:var(--danger)">*</span></label>
+        <div class="rg" id="wasteShiftGrp">
+          <div class="rp on" onclick="pickWasteShift(this)" data-val="오전">오전</div>
+          <div class="rp" onclick="pickWasteShift(this)" data-val="오후">오후</div>
+          <div class="rp" onclick="pickWasteShift(this)" data-val="야간">야간</div>
+        </div>
+      </div>
+      <div class="fg" style="margin-top:10px"><label class="f-lbl">팀 <span style="color:var(--danger)">*</span></label>
+        <div class="rg" id="wasteTeamGrp" style="flex-wrap:wrap;gap:6px">
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="1팀">1팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="2팀">2팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="3팀">3팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="4팀">4팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="5팀">5팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="6팀">6팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="7팀">7팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="8팀">8팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="9팀">9팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="10팀">10팀</div>
+        </div>
+      </div>
+    </div></div>
+
+    <!-- 소각 -->
+    <div class="card" style="margin-bottom:10px"><div class="cb">
+      <div style="font-size:13px;font-weight:800;color:var(--danger);margin-bottom:12px">🔥 소각</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="f-lbl" style="font-size:11px">생활쓰레기 (kg)</label><input type="number" id="w_inc_living" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">합성수지류 (kg)</label><input type="number" id="w_inc_syn" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">음식물쓰레기 (kg)</label><input type="number" id="w_inc_food" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">목재류 (kg)</label><input type="number" id="w_inc_wood" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+      </div>
+    </div></div>
+
+    <!-- 재활용 -->
+    <div class="card" style="margin-bottom:10px"><div class="cb">
+      <div style="font-size:13px;font-weight:800;color:var(--teal2);margin-bottom:12px">♻️ 재활용</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div><label class="f-lbl" style="font-size:11px">종이류 (kg)</label><input type="number" id="w_rec_paper" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">플라스틱류 (kg)</label><input type="number" id="w_rec_plastic" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">캔/고철류 (kg)</label><input type="number" id="w_rec_can" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">병/유리류 (kg)</label><input type="number" id="w_rec_glass" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">기타 (kg)</label><input type="number" id="w_rec_etc" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+      </div>
+    </div></div>
+
+    <!-- 기타 -->
+    <div class="card" style="margin-bottom:16px"><div class="cb">
+      <div class="fg"><label class="f-lbl">기타 특이사항</label>
+        <textarea id="wasteNote" class="f-ta show" rows="2" placeholder="특이사항 입력"></textarea>
+      </div>
+    </div></div>
+    <button onclick="saveWaste()" class="btn-prim" style="width:100%">♻️ 폐기물 처리현황 저장</button>
+  </div>
+</div>
 
 <!-- ══ AI 챗봇 ══ -->
 <div id="sChat" class="scr">
@@ -2057,9 +2211,9 @@ function showM(id){document.getElementById(id).classList.add('on');}
 function hideM(id){document.getElementById(id).classList.remove('on');}
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste'];
 function go(name){
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -2104,6 +2258,12 @@ function go(name){
   }
   if(name==='lost'){
     loadLostFromDB();
+  }
+  if(name==='equipment'){
+    loadEquipmentFromDB();
+  }
+  if(name==='waste'){
+    loadWasteFromDB();
   }
   if(name==='kpi'){
     // 권한에 따라 입력 탭 숨김 (조장은 분기별/연간 조회만)
@@ -6645,6 +6805,329 @@ async function deleteLost(id){
   }catch(e){ toast('⚠️ 삭제 실패'); }
 }
 
+// ══ 장비현황 ══
+var equipmentData=null; // {headers:[], rows:[[]], uploadDate:'', uploader:''}
+
+function eqTab(n){ tabSwitch('eq',n,2); }
+
+async function loadEquipmentFromDB(){
+  try{
+    var res=await sb.from('equipment_data').select('*').order('created_at',{ascending:false}).limit(1);
+    if(res.error) throw res.error;
+    if(res.data&&res.data.length){
+      var row=res.data[0];
+      equipmentData=row.data;
+      equipmentData.uploadDate=toKSTDate(row.created_at);
+      equipmentData.uploader=row.uploader||'';
+    } else {
+      equipmentData=null;
+    }
+    renderEquipment();
+  }catch(e){ console.error(e); }
+}
+
+function renderEquipment(){
+  var infoEl=document.getElementById('eqUploadInfo');
+  var statsEl=document.getElementById('eqStats');
+  var tableEl=document.getElementById('eqTable');
+  if(!tableEl) return;
+  if(!equipmentData||!equipmentData.rows||!equipmentData.rows.length){
+    if(infoEl) infoEl.textContent='';
+    if(statsEl) statsEl.innerHTML='';
+    tableEl.innerHTML='<div style="text-align:center;padding:40px;color:var(--g3);font-size:12px">엑셀 파일을 업로드해주세요</div>';
+    return;
+  }
+  var headers=equipmentData.headers||[];
+  var rows=equipmentData.rows||[];
+  // 검색 필터
+  var kw=(document.getElementById('eqSearch')||{}).value||'';
+  var filtered=rows;
+  if(kw){
+    var kl=kw.toLowerCase();
+    filtered=rows.filter(function(r){ return r.some(function(c){ return String(c||'').toLowerCase().includes(kl); }); });
+  }
+  // 업로드 정보
+  if(infoEl) infoEl.textContent='📅 '+equipmentData.uploadDate+(equipmentData.uploader?' · '+equipmentData.uploader:'')+'  총 '+rows.length+'건';
+  // 통계 (전체/검색결과)
+  if(statsEl){
+    statsEl.innerHTML=
+      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--g2)"><div style="font-size:18px;font-weight:900;color:var(--navy)">'+rows.length+'</div><div style="font-size:10px;color:var(--g4)">전체</div></div>'+
+      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--teal)"><div style="font-size:18px;font-weight:900;color:var(--teal2)">'+filtered.length+'</div><div style="font-size:10px;color:var(--g4)">검색결과</div></div>'+
+      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--g2)"><div style="font-size:18px;font-weight:900;color:var(--g5)">'+headers.length+'</div><div style="font-size:10px;color:var(--g4)">컬럼수</div></div>';
+  }
+  // 테이블
+  var h='<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:500px">';
+  h+='<thead><tr>';
+  headers.forEach(function(hd){
+    h+='<th style="padding:8px 10px;background:var(--navy);color:white;text-align:left;white-space:nowrap;font-size:11px">'+hd+'</th>';
+  });
+  h+='</tr></thead><tbody>';
+  filtered.forEach(function(r,i){
+    h+='<tr style="background:'+(i%2===0?'white':'var(--g1)')+';">';
+    r.forEach(function(c){
+      h+='<td style="padding:7px 10px;border-bottom:1px solid var(--g2);white-space:nowrap;color:var(--g7)">'+( c!==null&&c!==undefined?c:'')+'</td>';
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  tableEl.innerHTML=h;
+}
+
+function previewEquipmentFile(input){
+  var file=input.files[0];
+  if(!file){ return; }
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:'binary'});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var json=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      if(!json||json.length<2){ toast('데이터가 없습니다'); return; }
+      var headers=json[0].map(function(h){ return String(h); });
+      var rows=json.slice(1).filter(function(r){ return r.some(function(c){ return c!==''; }); });
+      // 미리보기
+      var prev=document.getElementById('eqPreview');
+      var prevTbl=document.getElementById('eqPreviewTable');
+      if(prev) prev.style.display='block';
+      var h='<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:400px">';
+      h+='<thead><tr>';
+      headers.forEach(function(hd){ h+='<th style="padding:6px 8px;background:var(--navy);color:white;white-space:nowrap">'+hd+'</th>'; });
+      h+='</tr></thead><tbody>';
+      rows.slice(0,5).forEach(function(r,i){
+        h+='<tr style="background:'+(i%2===0?'white':'var(--g1)')+';">';
+        r.forEach(function(c){ h+='<td style="padding:5px 8px;border-bottom:1px solid var(--g2);white-space:nowrap">'+c+'</td>'; });
+        h+='</tr>';
+      });
+      h+='</tbody></table>';
+      if(prevTbl) prevTbl.innerHTML=h;
+      // 임시 저장
+      window._eqPendingData={headers:headers,rows:rows};
+      window._eqPendingTotal=rows.length;
+      toast('✅ '+rows.length+'건 확인 완료. 업로드 버튼을 눌러주세요');
+    }catch(ex){ toast('⚠️ 파일 읽기 오류: '+ex.message); }
+  };
+  reader.readAsBinaryString(file);
+}
+
+async function uploadEquipmentData(){
+  if(!window._eqPendingData){ toast('파일을 먼저 선택해주세요'); return; }
+  var btn=document.querySelector('#eqP1 .btn-prim');
+  if(btn){btn.disabled=true;btn.textContent='업로드 중...';}
+  try{
+    // 기존 데이터 삭제 후 새로 insert
+    await sb.from('equipment_data').delete().neq('id',0);
+    var res=await sb.from('equipment_data').insert({
+      upload_date: new Date(Date.now()+9*3600000).toISOString().slice(0,10),
+      uploader: me?me.name:'',
+      data: window._eqPendingData
+    });
+    if(res.error) throw res.error;
+    toast('✅ '+window._eqPendingTotal+'건 업로드 완료!');
+    window._eqPendingData=null;
+    document.getElementById('eqFileInput').value='';
+    document.getElementById('eqPreview').style.display='none';
+    loadEquipmentFromDB();
+    eqTab(0);
+  }catch(e){ toast('⚠️ 업로드 실패: '+e.message);
+  }finally{ if(btn){btn.disabled=false;btn.textContent='🔧 장비현황 업로드';} }
+}
+
+// ══ 폐기물 처리현황 ══
+var wasteData=[];
+var wasteSelectedShift='오전';
+var wasteSelectedTeam='';
+
+function wasteTab(n){ tabSwitch('waste',n,2); }
+
+function pickWasteShift(el){
+  document.querySelectorAll('#wasteShiftGrp .rp').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  wasteSelectedShift=el.dataset.val;
+}
+
+function pickWasteTeam(el){
+  document.querySelectorAll('#wasteTeamGrp .rp').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  wasteSelectedTeam=el.dataset.val;
+}
+
+async function saveWaste(){
+  var date=document.getElementById('wasteDate').value;
+  if(!date){ toast('일자를 선택해주세요'); return; }
+  if(!wasteSelectedTeam){ toast('팀을 선택해주세요'); return; }
+  var getV=function(id){ return parseFloat(document.getElementById(id).value)||0; };
+  var data={
+    waste_date: date,
+    shift: wasteSelectedShift,
+    team_code: wasteSelectedTeam,
+    writer: me?me.name:'',
+    incineration_living: getV('w_inc_living'),
+    incineration_synthetic: getV('w_inc_syn'),
+    incineration_food: getV('w_inc_food'),
+    incineration_wood: getV('w_inc_wood'),
+    recycle_paper: getV('w_rec_paper'),
+    recycle_plastic: getV('w_rec_plastic'),
+    recycle_can: getV('w_rec_can'),
+    recycle_glass: getV('w_rec_glass'),
+    recycle_etc: getV('w_rec_etc'),
+    note: document.getElementById('wasteNote').value.trim()||null
+  };
+  var btn=document.querySelector('#wasteP1 .btn-prim');
+  if(btn){btn.disabled=true;btn.textContent='저장 중...';}
+  try{
+    var res=await sb.from('waste_data').insert(data);
+    if(res.error) throw res.error;
+    toast('✅ 폐기물 처리현황이 저장되었습니다');
+    // 입력 초기화
+    ['w_inc_living','w_inc_syn','w_inc_food','w_inc_wood','w_rec_paper','w_rec_plastic','w_rec_can','w_rec_glass','w_rec_etc'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.value='';
+    });
+    document.getElementById('wasteNote').value='';
+    loadWasteFromDB();
+    wasteTab(0);
+  }catch(e){ toast('⚠️ 저장 실패: '+e.message);
+  }finally{ if(btn){btn.disabled=false;btn.textContent='♻️ 폐기물 처리현황 저장';} }
+}
+
+async function loadWasteFromDB(){
+  try{
+    var res=await sb.from('waste_data').select('*').order('waste_date',{ascending:false}).order('created_at',{ascending:false});
+    if(res.error) throw res.error;
+    wasteData=res.data||[];
+    // 팀 필터 옵션 갱신
+    var teamSel=document.getElementById('wasteFilterTeam');
+    if(teamSel){
+      var teams=[...new Set(wasteData.map(function(r){return r.team_code;}).filter(Boolean))].sort();
+      var cur=teamSel.value;
+      teamSel.innerHTML='<option value="">전체 팀</option>';
+      teams.forEach(function(t){ teamSel.innerHTML+='<option value="'+t+'"'+(t===cur?' selected':'')+'>'+t+'</option>'; });
+    }
+    // 이번 달 기본값
+    var mf=document.getElementById('wasteFilterMonth');
+    if(mf&&!mf.value) mf.value=new Date(Date.now()+9*3600000).toISOString().slice(0,7);
+    renderWasteList();
+    // 조장이면 자기 팀 자동선택
+    if(me&&me.role==='leader'){
+      var myInfo=getMyLeaderTeam?getMyLeaderTeam():{shift:'',team:''};
+      if(myInfo.team){
+        var tNum=myInfo.team.replace(/[AB조]/g,'');
+        document.querySelectorAll('#wasteTeamGrp .rp').forEach(function(p){
+          if(p.dataset.val===tNum){p.click();}
+        });
+      }
+      if(myInfo.shift){
+        var sMap={'오전팀':'오전','오후팀':'오후','야간팀':'야간'};
+        var sv=sMap[myInfo.shift]||'';
+        document.querySelectorAll('#wasteShiftGrp .rp').forEach(function(p){
+          if(p.dataset.val===sv){p.click();}
+        });
+      }
+    }
+    // 오늘 날짜 기본값
+    var wd=document.getElementById('wasteDate');
+    if(wd&&!wd.value) wd.value=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+  }catch(e){ console.error(e); }
+}
+
+function renderWasteList(){
+  var el=document.getElementById('wasteList');
+  var summaryEl=document.getElementById('wasteMonthSummary');
+  if(!el) return;
+  var mf=document.getElementById('wasteFilterMonth');
+  var tf=document.getElementById('wasteFilterTeam');
+  var mfv=mf?mf.value:'';
+  var tfv=tf?tf.value:'';
+  var filtered=wasteData.filter(function(r){
+    if(mfv&&r.waste_date.slice(0,7)!==mfv) return false;
+    if(tfv&&r.team_code!==tfv) return false;
+    return true;
+  });
+  // 월간 합계
+  var totInc=0,totRec=0;
+  filtered.forEach(function(r){
+    totInc+=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
+    totRec+=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
+  });
+  if(summaryEl){
+    summaryEl.innerHTML=
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'+
+      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--danger)"><div style="font-size:16px;font-weight:900;color:var(--danger)">'+totInc.toLocaleString()+'</div><div style="font-size:10px;color:var(--g4)">소각 합계(kg)</div></div>'+
+      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--teal)"><div style="font-size:16px;font-weight:900;color:var(--teal2)">'+totRec.toLocaleString()+'</div><div style="font-size:10px;color:var(--g4)">재활용 합계(kg)</div></div>'+
+      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--navy)"><div style="font-size:16px;font-weight:900;color:var(--navy)">'+(totInc+totRec).toLocaleString()+'</div><div style="font-size:10px;color:var(--g4)">총합계(kg)</div></div>'+
+      '</div>';
+  }
+  if(!filtered.length){
+    el.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">입력된 데이터가 없습니다</div>';
+    return;
+  }
+  var isAdmin=me&&(me.role==='admin'||me.role==='manager');
+  var h='';
+  filtered.forEach(function(r){
+    var incTotal=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
+    var recTotal=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
+    h+='<div style="background:white;border-radius:var(--r2);border:1.5px solid var(--g2);padding:13px;margin-bottom:9px">';
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+    h+='<div style="display:flex;align-items:center;gap:7px">';
+    h+='<span style="font-size:12px;font-weight:800;color:var(--g7)">'+r.waste_date+'</span>';
+    h+='<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--navy-bg);color:var(--navy)">'+r.team_code+'</span>';
+    h+='<span style="font-size:11px;color:var(--g4)">'+r.shift+'</span>';
+    h+='</div>';
+    h+='<span style="font-size:10px;color:var(--g4)">'+r.writer+'</span>';
+    h+='</div>';
+    // 소각
+    h+='<div style="background:var(--danger-bg);border-radius:8px;padding:8px 10px;margin-bottom:7px">';
+    h+='<div style="font-size:11px;font-weight:700;color:var(--danger);margin-bottom:5px">🔥 소각 합계 '+incTotal.toLocaleString()+'kg</div>';
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:11px;color:var(--g6)">';
+    h+='<span>생활: '+(r.incineration_living||0)+'kg</span><span>합성수지: '+(r.incineration_synthetic||0)+'kg</span>';
+    h+='<span>음식물: '+(r.incineration_food||0)+'kg</span><span>목재: '+(r.incineration_wood||0)+'kg</span>';
+    h+='</div></div>';
+    // 재활용
+    h+='<div style="background:var(--teal-bg);border-radius:8px;padding:8px 10px;margin-bottom:7px">';
+    h+='<div style="font-size:11px;font-weight:700;color:var(--teal2);margin-bottom:5px">♻️ 재활용 합계 '+recTotal.toLocaleString()+'kg</div>';
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:11px;color:var(--g6)">';
+    h+='<span>종이: '+(r.recycle_paper||0)+'kg</span><span>플라스틱: '+(r.recycle_plastic||0)+'kg</span>';
+    h+='<span>캔/고철: '+(r.recycle_can||0)+'kg</span><span>병/유리: '+(r.recycle_glass||0)+'kg</span>';
+    h+='<span>기타: '+(r.recycle_etc||0)+'kg</span>';
+    h+='</div></div>';
+    if(r.note) h+='<div style="font-size:11px;color:var(--g5);background:var(--g1);border-radius:6px;padding:6px 9px;margin-bottom:7px">📎 '+r.note+'</div>';
+    if(isAdmin){
+      h+='<button data-id="'+r.id+'" onclick="deleteWaste(this.dataset.id)" style="padding:6px 12px;background:white;color:var(--danger);border:1.5px solid var(--danger);border-radius:var(--r2);font-size:11px;font-weight:700;cursor:pointer">🗑️ 삭제</button>';
+    }
+    h+='</div>';
+  });
+  el.innerHTML=h;
+}
+
+async function deleteWaste(id){
+  if(!confirm('이 기록을 삭제하시겠습니까?')) return;
+  try{
+    await sb.from('waste_data').delete().eq('id',parseInt(id));
+    toast('🗑️ 삭제되었습니다');
+    loadWasteFromDB();
+  }catch(e){ toast('⚠️ 삭제 실패'); }
+}
+
+function downloadWasteExcel(){
+  if(!wasteData||!wasteData.length){ toast('다운로드할 데이터가 없습니다'); return; }
+  var mf=document.getElementById('wasteFilterMonth');
+  var mfv=mf?mf.value:'';
+  var filtered=wasteData.filter(function(r){ return !mfv||r.waste_date.slice(0,7)===mfv; });
+  var rows=[['일자','근무조','팀','작성자','생활쓰레기(kg)','합성수지류(kg)','음식물쓰레기(kg)','목재류(kg)','소각합계(kg)','종이류(kg)','플라스틱류(kg)','캔/고철류(kg)','병/유리류(kg)','기타재활용(kg)','재활용합계(kg)','총합계(kg)','기타']];
+  filtered.forEach(function(r){
+    var inc=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
+    var rec=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
+    rows.push([r.waste_date,r.shift,r.team_code,r.writer,r.incineration_living||0,r.incineration_synthetic||0,r.incineration_food||0,r.incineration_wood||0,inc,r.recycle_paper||0,r.recycle_plastic||0,r.recycle_can||0,r.recycle_glass||0,r.recycle_etc||0,rec,inc+rec,r.note||'']);
+  });
+  try{
+    var wb=XLSX.utils.book_new();
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:12},{wch:8},{wch:6},{wch:10},{wch:14},{wch:14},{wch:16},{wch:10},{wch:12},{wch:10},{wch:14},{wch:12},{wch:12},{wch:14},{wch:14},{wch:12},{wch:16}];
+    XLSX.utils.book_append_sheet(wb,ws,'폐기물처리현황');
+    XLSX.writeFile(wb,'T1_폐기물처리현황'+(mfv?'_'+mfv:'')+'.xlsx');
+    toast('📥 다운로드 완료');
+  }catch(e){ toast('⚠️ 다운로드 실패'); }
+}
+
 async function loadVocFromDB(){
   try{
     var res=await sb.from('voc_data').select('*').order('voc_date',{ascending:false}).order('created_at',{ascending:false});
@@ -6849,7 +7332,8 @@ async function initAppData(){
     loadMpFromDB(),
     loadIndPrev(),
     loadVocFromDB(),
-    loadLostFromDB()
+    loadLostFromDB(),
+    loadWasteFromDB()
   ]);
   // 사규 자동 로드
   autoLoadPdf();
