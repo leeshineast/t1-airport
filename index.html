@@ -88,13 +88,13 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 .sec-lbl{font-size:10px;font-weight:700;color:var(--g4);letter-spacing:.5px;padding:12px 13px 5px}
 
 /* ─ 메인 메뉴 버튼 ─ */
-.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;padding:4px 13px 13px}
-.menu-btn{background:white;border-radius:var(--r);padding:18px 14px;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--g2);cursor:pointer;text-align:left;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 13px 13px}
+.menu-btn{background:white;border-radius:var(--r2);padding:11px 12px;box-shadow:0 1px 5px rgba(0,0,0,.06);border:1px solid var(--g2);cursor:pointer;text-align:left;transition:all .15s;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:10px}
 .menu-btn:active{transform:scale(.97);background:var(--g1)}
-.menu-icon{font-size:28px;margin-bottom:9px;display:block}
-.menu-title{font-size:14px;font-weight:800;color:var(--g7);margin-bottom:3px}
-.menu-desc{font-size:11px;color:var(--g4);line-height:1.4}
-.menu-arrow{font-size:11px;color:var(--g3);margin-top:8px;display:block}
+.menu-icon{font-size:22px;display:block;flex-shrink:0}
+.menu-title{font-size:13px;font-weight:800;color:var(--g7);margin-bottom:1px}
+.menu-desc{font-size:10px;color:var(--g4);line-height:1.3}
+.menu-arrow{display:none}
 
 /* ─ 통계 카드 ─ */
 .stat-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:3px 13px 11px}
@@ -848,6 +848,12 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div class="menu-desc">민원 전화 접수 및 처리현황</div>
       <span class="menu-arrow">접수하기 →</span>
     </button>
+    <button class="menu-btn" onclick="go('lost')">
+      <span class="menu-icon">🎒</span>
+      <div class="menu-title">습득물 관리</div>
+      <div class="menu-desc">습득물 접수 · 폐기 · 유실물 처리</div>
+      <span class="menu-arrow">관리하기 →</span>
+    </button>
     <button class="menu-btn" id="adminBtn" onclick="go('admin')" style="display:none;position:relative">
       <span class="menu-icon">⚙️</span>
       <div class="menu-title">관리자</div>
@@ -1071,6 +1077,146 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   </div>
 
 </div>
+
+<!-- ══ 습득물 관리 ══ -->
+<div id="sLost" class="scr" style="display:none">
+  <div class="pg-hd">
+    <div><h1>🎒 습득물 관리</h1><small>습득물 접수 및 처리현황</small></div>
+    <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">← 메인</button>
+  </div>
+
+  <!-- 탭 -->
+  <div style="display:flex;border-bottom:2px solid var(--g2);margin-bottom:0">
+    <div id="lostT0" onclick="lostTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">목록</div>
+    <div id="lostT1" onclick="lostTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--g3);cursor:pointer">접수 등록</div>
+  </div>
+
+  <!-- 목록 탭 -->
+  <div id="lostP0" style="padding-bottom:20px">
+    <!-- 필터/통계 -->
+    <div style="padding:12px 13px;background:var(--g1);border-bottom:1px solid var(--g2)">
+      <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+        <select id="lostFilterStatus" onchange="renderLostList()" style="flex:1;min-width:90px;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
+          <option value="">전체</option>
+          <option value="접수">접수중</option>
+          <option value="완료">처리완료</option>
+        </select>
+        <input type="month" id="lostFilterMonth" onchange="renderLostList()" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
+        <button onclick="loadLostFromDB()" style="padding:8px 13px;background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--g5);cursor:pointer">🔄</button>
+        <button onclick="downloadLostExcel()" style="padding:8px 13px;background:var(--teal-bg);border:1.5px solid var(--teal);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--teal2);cursor:pointer">📥 엑셀</button>
+        <button id="lostResetBtn" onclick="showM('lostResetModal')" style="display:none;padding:8px 13px;background:var(--danger-bg);border:1.5px solid var(--danger);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--danger);cursor:pointer">🗑️ 초기화</button>
+      </div>
+    </div>
+    <!-- 통계 -->
+    <div id="lostStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 13px"></div>
+    <!-- 목록 -->
+    <div id="lostList" style="padding:0 13px"></div>
+  </div>
+
+  <!-- 접수 등록 탭 -->
+  <div id="lostP1" style="display:none;padding:13px">
+    <div class="card" style="margin-bottom:10px"><div class="cb">
+      <div class="fg">
+        <label class="f-lbl">발견자 사번</label>
+        <input type="text" id="lostFinderId" class="ri" placeholder="사번 입력" style="margin-bottom:0">
+      </div>
+      <div class="fg" style="margin-top:10px">
+        <label class="f-lbl">발견자 이름</label>
+        <input type="text" id="lostFinderName" class="ri" placeholder="이름 입력" style="margin-bottom:0">
+      </div>
+    </div></div>
+    <div class="card" style="margin-bottom:10px"><div class="cb">
+      <div class="fg">
+        <label class="f-lbl">발견 위치 <span style="color:var(--danger)">*</span></label>
+        <input type="text" id="lostLocation" class="ri" placeholder="예: 3F 동편 화장실 앞" style="margin-bottom:0">
+      </div>
+    </div></div>
+    <div class="card" style="margin-bottom:10px"><div class="cb">
+      <div class="fg">
+        <label class="f-lbl">발견 물품 <span style="color:var(--danger)">*</span></label>
+        <textarea id="lostItem" class="f-ta show" rows="3" placeholder="예: 검은색 지갑, 아이폰 15 등 구체적으로 작성"></textarea>
+      </div>
+    </div></div>
+    <div class="card" style="margin-bottom:10px"><div class="cb">
+      <div class="fg">
+        <label class="f-lbl">처리현황</label>
+        <div class="rg" id="lostStatusGrp" style="flex-wrap:wrap;gap:7px">
+          <div class="rp on" onclick="pickLostStatus(this)" data-val="접수">접수</div>
+          <div class="rp" onclick="pickLostStatus(this)" data-val="완료-폐기">완료 · 폐기</div>
+          <div class="rp" onclick="pickLostStatus(this)" data-val="완료-유실물">완료 · 유실물</div>
+          <div class="rp" onclick="pickLostStatus(this)" data-val="완료-인계">완료 · 인계</div>
+          <div class="rp" onclick="pickLostStatus(this)" data-val="완료-기타">완료 · 기타</div>
+        </div>
+      </div>
+    </div></div>
+    <div class="card" style="margin-bottom:16px"><div class="cb">
+      <div class="fg">
+        <label class="f-lbl">기타</label>
+        <textarea id="lostNote" class="f-ta show" rows="2" placeholder="특이사항, 추가 설명 등"></textarea>
+      </div>
+    </div></div>
+    <button class="btn-prim" onclick="saveLost()" style="width:100%">🎒 습득물 접수 저장</button>
+  </div>
+</div>
+
+<!-- 습득물 수정 모달 -->
+<div id="lostEditModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>✏️ 습득물 수정</h3><button class="m-x" onclick="hideM('lostEditModal')">×</button></div><div style="padding:15px 17px">
+  <input type="hidden" id="lostEditId">
+  <div class="fg"><label class="f-lbl">발견자 사번</label><input type="text" id="lostEditFinderId" class="ri" style="margin-bottom:0"></div>
+  <div class="fg"><label class="f-lbl">발견자 이름</label><input type="text" id="lostEditFinderName" class="ri" style="margin-bottom:0"></div>
+  <div class="fg"><label class="f-lbl">발견 위치 *</label><input type="text" id="lostEditLocation" class="ri" style="margin-bottom:0"></div>
+  <div class="fg"><label class="f-lbl">발견 물품 *</label><textarea id="lostEditItem" class="ri" rows="3" style="resize:vertical;font-size:13px;margin-bottom:0"></textarea></div>
+  <div class="fg"><label class="f-lbl">처리현황</label>
+    <div class="rg" id="lostEditStatusGrp" style="flex-wrap:wrap;gap:7px">
+      <div class="rp on" onclick="pickLostEditStatus(this)" data-val="접수">접수</div>
+      <div class="rp" onclick="pickLostEditStatus(this)" data-val="완료-폐기">완료·폐기</div>
+      <div class="rp" onclick="pickLostEditStatus(this)" data-val="완료-유실물">완료·유실물</div>
+      <div class="rp" onclick="pickLostEditStatus(this)" data-val="완료-인계">완료·인계</div>
+      <div class="rp" onclick="pickLostEditStatus(this)" data-val="완료-기타">완료·기타</div>
+    </div>
+  </div>
+  <div class="fg"><label class="f-lbl">기타</label><textarea id="lostEditNote" class="ri" rows="2" style="resize:vertical;font-size:13px;margin-bottom:0"></textarea></div>
+  <div style="display:flex;gap:8px;margin-top:8px">
+    <button onclick="hideM('lostEditModal')" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">취소</button>
+    <button onclick="confirmLostEdit()" style="flex:1;padding:11px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">수정 저장</button>
+  </div>
+</div></div></div>
+
+<!-- 습득물 초기화 모달 -->
+<div id="lostResetModal" class="modal-bg"><div class="modal"><div style="padding:22px 20px;text-align:center">
+  <div style="font-size:32px;margin-bottom:10px">⚠️</div>
+  <div style="font-size:15px;font-weight:800;color:var(--danger);margin-bottom:8px">습득물 초기화</div>
+  <div style="font-size:13px;color:var(--g5);line-height:1.7;margin-bottom:18px">선택한 기간의 습득물 데이터를<br>모두 삭제합니다. 복구 불가합니다.</div>
+  <select id="lostResetRange" class="ri" style="margin-bottom:14px">
+    <option value="all">전체 초기화</option>
+    <option value="month">이번 달만</option>
+    <option value="year">올해만</option>
+  </select>
+  <div style="display:flex;gap:8px">
+    <button onclick="hideM('lostResetModal')" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">취소</button>
+    <button onclick="confirmLostReset()" style="flex:1;padding:11px;background:var(--danger);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">삭제</button>
+  </div>
+</div></div></div>
+
+<!-- 습득물 처리완료 모달 -->
+<div id="lostCompleteModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--teal),var(--teal2))"><h3>✅ 처리 완료</h3><button class="m-x" onclick="hideM('lostCompleteModal')">×</button></div><div style="padding:15px 17px">
+  <input type="hidden" id="lostCompleteId">
+  <div class="fg"><label class="f-lbl">처리 유형</label>
+    <div class="rg" id="lostCompleteTypeGrp" style="flex-wrap:wrap;gap:7px">
+      <div class="rp on" onclick="pickLostCompleteType(this)" data-val="완료-폐기">폐기</div>
+      <div class="rp" onclick="pickLostCompleteType(this)" data-val="완료-유실물">유실물</div>
+      <div class="rp" onclick="pickLostCompleteType(this)" data-val="완료-인계">인계</div>
+      <div class="rp" onclick="pickLostCompleteType(this)" data-val="완료-기타">기타</div>
+    </div>
+  </div>
+  <div class="fg"><label class="f-lbl">처리 내용 (선택)</label>
+    <textarea id="lostCompleteMemo" class="ri" rows="3" placeholder="처리 내용, 담당자 등" style="resize:vertical;font-size:13px;margin-bottom:0"></textarea>
+  </div>
+  <div style="display:flex;gap:8px;margin-top:4px">
+    <button onclick="hideM('lostCompleteModal')" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">취소</button>
+    <button onclick="confirmLostComplete()" style="flex:1;padding:11px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">완료 확인</button>
+  </div>
+</div></div></div>
 
 <!-- ══ AI 챗봇 ══ -->
 <div id="sChat" class="scr">
@@ -1911,9 +2057,9 @@ function showM(id){document.getElementById(id).classList.add('on');}
 function hideM(id){document.getElementById(id).classList.remove('on');}
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sAdmin','sVeh','sKpi','sFacility','sVoc'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost'];
 function go(name){
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -1955,6 +2101,9 @@ function go(name){
   }
   if(name==='voc'){
     loadVocFromDB();
+  }
+  if(name==='lost'){
+    loadLostFromDB();
   }
   if(name==='kpi'){
     // 권한에 따라 입력 탭 숨김 (조장은 분기별/연간 조회만)
@@ -1999,6 +2148,8 @@ function applyRoleUI(){
   var eb=document.getElementById('mainIndCmpEditBtn');if(eb)eb.style.display=isAdmin?'block':'none';
   // ARS 초기화 버튼 (admin만)
   var vrb=document.getElementById('vocResetBtn');if(vrb)vrb.style.display=isAdmin?'block':'none';
+  // 습득물 초기화 버튼 (admin만)
+  var lrb=document.getElementById('lostResetBtn');if(lrb)lrb.style.display=isAdmin?'block':'none';
   // Gemini API 키 복구
   try{var gk=localStorage.getItem('t1_gemini_key');if(gk){GEMINI_API_KEY=gk;var btn=document.getElementById('apiKeyBtn');if(btn){btn.textContent='🔑 API키 ✅';btn.style.background='rgba(26,158,117,.3)';}}}catch(e){}
 }
@@ -6223,6 +6374,277 @@ async function confirmVocReset(){
   }catch(e){ toast('⚠️ 초기화 실패: '+e.message); }
 }
 
+// ══ 습득물 관리 ══
+var lostData=[];
+var lostSelectedStatus='접수';
+var lostCompleteSelectedType='완료-폐기';
+
+function lostTab(n){ tabSwitch('lost',n,2); }
+
+function pickLostStatus(el){
+  document.querySelectorAll('#lostStatusGrp .rp').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  lostSelectedStatus=el.dataset.val;
+}
+
+function pickLostCompleteType(el){
+  document.querySelectorAll('#lostCompleteTypeGrp .rp').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  lostCompleteSelectedType=el.dataset.val;
+}
+
+async function saveLost(){
+  if(!me||!(me.role==='admin'||me.role==='manager')){
+    toast('⚠️ 팀장/T1운영 이상만 입력 가능합니다'); return;
+  }
+  var location=document.getElementById('lostLocation').value.trim();
+  var item=document.getElementById('lostItem').value.trim();
+  if(!location||!item){ toast('발견 위치와 발견 물품은 필수입니다'); return; }
+  var finderId=document.getElementById('lostFinderId').value.trim();
+  var finderName=document.getElementById('lostFinderName').value.trim();
+  var note=document.getElementById('lostNote').value.trim();
+  var now=new Date(Date.now()+9*3600000).toISOString();
+  var btn=document.querySelector('#lostP1 .btn-prim');
+  if(btn){btn.disabled=true;btn.textContent='저장 중...';}
+  try{
+    var res=await sb.from('lost_found').insert({
+      found_date: now,
+      writer: me.name+(me.team?' ('+me.team+')':''),
+      finder_id: finderId||null,
+      finder_name: finderName||null,
+      location: location,
+      item: item,
+      status: lostSelectedStatus,
+      note: note||null
+    });
+    if(res.error) throw res.error;
+    toast('✅ 습득물이 접수되었습니다');
+    ['lostFinderId','lostFinderName','lostLocation','lostItem','lostNote'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.value='';
+    });
+    document.querySelectorAll('#lostStatusGrp .rp').forEach(function(p){p.classList.remove('on');});
+    document.querySelector('#lostStatusGrp .rp').classList.add('on');
+    lostSelectedStatus='접수';
+    loadLostFromDB();
+    lostTab(0);
+  }catch(e){
+    toast('⚠️ 저장 실패: '+e.message);
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='🎒 습득물 접수 저장';}
+  }
+}
+
+async function loadLostFromDB(){
+  try{
+    var res=await sb.from('lost_found').select('*').order('created_at',{ascending:false});
+    if(res.error) throw res.error;
+    lostData=res.data||[];
+    renderLostList();
+  }catch(e){ console.error(e); }
+}
+
+function renderLostList(){
+  var el=document.getElementById('lostList');
+  var statsEl=document.getElementById('lostStats');
+  if(!el) return;
+  // 필터
+  var statusF=document.getElementById('lostFilterStatus');
+  var monthF=document.getElementById('lostFilterMonth');
+  var sf=statusF?statusF.value:'';
+  var mf=monthF?monthF.value:'';
+  // 이번달 기본값
+  if(monthF&&!monthF.value){
+    monthF.value=new Date(Date.now()+9*3600000).toISOString().slice(0,7);
+    mf=monthF.value;
+  }
+  var filtered=lostData.filter(function(r){
+    if(sf&&r.status!==sf) return false;
+    if(mf&&toKSTDate(r.created_at).slice(0,7)!==mf) return false;
+    return true;
+  });
+  // 통계
+  var total=filtered.length;
+  var acc=filtered.filter(function(r){return r.status==='접수';}).length;
+  var done=filtered.filter(function(r){return r.status&&r.status.startsWith('완료');}).length;
+  if(statsEl){
+    statsEl.innerHTML=
+      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--g2)"><div style="font-size:18px;font-weight:900;color:var(--navy)">'+total+'</div><div style="font-size:10px;color:var(--g4)">전체</div></div>'+
+      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--danger)"><div style="font-size:18px;font-weight:900;color:var(--danger)">'+acc+'</div><div style="font-size:10px;color:var(--g4)">접수중</div></div>'+
+      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--teal)"><div style="font-size:18px;font-weight:900;color:var(--teal)">'+done+'</div><div style="font-size:10px;color:var(--g4)">처리완료</div></div>';
+  }
+  if(!filtered.length){
+    el.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">접수된 습득물이 없습니다</div>';
+    return;
+  }
+  var isAdmin=me&&(me.role==='admin'||me.role==='manager');
+  var stColor={'접수':'var(--danger)','완료-폐기':'var(--g4)','완료-유실물':'var(--teal2)','완료-인계':'var(--navy)','완료-기타':'var(--g4)'};
+  var stBg={'접수':'var(--danger-bg)','완료-폐기':'var(--g1)','완료-유실물':'var(--teal-bg)','완료-인계':'var(--navy-bg)','완료-기타':'var(--g1)'};
+  var stLabel={'접수':'접수중','완료-폐기':'완료·폐기','완료-유실물':'완료·유실물','완료-인계':'완료·인계','완료-기타':'완료·기타'};
+  var h='';
+  filtered.forEach(function(r){
+    var dt=toKSTDateTime(r.created_at);
+    var st=r.status||'접수';
+    var isDone=st.startsWith('완료');
+    h+='<div style="background:white;border-radius:var(--r2);border:1.5px solid var(--g2);padding:13px;margin-bottom:9px">';
+    // 헤더
+    h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
+    h+='<span style="font-size:11px;color:var(--g4)">📅 '+dt+'</span>';
+    h+='<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:'+(stBg[st]||'var(--g1)')+';color:'+(stColor[st]||'var(--g4)')+'">'+( stLabel[st]||st)+'</span>';
+    h+='</div>';
+    // 발견자
+    if(r.finder_name||r.finder_id){
+      h+='<div style="font-size:11px;color:var(--g5);margin-bottom:5px">👤 발견자: '+(r.finder_name||'')+(r.finder_id?' ('+r.finder_id+')':'')+'</div>';
+    }
+    // 위치
+    h+='<div style="font-size:11px;color:var(--g5);margin-bottom:5px">📍 '+r.location+'</div>';
+    // 물품
+    h+='<div style="font-size:13px;font-weight:700;color:var(--g7);margin-bottom:8px;line-height:1.5">'+r.item+'</div>';
+    // 기타
+    if(r.note) h+='<div style="font-size:11px;color:var(--g5);background:var(--g1);border-radius:6px;padding:6px 9px;margin-bottom:8px">📎 '+r.note+'</div>';
+    // 작성자
+    h+='<div style="font-size:10px;color:var(--g4);margin-bottom:8px">✍️ '+r.writer+'</div>';
+    // 버튼
+    if(isAdmin){
+      h+='<div style="display:flex;gap:6px">';
+      if(!isDone){
+        h+='<button data-id="'+r.id+'" onclick="openLostComplete(this.dataset.id)" style="flex:1;padding:7px;background:var(--teal-bg);color:var(--teal2);border:1.5px solid var(--teal);border-radius:var(--r2);font-size:11px;font-weight:700;cursor:pointer">✅ 처리완료</button>';
+      }
+      h+='<button data-id="'+r.id+'" data-row="'+encodeURIComponent(JSON.stringify(r))+'" onclick="openLostEdit(this)" style="padding:7px 11px;background:var(--navy-bg);color:var(--navy);border:1.5px solid var(--navy);border-radius:var(--r2);font-size:11px;font-weight:700;cursor:pointer">✏️</button>';
+      h+='<button data-id="'+r.id+'" onclick="deleteLost(this.dataset.id)" style="padding:7px 11px;background:white;color:var(--danger);border:1.5px solid var(--danger);border-radius:var(--r2);font-size:11px;font-weight:700;cursor:pointer">🗑️</button>';
+      h+='</div>';
+    }
+    h+='</div>';
+  });
+  el.innerHTML=h;
+}
+
+var lostEditSelectedStatus='접수';
+
+function pickLostEditStatus(el){
+  document.querySelectorAll('#lostEditStatusGrp .rp').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  lostEditSelectedStatus=el.dataset.val;
+}
+
+function openLostEdit(btn){
+  var r=JSON.parse(decodeURIComponent(btn.dataset.row));
+  document.getElementById('lostEditId').value=r.id;
+  document.getElementById('lostEditFinderId').value=r.finder_id||'';
+  document.getElementById('lostEditFinderName').value=r.finder_name||'';
+  document.getElementById('lostEditLocation').value=r.location||'';
+  document.getElementById('lostEditItem').value=r.item||'';
+  document.getElementById('lostEditNote').value=r.note||'';
+  // 처리현황 선택
+  lostEditSelectedStatus=r.status||'접수';
+  document.querySelectorAll('#lostEditStatusGrp .rp').forEach(function(p){
+    p.classList.toggle('on', p.dataset.val===lostEditSelectedStatus);
+  });
+  showM('lostEditModal');
+}
+
+async function confirmLostEdit(){
+  var id=parseInt(document.getElementById('lostEditId').value);
+  var location=document.getElementById('lostEditLocation').value.trim();
+  var item=document.getElementById('lostEditItem').value.trim();
+  if(!location||!item){ toast('위치와 물품은 필수입니다'); return; }
+  try{
+    await sb.from('lost_found').update({
+      finder_id: document.getElementById('lostEditFinderId').value.trim()||null,
+      finder_name: document.getElementById('lostEditFinderName').value.trim()||null,
+      location: location,
+      item: item,
+      status: lostEditSelectedStatus,
+      note: document.getElementById('lostEditNote').value.trim()||null
+    }).eq('id',id);
+    hideM('lostEditModal');
+    toast('✅ 수정되었습니다');
+    loadLostFromDB();
+  }catch(e){ toast('⚠️ 수정 실패: '+e.message); }
+}
+
+async function confirmLostReset(){
+  var range=document.getElementById('lostResetRange').value;
+  var now=new Date(Date.now()+9*3600000);
+  try{
+    if(range==='all'){
+      await sb.from('lost_found').delete().neq('id',0);
+    } else {
+      var filterStr=range==='month'?now.toISOString().slice(0,7):String(now.getFullYear());
+      var ids=(lostData||[]).filter(function(r){
+        return toKSTDate(r.created_at).slice(0,filterStr.length)===filterStr;
+      }).map(function(r){return r.id;});
+      for(var i=0;i<ids.length;i++) await sb.from('lost_found').delete().eq('id',ids[i]);
+    }
+    hideM('lostResetModal');
+    toast('🗑️ 초기화 완료');
+    loadLostFromDB();
+  }catch(e){ toast('⚠️ 초기화 실패: '+e.message); }
+}
+
+function downloadLostExcel(){
+  if(!lostData||!lostData.length){ toast('다운로드할 데이터가 없습니다'); return; }
+  var filterMonth=document.getElementById('lostFilterMonth');
+  var mf=filterMonth?filterMonth.value:'';
+  var rows=[['연번','접수일시','작성자','발견자 사번','발견자 이름','발견 위치','발견 물품','처리현황','기타']];
+  var filtered=lostData.filter(function(r){
+    if(mf&&toKSTDate(r.created_at).slice(0,7)!==mf) return false;
+    return true;
+  });
+  filtered.forEach(function(r,i){
+    rows.push([
+      i+1,
+      toKSTDateTime(r.created_at),
+      r.writer||'',
+      r.finder_id||'',
+      r.finder_name||'',
+      r.location||'',
+      r.item||'',
+      r.status||'',
+      r.note||''
+    ]);
+  });
+  try{
+    var wb=XLSX.utils.book_new();
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:6},{wch:18},{wch:12},{wch:10},{wch:10},{wch:20},{wch:30},{wch:12},{wch:20}];
+    XLSX.utils.book_append_sheet(wb,ws,'습득물관리');
+    var fname='T1_습득물관리'+(mf?'_'+mf:'')+'.xlsx';
+    XLSX.writeFile(wb,fname);
+    toast('📥 다운로드 완료');
+  }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
+}
+
+function openLostComplete(id){
+  document.getElementById('lostCompleteId').value=id;
+  document.getElementById('lostCompleteMemo').value='';
+  document.querySelectorAll('#lostCompleteTypeGrp .rp').forEach(function(p){p.classList.remove('on');});
+  document.querySelector('#lostCompleteTypeGrp .rp').classList.add('on');
+  lostCompleteSelectedType='완료-폐기';
+  showM('lostCompleteModal');
+}
+
+async function confirmLostComplete(){
+  var id=parseInt(document.getElementById('lostCompleteId').value);
+  var memo=document.getElementById('lostCompleteMemo').value.trim();
+  try{
+    var updateData={status:lostCompleteSelectedType};
+    if(memo) updateData.note=memo;
+    await sb.from('lost_found').update(updateData).eq('id',id);
+    hideM('lostCompleteModal');
+    toast('✅ 처리완료 되었습니다');
+    loadLostFromDB();
+  }catch(e){ toast('⚠️ 실패: '+e.message); }
+}
+
+async function deleteLost(id){
+  if(!confirm('이 습득물 기록을 삭제하시겠습니까?')) return;
+  try{
+    await sb.from('lost_found').delete().eq('id',parseInt(id));
+    toast('🗑️ 삭제되었습니다');
+    loadLostFromDB();
+  }catch(e){ toast('⚠️ 삭제 실패'); }
+}
+
 async function loadVocFromDB(){
   try{
     var res=await sb.from('voc_data').select('*').order('voc_date',{ascending:false}).order('created_at',{ascending:false});
@@ -6426,7 +6848,8 @@ async function initAppData(){
     loadNoticesFromDB(),
     loadMpFromDB(),
     loadIndPrev(),
-    loadVocFromDB()
+    loadVocFromDB(),
+    loadLostFromDB()
   ]);
   // 사규 자동 로드
   autoLoadPdf();
