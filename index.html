@@ -445,7 +445,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       </div>
     </div>
     <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('waste')">
-      <div class="s-lbl">폐기물 현황 <span style="font-size:9px;color:var(--g3);font-weight:500">(이번달 kg)</span></div>
+      <div class="s-lbl">폐기물 현황 <span style="font-size:9px;color:var(--g3);font-weight:500">(이번달 톤)</span></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-top:5px">
         <div style="font-size:10px;color:var(--g5)">생활 <b id="dW_living" style="color:var(--g7)">0</b></div>
         <div style="font-size:10px;color:var(--g5)">합성수지 <b id="dW_syn" style="color:var(--g7)">0</b></div>
@@ -1380,10 +1380,10 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div class="card" style="margin-bottom:10px"><div class="cb">
       <div style="font-size:13px;font-weight:800;color:var(--danger);margin-bottom:12px">🔥 소각</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="f-lbl" style="font-size:11px">생활쓰레기 (kg)</label><input type="number" id="w_inc_living" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">합성수지류 (kg)</label><input type="number" id="w_inc_syn" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">음식물쓰레기 (kg)</label><input type="number" id="w_inc_food" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">목재류 (kg)</label><input type="number" id="w_inc_wood" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">생활쓰레기 (톤)</label><input type="number" id="w_inc_living" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">합성수지류 (톤)</label><input type="number" id="w_inc_syn" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">음식물쓰레기 (톤)</label><input type="number" id="w_inc_food" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">목재류 (톤)</label><input type="number" id="w_inc_wood" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
       </div>
     </div></div>
 
@@ -1391,11 +1391,11 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div class="card" style="margin-bottom:10px"><div class="cb">
       <div style="font-size:13px;font-weight:800;color:var(--teal2);margin-bottom:12px">♻️ 재활용</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="f-lbl" style="font-size:11px">종이류 (kg)</label><input type="number" id="w_rec_paper" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">플라스틱류 (kg)</label><input type="number" id="w_rec_plastic" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">캔/고철류 (kg)</label><input type="number" id="w_rec_can" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">병/유리류 (kg)</label><input type="number" id="w_rec_glass" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">기타 (kg)</label><input type="number" id="w_rec_etc" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">종이류 (톤)</label><input type="number" id="w_rec_paper" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">플라스틱류 (톤)</label><input type="number" id="w_rec_plastic" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">캔/고철류 (톤)</label><input type="number" id="w_rec_can" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">병/유리류 (톤)</label><input type="number" id="w_rec_glass" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">기타 (톤)</label><input type="number" id="w_rec_etc" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
       </div>
     </div></div>
 
@@ -6939,28 +6939,23 @@ function renderEquipmentGroup(){
   var headers=equipmentData.headers||[];
   var rows=equipmentData.rows||[];
   // 장비명 컬럼 인덱스 찾기
-  // 우선순위: 헤더명 정확 매칭 → 부분 매칭 → 순번/번호 제외 후 한글 값 많은 컬럼
   var nameIdx=-1;
   var nameCandidates=['장비명','품명','기기명','명칭','장비 명','기계명'];
   for(var ni=0;ni<nameCandidates.length;ni++){
     var found=headers.findIndex(function(h){ return h.trim()===nameCandidates[ni]; });
     if(found>=0){ nameIdx=found; break; }
   }
+  if(nameIdx<0) nameIdx=headers.findIndex(function(h){ return h.includes('장비명')||h.includes('품명'); });
   if(nameIdx<0){
-    // 부분 포함 매칭
-    nameIdx=headers.findIndex(function(h){ return h.includes('장비명')||h.includes('품명'); });
-  }
-  if(nameIdx<0){
-    // 순번/번호/NO 계열 컬럼 제외 후, 한글 2자 이상 값이 가장 많은 컬럼
     var skipPat=/순번|번호|serial|no|날짜|일자|입고|종료|제작|모델|code/i;
-    var best=-1, bestScore=0;
+    var best=-1,bestScore=0;
     headers.forEach(function(h,hi){
       if(skipPat.test(h)) return;
       var score=rows.slice(0,30).filter(function(r){
         var v=String(r[hi]||'').trim();
         return v&&isNaN(v)&&/[가-힣]/.test(v)&&v.length>=2;
       }).length;
-      if(score>bestScore){ bestScore=score; best=hi; }
+      if(score>bestScore){bestScore=score;best=hi;}
     });
     nameIdx=best>=0?best:2;
   }
@@ -6968,56 +6963,23 @@ function renderEquipmentGroup(){
   var groups={};
   rows.forEach(function(r){
     var name=String(r[nameIdx]||'기타').trim();
-    if(!groups[name]) groups[name]=[];
-    groups[name].push(r);
+    if(!groups[name]) groups[name]=0;
+    groups[name]++;
   });
-  var sorted=Object.keys(groups).sort(function(a,b){ return groups[b].length-groups[a].length; });
-  // 확장 상태 (열림/닫힘)
-  if(!window._eqGroupOpen) window._eqGroupOpen={};
-  var h='<div style="font-size:11px;color:var(--g4);margin-bottom:10px;text-align:right">총 '+sorted.length+'종 · '+rows.length+'대</div>';
-  sorted.forEach(function(name,gi){
-    var list=groups[name];
-    var isOpen=!!window._eqGroupOpen[name];
-    h+='<div style="margin-bottom:8px;border:1.5px solid var(--g2);border-radius:var(--r2);overflow:hidden">';
-    // 그룹 헤더
-    h+='<div onclick="eqGroupToggle(this)" data-name="'+name.replace(/"/g,'&quot;')+'" style="display:flex;align-items:center;justify-content:space-between;padding:11px 13px;background:var(--g1);cursor:pointer">';
-    h+='<div style="display:flex;align-items:center;gap:8px">';
-    h+='<span style="font-size:13px;font-weight:800;color:var(--g7)">'+name+'</span>';
-    h+='<span style="background:var(--teal);color:white;border-radius:20px;padding:2px 9px;font-size:11px;font-weight:700">'+list.length+'대</span>';
-    h+='</div>';
-    h+='<span style="font-size:14px;color:var(--g4);font-weight:700">'+(isOpen?'▲':'▼')+'</span>';
-    h+='</div>';
-    // 펼쳐진 목록
-    if(isOpen){
-      h+='<div style="padding:8px 12px;background:white">';
-      list.forEach(function(r,ri){
-        var mgmtIdx=headers.findIndex(function(h){ return h.includes('관리번호')||h.includes('관리'); });
-        var modelIdx=headers.findIndex(function(h){ return h.includes('모델명')||h.includes('모델'); });
-        var serialIdx=headers.findIndex(function(h){ return h.includes('Serial')||h.includes('시리얼'); });
-        var mgmt=mgmtIdx>=0?String(r[mgmtIdx]||''):'';
-        var model=modelIdx>=0?String(r[modelIdx]||''):'';
-        var serial=serialIdx>=0?String(r[serialIdx]||''):'';
-        h+='<div style="display:flex;align-items:center;justify-content:space-between;padding:7px 4px;border-bottom:1px solid var(--g1)">';
-        h+='<div style="display:flex;align-items:center;gap:6px">';
-        h+='<span style="font-size:10px;color:var(--g3);min-width:18px">'+(ri+1)+'</span>';
-        h+='<div><div style="font-size:12px;font-weight:700;color:var(--g7)">'+mgmt+'</div>';
-        if(model) h+='<div style="font-size:10px;color:var(--g4)">'+model+(serial?' · '+serial:'')+'</div>';
-        h+='</div></div>';
-        h+='</div>';
-      });
-      h+='</div>';
-    }
+  var sorted=Object.keys(groups).sort(function(a,b){ return groups[b]-groups[a]; });
+  // 그리드 카드 렌더링
+  var h='<div style="font-size:11px;color:var(--g4);margin-bottom:12px;text-align:right">총 '+sorted.length+'종 · '+rows.length+'대</div>';
+  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  sorted.forEach(function(name){
+    h+='<div style="background:white;border:1.5px solid var(--g2);border-radius:var(--r2);padding:12px 14px;display:flex;justify-content:space-between;align-items:center">';
+    h+='<span style="font-size:12px;font-weight:700;color:var(--g7)">'+name+'</span>';
+    h+='<span style="background:var(--teal);color:white;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700;white-space:nowrap">'+groups[name]+'대</span>';
     h+='</div>';
   });
+  h+='</div>';
   el.innerHTML=h;
 }
 
-function eqGroupToggle(el){
-  var name=el.getAttribute('data-name');
-  if(!window._eqGroupOpen) window._eqGroupOpen={};
-  window._eqGroupOpen[name]=!window._eqGroupOpen[name];
-  renderEquipmentGroup();
-}
 
 async function loadEquipmentFromDB(){
   try{
@@ -7262,7 +7224,7 @@ function renderWasteList(){
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'+
       '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--danger)"><div style="font-size:16px;font-weight:900;color:var(--danger)">'+totInc.toLocaleString()+'</div><div style="font-size:10px;color:var(--g4)">소각 합계(kg)</div></div>'+
       '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--teal)"><div style="font-size:16px;font-weight:900;color:var(--teal2)">'+totRec.toLocaleString()+'</div><div style="font-size:10px;color:var(--g4)">재활용 합계(kg)</div></div>'+
-      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--navy)"><div style="font-size:16px;font-weight:900;color:var(--navy)">'+(totInc+totRec).toLocaleString()+'</div><div style="font-size:10px;color:var(--g4)">총합계(kg)</div></div>'+
+      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--navy)"><div style="font-size:16px;font-weight:900;color:var(--navy)">'+(totInc+totRec).toLocaleString()+'</div><div style="font-size:10px;color:var(--g4)">총합계(톤)</div></div>'+
       '</div>';
   }
   if(!filtered.length){
@@ -7285,18 +7247,18 @@ function renderWasteList(){
     h+='</div>';
     // 소각
     h+='<div style="background:var(--danger-bg);border-radius:8px;padding:8px 10px;margin-bottom:7px">';
-    h+='<div style="font-size:11px;font-weight:700;color:var(--danger);margin-bottom:5px">🔥 소각 합계 '+incTotal.toLocaleString()+'kg</div>';
+    h+='<div style="font-size:11px;font-weight:700;color:var(--danger);margin-bottom:5px">🔥 소각 합계 '+incTotal.toLocaleString()+'톤</div>';
     h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:11px;color:var(--g6)">';
-    h+='<span>생활: '+(r.incineration_living||0)+'kg</span><span>합성수지: '+(r.incineration_synthetic||0)+'kg</span>';
-    h+='<span>음식물: '+(r.incineration_food||0)+'kg</span><span>목재: '+(r.incineration_wood||0)+'kg</span>';
+    h+='<span>생활: '+(r.incineration_living||0)+'톤</span><span>합성수지: '+(r.incineration_synthetic||0)+'톤</span>';
+    h+='<span>음식물: '+(r.incineration_food||0)+'톤</span><span>목재: '+(r.incineration_wood||0)+'톤</span>';
     h+='</div></div>';
     // 재활용
     h+='<div style="background:var(--teal-bg);border-radius:8px;padding:8px 10px;margin-bottom:7px">';
-    h+='<div style="font-size:11px;font-weight:700;color:var(--teal2);margin-bottom:5px">♻️ 재활용 합계 '+recTotal.toLocaleString()+'kg</div>';
+    h+='<div style="font-size:11px;font-weight:700;color:var(--teal2);margin-bottom:5px">♻️ 재활용 합계 '+recTotal.toLocaleString()+'톤</div>';
     h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:11px;color:var(--g6)">';
-    h+='<span>종이: '+(r.recycle_paper||0)+'kg</span><span>플라스틱: '+(r.recycle_plastic||0)+'kg</span>';
-    h+='<span>캔/고철: '+(r.recycle_can||0)+'kg</span><span>병/유리: '+(r.recycle_glass||0)+'kg</span>';
-    h+='<span>기타: '+(r.recycle_etc||0)+'kg</span>';
+    h+='<span>종이: '+(r.recycle_paper||0)+'톤</span><span>플라스틱: '+(r.recycle_plastic||0)+'톤</span>';
+    h+='<span>캔/고철: '+(r.recycle_can||0)+'톤</span><span>병/유리: '+(r.recycle_glass||0)+'톤</span>';
+    h+='<span>기타: '+(r.recycle_etc||0)+'톤</span>';
     h+='</div></div>';
     if(r.note) h+='<div style="font-size:11px;color:var(--g5);background:var(--g1);border-radius:6px;padding:6px 9px;margin-bottom:7px">📎 '+r.note+'</div>';
     if(isAdmin){
@@ -7321,7 +7283,7 @@ function downloadWasteExcel(){
   var mf=document.getElementById('wasteFilterMonth');
   var mfv=mf?mf.value:'';
   var filtered=wasteData.filter(function(r){ return !mfv||r.waste_date.slice(0,7)===mfv; });
-  var rows=[['일자','근무조','팀','작성자','생활쓰레기(kg)','합성수지류(kg)','음식물쓰레기(kg)','목재류(kg)','소각합계(kg)','종이류(kg)','플라스틱류(kg)','캔/고철류(kg)','병/유리류(kg)','기타재활용(kg)','재활용합계(kg)','총합계(kg)','기타']];
+  var rows=[['일자','근무조','팀','작성자','생활쓰레기(톤)','합성수지류(톤)','음식물쓰레기(톤)','목재류(톤)','소각합계(톤)','종이류(톤)','플라스틱류(톤)','캔/고철류(톤)','병/유리류(톤)','기타재활용(톤)','재활용합계(톤)','총합계(톤)','기타']];
   filtered.forEach(function(r){
     var inc=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
     var rec=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
