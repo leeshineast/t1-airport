@@ -88,11 +88,11 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 .sec-lbl{font-size:10px;font-weight:700;color:var(--g4);letter-spacing:.5px;padding:12px 13px 5px}
 
 /* ─ 메인 메뉴 버튼 ─ */
-.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 13px 13px}
-.menu-btn{background:white;border-radius:var(--r2);padding:11px 12px;box-shadow:0 1px 5px rgba(0,0,0,.06);border:1px solid var(--g2);cursor:pointer;text-align:left;transition:all .15s;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:10px}
+.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:4px 13px 13px}
+.menu-btn{background:white;border-radius:var(--r);padding:14px 12px 12px;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--g2);cursor:pointer;text-align:center;transition:all .15s;-webkit-tap-highlight-color:transparent;display:flex;flex-direction:column;align-items:center;gap:0}
 .menu-btn:active{transform:scale(.97);background:var(--g1)}
-.menu-icon{font-size:22px;display:block;flex-shrink:0}
-.menu-title{font-size:13px;font-weight:800;color:var(--g7);margin-bottom:1px}
+.menu-icon{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 9px;font-size:22px;flex-shrink:0}
+.menu-title{font-size:12px;font-weight:800;color:var(--g7);margin-bottom:2px}
 .menu-desc{font-size:10px;color:var(--g4);line-height:1.3}
 .menu-arrow{display:none}
 
@@ -844,67 +844,67 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <div class="sec-lbl">메뉴</div>
   <div class="menu-grid">
     <button class="menu-btn" onclick="go('mp')">
-      <span class="menu-icon">👥</span>
+      <span class="menu-icon" style="background:#E8F0FE">👥</span>
       <div class="menu-title">인력현황</div>
       <div class="menu-desc">구역별 인원 입력 및 현황 조회</div>
       <span class="menu-arrow">입력하기 →</span>
     </button>
     <button class="menu-btn" onclick="go('ho')">
-      <span class="menu-icon">🔄</span>
+      <span class="menu-icon" style="background:#E8F8F5">🔄</span>
       <div class="menu-title">인수인계</div>
       <div class="menu-desc">오전·오후·야간 인계 작성/확인</div>
       <span class="menu-arrow">작성하기 →</span>
     </button>
     <button class="menu-btn" onclick="go('chat')">
-      <span class="menu-icon">📋</span>
+      <span class="menu-icon" style="background:#FFF3E0">📋</span>
       <div class="menu-title">사규 열람</div>
       <div class="menu-desc">사내 규정 및 지침서 열람</div>
       <span class="menu-arrow">열람하기 →</span>
     </button>
     <button class="menu-btn" onclick="go('veh')">
-      <span class="menu-icon">🚗</span>
+      <span class="menu-icon" style="background:#E3F2FD">🚗</span>
       <div class="menu-title">차량운행기록</div>
       <div class="menu-desc">업무용 차량 운행 기록 작성</div>
       <span class="menu-arrow">작성하기 →</span>
     </button>
     <button class="menu-btn" onclick="go('kpi')">
-      <span class="menu-icon">📊</span>
+      <span class="menu-icon" style="background:#EDE7F6">📊</span>
       <div class="menu-title">과업평가지표</div>
       <div class="menu-desc">분기 수검 지표 월별 기록</div>
       <span class="menu-arrow">입력하기 →</span>
     </button>
     <button class="menu-btn" onclick="go('facility')">
-      <span class="menu-icon">🏢</span>
+      <span class="menu-icon" style="background:#E8F5E9">🏢</span>
       <div class="menu-title">시설현황</div>
       <div class="menu-desc">시설물 조사 데이터 집계</div>
       <span class="menu-arrow">조회하기 →</span>
     </button>
     <button class="menu-btn" onclick="go('voc')">
-      <span class="menu-icon">📞</span>
+      <span class="menu-icon" style="background:#FCE4EC">📞</span>
       <div class="menu-title">ARS 민원</div>
       <div class="menu-desc">민원 전화 접수 및 처리현황</div>
       <span class="menu-arrow">접수하기 →</span>
     </button>
     <button class="menu-btn" onclick="go('lost')">
-      <span class="menu-icon">🎒</span>
+      <span class="menu-icon" style="background:#FFF8E1">🎒</span>
       <div class="menu-title">습득물 관리</div>
       <div class="menu-desc">습득물 접수 · 폐기 · 유실물 처리</div>
       <span class="menu-arrow">관리하기 →</span>
     </button>
     <button class="menu-btn" onclick="go('equipment')">
-      <span class="menu-icon">🔧</span>
+      <span class="menu-icon" style="background:#EFEBE9">🔧</span>
       <div class="menu-title">장비현황</div>
       <div class="menu-desc">장비 목록 엑셀 업로드 및 현황 조회</div>
       <span class="menu-arrow">조회하기 →</span>
     </button>
     <button class="menu-btn" onclick="go('waste')">
-      <span class="menu-icon">♻️</span>
+      <span class="menu-icon" style="background:#E8F5E9">♻️</span>
       <div class="menu-title">폐기물 처리현황</div>
       <div class="menu-desc">소각·재활용 처리량 입력 및 이력</div>
       <span class="menu-arrow">입력하기 →</span>
     </button>
     <button class="menu-btn" id="adminBtn" onclick="go('admin')" style="display:none;position:relative">
-      <span class="menu-icon">⚙️</span>
+      <span class="menu-icon" style="background:#ECEFF1">⚙️</span>
       <div class="menu-title">관리자</div>
       <div class="menu-desc">승인·사용자·공지·다운로드</div>
       <div id="pendBadge" style="display:none;position:absolute;top:8px;right:8px;background:var(--danger);color:white;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:800;line-height:18px;text-align:center"></div>
