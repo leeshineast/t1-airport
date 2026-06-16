@@ -428,39 +428,45 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div style="font-size:10px;color:var(--g4)">누적 <span id="dCompT" style="font-weight:700;color:var(--g5)">0</span>건</div>
     </div>
   </div>
-  <!-- 습득물/폐기물 한 줄 -->
-  <div class="stat-row">
-    <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('lost')">
-      <div class="s-lbl">습득물 관리</div>
-      <div style="display:flex;align-items:baseline;gap:3px">
-        <div class="s-val" id="dLostToday" style="font-size:20px;color:var(--teal2)">0</div>
-        <div style="font-size:9px;color:var(--teal2);font-weight:700">금일</div>
-      </div>
-      <div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap">
-        <span style="font-size:10px;color:var(--g4)">접수 <b id="dLostPending" style="color:var(--warn)">0</b></span>
-        <span style="font-size:10px;color:var(--g3)">|</span>
-        <span style="font-size:10px;color:var(--g4)">처리중 <b id="dLostProcess" style="color:var(--navy)">0</b></span>
-        <span style="font-size:10px;color:var(--g3)">|</span>
-        <span style="font-size:10px;color:var(--g4)">완료 <b id="dLostDone" style="color:var(--teal2)">0</b></span>
-      </div>
-    </div>
-    <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('waste')">
-      <div class="s-lbl">폐기물 현황 <span style="font-size:9px;color:var(--g3);font-weight:500">(이번달 톤)</span></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-top:5px">
-        <div style="font-size:10px;color:var(--g5)">생활 <b id="dW_living" style="color:var(--g7)">0</b></div>
-        <div style="font-size:10px;color:var(--g5)">합성수지 <b id="dW_syn" style="color:var(--g7)">0</b></div>
-        <div style="font-size:10px;color:var(--g5)">음식물 <b id="dW_food" style="color:var(--g7)">0</b></div>
-        <div style="font-size:10px;color:var(--g5)">목재 <b id="dW_wood" style="color:var(--g7)">0</b></div>
-        <div style="font-size:10px;color:var(--g5)">종이 <b id="dW_paper" style="color:var(--g7)">0</b></div>
-        <div style="font-size:10px;color:var(--g5)">플라스틱 <b id="dW_plastic" style="color:var(--g7)">0</b></div>
-        <div style="font-size:10px;color:var(--g5)">캔/고철 <b id="dW_can" style="color:var(--g7)">0</b></div>
-        <div style="font-size:10px;color:var(--g5)">병/유리 <b id="dW_glass" style="color:var(--g7)">0</b></div>
-        <div style="font-size:10px;color:var(--g5)">기타 <b id="dW_etc" style="color:var(--g7)">0</b></div>
-      </div>
-    </div>
-  </div>
   <div class="alert-warn" id="dashHOAlert" style="display:none"><span>🔔</span><div><strong style="display:block;font-weight:700;margin-bottom:1px">인수인계 확인 대기</strong><span id="dashHOAlertMsg"></span></div></div>
 
+  <!-- 습득물/폐기물/차량/장비 현황 -->
+  <div class="stat-row">
+    <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('lost')">
+      <div class="s-lbl">🎒 습득물</div>
+      <div style="display:flex;align-items:baseline;gap:3px">
+        <div class="s-val c-danger" id="dLostAcc" style="font-size:20px">0</div>
+        <div style="font-size:9px;color:var(--danger);font-weight:700">접수중</div>
+      </div>
+      <div style="font-size:10px;color:var(--g4)">이번달 <span id="dLostMonth" style="font-weight:700;color:var(--g5)">0</span>건</div>
+    </div>
+    <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('waste')">
+      <div class="s-lbl">♻️ 폐기물</div>
+      <div style="display:flex;align-items:baseline;gap:3px">
+        <div class="s-val c-teal" id="dWasteMonth" style="font-size:18px">0</div>
+        <div style="font-size:9px;color:var(--teal2);font-weight:700">t</div>
+      </div>
+      <div style="font-size:10px;color:var(--g4)">이번달 처리량(t)</div>
+    </div>
+  </div>
+  <div class="stat-row">
+    <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('veh')">
+      <div class="s-lbl">🚗 차량운행</div>
+      <div style="display:flex;align-items:baseline;gap:3px">
+        <div class="s-val c-navy" id="dVehMonth" style="font-size:20px">0</div>
+        <div style="font-size:9px;color:var(--navy);font-weight:700">회</div>
+      </div>
+      <div style="font-size:10px;color:var(--g4)">이번달 운행횟수</div>
+    </div>
+    <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('equipment')">
+      <div class="s-lbl">🔧 장비현황</div>
+      <div style="display:flex;align-items:baseline;gap:3px">
+        <div class="s-val" id="dEquipTotal" style="font-size:20px;color:var(--g6)">0</div>
+        <div style="font-size:9px;color:var(--g5);font-weight:700">건</div>
+      </div>
+      <div style="font-size:10px;color:var(--g4)">등록 장비 수</div>
+    </div>
+  </div>
 
   <!-- 층별 전체 인력현황 -->
   <div style="margin:0 0 0 0">
@@ -1271,8 +1277,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <!-- 탭 -->
   <div style="display:flex;border-bottom:2px solid var(--g2)">
     <div id="eqT0" onclick="eqTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">현황 조회</div>
-    <div id="eqT1" onclick="eqTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--g3);cursor:pointer">장비별 그룹</div>
-    <div id="eqT2" onclick="eqTab(2)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--g3);cursor:pointer">엑셀 업로드</div>
+    <div id="eqT1" onclick="eqTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--g3);cursor:pointer">엑셀 업로드</div>
   </div>
 
   <!-- 조회 탭 -->
@@ -1290,13 +1295,8 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div id="eqTable" style="overflow-x:auto"></div>
   </div>
 
-  <!-- 장비별 그룹 탭 -->
-  <div id="eqP1" style="display:none;padding:13px">
-    <div id="eqGroupList"></div>
-  </div>
-
   <!-- 업로드 탭 -->
-  <div id="eqP2" style="display:none;padding:13px">
+  <div id="eqP1" style="display:none;padding:13px">
     <div class="card" style="margin-bottom:12px"><div class="cb">
       <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:8px">📋 엑셀 파일 업로드</div>
       <div style="font-size:11px;color:var(--g4);line-height:1.7;margin-bottom:12px">
@@ -1334,7 +1334,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div style="display:flex;gap:7px;align-items:center">
         <input type="month" id="wasteFilterMonth" onchange="renderWasteList()" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
         <select id="wasteFilterTeam" onchange="renderWasteList()" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
-          <option value="">전체 차량</option>
+          <option value="">전체 팀</option>
         </select>
         <button onclick="loadWasteFromDB()" style="padding:8px 13px;background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--g5);cursor:pointer">🔄</button>
         <button onclick="downloadWasteExcel()" style="padding:8px 13px;background:var(--teal-bg);border:1.5px solid var(--teal);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--teal2);cursor:pointer">📥</button>
@@ -1360,11 +1360,18 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           <div class="rp" onclick="pickWasteShift(this)" data-val="야간">야간</div>
         </div>
       </div>
-      <div class="fg" style="margin-top:10px"><label class="f-lbl">차량번호 <span style="color:var(--danger)">*</span></label>
+      <div class="fg" style="margin-top:10px"><label class="f-lbl">팀 <span style="color:var(--danger)">*</span></label>
         <div class="rg" id="wasteTeamGrp" style="flex-wrap:wrap;gap:6px">
-          <div class="rp" onclick="pickWasteTeam(this)" data-val="88러7396">88러 7396</div>
-          <div class="rp" onclick="pickWasteTeam(this)" data-val="88러7397">88러 7397</div>
-          <div class="rp" onclick="pickWasteTeam(this)" data-val="809나1745">809나 1745</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="1팀">1팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="2팀">2팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="3팀">3팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="4팀">4팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="5팀">5팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="6팀">6팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="7팀">7팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="8팀">8팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="9팀">9팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="10팀">10팀</div>
         </div>
       </div>
     </div></div>
@@ -1373,10 +1380,10 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div class="card" style="margin-bottom:10px"><div class="cb">
       <div style="font-size:13px;font-weight:800;color:var(--danger);margin-bottom:12px">🔥 소각</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="f-lbl" style="font-size:11px">생활쓰레기 (톤)</label><input type="number" id="w_inc_living" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">합성수지류 (톤)</label><input type="number" id="w_inc_syn" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">음식물쓰레기 (톤)</label><input type="number" id="w_inc_food" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">목재류 (톤)</label><input type="number" id="w_inc_wood" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">생활쓰레기 (t)</label><input type="number" id="w_inc_living" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">합성수지류 (t)</label><input type="number" id="w_inc_syn" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">음식물쓰레기 (t)</label><input type="number" id="w_inc_food" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">목재류 (t)</label><input type="number" id="w_inc_wood" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
       </div>
     </div></div>
 
@@ -1384,11 +1391,11 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div class="card" style="margin-bottom:10px"><div class="cb">
       <div style="font-size:13px;font-weight:800;color:var(--teal2);margin-bottom:12px">♻️ 재활용</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="f-lbl" style="font-size:11px">종이류 (톤)</label><input type="number" id="w_rec_paper" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">플라스틱류 (톤)</label><input type="number" id="w_rec_plastic" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">캔/고철류 (톤)</label><input type="number" id="w_rec_can" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">병/유리류 (톤)</label><input type="number" id="w_rec_glass" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">기타 (톤)</label><input type="number" id="w_rec_etc" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">종이류 (t)</label><input type="number" id="w_rec_paper" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">플라스틱류 (t)</label><input type="number" id="w_rec_plastic" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">캔/고철류 (t)</label><input type="number" id="w_rec_can" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">병/유리류 (t)</label><input type="number" id="w_rec_glass" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">기타 (t)</label><input type="number" id="w_rec_etc" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
       </div>
     </div></div>
 
@@ -1614,7 +1621,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     </div></div>
 
     <div style="padding:0 13px 16px">
-      <button class="btn-prim" onclick="saveKpi()">지표 저장</button>
+      <button class="btn-prim" onclick="saveKpi()">💾 지표 저장</button>
     </div>
     <div style="height:20px"></div>
   </div>
@@ -1951,33 +1958,13 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           <div class="dl-ico">🔄</div>
           <div><div class="dl-title">인수인계</div><div class="dl-sub">전체 인계 이력 (.xlsx)</div></div>
         </div>
-        <div class="dl-item" onclick="dlCSV('ind')">
-          <div class="dl-ico">🚑</div>
-          <div><div class="dl-title">산업재해</div><div class="dl-sub">전체 재해 이력 (.xlsx)</div></div>
-        </div>
         <div class="dl-item" onclick="dlCSV('veh')">
           <div class="dl-ico">🚗</div>
           <div><div class="dl-title">차량운행기록</div><div class="dl-sub">운행 이력 (.xlsx)</div></div>
         </div>
-        <div class="dl-item" onclick="dlCSV('kpi')">
-          <div class="dl-ico">📊</div>
-          <div><div class="dl-title">과업평가지표(KPI)</div><div class="dl-sub">월별 지표 데이터 (.xlsx)</div></div>
-        </div>
         <div class="dl-item" onclick="dlCSV('voc')">
           <div class="dl-ico">📞</div>
           <div><div class="dl-title">ARS 민원</div><div class="dl-sub">민원 접수 및 처리현황 (.xlsx)</div></div>
-        </div>
-        <div class="dl-item" onclick="dlCSV('lost')">
-          <div class="dl-ico">🎒</div>
-          <div><div class="dl-title">습득물 관리</div><div class="dl-sub">전체 습득물 이력 (.xlsx)</div></div>
-        </div>
-        <div class="dl-item" onclick="dlCSV('waste')">
-          <div class="dl-ico">♻️</div>
-          <div><div class="dl-title">폐기물 처리현황</div><div class="dl-sub">성상별 처리량 (.xlsx)</div></div>
-        </div>
-        <div class="dl-item" onclick="dlCSV('equipment')">
-          <div class="dl-ico">🔧</div>
-          <div><div class="dl-title">장비현황</div><div class="dl-sub">장비 목록 전체 (.xlsx)</div></div>
         </div>
       </div>
     </div></div>
@@ -2196,52 +2183,52 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <div style="font-size:12px;font-weight:700;color:var(--danger);margin-bottom:4px">⚠️ 주의사항</div>
         <div style="font-size:11px;color:var(--g5);line-height:1.7">초기화된 데이터는 <b>복구가 불가능</b>합니다.<br>초기화할 항목을 선택 후 확인 버튼을 눌러주세요.</div>
       </div>
-      <!-- 체크박스 목록 (2열 그리드) -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:16px">
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_mp">
-          <input type="checkbox" id="rst_mp" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">👥 인력현황</div><div style="font-size:10px;color:var(--g4)">금일 데이터</div></div>
+      <!-- 체크박스 목록 -->
+      <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:16px">
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_mp">
+          <input type="checkbox" id="rst_mp" style="width:18px;height:18px;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">👥 인력현황</div><div style="font-size:10px;color:var(--g4)">금일 입력 데이터, 조장 입력 기록</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_ho">
-          <input type="checkbox" id="rst_ho" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">🔄 인수인계</div><div style="font-size:10px;color:var(--g4)">전체 기록</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_ho">
+          <input type="checkbox" id="rst_ho" style="width:18px;height:18px;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">🔄 인수인계</div><div style="font-size:10px;color:var(--g4)">전체 인수인계 기록</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_ind">
-          <input type="checkbox" id="rst_ind" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">🚑 산업재해</div><div style="font-size:10px;color:var(--g4)">전체 이력</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_ind">
+          <input type="checkbox" id="rst_ind" style="width:18px;height:18px;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">🚑 산업재해</div><div style="font-size:10px;color:var(--g4)">전체 산업재해 이력</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_veh">
-          <input type="checkbox" id="rst_veh" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">🚗 차량운행</div><div style="font-size:10px;color:var(--g4)">전체 이력</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_veh">
+          <input type="checkbox" id="rst_veh" style="width:18px;height:18px;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">🚗 차량운행기록</div><div style="font-size:10px;color:var(--g4)">전체 차량운행 이력</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_kpi">
-          <input type="checkbox" id="rst_kpi" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">📊 과업평가</div><div style="font-size:10px;color:var(--g4)">전체 데이터</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_kpi">
+          <input type="checkbox" id="rst_kpi" style="width:18px;height:18px;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">📊 과업평가지표</div><div style="font-size:10px;color:var(--g4)">전체 지표 입력 데이터</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_users">
-          <input type="checkbox" id="rst_users" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">👤 가입사용자</div><div style="font-size:10px;color:var(--g4)">승인 목록</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_users">
+          <input type="checkbox" id="rst_users" style="width:18px;height:18px;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">👤 가입 사용자</div><div style="font-size:10px;color:var(--g4)">승인된 사용자 목록 (테스트 계정 제외)</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
-          <input type="checkbox" id="rst_voc" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--teal);cursor:pointer">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">📞 ARS 민원</div><div style="font-size:10px;color:var(--g4)">전체 이력</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
+          <input type="checkbox" id="rst_voc" style="width:18px;height:18px;accent-color:var(--teal);cursor:pointer">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">📞 ARS 민원</div><div style="font-size:10px;color:var(--g4)">전체 민원 접수 이력</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
-          <input type="checkbox" id="rst_lost" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--teal);cursor:pointer">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">🎒 습득물</div><div style="font-size:10px;color:var(--g4)">전체 이력</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
+          <input type="checkbox" id="rst_lost" style="width:18px;height:18px;accent-color:var(--teal);cursor:pointer">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">🎒 습득물 관리</div><div style="font-size:10px;color:var(--g4)">전체 습득물 이력</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
-          <input type="checkbox" id="rst_waste" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--teal);cursor:pointer">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">♻️ 폐기물</div><div style="font-size:10px;color:var(--g4)">처리 이력</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
+          <input type="checkbox" id="rst_waste" style="width:18px;height:18px;accent-color:var(--teal);cursor:pointer">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">♻️ 폐기물 처리현황</div><div style="font-size:10px;color:var(--g4)">전체 폐기물 처리 이력</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
-          <input type="checkbox" id="rst_equipment" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--teal);cursor:pointer">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">🔧 장비현황</div><div style="font-size:10px;color:var(--g4)">업로드 데이터</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
+          <input type="checkbox" id="rst_equipment" style="width:18px;height:18px;accent-color:var(--teal);cursor:pointer">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">🔧 장비현황</div><div style="font-size:10px;color:var(--g4)">업로드된 장비 데이터</div></div>
         </label>
-        <!-- 전체 선택 (2열 전체 차지) -->
-        <label style="grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--danger-bg);border-radius:var(--r2);border:1.5px solid rgba(217,64,64,.3);cursor:pointer;margin-top:2px">
-          <input type="checkbox" id="rst_all" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--danger);cursor:pointer" onchange="rstSelectAll(this)">
-          <div><div style="font-size:12px;font-weight:700;color:var(--danger)">⚠️ 전체 선택</div><div style="font-size:10px;color:var(--danger)">위 항목 모두 초기화</div></div>
+        <!-- 전체 선택 -->
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--danger-bg);border-radius:var(--r2);border:1.5px solid rgba(217,64,64,.3);cursor:pointer;margin-top:4px">
+          <input type="checkbox" id="rst_all" style="width:18px;height:18px;accent-color:var(--danger);cursor:pointer" onchange="rstSelectAll(this)">
+          <div><div style="font-size:13px;font-weight:700;color:var(--danger)">⚠️ 전체 선택</div><div style="font-size:10px;color:var(--danger)">위 항목 모두 초기화</div></div>
         </label>
       </div>
       <!-- 확인 문구 입력 -->
@@ -3088,84 +3075,6 @@ async function dlCSV(type){
         wsv['!cols']=[{wch:6},{wch:12},{wch:14},{wch:40},{wch:10},{wch:20},{wch:18}];
         wb.SheetNames.push('ARS민원');wb.Sheets['ARS민원']=wsv;
       }
-    }
-
-    // ── KPI ──
-    if(type==='kpi'||type==='all'){
-      var rk=await sb.from('kpi_data').select('*').order('year',{ascending:false}).order('month',{ascending:false});
-      if(rk.data&&rk.data.length){
-        var kpiRows=[['연도','월','KPI1점수','KPI1메모','KPI2점수','KPI3점수','KPI4점수','KPI5점수','KPI6점수','KPI7점수','작성자']];
-        rk.data.forEach(function(d){
-          kpiRows.push([
-            d.year||'',d.month||'',
-            d.kpi1_score||'',d.kpi1_memo||'',
-            d.kpi2_score||'',d.kpi3_score||'',
-            d.kpi4_score||'',d.kpi5_score||'',
-            d.kpi6_score||'',d.kpi7_score||'',
-            d.writer||''
-          ]);
-        });
-        var wsk=XLSX.utils.aoa_to_sheet(kpiRows);
-        wsk['!cols']=[{wch:6},{wch:4},{wch:8},{wch:20},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:12}];
-        wb.SheetNames.push('KPI');wb.Sheets['KPI']=wsk;
-      }
-    }
-
-    // ── 습득물 ──
-    if(type==='lost'||type==='all'){
-      var rl=await sb.from('lost_found').select('*').order('created_at',{ascending:false});
-      if(rl.data&&rl.data.length){
-        var lostRows=[['접수일시','발견자사번','발견자이름','발견위치','물품내용','상태','처리내용','기타']];
-        rl.data.forEach(function(d){
-          lostRows.push([
-            d.created_at?toKSTDateTime(d.created_at):'',
-            d.finder_id||'',d.finder_name||'',
-            d.location||'',d.item||'',
-            d.status||'',d.complete_memo||'',d.note||''
-          ]);
-        });
-        var wsl=XLSX.utils.aoa_to_sheet(lostRows);
-        wsl['!cols']=[{wch:18},{wch:10},{wch:12},{wch:20},{wch:24},{wch:10},{wch:20},{wch:16}];
-        wb.SheetNames.push('습득물');wb.Sheets['습득물']=wsl;
-      }
-    }
-
-    // ── 폐기물 ──
-    if(type==='waste'||type==='all'){
-      var rw=await sb.from('waste_data').select('*').order('waste_date',{ascending:false});
-      if(rw.data&&rw.data.length){
-        var wasteRows=[['일자','근무조','팀','작성자',
-          '생활쓰레기(톤)','합성수지류(톤)','음식물쓰레기(톤)','목재류(톤)','소각합계(톤)',
-          '종이류(톤)','플라스틱류(톤)','캔/고철류(톤)','병/유리류(톤)','기타재활용(톤)','재활용합계(톤)',
-          '총합계(톤)','비고']];
-        rw.data.forEach(function(d){
-          var inc=(d.incineration_living||0)+(d.incineration_synthetic||0)+(d.incineration_food||0)+(d.incineration_wood||0);
-          var rec=(d.recycle_paper||0)+(d.recycle_plastic||0)+(d.recycle_can||0)+(d.recycle_glass||0)+(d.recycle_etc||0);
-          wasteRows.push([
-            d.waste_date||'',d.shift||'',d.team_code||'',d.writer||'',
-            d.incineration_living||0,d.incineration_synthetic||0,d.incineration_food||0,d.incineration_wood||0,inc,
-            d.recycle_paper||0,d.recycle_plastic||0,d.recycle_can||0,d.recycle_glass||0,d.recycle_etc||0,rec,
-            inc+rec,d.note||''
-          ]);
-        });
-        var wsw=XLSX.utils.aoa_to_sheet(wasteRows);
-        wsw['!cols']=[{wch:12},{wch:6},{wch:8},{wch:10},
-          {wch:12},{wch:12},{wch:14},{wch:10},{wch:10},
-          {wch:10},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},
-          {wch:10},{wch:16}];
-        wb.SheetNames.push('폐기물');wb.Sheets['폐기물']=wsw;
-      }
-    }
-
-    // ── 장비현황 ──
-    if(type==='equipment'){
-      if(!equipmentData||!equipmentData.rows||!equipmentData.rows.length){
-        toast('업로드된 장비 데이터가 없습니다'); return;
-      }
-      var eqRows=[equipmentData.headers||[]];
-      (equipmentData.rows||[]).forEach(function(r){ eqRows.push(r); });
-      var wse=XLSX.utils.aoa_to_sheet(eqRows);
-      wb.SheetNames.push('장비현황');wb.Sheets['장비현황']=wse;
     }
 
     if(wb.SheetNames.length===0){toast('다운로드할 데이터가 없습니다');return;}
@@ -4232,40 +4141,38 @@ function kpiMonthChange(){
 
 function loadKpiInputForm(y, m){
   var entry=(kpiData[y]&&kpiData[y][m])||{};
+  var hasData=Object.keys(entry).length>0;
+  // 저장/수정 버튼 텍스트 변경
+  var saveBtn=document.querySelector('#kpiP0 .btn-prim');
+  if(saveBtn) saveBtn.textContent=hasData?'✏️ 지표 수정':'💾 지표 저장';
+  // kpi1~5 기존값 모두 채우기
   for(var i=1;i<=5;i++){
     var el=document.getElementById('kpi'+i);
     if(!el) continue;
-    if(i===1){
-      el.value=''; // kpi1(VOC)는 항상 비움 — 새로 추가할 건수 입력
-    } else {
-      el.value=entry['kpi'+i]!==undefined?entry['kpi'+i]:''; // kpi2~5는 기존값 로드
-    }
+    el.value=entry['kpi'+i]!==undefined?entry['kpi'+i]:'';
   }
-  // ATP 세부 항목 불러오기
+  // ATP 세부 항목
   var atpDetail=entry.atpDetail||{};
   for(var j=1;j<=6;j++){
     var ae=document.getElementById('atp'+j);
     if(ae) ae.value=atpDetail['atp'+j]!==undefined?atpDetail['atp'+j]:'';
   }
-  // ATP 점수 재계산
   calcAtpScore();
   var lbl=document.getElementById('kpi6Label');
   if(lbl) lbl.value=entry.kpi6Label||'ATP 측정';
   var note=document.getElementById('kpiNote');
   if(note) note.value=entry.kpiNote||'';
+  // 메모: 기존값 표시 (수정 가능)
   var memo=document.getElementById('kpi1Memo');
-  if(memo) memo.value=''; // 새 메모 입력용으로 항상 비움 (기존 내용은 저장 시 누적)
-  // kpi1 입력폼 placeholder에 기존 누적값 안내
+  if(memo) memo.value=entry.kpi1Memo||'';
+  // kpi1 힌트
   var kpi1el=document.getElementById('kpi1');
   var kpi1hint=document.getElementById('kpi1Hint');
-  if(kpi1el){
-    var existing=(entry['kpi1']||0);
-    kpi1el.placeholder=existing>0?'현재: '+existing+'건 (입력하면 해당 값으로 변경됨)':'예: 8 (분기 VOC+민원 건수)';
-  }
+  if(kpi1el) kpi1el.placeholder=hasData?'현재값: '+(entry['kpi1']||0)+'건':'예: 8 (분기 VOC+민원 건수)';
   if(kpi1hint){
-    var ex=(entry['kpi1']||0);
-    kpi1hint.textContent=ex>0?'현재 '+ex+'건 입력됨 · 수정하려면 새 값을 입력하세요':'';
-    kpi1hint.style.display=ex>0?'block':'none';
+    var ex=entry['kpi1']||0;
+    kpi1hint.textContent=hasData&&ex>0?'현재 '+ex+'건 · 값을 수정하면 덮어씁니다':'';
+    kpi1hint.style.display=hasData&&ex>0?'block':'none';
   }
 }
 
@@ -4318,17 +4225,7 @@ function saveKpi(){
   var note=document.getElementById('kpiNote');
   if(note) entry.kpiNote=note.value;
   var memo=document.getElementById('kpi1Memo');
-  if(memo&&memo.value){
-    // 메모 누적: 기존 메모가 있으면 날짜+줄바꿈으로 append
-    var today=new Date(Date.now()+9*3600000).toLocaleDateString('ko-KR');
-    var prevMemo=entry.kpi1Memo||'';
-    var newMemo=memo.value.trim();
-    if(prevMemo&&prevMemo!==newMemo){
-      entry.kpi1Memo=prevMemo+'\n['+today+'] '+newMemo;
-    } else {
-      entry.kpi1Memo=newMemo;
-    }
-  }
+  if(memo) entry.kpi1Memo=memo.value.trim();
   if(!kpiData[y]) kpiData[y]={};
   kpiData[y][m]=entry;
   saveKpiToDB(y, m, entry); // DB 저장 (전체 공유)
@@ -6273,6 +6170,33 @@ async function confHODB(id, btn){
   await confirmHandoverDB(id);
 }
 
+function updateMainStats(){
+  var now=new Date(Date.now()+9*3600000);
+  var ym=now.toISOString().slice(0,7); // 'YYYY-MM'
+
+  // 🎒 습득물: 접수중 / 이번달
+  var lostAcc=(lostData||[]).filter(function(r){ return r.status==='접수'; }).length;
+  var lostMonth=(lostData||[]).filter(function(r){ return toKSTDate(r.created_at).slice(0,7)===ym; }).length;
+  var dLA=document.getElementById('dLostAcc'); if(dLA) dLA.textContent=lostAcc;
+  var dLM=document.getElementById('dLostMonth'); if(dLM) dLM.textContent=lostMonth;
+
+  // ♻️ 폐기물: 이번달 총 처리량(t)
+  var wasteTotal=(wasteData||[]).filter(function(r){ return r.waste_date&&r.waste_date.slice(0,7)===ym; })
+    .reduce(function(sum,r){
+      return sum+(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0)
+                +(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
+    },0);
+  var dWM=document.getElementById('dWasteMonth'); if(dWM) dWM.textContent=wasteTotal.toLocaleString();
+
+  // 🚗 차량운행: 이번달 운행횟수
+  var vehMonth=(vehData||[]).filter(function(r){ return r.date&&r.date.slice(0,7)===ym; }).length;
+  var dVM=document.getElementById('dVehMonth'); if(dVM) dVM.textContent=vehMonth;
+
+  // 🔧 장비현황: 등록 건수
+  var equipTotal=(equipmentData&&equipmentData.rows)?equipmentData.rows.length:0;
+  var dET=document.getElementById('dEquipTotal'); if(dET) dET.textContent=equipTotal;
+}
+
 function updateAccComplaintCount(){
   // 오늘 인수인계 기록에서 안전사고/민원 건수 집계 (KST 기준)
   var today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
@@ -6298,45 +6222,6 @@ function updateAccComplaintCount(){
   var dAccT=document.getElementById('dAccT'); if(dAccT) dAccT.textContent=accTotal;
   var dComp=document.getElementById('dComp'); if(dComp) dComp.textContent=compToday;
   var dCompT=document.getElementById('dCompT'); if(dCompT) dCompT.textContent=compTotal;
-
-  // 습득물 요약 (금일 접수 건수 / 미처리=접수 상태)
-  var lostToday=(lostData||[]).filter(function(r){
-    var d=r.created_at||'';
-    return d?new Date(d).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'})===today:false;
-  }).length;
-  var lostPending=(lostData||[]).filter(function(r){
-    var s=r.status||'';
-    return s==='접수'||s==='보관중';
-  }).length;
-  var lostProcess=(lostData||[]).filter(function(r){
-    var s=r.status||'';
-    return s==='처리중'||s==='확인중';
-  }).length;
-  var lostDone=(lostData||[]).filter(function(r){
-    var s=r.status||'';
-    return s.startsWith('완료');
-  }).length;
-  var dLT=document.getElementById('dLostToday'); if(dLT) dLT.textContent=lostToday;
-  var dLP=document.getElementById('dLostPending'); if(dLP) dLP.textContent=lostPending;
-  var dLPr=document.getElementById('dLostProcess'); if(dLPr) dLPr.textContent=lostProcess;
-  var dLD=document.getElementById('dLostDone'); if(dLD) dLD.textContent=lostDone;
-
-  // 폐기물 성상별 이번달 합계
-  var thisMonth=today.slice(0,7);
-  var wasteThisMonth=(wasteData||[]).filter(function(r){ return (r.waste_date||'').slice(0,7)===thisMonth; });
-  var wSum=function(key){ return wasteThisMonth.reduce(function(s,r){ return s+(r[key]||0); },0); };
-  var wFields=[
-    ['dW_living','incineration_living'],['dW_syn','incineration_synthetic'],
-    ['dW_food','incineration_food'],['dW_wood','incineration_wood'],
-    ['dW_paper','recycle_paper'],['dW_plastic','recycle_plastic'],
-    ['dW_can','recycle_can'],['dW_glass','recycle_glass'],['dW_etc','recycle_etc']
-  ];
-  wFields.forEach(function(wf){
-    var el=document.getElementById(wf[0]); if(el){
-      var v=wSum(wf[1]);
-      el.textContent=v===0?0:parseFloat(v.toFixed(3));
-    }
-  });
 
   // 특별작업 현황 (오늘 건)
   var todaySpecial=(hoAll||[]).filter(function(r){
@@ -6530,6 +6415,7 @@ async function loadVehicleFromDB(){
       };
     });
     renderVehList(vehData);
+    updateMainStats();
     return vehData;
   }catch(e){ return []; }
 }
@@ -6809,8 +6695,8 @@ async function loadLostFromDB(){
     var res=await sb.from('lost_found').select('*').order('created_at',{ascending:false});
     if(res.error) throw res.error;
     lostData=res.data||[];
-    updateAccComplaintCount();
     renderLostList();
+    updateMainStats();
   }catch(e){ console.error(e); }
 }
 
@@ -7019,62 +6905,7 @@ async function deleteLost(id){
 // ══ 장비현황 ══
 var equipmentData=null; // {headers:[], rows:[[]], uploadDate:'', uploader:''}
 
-function eqTab(n){
-  tabSwitch('eq',n,3);
-  if(n===1) renderEquipmentGroup();
-}
-
-function renderEquipmentGroup(){
-  var el=document.getElementById('eqGroupList');
-  if(!el) return;
-  if(!equipmentData||!equipmentData.rows||!equipmentData.rows.length){
-    el.innerHTML='<div style="text-align:center;padding:40px;color:var(--g3);font-size:12px">엑셀 파일을 업로드해주세요</div>';
-    return;
-  }
-  var headers=equipmentData.headers||[];
-  var rows=equipmentData.rows||[];
-  // 장비명 컬럼 인덱스 찾기
-  var nameIdx=-1;
-  var nameCandidates=['장비명','품명','기기명','명칭','장비 명','기계명'];
-  for(var ni=0;ni<nameCandidates.length;ni++){
-    var found=headers.findIndex(function(h){ return h.trim()===nameCandidates[ni]; });
-    if(found>=0){ nameIdx=found; break; }
-  }
-  if(nameIdx<0) nameIdx=headers.findIndex(function(h){ return h.includes('장비명')||h.includes('품명'); });
-  if(nameIdx<0){
-    var skipPat=/순번|번호|serial|no|날짜|일자|입고|종료|제작|모델|code/i;
-    var best=-1,bestScore=0;
-    headers.forEach(function(h,hi){
-      if(skipPat.test(h)) return;
-      var score=rows.slice(0,30).filter(function(r){
-        var v=String(r[hi]||'').trim();
-        return v&&isNaN(v)&&/[가-힣]/.test(v)&&v.length>=2;
-      }).length;
-      if(score>bestScore){bestScore=score;best=hi;}
-    });
-    nameIdx=best>=0?best:2;
-  }
-  // 그룹화
-  var groups={};
-  rows.forEach(function(r){
-    var name=String(r[nameIdx]||'기타').trim();
-    if(!groups[name]) groups[name]=0;
-    groups[name]++;
-  });
-  var sorted=Object.keys(groups).sort(function(a,b){ return groups[b]-groups[a]; });
-  // 그리드 카드 렌더링
-  var h='<div style="font-size:11px;color:var(--g4);margin-bottom:12px;text-align:right">총 '+sorted.length+'종 · '+rows.length+'대</div>';
-  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
-  sorted.forEach(function(name){
-    h+='<div style="background:white;border:1.5px solid var(--g2);border-radius:var(--r2);padding:12px 14px;display:flex;justify-content:space-between;align-items:center">';
-    h+='<span style="font-size:12px;font-weight:700;color:var(--g7)">'+name+'</span>';
-    h+='<span style="background:var(--teal);color:white;border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700;white-space:nowrap">'+groups[name]+'대</span>';
-    h+='</div>';
-  });
-  h+='</div>';
-  el.innerHTML=h;
-}
-
+function eqTab(n){ tabSwitch('eq',n,2); }
 
 async function loadEquipmentFromDB(){
   try{
@@ -7089,6 +6920,7 @@ async function loadEquipmentFromDB(){
       equipmentData=null;
     }
     renderEquipment();
+    updateMainStats();
   }catch(e){ console.error(e); }
 }
 
@@ -7124,16 +6956,14 @@ function renderEquipment(){
   // 테이블
   var h='<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:500px">';
   h+='<thead><tr>';
-  headers.forEach(function(hd,hi){
-    var w=hi===0?'width:36px;':''; // 순번 컬럼 너비 고정
-    h+='<th style="'+w+'padding:8px 10px;background:var(--navy);color:white;text-align:left;white-space:nowrap;font-size:11px">'+hd+'</th>';
+  headers.forEach(function(hd){
+    h+='<th style="padding:8px 10px;background:var(--navy);color:white;text-align:left;white-space:nowrap;font-size:11px">'+hd+'</th>';
   });
   h+='</tr></thead><tbody>';
   filtered.forEach(function(r,i){
     h+='<tr style="background:'+(i%2===0?'white':'var(--g1)')+';">';
-    r.forEach(function(c,ci){
-      var w=ci===0?'width:36px;text-align:center;':''; // 순번 컬럼
-      h+='<td style="'+w+'padding:7px 10px;border-bottom:1px solid var(--g2);white-space:nowrap;color:var(--g7)">'+( c!==null&&c!==undefined?c:'')+'</td>';
+    r.forEach(function(c){
+      h+='<td style="padding:7px 10px;border-bottom:1px solid var(--g2);white-space:nowrap;color:var(--g7)">'+( c!==null&&c!==undefined?c:'')+'</td>';
     });
     h+='</tr>';
   });
@@ -7179,7 +7009,7 @@ function previewEquipmentFile(input){
 
 async function uploadEquipmentData(){
   if(!window._eqPendingData){ toast('파일을 먼저 선택해주세요'); return; }
-  var btn=document.querySelector('#eqP2 .btn-prim');
+  var btn=document.querySelector('#eqP1 .btn-prim');
   if(btn){btn.disabled=true;btn.textContent='업로드 중...';}
   try{
     // 기존 데이터 삭제 후 새로 insert
@@ -7220,9 +7050,13 @@ function pickWasteTeam(el){
 }
 
 async function saveWaste(){
+  if(!me){ toast('⚠️ 로그인이 필요합니다'); return; }
+  if(!(me.role==='admin'||me.role==='manager'||me.role==='leader')){
+    toast('⚠️ 조장 이상만 입력 가능합니다'); return;
+  }
   var date=document.getElementById('wasteDate').value;
   if(!date){ toast('일자를 선택해주세요'); return; }
-  if(!wasteSelectedTeam){ toast('차량번호를 선택해주세요'); return; }
+  if(!wasteSelectedTeam){ toast('팀을 선택해주세요'); return; }
   var getV=function(id){ return parseFloat(document.getElementById(id).value)||0; };
   var data={
     waste_date: date,
@@ -7262,26 +7096,39 @@ async function loadWasteFromDB(){
     var res=await sb.from('waste_data').select('*').order('waste_date',{ascending:false}).order('created_at',{ascending:false});
     if(res.error) throw res.error;
     wasteData=res.data||[];
-    updateAccComplaintCount();
-    // 차량 필터 옵션 갱신
+    // 팀 필터 옵션 갱신
     var teamSel=document.getElementById('wasteFilterTeam');
     if(teamSel){
-      var vehicles=['88러7396','88러7397','809나1745'];
+      var teams=[...new Set(wasteData.map(function(r){return r.team_code;}).filter(Boolean))].sort();
       var cur=teamSel.value;
-      teamSel.innerHTML='<option value="">전체 차량</option>';
-      vehicles.forEach(function(v){
-        var label=v.replace('88러7396','88러 7396').replace('88러7397','88러 7397').replace('809나1745','809나 1745');
-        teamSel.innerHTML+='<option value="'+v+'"'+(v===cur?' selected':'')+'>'+label+'</option>';
-      });
+      teamSel.innerHTML='<option value="">전체 팀</option>';
+      teams.forEach(function(t){ teamSel.innerHTML+='<option value="'+t+'"'+(t===cur?' selected':'')+'>'+t+'</option>'; });
     }
     // 이번 달 기본값
     var mf=document.getElementById('wasteFilterMonth');
     if(mf&&!mf.value) mf.value=new Date(Date.now()+9*3600000).toISOString().slice(0,7);
     renderWasteList();
-
+    // 조장이면 자기 팀 자동선택
+    if(me&&me.role==='leader'){
+      var myInfo=getMyLeaderTeam?getMyLeaderTeam():{shift:'',team:''};
+      if(myInfo.team){
+        var tNum=myInfo.team.replace(/[AB조]/g,'');
+        document.querySelectorAll('#wasteTeamGrp .rp').forEach(function(p){
+          if(p.dataset.val===tNum){p.click();}
+        });
+      }
+      if(myInfo.shift){
+        var sMap={'오전팀':'오전','오후팀':'오후','야간팀':'야간'};
+        var sv=sMap[myInfo.shift]||'';
+        document.querySelectorAll('#wasteShiftGrp .rp').forEach(function(p){
+          if(p.dataset.val===sv){p.click();}
+        });
+      }
+    }
     // 오늘 날짜 기본값
     var wd=document.getElementById('wasteDate');
     if(wd&&!wd.value) wd.value=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+    updateMainStats();
   }catch(e){ console.error(e); }
 }
 
@@ -7289,8 +7136,6 @@ function renderWasteList(){
   var el=document.getElementById('wasteList');
   var summaryEl=document.getElementById('wasteMonthSummary');
   if(!el) return;
-  var today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
-  var thisMonth=today.slice(0,7);
   var mf=document.getElementById('wasteFilterMonth');
   var tf=document.getElementById('wasteFilterTeam');
   var mfv=mf?mf.value:'';
@@ -7300,81 +7145,19 @@ function renderWasteList(){
     if(tfv&&r.team_code!==tfv) return false;
     return true;
   });
-  // 월간 합계 + 차량별 합산 + 일일 합산
-  var VEHICLES=['88러7396','88러7397','809나1745'];
-  var VLABEL={'88러7396':'88러 7396','88러7397':'88러 7397','809나1745':'809나 1745'};
+  // 월간 합계
   var totInc=0,totRec=0;
   filtered.forEach(function(r){
     totInc+=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
     totRec+=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
   });
-  // 일별 합산 (날짜별로 그룹화하여 3대 합계)
-  var dayMap={};
-  filtered.forEach(function(r){
-    var d=r.waste_date||'';
-    if(!dayMap[d]) dayMap[d]={inc:0,rec:0,vehicles:{}};
-    var inc=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
-    var rec=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
-    dayMap[d].inc+=inc; dayMap[d].rec+=rec;
-    dayMap[d].vehicles[r.team_code]=(dayMap[d].vehicles[r.team_code]||0)+(inc+rec);
-  });
-  // 차량별 합산
-  var vMap={};
-  filtered.forEach(function(r){
-    var v=r.team_code||'기타';
-    if(!vMap[v]){vMap[v]={inc:0,rec:0};}
-    vMap[v].inc+=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
-    vMap[v].rec+=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
-  });
-  // 연간 합계
-  var thisYear=today.slice(0,4);
-  var yearInc=0,yearRec=0;
-  wasteData.forEach(function(r){
-    if((r.waste_date||'').slice(0,4)!==thisYear) return;
-    yearInc+=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
-    yearRec+=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
-  });
-
   if(summaryEl){
-    var sh='';
-
-    // ① 일별 합산 (필터된 월의 날짜별, 최신순)
-    var dayKeys=Object.keys(dayMap).sort().reverse();
-    if(dayKeys.length){
-      sh+='<div style="margin-bottom:12px">';
-      sh+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">📅 일별 합계</div>';
-      dayKeys.forEach(function(d){
-        var di=dayMap[d];
-        sh+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 11px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:5px">';
-        sh+='<span style="font-size:12px;font-weight:700;color:var(--g7)">'+d+'</span>';
-        sh+='<div style="display:flex;gap:10px">';
-        sh+='<span style="font-size:11px;color:var(--danger)">소각 '+di.inc.toFixed(3)+'톤</span>';
-        sh+='<span style="font-size:11px;color:var(--teal2)">재활용 '+di.rec.toFixed(3)+'톤</span>';
-        sh+='<span style="font-size:12px;font-weight:800;color:var(--navy)">'+( di.inc+di.rec).toFixed(3)+'톤</span>';
-        sh+='</div></div>';
-      });
-      sh+='</div>';
-    }
-
-    // ② 월별 합계 (소계 카드)
-    sh+='<div style="margin-bottom:12px">';
-    sh+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">📆 월별 합계 ('+(mfv||thisMonth)+')</div>';
-    sh+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">';
-    sh+='<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--danger)"><div style="font-size:15px;font-weight:900;color:var(--danger)">'+totInc.toFixed(3)+'</div><div style="font-size:10px;color:var(--g4)">소각(톤)</div></div>';
-    sh+='<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--teal)"><div style="font-size:15px;font-weight:900;color:var(--teal2)">'+totRec.toFixed(3)+'</div><div style="font-size:10px;color:var(--g4)">재활용(톤)</div></div>';
-    sh+='<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--navy)"><div style="font-size:15px;font-weight:900;color:var(--navy)">'+(totInc+totRec).toFixed(3)+'</div><div style="font-size:10px;color:var(--g4)">합계(톤)</div></div>';
-    sh+='</div></div>';
-
-    // ③ 연간 합계
-    sh+='<div style="margin-bottom:4px">';
-    sh+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">📊 연간 합계 ('+thisYear+'년)</div>';
-    sh+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">';
-    sh+='<div style="background:var(--danger-bg);border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid rgba(217,64,64,.2)"><div style="font-size:15px;font-weight:900;color:var(--danger)">'+yearInc.toFixed(3)+'</div><div style="font-size:10px;color:var(--g4)">소각(톤)</div></div>';
-    sh+='<div style="background:var(--teal-bg);border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid rgba(0,180,160,.2)"><div style="font-size:15px;font-weight:900;color:var(--teal2)">'+yearRec.toFixed(3)+'</div><div style="font-size:10px;color:var(--g4)">재활용(톤)</div></div>';
-    sh+='<div style="background:var(--navy-bg);border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid rgba(30,58,120,.15)"><div style="font-size:15px;font-weight:900;color:var(--navy)">'+(yearInc+yearRec).toFixed(3)+'</div><div style="font-size:10px;color:var(--g4)">합계(톤)</div></div>';
-    sh+='</div></div>';
-
-    summaryEl.innerHTML=sh;
+    summaryEl.innerHTML=
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">'+
+      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--danger)"><div style="font-size:16px;font-weight:900;color:var(--danger)">'+totInc.toLocaleString()+'</div><div style="font-size:10px;color:var(--g4)">소각 합계(t)</div></div>'+
+      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--teal)"><div style="font-size:16px;font-weight:900;color:var(--teal2)">'+totRec.toLocaleString()+'</div><div style="font-size:10px;color:var(--g4)">재활용 합계(t)</div></div>'+
+      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--navy)"><div style="font-size:16px;font-weight:900;color:var(--navy)">'+(totInc+totRec).toLocaleString()+'</div><div style="font-size:10px;color:var(--g4)">총합계(t)</div></div>'+
+      '</div>';
   }
   if(!filtered.length){
     el.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">입력된 데이터가 없습니다</div>';
@@ -7396,18 +7179,18 @@ function renderWasteList(){
     h+='</div>';
     // 소각
     h+='<div style="background:var(--danger-bg);border-radius:8px;padding:8px 10px;margin-bottom:7px">';
-    h+='<div style="font-size:11px;font-weight:700;color:var(--danger);margin-bottom:5px">🔥 소각 합계 '+incTotal.toLocaleString()+'톤</div>';
+    h+='<div style="font-size:11px;font-weight:700;color:var(--danger);margin-bottom:5px">🔥 소각 합계 '+incTotal.toLocaleString()+'t</div>';
     h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:11px;color:var(--g6)">';
-    h+='<span>생활: '+(r.incineration_living||0)+'톤</span><span>합성수지: '+(r.incineration_synthetic||0)+'톤</span>';
-    h+='<span>음식물: '+(r.incineration_food||0)+'톤</span><span>목재: '+(r.incineration_wood||0)+'톤</span>';
+    h+='<span>생활: '+(r.incineration_living||0)+'kg</span><span>합성수지: '+(r.incineration_synthetic||0)+'kg</span>';
+    h+='<span>음식물: '+(r.incineration_food||0)+'kg</span><span>목재: '+(r.incineration_wood||0)+'kg</span>';
     h+='</div></div>';
     // 재활용
     h+='<div style="background:var(--teal-bg);border-radius:8px;padding:8px 10px;margin-bottom:7px">';
-    h+='<div style="font-size:11px;font-weight:700;color:var(--teal2);margin-bottom:5px">♻️ 재활용 합계 '+recTotal.toLocaleString()+'톤</div>';
+    h+='<div style="font-size:11px;font-weight:700;color:var(--teal2);margin-bottom:5px">♻️ 재활용 합계 '+recTotal.toLocaleString()+'t</div>';
     h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:11px;color:var(--g6)">';
-    h+='<span>종이: '+(r.recycle_paper||0)+'톤</span><span>플라스틱: '+(r.recycle_plastic||0)+'톤</span>';
-    h+='<span>캔/고철: '+(r.recycle_can||0)+'톤</span><span>병/유리: '+(r.recycle_glass||0)+'톤</span>';
-    h+='<span>기타: '+(r.recycle_etc||0)+'톤</span>';
+    h+='<span>종이: '+(r.recycle_paper||0)+'kg</span><span>플라스틱: '+(r.recycle_plastic||0)+'kg</span>';
+    h+='<span>캔/고철: '+(r.recycle_can||0)+'kg</span><span>병/유리: '+(r.recycle_glass||0)+'kg</span>';
+    h+='<span>기타: '+(r.recycle_etc||0)+'kg</span>';
     h+='</div></div>';
     if(r.note) h+='<div style="font-size:11px;color:var(--g5);background:var(--g1);border-radius:6px;padding:6px 9px;margin-bottom:7px">📎 '+r.note+'</div>';
     if(isAdmin){
@@ -7432,7 +7215,7 @@ function downloadWasteExcel(){
   var mf=document.getElementById('wasteFilterMonth');
   var mfv=mf?mf.value:'';
   var filtered=wasteData.filter(function(r){ return !mfv||r.waste_date.slice(0,7)===mfv; });
-  var rows=[['일자','근무조','팀','작성자','생활쓰레기(톤)','합성수지류(톤)','음식물쓰레기(톤)','목재류(톤)','소각합계(톤)','종이류(톤)','플라스틱류(톤)','캔/고철류(톤)','병/유리류(톤)','기타재활용(톤)','재활용합계(톤)','총합계(톤)','기타']];
+  var rows=[['일자','근무조','팀','작성자','생활쓰레기(t)','합성수지류(t)','음식물쓰레기(t)','목재류(t)','소각합계(t)','종이류(t)','플라스틱류(t)','캔/고철류(t)','병/유리류(t)','기타재활용(t)','재활용합계(t)','총합계(t)','기타']];
   filtered.forEach(function(r){
     var inc=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
     var rec=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
@@ -7641,7 +7424,6 @@ loadKpiData();
 
 // DB 자동 로드 (로그인 후 호출되지만 앱 시작시 미리 캐싱)
 async function initAppData(){
-  // 모든 DB 데이터 동시 로드 (전체 공유)
   await Promise.all([
     loadHandoverFromDB(),
     loadAccidentsFromDB(),
@@ -7653,13 +7435,12 @@ async function initAppData(){
     loadIndPrev(),
     loadVocFromDB(),
     loadLostFromDB(),
-    loadWasteFromDB()
+    loadWasteFromDB(),
+    loadEquipmentFromDB()
   ]);
-  // 사규 자동 로드
+  updateMainStats();
   autoLoadPdf();
-  // 일별 이력 로드
   loadMpHistory();
-  // 전일 근무 인원 로드
   loadPrevStaff();
 }
 
