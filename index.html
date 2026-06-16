@@ -1958,13 +1958,29 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           <div class="dl-ico">🔄</div>
           <div><div class="dl-title">인수인계</div><div class="dl-sub">전체 인계 이력 (.xlsx)</div></div>
         </div>
+        <div class="dl-item" onclick="dlCSV('ind')">
+          <div class="dl-ico">🚑</div>
+          <div><div class="dl-title">산업재해</div><div class="dl-sub">전체 재해 이력 (.xlsx)</div></div>
+        </div>
         <div class="dl-item" onclick="dlCSV('veh')">
           <div class="dl-ico">🚗</div>
           <div><div class="dl-title">차량운행기록</div><div class="dl-sub">운행 이력 (.xlsx)</div></div>
         </div>
+        <div class="dl-item" onclick="dlCSV('kpi')">
+          <div class="dl-ico">📊</div>
+          <div><div class="dl-title">과업평가지표(KPI)</div><div class="dl-sub">월별 지표 데이터 (.xlsx)</div></div>
+        </div>
         <div class="dl-item" onclick="dlCSV('voc')">
           <div class="dl-ico">📞</div>
           <div><div class="dl-title">ARS 민원</div><div class="dl-sub">민원 접수 및 처리현황 (.xlsx)</div></div>
+        </div>
+        <div class="dl-item" onclick="dlCSV('lost')">
+          <div class="dl-ico">🎒</div>
+          <div><div class="dl-title">습득물 관리</div><div class="dl-sub">전체 습득물 이력 (.xlsx)</div></div>
+        </div>
+        <div class="dl-item" onclick="dlCSV('waste')">
+          <div class="dl-ico">♻️</div>
+          <div><div class="dl-title">폐기물 처리현황</div><div class="dl-sub">성상별 처리량 (.xlsx)</div></div>
         </div>
       </div>
     </div></div>
@@ -3074,6 +3090,73 @@ async function dlCSV(type){
         var wsv=XLSX.utils.aoa_to_sheet(vocRows);
         wsv['!cols']=[{wch:6},{wch:12},{wch:14},{wch:40},{wch:10},{wch:20},{wch:18}];
         wb.SheetNames.push('ARS민원');wb.Sheets['ARS민원']=wsv;
+      }
+    }
+
+    // ── KPI ──
+    if(type==='kpi'||type==='all'){
+      var rk=await sb.from('kpi_data').select('*').order('year',{ascending:false}).order('month',{ascending:false});
+      if(rk.data&&rk.data.length){
+        var kpiRows=[['연도','월','KPI1점수','KPI1메모','KPI2점수','KPI3점수','KPI4점수','KPI5점수','KPI6점수','KPI7점수','작성자']];
+        rk.data.forEach(function(d){
+          kpiRows.push([
+            d.year||'',d.month||'',
+            d.kpi1_score||'',d.kpi1_memo||'',
+            d.kpi2_score||'',d.kpi3_score||'',
+            d.kpi4_score||'',d.kpi5_score||'',
+            d.kpi6_score||'',d.kpi7_score||'',
+            d.writer||''
+          ]);
+        });
+        var wsk=XLSX.utils.aoa_to_sheet(kpiRows);
+        wsk['!cols']=[{wch:6},{wch:4},{wch:8},{wch:20},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:12}];
+        wb.SheetNames.push('KPI');wb.Sheets['KPI']=wsk;
+      }
+    }
+
+    // ── 습득물 ──
+    if(type==='lost'||type==='all'){
+      var rl=await sb.from('lost_found').select('*').order('created_at',{ascending:false});
+      if(rl.data&&rl.data.length){
+        var lostRows=[['접수일시','발견자사번','발견자이름','발견위치','물품내용','상태','처리내용','기타']];
+        rl.data.forEach(function(d){
+          lostRows.push([
+            d.created_at?toKSTDateTime(d.created_at):'',
+            d.finder_id||'',d.finder_name||'',
+            d.location||'',d.item||'',
+            d.status||'',d.complete_memo||'',d.note||''
+          ]);
+        });
+        var wsl=XLSX.utils.aoa_to_sheet(lostRows);
+        wsl['!cols']=[{wch:18},{wch:10},{wch:12},{wch:20},{wch:24},{wch:10},{wch:20},{wch:16}];
+        wb.SheetNames.push('습득물');wb.Sheets['습득물']=wsl;
+      }
+    }
+
+    // ── 폐기물 ──
+    if(type==='waste'||type==='all'){
+      var rw=await sb.from('waste_data').select('*').order('waste_date',{ascending:false});
+      if(rw.data&&rw.data.length){
+        var wasteRows=[['일자','근무조','팀','작성자',
+          '생활쓰레기(톤)','합성수지류(톤)','음식물쓰레기(톤)','목재류(톤)','소각합계(톤)',
+          '종이류(톤)','플라스틱류(톤)','캔/고철류(톤)','병/유리류(톤)','기타재활용(톤)','재활용합계(톤)',
+          '총합계(톤)','비고']];
+        rw.data.forEach(function(d){
+          var inc=(d.incineration_living||0)+(d.incineration_synthetic||0)+(d.incineration_food||0)+(d.incineration_wood||0);
+          var rec=(d.recycle_paper||0)+(d.recycle_plastic||0)+(d.recycle_can||0)+(d.recycle_glass||0)+(d.recycle_etc||0);
+          wasteRows.push([
+            d.waste_date||'',d.shift||'',d.team_code||'',d.writer||'',
+            d.incineration_living||0,d.incineration_synthetic||0,d.incineration_food||0,d.incineration_wood||0,inc,
+            d.recycle_paper||0,d.recycle_plastic||0,d.recycle_can||0,d.recycle_glass||0,d.recycle_etc||0,rec,
+            inc+rec,d.note||''
+          ]);
+        });
+        var wsw=XLSX.utils.aoa_to_sheet(wasteRows);
+        wsw['!cols']=[{wch:12},{wch:6},{wch:8},{wch:10},
+          {wch:12},{wch:12},{wch:14},{wch:10},{wch:10},
+          {wch:10},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},
+          {wch:10},{wch:16}];
+        wb.SheetNames.push('폐기물');wb.Sheets['폐기물']=wsw;
       }
     }
 
@@ -7029,14 +7112,16 @@ function renderEquipment(){
   // 테이블
   var h='<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:500px">';
   h+='<thead><tr>';
-  headers.forEach(function(hd){
-    h+='<th style="padding:8px 10px;background:var(--navy);color:white;text-align:left;white-space:nowrap;font-size:11px">'+hd+'</th>';
+  headers.forEach(function(hd,hi){
+    var w=hi===0?'width:36px;':''; // 순번 컬럼 너비 고정
+    h+='<th style="'+w+'padding:8px 10px;background:var(--navy);color:white;text-align:left;white-space:nowrap;font-size:11px">'+hd+'</th>';
   });
   h+='</tr></thead><tbody>';
   filtered.forEach(function(r,i){
     h+='<tr style="background:'+(i%2===0?'white':'var(--g1)')+';">';
-    r.forEach(function(c){
-      h+='<td style="padding:7px 10px;border-bottom:1px solid var(--g2);white-space:nowrap;color:var(--g7)">'+( c!==null&&c!==undefined?c:'')+'</td>';
+    r.forEach(function(c,ci){
+      var w=ci===0?'width:36px;text-align:center;':''; // 순번 컬럼
+      h+='<td style="'+w+'padding:7px 10px;border-bottom:1px solid var(--g2);white-space:nowrap;color:var(--g7)">'+( c!==null&&c!==undefined?c:'')+'</td>';
     });
     h+='</tr>';
   });
