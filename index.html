@@ -6332,7 +6332,10 @@ function updateAccComplaintCount(){
     ['dW_can','recycle_can'],['dW_glass','recycle_glass'],['dW_etc','recycle_etc']
   ];
   wFields.forEach(function(wf){
-    var el=document.getElementById(wf[0]); if(el) el.textContent=wSum(wf[1]);
+    var el=document.getElementById(wf[0]); if(el){
+      var v=wSum(wf[1]);
+      el.textContent=v===0?0:parseFloat(v.toFixed(3));
+    }
   });
 
   // 특별작업 현황 (오늘 건)
@@ -7286,6 +7289,8 @@ function renderWasteList(){
   var el=document.getElementById('wasteList');
   var summaryEl=document.getElementById('wasteMonthSummary');
   if(!el) return;
+  var today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
+  var thisMonth=today.slice(0,7);
   var mf=document.getElementById('wasteFilterMonth');
   var tf=document.getElementById('wasteFilterTeam');
   var mfv=mf?mf.value:'';
