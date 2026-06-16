@@ -1033,23 +1033,10 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <textarea class="f-ta" id="hF" rows="2" placeholder="고장 내용 및 조치사항"></textarea>
     </div></div>
 
-    <!-- 4. 민원 -->
+    <!-- 4. 안전사고 -->
     <div class="card" style="margin-bottom:10px"><div class="cb">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
         <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">4</div>
-        <span style="font-size:13px;font-weight:800;color:var(--g7)">📢 민원</span>
-      </div>
-      <div class="rg" style="margin-bottom:8px">
-        <div class="rp on" onclick="togF(this,'hC',false)">없음</div>
-        <div class="rp" onclick="togF(this,'hC',true)">있음</div>
-      </div>
-      <textarea class="f-ta" id="hC" rows="2" placeholder="민원 내용 및 처리결과"></textarea>
-    </div></div>
-
-    <!-- 5. 안전사고 -->
-    <div class="card" style="margin-bottom:10px"><div class="cb">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
-        <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">5</div>
         <span style="font-size:13px;font-weight:800;color:var(--g7)">🚨 안전사고</span>
       </div>
       <div class="rg" style="margin-bottom:8px">
@@ -1059,10 +1046,10 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <textarea class="f-ta" id="hA" rows="2" placeholder="사고 내용 및 조치사항"></textarea>
     </div></div>
 
-    <!-- 6. 특별작업 -->
+    <!-- 5. 특별작업 -->
     <div class="card" style="margin-bottom:10px"><div class="cb">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
-        <div style="width:24px;height:24px;border-radius:50%;background:var(--navy);color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">6</div>
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--navy);color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">5</div>
         <span style="font-size:13px;font-weight:800;color:var(--g7)">🔨 특별작업</span>
       </div>
       <div class="rg" style="margin-bottom:8px">
@@ -3019,7 +3006,7 @@ function renderLeaderStatus(){
   ['오전','오후','야간'].forEach(function(shift){
     var leaders=LEADERS[shift]||[];
     // DB 기준 완료 여부 (다른 사용자 입력도 반영)
-    var dbDone=Object.keys(mpDataByLeader[shift]||{});
+    var dbDone=Object.keys(mpDataByLeader[shift]||{}).filter(function(k){ return k.indexOf('_')!==0; });
     var done=dbDone;
     var total=leaders.length;
     var doneCount=done.length;
@@ -3059,7 +3046,7 @@ function renderLeaderStatus(){
   var allMissing=[];
   ['오전','오후','야간'].forEach(function(shift){
     var leaders=LEADERS[shift]||[];
-    var done=Object.keys(mpDataByLeader[shift]||{});
+    var done=Object.keys(mpDataByLeader[shift]||{}).filter(function(k){ return k.indexOf('_')!==0; });
     leaders.forEach(function(l){
       if(done.indexOf(l.team)===-1) allMissing.push(shift+' '+l.name);
     });
@@ -4309,6 +4296,8 @@ function saveLeaderDataEdit(){
   updateFloorChart();
   updateMpSummary();
   closeLeaderDataEdit();
+  // DB 저장 후 재로드 (완료 카운트 정확히 반영)
+  saveMpToDB(editShift, editTeam, newVals).then(function(){ loadMpFromDB(); });
   toast('✅ '+editTeam+' 입력값이 수정되었습니다');
 }
 
@@ -6089,8 +6078,8 @@ function initVocForm(){
 }
 
 async function saveVoc(){
-  if(!me||!(me.role==='admin'||me.role==='manager')){
-    toast('⚠️ 팀장 이상만 입력 가능합니다'); return;
+  if(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader')){
+    toast('⚠️ 조장 이상만 입력 가능합니다'); return;
   }
   var date=document.getElementById('vocDate').value;
   var content=document.getElementById('vocContent').value.trim();
