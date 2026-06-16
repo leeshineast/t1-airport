@@ -2175,6 +2175,11 @@ function pickR(el){document.querySelectorAll('.r-btn').forEach(b=>b.classList.re
 function closeRegOk(){hideM('regOk');goLogin();}
 // ─ 인력현황 ─
 function pickShift(el){
+  // 조장은 근무조 변경 불가
+  if(me&&me.role==='leader'){
+    toast('⚠️ 본인 근무조만 입력 가능합니다');
+    return;
+  }
   document.querySelectorAll('#shiftGrp .rp').forEach(function(p){p.classList.remove('on');});
   el.classList.add('on');
   updateMyTeamGrp();
@@ -3589,7 +3594,7 @@ function updateMyTeamGrp(){
   var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
   // DB 기준으로 완료 여부 판단 (다른 사용자 입력도 반영)
   var dbLeaders=mpDataByLeader[shift]||{};
-  var done=Object.keys(dbLeaders);
+  var done=Object.keys(dbLeaders).filter(function(k){ return k.indexOf('_')!==0; });
   var shiftColors={'오전':'var(--navy)','오후':'var(--teal2)','야간':'#6B21A8'};
   var shiftBgs={'오전':'var(--navy-bg)','오후':'var(--teal-bg)','야간':'#F3EEF8'};
   var color=shiftColors[shift]||'var(--teal2)';
@@ -3608,6 +3613,9 @@ function updateMyTeamGrp(){
     teamMap[teamName].push(l);
   });
 
+  // 조장(leader)은 자기 팀만 선택 가능, admin/manager는 모두 선택 가능
+  var isLeaderOnly = me && me.role === 'leader';
+
   var h='';
   teamOrder.forEach(function(teamName){
     var members=teamMap[teamName];
@@ -3619,17 +3627,21 @@ function updateMyTeamGrp(){
       var isMe=(autoTeam===l.team);
       var shortName=l.name.replace(/^[0-9]+팀\s*/,'');
       if(isDone){
-        // 완료 버튼 - done 클래스 (선택 불가)
         h+='<div class="rp myteam-btn done" data-team="'+l.team+'" '+
            'style="font-size:12px;padding:7px 14px;background:'+bg+';color:'+color+';border-color:'+color+';font-weight:700;opacity:0.7">'+
            '✔ '+shortName+'</div>';
-      } else if(isMe){
-        // 내 팀 - on 클래스 자동 선택
-        h+='<div class="rp myteam-btn on" onclick="pickMyTeam(this)" data-team="'+l.team+'" '+
-           'style="font-size:12px;padding:7px 14px;background:'+bg+';color:'+color+';border-color:'+color+';font-weight:700">'+
+      } else if(isLeaderOnly && isMe){
+        // 조장 - 내 팀: 자동선택 고정 (클릭해도 해제 불가)
+        h+='<div class="rp myteam-btn on" data-team="'+l.team+'" '+
+           'style="font-size:12px;padding:7px 14px;background:'+bg+';color:'+color+';border-color:'+color+';font-weight:700;cursor:default">'+
+           '✔ '+shortName+'</div>';
+      } else if(isLeaderOnly){
+        // 조장 - 다른 팀: 완전 비활성화
+        h+='<div class="rp myteam-btn" data-team="'+l.team+'" '+
+           'style="font-size:12px;padding:7px 14px;opacity:0.2;cursor:not-allowed;pointer-events:none" title="본인 팀만 입력 가능">'+
            shortName+'</div>';
       } else {
-        // 미완료 - 선택 가능
+        // admin/manager - 모두 선택 가능
         h+='<div class="rp myteam-btn" onclick="pickMyTeam(this)" data-team="'+l.team+'" '+
            'style="font-size:12px;padding:7px 14px">'+
            shortName+'</div>';
