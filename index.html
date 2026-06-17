@@ -3605,7 +3605,7 @@ function tabSwitch(prefix,n,count){
     if(p) p.style.display=i===n?'block':'none';
   }
 }
-function mpTab(n){tabSwitch('mp',n,4);if(n===2){renderLeaderStatus();updateMyTeamGrp();}if(n===3){loadMpHistory();}}
+function mpTab(n){tabSwitch('mp',n,4);if(n===2){renderLeaderStatus();updateMyTeamGrp();checkPrevDayMissing();}if(n===3){loadMpHistory();}}
 function hoTab(n){
   tabSwitch('ho',n,5);
   // 탭 전환 시 해당 팀 데이터 로드
