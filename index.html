@@ -4265,39 +4265,34 @@ function getSelectedTeam(){
 
 
 // ─ 전일 미입력 조장 확인 ─
-function checkPrevDayMissing(){
+async function checkPrevDayMissing(){
   try{
     var box=document.getElementById('prevDayMissing');
     var lst=document.getElementById('prevDayMissingList');
     if(!box||!lst) return;
     var kst=new Date(Date.now()+9*3600000);
     var yesterday=new Date(kst.getTime()-86400000).toISOString().slice(0,10);
-    // LEADERS는 {오전:[{team,name}...], 오후:[...], 야간:[...]} 구조
-    var allLeaders=[];
+    // 전일 DB에서 입력된 team_code 목록 조회
+    var doneTeams=[];
     try{
-      var s=localStorage.getItem('t1_leaders');
-      if(s){
-        var parsed=JSON.parse(s);
-        // 근무조별 flat 배열로 변환
-        ['오전','오후','야간'].forEach(function(sh){
-          (parsed[sh]||[]).forEach(function(l){ allLeaders.push(l); });
-        });
-      }
+      var res=await sb.from('mp_data').select('team_code').eq('date',yesterday);
+      if(res.data) res.data.forEach(function(r){
+        if(r.team_code && r.team_code.indexOf('_')!==0) doneTeams.push(r.team_code);
+      });
     }catch(e){}
-    // localStorage에 없으면 전역 LEADERS 사용
-    if(!allLeaders.length && typeof LEADERS!=='undefined'){
+    // 전체 조장 목록 (LEADERS 전역변수 사용)
+    var allLeaders=[];
+    if(typeof LEADERS!=='undefined'){
       ['오전','오후','야간'].forEach(function(sh){
         (LEADERS[sh]||[]).forEach(function(l){ allLeaders.push(l); });
       });
     }
     if(!allLeaders.length){box.style.display='none';return;}
-    // 전일 입력 완료 팀코드 목록
-    var log=mpInputLog||{};
-    var yLog=log[yesterday]||{};
-    var doneTeams=[];
-    Object.keys(yLog).forEach(function(sh){(yLog[sh]||[]).forEach(function(t){doneTeams.push(t);});});
     var missing=allLeaders.filter(function(l){return doneTeams.indexOf(l.team)===-1;});
-    if(missing.length===0){box.style.display='none';return;}
+    if(missing.length===0){
+      box.style.display='none';
+      return;
+    }
     box.style.display='block';
     lst.innerHTML=missing.map(function(l){
       return '<span style="display:inline-block;margin:1px 4px 1px 0;padding:2px 8px;background:rgba(220,50,50,0.1);border-radius:20px;font-weight:700">'+l.name+' <span style="font-weight:400;color:var(--g4)">('+l.team+')</span></span>';
