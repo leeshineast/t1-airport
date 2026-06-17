@@ -2752,9 +2752,32 @@ function subHO(){
     special: _special,
     confirmed: false
   };
-  saveHandoverToDB(hoData);
-  // 미확인 카운트 증가
-  const pb=document.getElementById('dHO');if(pb)pb.textContent=parseInt(pb.textContent||0)+1;
+  // ① 수정 모드면 update, 신규면 insert
+  const submitBtn=document.querySelector('#hoP4 .btn-prim');
+  const editId=submitBtn?submitBtn._editId:null;
+  if(editId){
+    // 수정 저장 (update)
+    sb.from('handover').update({
+      shift: hoData.shift,
+      to_shift: hoData.to_shift,
+      facility: hoData.facility,
+      complaint: hoData.complaint,
+      danger: hoData.danger,
+      accident: hoData.accident,
+      equipment: hoData.equipment,
+      notice: hoData.notice,
+      special: hoData.special
+    }).eq('id', editId).then(function(res){
+      if(res.error) toast('수정 오류: '+res.error.message);
+      else{ loadHandoverFromDB(); toast('✅ 인수인계가 수정되었습니다'); }
+    });
+    // 버튼 원상복귀
+    if(submitBtn){ submitBtn.textContent='📋 인수인계 제출'; delete submitBtn._editId; }
+  } else {
+    // 신규 저장 (insert)
+    saveHandoverToDB(hoData);
+    const pb=document.getElementById('dHO');if(pb)pb.textContent=parseInt(pb.textContent||0)+1;
+  }
   // ② 전체 탭(0)으로 이동
   hoTab(0);
 }
