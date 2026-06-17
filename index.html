@@ -386,19 +386,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     </div>
     <div class="user-chip" onclick="showInfo()"><div class="u-av" id="uAv">관</div><span id="uNm">관리자</span></div>
   </div>
-  <div style="padding:14px 13px 6px;display:flex;align-items:center;justify-content:space-between">
-    <div>
-      <h1 style="font-size:18px;font-weight:800;color:var(--g7)">운영현황</h1>
-      <p style="font-size:11px;color:var(--g4);margin-top:2px" id="dashDate"></p>
-    </div>
-    <!-- 인천공항운영서비스 로고 -->
-    <div style="display:flex;align-items:center;justify-content:center;width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#003B7E,#0055C8);border:2px solid rgba(255,255,255,0.4);box-shadow:0 2px 8px rgba(0,59,126,0.4)">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 3C12 3 8 8 4.5 10.5L6.5 12L10.5 11V15.5L8.5 16.5L9.5 17.5L12 16.5L14.5 17.5L15.5 16.5L13.5 15.5V11L17.5 12L19.5 10.5C16 8 12 3 12 3Z" fill="white"/>
-        <rect x="4" y="20" width="16" height="1.5" rx="0.75" fill="rgba(255,255,255,0.7)"/>
-      </svg>
-    </div>
-  </div>
+  <div style="padding:14px 13px 6px"><h1 style="font-size:18px;font-weight:800;color:var(--g7)">운영현황</h1><p style="font-size:11px;color:var(--g4);margin-top:2px" id="dashDate"></p></div>
   <!-- 인력현황 통합 카드 -->
   <div class="stat-row">
     <div class="stat-box" style="flex:1">
@@ -509,27 +497,9 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           <tr><td class="lbl">A/S 동편</td><td>4</td><td>10</td><td>14</td><td>12</td><td>11</td><td>8</td><td>3</td><td style="font-weight:800;color:var(--teal2)">62</td></tr>
           <tr><td class="lbl">A/S 서편</td><td>3</td><td>9</td><td>13</td><td>11</td><td>10</td><td>7</td><td>2</td><td style="font-weight:800;color:var(--teal2)">55</td></tr>
           <tr class="sub"><td class="lbl">A/S 소계</td><td>7</td><td>19</td><td>27</td><td>23</td><td>21</td><td>15</td><td>5</td><td>117</td></tr>
-          <tr class="tot"><td class="lbl">주간 총계</td><td>16</td><td>41</td><td>61</td><td>51</td><td>47</td><td>34</td><td>12</td><td>262</td></tr>
-          <tr id="nightSpecialRow" style="display:none;background:#F3EEF8">
-            <td class="lbl" style="color:#6B21A8;font-weight:800">야간특별</td>
-            <td colspan="7" style="font-size:11px;color:#6B21A8;padding:7px 8px" id="nightSpecialCells"></td>
-            <td style="font-weight:800;color:#6B21A8" id="nightSpecialTotal">0</td>
-          </tr>
+          <tr class="tot"><td class="lbl">전체 총계</td><td>16</td><td>41</td><td>61</td><td>51</td><td>47</td><td>34</td><td>12</td><td>262</td></tr>
         </tbody>
       </table></div></div>
-      <!-- 주간/야간 합산 박스 -->
-      <div style="display:flex;gap:10px;padding:10px 13px 0">
-        <div style="flex:1;background:var(--navy-bg);border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--navy)">
-          <div style="font-size:10px;color:var(--g4);margin-bottom:3px">☀️ 주간 총</div>
-          <div style="font-size:22px;font-weight:900;color:var(--navy)" id="staffDayBox">0</div>
-          <div style="font-size:10px;color:var(--g4)">명</div>
-        </div>
-        <div style="flex:1;background:#F3EEF8;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid #6B21A8">
-          <div style="font-size:10px;color:var(--g4);margin-bottom:3px">🌙 야간 총</div>
-          <div style="font-size:22px;font-weight:900;color:#6B21A8" id="staffNightBox">0</div>
-          <div style="font-size:10px;color:var(--g4)">명</div>
-        </div>
-      </div>
     </div>
 
     <!-- B2F 패널 -->
@@ -972,7 +942,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         </div>
       </div>
     </div></div>
-    <div class="card" id="mpFloorCard">
+    <div class="card">
       <div class="tbl-w">
         <table class="mp-tbl">
           <thead><tr><th style="text-align:left;min-width:76px;padding-left:8px">구역</th><th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th></tr></thead>
@@ -989,42 +959,6 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <button class="btn-prim" style="width:auto;padding:12px 22px" onclick="subMp()">입력 완료</button>
       </div>
     </div>
-
-    <!-- 야간 특별작업 입력폼 -->
-    <div id="nightSpecialCard" style="display:none" class="card"><div class="cb">
-      <div style="font-size:13px;font-weight:800;color:#6B21A8;margin-bottom:13px">🌙 야간 특별작업 인원</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div>
-          <div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:5px">왁스</div>
-          <input type="number" id="ns_wax" class="ri" placeholder="0" min="0" oninput="calcNightTotal()" style="margin-bottom:0;font-size:14px">
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:5px">카페트</div>
-          <input type="number" id="ns_carpet" class="ri" placeholder="0" min="0" oninput="calcNightTotal()" style="margin-bottom:0;font-size:14px">
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:5px">PBB</div>
-          <input type="number" id="ns_pbb" class="ri" placeholder="0" min="0" oninput="calcNightTotal()" style="margin-bottom:0;font-size:14px">
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:5px">E/S</div>
-          <input type="number" id="ns_es" class="ri" placeholder="0" min="0" oninput="calcNightTotal()" style="margin-bottom:0;font-size:14px">
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:5px">화장실</div>
-          <input type="number" id="ns_toilet" class="ri" placeholder="0" min="0" oninput="calcNightTotal()" style="margin-bottom:0;font-size:14px">
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:5px">석재</div>
-          <input type="number" id="ns_stone" class="ri" placeholder="0" min="0" oninput="calcNightTotal()" style="margin-bottom:0;font-size:14px">
-        </div>
-      </div>
-      <div style="margin-top:12px;background:#F3EEF8;border-radius:var(--r2);padding:10px 13px;display:flex;justify-content:space-between;align-items:center">
-        <span style="font-size:12px;font-weight:700;color:#6B21A8">야간 특별작업 합계</span>
-        <span style="font-size:22px;font-weight:900;color:#6B21A8" id="nightTot">0</span>
-      </div>
-    </div></div>
-
     <div style="height:20px"></div>
   </div>
   <!-- 전체현황 -->
@@ -1056,11 +990,6 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div id="leaderEditBtn" style="display:none">
         <button onclick="openLeaderEdit()" style="padding:6px 11px;background:var(--g1);color:var(--g5);border:1.5px solid var(--g2);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer">⚙️ 명단 편집</button>
       </div>
-    </div>
-    <!-- 오늘/전일 탭 -->
-    <div style="display:flex;gap:8px;padding:0 13px 10px">
-      <button id="lsTabToday" onclick="switchLeaderTab('today')" style="flex:1;padding:8px;border-radius:20px;font-size:12px;font-weight:700;border:none;cursor:pointer;background:var(--navy);color:#fff;transition:.2s">📅 오늘</button>
-      <button id="lsTabYest" onclick="switchLeaderTab('yesterday')" style="flex:1;padding:8px;border-radius:20px;font-size:12px;font-weight:700;border:1.5px solid var(--g2);cursor:pointer;background:var(--g1);color:var(--g4);transition:.2s">📋 전일 미입력 확인</button>
     </div>
     <div class="card"><div class="cb">
       <div id="leaderStatusWrap">
@@ -1338,34 +1267,34 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 </div></div></div>
 
 <!-- ══ 장비현황 ══ -->
-<div <!-- ══ 장비현황 ══ -->
 <div id="sEquipment" class="scr" style="display:none">
   <div class="pg-hd">
     <div><h1>🔧 장비현황</h1><small>장비 목록 엑셀 업로드 및 현황 조회</small></div>
     <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">← 메인</button>
   </div>
+
   <!-- 탭 -->
   <div style="display:flex;border-bottom:2px solid var(--g2)">
     <div id="eqT0" onclick="eqTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">현황 조회</div>
     <div id="eqT1" onclick="eqTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--g3);cursor:pointer">엑셀 업로드</div>
   </div>
-  <!-- 현황 조회 -->
+
+  <!-- 조회 탭 -->
   <div id="eqP0" style="padding:13px">
-    <input type="hidden" id="eqViewMode" value="list">
-    <input type="hidden" id="eqActiveGroup" value="">
-    <div style="display:flex;gap:7px;margin-bottom:8px">
-      <input type="text" id="eqSearch" oninput="renderEquipment()" placeholder="🔍 장비명, 관리번호 검색..." style="flex:1;padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white">
+    <!-- 검색 -->
+    <div style="display:flex;gap:7px;margin-bottom:10px">
+      <input type="text" id="eqSearch" oninput="renderEquipment()" placeholder="🔍 장비명, 모델명 검색..." style="flex:1;padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white">
       <button onclick="loadEquipmentFromDB()" style="padding:9px 13px;background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--g5);cursor:pointer">🔄</button>
     </div>
-    <div style="display:flex;gap:7px;margin-bottom:10px">
-      <button id="eqBtnGroup" onclick="setEqViewMode('group')" style="flex:1;padding:8px;background:var(--g2);color:var(--g5);border:none;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer">🗂️ 종류별 카드</button>
-      <button id="eqBtnList" onclick="setEqViewMode('list')" style="flex:1;padding:8px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer">📋 목록</button>
-    </div>
+    <!-- 업로드 정보 -->
     <div id="eqUploadInfo" style="font-size:11px;color:var(--g4);margin-bottom:8px;text-align:right"></div>
+    <!-- 통계 -->
     <div id="eqStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px"></div>
+    <!-- 테이블 -->
     <div id="eqTable" style="overflow-x:auto"></div>
   </div>
-  <!-- 엑셀 업로드 -->
+
+  <!-- 업로드 탭 -->
   <div id="eqP1" style="display:none;padding:13px">
     <div class="card" style="margin-bottom:12px"><div class="cb">
       <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:8px">📋 엑셀 파일 업로드</div>
@@ -1376,6 +1305,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       </div>
       <input type="file" id="eqFileInput" accept=".xlsx,.xls" onchange="previewEquipmentFile(this)" style="width:100%;padding:10px;border:2px dashed var(--g2);border-radius:var(--r2);font-size:12px;background:var(--g1)">
     </div></div>
+    <!-- 미리보기 -->
     <div id="eqPreview" style="display:none">
       <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:8px">미리보기 (상위 5행)</div>
       <div id="eqPreviewTable" style="overflow-x:auto;margin-bottom:12px"></div>
@@ -1384,20 +1314,17 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   </div>
 </div>
 
-
-
 <!-- ══ 폐기물 처리현황 ══ -->
 <div id="sWaste" class="scr" style="display:none">
   <div class="pg-hd">
     <div><h1>♻️ 폐기물 처리현황</h1><small>소각·재활용 처리량 입력 및 이력</small></div>
     <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">← 메인</button>
-  
+  </div>
 
   <!-- 탭 -->
   <div style="display:flex;border-bottom:2px solid var(--g2)">
     <div id="wasteT0" onclick="wasteTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">이력 조회</div>
     <div id="wasteT1" onclick="wasteTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--g3);cursor:pointer">입력</div>
-    <div id="wasteT2" onclick="wasteTab(2);renderWasteSummary()" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--g3);cursor:pointer">합계</div>
   </div>
 
   <!-- 이력 조회 탭 -->
@@ -1406,10 +1333,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div style="display:flex;gap:7px;align-items:center">
         <input type="month" id="wasteFilterMonth" onchange="renderWasteList()" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
         <select id="wasteFilterTeam" onchange="renderWasteList()" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
-          <option value="">전체 차량</option>
-          <option value="88러 7396">88러 7396</option>
-          <option value="88러 7397">88러 7397</option>
-          <option value="809나 1745">809나 1745</option>
+          <option value="">전체 팀</option>
         </select>
         <button onclick="loadWasteFromDB()" style="padding:8px 13px;background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--g5);cursor:pointer">🔄</button>
         <button onclick="downloadWasteExcel()" style="padding:8px 13px;background:var(--teal-bg);border:1.5px solid var(--teal);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--teal2);cursor:pointer">📥</button>
@@ -1428,11 +1352,25 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div class="fg"><label class="f-lbl">일자 <span style="color:var(--danger)">*</span></label>
         <input type="date" id="wasteDate" class="ri" style="margin-bottom:0">
       </div>
-      <div class="fg" style="margin-top:10px"><label class="f-lbl">차량번호 <span style="color:var(--danger)">*</span></label>
-        <div class="rg" id="wasteVehicleGrp" style="flex-wrap:wrap;gap:8px">
-          <div class="rp" onclick="pickWasteVehicle(this)" data-val="88러 7396" style="font-size:13px;padding:9px 15px;font-weight:700">88러 7396</div>
-          <div class="rp" onclick="pickWasteVehicle(this)" data-val="88러 7397" style="font-size:13px;padding:9px 15px;font-weight:700">88러 7397</div>
-          <div class="rp" onclick="pickWasteVehicle(this)" data-val="809나 1745" style="font-size:13px;padding:9px 15px;font-weight:700">809나 1745</div>
+      <div class="fg" style="margin-top:10px"><label class="f-lbl">근무조 <span style="color:var(--danger)">*</span></label>
+        <div class="rg" id="wasteShiftGrp">
+          <div class="rp on" onclick="pickWasteShift(this)" data-val="오전">오전</div>
+          <div class="rp" onclick="pickWasteShift(this)" data-val="오후">오후</div>
+          <div class="rp" onclick="pickWasteShift(this)" data-val="야간">야간</div>
+        </div>
+      </div>
+      <div class="fg" style="margin-top:10px"><label class="f-lbl">팀 <span style="color:var(--danger)">*</span></label>
+        <div class="rg" id="wasteTeamGrp" style="flex-wrap:wrap;gap:6px">
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="1팀">1팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="2팀">2팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="3팀">3팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="4팀">4팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="5팀">5팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="6팀">6팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="7팀">7팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="8팀">8팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="9팀">9팀</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="10팀">10팀</div>
         </div>
       </div>
     </div></div>
@@ -1468,20 +1406,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     </div></div>
     <button onclick="saveWaste()" class="btn-prim" style="width:100%">♻️ 폐기물 처리현황 저장</button>
   </div>
-  <div id="wasteP2" style="display:none;padding:13px">
-    <div style="display:flex;gap:8px;margin-bottom:13px">
-      <button onclick="setWasteSummaryMode('day')" id="wSumDay" style="flex:1;padding:9px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer">📅 일별</button>
-      <button onclick="setWasteSummaryMode('month')" id="wSumMonth" style="flex:1;padding:9px;background:var(--g2);color:var(--g5);border:none;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer">📆 월별</button>
-      <button onclick="setWasteSummaryMode('year')" id="wSumYear" style="flex:1;padding:9px;background:var(--g2);color:var(--g5);border:none;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer">📊 연간</button>
-    </div>
-    <div id="wasteSummaryBody"><div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">기간을 선택해주세요</div></div>
-  </div>
-  </div>
 </div>
-</div>
-
-
-
 
 <!-- ══ AI 챗봇 ══ -->
 <div id="sChat" class="scr">
@@ -1499,10 +1424,6 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 
   <!-- 탭0: 사규 목록 -->
   <div id="regP0" style="padding:13px">
-    <div style="display:flex;gap:7px;margin-bottom:10px">
-      <input type="text" id="regSearch" placeholder="🔍 사규명 검색..." oninput="renderRegList()" style="flex:1;padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white">
-      <button onclick="loadRegList()" style="padding:9px 13px;background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--g5);cursor:pointer">🔄</button>
-    </div>
     <div id="regListWrap">
       <div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">사규를 불러오는 중...</div>
     </div>
@@ -2026,7 +1947,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div style="display:flex;flex-direction:column;gap:9px">
         <div class="dl-item" onclick="dlCSV('all')">
           <div class="dl-ico">📋</div>
-          <div><div class="dl-title">일별 운영현황 전체</div><div class="dl-sub">인력+인수인계+차량+민원+사고+습득물+폐기물+KPI (.xlsx)</div></div>
+          <div><div class="dl-title">일별 운영현황 전체</div><div class="dl-sub">인력+인수인계+민원+사고 (.xlsx)</div></div>
         </div>
         <div class="dl-item" onclick="dlCSV('mp')">
           <div class="dl-ico">👥</div>
@@ -2043,30 +1964,6 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <div class="dl-item" onclick="dlCSV('voc')">
           <div class="dl-ico">📞</div>
           <div><div class="dl-title">ARS 민원</div><div class="dl-sub">민원 접수 및 처리현황 (.xlsx)</div></div>
-        </div>
-        <div class="dl-item" onclick="dlCSV('ind')">
-          <div class="dl-ico">🦺</div>
-          <div><div class="dl-title">산업재해</div><div class="dl-sub">재해 접수 이력 (.xlsx)</div></div>
-        </div>
-        <div class="dl-item" onclick="downloadLostExcel()">
-          <div class="dl-ico">🎒</div>
-          <div><div class="dl-title">습득물 관리</div><div class="dl-sub">습득물 접수 및 처리현황 (.xlsx)</div></div>
-        </div>
-        <div class="dl-item" onclick="downloadWasteExcel()">
-          <div class="dl-ico">♻️</div>
-          <div><div class="dl-title">폐기물 처리현황</div><div class="dl-sub">소각·재활용 처리량 이력 (.xlsx)</div></div>
-        </div>
-        <div class="dl-item" onclick="downloadKpiExcel()">
-          <div class="dl-ico">📊</div>
-          <div><div class="dl-title">KPI 지표</div><div class="dl-sub">월별 성과지표 현황 (.xlsx)</div></div>
-        </div>
-        <div class="dl-item" onclick="downloadFacilExcel()">
-          <div class="dl-ico">🏢</div>
-          <div><div class="dl-title">시설물 현황</div><div class="dl-sub">등록 시설물 목록 (.xlsx)</div></div>
-        </div>
-        <div class="dl-item" onclick="downloadNoticeExcel()">
-          <div class="dl-ico">📢</div>
-          <div><div class="dl-title">공지사항</div><div class="dl-sub">전체 공지 이력 (.xlsx)</div></div>
         </div>
       </div>
     </div></div>
@@ -2285,52 +2182,52 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <div style="font-size:12px;font-weight:700;color:var(--danger);margin-bottom:4px">⚠️ 주의사항</div>
         <div style="font-size:11px;color:var(--g5);line-height:1.7">초기화된 데이터는 <b>복구가 불가능</b>합니다.<br>초기화할 항목을 선택 후 확인 버튼을 눌러주세요.</div>
       </div>
-      <!-- 체크박스 목록 2열 그리드 -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:16px">
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_mp">
-          <input type="checkbox" id="rst_mp" style="width:16px;height:16px;accent-color:var(--danger);cursor:pointer;flex-shrink:0" onchange="rstCheckChange()">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">👥 인력현황</div><div style="font-size:10px;color:var(--g4)">금일 입력 데이터</div></div>
+      <!-- 체크박스 목록 -->
+      <div style="display:flex;flex-direction:column;gap:9px;margin-bottom:16px">
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_mp">
+          <input type="checkbox" id="rst_mp" style="width:18px;height:18px;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">👥 인력현황</div><div style="font-size:10px;color:var(--g4)">금일 입력 데이터, 조장 입력 기록</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_ho">
-          <input type="checkbox" id="rst_ho" style="width:16px;height:16px;accent-color:var(--danger);cursor:pointer;flex-shrink:0" onchange="rstCheckChange()">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">🔄 인수인계</div><div style="font-size:10px;color:var(--g4)">전체 이력</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_ho">
+          <input type="checkbox" id="rst_ho" style="width:18px;height:18px;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">🔄 인수인계</div><div style="font-size:10px;color:var(--g4)">전체 인수인계 기록</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_ind">
-          <input type="checkbox" id="rst_ind" style="width:16px;height:16px;accent-color:var(--danger);cursor:pointer;flex-shrink:0" onchange="rstCheckChange()">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">🚑 산업재해</div><div style="font-size:10px;color:var(--g4)">전체 이력</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_ind">
+          <input type="checkbox" id="rst_ind" style="width:18px;height:18px;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">🚑 산업재해</div><div style="font-size:10px;color:var(--g4)">전체 산업재해 이력</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_veh">
-          <input type="checkbox" id="rst_veh" style="width:16px;height:16px;accent-color:var(--danger);cursor:pointer;flex-shrink:0" onchange="rstCheckChange()">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">🚗 차량운행</div><div style="font-size:10px;color:var(--g4)">전체 이력</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_veh">
+          <input type="checkbox" id="rst_veh" style="width:18px;height:18px;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">🚗 차량운행기록</div><div style="font-size:10px;color:var(--g4)">전체 차량운행 이력</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_kpi">
-          <input type="checkbox" id="rst_kpi" style="width:16px;height:16px;accent-color:var(--danger);cursor:pointer;flex-shrink:0" onchange="rstCheckChange()">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">📊 KPI</div><div style="font-size:10px;color:var(--g4)">전체 지표 데이터</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_kpi">
+          <input type="checkbox" id="rst_kpi" style="width:18px;height:18px;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">📊 과업평가지표</div><div style="font-size:10px;color:var(--g4)">전체 지표 입력 데이터</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_users">
-          <input type="checkbox" id="rst_users" style="width:16px;height:16px;accent-color:var(--danger);cursor:pointer;flex-shrink:0" onchange="rstCheckChange()">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">👤 가입사용자</div><div style="font-size:10px;color:var(--g4)">사용자 목록</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_users">
+          <input type="checkbox" id="rst_users" style="width:18px;height:18px;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">👤 가입 사용자</div><div style="font-size:10px;color:var(--g4)">승인된 사용자 목록 (테스트 계정 제외)</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
-          <input type="checkbox" id="rst_voc" style="width:16px;height:16px;accent-color:var(--danger);cursor:pointer;flex-shrink:0" onchange="rstCheckChange()">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">📞 ARS 민원</div><div style="font-size:10px;color:var(--g4)">전체 이력</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
+          <input type="checkbox" id="rst_voc" style="width:18px;height:18px;accent-color:var(--teal);cursor:pointer">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">📞 ARS 민원</div><div style="font-size:10px;color:var(--g4)">전체 민원 접수 이력</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
-          <input type="checkbox" id="rst_lost" style="width:16px;height:16px;accent-color:var(--danger);cursor:pointer;flex-shrink:0" onchange="rstCheckChange()">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">🎒 습득물</div><div style="font-size:10px;color:var(--g4)">전체 이력</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
+          <input type="checkbox" id="rst_lost" style="width:18px;height:18px;accent-color:var(--teal);cursor:pointer">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">🎒 습득물 관리</div><div style="font-size:10px;color:var(--g4)">전체 습득물 이력</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
-          <input type="checkbox" id="rst_waste" style="width:16px;height:16px;accent-color:var(--danger);cursor:pointer;flex-shrink:0" onchange="rstCheckChange()">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">♻️ 폐기물</div><div style="font-size:10px;color:var(--g4)">처리 이력</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
+          <input type="checkbox" id="rst_waste" style="width:18px;height:18px;accent-color:var(--teal);cursor:pointer">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">♻️ 폐기물 처리현황</div><div style="font-size:10px;color:var(--g4)">전체 폐기물 처리 이력</div></div>
         </label>
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
-          <input type="checkbox" id="rst_equipment" style="width:16px;height:16px;accent-color:var(--danger);cursor:pointer;flex-shrink:0" onchange="rstCheckChange()">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">🔧 장비현황</div><div style="font-size:10px;color:var(--g4)">장비 데이터</div></div>
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
+          <input type="checkbox" id="rst_equipment" style="width:18px;height:18px;accent-color:var(--teal);cursor:pointer">
+          <div><div style="font-size:13px;font-weight:700;color:var(--g7)">🔧 장비현황</div><div style="font-size:10px;color:var(--g4)">업로드된 장비 데이터</div></div>
         </label>
-        <!-- 전체 선택 - 2칸 전체 차지 -->
-        <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--danger-bg);border-radius:var(--r2);border:1.5px solid rgba(217,64,64,.3);cursor:pointer;grid-column:1/-1">
-          <input type="checkbox" id="rst_all" style="width:16px;height:16px;accent-color:var(--danger);cursor:pointer;flex-shrink:0" onchange="rstSelectAll(this)">
-          <div><div style="font-size:12px;font-weight:700;color:var(--danger)">⚠️ 전체 선택</div><div style="font-size:10px;color:var(--danger)">위 항목 모두 초기화</div></div>
+        <!-- 전체 선택 -->
+        <label style="display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--danger-bg);border-radius:var(--r2);border:1.5px solid rgba(217,64,64,.3);cursor:pointer;margin-top:4px">
+          <input type="checkbox" id="rst_all" style="width:18px;height:18px;accent-color:var(--danger);cursor:pointer" onchange="rstSelectAll(this)">
+          <div><div style="font-size:13px;font-weight:700;color:var(--danger)">⚠️ 전체 선택</div><div style="font-size:10px;color:var(--danger)">위 항목 모두 초기화</div></div>
         </label>
       </div>
       <!-- 확인 문구 입력 -->
@@ -2649,59 +2546,14 @@ function pickShift(el){
   document.querySelectorAll('#shiftGrp .rp').forEach(function(p){p.classList.remove('on');});
   el.classList.add('on');
   updateMyTeamGrp();
-  toggleNightForm();
-  // 야간 폼 초기화
-  if(el.textContent.trim()==='야간'){
-    ['ns_wax','ns_carpet','ns_pbb','ns_es','ns_toilet','ns_stone'].forEach(function(id){
-      var e=document.getElementById(id); if(e) e.value='';
-    });
-    calcNightTotal();
-  }
 }
 function calcMp(){
   let s=0;document.querySelectorAll('#mpBody .mp-inp').forEach(i=>s+=parseInt(i.value)||0);
   const el=document.getElementById('mpTot');el.textContent=s;el.style.color=s>0?'var(--teal)':'var(--g3)';
 }
-
-// 야간 특별작업 합계 계산
-function calcNightTotal(){
-  var ids=['ns_wax','ns_carpet','ns_pbb','ns_es','ns_toilet','ns_stone'];
-  var total=ids.reduce(function(s,id){return s+(parseInt(document.getElementById(id).value)||0);},0);
-  var el=document.getElementById('nightTot');
-  if(el){el.textContent=total;el.style.color=total>0?'#6B21A8':'var(--g3)';}
-  var mpTot=document.getElementById('mpTot');
-  if(mpTot){mpTot.textContent=total;mpTot.style.color=total>0?'var(--teal)':'var(--g3)';}
-}
-
-// 야간 여부 체크
-function isNightShift(){
-  var sel=document.querySelector('#shiftGrp .rp.on');
-  return sel&&sel.textContent.trim()==='야간';
-}
-
-// 야간 특별작업 폼 표시/숨김
-function toggleNightForm(){
-  var night=isNightShift();
-  var floorCard=document.getElementById('mpFloorCard');
-  var nightCard=document.getElementById('nightSpecialCard');
-  if(floorCard) floorCard.style.display=night?'none':'block';
-  if(nightCard) nightCard.style.display=night?'block':'none';
-  if(!night){
-    // 주간: mpTot을 층별 합산으로
-    calcMp();
-  } else {
-    // 야간: nightTot으로
-    calcNightTotal();
-  }
-}
 function subMp(){
   const t=document.getElementById('mpTot').textContent;
   if(!t||t==='0'){toast('인원을 입력해주세요');return;}
-  // 야간이면 nightTot도 확인
-  if(isNightShift()){
-    var nt=document.getElementById('nightTot');
-    if(!nt||!parseInt(nt.textContent)){toast('야간 특별작업 인원을 입력해주세요');return;}
-  }
   const sh=(function(){var _el=document.querySelector('#shiftGrp .rp.on');return _el?_el.textContent:undefined;})()||'해당';
   // 조장 1일 1회 입력 제한 체크
   if(me&&me.role==='leader'){
@@ -2783,18 +2635,20 @@ function subHO(){
   const pMap={'오전팀':'pill-am','오후팀':'pill-pm','야간팀':'pill-nt'};
   const avC={'오전팀':'var(--navy)','오후팀':'var(--teal2)','야간팀':'#6B21A8'};
   const toNm=toMap[sNm];
-  const fE=document.getElementById('hF');
+  const fE=document.getElementById('hF'),cE=document.getElementById('hC');
   const dE=document.getElementById('hD'),aE=document.getElementById('hA'),eE=document.getElementById('hE');
   const fT=(fE&&fE.classList.contains('show')&&fE.value?fE.value:'없음');
+  const cT=(cE&&cE.classList.contains('show')&&cE.value?cE.value:'없음');
   const dT=(dE&&dE.classList.contains('show')&&dE.value?dE.value:'없음');
   const aT=(aE&&aE.classList.contains('show')&&aE.value?aE.value:'없음');
   const eT=(eE&&eE.classList.contains('show')&&eE.value)?eE.value:'이상없음';
   if(aT!=='없음'){const e=document.getElementById('dAcc');if(e)e.textContent=parseInt(e.textContent||0)+1;const t=document.getElementById('dAccT');if(t)t.textContent=parseInt(t.textContent||0)+1;}
+  if(cT!=='없음'){const e=document.getElementById('dComp');if(e)e.textContent=parseInt(e.textContent||0)+1;const t=document.getElementById('dCompT');if(t)t.textContent=parseInt(t.textContent||0)+1;}
   toast('✓ 인수인계 제출 완료!');
   // 폼 초기화
   document.querySelectorAll('#hoSG .rp').forEach(p=>p.classList.remove('on'));
   document.getElementById('hoW').style.display='none';
-  ['hF','hD','hA','hE','hSp'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';e.classList.remove('show');}});
+  ['hF','hC','hD','hA','hE','hSp'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';e.classList.remove('show');}});
   var hEtcEl=document.getElementById('hEtc');if(hEtcEl)hEtcEl.value='';
   ['hN'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   document.querySelectorAll('#hoP4 .fg').forEach(g=>{const ps=g.querySelectorAll('.rp');ps.forEach(p=>p.classList.remove('on','on-d'));if(ps[0])ps[0].classList.add('on');});
@@ -2803,6 +2657,7 @@ function subHO(){
   const ts=(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
   let fields='';
   if(fT!=='없음')fields+=`<div class="ho-f"><div class="ho-lbl">🔧 시설물 고장</div><div class="ho-val">${fT}</div></div>`;
+  if(cT!=='없음')fields+=`<div class="ho-f"><div class="ho-lbl">📢 민원</div><div class="ho-val">${cT}</div></div>`;
   if(dT!=='없음')fields+=`<div class="ho-f"><div class="ho-lbl">⚠️ 위험구역</div><div class="ho-val">${dT}</div></div>`;
   if(aT!=='없음')fields+=`<div class="ho-f"><div class="ho-lbl">🚨 안전사고</div><div class="ho-val">${aT}</div></div>`;
   if(eT!=='이상없음')fields+=`<div class="ho-f"><div class="ho-lbl">🚛 장비·차량</div><div class="ho-val">${eT}</div></div>`;
@@ -2821,6 +2676,7 @@ function subHO(){
     author: me?me.name:'작성자',
     team: me?me.team:'',
     facility: fT!=='없음'?fT:null,
+    complaint: cT!=='없음'?cT:null,
     danger: dT!=='없음'?dT:null,
     accident: aT!=='없음'?aT:null,
     equipment: eT!=='이상없음'?eT:null,
@@ -3220,49 +3076,6 @@ async function dlCSV(type){
       }
     }
 
-    // ── 습득물 ──
-    if(type==='lost'||type==='all'){
-      var rl=await sb.from('lost_found').select('*').order('created_at',{ascending:false});
-      if(rl.data&&rl.data.length){
-        var lostRows=[['연번','접수일시','작성자','발견자사번','발견자이름','발견위치','발견물품','처리현황','기타']];
-        rl.data.forEach(function(d,i){
-          lostRows.push([i+1,d.created_at?toKSTDateTime(d.created_at):'',d.writer||'',d.finder_id||'',d.finder_name||'',d.location||'',d.item||'',d.status||'',d.note||'']);
-        });
-        var wsl=XLSX.utils.aoa_to_sheet(lostRows);
-        wsl['!cols']=[{wch:6},{wch:18},{wch:12},{wch:10},{wch:10},{wch:20},{wch:30},{wch:12},{wch:20}];
-        wb.SheetNames.push('습득물관리');wb.Sheets['습득물관리']=wsl;
-      }
-    }
-
-    // ── 폐기물 ──
-    if(type==='waste'||type==='all'){
-      var rw=await sb.from('waste_data').select('*').order('waste_date',{ascending:false});
-      if(rw.data&&rw.data.length){
-        var wasteRows=[['일자','근무조','팀','작성자','생활(t)','합성수지(t)','음식물(t)','목재(t)','소각합계(t)','종이(t)','플라스틱(t)','캔고철(t)','병유리(t)','기타재활용(t)','재활용합계(t)','총합계(t)','기타']];
-        rw.data.forEach(function(d){
-          var inc=(d.incineration_living||0)+(d.incineration_synthetic||0)+(d.incineration_food||0)+(d.incineration_wood||0);
-          var rec=(d.recycle_paper||0)+(d.recycle_plastic||0)+(d.recycle_can||0)+(d.recycle_glass||0)+(d.recycle_etc||0);
-          wasteRows.push([d.waste_date,d.shift,d.team_code,d.writer,d.incineration_living||0,d.incineration_synthetic||0,d.incineration_food||0,d.incineration_wood||0,inc,d.recycle_paper||0,d.recycle_plastic||0,d.recycle_can||0,d.recycle_glass||0,d.recycle_etc||0,rec,inc+rec,d.note||'']);
-        });
-        var wsw=XLSX.utils.aoa_to_sheet(wasteRows);
-        wb.SheetNames.push('폐기물처리현황');wb.Sheets['폐기물처리현황']=wsw;
-      }
-    }
-
-    // ── KPI ──
-    if(type==='kpi'||type==='all'){
-      var rk=await sb.from('kpi_data').select('*').order('year',{ascending:true}).order('month',{ascending:true});
-      if(rk.data&&rk.data.length){
-        var kpiRows=[['연도','월','VOC+민원(건)','민원메모','지적건수','산재건수','적절성(%)','처리율(%)','만족도(%)','ATP(%)','특이지표명','비고']];
-        rk.data.forEach(function(d){
-          kpiRows.push([d.year||'',d.month||'',d.kpi1!==null?d.kpi1:'',d.kpi1_memo||'',d.kpi2!==null?d.kpi2:'',d.kpi3!==null?d.kpi3:'',d.kpi4!==null?d.kpi4:'',d.kpi5!==null?d.kpi5:'',d.kpi5!==null?d.kpi5:'',d.kpi6!==null?d.kpi6:'',d.kpi6_label||'',d.note||'']);
-        });
-        var wsk=XLSX.utils.aoa_to_sheet(kpiRows);
-        wsk['!cols']=[{wch:8},{wch:6},{wch:12},{wch:30},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:14},{wch:20}];
-        wb.SheetNames.push('KPI지표');wb.Sheets['KPI지표']=wsk;
-      }
-    }
-
     if(wb.SheetNames.length===0){toast('다운로드할 데이터가 없습니다');return;}
 
     // SheetJS로 xlsx 생성
@@ -3277,107 +3090,6 @@ async function dlCSV(type){
   }catch(e){console.error(e);toast('오류: '+e.message);}
 }
 function _dlCSV_old(type){if(!me||me.role!=='admin'){toast('다운로드 권한이 없습니다');return;}toast(type+' 다운로드 중...');setTimeout(()=>{const rows=[['T1환경미화사업부 '+type],['날짜','구역','B2F','B1F','1F','2F','3F','4F','집하장','소계']];const zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];const from=new Date('2026-05-01'),to=new Date('2026-05-31');for(let d=new Date(from);d<=to&&rows.length<200;d.setDate(d.getDate()+1)){zones.forEach(z=>{const vs=[2,5,8,7,6,5,2].map(v=>v+Math.floor(Math.random()*3));rows.push([d.toISOString().slice(0,10),z,...vs,vs.reduce((a,b)=>a+b,0)]);});}const csv='\uFEFF'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='T1_'+type+'.csv';a.click();URL.revokeObjectURL(url);toast('✓ 다운로드 완료!');},600);}
-
-// ── KPI 지표 다운로드 ──
-async function downloadKpiExcel(){
-  if(!me||me.role!=='admin'){toast('최고관리자만 다운로드할 수 있습니다');return;}
-  toast('📥 KPI 엑셀 다운로드 준비 중...');
-  try{
-    var res=await sb.from('kpi_data').select('*').order('year',{ascending:true}).order('month',{ascending:true});
-    if(!res.data||!res.data.length){toast('다운로드할 KPI 데이터가 없습니다');return;}
-    var rows=[['연도','월','VOC+민원(건)','민원메모','지적건수(건)','산업재해(건)','청결도(%)','위생도(%)','특이지표명','특이지표값','비고']];
-    res.data.forEach(function(d){
-      rows.push([
-        d.year||'',d.month||'',
-        d.kpi1!==null?d.kpi1:'',d.kpi1_memo||'',
-        d.kpi2!==null?d.kpi2:'',
-        d.kpi3!==null?d.kpi3:'',
-        d.kpi4!==null?d.kpi4:'',
-        d.kpi5!==null?d.kpi5:'',
-        d.kpi6_label||'',d.kpi6!==null?d.kpi6:'',
-        d.note||''
-      ]);
-    });
-    var wb=XLSX.utils.book_new();
-    var ws=XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols']=[{wch:8},{wch:6},{wch:14},{wch:30},{wch:12},{wch:12},{wch:10},{wch:10},{wch:14},{wch:12},{wch:20}];
-    XLSX.utils.book_append_sheet(wb,ws,'KPI지표');
-    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-    XLSX.writeFile(wb,'T1_KPI지표_'+today+'.xlsx');
-    toast('✅ KPI 엑셀 다운로드 완료');
-  }catch(e){console.error(e);toast('오류: '+e.message);}
-}
-
-// ── 시설물 현황 다운로드 ──
-async function downloadFacilExcel(){
-  if(!me||me.role!=='admin'){toast('최고관리자만 다운로드할 수 있습니다');return;}
-  toast('📥 시설물 현황 다운로드 준비 중...');
-  try{
-    var res=await sb.from('facility_data').select('*');
-    if(!res.data||!res.data.length){toast('다운로드할 시설물 데이터가 없습니다');return;}
-    var wb=XLSX.utils.book_new();
-    var floorOrder=['B2F','B1F','1F','2F','3F','4F'];
-    // 시설유형별 시트 생성
-    res.data.forEach(function(row){
-      var type=row.facility_type||'기타';
-      var d=row.data||{};
-      var uploadDate=row.upload_date||'';
-      var rows=[['T1 환경미화사업부 시설현황 - '+type],['업로드일: '+uploadDate],[]];
-      // 총계 요약
-      rows.push(['구분','L/S','A/S','합계']);
-      rows.push(['총계', d.ls||0, d.as||0, d.total||0]);
-      rows.push([]);
-      // 층별 데이터
-      if(d.floors && typeof d.floors==='object'){
-        rows.push(['층','L/S','A/S','합계']);
-        floorOrder.forEach(function(fl){
-          var fdata=d.floors[fl];
-          if(fdata){
-            var ls=typeof fdata==='object'?(fdata.ls||0):0;
-            var as=typeof fdata==='object'?(fdata.as||0):0;
-            rows.push([fl, ls, as, ls+as]);
-          }
-        });
-      }
-      var sheetName=type.length>31?type.slice(0,31):type;
-      var ws=XLSX.utils.aoa_to_sheet(rows);
-      ws['!cols']=[{wch:10},{wch:10},{wch:10},{wch:10}];
-      XLSX.utils.book_append_sheet(wb,ws,sheetName);
-    });
-    if(wb.SheetNames.length===0){toast('다운로드할 데이터가 없습니다');return;}
-    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-    XLSX.writeFile(wb,'T1_시설물현황_'+today+'.xlsx');
-    toast('✅ 시설물 현황 다운로드 완료 ('+wb.SheetNames.length+'종)');
-  }catch(e){console.error(e);toast('오류: '+e.message);}
-}
-
-// ── 공지사항 다운로드 ──
-async function downloadNoticeExcel(){
-  if(!me||me.role!=='admin'){toast('최고관리자만 다운로드할 수 있습니다');return;}
-  toast('📥 공지사항 다운로드 준비 중...');
-  try{
-    var res=await sb.from('notices').select('*').order('created_at',{ascending:false});
-    if(!res.data||!res.data.length){toast('다운로드할 공지사항이 없습니다');return;}
-    var rows=[['연번','등록일시','제목','내용','작성자','대상']];
-    res.data.forEach(function(d,i){
-      rows.push([
-        i+1,
-        d.created_at?toKSTDateTime(d.created_at):'',
-        d.title||'',
-        d.content||'',
-        d.author||d.writer||'',
-        d.target||'전체'
-      ]);
-    });
-    var wb=XLSX.utils.book_new();
-    var ws=XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols']=[{wch:6},{wch:18},{wch:30},{wch:50},{wch:12},{wch:10}];
-    XLSX.utils.book_append_sheet(wb,ws,'공지사항');
-    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-    XLSX.writeFile(wb,'T1_공지사항_'+today+'.xlsx');
-    toast('✅ 공지사항 다운로드 완료');
-  }catch(e){console.error(e);toast('오류: '+e.message);}
-}
 
 // ─ 현재 근무인원 ─
 function updateStaff(){
@@ -3651,119 +3363,6 @@ function logMpInput(shift, leaderTeam){
 }
 
 // 메인 화면 조장 입력현황 렌더링
-// ─ 조장 입력현황 날짜 탭 전환 ─
-var leaderTabMode = 'today'; // 'today' | 'yesterday'
-function switchLeaderTab(mode){
-  leaderTabMode = mode;
-  var btnT=document.getElementById('lsTabToday');
-  var btnY=document.getElementById('lsTabYest');
-  if(mode==='today'){
-    if(btnT){btnT.style.background='var(--navy)';btnT.style.color='#fff';btnT.style.border='none';}
-    if(btnY){btnY.style.background='var(--g1)';btnY.style.color='var(--g4)';btnY.style.border='1.5px solid var(--g2)';}
-    renderLeaderStatus();
-  } else {
-    if(btnY){btnY.style.background='var(--navy)';btnY.style.color='#fff';btnY.style.border='none';}
-    if(btnT){btnT.style.background='var(--g1)';btnT.style.color='var(--g4)';btnT.style.border='1.5px solid var(--g2)';}
-    renderLeaderStatusYesterday();
-  }
-}
-
-// 전일 미입력 조장 조회
-async function renderLeaderStatusYesterday(){
-  var el=document.getElementById('leaderStatusWrap');
-  if(!el) return;
-  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">전일 데이터 조회 중...</div>';
-
-  // 전일 날짜 계산 (KST)
-  var now=new Date(Date.now()+9*3600000);
-  var yest=new Date(now);
-  yest.setDate(yest.getDate()-1);
-  var yestStr=yest.toISOString().slice(0,10);
-  var yestLabel=yest.toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
-
-  // 날짜 레이블 업데이트
-  var ldl2=document.getElementById('leaderDateLbl2');
-  if(ldl2) ldl2.textContent=yestLabel+' 입력현황';
-
-  try{
-    // 어제 날짜 mp_data 전체 조회
-    var res=await sb.from('mp_data').select('shift,team_code').eq('date',yestStr);
-    if(res.error) throw res.error;
-
-    // 입력된 팀코드 세트 구성
-    var doneByShift={오전:[],오후:[],야간:[]};
-    (res.data||[]).forEach(function(row){
-      var sh=row.shift;
-      if(doneByShift[sh] && doneByShift[sh].indexOf(row.team_code)===-1){
-        doneByShift[sh].push(row.team_code);
-      }
-    });
-
-    var shiftColors={오전:'var(--navy)',오후:'var(--teal2)',야간:'#6B21A8'};
-    var shiftBgs={오전:'var(--navy-bg)',오후:'var(--teal-bg)',야간:'#F3EEF8'};
-    var shiftIcons={오전:'🌅',오후:'☀️',야간:'🌙'};
-    var html='';
-    var totalMissing=[];
-
-    ['오전','오후','야간'].forEach(function(shift){
-      var leaders=LEADERS[shift]||[];
-      var done=doneByShift[shift]||[];
-      var missing=leaders.filter(function(l){ return done.indexOf(l.team)===-1; });
-      var doneCount=done.length;
-      var total=leaders.length;
-      var pct=total>0?Math.round(doneCount/total*100):0;
-      missing.forEach(function(l){ totalMissing.push({shift:shift, name:l.name, team:l.team}); });
-
-      html+='<div style="margin-bottom:14px">';
-      html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">';
-      html+='<div style="display:flex;align-items:center;gap:6px">';
-      html+='<span style="font-size:13px">'+shiftIcons[shift]+'</span>';
-      html+='<span style="font-size:12px;font-weight:700;color:'+shiftColors[shift]+'">'+shift+'팀</span>';
-      html+='</div>';
-      html+='<div style="display:flex;align-items:center;gap:6px">';
-      html+='<span style="font-size:13px;font-weight:900;color:'+(doneCount===total&&total>0?'var(--success)':shiftColors[shift])+'">'+doneCount+'/'+total+'</span>';
-      html+='<span style="font-size:10px;color:var(--g4)">입력</span>';
-      if(doneCount===total&&total>0) html+='<span style="font-size:11px">✅</span>';
-      html+='</div></div>';
-      // 진행 바
-      html+='<div style="background:var(--g2);border-radius:10px;height:7px;overflow:hidden;margin-bottom:8px">';
-      html+='<div style="height:100%;border-radius:10px;background:'+shiftColors[shift]+';width:'+pct+'%;transition:width .4s"></div>';
-      html+='</div>';
-      // 조장 칩
-      html+='<div style="display:flex;flex-wrap:wrap;gap:5px">';
-      leaders.forEach(function(l){
-        var isDone=done.indexOf(l.team)!==-1;
-        if(isDone){
-          html+='<div style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;background:'+shiftBgs[shift]+';color:'+shiftColors[shift]+';border:1.5px solid '+shiftColors[shift]+'40">✔ '+l.name+'</div>';
-        } else {
-          html+='<div style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;background:var(--danger-bg);color:var(--danger);border:1.5px solid var(--danger)40">✗ '+l.name+'</div>';
-        }
-      });
-      html+='</div></div>';
-    });
-
-    // 미입력 요약 박스
-    if(totalMissing.length>0){
-      html+='<div style="background:var(--danger-bg);border-radius:var(--r2);padding:11px 13px;border-left:3px solid var(--danger)">';
-      html+='<div style="font-size:12px;font-weight:800;color:var(--danger);margin-bottom:7px">⚠️ 전일 미입력 조장 '+totalMissing.length+'명</div>';
-      html+='<div style="display:flex;flex-direction:column;gap:4px">';
-      totalMissing.forEach(function(m){
-        html+='<div style="font-size:12px;color:var(--g6);display:flex;align-items:center;gap:6px">';
-        html+='<span style="font-size:10px;padding:2px 7px;border-radius:10px;background:rgba(220,38,38,0.12);color:var(--danger);font-weight:700">'+m.shift+'</span>';
-        html+='<span style="font-weight:600">'+m.name+'</span></div>';
-      });
-      html+='</div></div>';
-    } else {
-      html+='<div style="background:var(--success-bg);border-radius:var(--r2);padding:10px;text-align:center">';
-      html+='<span style="font-size:12px;font-weight:700;color:var(--success)">🎉 전일 전체 조장 입력 완료!</span></div>';
-    }
-
-    el.innerHTML=html;
-  }catch(e){
-    el.innerHTML='<div style="text-align:center;padding:16px;color:var(--danger);font-size:12px">⚠️ 조회 오류: '+e.message+'</div>';
-  }
-}
-
 function renderLeaderStatus(){
   var ldl2=document.getElementById('leaderDateLbl2');if(ldl2)ldl2.textContent=new Date(Date.now()+9*3600000).toLocaleDateString('ko-KR');
   var el=document.getElementById('leaderStatusWrap');
@@ -3844,7 +3443,6 @@ var mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
 var mpDataByShift={'오전':null,'오후':null,'야간':null};
 // 조장별 개별 저장: {오전:{1팀A:[[4][7]]}, ...}
 var mpDataByLeader={오전:{},오후:{},야간:{}};
-var nightSpecialData={}; // {팀코드: {wax,carpet,pbb,es,toilet,stone,total}}
 var vehData=[];
 var indPrevYear=0;
 var ZONES=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
@@ -3936,26 +3534,12 @@ function confirmMp(){
 
 
   // 입력값 수집
-  var newVals;
-  if(shKey==='야간'){
-    // 야간: 특별작업 6항목
-    var nsW=parseInt(document.getElementById('ns_wax').value)||0;
-    var nsC=parseInt(document.getElementById('ns_carpet').value)||0;
-    var nsP=parseInt(document.getElementById('ns_pbb').value)||0;
-    var nsE=parseInt(document.getElementById('ns_es').value)||0;
-    var nsT=parseInt(document.getElementById('ns_toilet').value)||0;
-    var nsS=parseInt(document.getElementById('ns_stone').value)||0;
-    var nsTotal=nsW+nsC+nsP+nsE+nsT+nsS;
-    // nightSpecial 형태로 저장 ({type:'night',...})
-    newVals={type:'night',wax:nsW,carpet:nsC,pbb:nsP,es:nsE,toilet:nsT,stone:nsS,total:nsTotal};
-  } else {
-    newVals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-    document.querySelectorAll('#mpBody tr').forEach(function(row,ri){
-      row.querySelectorAll('.mp-inp').forEach(function(inp,ci){
-        newVals[ri][ci]=parseInt(inp.value)||0;
-      });
+  var newVals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  document.querySelectorAll('#mpBody tr').forEach(function(row,ri){
+    row.querySelectorAll('.mp-inp').forEach(function(inp,ci){
+      newVals[ri][ci]=parseInt(inp.value)||0;
     });
-  }
+  });
 
   // 조장 팀코드 확인
   var myTeam=getSelectedTeam?getSelectedTeam():'';
@@ -3987,16 +3571,8 @@ function confirmMp(){
 
   var total=0;
   for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) total+=mpData[ri][ci];
-  var toastTotal=shKey==='야간'&&newVals&&newVals.type==='night'?newVals.total:total;
-  toast('✓ '+shKey+' '+(myTeam||'')+' 인력현황 입력! 금일 누계: '+toastTotal+'명');
+  toast('✓ '+shKey+' '+( myTeam||'' )+' 인력현황 입력! 금일 누계: '+total+'명');
   document.querySelectorAll('#mpBody .mp-inp').forEach(function(i){i.value='';});
-  // 야간 특별작업 폼 초기화
-  if(shKey==='야간'){
-    ['ns_wax','ns_carpet','ns_pbb','ns_es','ns_toilet','ns_stone'].forEach(function(id){
-      var e=document.getElementById(id); if(e) e.value='';
-    });
-    calcNightTotal();
-  }
   var el=document.getElementById('mpTot');if(el){el.textContent='0';el.style.color='var(--g3)';}
   // DB 저장 후 전체 데이터 다시 로드해서 화면 갱신
   var saveTeam=myTeam||('_'+shKey);
@@ -4007,21 +3583,14 @@ function confirmMp(){
 // 전체 합산 재계산
 function recalcMpData(){
   mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-  nightSpecialData={};
   ['오전','오후','야간'].forEach(function(shift){
     var leaderData=mpDataByLeader[shift]||{};
     Object.keys(leaderData).forEach(function(team){
       var vals=leaderData[team];
       if(!vals) return;
-      if(vals&&vals.type==='night'){
-        // 야간 특별작업 - 조별로 nightSpecialData에 저장
-        nightSpecialData[team]=vals;
-      } else if(Array.isArray(vals)&&Array.isArray(vals[0])){
-        // 주간 - 층별 배열 합산
-        for(var ri=0;ri<4;ri++)
-          for(var ci=0;ci<7;ci++)
-            mpData[ri][ci]+=vals[ri][ci];
-      }
+      for(var ri=0;ri<4;ri++)
+        for(var ci=0;ci<7;ci++)
+          mpData[ri][ci]+=vals[ri][ci];
     });
   });
 }
@@ -4076,40 +3645,18 @@ function updateFloorChart(){
   // flP_all 테이블
   var allTbl=document.querySelector('#flP_all table tbody');
   if(allTbl){
-    // 야간 특별작업 합계 계산
-    var nightTotal=0, nightWax=0, nightCarpet=0, nightPbb=0, nightEs=0, nightToilet=0, nightStone=0;
-    Object.keys(nightSpecialData||{}).forEach(function(team){
-      var d=nightSpecialData[team];
-      nightTotal+=d.total||0;
-      nightWax+=d.wax||0; nightCarpet+=d.carpet||0; nightPbb+=d.pbb||0;
-      nightEs+=d.es||0; nightToilet+=d.toilet||0; nightStone+=d.stone||0;
-    });
-    var newRows=[[ZONES[0]].concat(mpData[0]).concat([totals[0]]),[ZONES[1]].concat(mpData[1]).concat([totals[1]]),['L/S 소계'].concat(lsSub).concat([lsTotal]),[ZONES[2]].concat(mpData[2]).concat([totals[2]]),[ZONES[3]].concat(mpData[3]).concat([totals[3]]),['A/S 소계'].concat(asSub).concat([asTotal]),['주간 총계'].concat(colTot).concat([grandTotal])];
+    var newRows=[[ZONES[0]].concat(mpData[0]).concat([totals[0]]),[ZONES[1]].concat(mpData[1]).concat([totals[1]]),['L/S 소계'].concat(lsSub).concat([lsTotal]),[ZONES[2]].concat(mpData[2]).concat([totals[2]]),[ZONES[3]].concat(mpData[3]).concat([totals[3]]),['A/S 소계'].concat(asSub).concat([asTotal]),['전체 총계'].concat(colTot).concat([grandTotal])];
     var trs=allTbl.querySelectorAll('tr');
     newRows.forEach(function(rowData,ri){if(!trs[ri])return;var tds=trs[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
   }
   // 공통 테이블 갱신 함수
-  var allRows=[[ZONES[0]].concat(mpData[0]).concat([totals[0]]),[ZONES[1]].concat(mpData[1]).concat([totals[1]]),['L/S 소계'].concat(lsSub).concat([lsTotal]),[ZONES[2]].concat(mpData[2]).concat([totals[2]]),[ZONES[3]].concat(mpData[3]).concat([totals[3]]),['A/S 소계'].concat(asSub).concat([asTotal]),['주간 총계'].concat(colTot).concat([grandTotal])];
+  var allRows=[[ZONES[0]].concat(mpData[0]).concat([totals[0]]),[ZONES[1]].concat(mpData[1]).concat([totals[1]]),['L/S 소계'].concat(lsSub).concat([lsTotal]),[ZONES[2]].concat(mpData[2]).concat([totals[2]]),[ZONES[3]].concat(mpData[3]).concat([totals[3]]),['A/S 소계'].concat(asSub).concat([asTotal]),['전체 총계'].concat(colTot).concat([grandTotal])];
   // 메인 테이블 (#dHome = #flP_all 안)
   var mainTbl=document.querySelector('#dHome tbody');
   if(mainTbl){
     var trs2=mainTbl.querySelectorAll('tr');
     allRows.forEach(function(rowData,ri){if(!trs2[ri])return;var tds=trs2[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
   }
-  // 야간 특별작업 행 업데이트
-  var nightRow=document.getElementById('nightSpecialRow');
-  if(nightRow){
-    nightRow.style.display=nightTotal>0?'':'none';
-    var nsCell=document.getElementById('nightSpecialCells');
-    if(nsCell) nsCell.textContent='왁스 '+nightWax+' · 카페트 '+nightCarpet+' · PBB '+nightPbb+' · E/S '+nightEs+' · 화장실 '+nightToilet+' · 석재 '+nightStone;
-    var nsTot=document.getElementById('nightSpecialTotal');
-    if(nsTot) nsTot.textContent=nightTotal;
-  }
-  // 주간/야간 박스 업데이트
-  var dayBox=document.getElementById('staffDayBox');
-  var nightBox=document.getElementById('staffNightBox');
-  if(dayBox) dayBox.textContent=grandTotal;
-  if(nightBox) nightBox.textContent=nightTotal;
   // 인력현황 탭 > 전체현황 테이블 (#mpFullTable)
   var mpTbl=document.querySelector('#mpFullTable tbody');
   if(mpTbl){
@@ -4132,16 +3679,10 @@ function updateFloorChart(){
   });
   // 대시보드 카드
   var dashTot=document.getElementById('dashTotStaff');if(dashTot&&grandTotal>0)dashTot.textContent=grandTotal;
-  var totalAll=grandTotal+nightTotal;
   var curEl=document.getElementById('curStaff');var unitEl=document.getElementById('curUnit');
-  if(curEl){
-    if(totalAll>0){
-      curEl.textContent=totalAll;
-      if(unitEl) unitEl.textContent='명 (주간'+grandTotal+'+야간'+nightTotal+')';
-    } else if(grandTotal>0){
-      curEl.textContent=grandTotal;
-      if(unitEl) unitEl.textContent='명 (주간)';
-    }
+  if(curEl&&grandTotal>0){
+    curEl.textContent=grandTotal;
+    if(unitEl){var labels=[];if(mpDataByShift['오전'])labels.push('오전');if(mpDataByShift['오후'])labels.push('오후');if(mpDataByShift['야간'])labels.push('야간');unitEl.textContent='명 ('+(labels.length>0?labels.join('+')+'합계':'입력됨')+')';}
   }
 }
 
@@ -4452,27 +3993,16 @@ function updateMyTeamGrp(){
         h+='<div class="rp myteam-btn done" data-team="'+l.team+'" '+
            'style="font-size:12px;padding:7px 14px;background:'+bg+';color:'+color+';border-color:'+color+';font-weight:700;opacity:0.7">'+
            '✔ '+shortName+'</div>';
+      } else if(isLeaderOnly && isMe){
+        // 조장 - 내 팀: 자동선택 고정 (클릭해도 해제 불가)
+        h+='<div class="rp myteam-btn on" data-team="'+l.team+'" '+
+           'style="font-size:12px;padding:7px 14px;background:'+bg+';color:'+color+';border-color:'+color+';font-weight:700;cursor:default">'+
+           '✔ '+shortName+'</div>';
       } else if(isLeaderOnly){
-        // 조장 - 같은 팀 내 조는 선택 가능 (휴무/연차 대리입력), 다른 팀은 비활성
-        var myTeamNum=autoTeam?autoTeam.replace(/[A-Z조]/g,''):'';
-        var thisTeamNum=l.team.replace(/[A-Z조]/g,'');
-        var isSameTeam=(myTeamNum===thisTeamNum);
-        if(isSameTeam){
-          if(isMe){
-            h+='<div class="rp myteam-btn on" onclick="pickMyTeam(this)" data-team="'+l.team+'" '+
-               'style="font-size:12px;padding:7px 14px;background:'+bg+';color:'+color+';border-color:'+color+';font-weight:700">'+
-               '✔ '+shortName+'</div>';
-          } else {
-            h+='<div class="rp myteam-btn" onclick="pickMyTeam(this)" data-team="'+l.team+'" '+
-               'style="font-size:12px;padding:7px 14px" title="대리 입력">'+
-               shortName+'</div>';
-          }
-        } else {
-          // 다른 팀: 완전 비활성화
-          h+='<div class="rp myteam-btn" data-team="'+l.team+'" '+
-             'style="font-size:12px;padding:7px 14px;opacity:0.2;cursor:not-allowed;pointer-events:none" title="본인 팀 내에서만 대리입력 가능">'+
-             shortName+'</div>';
-        }
+        // 조장 - 다른 팀: 완전 비활성화
+        h+='<div class="rp myteam-btn" data-team="'+l.team+'" '+
+           'style="font-size:12px;padding:7px 14px;opacity:0.2;cursor:not-allowed;pointer-events:none" title="본인 팀만 입력 가능">'+
+           shortName+'</div>';
       } else {
         // admin/manager - 모두 선택 가능
         h+='<div class="rp myteam-btn" onclick="pickMyTeam(this)" data-team="'+l.team+'" '+
@@ -4503,7 +4033,6 @@ function autoSelectMyShiftTeam(){
 
   // 팀 버튼 자동 체크 (updateMyTeamGrp 후)
   updateMyTeamGrp();
-  toggleNightForm();
   setTimeout(function(){
     document.querySelectorAll('.myteam-btn').forEach(function(btn){
       if(btn.dataset.team===team && !btn.classList.contains('done')){
@@ -5089,35 +4618,18 @@ function openLeaderDataEdit(shift,team,name){
   if(title) title.textContent=name+' 입력값 수정 ('+shift+')';
   var body=document.getElementById('leaderDataEditBody');
   if(!body) return;
-
-  // 야간 조인 경우 (현재 저장값이 night 객체)
-  var cur=(mpDataByLeader[shift]&&mpDataByLeader[shift][team])||null;
-  var isNight=(shift==='야간')||(cur&&cur.type==='night');
-
-  if(isNight){
-    var nd=cur&&cur.type==='night'?cur:{wax:0,carpet:0,pbb:0,es:0,toilet:0,stone:0};
-    body.innerHTML=
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">'+
-      ['wax:왁스','carpet:카페트','pbb:PBB','es:E/S','toilet:화장실','stone:석재'].map(function(s){
-        var k=s.split(':')[0]; var lbl=s.split(':')[1];
-        return '<div><div style="font-size:11px;font-weight:700;color:#6B21A8;margin-bottom:4px">'+lbl+'</div>'+
-          '<input type="number" id="ledit_night_'+k+'" value="'+(nd[k]||0)+'" min="0" '+
-          'style="width:100%;padding:8px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;outline:none" onfocus="this.select()"></div>';
-      }).join('')+'</div>';
-    showM('leaderDataModal');
-    return;
-  }
-
   var zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
   var floors=['B2F','B1F','1F','2F','3F','4F','집하장'];
-  var curArr=cur&&Array.isArray(cur)?cur:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  // 현재 저장값 불러오기
+  var cur=(mpDataByLeader[shift]&&mpDataByLeader[shift][team])||
+          [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
   var rows='';
   zones.forEach(function(zone,ri){
     rows+='<tr style="border-bottom:1px solid var(--g1)">';
     rows+='<td style="font-size:11px;font-weight:600;color:var(--g6);padding:7px 6px">'+zone+'</td>';
     floors.forEach(function(fl,ci){
       rows+='<td style="padding:4px 3px;text-align:center">';
-      rows+='<input type="number" id="ledit_'+ri+'_'+ci+'" value="'+(curArr[ri][ci]||0)+'" min="0" '+
+      rows+='<input type="number" id="ledit_'+ri+'_'+ci+'" value="'+(cur[ri][ci]||0)+'" min="0" '+
         'style="width:36px;padding:5px 3px;border:1.5px solid var(--g2);border-radius:6px;font-size:12px;text-align:center;outline:none" '+
         'onfocus="this.select()">';
       rows+='</td>';
@@ -5131,39 +4643,23 @@ function openLeaderDataEdit(shift,team,name){
 function closeLeaderDataEdit(){hideM('leaderDataModal');}
 
 function saveLeaderDataEdit(){
-  var cur=(mpDataByLeader[editShift]&&mpDataByLeader[editShift][editTeam])||null;
-  var isNight=(editShift==='야간')||(cur&&cur.type==='night');
-  var newVals;
-
-  if(isNight){
-    // 야간: 6항목 객체
-    var keys=['wax','carpet','pbb','es','toilet','stone'];
-    var obj={type:'night'};
-    var tot=0;
-    keys.forEach(function(k){
-      var el=document.getElementById('ledit_night_'+k);
-      var v=el?parseInt(el.value)||0:0;
-      obj[k]=v; tot+=v;
-    });
-    obj.total=tot;
-    newVals=obj;
-  } else {
-    newVals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-    for(var ri=0;ri<4;ri++){
-      for(var ci=0;ci<7;ci++){
-        var el=document.getElementById('ledit_'+ri+'_'+ci);
-        newVals[ri][ci]=el?parseInt(el.value)||0:0;
-      }
+  var zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
+  var newVals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  for(var ri=0;ri<4;ri++){
+    for(var ci=0;ci<7;ci++){
+      var el=document.getElementById('ledit_'+ri+'_'+ci);
+      newVals[ri][ci]=el?parseInt(el.value)||0:0;
     }
   }
-
   if(!mpDataByLeader[editShift]) mpDataByLeader[editShift]={};
   mpDataByLeader[editShift][editTeam]=newVals;
+  // 전체 재계산
   recalcMpData();
   saveMpData();
   updateFloorChart();
   updateMpSummary();
   closeLeaderDataEdit();
+  // DB 저장 후 재로드 (완료 카운트 정확히 반영)
   saveMpToDB(editShift, editTeam, newVals).then(function(){ loadMpFromDB(); });
   toast('✅ '+editTeam+' 입력값이 수정되었습니다');
 }
@@ -6774,12 +6270,12 @@ function editHo(btn){
     teamBtns.forEach(function(b){ if(b.textContent.trim()===r.shift) b.classList.add('on'); });
     // 내용 채우기
     var hF=document.getElementById('hF'); if(hF) hF.value=r.facility||'';
-
+    var hC=document.getElementById('hC'); if(hC) hC.value=r.complaint||'';
     var hA=document.getElementById('hA'); if(hA) hA.value=r.accident||'';
     var hEtc=document.getElementById('hEtc'); if(hEtc) hEtc.value=r.notice||r.etc||'';
     // 토글 버튼 상태
     if(r.facility&&r.facility!=='없음'){ var fBtn=document.querySelector('[onclick*="togF"][onclick*="hF"][onclick*="true"]'); if(fBtn) togF(fBtn,'hF',true); }
-
+    if(r.complaint&&r.complaint!=='없음'){ var cBtn=document.querySelector('[onclick*="togF"][onclick*="hC"][onclick*="true"]'); if(cBtn) togF(cBtn,'hC',true); }
     if(r.accident&&r.accident!=='없음'){ var aBtn=document.querySelector('[onclick*="togF"][onclick*="hA"][onclick*="true"]'); if(aBtn) togF(aBtn,'hA',true); }
     // 수정 모드 표시
     var submitBtn=document.querySelector('#hoP4 .btn-prim');
@@ -6941,7 +6437,7 @@ async function loadKpiFromDB(){
       if(!kpiData[y]) kpiData[y]={};
       kpiData[y][m]={
         kpi1:row.kpi1!==null?row.kpi1:undefined,kpi2:row.kpi2!==null?row.kpi2:undefined,kpi3:row.kpi3!==null?row.kpi3:undefined,
-        kpi4:row.kpi4!==null?row.kpi4:undefined,kpi5:row.kpi5!==null?row.kpi5:undefined,kpi6:row.kpi6!==null?row.kpi6:undefined,kpi6Label:row.kpi6_label||undefined,
+        kpi4:row.kpi4!==null?row.kpi4:undefined,kpi5:row.kpi5!==null?row.kpi5:undefined,kpi6:row.kpi6!==null?row.kpi6:undefined,
         atpDetail:row.atp_detail,kpiNote:row.note,kpi1Memo:row.kpi1_memo
       };
     });
@@ -6955,7 +6451,6 @@ async function saveKpiToDB(y, m, entry){
       year:parseInt(y),month:m,
       kpi1:entry.kpi1!==undefined?entry.kpi1:null,kpi2:entry.kpi2!==undefined?entry.kpi2:null,kpi3:entry.kpi3!==undefined?entry.kpi3:null,
       kpi4:entry.kpi4!==undefined?entry.kpi4:null,kpi5:entry.kpi5!==undefined?entry.kpi5:null,kpi6:entry.kpi6!==undefined?entry.kpi6:null,
-      kpi6_label:entry.kpi6Label||null,
       atp_detail:entry.atpDetail||null,note:entry.kpiNote||null,kpi1_memo:entry.kpi1Memo||null
     };
     await sb.from('kpi_data').upsert(data,{onConflict:'year,month'});
@@ -7441,175 +6936,38 @@ function renderEquipment(){
   }
   var headers=equipmentData.headers||[];
   var rows=equipmentData.rows||[];
+  // 검색 필터
   var kw=(document.getElementById('eqSearch')||{}).value||'';
   var filtered=rows;
   if(kw){
     var kl=kw.toLowerCase();
     filtered=rows.filter(function(r){ return r.some(function(c){ return String(c||'').toLowerCase().includes(kl); }); });
   }
-  // 헤더 인덱스
-  var idxNo   = headers.findIndex(function(hx){ return /순번|번호|no/i.test(hx); });
-  var idxCode = headers.findIndex(function(hx){ return /관리번호|관리 번호/i.test(hx); });
-  var idxName = headers.findIndex(function(hx){ return /장비명|장비 명/i.test(hx); });
-
+  // 업로드 정보
   if(infoEl) infoEl.textContent='📅 '+equipmentData.uploadDate+(equipmentData.uploader?' · '+equipmentData.uploader:'')+'  총 '+rows.length+'건';
-
-  // 그룹 데이터 생성
-  var grouped={};
-  var groupOrder=[];
-  rows.forEach(function(r){
-    var nm=idxName>=0?String(r[idxName]||'기타'):'기타';
-    var baseName=nm.replace(/\s*[\(\（].+/,'').trim()||nm;
-    if(!grouped[baseName]){grouped[baseName]=[];groupOrder.push(baseName);}
-    grouped[baseName].push(r);
-  });
-  // 가나다순 정렬
-  groupOrder.sort(function(a,b){return a.localeCompare(b,'ko');});
-
-  // 현재 탭 모드 확인
-  var eqViewMode=document.getElementById('eqViewMode')?document.getElementById('eqViewMode').value:'list';
-
-  // 통계
+  // 통계 (전체/검색결과)
   if(statsEl){
     statsEl.innerHTML=
       '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--g2)"><div style="font-size:18px;font-weight:900;color:var(--navy)">'+rows.length+'</div><div style="font-size:10px;color:var(--g4)">전체</div></div>'+
       '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--teal)"><div style="font-size:18px;font-weight:900;color:var(--teal2)">'+filtered.length+'</div><div style="font-size:10px;color:var(--g4)">검색결과</div></div>'+
-      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--g2)"><div style="font-size:18px;font-weight:900;color:var(--g5)">'+groupOrder.length+'</div><div style="font-size:10px;color:var(--g4)">장비종류</div></div>';
+      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--g2)"><div style="font-size:18px;font-weight:900;color:var(--g5)">'+headers.length+'</div><div style="font-size:10px;color:var(--g4)">컬럼수</div></div>';
   }
-
-  if(eqViewMode==='group'){
-    // ── 그룹 카드 뷰 ──
-    var gh='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">';
-    groupOrder.forEach(function(baseName){
-      var gRows=grouped[baseName];
-      // 검색 필터 적용
-      var gFiltered=kw?gRows.filter(function(r){return r.some(function(cv){return String(cv||'').toLowerCase().includes(kl);});}):gRows;
-      if(kw&&!gFiltered.length) return;
-      var cnt=kw?gFiltered.length:gRows.length;
-      var escapedGn=baseName.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-    gh+='<div data-gname="'+escapedGn+'" onclick="setEqGroup(this.dataset.gname)" style="background:white;border-radius:var(--r2);border:1.5px solid var(--g2);padding:13px 12px;cursor:pointer">';
-      gh+='<div style="font-size:22px;font-weight:900;color:var(--teal2);line-height:1;margin-bottom:5px">'+cnt+'</div>';
-      gh+='<div style="font-size:11px;font-weight:700;color:var(--g6);line-height:1.4">'+baseName+'</div>';
-      gh+='<div style="font-size:10px;color:var(--g4);margin-top:3px">대</div>';
-      gh+='</div>';
-    });
-    gh+='</div>';
-    tableEl.innerHTML=gh;
-    return;
-  }
-
-  // ── 목록 뷰 (그룹별 테이블) ──
-  var activeGroup=document.getElementById('eqActiveGroup')?document.getElementById('eqActiveGroup').value:'';
-
-  // 필터 헤더 드롭다운 생성
-  function makeColFilter(ci, hd){
-    var vals=[...new Set(filtered.map(function(r){return String(r[ci]||'');}))].filter(Boolean).sort(function(a,b){return a.localeCompare(b,'ko');});
-    if(vals.length<=1) return '';
-    var selId='eqColFilter_'+ci;
-    var sel='<select id="'+selId+'" onchange="renderEquipment()" style="font-size:10px;border:1px solid rgba(255,255,255,.4);background:rgba(255,255,255,.15);color:white;border-radius:4px;padding:2px 4px;max-width:80px">';
-    var cur=(window._eqColFilters&&window._eqColFilters[ci])||'';
-    sel+='<option value="">전체</option>';
-    vals.forEach(function(v){ sel+='<option value="'+v+'"'+(v===cur?' selected':'')+'>'+v+'</option>'; });
-    sel+='</select>';
-    return sel;
-  }
-
-  // 컬럼 필터 적용
-  if(!window._eqColFilters) window._eqColFilters={};
-  headers.forEach(function(hd,ci){
-    var sel=document.getElementById('eqColFilter_'+ci);
-    if(sel) window._eqColFilters[ci]=sel.value;
-  });
-  var colFiltered=filtered.filter(function(r){
-    return headers.every(function(hd,ci){
-      var fv=window._eqColFilters[ci]||'';
-      return !fv||String(r[ci]||'')===fv;
-    });
-  });
-
-  // 컬럼 너비
-  function colW(ci, hd){
-    if(ci===idxNo) return '32px';
-    if(ci===idxCode) return '110px';
-    if(ci===idxName) return '140px';
-    var l=String(hd).length;
-    return l<=3?'60px':l<=5?'80px':'100px';
-  }
-
-  // 필터로 표시할 그룹
-  var displayGroups=activeGroup?[activeGroup]:groupOrder;
-
-  var h='';
-  // 그룹 탭 헤더
-  h+='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;white-space:nowrap;margin-bottom:9px;padding-bottom:2px">';
-  h+='<button data-gname="" onclick="setEqGroup(this.dataset.gname)" style="display:inline-block;margin-right:5px;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid '+(activeGroup===''?'var(--teal)':'var(--g2)')+';background:'+(activeGroup===''?'var(--teal)':'white')+';color:'+(activeGroup===''?'white':'var(--g5)')+'">전체</button>';
-  groupOrder.forEach(function(gn){
-    var active=(activeGroup===gn);
-    var escapedGnTab=gn.replace(/&/g,'&amp;').replace(/"/g,'&quot;');
-    h+='<button data-gname="'+escapedGnTab+'" onclick="setEqGroup(this.dataset.gname)" style="display:inline-block;margin-right:5px;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid '+(active?'var(--teal)':'var(--g2)')+';background:'+(active?'var(--teal)':'white')+';color:'+(active?'white':'var(--g5)')+'">'+gn+' <span style="font-weight:400;font-size:10px">'+grouped[gn].length+'</span></button>';
-  });
-  h+='</div>';
-
-  h+='<div style="overflow-x:auto;-webkit-overflow-scrolling:touch"><table style="width:100%;border-collapse:collapse;font-size:12px;table-layout:fixed">';
-  h+='<colgroup>';
-  headers.forEach(function(hd,ci){ h+='<col style="width:'+colW(ci,hd)+'">'; });
-  h+='</colgroup>';
-  // 헤더 - 필터 드롭다운 포함
+  // 테이블
+  var h='<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:500px">';
   h+='<thead><tr>';
-  headers.forEach(function(hd,ci){
-    var filter=makeColFilter(ci,hd);
-    h+='<th style="padding:7px 5px;background:var(--navy);color:white;text-align:left;white-space:nowrap;font-size:10px;overflow:hidden;position:relative">';
-    h+='<div style="display:flex;flex-direction:column;gap:2px"><span style="overflow:hidden;text-overflow:ellipsis;display:block">'+hd+'</span>'+filter+'</div>';
-    h+='</th>';
+  headers.forEach(function(hd){
+    h+='<th style="padding:8px 10px;background:var(--navy);color:white;text-align:left;white-space:nowrap;font-size:11px">'+hd+'</th>';
   });
   h+='</tr></thead><tbody>';
-
-  var rowNum=0;
-  displayGroups.forEach(function(baseName){
-    var gRows=grouped[baseName];
-    if(!gRows) return;
-    // 컬럼필터 적용
-    var gFiltered=colFiltered.filter(function(r){return gRows.includes(r);});
-    if(kw){gFiltered=gFiltered.filter(function(r){return r.some(function(cv){return String(cv||'').toLowerCase().includes(kl);});});}
-    if(!gFiltered.length) return;
-    // 그룹 헤더
-    h+='<tr><td colspan="'+headers.length+'" style="padding:7px 10px;background:linear-gradient(135deg,var(--navy) 0%,var(--teal2) 100%);color:white;font-size:11px;font-weight:800">▸ '+baseName+' <span style="font-weight:400;opacity:.8">('+gFiltered.length+'대)</span></td></tr>';
-    gFiltered.forEach(function(r){
-      rowNum++;
-      h+='<tr style="background:'+(rowNum%2===0?'white':'var(--g1)')+';">';
-      r.forEach(function(cv,ci){
-        var val=cv!==null&&cv!==undefined?cv:'';
-        h+='<td style="padding:7px 5px;border-bottom:1px solid var(--g2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:'+(ci===idxNo?'var(--g4)':'var(--g7)')+';font-size:'+(ci===idxNo?'10px':'11px')+'">'+val+'</td>';
-      });
-      h+='</tr>';
+  filtered.forEach(function(r,i){
+    h+='<tr style="background:'+(i%2===0?'white':'var(--g1)')+';">';
+    r.forEach(function(c){
+      h+='<td style="padding:7px 10px;border-bottom:1px solid var(--g2);white-space:nowrap;color:var(--g7)">'+( c!==null&&c!==undefined?c:'')+'</td>';
     });
+    h+='</tr>';
   });
-  h+='</tbody></table></div>';
+  h+='</tbody></table>';
   tableEl.innerHTML=h;
-}
-
-function setEqGroup(name){
-  var inp=document.getElementById('eqActiveGroup');
-  if(!inp){ inp=document.createElement('input');inp.type='hidden';inp.id='eqActiveGroup';document.body.appendChild(inp); }
-  inp.value=name;
-  var modeInp=document.getElementById('eqViewMode');
-  if(modeInp) modeInp.value='list';
-  // 뷰모드 버튼 업데이트
-  var gBtn=document.getElementById('eqBtnGroup'); var lBtn=document.getElementById('eqBtnList');
-  if(gBtn){gBtn.style.background='var(--g2)';gBtn.style.color='var(--g5)';}
-  if(lBtn){lBtn.style.background='var(--teal)';lBtn.style.color='white';}
-  renderEquipment();
-}
-
-function setEqViewMode(mode){
-  var inp=document.getElementById('eqViewMode');
-  if(!inp){ inp=document.createElement('input');inp.type='hidden';inp.id='eqViewMode';document.body.appendChild(inp); }
-  inp.value=mode;
-  window._eqColFilters={};
-  var gBtn=document.getElementById('eqBtnGroup'); var lBtn=document.getElementById('eqBtnList');
-  if(gBtn){gBtn.style.background=mode==='group'?'var(--teal)':'var(--g2)';gBtn.style.color=mode==='group'?'white':'var(--g5)';}
-  if(lBtn){lBtn.style.background=mode==='list'?'var(--teal)':'var(--g2)';lBtn.style.color=mode==='list'?'white':'var(--g5)';}
-  renderEquipment();
 }
 
 function previewEquipmentFile(input){
@@ -7673,14 +7031,21 @@ async function uploadEquipmentData(){
 
 // ══ 폐기물 처리현황 ══
 var wasteData=[];
-var wasteSelectedVehicle='';
+var wasteSelectedShift='오전';
+var wasteSelectedTeam='';
 
-function wasteTab(n){ tabSwitch('waste',n,3); }
+function wasteTab(n){ tabSwitch('waste',n,2); }
 
-function pickWasteVehicle(el){
-  document.querySelectorAll('#wasteVehicleGrp .rp').forEach(function(p){p.classList.remove('on');});
+function pickWasteShift(el){
+  document.querySelectorAll('#wasteShiftGrp .rp').forEach(function(p){p.classList.remove('on');});
   el.classList.add('on');
-  wasteSelectedVehicle=el.dataset.val;
+  wasteSelectedShift=el.dataset.val;
+}
+
+function pickWasteTeam(el){
+  document.querySelectorAll('#wasteTeamGrp .rp').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  wasteSelectedTeam=el.dataset.val;
 }
 
 async function saveWaste(){
@@ -7690,12 +7055,12 @@ async function saveWaste(){
   }
   var date=document.getElementById('wasteDate').value;
   if(!date){ toast('일자를 선택해주세요'); return; }
-  if(!wasteSelectedVehicle){ toast('차량번호를 선택해주세요'); return; }
+  if(!wasteSelectedTeam){ toast('팀을 선택해주세요'); return; }
   var getV=function(id){ return parseFloat(document.getElementById(id).value)||0; };
   var data={
     waste_date: date,
-    shift: '',
-    team_code: wasteSelectedVehicle,
+    shift: wasteSelectedShift,
+    team_code: wasteSelectedTeam,
     writer: me?me.name:'',
     incineration_living: getV('w_inc_living'),
     incineration_synthetic: getV('w_inc_syn'),
@@ -7742,7 +7107,23 @@ async function loadWasteFromDB(){
     var mf=document.getElementById('wasteFilterMonth');
     if(mf&&!mf.value) mf.value=new Date(Date.now()+9*3600000).toISOString().slice(0,7);
     renderWasteList();
-    // 차량번호는 수동 선택
+    // 조장이면 자기 팀 자동선택
+    if(me&&me.role==='leader'){
+      var myInfo=getMyLeaderTeam?getMyLeaderTeam():{shift:'',team:''};
+      if(myInfo.team){
+        var tNum=myInfo.team.replace(/[AB조]/g,'');
+        document.querySelectorAll('#wasteTeamGrp .rp').forEach(function(p){
+          if(p.dataset.val===tNum){p.click();}
+        });
+      }
+      if(myInfo.shift){
+        var sMap={'오전팀':'오전','오후팀':'오후','야간팀':'야간'};
+        var sv=sMap[myInfo.shift]||'';
+        document.querySelectorAll('#wasteShiftGrp .rp').forEach(function(p){
+          if(p.dataset.val===sv){p.click();}
+        });
+      }
+    }
     // 오늘 날짜 기본값
     var wd=document.getElementById('wasteDate');
     if(wd&&!wd.value) wd.value=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
@@ -7790,7 +7171,7 @@ function renderWasteList(){
     h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
     h+='<div style="display:flex;align-items:center;gap:7px">';
     h+='<span style="font-size:12px;font-weight:800;color:var(--g7)">'+r.waste_date+'</span>';
-    h+='<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--navy-bg);color:var(--navy)">🚛 '+r.team_code+'</span>';
+    h+='<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--navy-bg);color:var(--navy)">'+r.team_code+'</span>';
     h+='<span style="font-size:11px;color:var(--g4)">'+r.shift+'</span>';
     h+='</div>';
     h+='<span style="font-size:10px;color:var(--g4)">'+r.writer+'</span>';
@@ -7826,60 +7207,6 @@ async function deleteWaste(id){
     toast('🗑️ 삭제되었습니다');
     loadWasteFromDB();
   }catch(e){ toast('⚠️ 삭제 실패'); }
-}
-
-// ══ 폐기물 합계 ══
-var _wasteSummaryMode = 'day';
-function setWasteSummaryMode(mode){
-  _wasteSummaryMode = mode;
-  ['day','month','year'].forEach(function(m){
-    var btn = document.getElementById('wSum'+m.charAt(0).toUpperCase()+m.slice(1));
-    if(!btn) return;
-    btn.style.background = m===mode ? 'var(--teal)' : 'var(--g2)';
-    btn.style.color = m===mode ? 'white' : 'var(--g5)';
-  });
-  renderWasteSummary();
-}
-
-function renderWasteSummary(){
-  var el = document.getElementById('wasteSummaryBody');
-  if(!el) return;
-  if(!wasteData||!wasteData.length){
-    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">입력된 데이터가 없습니다</div>';
-    return;
-  }
-  var mode = _wasteSummaryMode || 'day';
-  var groups = {};
-  wasteData.forEach(function(r){
-    var key;
-    if(mode==='day') key = r.waste_date;
-    else if(mode==='month') key = r.waste_date.slice(0,7);
-    else key = r.waste_date.slice(0,4);
-    if(!groups[key]) groups[key]={inc:0,rec:0,total:0,count:0};
-    var inc=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
-    var rec=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
-    groups[key].inc+=inc; groups[key].rec+=rec; groups[key].total+=inc+rec; groups[key].count++;
-  });
-  var keys=Object.keys(groups).sort().reverse();
-  var grandInc=0,grandRec=0,grandTotal=0;
-  keys.forEach(function(k){grandInc+=groups[k].inc;grandRec+=groups[k].rec;grandTotal+=groups[k].total;});
-  var label = mode==='day'?'일별':mode==='month'?'월별':'연간';
-  var h = '<div style="background:var(--navy);border-radius:var(--r2);padding:11px 13px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center">';
-  h += '<span style="font-size:12px;font-weight:700;color:white">'+label+' 전체 합계</span>';
-  h += '<span style="font-size:20px;font-weight:900;color:#FFD700">'+grandTotal.toLocaleString()+'<span style="font-size:10px;font-weight:400;color:rgba(255,255,255,.7)">t</span></span></div>';
-  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:13px">';
-  h += '<div style="background:var(--danger-bg);border-radius:var(--r2);padding:10px;text-align:center"><div style="font-size:10px;color:var(--danger);font-weight:700;margin-bottom:3px">🔥 소각 합계</div><div style="font-size:18px;font-weight:900;color:var(--danger)">'+grandInc.toLocaleString()+'</div><div style="font-size:10px;color:var(--g4)">t</div></div>';
-  h += '<div style="background:var(--teal-bg);border-radius:var(--r2);padding:10px;text-align:center"><div style="font-size:10px;color:var(--teal2);font-weight:700;margin-bottom:3px">♻️ 재활용 합계</div><div style="font-size:18px;font-weight:900;color:var(--teal2)">'+grandRec.toLocaleString()+'</div><div style="font-size:10px;color:var(--g4)">t</div></div>';
-  h += '</div>';
-  h += '<div style="overflow:hidden;border-radius:var(--r2);border:1.5px solid var(--g2)">';
-  h += '<table style="width:100%;border-collapse:collapse;font-size:12px">';
-  h += '<thead><tr style="background:var(--g1)"><th style="padding:9px 10px;text-align:left;font-weight:700;color:var(--g6)">'+label+'</th><th style="padding:9px 8px;text-align:right;color:var(--danger);font-weight:700">소각(t)</th><th style="padding:9px 8px;text-align:right;color:var(--teal2);font-weight:700">재활용(t)</th><th style="padding:9px 8px;text-align:right;color:var(--navy);font-weight:700">합계(t)</th></tr></thead><tbody>';
-  keys.forEach(function(k,i){
-    var g=groups[k];
-    h += '<tr style="border-top:1px solid var(--g2);background:'+(i%2===0?'white':'var(--g1)')+'"><td style="padding:9px 10px;font-weight:700;color:var(--g7)">'+k+'</td><td style="padding:9px 8px;text-align:right;color:var(--danger)">'+g.inc.toLocaleString()+'</td><td style="padding:9px 8px;text-align:right;color:var(--teal2)">'+g.rec.toLocaleString()+'</td><td style="padding:9px 8px;text-align:right;font-weight:800;color:var(--navy)">'+g.total.toLocaleString()+'</td></tr>';
-  });
-  h += '</tbody></table></div>';
-  el.innerHTML = h;
 }
 
 function downloadWasteExcel(){
@@ -8056,10 +7383,8 @@ async function loadMpFromDB(){
       // values가 jsonb 배열로 저장됨 - 타입 보정
       var vals=row.values;
       if(typeof vals==='string') try{ vals=JSON.parse(vals); }catch(e){}
-      // 2차원 배열(주간) 또는 야간특별 객체 저장
+      // 2차원 배열 형태 검증
       if(Array.isArray(vals) && Array.isArray(vals[0])){
-        mpDataByLeader[row.shift][row.team_code]=vals;
-      } else if(vals&&vals.type==='night'){
         mpDataByLeader[row.shift][row.team_code]=vals;
       }
     });
@@ -8158,41 +7483,27 @@ async function loadRegList(){
   try{
     var res=await sb.from('regulation_files').select('*').order('name',{ascending:true});
     if(res.error||!res.data||!res.data.length){
-      regFiles=[];
       wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">📭 등록된 사규가 없습니다<br><small>관리자에게 업로드 요청하세요</small></div>';
       return;
     }
     regFiles=res.data;
-    renderRegList();
+    var html='<div style="margin-bottom:11px;font-size:11px;color:var(--g4)">총 '+regFiles.length+'개 사규 등록됨 · 탭하여 열기</div>';
+    regFiles.forEach(function(f){
+      var escapedPath=f.path.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      var escapedName=f.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      html+='<div onclick="viewReg(\''+escapedPath+'\',\''+escapedName+'\')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
+      html+='<div style="width:38px;height:38px;background:#FFF0F0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📄</div>';
+      html+='<div style="flex:1;min-width:0">';
+      html+='<div style="font-size:13px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+'</div>';
+      html+='<div style="font-size:10px;color:var(--g4);margin-top:2px">'+(f.uploaded_at?f.uploaded_at.slice(0,10):'')+'</div>';
+      html+='</div>';
+      html+='<div style="font-size:11px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
+      html+='</div>';
+    });
+    wrap.innerHTML=html;
   }catch(e){
     wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:12px">불러오기 실패: '+e.message+'</div>';
   }
-}
-
-function renderRegList(){
-  var wrap=document.getElementById('regListWrap'); if(!wrap) return;
-  var kw=(document.getElementById('regSearch')||{}).value||'';
-  var filtered=regFiles;
-  if(kw.trim()) filtered=regFiles.filter(function(f){ return f.name.toLowerCase().includes(kw.trim().toLowerCase()); });
-  if(!filtered.length){
-    wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">'+(kw?'검색 결과가 없습니다':'📭 등록된 사규가 없습니다<br><small>관리자에게 업로드 요청하세요</small>')+'</div>';
-    return;
-  }
-  var html='<div style="margin-bottom:11px;font-size:11px;color:var(--g4)">총 '+regFiles.length+'개'+( kw?' · 검색결과 '+filtered.length+'개':'')+' · 탭하여 열기</div>';
-  filtered.forEach(function(f){
-    var escapedPath=f.path.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    var escapedName=f.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-    html+='<div onclick="viewReg(\''+escapedPath+'\',\''+escapedName+'\')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer;transition:.15s" onmouseover="this.style.borderColor=\'var(--teal)\'" onmouseout="this.style.borderColor=\'var(--g2)\'">';
-    html+='<div style="width:38px;height:38px;background:#FFF0F0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0">📄</div>';
-    html+='<div style="flex:1;min-width:0">';
-    var nameHtml=kw?f.name.replace(new RegExp('('+kw.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi'),'<mark style="background:#FFF176;border-radius:2px">$1</mark>'):f.name;
-    html+='<div style="font-size:13px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+nameHtml+'</div>';
-    html+='<div style="font-size:10px;color:var(--g4);margin-top:2px">'+(f.uploaded_at?f.uploaded_at.slice(0,10):'')+'</div>';
-    html+='</div>';
-    html+='<div style="font-size:11px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
-    html+='</div>';
-  });
-  wrap.innerHTML=html;
 }
 
 function viewReg(path, name){
@@ -8349,14 +7660,9 @@ async function loadMpHistory(){
     // 날짜별 합산
     var byDate={};
     res.data.forEach(function(row){
+      if(!row.values||!Array.isArray(row.values)) return;
       var d=row.date;
-      if(!byDate[d]) byDate[d]={total:0,ls:0,as:0,nightTotal:0};
-      // 야간 특별작업은 별도 표시
-      if(row.values&&row.values.type==='night'){
-        byDate[d].nightTotal+=(row.values.total||0);
-        return;
-      }
-      if(!row.values||!Array.isArray(row.values)||!Array.isArray(row.values[0])) return;
+      if(!byDate[d]) byDate[d]={total:0,ls:0,as:0};
       for(var ri=0;ri<4;ri++){
         for(var ci=0;ci<7;ci++){
           var v=(row.values[ri]&&row.values[ri][ci])||0;
@@ -8376,7 +7682,7 @@ async function loadMpHistory(){
       h+='<div class="hist-item">';
       h+='<div class="h-dot"></div>';
       h+='<div><div class="h-h4">'+d+'</div>';
-      h+='<div class="h-p">주간 '+info.total+'명 &middot; L/S '+info.ls+' A/S '+info.as+(info.nightTotal>0?' &middot; 야간특별 '+info.nightTotal+'명':'')+'</div></div>';
+      h+='<div class="h-p">총계 '+info.total+'명 &middot; L/S '+info.ls+'명 &middot; A/S '+info.as+'명</div></div>';
       h+='</div>';
     });
     listEl.innerHTML=h;
