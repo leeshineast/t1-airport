@@ -4086,14 +4086,14 @@ function updateMyTeamGrp(){
            'style="font-size:12px;padding:7px 14px;background:'+bg+';color:'+color+';border-color:'+color+';font-weight:700;opacity:0.7">'+
            '✔ '+shortName+'</div>';
       } else if(isLeaderOnly && isMe){
-        // 조장 - 내 팀: 자동선택 고정 (클릭해도 해제 불가)
-        h+='<div class="rp myteam-btn on" data-team="'+l.team+'" '+
-           'style="font-size:12px;padding:7px 14px;background:'+bg+';color:'+color+';border-color:'+color+';font-weight:700;cursor:default">'+
-           '✔ '+shortName+'</div>';
+        // 조장 - 내 팀: 기본 자동선택 (클릭으로 다른 팀 선택 가능)
+        h+='<div class="rp myteam-btn on" onclick="pickMyTeam(this)" data-team="'+l.team+'" data-myteam="1" '+
+           'style="font-size:12px;padding:7px 14px;background:'+bg+';color:'+color+';border-color:'+color+';font-weight:700">'+
+           '★ '+shortName+'</div>';
       } else if(isLeaderOnly){
-        // 조장 - 다른 팀: 완전 비활성화
-        h+='<div class="rp myteam-btn" data-team="'+l.team+'" '+
-           'style="font-size:12px;padding:7px 14px;opacity:0.2;cursor:not-allowed;pointer-events:none" title="본인 팀만 입력 가능">'+
+        // 조장 - 같은 근무조 다른 팀: 선택 가능 (대리 입력)
+        h+='<div class="rp myteam-btn" onclick="pickMyTeam(this)" data-team="'+l.team+'" '+
+           'style="font-size:12px;padding:7px 14px" title="대리 입력">'+
            shortName+'</div>';
       } else {
         // admin/manager - 모두 선택 가능
