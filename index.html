@@ -1338,42 +1338,34 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 </div></div></div>
 
 <!-- ══ 장비현황 ══ -->
+<div <!-- ══ 장비현황 ══ -->
 <div id="sEquipment" class="scr" style="display:none">
   <div class="pg-hd">
     <div><h1>🔧 장비현황</h1><small>장비 목록 엑셀 업로드 및 현황 조회</small></div>
     <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">← 메인</button>
   </div>
-
   <!-- 탭 -->
   <div style="display:flex;border-bottom:2px solid var(--g2)">
     <div id="eqT0" onclick="eqTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">현황 조회</div>
     <div id="eqT1" onclick="eqTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--g3);cursor:pointer">엑셀 업로드</div>
   </div>
-
-  <!-- 조회 탭 -->
+  <!-- 현황 조회 -->
   <div id="eqP0" style="padding:13px">
     <input type="hidden" id="eqViewMode" value="list">
     <input type="hidden" id="eqActiveGroup" value="">
-    <!-- 검색 + 뷰 모드 -->
-    <div style="margin-bottom:10px">
-      <div style="display:flex;gap:7px;margin-bottom:8px">
-        <input type="text" id="eqSearch" oninput="renderEquipment()" placeholder="🔍 장비명, 관리번호 검색..." style="flex:1;padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white">
+    <div style="display:flex;gap:7px;margin-bottom:8px">
+      <input type="text" id="eqSearch" oninput="renderEquipment()" placeholder="🔍 장비명, 관리번호 검색..." style="flex:1;padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white">
       <button onclick="loadEquipmentFromDB()" style="padding:9px 13px;background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--g5);cursor:pointer">🔄</button>
     </div>
-    <!-- 뷰 모드 버튼 -->
     <div style="display:flex;gap:7px;margin-bottom:10px">
       <button id="eqBtnGroup" onclick="setEqViewMode('group')" style="flex:1;padding:8px;background:var(--g2);color:var(--g5);border:none;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer">🗂️ 종류별 카드</button>
       <button id="eqBtnList" onclick="setEqViewMode('list')" style="flex:1;padding:8px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer">📋 목록</button>
     </div>
-    <!-- 업로드 정보 -->
     <div id="eqUploadInfo" style="font-size:11px;color:var(--g4);margin-bottom:8px;text-align:right"></div>
-    <!-- 통계 -->
     <div id="eqStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px"></div>
-    <!-- 테이블 -->
     <div id="eqTable" style="overflow-x:auto"></div>
   </div>
-
-  <!-- 업로드 탭 -->
+  <!-- 엑셀 업로드 -->
   <div id="eqP1" style="display:none;padding:13px">
     <div class="card" style="margin-bottom:12px"><div class="cb">
       <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:8px">📋 엑셀 파일 업로드</div>
@@ -1384,7 +1376,6 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       </div>
       <input type="file" id="eqFileInput" accept=".xlsx,.xls" onchange="previewEquipmentFile(this)" style="width:100%;padding:10px;border:2px dashed var(--g2);border-radius:var(--r2);font-size:12px;background:var(--g1)">
     </div></div>
-    <!-- 미리보기 -->
     <div id="eqPreview" style="display:none">
       <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:8px">미리보기 (상위 5행)</div>
       <div id="eqPreviewTable" style="overflow-x:auto;margin-bottom:12px"></div>
@@ -1392,6 +1383,8 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     </div>
   </div>
 </div>
+
+
 
 <!-- ══ 폐기물 처리현황 ══ -->
 <div id="sWaste" class="scr" style="display:none">
