@@ -2709,6 +2709,10 @@ function subHO(){
   const eT=(eE&&eE.classList.contains('show')&&eE.value)?eE.value:'이상없음';
   if(aT!=='없음'){const e=document.getElementById('dAcc');if(e)e.textContent=parseInt(e.textContent||0)+1;const t=document.getElementById('dAccT');if(t)t.textContent=parseInt(t.textContent||0)+1;}
   if(cT!=='없음'){const e=document.getElementById('dComp');if(e)e.textContent=parseInt(e.textContent||0)+1;const t=document.getElementById('dCompT');if(t)t.textContent=parseInt(t.textContent||0)+1;}
+  // ★ DB 저장용 데이터 먼저 캡처 (폼 초기화 전)
+  var _hEtcVal=document.getElementById('hEtc')?document.getElementById('hEtc').value||null:null;
+  var _hSpEl=document.getElementById('hSp');
+  var _special=(_hSpEl&&_hSpEl.classList.contains('show')&&_hSpEl.value)?_hSpEl.value:null;
   toast('✓ 인수인계 제출 완료!');
   // 폼 초기화
   document.querySelectorAll('#hoSG .rp').forEach(p=>p.classList.remove('on'));
@@ -2726,8 +2730,7 @@ function subHO(){
   if(dT!=='없음')fields+=`<div class="ho-f"><div class="ho-lbl">⚠️ 위험구역</div><div class="ho-val">${dT}</div></div>`;
   if(aT!=='없음')fields+=`<div class="ho-f"><div class="ho-lbl">🚨 안전사고</div><div class="ho-val">${aT}</div></div>`;
   if(eT!=='이상없음')fields+=`<div class="ho-f"><div class="ho-lbl">🚛 장비·차량</div><div class="ho-val">${eT}</div></div>`;
-  var etcVal=document.getElementById('hEtc')?document.getElementById('hEtc').value:'';
-  if(etcVal) fields='<div class="ho-f"><div class="ho-lbl">📝 업무내용</div><div class="ho-val">'+etcVal+'</div></div>'+fields;
+  if(_hEtcVal) fields='<div class="ho-f"><div class="ho-lbl">📝 업무내용</div><div class="ho-val">'+_hEtcVal+'</div></div>'+fields;
   if(!fields)fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
   const card=document.createElement('div');
   card.className='ho-card';
@@ -2745,8 +2748,8 @@ function subHO(){
     danger: dT!=='없음'?dT:null,
     accident: aT!=='없음'?aT:null,
     equipment: eT!=='이상없음'?eT:null,
-    notice: document.getElementById('hEtc')?document.getElementById('hEtc').value||null:null,
-    special: (document.getElementById('hSp')&&document.getElementById('hSp').classList.contains('show'))?document.getElementById('hSp').value||null:null,
+    notice: _hEtcVal,
+    special: _special,
     confirmed: false
   };
   saveHandoverToDB(hoData);
