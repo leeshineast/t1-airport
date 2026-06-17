@@ -2327,6 +2327,7 @@ function hideM(id){document.getElementById(id).classList.remove('on');}
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
 const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste'];
 function go(name){
+  if(me&&me.role==='vehicle_guest'&&name!=='veh'&&name!=='login'){ return; }
   const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
@@ -2426,6 +2427,27 @@ function applyRoleUI(){
   var lrb=document.getElementById('lostResetBtn');if(lrb)lrb.style.display=isAdmin?'block':'none';
   // Gemini API 키 복구
   try{var gk=localStorage.getItem('t1_gemini_key');if(gk){GEMINI_API_KEY=gk;var btn=document.getElementById('apiKeyBtn');if(btn){btn.textContent='🔑 API키 ✅';btn.style.background='rgba(26,158,117,.3)';}}}catch(e){}
+  // 차량 게스트: 차량운행기록만 접근 가능
+  if(me.role==='vehicle_guest'){
+    // 메뉴 버튼 전체 숨김 후 차량만 표시
+    document.querySelectorAll('.menu-btn').forEach(function(el){
+      var oc=el.getAttribute('onclick')||'';
+      el.style.display=oc.indexOf("'veh'")!==-1?'':'none';
+    });
+    // 메인화면 stat-box, 섹션 숨김
+    ['sMain'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(!el) return;
+      // stat-box 숨김
+      el.querySelectorAll('.stat-box').forEach(function(b){ b.style.display='none'; });
+      // 층별현황, 공지사항 섹션 숨김
+      el.querySelectorAll('.sec-lbl').forEach(function(s){ s.style.display='none'; });
+      el.querySelectorAll('.card').forEach(function(c){ c.style.display='none'; });
+    });
+    // 알림벨 숨김
+    var bell=document.getElementById('bellBtn');if(bell)bell.style.display='none';
+    setTimeout(function(){ go('veh'); },100);
+  }
 }
 
 async function doLogin(){
@@ -2611,7 +2633,7 @@ function pickShift(el){
 }
 function calcMp(){
   let s=0;document.querySelectorAll('#mpBody .mp-inp').forEach(i=>s+=parseInt(i.value)||0);
-  [0,1,2,3].forEach(function(i){var mi=document.getElementById('mgrInp'+i);if(mi) s+=parseInt(mi.value)||0;});
+  // 관리자 칸은 총인원 합산 제외 (별도 표시)
   const el=document.getElementById('mpTot');el.textContent=s;el.style.color=s>0?'var(--teal)':'var(--g3)';
 }
 function subMp(){
@@ -2712,7 +2734,7 @@ function subHO(){
   // ★ DB 저장용 데이터 먼저 캡처 (폼 초기화 전)
   var _hEtcVal=document.getElementById('hEtc')?document.getElementById('hEtc').value||null:null;
   var _hSpEl=document.getElementById('hSp');
-  var _special=(_hSpEl&&_hSpEl.classList.contains('show')&&_hSpEl.value)?_hSpEl.value:null;
+  var _special=(_hSpEl&&_hSpEl.value&&_hSpEl.value.trim())?_hSpEl.value.trim():null;
   toast('✓ 인수인계 제출 완료!');
   // 폼 초기화
   document.querySelectorAll('#hoSG .rp').forEach(p=>p.classList.remove('on'));
@@ -3848,7 +3870,10 @@ function updateMpSummary(){
 // ═══ 층별 인력현황 업데이트 ═══
 function updateFloorChart(){
   var totals=[0,0,0,0];
-  for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) totals[ri]+=(mpData[ri]&&mpData[ri][ci])||0;
+  for(var ri=0;ri<4;ri++){
+    for(var ci=0;ci<7;ci++) totals[ri]+=(mpData[ri]&&mpData[ri][ci])||0;
+    totals[ri]+=(mgrCounts&&mgrCounts[ri])||0; // 관리자 소계 포함
+  }
   var grandTotal=totals.reduce(function(a,b){return a+b;},0);
   var lsSub=[0,0,0,0,0,0,0],asSub=[0,0,0,0,0,0,0],colTot=[0,0,0,0,0,0,0];
   for(var ci=0;ci<7;ci++){
@@ -4860,6 +4885,8 @@ function rstShiftTab(n){
     div.dataset.team=l.team;
     div.dataset.name=l.name;
     div.addEventListener('click',function(){openLeaderDataEdit(this.dataset.shift,this.dataset.team,this.dataset.name);});
+    // 조장은 본인 팀만 수정 가능 - 시각적으로 구분
+    if(me&&me.role==='leader'&&l.team!==me.team){ div.style.cursor='default'; }
     list.appendChild(div);
   });
   list.innerHTML='';
@@ -4883,7 +4910,10 @@ function rstShiftTab(n){
 // 수정 모달 열기
 var editShift='',editTeam='';
 function openLeaderDataEdit(shift,team,name){
-  if(!me||me.role!=='admin'){toast('관리자만 수정할 수 있습니다');return;}
+  if(!me) return;
+  var isAdmin=me.role==='admin'||me.role==='manager';
+  var isMyTeam=me.role==='leader'&&me.team===team;
+  if(!isAdmin&&!isMyTeam){toast('본인 조 데이터만 수정할 수 있습니다');return;}
   editShift=shift; editTeam=team;
   var title=document.getElementById('leaderDataModalTitle');
   if(title) title.textContent=name+' 입력값 수정 ('+shift+')';
@@ -4900,11 +4930,17 @@ function openLeaderDataEdit(shift,team,name){
   zones.forEach(function(zone,ri){
     rows+='<tr style="border-bottom:1px solid var(--g1)">';
     rows+='<td style="font-size:11px;font-weight:600;color:var(--g6);padding:7px 6px">'+zone+'</td>';
-    // 관리자 칸
+    // 관리자 칸 (관리자만 수정 가능)
+    var isAdminEdit=me&&(me.role==='admin'||me.role==='manager');
     rows+='<td style="padding:4px 3px;text-align:center">';
-    rows+='<input type="number" id="ledit_mgr_'+ri+'" value="'+(curMgr[ri]||0)+'" min="0" '+
-      'style="width:36px;padding:5px 3px;border:1.5px solid var(--navy);border-radius:6px;font-size:12px;text-align:center;outline:none" '+
-      'onfocus="this.select()">';
+    if(isAdminEdit){
+      rows+='<input type="number" id="ledit_mgr_'+ri+'" value="'+(curMgr[ri]||0)+'" min="0" '+
+        'style="width:36px;padding:5px 3px;border:1.5px solid var(--navy);border-radius:6px;font-size:12px;text-align:center;outline:none" '+
+        'onfocus="this.select()">';
+    } else {
+      rows+='<span style="font-size:12px;color:var(--g4)">'+(curMgr[ri]||0)+'</span>';
+      rows+='<input type="hidden" id="ledit_mgr_'+ri+'" value="'+(curMgr[ri]||0)+'">';
+    }
     rows+='</td>';
     floors.forEach(function(fl,ci){
       rows+='<td style="padding:4px 3px;text-align:center">';
@@ -6164,8 +6200,14 @@ function renderNoticeList(data){
     wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">등록된 공지사항이 없습니다</div>';
     return;
   }
+  // 메인화면이면 최근 3건만 표시
+  var isMain=wrap.closest('#sMain')!=null;
+  var displayData=isMain?data.slice(0,5):data;
   var html='';
-  data.forEach(function(n,i){
+  if(isMain&&data.length>5){
+    html+='<div style="font-size:10px;color:var(--g4);text-align:right;padding:4px 13px 0">전체 '+data.length+'건 중 최근 3건</div>';
+  }
+  displayData.forEach(function(n,i){
     var date=n.created_at?toKSTDate(n.created_at):'';
     html+='<div style="padding:13px;border-bottom:1px solid var(--g2);cursor:pointer" onclick="openNoticeDetail('+i+')" >';
     html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
@@ -7807,7 +7849,8 @@ async function loadMpFromDB(){
     updateMyTeamGrp();    // 입력 탭 완료 상태 반영
     renderLeaderStatus(); // 입력현황 탭 완료 상태 반영
     checkPrevDayMissing();
-    updateMgrDisplay(); // 전일 미입력 조장 확인
+    updateMgrDisplay();
+    updateAccComplaintCount(); // 폐기물 포함 전체 재집계 // 전일 미입력 조장 확인
   }catch(e){}
 }
 
