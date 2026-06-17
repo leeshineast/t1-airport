@@ -2211,6 +2211,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           <thead>
             <tr style="background:var(--teal2)">
               <th style="color:white;font-size:11px;padding:8px 6px;text-align:left;min-width:70px">구역</th>
+              <th style="color:white;font-size:10px;padding:8px 4px;text-align:center;background:rgba(255,255,255,0.15)">관리자</th>
               <th style="color:white;font-size:10px;padding:8px 4px;text-align:center">B2F</th>
               <th style="color:white;font-size:10px;padding:8px 4px;text-align:center">B1F</th>
               <th style="color:white;font-size:10px;padding:8px 4px;text-align:center">1F</th>
@@ -4271,11 +4272,27 @@ function checkPrevDayMissing(){
     if(!box||!lst) return;
     var kst=new Date(Date.now()+9*3600000);
     var yesterday=new Date(kst.getTime()-86400000).toISOString().slice(0,10);
+    // LEADERS는 {오전:[{team,name}...], 오후:[...], 야간:[...]} 구조
     var allLeaders=[];
-    try{var s=localStorage.getItem('t1_leaders_v2');if(s)allLeaders=JSON.parse(s);}catch(e){}
+    try{
+      var s=localStorage.getItem('t1_leaders');
+      if(s){
+        var parsed=JSON.parse(s);
+        // 근무조별 flat 배열로 변환
+        ['오전','오후','야간'].forEach(function(sh){
+          (parsed[sh]||[]).forEach(function(l){ allLeaders.push(l); });
+        });
+      }
+    }catch(e){}
+    // localStorage에 없으면 전역 LEADERS 사용
+    if(!allLeaders.length && typeof LEADERS!=='undefined'){
+      ['오전','오후','야간'].forEach(function(sh){
+        (LEADERS[sh]||[]).forEach(function(l){ allLeaders.push(l); });
+      });
+    }
     if(!allLeaders.length){box.style.display='none';return;}
-    var log={};
-    try{var ls=localStorage.getItem('t1_mp_log');if(ls)log=JSON.parse(ls);}catch(e){}
+    // 전일 입력 완료 팀코드 목록
+    var log=mpInputLog||{};
     var yLog=log[yesterday]||{};
     var doneTeams=[];
     Object.keys(yLog).forEach(function(sh){(yLog[sh]||[]).forEach(function(t){doneTeams.push(t);});});
@@ -4856,10 +4873,18 @@ function openLeaderDataEdit(shift,team,name){
   // 현재 저장값 불러오기
   var cur=(mpDataByLeader[shift]&&mpDataByLeader[shift][team])||
           [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  // 관리자 인원 현재값 (mgrCounts 배열)
+  var curMgr=(typeof mgrCounts!=='undefined')?mgrCounts:[0,0,0,0];
   var rows='';
   zones.forEach(function(zone,ri){
     rows+='<tr style="border-bottom:1px solid var(--g1)">';
     rows+='<td style="font-size:11px;font-weight:600;color:var(--g6);padding:7px 6px">'+zone+'</td>';
+    // 관리자 칸
+    rows+='<td style="padding:4px 3px;text-align:center">';
+    rows+='<input type="number" id="ledit_mgr_'+ri+'" value="'+(curMgr[ri]||0)+'" min="0" '+
+      'style="width:36px;padding:5px 3px;border:1.5px solid var(--navy);border-radius:6px;font-size:12px;text-align:center;outline:none" '+
+      'onfocus="this.select()">';
+    rows+='</td>';
     floors.forEach(function(fl,ci){
       rows+='<td style="padding:4px 3px;text-align:center">';
       rows+='<input type="number" id="ledit_'+ri+'_'+ci+'" value="'+(cur[ri][ci]||0)+'" min="0" '+
@@ -4876,24 +4901,32 @@ function openLeaderDataEdit(shift,team,name){
 function closeLeaderDataEdit(){hideM('leaderDataModal');}
 
 function saveLeaderDataEdit(){
-  var zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
   var newVals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  var newMgr=[0,0,0,0];
   for(var ri=0;ri<4;ri++){
+    // 관리자 칸
+    var mel=document.getElementById('ledit_mgr_'+ri);
+    newMgr[ri]=mel?parseInt(mel.value)||0:0;
+    // 구역별 층 칸
     for(var ci=0;ci<7;ci++){
       var el=document.getElementById('ledit_'+ri+'_'+ci);
       newVals[ri][ci]=el?parseInt(el.value)||0:0;
     }
   }
+  // 관리자 인원 업데이트
+  if(typeof mgrCounts!=='undefined') mgrCounts=newMgr;
+  mgrCount=newMgr.reduce(function(a,b){return a+b;},0);
   if(!mpDataByLeader[editShift]) mpDataByLeader[editShift]={};
   mpDataByLeader[editShift][editTeam]=newVals;
-  // 전체 재계산
   recalcMpData();
   saveMpData();
   updateFloorChart();
   updateMpSummary();
+  updateMgrDisplay();
   closeLeaderDataEdit();
-  // DB 저장 후 재로드 (완료 카운트 정확히 반영)
+  // DB 저장 (구역 인력 + 관리자 인원)
   saveMpToDB(editShift, editTeam, newVals).then(function(){ loadMpFromDB(); });
+  saveMgrCountToDB(editShift, newMgr);
   toast('✅ '+editTeam+' 입력값이 수정되었습니다');
 }
 
