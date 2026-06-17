@@ -488,15 +488,20 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div id="flP_all">
       <div class="card"><div class="tbl-w"><table class="mp-tbl" id="dHome">
         <colgroup>
-  <col style="width:46px"><!-- 구역 -->
-  <col style="width:44px"><!-- 관리자 -->
-  <col><col><col><col><col><col><!-- B2F~4F -->
-  <col style="width:44px"><!-- 집하장 -->
-  <col style="width:40px"><!-- 소계 -->
+  <col style="width:10%"><!-- 구역 -->
+  <col style="width:10%"><!-- 관리자 -->
+  <col style="width:10%"><!-- B2F -->
+  <col style="width:10%"><!-- B1F -->
+  <col style="width:10%"><!-- 1F -->
+  <col style="width:10%"><!-- 2F -->
+  <col style="width:10%"><!-- 3F -->
+  <col style="width:10%"><!-- 4F -->
+  <col style="width:10%"><!-- 집하장 -->
+  <col style="width:10%"><!-- 소계 -->
 </colgroup>
         <thead><tr>
-          <th style="text-align:left;min-width:46px;padding-left:4px">구역</th>
-          <th style="color:var(--g5);width:46px;max-width:46px">관리자</th>
+          <th style="text-align:left;padding-left:4px">구역</th>
+          <th style="color:var(--g5);">관리자</th>
           <th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th>
           <th style="background:var(--teal2)">소계</th>
         </tr></thead>
@@ -956,16 +961,22 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div class="tbl-w">
         <table class="mp-tbl">
           <colgroup>
-  <col style="width:46px"><!-- 구역 -->
-  <col style="width:44px"><!-- 관리자 -->
-  <col><col><col><col><col><col><col><!-- B2F~집하장 -->
+  <col style="width:11.1%"><!-- 구역 -->
+  <col style="width:11.1%"><!-- 관리자 -->
+  <col style="width:11.1%"><!-- B2F -->
+  <col style="width:11.1%"><!-- B1F -->
+  <col style="width:11.1%"><!-- 1F -->
+  <col style="width:11.1%"><!-- 2F -->
+  <col style="width:11.1%"><!-- 3F -->
+  <col style="width:11.1%"><!-- 4F -->
+  <col style="width:11.2%"><!-- 집하장 -->
 </colgroup>
-          <thead><tr><th style="text-align:left;min-width:46px;padding-left:4px">구역</th><th style="color:var(--g5);width:46px;max-width:46px">관리자</th><th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th></tr></thead>
+          <thead><tr><th style="text-align:left;padding-left:4px">구역</th><th style="color:var(--g5);">관리자</th><th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th></tr></thead>
           <tbody id="mpBody">
-            <tr><td class="lbl">L/S 동편</td><td rowspan="4" style="vertical-align:middle;text-align:center"><input id="mgrCountInp" class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()" style="width:44px"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td></tr>
-            <tr><td class="lbl">L/S 서편</td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td></tr>
-            <tr><td class="lbl">A/S 동편</td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td></tr>
-            <tr><td class="lbl">A/S 서편</td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td></tr>
+            <tr><td class="lbl">L/S 동편</td><td><input id="mgrInp0" class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td></tr>
+            <tr><td class="lbl">L/S 서편</td><td><input id="mgrInp1" class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td></tr>
+            <tr><td class="lbl">A/S 동편</td><td><input id="mgrInp2" class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td></tr>
+            <tr><td class="lbl">A/S 서편</td><td><input id="mgrInp3" class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td></tr>
           </tbody>
         </table>
       </div>
@@ -981,13 +992,18 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div class="pg-hd"><div><h1>전체 현황</h1></div></div>
     <div class="card"><div class="tbl-w"><table class="mp-tbl" id="mpFullTable">
       <colgroup>
-  <col style="width:46px"><!-- 구역 -->
-  <col style="width:44px"><!-- 관리자 -->
-  <col><col><col><col><col><col><!-- B2F~4F -->
-  <col style="width:44px"><!-- 집하장 -->
-  <col style="width:40px"><!-- 소계 -->
+  <col style="width:10%"><!-- 구역 -->
+  <col style="width:10%"><!-- 관리자 -->
+  <col style="width:10%"><!-- B2F -->
+  <col style="width:10%"><!-- B1F -->
+  <col style="width:10%"><!-- 1F -->
+  <col style="width:10%"><!-- 2F -->
+  <col style="width:10%"><!-- 3F -->
+  <col style="width:10%"><!-- 4F -->
+  <col style="width:10%"><!-- 집하장 -->
+  <col style="width:10%"><!-- 소계 -->
 </colgroup>
-      <thead><tr><th style="text-align:left;min-width:46px;padding-left:4px">구역</th><th style="color:var(--g5);width:46px;max-width:46px">관리자</th><th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th><th style="background:var(--teal2)">소계</th></tr></thead>
+      <thead><tr><th style="text-align:left;padding-left:4px">구역</th><th style="color:var(--g5);">관리자</th><th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th><th style="background:var(--teal2)">소계</th></tr></thead>
       <tbody>
         <tr><td class="lbl">L/S 동편</td><td style="color:var(--g5)">0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
         <tr><td class="lbl">L/S 서편</td><td style="color:var(--g5)">0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
@@ -2594,7 +2610,7 @@ function pickShift(el){
 }
 function calcMp(){
   let s=0;document.querySelectorAll('#mpBody .mp-inp').forEach(i=>s+=parseInt(i.value)||0);
-  var mi=document.getElementById('mgrCountInp');if(mi) s+=parseInt(mi.value)||0;
+  [0,1,2,3].forEach(function(i){var mi=document.getElementById('mgrInp'+i);if(mi) s+=parseInt(mi.value)||0;});
   const el=document.getElementById('mpTot');el.textContent=s;el.style.color=s>0?'var(--teal)':'var(--g3)';
 }
 function subMp(){
@@ -2621,9 +2637,9 @@ function subMp(){
     }
   }
   document.getElementById('mpMShift').textContent=sh+'팀';
-  var _mi=document.getElementById('mgrCountInp');var _mc=parseInt(_mi?_mi.value:0)||0;
+  mgrCounts=[0,1,2,3].map(function(i){var el=document.getElementById('mgrInp'+i);return parseInt(el?el.value:0)||0;});
+  mgrCount=mgrCounts.reduce(function(a,b){return a+b;},0);
   document.getElementById('mpMCnt').textContent=t;
-  mgrCount=_mc;
   const rows=document.querySelectorAll('#mpBody tr');let det='';
   rows.forEach(row=>{const lb=(function(){var _e=row.querySelector('.lbl');return _e?_e.textContent:undefined;})();let sm=0;row.querySelectorAll('.mp-inp').forEach(i=>sm+=parseInt(i.value)||0);if(lb&&sm>0)det+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--g1)"><span style="color:var(--g5)">'+lb+'</span><span style="font-weight:700;color:var(--teal)">'+sm+'명</span></div>';});
   document.getElementById('mpMDet').innerHTML=det||'<div style="color:var(--g4)">입력된 구역 없음</div>';
@@ -3566,7 +3582,8 @@ function renderLeaderStatus(){
 // 사용자 권한 (userId → {read,write,edit,download})
 var userPerms={};
 var mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-var mgrCount=0; // 관리자(팀장+조장) 총 인원
+var mgrCount=0; // 관리자 총 인원
+var mgrCounts=[0,0,0,0]; // 구역별 관리자 인원 [L/S동, L/S서, A/S동, A/S서]
 var mpDataByShift={'오전':null,'오후':null,'야간':null};
 // 조장별 개별 저장: {오전:{1팀A:[[4][7]]}, ...}
 var mpDataByLeader={오전:{},오후:{},야간:{}};
@@ -3687,9 +3704,9 @@ function confirmMp(){
   if(myTeam) logMpInput(shKey, myTeam);
   saveMpData();
   // 관리자 인원 DB 저장
-  var _mci=document.getElementById('mgrCountInp');var _mcv=parseInt(_mci?_mci.value:0)||0;
-  mgrCount=_mcv;
-  saveMgrCountToDB(shKey, _mcv);
+  mgrCounts=[0,1,2,3].map(function(i){var el=document.getElementById('mgrInp'+i);return parseInt(el?el.value:0)||0;});
+  mgrCount=mgrCounts.reduce(function(a,b){return a+b;},0);
+  saveMgrCountToDB(shKey, mgrCounts);
 
   try{
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
@@ -3710,35 +3727,42 @@ function confirmMp(){
   saveMpToDB(shKey, saveTeam, mpDataByLeader[shKey]&&mpDataByLeader[shKey][saveTeam]||newVals)
     .then(function(){ loadMpFromDB(); });
   // 입력창 초기화 (관리자 칸 제외)
-  var mgrInp=document.getElementById('mgrCountInp');if(mgrInp) mgrInp.value='';
+  [0,1,2,3].forEach(function(i){var el=document.getElementById('mgrInp'+i);if(el)el.value='';});
 }
 
 // ─ 관리자 인원 DB 저장/로드 ─
-async function saveMgrCountToDB(shift, count){
+async function saveMgrCountToDB(shift, counts){
   try{
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+    var c=Array.isArray(counts)?counts:[counts,counts,counts,counts];
     await sb.from('mp_data').upsert(
-      {date:today, shift:shift, team_code:'__mgr__', values:[[count,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]]},
+      {date:today, shift:shift, team_code:'__mgr__', values:[[c[0],0,0,0,0,0,0],[c[1],0,0,0,0,0,0],[c[2],0,0,0,0,0,0],[c[3],0,0,0,0,0,0]]},
       {onConflict:'date,shift,team_code'}
     );
   }catch(e){}
 }
 function updateMgrDisplay(){
-  // 관리자 인원 표시 갱신
-  var v=mgrCount;
-  ['dHomeMgr0','dHomeMgr1','dHomeMgr2','dHomeMgr3'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=v>0?v:0;});
-  var ls=v*2,as=v*2; // L/S, A/S 각 합산 표시 (같은 값으로)
-  ['dHomeMgrLS','mpMgrLS'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=v>0?v:0;});
-  ['dHomeMgrAS','mpMgrAS'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=v>0?v:0;});
-  ['dHomeMgrAll','mpMgrTotal'].forEach(function(id){var el=document.getElementById(id);if(el)el.textContent=v>0?v:0;});
-  // mpFullTable 관리자 칸
+  var c=mgrCounts||[0,0,0,0];
+  var ls=c[0]+c[1], as=c[2]+c[3], total=ls+as;
+  // dHome 테이블
+  ['dHomeMgr0','dHomeMgr1','dHomeMgr2','dHomeMgr3'].forEach(function(id,i){
+    var el=document.getElementById(id);if(el)el.textContent=c[i]||0;
+  });
+  var dHomeLS=document.getElementById('dHomeMgrLS');if(dHomeLS)dHomeLS.textContent=ls;
+  var dHomeAS=document.getElementById('dHomeMgrAS');if(dHomeAS)dHomeAS.textContent=as;
+  var dHomeAll=document.getElementById('dHomeMgrAll');if(dHomeAll)dHomeAll.textContent=total;
+  // mpFullTable (전체현황 탭)
   var mpTbl=document.querySelector('#mpFullTable tbody');
   if(mpTbl){
-    var tds=mpTbl.querySelectorAll('tr td:nth-child(2)');
-    tds.forEach(function(td){td.textContent=v>0?v:0;});
+    var rows=mpTbl.querySelectorAll('tr');
+    var vals=[c[0],c[1],ls,c[2],c[3],as,total];
+    rows.forEach(function(tr,i){if(vals[i]!==undefined){var td=tr.querySelector('td:nth-child(2)');if(td)td.textContent=vals[i]||0;}});
   }
+  var mpLS=document.getElementById('mpMgrLS');if(mpLS)mpLS.textContent=ls;
+  var mpAS=document.getElementById('mpMgrAS');if(mpAS)mpAS.textContent=as;
+  var mpTotal=document.getElementById('mpMgrTotal');if(mpTotal)mpTotal.textContent=total;
   // 입력칸 복원
-  var inp=document.getElementById('mgrCountInp');if(inp&&v>0)inp.value=v;
+  [0,1,2,3].forEach(function(i){var el=document.getElementById('mgrInp'+i);if(el&&c[i]>0)el.value=c[i];});
 }
 
 // 전체 합산 재계산
@@ -3812,7 +3836,7 @@ function updateFloorChart(){
   if(allTbl){
     var newRows=[[ZONES[0]].concat(mpData[0]).concat([totals[0]]),[ZONES[1]].concat(mpData[1]).concat([totals[1]]),['L/S 소계'].concat(lsSub).concat([lsTotal]),[ZONES[2]].concat(mpData[2]).concat([totals[2]]),[ZONES[3]].concat(mpData[3]).concat([totals[3]]),['A/S 소계'].concat(asSub).concat([asTotal]),['전체 총계'].concat(colTot).concat([grandTotal])];
     var trs=allTbl.querySelectorAll('tr');
-    newRows.forEach(function(rowData,ri){if(!trs[ri])return;var tds=trs[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
+    newRows.forEach(function(rowData,ri){if(!trs[ri])return;var tds=trs[ri].querySelectorAll('td');rowData.forEach(function(val,ci){var tdIdx=ci===0?0:ci+1;if(tds[tdIdx])tds[tdIdx].textContent=val;});});
   }
   // 공통 테이블 갱신 함수
   var allRows=[[ZONES[0]].concat(mpData[0]).concat([totals[0]]),[ZONES[1]].concat(mpData[1]).concat([totals[1]]),['L/S 소계'].concat(lsSub).concat([lsTotal]),[ZONES[2]].concat(mpData[2]).concat([totals[2]]),[ZONES[3]].concat(mpData[3]).concat([totals[3]]),['A/S 소계'].concat(asSub).concat([asTotal]),['전체 총계'].concat(colTot).concat([grandTotal])];
@@ -3820,13 +3844,13 @@ function updateFloorChart(){
   var mainTbl=document.querySelector('#dHome tbody');
   if(mainTbl){
     var trs2=mainTbl.querySelectorAll('tr');
-    allRows.forEach(function(rowData,ri){if(!trs2[ri])return;var tds=trs2[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
+    allRows.forEach(function(rowData,ri){if(!trs2[ri])return;var tds=trs2[ri].querySelectorAll('td');rowData.forEach(function(val,ci){var tdIdx=ci===0?0:ci+1;if(tds[tdIdx])tds[tdIdx].textContent=val;});});
   }
   // 인력현황 탭 > 전체현황 테이블 (#mpFullTable)
   var mpTbl=document.querySelector('#mpFullTable tbody');
   if(mpTbl){
     var trs3=mpTbl.querySelectorAll('tr');
-    allRows.forEach(function(rowData,ri){if(!trs3[ri])return;var tds=trs3[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
+    allRows.forEach(function(rowData,ri){if(!trs3[ri])return;var tds=trs3[ri].querySelectorAll('td');rowData.forEach(function(val,ci){var tdIdx=ci===0?0:ci+1;if(tds[tdIdx])tds[tdIdx].textContent=val;});});
   }
   // 층별 패널
   var fps=[{id:'B2F',ci:0},{id:'B1F',ci:[1,6],merged:true},{id:'1F',ci:2},{id:'2F',ci:3},{id:'3F',ci:4},{id:'4F',ci:5}];
@@ -7708,7 +7732,10 @@ async function loadMpFromDB(){
       if(row.team_code==='__mgr__'){
         var vals=row.values;
         if(typeof vals==='string') try{ vals=JSON.parse(vals); }catch(e){}
-        if(Array.isArray(vals)&&Array.isArray(vals[0])&&vals[0][0]!==undefined) mgrCount=(mgrCount||0)+vals[0][0];
+        if(Array.isArray(vals)){
+          for(var ri=0;ri<4;ri++) if(vals[ri]&&vals[ri][0]!==undefined) mgrCounts[ri]=(mgrCounts[ri]||0)+Number(vals[ri][0]);
+          mgrCount=mgrCounts.reduce(function(a,b){return a+b;},0);
+        }
         return;
       }
       if(!mpDataByLeader[row.shift]) mpDataByLeader[row.shift]={};
@@ -7718,7 +7745,7 @@ async function loadMpFromDB(){
         mpDataByLeader[row.shift][row.team_code]=vals;
       }
     });
-    mgrCount=0; // 로드 전 초기화
+    mgrCount=0; mgrCounts=[0,0,0,0]; // 로드 전 초기화
     recalcMpData();
     updateFloorChart();
     updateMpSummary();
