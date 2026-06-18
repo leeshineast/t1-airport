@@ -3117,13 +3117,13 @@ async function dlCSV(type){
     if(type==='veh'||type==='all'){
       var r3=await sb.from('vehicle_log').select('*').order('created_at',{ascending:false});
       if(r3.data&&r3.data.length){
-        var vRows=[['날짜','운전자','소속팀','목적지','목적','출발전km','도착후km','주행거리']];
+        var vRows=[['사용일자','소속','성명','주행 전 계기판(km)','주행 후 계기판(km)','주행거리','출발 시간','도착 시간','목적지','목적','기타']];
         r3.data.forEach(function(d){
           vRows.push([
-            d.date||'',d.driver||'',d.team||'',
-            d.vehicle||'',d.purpose||'',
-            d.start_km||0,d.end_km||0,
-            (d.end_km||0)-(d.start_km||0)
+            d.date||'', d.team||'', d.driver||'',
+            d.start_km||0, d.end_km||0, (d.end_km||0)-(d.start_km||0),
+            d.start_time||'', d.end_time||'',
+            d.vehicle||'', d.purpose||'', d.etc||''
           ]);
         });
         var ws3=XLSX.utils.aoa_to_sheet(vRows);
@@ -4127,7 +4127,10 @@ function subVeh(){
       vehicle: record.dest,
       purpose: record.purpose,
       start_km: record.before,
-      end_km: record.after
+      end_km: record.after,
+      start_time: record.start||null,
+      end_time: record.end||null,
+      etc: record.etc||null
     });
     if(res.error){ console.error('차량 저장 오류:', res.error); toast('저장 오류: '+res.error.message); }
     else { await loadVehicleFromDB(); }
@@ -6820,9 +6823,9 @@ async function loadVehicleFromDB(){
         before: r.start_km,
         after: r.end_km,
         dist: (r.end_km||0)-(r.start_km||0),
-        start: '',
-        end: '',
-        etc: ''
+        start: r.start_time||'',
+        end: r.end_time||'',
+        etc: r.etc||''
       };
     });
     renderVehList(vehData);
