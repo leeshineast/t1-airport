@@ -3668,7 +3668,13 @@ function renderLeaderStatus(){
     html+='<div style="display:flex;flex-wrap:wrap;gap:5px">';
     leaders.forEach(function(l){
       var isDone=done.indexOf(l.team)!==-1;
-      html+='<div style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;';
+      // 클릭 가능 여부: 관리자는 전체, 조장은 본인 조만
+      var isAdmin=me&&(me.role==='admin'||me.role==='manager');
+      var myCode=me?normalizeTeamCode(me.team):'';
+      var canEdit=isAdmin||(me&&me.role==='leader'&&(myCode===l.team||me.team===l.team));
+      var cursor=canEdit?'cursor:pointer;':'cursor:default;';
+      var onclick=canEdit?'onclick="openLeaderDataEdit(\'' +shift+'\',\''+l.team+'\',\''+l.name+'\')"':'';
+      html+='<div '+onclick+' style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;'+cursor;
       if(isDone){
         html+='background:'+shiftBgs[shift]+';color:'+shiftColors[shift]+';border:1.5px solid '+shiftColors[shift]+'40">';
         html+='✔ '+l.name;
