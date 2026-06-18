@@ -2006,11 +2006,15 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div style="display:flex;flex-direction:column;gap:9px">
         <div class="dl-item" onclick="dlCSV('all')">
           <div class="dl-ico">📋</div>
-          <div><div class="dl-title">일별 운영현황 전체</div><div class="dl-sub">인력+인수인계+민원+사고 (.xlsx)</div></div>
+          <div><div class="dl-title">전체 다운로드 (운영앱 전체)</div><div class="dl-sub">인력·관리자출근·인수인계·민원·사고·차량·KPI·습득물·폐기물·장비·시설·공지·사규·사용자 (.xlsx)</div></div>
         </div>
         <div class="dl-item" onclick="dlCSV('mp')">
           <div class="dl-ico">👥</div>
           <div><div class="dl-title">인력현황</div><div class="dl-sub">구역별 층별 현황 (.xlsx)</div></div>
+        </div>
+        <div class="dl-item" onclick="dlCSV('mgrattend')">
+          <div class="dl-ico">👔</div>
+          <div><div class="dl-title">관리자 출근 현황</div><div class="dl-sub">팀장·조장·운영팀 출근 이력 전체 (.xlsx)</div></div>
         </div>
         <div class="dl-item" onclick="dlCSV('ho')">
           <div class="dl-ico">🔄</div>
@@ -2043,6 +2047,22 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <div class="dl-item" onclick="dlCSV('equipment')">
           <div class="dl-ico">🔧</div>
           <div><div class="dl-title">장비현황</div><div class="dl-sub">장비 목록 전체 (.xlsx)</div></div>
+        </div>
+        <div class="dl-item" onclick="dlCSV('facility')">
+          <div class="dl-ico">🏢</div>
+          <div><div class="dl-title">시설현황</div><div class="dl-sub">화장실·흡연실·창고 등 전체 (.xlsx)</div></div>
+        </div>
+        <div class="dl-item" onclick="dlCSV('notice')">
+          <div class="dl-ico">📢</div>
+          <div><div class="dl-title">공지사항</div><div class="dl-sub">전체 공지 이력 (.xlsx)</div></div>
+        </div>
+        <div class="dl-item" onclick="dlCSV('regulation')">
+          <div class="dl-ico">📜</div>
+          <div><div class="dl-title">사규 파일 목록</div><div class="dl-sub">업로드된 사규 파일 목록 (.xlsx)</div></div>
+        </div>
+        <div class="dl-item" onclick="dlCSV('users')">
+          <div class="dl-ico">👤</div>
+          <div><div class="dl-title">사용자 목록</div><div class="dl-sub">전체 가입자 정보 (.xlsx)</div></div>
         </div>
       </div>
     </div></div>
@@ -3283,14 +3303,84 @@ async function dlCSV(type){
     }
 
     // ── 장비현황 ──
-    if(type==='equipment'){
-      if(!equipmentData||!equipmentData.rows||!equipmentData.rows.length){
+    if(type==='equipment'||type==='all'){
+      if(equipmentData&&equipmentData.rows&&equipmentData.rows.length){
+        var eqRows=[equipmentData.headers||[]];
+        (equipmentData.rows||[]).forEach(function(r){ eqRows.push(r); });
+        var wse=XLSX.utils.aoa_to_sheet(eqRows);
+        wb.SheetNames.push('장비현황');wb.Sheets['장비현황']=wse;
+      } else if(type==='equipment'){
         toast('업로드된 장비 데이터가 없습니다'); return;
       }
-      var eqRows=[equipmentData.headers||[]];
-      (equipmentData.rows||[]).forEach(function(r){ eqRows.push(r); });
-      var wse=XLSX.utils.aoa_to_sheet(eqRows);
-      wb.SheetNames.push('장비현황');wb.Sheets['장비현황']=wse;
+    }
+
+    // ── 관리자 출근 현황 ──
+    if(type==='mgrattend'||type==='all'){
+      var rma=await sb.from('mgr_attendance').select('*').order('date',{ascending:false});
+      if(rma.data&&rma.data.length){
+        var maRows=[['날짜','근무조','팀','직책','출근여부','체크자','체크시각']];
+        rma.data.forEach(function(d){
+          maRows.push([
+            d.date||'', d.team==='운영'?'운영팀':(d.team?d.team+'팀':''), d.team||'',
+            d.role||d.name||'', d.checked?'출근':'미출근',
+            d.checked_by||'', d.checked_at?toKSTDateTime(d.checked_at):''
+          ]);
+        });
+        var wsma=XLSX.utils.aoa_to_sheet(maRows);
+        wb.SheetNames.push('관리자출근현황');wb.Sheets['관리자출근현황']=wsma;
+      }
+    }
+
+    // ── 시설현황 ──
+    if(type==='facility'||type==='all'){
+      var rf=await sb.from('facility_data').select('*');
+      if(rf.data&&rf.data.length){
+        var facRows=[['시설구분','데이터(JSON)']];
+        rf.data.forEach(function(d){
+          facRows.push([d.facility_type||'', d.data?JSON.stringify(d.data):'']);
+        });
+        var wsf=XLSX.utils.aoa_to_sheet(facRows);
+        wb.SheetNames.push('시설현황');wb.Sheets['시설현황']=wsf;
+      }
+    }
+
+    // ── 공지사항 ──
+    if(type==='notice'||type==='all'){
+      var rn=await sb.from('notices').select('*').neq('title','__ind_prev_year__').order('created_at',{ascending:false});
+      if(rn.data&&rn.data.length){
+        var ntRows=[['작성일','제목','내용','작성자']];
+        rn.data.forEach(function(d){
+          ntRows.push([d.created_at?toKSTDate(d.created_at):'', d.title||'', d.content||'', d.author||'']);
+        });
+        var wsn=XLSX.utils.aoa_to_sheet(ntRows);
+        wb.SheetNames.push('공지사항');wb.Sheets['공지사항']=wsn;
+      }
+    }
+
+    // ── 사규 파일 목록 ──
+    if(type==='regulation'||type==='all'){
+      var rr=await sb.from('regulation_files').select('*').order('name',{ascending:true});
+      if(rr.data&&rr.data.length){
+        var rgRows=[['파일명','업로드일','URL']];
+        rr.data.forEach(function(d){
+          rgRows.push([d.name||'', d.uploaded_at?toKSTDate(d.uploaded_at):'', d.url||d.file_path||'']);
+        });
+        var wsr=XLSX.utils.aoa_to_sheet(rgRows);
+        wb.SheetNames.push('사규파일목록');wb.Sheets['사규파일목록']=wsr;
+      }
+    }
+
+    // ── 사용자 목록 ──
+    if(type==='users'||type==='all'){
+      var ru=await sb.from('users').select('*');
+      if(ru.data&&ru.data.length){
+        var usRows=[['이름','역할','소속팀','상태']];
+        ru.data.forEach(function(d){
+          usRows.push([d.name||'', d.role||'', d.team||'', d.status||'']);
+        });
+        var wsu=XLSX.utils.aoa_to_sheet(usRows);
+        wb.SheetNames.push('사용자목록');wb.Sheets['사용자목록']=wsu;
+      }
     }
 
     if(wb.SheetNames.length===0){toast('다운로드할 데이터가 없습니다');return;}
