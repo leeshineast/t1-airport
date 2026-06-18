@@ -3942,7 +3942,7 @@ function updateFloorChart(){
   for(var ri=0;ri<4;ri++){
     for(var ci=0;ci<7;ci++) totals[ri]+=(mpData[ri]&&mpData[ri][ci])||0;
   }
-  var grandTotal=totals.reduce(function(a,b){return a+b;},0)+(mpMgrTotal||0);
+  var grandTotal=totals.reduce(function(a,b){return a+b;},0); // 현장 작업자만 (관리자 제외)
   var lsSub=[0,0,0,0,0,0,0],asSub=[0,0,0,0,0,0,0],colTot=[0,0,0,0,0,0,0];
   for(var ci=0;ci<7;ci++){
     lsSub[ci]=mpData[0][ci]+mpData[1][ci];
@@ -3987,7 +3987,7 @@ function updateFloorChart(){
     if(subDivs[1]) subDivs[1].textContent=asS;
   });
   // 대시보드 카드
-  var dashTot=document.getElementById('dashTotStaff');if(dashTot&&grandTotal>0)dashTot.textContent=grandTotal;
+  var dashTot=document.getElementById('dashTotStaff');if(dashTot&&totalWithMgr>0)dashTot.textContent=totalWithMgr;
   // 관리자 인원 테이블 아래 표시
   var mgrDispEl=document.getElementById('mpMgrDisplay');
   for(var t=1;t<=10;t++){
@@ -3997,8 +3997,9 @@ function updateFloorChart(){
   var mgrNumEl=document.getElementById('mpMgrNum'); if(mgrNumEl) mgrNumEl.textContent=mpMgrTotal||0;
   if(mgrDispEl) mgrDispEl.style.display='block';
   var curEl=document.getElementById('curStaff');var unitEl=document.getElementById('curUnit');
-  if(curEl&&grandTotal>0){
-    curEl.textContent=grandTotal;
+  var totalWithMgr=grandTotal+(mpMgrTotal||0); // 현장작업자+관리자
+  if(curEl&&totalWithMgr>0){
+    curEl.textContent=totalWithMgr;
     if(unitEl){var labels=[];if(mpDataByShift['오전'])labels.push('오전');if(mpDataByShift['오후'])labels.push('오후');if(mpDataByShift['야간'])labels.push('야간');unitEl.textContent='명 ('+(labels.length>0?labels.join('+')+'합계':'입력됨')+')';}
   }
 }
@@ -4962,7 +4963,10 @@ function rstShiftTab(n){
     div.dataset.name=l.name;
     div.addEventListener('click',function(){openLeaderDataEdit(this.dataset.shift,this.dataset.team,this.dataset.name);});
     // 조장은 본인 팀만 수정 가능 - 시각적으로 구분
-    if(me&&me.role==='leader'){ var _mc=(me.team||'').replace(/\s/g,'').replace(/조$/,''); if(_mc!==l.team&&me.team!==l.team) div.style.cursor='default'; }
+    if(me&&me.role==='leader'){
+      var _isMine=normalizeTeamCode(me.team)===l.team||me.team===l.team;
+      if(!_isMine) div.style.cursor='not-allowed';
+    }
     list.appendChild(div);
   });
   list.innerHTML='';
@@ -5000,9 +5004,11 @@ var editShift='',editTeam='';
 function openLeaderDataEdit(shift,team,name){
   if(!me) return;
   var isAdmin=me.role==='admin'||me.role==='manager';
-  // me.team '1팀 A조' → '1팀A' 변환 후 비교
-  var myTeamCode=(me.team||'').replace(/\s/g,'').replace(/조$/,'');
-  var isMyTeam=me.role==='leader'&&(myTeamCode===team||me.team===team);
+  var isMyTeam=false;
+  if(me.role==='leader'){
+    var myCode=normalizeTeamCode(me.team); // '7팀 A조' → '7팀A'
+    isMyTeam=(myCode===team)||(me.team===team);
+  }
   if(!isAdmin&&!isMyTeam){toast('본인 조 데이터만 수정할 수 있습니다');return;}
   // 모달 상단에 입력이력 표시
   var metaKey=shift+'_'+team;
@@ -5409,6 +5415,15 @@ async function executeDataReset(){
 
 
 // ─ 로그인 사용자 팀코드 자동 매핑 ─
+// 공통: me.team('7팀 A조') → 팀코드('7팀A') 변환
+function normalizeTeamCode(teamStr){
+  if(!teamStr) return '';
+  // '7팀 A조' → '7팀A', '10팀 B조' → '10팀B'
+  var t=teamStr.trim().replace(/\s+/g,''); // 공백 제거
+  t=t.replace(/조$/, '');                   // 끝 '조' 제거
+  return t;
+}
+
 function getMyLeaderTeam(){
   if(!me||!me.team) return {shift:'',team:''};
   var t=me.team.trim();
