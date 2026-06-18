@@ -2230,10 +2230,12 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <h3>👔 팀별 관리자 인원 수정</h3>
       <button class="m-x" onclick="closeMgrEdit()">×</button>
     </div>
-    <div style="padding:15px 17px">
-      <div style="font-size:11px;color:var(--g4);margin-bottom:12px">팀별 관리자(팀장+조장) 인원을 입력하세요</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px" id="mgrEditGrid"></div>
-      <div style="display:flex;gap:7px">
+    <div style="display:flex;flex-direction:column;max-height:70vh">
+      <div style="padding:13px 17px;overflow-y:auto;flex:1">
+        <div style="font-size:11px;color:var(--g4);margin-bottom:12px">팀별 관리자(팀장+조장) 인원을 입력하세요</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="mgrEditGrid"></div>
+      </div>
+      <div style="padding:13px 17px;border-top:1px solid var(--g2);display:flex;gap:7px;flex-shrink:0">
         <button onclick="closeMgrEdit()" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">취소</button>
         <button onclick="saveMgrEdit()" style="flex:2;padding:11px;background:linear-gradient(135deg,var(--navy),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">저장</button>
       </div>
@@ -3851,13 +3853,12 @@ async function saveMgrToDB(teamNum, count){
   try{
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
     var key='__mgr_'+teamNum+'__';
-    await sb.from('mp_data').upsert(
+    var res=await sb.from('mp_data').upsert(
       {date:today, shift:'__mgr__', team_code:key, values:[[count,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]]},
       {onConflict:'date,shift,team_code'}
     );
-    mpMgrByTeam[teamNum]=count;
-    mpMgrTotal=Object.values(mpMgrByTeam).reduce(function(a,b){return a+(b||0);},0);
-    updateMgrDisplay();
+    if(res&&res.error) console.error('관리자 저장 오류',res.error);
+    else mpMgrByTeam[teamNum]=count;
   }catch(e){ console.error('관리자 저장 오류',e); }
 }
 function recalcMpData(){
@@ -5021,9 +5022,11 @@ async function saveMgrEdit(){
     promises.push(saveMgrToDB(t, val));
   }
   await Promise.all(promises);
+  // 저장 완료 후 재계산 및 전체 갱신
   mpMgrTotal=Object.values(mpMgrByTeam).reduce(function(a,b){return a+(b||0);},0);
   updateMgrDisplay();
-  updateFloorChart();
+  updateFloorChart(); // 층별 테이블 + grandTotal 갱신
+  updateStaff();      // 메인 대시보드 현재근무 갱신
   closeMgrEdit();
   toast('✅ 관리자 인원이 저장되었습니다');
 }
