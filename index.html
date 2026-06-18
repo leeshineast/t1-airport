@@ -4948,27 +4948,6 @@ function rstShiftTab(n){
     list.innerHTML='<div style="font-size:11px;color:var(--g4);padding:8px">등록된 조장이 없습니다</div>';
     return;
   }
-  var items='';
-  leaders.forEach(function(l){
-    var isDone=done.indexOf(l.team)!==-1;
-    var bc=isDone?colors[n]:'var(--g2)';
-    var bg=isDone?bgs[n]:'var(--g1)';
-    var co=isDone?colors[n]:'var(--g4)';
-    var div=document.createElement('div');
-    div.className='rp';
-    div.style.cssText='font-size:11px;padding:6px 12px;background:'+bg+';color:'+co+';border-color:'+bc+';cursor:pointer';
-    div.textContent=(isDone?'✔ ':'')+l.name;
-    div.dataset.shift=shift;
-    div.dataset.team=l.team;
-    div.dataset.name=l.name;
-    div.addEventListener('click',function(){openLeaderDataEdit(this.dataset.shift,this.dataset.team,this.dataset.name);});
-    // 조장은 본인 팀만 수정 가능 - 시각적으로 구분
-    if(me&&me.role==='leader'){
-      var _isMine=normalizeTeamCode(me.team)===l.team||me.team===l.team;
-      if(!_isMine) div.style.cursor='not-allowed';
-    }
-    list.appendChild(div);
-  });
   list.innerHTML='';
   leaders.forEach(function(l){
     var isDone=done.indexOf(l.team)!==-1;
