@@ -2338,8 +2338,10 @@ function toast(m){const t=document.getElementById('toast');t.textContent=m;t.sty
 function toKSTTime(isoStr){
   if(!isoStr) return '';
   try{
-    var d=new Date(isoStr);
-    return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+    // isoStr은 UTC 기준 타임스탬프. UTC 시각에 9시간을 더해 KST로 변환 후
+    // getUTCHours/getUTCMinutes로 읽어야 브라우저 타임존에 영향받지 않음.
+    var d=new Date(new Date(isoStr).getTime()+9*3600000);
+    return d.getUTCHours().toString().padStart(2,'0')+':'+d.getUTCMinutes().toString().padStart(2,'0');
   }catch(e){return '';}
 }
 function toKSTDate(isoStr){ if(!isoStr) return ''; return new Date(new Date(isoStr).getTime()+9*3600000).toISOString().slice(0,10); }
@@ -8290,6 +8292,9 @@ var MGR_STRUCTURE = {
   '야간': {
     '5팀': ['팀장','A조장','B조장'],
     '10팀': ['팀장','A조장','B조장']
+  },
+  '운영팀': {
+    '운영': ['사업부장','총괄1팀장','총괄2팀장','행정1','행정2']
   }
 };
 
@@ -8316,13 +8321,13 @@ function renderMgrAttendance(){
   var myTeam = me ? (me.team||'').replace(/\s*(A|B|C)조장?$/,'').replace(/\s*팀장$/,'').trim() : '';
 
   var totalCount = 0, checkedCount = 0;
-  var html = '';
 
-  ['오전','오후','야간'].forEach(function(shift){
+  // 근무조 하나(오전/오후/야간/운영팀)를 카드 HTML로 생성
+  function buildShiftCard(shift){
     var shiftData = MGR_STRUCTURE[shift];
-    var shiftIcon = shift==='오전'?'🌅':shift==='오후'?'☀️':'🌙';
-    html += '<div style="margin-bottom:16px">';
-    html += '<div style="font-size:13px;font-weight:700;color:var(--g6);margin-bottom:8px;padding:8px 0;border-bottom:1.5px solid var(--g2)">'+shiftIcon+' '+shift+'팀</div>';
+    var shiftIcon = shift==='오전'?'🌅':shift==='오후'?'☀️':shift==='야간'?'🌙':'🏢';
+    var h = '<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:12px;min-width:0">';
+    h += '<div style="font-size:13px;font-weight:700;color:var(--g6);margin-bottom:8px;padding-bottom:8px;border-bottom:1.5px solid var(--g2)">'+shiftIcon+' '+shift+(shift==='운영팀'?'':'팀')+'</div>';
 
     Object.keys(shiftData).forEach(function(team){
       var members = shiftData[team];
@@ -8332,9 +8337,13 @@ function renderMgrAttendance(){
       totalCount += members.length;
       checkedCount += teamChecked;
 
-      html += '<div style="margin-bottom:10px">';
-      html += '<div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:5px">'+team+' <span style="font-weight:400;color:var(--g4)">('+teamChecked+'/'+members.length+')</span></div>';
-      html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+      h += '<div style="margin-bottom:10px">';
+      if(team!=='운영'){
+        h += '<div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:5px">'+team+' <span style="font-weight:400;color:var(--g4)">('+teamChecked+'/'+members.length+')</span></div>';
+      } else {
+        h += '<div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:5px">운영진 <span style="font-weight:400;color:var(--g4)">('+teamChecked+'/'+members.length+')</span></div>';
+      }
+      h += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
 
       members.forEach(function(name){
         var key = team+'_'+name;
@@ -8343,25 +8352,34 @@ function renderMgrAttendance(){
         var checkedBy = att ? att.checked_by : '';
         var checkedTime = att && att.checked_at ? toKSTTime(att.checked_at) : '';
 
-        // 클릭 권한: 관리자 전체, 해당팀 조장/팀장
-        var canCheck = isAdmin || (me && myTeam === team);
+        // 클릭 권한: 관리자 전체, 해당팀 조장/팀장 (운영팀은 관리자만)
+        var canCheck = isAdmin || (team!=='운영' && me && myTeam === team);
 
         var bg = isChecked ? 'background:var(--teal-bg);border-color:var(--teal2);color:var(--teal2)' : 'background:var(--g1);border-color:var(--g2);color:var(--g4)';
         var cursor = canCheck ? 'cursor:pointer' : 'cursor:default';
         var onclick = canCheck ? 'onclick="toggleMgrAtt(\'' + team + '\',\'' + name + '\')"' : '';
 
-        html += '<div '+onclick+' style="padding:6px 10px;border-radius:var(--r2);border:1.5px solid;font-size:11px;font-weight:600;'+bg+';'+cursor+';min-width:60px;text-align:center">';
-        html += '<div>'+(isChecked?'✔ ':'')+name+'</div>';
+        h += '<div '+onclick+' style="padding:6px 10px;border-radius:var(--r2);border:1.5px solid;font-size:11px;font-weight:600;'+bg+';'+cursor+';min-width:60px;text-align:center">';
+        h += '<div>'+(isChecked?'✔ ':'')+name+'</div>';
         if(isChecked && checkedTime){
-          html += '<div style="font-size:9px;color:var(--g4);margin-top:1px">'+checkedTime+(checkedBy&&checkedBy!==me.name?' ('+checkedBy+')':'')+'</div>';
+          h += '<div style="font-size:9px;color:var(--g4);margin-top:1px">'+checkedTime+(checkedBy&&checkedBy!==me.name?' ('+checkedBy+')':'')+'</div>';
         }
-        html += '</div>';
+        h += '</div>';
       });
 
-      html += '</div></div>';
+      h += '</div></div>';
     });
-    html += '</div>';
-  });
+    h += '</div>';
+    return h;
+  }
+
+  // 2x2 그리드: 오전팀 | 오후팀  /  야간팀 | 운영팀
+  var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+  html += buildShiftCard('오전');
+  html += buildShiftCard('오후');
+  html += buildShiftCard('야간');
+  html += buildShiftCard('운영팀');
+  html += '</div>';
 
   body.innerHTML = html;
 
@@ -8376,7 +8394,7 @@ function updateDashMgrAtt(){
   if(!badge||!detail) return;
   var total=0, checked=0;
   var teamSummary=[];
-  ['오전','오후','야간'].forEach(function(shift){
+  ['오전','오후','야간','운영팀'].forEach(function(shift){
     var shiftData=MGR_STRUCTURE[shift];
     Object.keys(shiftData).forEach(function(team){
       var members=shiftData[team];
@@ -8399,7 +8417,8 @@ async function toggleMgrAtt(team, name){
   var key = team+'_'+name;
   var att = mgrAttData[key];
   var newChecked = !(att && att.checked);
-  var nowISO = new Date(Date.now()+9*3600000).toISOString();
+  // 순수 UTC로 저장 (KST 보정은 표시 시점 toKSTTime에서만 수행)
+  var nowISO = new Date().toISOString();
   var checkerName = me ? me.name : '';
 
   try{
