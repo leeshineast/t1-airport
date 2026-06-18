@@ -2666,26 +2666,26 @@ function subMp(){
   const t=document.getElementById('mpTot').textContent;
   if(!t||t==='0'){toast('인원을 입력해주세요');return;}
   const sh=(function(){var _el=document.querySelector('#shiftGrp .rp.on');return _el?_el.textContent:undefined;})()||'해당';
-  // 조장 1일 1회 입력 제한 체크
-  if(me&&me.role==='leader'){
-    var myTeam=getSelectedTeam?getSelectedTeam():'';
-  // done(완료) 버튼이 아닌 실제 선택한 팀만
+  var shKey=sh.trim();
+
+  // ★ 선택된 팀코드·입력값 미리 캡처 (모달 열기 전)
+  var myTeam=getSelectedTeam?getSelectedTeam():'';
   var selBtn=document.querySelector('.myteam-btn.on:not(.done)');
   if(selBtn) myTeam=selBtn.dataset.team||myTeam;
-    if(myTeam){
-      var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-      try{
-        var log=JSON.parse(localStorage.getItem('t1_mp_log')||'{}');
-        var shKey=sh.trim();
-        var dayLog=log[today]||{};
-        if(dayLog[shKey]&&dayLog[shKey].indexOf(myTeam)!==-1){
-          toast('⚠️ 오늘 이미 입력 완료했습니다. 수정이 필요하면 관리자에게 요청하세요.');
-          return;
-        }
-      }catch(e){}
-    }
-  }
-  document.getElementById('mpMShift').textContent=sh+'팀';
+
+  var newVals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  document.querySelectorAll('#mpBody tr').forEach(function(row,ri){
+    row.querySelectorAll('.mp-inp').forEach(function(inp,ci){
+      newVals[ri][ci]=parseInt(inp.value)||0;
+    });
+  });
+
+  // 전역 임시 저장 → confirmMp에서 사용
+  _mpPending={shKey:shKey, myTeam:myTeam, newVals:newVals};
+
+  // (1일 1회 제한 없음 - 재입력 허용)
+
+  document.getElementById('mpMShift').textContent=shKey+'팀';
   document.getElementById('mpMCnt').textContent=t;
   const rows=document.querySelectorAll('#mpBody tr');let det='';
   rows.forEach(row=>{const lb=(function(){var _e=row.querySelector('.lbl');return _e?_e.textContent:undefined;})();let sm=0;row.querySelectorAll('.mp-inp').forEach(i=>sm+=parseInt(i.value)||0);if(lb&&sm>0)det+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--g1)"><span style="color:var(--g5)">'+lb+'</span><span style="font-weight:700;color:var(--teal)">'+sm+'명</span></div>';});
@@ -3686,6 +3686,8 @@ var mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
 var mpDataByShift={'오전':null,'오후':null,'야간':null};
 // 조장별 개별 저장: {오전:{1팀A:[[4][7]]}, ...}
 var mpDataByLeader={오전:{},오후:{},야간:{}};
+// subMp → confirmMp 데이터 전달용 임시 저장
+var _mpPending={shKey:'', myTeam:'', newVals:null};
 var vehData=[];
 var indPrevYear=0;
 var ZONES=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
@@ -3771,60 +3773,40 @@ function confirmMp(){
   // write 권한 체크
   var myPerms=me?userPerms[me.name]:null;
   if(myPerms&&myPerms.write===false){toast('⚠️ 쓰기 권한이 없습니다');return;}
-  var sh=document.querySelector('#shiftGrp .rp.on')?document.querySelector('#shiftGrp .rp.on').textContent:'미선택';
-  var shKey=sh.trim();
 
+  // ★ subMp에서 미리 캡처한 값 사용 (DOM 재참조 금지)
+  var shKey=_mpPending.shKey||'';
+  var myTeam=_mpPending.myTeam||'';
+  var newVals=_mpPending.newVals||[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
 
-
-  // 입력값 수집
-  var newVals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-  document.querySelectorAll('#mpBody tr').forEach(function(row,ri){
-    row.querySelectorAll('.mp-inp').forEach(function(inp,ci){
-      newVals[ri][ci]=parseInt(inp.value)||0;
-    });
-  });
-
-  // 조장 팀코드 확인
-  var myTeam=getSelectedTeam?getSelectedTeam():'';
-  // done(완료) 버튼 제외, 실제 선택한 팀만
-  var selBtnC=document.querySelector('.myteam-btn.on:not(.done)');
-  if(selBtnC) myTeam=selBtnC.dataset.team||myTeam;
+  if(!shKey){toast('⚠️ 근무조를 선택해주세요');return;}
 
   // ★ 조장별 개별 저장
   if(!mpDataByLeader[shKey]) mpDataByLeader[shKey]={};
-  // 팀 미선택 시 근무조명을 임시 키로 사용
   var saveKey=myTeam||('_'+shKey);
   mpDataByLeader[shKey][saveKey]=newVals;
 
-  // 전체 합산 재계산 (모든 조장 합산)
+  // 전체 합산 재계산
   recalcMpData();
 
   // 조장 입력 완료 기록
   if(myTeam) logMpInput(shKey, myTeam);
   saveMpData();
 
-
-  try{
-    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-    var shiftSaved={};  // localStorage 제거 - DB 저장 사용
-    if(!shiftSaved[today]) shiftSaved[today]=[];
-    if(shiftSaved[today].indexOf(shKey)===-1) shiftSaved[today].push(shKey);
-    shiftSaved[today].sort(function(a,b){var o={'오전':0,'오후':1,'야간':2};return (o[a]||0)-(o[b]||0);});
-    // localStorage 미사용 - DB 저장
-  }catch(e){}
-
   var total=0;
   for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) total+=mpData[ri][ci];
-  toast('✓ '+shKey+' '+( myTeam||'' )+' 인력현황 입력! 금일 누계: '+total+'명');
+  toast('✓ '+shKey+' '+(myTeam||'')+' 인력현황 입력! 금일 누계: '+total+'명');
+
   document.querySelectorAll('#mpBody .mp-inp').forEach(function(i){i.value='';});
   var el=document.getElementById('mpTot');if(el){el.textContent='0';el.style.color='var(--g3)';}
-  // DB 저장 후 전체 데이터 다시 로드해서 화면 갱신
-  var saveTeam=myTeam||('_'+shKey);
-  saveMpToDB(shKey, saveTeam, mpDataByLeader[shKey]&&mpDataByLeader[shKey][saveTeam]||newVals)
-    .then(function(){ loadMpFromDB(); });
-  // 입력창 초기화 (관리자 칸 제외)
-}
 
+  // DB 저장 후 화면 갱신
+  saveMpToDB(shKey, saveKey, newVals)
+    .then(function(){ loadMpFromDB(); });
+
+  // 임시 저장 초기화
+  _mpPending={shKey:'', myTeam:'', newVals:null};
+}
 // ─ 관리자 인원 DB 저장/로드 ─
 
 
@@ -4310,11 +4292,6 @@ function autoSelectMyShiftTeam(){
 }
 
 function pickMyTeam(el){
-  // done(입력완료) 버튼은 선택 불가
-  if(el.classList.contains('done')){
-    toast('이미 입력 완료된 조입니다');
-    return;
-  }
   // 이전 선택 해제
   document.querySelectorAll('.myteam-btn.on').forEach(function(b){
     if(!b.classList.contains('done')){
@@ -4322,7 +4299,18 @@ function pickMyTeam(el){
       b.style.background='';b.style.color='';b.style.borderColor='';
     }
   });
+  // 현재 근무조에 맞는 색상 적용
+  var sel=document.querySelector('#shiftGrp .rp.on');
+  var shift=sel?sel.textContent.trim():'';
+  var shiftColors={'오전':'var(--navy)','오후':'var(--teal2)','야간':'#6B21A8'};
+  var shiftBgs={'오전':'var(--navy-bg)','오후':'var(--teal-bg)','야간':'#F3EEF8'};
+  var color=shiftColors[shift]||'var(--teal2)';
+  var bg=shiftBgs[shift]||'var(--teal-bg)';
   el.classList.add('on');
+  el.style.background=bg;
+  el.style.color=color;
+  el.style.borderColor=color;
+  el.style.fontWeight='700';
 }
 function getSelectedTeam(){
   var sel=document.querySelector('.myteam-btn.on');
