@@ -466,6 +466,17 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       </div>
     </div>
   </div>
+  <!-- 관리자 출근 현황 카드 -->
+  <div class="stat-box" style="margin:8px 13px;cursor:pointer" onclick="mpTab(4);go('mp')">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div class="s-lbl">👔 관리자 출근 현황</div>
+      <div id="dashMgrAttBadge" style="font-size:11px;font-weight:700;color:var(--teal2)">0/0명</div>
+    </div>
+    <div id="dashMgrAttDetail" style="display:flex;flex-wrap:wrap;gap:4px;font-size:10px;color:var(--g5)">
+      <span style="color:var(--g3)">불러오는 중...</span>
+    </div>
+  </div>
+
   <div class="alert-warn" id="dashHOAlert" style="display:none"><span>🔔</span><div><strong style="display:block;font-weight:700;margin-bottom:1px">인수인계 확인 대기</strong><span id="dashHOAlertMsg"></span></div></div>
 
 
@@ -937,6 +948,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div id="mpT1" style="flex:1;padding:11px;text-align:center;font-size:12px;font-weight:600;color:var(--g3);cursor:pointer;white-space:nowrap;min-width:70px" onclick="mpTab(1)">전체 현황</div>
     <div id="mpT2" style="flex:1;padding:11px;text-align:center;font-size:12px;font-weight:600;color:var(--g3);cursor:pointer;white-space:nowrap;min-width:70px" onclick="mpTab(2)">입력 현황</div>
     <div id="mpT3" style="flex:1;padding:11px;text-align:center;font-size:12px;font-weight:600;color:var(--g3);cursor:pointer;white-space:nowrap;min-width:70px" onclick="mpTab(3)">일별 이력</div>
+    <div id="mpT4" style="flex:1;padding:11px;text-align:center;font-size:12px;font-weight:600;color:var(--g3);cursor:pointer;white-space:nowrap;min-width:70px" onclick="mpTab(4)">관리자 출근</div>
   </div>
   <!-- 입력 -->
   <div id="mpP0">
@@ -1043,6 +1055,15 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">불러오는 중...</div>
     </div></div>
     <div style="height:20px"></div>
+  </div>
+
+  <!-- 관리자 출근 탭 -->
+  <div id="mpP4" style="display:none">
+    <div class="pg-hd">
+      <div><h1>관리자 출근 현황</h1><small id="mgrAttDate"></small></div>
+      <div id="mgrAttSummary" style="font-size:12px;font-weight:700;color:var(--teal2)"></div>
+    </div>
+    <div id="mgrAttBody" style="padding:0 13px 20px"></div>
   </div>
 </div>
 
@@ -3585,15 +3606,15 @@ function renderLeaderStatus(){
     html+='<div style="display:flex;flex-wrap:wrap;gap:5px">';
     leaders.forEach(function(l){
       var isDone=done.indexOf(l.team)!==-1;
-      html+='<div style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;';
+      var isAdmin=me&&(me.role==='admin'||me.role==='manager');
+      var myCode=(me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
+      var canEdit=isAdmin||(me&&me.role==='leader'&&myCode===l.team);
       if(isDone){
-        html+='background:'+shiftBgs[shift]+';color:'+shiftColors[shift]+';border:1.5px solid '+shiftColors[shift]+'40">';
-        html+='✔ '+l.name;
+        var oc=canEdit?' onclick="openLeaderDataEdit(\''+shift+'\',\''+l.team+'\',\''+l.name+'\')"':'';
+        html+='<div'+oc+' style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;'+(canEdit?'cursor:pointer;':'cursor:default;')+'background:'+shiftBgs[shift]+';color:'+shiftColors[shift]+';border:1.5px solid '+shiftColors[shift]+'40">✔ '+l.name+'</div>';
       } else {
-        html+='background:var(--g1);color:var(--g3);border:1.5px solid var(--g2)">';
-        html+=l.name;
+        html+='<div style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:default;background:var(--g1);color:var(--g3);border:1.5px solid var(--g2)">'+l.name+'</div>';
       }
-      html+='</div>';
     });
     html+='</div></div>';
   });
@@ -3647,7 +3668,7 @@ function tabSwitch(prefix,n,count){
     if(p) p.style.display=i===n?'block':'none';
   }
 }
-function mpTab(n){tabSwitch('mp',n,4);if(n===2){renderLeaderStatus();updateMyTeamGrp();checkPrevDayMissing();}if(n===3){loadMpHistory();}}
+function mpTab(n){tabSwitch('mp',n,5);if(n===2){renderLeaderStatus();updateMyTeamGrp();checkPrevDayMissing();}if(n===3){loadMpHistory();}if(n===4){loadMgrAttendance();}}
 function hoTab(n){
   tabSwitch('ho',n,5);
   // 탭 전환 시 해당 팀 데이터 로드
@@ -4868,7 +4889,8 @@ var editShift='',editTeam='';
 function openLeaderDataEdit(shift,team,name){
   if(!me) return;
   var isAdmin=me.role==='admin'||me.role==='manager';
-  var isMyTeam=me.role==='leader'&&me.team===team;
+  var myCode=(me.team||'').trim().replace(/\s+/g,'').replace(/조$/,'');
+  var isMyTeam=me.role==='leader'&&(myCode===team||me.team===team);
   if(!isAdmin&&!isMyTeam){toast('본인 조 데이터만 수정할 수 있습니다');return;}
   editShift=shift; editTeam=team;
   var title=document.getElementById('leaderDataModalTitle');
@@ -7766,6 +7788,7 @@ async function loadMpFromDB(){
     updateFloorChart();
     updateMpSummary();
     updateStaff();
+    loadMgrAttendance();
     updateMyTeamGrp();    // 입력 탭 완료 상태 반영
     renderLeaderStatus(); // 입력현황 탭 완료 상태 반영
     checkPrevDayMissing();
@@ -8222,6 +8245,159 @@ setInterval(function(){ if(me){ loadMpFromDB(); checkNotifUpdates(); } }, 30000)
 checkShiftReset();
 </script>
 <script>
+// ═══ 관리자 출근 현황 ═══
+var mgrAttData = {}; // {team_name: {checked, checked_by, checked_at}}
+
+var MGR_STRUCTURE = {
+  '오전': {
+    '1팀': ['팀장','A조장','B조장','C조장'],
+    '2팀': ['팀장','A조장','B조장'],
+    '3팀': ['팀장','A조장','B조장'],
+    '4팀': ['팀장','A조장','B조장']
+  },
+  '오후': {
+    '6팀': ['팀장','A조장','B조장','C조장'],
+    '7팀': ['팀장','A조장','B조장'],
+    '8팀': ['팀장','A조장','B조장'],
+    '9팀': ['팀장','A조장','B조장']
+  },
+  '야간': {
+    '5팀': ['팀장','A조장','B조장'],
+    '10팀': ['팀장','A조장','B조장']
+  }
+};
+
+async function loadMgrAttendance(){
+  var today = new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+  var dateEl = document.getElementById('mgrAttDate');
+  if(dateEl) dateEl.textContent = today;
+  try{
+    var res = await sb.from('mgr_attendance').select('*').eq('date', today);
+    if(res.error) throw res.error;
+    mgrAttData = {};
+    (res.data||[]).forEach(function(r){
+      mgrAttData[r.team+'_'+r.name] = r;
+    });
+  }catch(e){ console.error(e); }
+  renderMgrAttendance();
+  updateDashMgrAtt();
+}
+
+function renderMgrAttendance(){
+  var body = document.getElementById('mgrAttBody');
+  if(!body) return;
+  var isAdmin = me && (me.role==='admin'||me.role==='manager');
+  var myTeam = me ? (me.team||'').replace(/\s*(A|B|C)조장?$/,'').replace(/\s*팀장$/,'').trim() : '';
+
+  var totalCount = 0, checkedCount = 0;
+  var html = '';
+
+  ['오전','오후','야간'].forEach(function(shift){
+    var shiftData = MGR_STRUCTURE[shift];
+    var shiftIcon = shift==='오전'?'🌅':shift==='오후'?'☀️':'🌙';
+    html += '<div style="margin-bottom:16px">';
+    html += '<div style="font-size:13px;font-weight:700;color:var(--g6);margin-bottom:8px;padding:8px 0;border-bottom:1.5px solid var(--g2)">'+shiftIcon+' '+shift+'팀</div>';
+
+    Object.keys(shiftData).forEach(function(team){
+      var members = shiftData[team];
+      var teamChecked = members.filter(function(name){
+        return mgrAttData[team+'_'+name] && mgrAttData[team+'_'+name].checked;
+      }).length;
+      totalCount += members.length;
+      checkedCount += teamChecked;
+
+      html += '<div style="margin-bottom:10px">';
+      html += '<div style="font-size:11px;font-weight:700;color:var(--navy);margin-bottom:5px">'+team+' <span style="font-weight:400;color:var(--g4)">('+teamChecked+'/'+members.length+')</span></div>';
+      html += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
+
+      members.forEach(function(name){
+        var key = team+'_'+name;
+        var att = mgrAttData[key];
+        var isChecked = att && att.checked;
+        var checkedBy = att ? att.checked_by : '';
+        var checkedTime = att && att.checked_at ? toKSTTime(att.checked_at) : '';
+
+        // 클릭 권한: 관리자 전체, 해당팀 조장/팀장
+        var canCheck = isAdmin || (me && myTeam === team);
+
+        var bg = isChecked ? 'background:var(--teal-bg);border-color:var(--teal2);color:var(--teal2)' : 'background:var(--g1);border-color:var(--g2);color:var(--g4)';
+        var cursor = canCheck ? 'cursor:pointer' : 'cursor:default';
+        var onclick = canCheck ? 'onclick="toggleMgrAtt(\'' + team + '\',\'' + name + '\')"' : '';
+
+        html += '<div '+onclick+' style="padding:6px 10px;border-radius:var(--r2);border:1.5px solid;font-size:11px;font-weight:600;'+bg+';'+cursor+';min-width:60px;text-align:center">';
+        html += '<div>'+(isChecked?'✔ ':'')+name+'</div>';
+        if(isChecked && checkedTime){
+          html += '<div style="font-size:9px;color:var(--g4);margin-top:1px">'+checkedTime+(checkedBy&&checkedBy!==me.name?' ('+checkedBy+')':'')+'</div>';
+        }
+        html += '</div>';
+      });
+
+      html += '</div></div>';
+    });
+    html += '</div>';
+  });
+
+  body.innerHTML = html;
+
+  // 요약
+  var summaryEl = document.getElementById('mgrAttSummary');
+  if(summaryEl) summaryEl.textContent = '출근 '+checkedCount+'/'+totalCount+'명';
+}
+
+function updateDashMgrAtt(){
+  var badge = document.getElementById('dashMgrAttBadge');
+  var detail = document.getElementById('dashMgrAttDetail');
+  if(!badge||!detail) return;
+  var total=0, checked=0;
+  var teamSummary=[];
+  ['오전','오후','야간'].forEach(function(shift){
+    var shiftData=MGR_STRUCTURE[shift];
+    Object.keys(shiftData).forEach(function(team){
+      var members=shiftData[team];
+      var c=members.filter(function(n){ return mgrAttData[team+'_'+n]&&mgrAttData[team+'_'+n].checked; }).length;
+      total+=members.length;
+      checked+=c;
+      teamSummary.push({team:team, checked:c, total:members.length});
+    });
+  });
+  badge.textContent=checked+'/'+total+'명';
+  badge.style.color=checked===total&&total>0?'var(--teal2)':'var(--warn)';
+  detail.innerHTML=teamSummary.map(function(t){
+    var color=t.checked===t.total?'var(--teal2)':t.checked>0?'var(--warn)':'var(--g3)';
+    return '<span style="color:'+color+';font-weight:600">'+t.team+' '+t.checked+'/'+t.total+'</span>';
+  }).join('<span style="color:var(--g2)"> · </span>');
+}
+
+async function toggleMgrAtt(team, name){
+  var today = new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+  var key = team+'_'+name;
+  var att = mgrAttData[key];
+  var newChecked = !(att && att.checked);
+  var nowISO = new Date(Date.now()+9*3600000).toISOString();
+  var checkerName = me ? me.name : '';
+
+  try{
+    var res = await sb.from('mgr_attendance').upsert({
+      date: today,
+      team: team,
+      name: name,
+      role: name.includes('팀장') ? '팀장' : '조장',
+      checked: newChecked,
+      checked_by: newChecked ? checkerName : null,
+      checked_at: newChecked ? nowISO : null
+    },{onConflict:'date,team,name'});
+    if(res.error) throw res.error;
+    // 로컬 즉시 반영
+    if(newChecked){
+      mgrAttData[key] = {team:team, name:name, checked:true, checked_by:checkerName, checked_at:nowISO};
+    } else {
+      mgrAttData[key] = {team:team, name:name, checked:false, checked_by:null, checked_at:null};
+    }
+    renderMgrAttendance();
+    updateDashMgrAtt();
+  }catch(e){ toast('저장 오류: '+String(e.message||e)); }
+}
+
 if('serviceWorker' in navigator){
   window.addEventListener('load', function(){
     navigator.serviceWorker.register('sw.js').then(function(reg){
