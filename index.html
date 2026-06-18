@@ -4962,7 +4962,7 @@ function rstShiftTab(n){
     div.dataset.name=l.name;
     div.addEventListener('click',function(){openLeaderDataEdit(this.dataset.shift,this.dataset.team,this.dataset.name);});
     // 조장은 본인 팀만 수정 가능 - 시각적으로 구분
-    if(me&&me.role==='leader'&&l.team!==me.team){ div.style.cursor='default'; }
+    if(me&&me.role==='leader'){ var _mc=(me.team||'').replace(/\s/g,'').replace(/조$/,''); if(_mc!==l.team&&me.team!==l.team) div.style.cursor='default'; }
     list.appendChild(div);
   });
   list.innerHTML='';
@@ -5000,7 +5000,9 @@ var editShift='',editTeam='';
 function openLeaderDataEdit(shift,team,name){
   if(!me) return;
   var isAdmin=me.role==='admin'||me.role==='manager';
-  var isMyTeam=me.role==='leader'&&me.team===team;
+  // me.team '1팀 A조' → '1팀A' 변환 후 비교
+  var myTeamCode=(me.team||'').replace(/\s/g,'').replace(/조$/,'');
+  var isMyTeam=me.role==='leader'&&(myTeamCode===team||me.team===team);
   if(!isAdmin&&!isMyTeam){toast('본인 조 데이터만 수정할 수 있습니다');return;}
   // 모달 상단에 입력이력 표시
   var metaKey=shift+'_'+team;
