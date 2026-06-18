@@ -2367,6 +2367,14 @@ let me=null,wdT=null,indData=[];
 // ─ 유틸 ─
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';clearTimeout(t._t);t._t=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(8px)';},2600);}
 // UTC ISO 문자열 → KST 날짜 'YYYY-MM-DD' 반환
+function toKSTTime(isoStr){
+  if(!isoStr) return '';
+  try{
+    var d=new Date(isoStr);
+    var kst=new Date(d.getTime()+9*3600000);
+    return kst.getUTCHours().toString().padStart(2,'0')+':'+kst.getUTCMinutes().toString().padStart(2,'0');
+  }catch(e){return '';}
+}
 function toKSTDate(isoStr){ if(!isoStr) return ''; return new Date(new Date(isoStr).getTime()+9*3600000).toISOString().slice(0,10); }
 // UTC ISO 문자열 → KST 날짜+시각 'YYYY-MM-DD HH:MM' 반환
 function toKSTDateTime(isoStr){ if(!isoStr) return ''; var d=new Date(new Date(isoStr).getTime()+9*3600000).toISOString(); return d.slice(0,10)+' '+d.slice(11,16); }
@@ -3848,6 +3856,21 @@ function confirmMp(){
     .then(function(){ loadMpFromDB(); });
   }
 
+// ─ 관리자 인원 화면 갱신 ─
+function updateMgrDisplay(){
+  // 팀별 박스 숫자 갱신
+  for(var t=1;t<=10;t++){
+    var box=document.getElementById('mpMgrT'+t);
+    if(box) box.textContent=mpMgrByTeam[t]||0;
+  }
+  // 합계 갱신
+  var numEl=document.getElementById('mpMgrNum');
+  if(numEl) numEl.textContent=mpMgrTotal||0;
+  // 표시 영역 보이기
+  var dispEl=document.getElementById('mpMgrDisplay');
+  if(dispEl) dispEl.style.display='block';
+}
+
 // ─ 관리자 인원 저장 ─
 async function saveMgrToDB(teamNum, count){
   try{
@@ -4948,10 +4971,22 @@ function rstShiftTab(n){
     var bc=isDone?colors[n]:'var(--g2)';
     var bg=isDone?bgs[n]:'var(--g1)';
     var co=isDone?colors[n]:'var(--g4)';
+    // 입력 메타정보
+    var metaKey=shift+'_'+l.team;
+    var meta=mpDataMeta[metaKey]||{};
+    var writerTxt=meta.writer||'';
+    var inputTime=meta.updated_at?toKSTTime(meta.updated_at):(meta.created_at?toKSTTime(meta.created_at):'');
+    var isProxy=meta.proxy_writer&&meta.proxy_writer!==meta.writer;
     var div=document.createElement('div');
     div.className='rp';
-    div.style.cssText='font-size:11px;padding:6px 12px;cursor:pointer;background:'+bg+';color:'+co+';border-color:'+bc;
-    div.textContent=(isDone?'\u2714 ':'')+l.name;
+    div.style.cssText='font-size:11px;padding:6px 10px;cursor:pointer;background:'+bg+';color:'+co+';border-color:'+bc;
+    var shortN=l.name.replace(/^[0-9]+팀\s*/,'');
+    var inner='<div style="font-weight:600">'+(isDone?'✔ ':'')+shortN+'</div>';
+    if(isDone&&writerTxt){
+      inner+='<div style="font-size:9px;color:'+(isProxy?'var(--warn)':'var(--g4)')+';margin-top:1px">'+writerTxt+(isProxy?' (대리)':'')+'</div>';
+      if(inputTime) inner+='<div style="font-size:9px;color:var(--g4)">'+inputTime+'</div>';
+    }
+    div.innerHTML=inner;
     div.dataset.shift=shift;
     div.dataset.team=l.team;
     div.dataset.name=l.name;
@@ -4967,9 +5002,20 @@ function openLeaderDataEdit(shift,team,name){
   var isAdmin=me.role==='admin'||me.role==='manager';
   var isMyTeam=me.role==='leader'&&me.team===team;
   if(!isAdmin&&!isMyTeam){toast('본인 조 데이터만 수정할 수 있습니다');return;}
+  // 모달 상단에 입력이력 표시
+  var metaKey=shift+'_'+team;
+  var meta=mpDataMeta[metaKey]||{};
   editShift=shift; editTeam=team;
   var title=document.getElementById('leaderDataModalTitle');
-  if(title) title.textContent=name+' 입력값 수정 ('+shift+')';
+  var metaKey2=shift+'_'+team;
+  var meta2=mpDataMeta[metaKey2]||{};
+  if(title){
+    var tInfo=team+' 수정';
+    if(meta2.writer) tInfo+='  ·  '+meta2.writer;
+    if(meta2.updated_at) tInfo+=' '+toKSTTime(meta2.updated_at);
+    if(meta2.proxy_writer&&meta2.proxy_writer!==meta2.writer) tInfo+=' (대리)';
+    title.textContent=tInfo;
+  }
   var body=document.getElementById('leaderDataEditBody');
   if(!body) return;
   var zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
@@ -5015,20 +5061,28 @@ function openMgrEdit(){
 }
 function closeMgrEdit(){hideM('mgrEditModal');}
 async function saveMgrEdit(){
-  var promises=[];
+  // 1. 입력값 읽기 + mpMgrByTeam 즉시 반영
   for(var t=1;t<=10;t++){
     var el=document.getElementById('mgrEditT'+t);
-    var val=parseInt(el?el.value:0)||0;
-    promises.push(saveMgrToDB(t, val));
+    mpMgrByTeam[t]=parseInt(el?el.value:0)||0;
   }
-  await Promise.all(promises);
-  // 저장 완료 후 재계산 및 전체 갱신
+  // 2. 합계 즉시 재계산
   mpMgrTotal=Object.values(mpMgrByTeam).reduce(function(a,b){return a+(b||0);},0);
-  updateMgrDisplay();
-  updateFloorChart(); // 층별 테이블 + grandTotal 갱신
-  updateStaff();      // 메인 대시보드 현재근무 갱신
+  // 3. 화면 즉시 갱신 (DB 저장과 별개로)
+  updateMgrDisplay();   // 팀별 박스 + 합계
+  updateFloorChart();   // 층별 집계표 + grandTotal
+  updateStaff();        // 메인 대시보드 현재근무
   closeMgrEdit();
   toast('✅ 관리자 인원이 저장되었습니다');
+  // 4. DB 저장 (비동기 - 화면 갱신 후 백그라운드)
+  var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+  for(var t2=1;t2<=10;t2++){
+    var key='__mgr_'+t2+'__';
+    sb.from('mp_data').upsert(
+      {date:today, shift:'__mgr__', team_code:key, values:[[mpMgrByTeam[t2]||0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]]},
+      {onConflict:'date,shift,team_code'}
+    ).then(function(r){ if(r&&r.error) console.error('관리자 저장 오류',r.error); });
+  }
 }
 
 function saveLeaderDataEdit(){
@@ -7862,11 +7916,21 @@ async function loadFacilityFromDB(){
 // 인력현황 - DB 저장 (일별 누적)
 async function saveMpToDB(shift, teamCode, values){
   try{
-    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
-    var res=await sb.from('mp_data').upsert(
-      {date:today, shift:shift, team_code:teamCode, values:values},
-      {onConflict:'date,shift,team_code'}
-    );
+    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+    var nowISO=new Date(Date.now()+9*3600000).toISOString();
+    var writerName=me?me.name:'';
+    var isProxy=me&&me.team&&teamCode!==me.team;
+    // 기존 레코드 확인
+    var exist=await sb.from('mp_data').select('id,writer').eq('date',today).eq('shift',shift).eq('team_code',teamCode).maybeSingle();
+    var upsertData={date:today, shift:shift, team_code:teamCode, values:values, updated_at:nowISO};
+    if(!exist.data){
+      upsertData.writer=writerName;
+      if(isProxy) upsertData.proxy_writer=writerName;
+    } else {
+      upsertData.writer=exist.data.writer||writerName;
+      if(isProxy) upsertData.proxy_writer=writerName;
+    }
+    var res=await sb.from('mp_data').upsert(upsertData,{onConflict:'date,shift,team_code'});
     if(res&&res.error) toast('⚠️ 저장오류: '+res.error.message);
   }catch(e){ toast('⚠️ 저장예외: '+String(e.message||e)); }
 }
@@ -7874,7 +7938,7 @@ async function saveMpToDB(shift, teamCode, values){
 async function loadMpFromDB(){
   try{
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
-    var res=await sb.from('mp_data').select('*').eq('date',today);
+    var res=await sb.from('mp_data').select('*,writer,updated_at,proxy_writer').eq('date',today);
     // 데이터 없어도 반드시 초기화 (이전 날짜 데이터 메모리 잔존 방지)
     mpDataByLeader={오전:{},오후:{},야간:{}};
     if(res.error||!res.data||!res.data.length){
