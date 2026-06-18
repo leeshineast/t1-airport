@@ -3378,10 +3378,11 @@ function updateStaff(){
   }
 
   var todayTotal=calcDayTotal(today);
+  var todayWithMgr=(todayTotal||0)+(mpMgrTotal||0); // 현장+관리자
   var vE=document.getElementById('curStaff');
   var uE=document.getElementById('curUnit');
-  if(vE) vE.textContent=todayTotal>0?todayTotal:'—';
-  if(uE) uE.textContent=todayTotal>0?'명 (금일)':'미입력';
+  if(vE) vE.textContent=todayWithMgr>0?todayWithMgr:'—';
+  if(uE) uE.textContent=todayWithMgr>0?'명 (금일)':'미입력';
 }
 
 async function loadPrevStaff(){
