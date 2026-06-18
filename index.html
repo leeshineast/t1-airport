@@ -2335,6 +2335,13 @@ let me=null,wdT=null,indData=[];
 // ─ 유틸 ─
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';clearTimeout(t._t);t._t=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(8px)';},2600);}
 // UTC ISO 문자열 → KST 날짜 'YYYY-MM-DD' 반환
+function toKSTTime(isoStr){
+  if(!isoStr) return '';
+  try{
+    var d=new Date(isoStr);
+    return d.getHours().toString().padStart(2,'0')+':'+d.getMinutes().toString().padStart(2,'0');
+  }catch(e){return '';}
+}
 function toKSTDate(isoStr){ if(!isoStr) return ''; return new Date(new Date(isoStr).getTime()+9*3600000).toISOString().slice(0,10); }
 // UTC ISO 문자열 → KST 날짜+시각 'YYYY-MM-DD HH:MM' 반환
 function toKSTDateTime(isoStr){ if(!isoStr) return ''; var d=new Date(new Date(isoStr).getTime()+9*3600000).toISOString(); return d.slice(0,10)+' '+d.slice(11,16); }
@@ -3480,7 +3487,7 @@ var LEADERS = {
   ],
 };
 // localStorage에서 조장 목록 로드
-function loadLeaders(){
+async function loadLeaders(){
   var VALID_TEAMS={
     '오전':['1팀A','1팀B','1팀C','2팀A','2팀B','3팀A','3팀B','4팀A','4팀B'],
     '오후':['6팀A','6팀B','6팀C','7팀A','7팀B','8팀A','8팀B','9팀A','9팀B'],
@@ -3494,6 +3501,21 @@ function loadLeaders(){
     '8팀B':'8팀 B조','9팀A':'9팀 A조','9팀B':'9팀 B조','5팀A':'5팀 A조',
     '5팀B':'5팀 B조','10팀A':'10팀 A조','10팀B':'10팀 B조'
   };
+  // DB에서 먼저 로드
+  try{
+    var res=await sb.from('leaders').select('shift,team,name');
+    if(res.data&&res.data.length>0){
+      ['오전','오후','야간'].forEach(function(shift){
+        LEADERS[shift].forEach(function(l,i){
+          var found=res.data.find(function(r){return r.shift===shift&&r.team===l.team;});
+          if(found) LEADERS[shift][i].name=found.name;
+        });
+      });
+      try{ localStorage.setItem('t1_leaders',JSON.stringify(LEADERS)); }catch(e){}
+      return;
+    }
+  }catch(e){ console.error('조장 DB 로드 오류',e); }
+  // DB 실패시 localStorage
   try{
     var s=localStorage.getItem('t1_leaders');
     if(s){
@@ -3524,6 +3546,19 @@ function loadLeaders(){
 }
 function saveLeaders(){
   try{ localStorage.setItem('t1_leaders',JSON.stringify(LEADERS)); }catch(e){}
+  saveLeadersToDB();
+}
+async function saveLeadersToDB(){
+  try{
+    var rows=[];
+    ['오전','오후','야간'].forEach(function(shift){
+      (LEADERS[shift]||[]).forEach(function(l){
+        rows.push({shift:shift, team:l.team, name:l.name});
+      });
+    });
+    var res=await sb.from('leaders').upsert(rows,{onConflict:'shift,team'});
+    if(res.error) console.error('조장 저장 오류',res.error);
+  }catch(e){ console.error(e); }
 }
 
 // 입력 완료 기록 (날짜별)
@@ -4243,7 +4278,10 @@ function updateMyTeamGrp(){
 // 로그인한 사람 근무조/팀 자동 선택
 function autoSelectMyShiftTeam(){
   if(!me||!me.team) return;
-  var team=me.team; // 예: '3팀B', '8팀A' 등
+  // me.team: '7팀 A조' → teamCode: '7팀A'
+  var raw=me.team.trim();
+  var teamCode=raw.replace(/\s+/g,'').replace(/조$/,'');
+  var team=teamCode;
 
   // 팀번호로 근무조 파악
   var teamNum=parseInt(team.replace(/[^0-9]/g,''));
@@ -4260,7 +4298,7 @@ function autoSelectMyShiftTeam(){
   updateMyTeamGrp();
   setTimeout(function(){
     document.querySelectorAll('.myteam-btn').forEach(function(btn){
-      if(btn.dataset.team===team && !btn.classList.contains('done')){
+      if((btn.dataset.team===teamCode||btn.dataset.team===raw) && !btn.classList.contains('done')){
         // 이미 선택된 것 해제 후 내 팀 선택
         document.querySelectorAll('.myteam-btn.on').forEach(function(b){
           if(!b.classList.contains('done')) b.classList.remove('on');
