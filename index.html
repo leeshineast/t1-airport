@@ -7120,7 +7120,7 @@ function renderLostList(){
   }
   var filtered=lostData.filter(function(r){
     if(sf&&r.status!==sf) return false;
-    if(mf&&toKSTDate(r.created_at).slice(0,7)!==mf) return false;
+    if(mf&&toKSTDate(r.found_date||r.created_at).slice(0,7)!==mf) return false;
     return true;
   });
   // 통계
@@ -7143,7 +7143,7 @@ function renderLostList(){
   var stLabel={'접수':'접수중','완료-폐기':'완료·폐기','완료-유실물':'완료·유실물','완료-인계':'완료·인계','완료-기타':'완료·기타'};
   var h='';
   filtered.forEach(function(r){
-    var dt=toKSTDateTime(r.created_at);
+    var dt=toKSTDateTime(r.found_date||r.created_at);
     var st=r.status||'접수';
     var isDone=st.startsWith('완료');
     h+='<div style="background:white;border-radius:var(--r2);border:1.5px solid var(--g2);padding:13px;margin-bottom:9px">';
