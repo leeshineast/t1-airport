@@ -3917,7 +3917,6 @@ function confirmMp(){
 
   // 조장 입력 완료 기록
   if(myTeam) logMpInput(shKey, myTeam);
-  saveMpData();
 
   var total=0;
   for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) total+=mpData[ri][ci];
@@ -5072,7 +5071,6 @@ function saveLeaderDataEdit(){
   if(!mpDataByLeader[editShift]) mpDataByLeader[editShift]={};
   mpDataByLeader[editShift][editTeam]=newVals;
   recalcMpData();
-  saveMpData();
   updateFloorChart();
   updateMpSummary();
   closeLeaderDataEdit();
