@@ -470,7 +470,10 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <div class="stat-box" style="margin:8px 13px;cursor:pointer" onclick="mpTab(4);go('mp')">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
       <div class="s-lbl">👔 관리자 출근 현황</div>
-      <div id="dashMgrAttBadge" style="font-size:11px;font-weight:700;color:var(--teal2)">0/0명</div>
+      <div style="text-align:right">
+        <div id="dashMgrAttBadge" style="font-size:11px;font-weight:700;color:var(--teal2)">0/0명</div>
+        <div id="dashMgrAttYesterday" style="font-size:10px;font-weight:600;color:var(--g4);margin-top:2px">전일 0/0명</div>
+      </div>
     </div>
     <div id="dashMgrAttDetail" style="display:flex;flex-wrap:wrap;gap:4px;font-size:10px;color:var(--g5)">
       <span style="color:var(--g3)">불러오는 중...</span>
@@ -8434,7 +8437,7 @@ async function loadMgrAttendance(){
 
 async function loadMgrAttendanceYesterday(){
   var yEl = document.getElementById('mgrAttYesterday');
-  if(!yEl) return;
+  var dashYEl = document.getElementById('dashMgrAttYesterday');
   var yesterday = new Date(Date.now()+9*3600000-86400000).toISOString().slice(0,10);
   var totalCount = 0;
   Object.keys(MGR_STRUCTURE).forEach(function(shift){
@@ -8446,10 +8449,12 @@ async function loadMgrAttendanceYesterday(){
     var res = await sb.from('mgr_attendance').select('*').eq('date', yesterday).eq('checked', true);
     if(res.error) throw res.error;
     var checkedCount = (res.data||[]).length;
-    yEl.textContent = '전일 '+checkedCount+'/'+totalCount+'명';
+    if(yEl) yEl.textContent = '전일 '+checkedCount+'/'+totalCount+'명';
+    if(dashYEl) dashYEl.textContent = '전일 '+checkedCount+'/'+totalCount+'명';
   }catch(e){
     console.error(e);
-    yEl.textContent='';
+    if(yEl) yEl.textContent='';
+    if(dashYEl) dashYEl.textContent='';
   }
 }
 
@@ -8543,7 +8548,7 @@ function updateDashMgrAtt(){
       teamSummary.push({team:team, checked:c, total:members.length});
     });
   });
-  badge.textContent=checked+'/'+total+'명';
+  badge.textContent='금일 '+checked+'/'+total+'명';
   badge.style.color=checked===total&&total>0?'var(--teal2)':'var(--warn)';
   detail.innerHTML=teamSummary.map(function(t){
     var color=t.checked===t.total?'var(--teal2)':t.checked>0?'var(--warn)':'var(--g3)';
