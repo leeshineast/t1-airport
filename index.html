@@ -4546,7 +4546,7 @@ function loadKpiInputForm(y, m){
   var note=document.getElementById('kpiNote');
   if(note) note.value=entry.kpiNote||'';
   var memo=document.getElementById('kpi1Memo');
-  if(memo) memo.value=''; // 새 메모 입력용으로 항상 비움 (기존 내용은 저장 시 누적)
+  if(memo) memo.value=entry.kpi1Memo||''; // 기존 메모 그대로 표시 (자유롭게 수정/삭제 가능)
   // kpi1 입력폼 placeholder (값이 없을 때만 표시되는 기본 안내)
   var kpi1el=document.getElementById('kpi1');
   if(kpi1el){
@@ -4608,17 +4608,7 @@ function saveKpi(){
   var note=document.getElementById('kpiNote');
   if(note) entry.kpiNote=note.value;
   var memo=document.getElementById('kpi1Memo');
-  if(memo&&memo.value){
-    // 메모 누적: 기존 메모가 있으면 날짜+줄바꿈으로 append
-    var today=new Date(Date.now()+9*3600000).toLocaleDateString('ko-KR');
-    var prevMemo=entry.kpi1Memo||'';
-    var newMemo=memo.value.trim();
-    if(prevMemo&&prevMemo!==newMemo){
-      entry.kpi1Memo=prevMemo+'\n['+today+'] '+newMemo;
-    } else {
-      entry.kpi1Memo=newMemo;
-    }
-  }
+  if(memo) entry.kpi1Memo=memo.value.trim(); // 입력란 내용으로 그대로 덮어쓰기 (수정/삭제 자유)
   if(!kpiData[y]) kpiData[y]={};
   kpiData[y][m]=entry;
   saveKpiToDB(y, m, entry); // DB 저장 (전체 공유)
