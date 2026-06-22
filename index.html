@@ -1234,6 +1234,12 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     </div></div>
     <div class="card" style="margin-bottom:10px"><div class="cb">
       <div class="fg">
+        <label class="f-lbl">📅 발견일자</label>
+        <input type="date" id="lostFoundDate" class="ri" style="margin-bottom:0">
+      </div>
+    </div></div>
+    <div class="card" style="margin-bottom:10px"><div class="cb">
+      <div class="fg">
         <label class="f-lbl">발견 위치 <span style="color:var(--danger)">*</span></label>
         <input type="text" id="lostLocation" class="ri" placeholder="예: 3F 동편 화장실 앞" style="margin-bottom:0">
       </div>
@@ -4525,11 +4531,7 @@ function loadKpiInputForm(y, m){
   for(var i=1;i<=5;i++){
     var el=document.getElementById('kpi'+i);
     if(!el) continue;
-    if(i===1){
-      el.value=''; // kpi1(VOC)는 항상 비움 — 새로 추가할 건수 입력
-    } else {
-      el.value=entry['kpi'+i]!==undefined?entry['kpi'+i]:''; // kpi2~5는 기존값 로드
-    }
+    el.value=entry['kpi'+i]!==undefined?entry['kpi'+i]:''; // kpi1~5 모두 기존값 로드
   }
   // ATP 세부 항목 불러오기
   var atpDetail=entry.atpDetail||{};
@@ -4545,17 +4547,15 @@ function loadKpiInputForm(y, m){
   if(note) note.value=entry.kpiNote||'';
   var memo=document.getElementById('kpi1Memo');
   if(memo) memo.value=''; // 새 메모 입력용으로 항상 비움 (기존 내용은 저장 시 누적)
-  // kpi1 입력폼 placeholder에 기존 누적값 안내
+  // kpi1 입력폼 placeholder (값이 없을 때만 표시되는 기본 안내)
   var kpi1el=document.getElementById('kpi1');
-  var kpi1hint=document.getElementById('kpi1Hint');
   if(kpi1el){
-    var existing=(entry['kpi1']||0);
-    kpi1el.placeholder=existing>0?'현재: '+existing+'건 (입력하면 해당 값으로 변경됨)':'예: 8 (분기 VOC+민원 건수)';
+    kpi1el.placeholder='예: 8 (분기 VOC+민원 건수)';
   }
+  // kpi1Hint: 입력란에 기존값이 직접 표시되므로 중복 안내 비활성화
+  var kpi1hint=document.getElementById('kpi1Hint');
   if(kpi1hint){
-    var ex=(entry['kpi1']||0);
-    kpi1hint.textContent=ex>0?'현재 '+ex+'건 입력됨 · 수정하려면 새 값을 입력하세요':'';
-    kpi1hint.style.display=ex>0?'block':'none';
+    kpi1hint.style.display='none';
   }
 }
 
@@ -7072,7 +7072,8 @@ async function saveLost(){
   var finderId=document.getElementById('lostFinderId').value.trim();
   var finderName=document.getElementById('lostFinderName').value.trim();
   var note=document.getElementById('lostNote').value.trim();
-  var now=new Date(Date.now()+9*3600000).toISOString();
+  var foundDateInput=document.getElementById('lostFoundDate').value;
+  var now=foundDateInput?new Date(foundDateInput+'T00:00:00+09:00').toISOString():new Date(Date.now()+9*3600000).toISOString();
   var btn=document.querySelector('#lostP1 .btn-prim');
   if(btn){btn.disabled=true;btn.textContent='저장 중...';}
   try{
@@ -7088,7 +7089,7 @@ async function saveLost(){
     });
     if(res.error) throw res.error;
     toast('✅ 습득물이 접수되었습니다');
-    ['lostFinderId','lostFinderName','lostLocation','lostItem','lostNote'].forEach(function(id){
+    ['lostFinderId','lostFinderName','lostFoundDate','lostLocation','lostItem','lostNote'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.value='';
     });
     document.querySelectorAll('#lostStatusGrp .rp').forEach(function(p){p.classList.remove('on');});
