@@ -1983,7 +1983,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   </div>
   <div id="adP2" style="display:none">
     <div class="pg-hd"><div><h1>공지사항 관리</h1></div></div>
-    <div class="card"><div class="cb"><p style="font-size:12px;color:var(--g5);margin-bottom:13px;line-height:1.6">전체 공지사항을 작성하면 로그인 시 팝업으로 표시됩니다.</p><button class="btn-prim" onclick="if(me&&(me.role==='admin'||me.role==='manager')){openNW();}else{toast('관리자만 공지사항을 작성할 수 있습니다');}">📢 새 공지사항 작성</button></div></div>
+    <div class="card"><div class="cb"><p style="font-size:12px;color:var(--g5);margin-bottom:13px;line-height:1.6">전체 공지사항을 작성하면 로그인 시 팝업으로 표시됩니다.</p><button class="btn-prim" onclick="if(me&&(me.role==='admin'||me.role==='manager'||me.role==='leader')){openNW();}else{toast('관리자만 공지사항을 작성할 수 있습니다');}">📢 새 공지사항 작성</button></div></div>
     <!-- 공지사항 목록 -->
     <div style="font-size:12px;font-weight:800;color:var(--g6);padding:13px 13px 6px">등록된 공지사항</div>
     <div id="adminNoticeList">
@@ -2465,7 +2465,7 @@ function go(name){
     // 권한에 따라 입력 탭 숨김 (조장은 분기별/연간 조회만)
     var _kpiT0=document.getElementById('kpiT0');
     var _kpiP0=document.getElementById('kpiP0');
-    var _canKpi=(me&&(me.role==='admin'||me.role==='manager'));
+    var _canKpi=(me&&(me.role==='admin'||me.role==='manager'||me.role==='leader'));
     if(_kpiT0) _kpiT0.style.display=_canKpi?'':'none';
     if(_kpiP0&&!_canKpi) _kpiP0.style.display='none';
     if(!_canKpi) kpiTab(1);
@@ -2490,7 +2490,7 @@ function applyRoleUI(){
   var md=document.getElementById('mpDate');if(md)md.textContent=ds;
   // 관리자 메뉴 (admin + manager 모두)
   var isAdmin=me.role==='admin';
-  var isMgr=me.role==='manager'||me.role==='admin';
+  var isMgr=me.role==='manager'||me.role==='admin'||me.role==='leader';
   var ab=document.getElementById('adminBtn');
   if(ab) ab.style.display=isMgr?'block':'none';
   // 산업재해 등록 버튼 (admin만)
@@ -3884,7 +3884,7 @@ async function loadHandoverByShift(shift){
       if(r.accident&&r.accident!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🚨 사고</div><div class="ho-val">'+r.accident+'</div></div>';
       if(r.special&&r.special!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🔨 특별작업</div><div class="ho-val">'+r.special+'</div></div>';
       if(!fields) fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
-      var confBtn=isDone?'<div style="font-size:11px;color:var(--success);font-weight:700;padding:6px 0">✅ '+(r.confirmed_by||'')+'님 확인완료</div>':'<div class="conf-row"><button class="btn-conf" onclick="confHODB('+r.id+',this)">✔ 인수 확인</button></div>';
+      var confBtn=renderHoConfBlock(r);
       html+='<div class="ho-card">'
         +'<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px">'
         +'<span class="t-pill '+(pMap[ps2.group]||'pill-am')+'">'+ps2.team+'</span>'
@@ -4602,8 +4602,8 @@ function loadKpiInputForm(y, m){
 }
 
 function saveKpi(){
-  if(!me||!(me.role==='admin'||me.role==='manager')){
-    toast('⚠️ KPI 입력은 팀장 이상만 가능합니다');return;
+  if(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader')){
+    toast('⚠️ 조장 이상만 가능합니다');return;
   }
   var y=document.getElementById('kpiYear').value;
   var m=parseInt(document.getElementById('kpiMonth').value);
@@ -6350,6 +6350,7 @@ async function loadAdminNoticeList(){
       wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">등록된 공지사항이 없습니다</div>';
       return;
     }
+    var isAdminOnly=me&&me.role==='admin';
     var h='';
     res.data.forEach(function(n){
       var date=n.created_at?toKSTDate(n.created_at):'';
@@ -6362,7 +6363,7 @@ async function loadAdminNoticeList(){
       h+='</div>';
       h+='<div style="display:flex;gap:5px;flex-shrink:0">';
       h+='<button data-id="'+n.id+'" data-title="'+encodeURIComponent(n.title)+'" data-content="'+encodeURIComponent(n.content||'')+'" onclick="openEditNotice(this)" style="padding:5px 10px;background:var(--teal-bg);color:var(--teal2);border:1px solid var(--teal);border-radius:20px;font-size:10px;font-weight:700;cursor:pointer">수정</button>';
-      h+='<button data-id="'+n.id+'" onclick="deleteNotice(this)" style="padding:5px 10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:20px;font-size:10px;font-weight:700;cursor:pointer">삭제</button>';
+      if(isAdminOnly){h+='<button data-id="'+n.id+'" onclick="deleteNotice(this)" style="padding:5px 10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:20px;font-size:10px;font-weight:700;cursor:pointer">삭제</button>';}
       h+='</div></div></div></div>';
     });
     wrap.innerHTML=h;
@@ -6370,6 +6371,7 @@ async function loadAdminNoticeList(){
 }
 
 async function deleteNotice(btn){
+  if(!me||me.role!=='admin'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 공지사항을 삭제하시겠습니까?')) return;
   var id=btn.getAttribute('data-id');
   try{
@@ -6474,7 +6476,7 @@ function renderHoList(data){
   var html='';
 
   // 다운로드 버튼 (관리자/팀장용)
-  if(me&&(me.role==='admin'||me.role==='manager')){
+  if(me&&(me.role==='admin'||me.role==='manager'||me.role==='leader')){
     html+='<div style="padding:8px 13px 4px;text-align:right">';
     html+='<button onclick="downloadHoExcel()" style="padding:7px 14px;background:var(--teal);color:white;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">📥 엑셀 다운로드</button>';
     html+='</div>';
@@ -6510,7 +6512,7 @@ function renderHoList(data){
     if(r.equipment) fields+='<div class="ho-f"><div class="ho-lbl">🚛 장비·차량</div><div class="ho-val">'+r.equipment+'</div></div>';
     if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📋 공지</div><div class="ho-val">'+r.notice+'</div></div>';
     if(!fields) fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
-    var confBtn=isDone?'<div style="font-size:11px;color:var(--success);font-weight:700;padding:6px 0">✅ '+( r.confirmed_by||'')+'님 확인완료</div>':'<div class="conf-row"><button class="btn-conf" onclick="confHODB('+r.id+',this)">✔ 인수 확인</button></div>';
+    var confBtn=renderHoConfBlock(r);
     html+='<div class="ho-card">'
       +'<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px">'
       +'<span class="t-pill '+(pMap[sNm]||'pill-am')+'">'+sNm+'</span>'
@@ -6523,7 +6525,7 @@ function renderHoList(data){
       +'<div class="ho-body">'+fields+'</div>'
       +confBtn
       // 관리자 수정/삭제 버튼
-      +(me&&me.role==='admin'?'<div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--g1)"><button data-id="'+r.id+'" onclick="editHo(this)" style="flex:1;padding:5px;background:var(--teal-bg);color:var(--teal2);border:1px solid var(--teal);border-radius:8px;font-size:10px;font-weight:700;cursor:pointer">✏️ 수정</button><button data-id="'+r.id+'" onclick="deleteHo(this)" style="flex:1;padding:5px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:8px;font-size:10px;font-weight:700;cursor:pointer">🗑️ 삭제</button></div>':'')
+      +((me&&(me.role==='admin'||me.role==='manager'||me.role==='leader'))?('<div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--g1)"><button data-id="'+r.id+'" onclick="editHo(this)" style="flex:1;padding:5px;background:var(--teal-bg);color:var(--teal2);border:1px solid var(--teal);border-radius:8px;font-size:10px;font-weight:700;cursor:pointer">✏️ 수정</button>'+(me&&me.role==='admin'?'<button data-id="'+r.id+'" onclick="deleteHo(this)" style="flex:1;padding:5px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:8px;font-size:10px;font-weight:700;cursor:pointer">🗑️ 삭제</button>':'')+'</div>'):'')
       +'</div>';
     }); // dayData.forEach 끝
   }); // dates.forEach 끝
@@ -6553,7 +6555,7 @@ function downloadHoExcel(){
     var dates=Object.keys(groups).sort().reverse();
 
     // 전체 시트
-    var allRows=[['날짜','시간','인계팀','인수팀','작성자','소속','시설고장','민원','위험구역','안전사고','장비차량','공지사항','확인여부','확인자']];
+    var allRows=[['날짜','시간','인계팀','인수팀','작성자','소속','시설고장','민원','위험구역','안전사고','장비차량','공지사항','확인여부','확인자','처리결과']];
     dates.forEach(function(d){
       groups[d].forEach(function(r){
         var ts=(r.ho_date||r.created_at)?new Date(r.ho_date||r.created_at).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false}):'';
@@ -6564,25 +6566,25 @@ function downloadHoExcel(){
           r.facility||'', r.complaint||'',
           r.danger||'', r.accident||'',
           r.equipment||'', r.notice||'',
-          r.confirmed?'확인완료':'미확인', r.confirmed_by||''
+          r.confirmed?'확인완료':'미확인', r.confirmed_by||'', r.result||''
         ]);
       });
       allRows.push([]); // 날짜 구분 빈줄
     });
     var ws=XLSX.utils.aoa_to_sheet(allRows);
     // 열 너비
-    ws['!cols']=[{wch:12},{wch:8},{wch:8},{wch:8},{wch:10},{wch:12},{wch:20},{wch:20},{wch:15},{wch:15},{wch:15},{wch:20},{wch:10},{wch:10}];
+    ws['!cols']=[{wch:12},{wch:8},{wch:8},{wch:8},{wch:10},{wch:12},{wch:20},{wch:20},{wch:15},{wch:15},{wch:15},{wch:20},{wch:10},{wch:10},{wch:25}];
     XLSX.utils.book_append_sheet(wb,'전체인수인계',ws);
 
     // 날짜별 시트 (최근 7일)
     dates.slice(0,7).forEach(function(d){
-      var rows=[['시간','인계팀','인수팀','작성자','소속','시설고장','민원','위험구역','안전사고','장비차량','공지사항','확인여부']];
+      var rows=[['시간','인계팀','인수팀','작성자','소속','시설고장','민원','위험구역','안전사고','장비차량','공지사항','확인여부','처리결과']];
       groups[d].forEach(function(r){
         var ts=(r.ho_date||r.created_at)?new Date(r.ho_date||r.created_at).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false}):'';
-        rows.push([ts, r.shift||'', r.to_shift||'', r.author||'', r.team||'', r.facility||'', r.complaint||'', r.danger||'', r.accident||'', r.equipment||'', r.notice||'', r.confirmed?'✅':'❌']);
+        rows.push([ts, r.shift||'', r.to_shift||'', r.author||'', r.team||'', r.facility||'', r.complaint||'', r.danger||'', r.accident||'', r.equipment||'', r.notice||'', r.confirmed?'✅':'❌', r.result||'']);
       });
       var ws2=XLSX.utils.aoa_to_sheet(rows);
-      ws2['!cols']=[{wch:8},{wch:8},{wch:8},{wch:10},{wch:12},{wch:20},{wch:20},{wch:15},{wch:15},{wch:15},{wch:20},{wch:8}];
+      ws2['!cols']=[{wch:8},{wch:8},{wch:8},{wch:10},{wch:12},{wch:20},{wch:20},{wch:15},{wch:15},{wch:15},{wch:20},{wch:8},{wch:25}];
       var sheetName=d.replace(/-/g,'').slice(4); // 0612 형식
       XLSX.utils.book_append_sheet(wb,sheetName,ws2);
     });
@@ -6598,9 +6600,27 @@ function updateHoPending(){
   var el=document.getElementById('dHO'); if(el) el.textContent=cnt;
 }
 
+function renderHoConfBlock(r){
+  if(r.confirmed){
+    var resultHtml=r.result?('<div style="font-size:11px;color:var(--g6);background:var(--g1);border-radius:6px;padding:6px 9px;margin-top:5px;white-space:pre-wrap">📝 처리결과: '+r.result+'</div>'):'';
+    return '<div style="font-size:11px;color:var(--success);font-weight:700;padding:6px 0">✅ '+(r.confirmed_by||'')+'님 확인완료</div>'+resultHtml;
+  }
+  return '<div class="conf-row"><button class="btn-conf" onclick="openHoResult('+r.id+')">✔ 확인 및 결과입력</button></div>'
+    +'<div id="hoResultBox_'+r.id+'" style="display:none;margin-top:6px">'
+      +'<textarea id="hoResultInput_'+r.id+'" placeholder="처리결과를 입력하세요 (예: 수리 완료 / 자재 주문 중, 내일 처리 예정)" style="width:100%;min-height:54px;padding:8px;border:1.5px solid var(--g2);border-radius:8px;font-size:12px;box-sizing:border-box;font-family:inherit"></textarea>'
+      +'<button onclick="confHODB('+r.id+',this)" style="margin-top:5px;width:100%;padding:8px;background:var(--teal);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">확인 완료</button>'
+    +'</div>';
+}
+function openHoResult(id){
+  var box=document.getElementById('hoResultBox_'+id);
+  if(box) box.style.display='block';
+}
 async function confHODB(id, btn){
+  var input=document.getElementById('hoResultInput_'+id);
+  var resultText=input?input.value.trim():'';
+  if(!resultText){ toast('⚠️ 처리결과를 입력해주세요'); return; }
   if(btn) btn.disabled=true;
-  await confirmHandoverDB(id);
+  await confirmHandoverDB(id, resultText);
 }
 
 function updateAccComplaintCount(){
@@ -6694,6 +6714,7 @@ function updateAccComplaintCount(){
 
 
 async function deleteHo(btn){
+  if(!me||me.role!=='admin'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 인수인계를 삭제하시겠습니까?')) return;
   var id=btn.getAttribute('data-id');
   try{
@@ -6705,6 +6726,7 @@ async function deleteHo(btn){
 }
 
 function editHo(btn){
+  if(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader')){toast('⚠️ 조장 이상만 수정할 수 있습니다');return;}
   var id=btn.getAttribute('data-id');
   var r=(hoAll||[]).find(function(x){return String(x.id)===String(id);});
   if(!r){toast('데이터를 찾을 수 없습니다');return;}
@@ -6757,14 +6779,18 @@ async function saveHandoverToDB(data){
   }catch(e){}
 }
 
-async function confirmHandoverDB(id){
+async function confirmHandoverDB(id, resultText){
   try{
     await sb.from('handover').update({
       confirmed:true,
       confirmed_by:me?me.name:'',
-      confirmed_at:new Date().toISOString()
+      confirmed_at:new Date().toISOString(),
+      result:resultText||'',
+      result_by:me?me.name:'',
+      result_at:new Date().toISOString()
     }).eq('id',id);
     loadHandoverFromDB();
+    ['오전팀','오후팀','야간팀'].forEach(function(s){ if(document.getElementById(s==='오전팀'?'hoAmList':s==='오후팀'?'hoPmList':'hoNtList')) loadHandoverByShift(s); });
   }catch(e){}
 }
 
@@ -7026,6 +7052,7 @@ async function confirmVocComplete(){
 }
 
 async function deleteVoc(id){
+  if(!me||me.role!=='admin'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 민원 기록을 삭제하시겠습니까?')) return;
   try{
     await sb.from('voc_data').delete().eq('id',parseInt(id));
@@ -7102,8 +7129,8 @@ function pickLostCompleteType(el){
 }
 
 async function saveLost(){
-  if(!me||!(me.role==='admin'||me.role==='manager')){
-    toast('⚠️ 팀장/T1운영 이상만 입력 가능합니다'); return;
+  if(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader')){
+    toast('⚠️ 조장 이상만 입력 가능합니다'); return;
   }
   var location=document.getElementById('lostLocation').value.trim();
   var item=document.getElementById('lostItem').value.trim();
@@ -7186,7 +7213,8 @@ function renderLostList(){
     el.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">접수된 습득물이 없습니다</div>';
     return;
   }
-  var isAdmin=me&&(me.role==='admin'||me.role==='manager');
+  var isAdmin=me&&(me.role==='admin'||me.role==='manager'||me.role==='leader');
+  var isAdminOnly=me&&me.role==='admin';
   var stColor={'접수':'var(--danger)','완료-폐기':'var(--g4)','완료-유실물':'var(--teal2)','완료-인계':'var(--navy)','완료-기타':'var(--g4)'};
   var stBg={'접수':'var(--danger-bg)','완료-폐기':'var(--g1)','완료-유실물':'var(--teal-bg)','완료-인계':'var(--navy-bg)','완료-기타':'var(--g1)'};
   var stLabel={'접수':'접수중','완료-폐기':'완료·폐기','완료-유실물':'완료·유실물','완료-인계':'완료·인계','완료-기타':'완료·기타'};
@@ -7220,7 +7248,7 @@ function renderLostList(){
         h+='<button data-id="'+r.id+'" onclick="openLostComplete(this.dataset.id)" style="flex:1;padding:7px;background:var(--teal-bg);color:var(--teal2);border:1.5px solid var(--teal);border-radius:var(--r2);font-size:11px;font-weight:700;cursor:pointer">✅ 처리완료</button>';
       }
       h+='<button data-id="'+r.id+'" data-row="'+encodeURIComponent(JSON.stringify(r))+'" onclick="openLostEdit(this)" style="padding:7px 11px;background:var(--navy-bg);color:var(--navy);border:1.5px solid var(--navy);border-radius:var(--r2);font-size:11px;font-weight:700;cursor:pointer">✏️</button>';
-      h+='<button data-id="'+r.id+'" onclick="deleteLost(this.dataset.id)" style="padding:7px 11px;background:white;color:var(--danger);border:1.5px solid var(--danger);border-radius:var(--r2);font-size:11px;font-weight:700;cursor:pointer">🗑️</button>';
+      if(isAdminOnly){h+='<button data-id="'+r.id+'" onclick="deleteLost(this.dataset.id)" style="padding:7px 11px;background:white;color:var(--danger);border:1.5px solid var(--danger);border-radius:var(--r2);font-size:11px;font-weight:700;cursor:pointer">🗑️</button>';}
       h+='</div>';
     }
     h+='</div>';
@@ -7347,6 +7375,7 @@ async function confirmLostComplete(){
 }
 
 async function deleteLost(id){
+  if(!me||me.role!=='admin'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 습득물 기록을 삭제하시겠습니까?')) return;
   try{
     await sb.from('lost_found').delete().eq('id',parseInt(id));
@@ -7517,6 +7546,7 @@ function previewEquipmentFile(input){
 }
 
 async function uploadEquipmentData(){
+  if(!me||me.role!=='admin'){toast('⚠️ 최고관리자만 업로드(기존 데이터 교체)할 수 있습니다');return;}
   if(!window._eqPendingData){ toast('파일을 먼저 선택해주세요'); return; }
   var btn=document.querySelector('#eqP2 .btn-prim');
   if(btn){btn.disabled=true;btn.textContent='업로드 중...';}
@@ -7719,7 +7749,7 @@ function renderWasteList(){
     el.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">입력된 데이터가 없습니다</div>';
     return;
   }
-  var isAdmin=me&&(me.role==='admin'||me.role==='manager');
+  var isAdminOnly=me&&me.role==='admin';
   var h='';
   filtered.forEach(function(r){
     var incTotal=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
@@ -7749,7 +7779,7 @@ function renderWasteList(){
     h+='<span>기타: '+(r.recycle_etc||0)+'톤</span>';
     h+='</div></div>';
     if(r.note) h+='<div style="font-size:11px;color:var(--g5);background:var(--g1);border-radius:6px;padding:6px 9px;margin-bottom:7px">📎 '+r.note+'</div>';
-    if(isAdmin){
+    if(isAdminOnly){
       h+='<button data-id="'+r.id+'" onclick="deleteWaste(this.dataset.id)" style="padding:6px 12px;background:white;color:var(--danger);border:1.5px solid var(--danger);border-radius:var(--r2);font-size:11px;font-weight:700;cursor:pointer">🗑️ 삭제</button>';
     }
     h+='</div>';
@@ -7758,6 +7788,7 @@ function renderWasteList(){
 }
 
 async function deleteWaste(id){
+  if(!me||me.role!=='admin'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 기록을 삭제하시겠습니까?')) return;
   try{
     await sb.from('waste_data').delete().eq('id',parseInt(id));
@@ -7840,7 +7871,8 @@ function renderVocList(){
     return;
   }
 
-  var isAdmin=me&&(me.role==='admin'||me.role==='manager');
+  var isAdmin=me&&(me.role==='admin'||me.role==='manager'||me.role==='leader');
+  var isAdminOnly=me&&me.role==='admin';
   var stColor={접수:'var(--danger)',처리중:'#D97706',완료:'var(--teal2)'};
   var stBg={접수:'#FEF2F2',처리중:'#FFFBEB',완료:'var(--teal-bg)'};
 
@@ -7878,7 +7910,7 @@ function renderVocList(){
         var active=r.status===s;
         h+='<button data-id="'+r.id+'" data-status="'+s+'" onclick="updateVocStatus(this.dataset.id,this.dataset.status)" style="padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid '+(active?stColor[s]:'var(--g2)')+';background:'+(active?stBg[s]:'white')+';color:'+(active?stColor[s]:'var(--g4)')+'">'+s+'</button>';
       });
-      h+='<button data-id="'+r.id+'" onclick="deleteVoc(this.dataset.id)" style="margin-left:auto;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--g2);background:white;color:var(--g4)">🗑️</button>';
+      if(isAdminOnly){h+='<button data-id="'+r.id+'" onclick="deleteVoc(this.dataset.id)" style="margin-left:auto;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--g2);background:white;color:var(--g4)">🗑️</button>';}
       h+='<button data-id="'+r.id+'" data-date="'+r.voc_date+'" data-content="'+encodeURIComponent(r.content)+'" data-note="'+encodeURIComponent(r.note||'')+'" onclick="openVocEdit(this)" style="padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--g2);background:white;color:var(--g4)">✏️</button>';
       h+='</div>';
     }
@@ -8079,7 +8111,7 @@ function regTab(idx){
   if(idx===0) loadRegList();
   if(idx===1 && regFiles.length===0){ toast('먼저 사규를 선택해 주세요'); regTab(0); return; }
   if(idx===2){
-    var isAdmin=(me&&(me.role==='admin'||me.role==='manager'));
+    var isAdmin=(me&&me.role==='admin');
     var adminWrap=document.getElementById('regAdminOnly');
     var notAdmin=document.getElementById('regNotAdmin');
     if(adminWrap) adminWrap.style.display=isAdmin?'block':'none';
@@ -8222,6 +8254,7 @@ function deleteRegById(btn){
   deleteReg(id, path);
 }
 async function deleteReg(id, path){
+  if(!me||me.role!=='admin'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 사규를 삭제하시겠습니까?')) return;
   try{
     var delUrl=SUPABASE_URL+'/storage/v1/object/regulations/'+encodeURIComponent(path);
