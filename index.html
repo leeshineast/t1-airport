@@ -1045,6 +1045,10 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <button onclick="openLeaderEdit()" style="padding:6px 11px;background:var(--g1);color:var(--g5);border:1.5px solid var(--g2);border-radius:20px;font-size:11px;font-weight:600;cursor:pointer">⚙️ 명단 편집</button>
       </div>
     </div>
+    <div style="padding:0 13px 10px;display:flex;gap:7px" id="leaderViewToggle">
+      <div class="rp on" onclick="switchLeaderStatusView(this,'today')" style="flex:1;text-align:center">당일</div>
+      <div class="rp" onclick="switchLeaderStatusView(this,'yesterday')" style="flex:1;text-align:center">전일</div>
+    </div>
     <div class="card"><div class="cb">
       <div id="leaderStatusWrap">
         <div style="text-align:center;padding:16px;color:var(--g3);font-size:12px">로딩 중...</div>
@@ -1069,6 +1073,10 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <div id="mgrAttSummary" style="font-size:12px;font-weight:700;color:var(--teal2)"></div>
         <div id="mgrAttYesterday" style="font-size:11px;font-weight:600;color:var(--g4);margin-top:2px"></div>
       </div>
+    </div>
+    <div style="padding:0 13px 10px;display:flex;gap:7px" id="mgrAttViewToggle">
+      <div class="rp on" onclick="switchMgrAttView(this,'today')" style="flex:1;text-align:center">당일</div>
+      <div class="rp" onclick="switchMgrAttView(this,'yesterday')" style="flex:1;text-align:center">전일</div>
     </div>
     <div id="mgrAttBody" style="padding:0 13px 20px"></div>
   </div>
@@ -3763,10 +3771,45 @@ function logMpInput(shift, leaderTeam){
 }
 
 // 메인 화면 조장 입력현황 렌더링
-function renderLeaderStatus(){
-  var ldl2=document.getElementById('leaderDateLbl2');if(ldl2)ldl2.textContent=new Date(Date.now()+9*3600000).toLocaleDateString('ko-KR');
+var yLeaderData=null; // 전일 데이터 캐시: {오전:{team:{writer,proxy_writer}}, ...}
+async function fetchYesterdayLeaderData(){
+  if(yLeaderData) return yLeaderData;
+  var kst=new Date(Date.now()+9*3600000);
+  var yesterday=new Date(kst.getTime()-86400000).toISOString().slice(0,10);
+  var byShift={오전:{},오후:{},야간:{}};
+  try{
+    var res=await sb.from('mp_data').select('shift,team_code,writer,proxy_writer').eq('date',yesterday);
+    if(res.data) res.data.forEach(function(r){
+      if(!r.team_code||r.team_code.indexOf('_')===0) return;
+      if(!byShift[r.shift]) byShift[r.shift]={};
+      byShift[r.shift][r.team_code]={writer:r.writer||'',proxy_writer:r.proxy_writer||''};
+    });
+  }catch(e){}
+  yLeaderData=byShift;
+  return byShift;
+}
+function switchLeaderStatusView(btn, mode){
+  document.querySelectorAll('#leaderViewToggle .rp').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  if(mode==='yesterday'){
+    document.getElementById('leaderStatusWrap').innerHTML='<div style="text-align:center;padding:16px;color:var(--g3);font-size:12px">불러오는 중...</div>';
+    fetchYesterdayLeaderData().then(function(){ renderLeaderStatus('yesterday'); });
+  } else {
+    renderLeaderStatus('today');
+  }
+}
+function renderLeaderStatus(viewDate){
+  viewDate=viewDate||'today';
+  var ldl2=document.getElementById('leaderDateLbl2');
+  if(ldl2){
+    var kst=new Date(Date.now()+9*3600000);
+    if(viewDate==='yesterday'){ kst=new Date(kst.getTime()-86400000); ldl2.textContent=kst.toLocaleDateString('ko-KR')+' (전일)'; }
+    else ldl2.textContent=kst.toLocaleDateString('ko-KR');
+  }
   var el=document.getElementById('leaderStatusWrap');
   if(!el) return;
+  var dataSrc=(viewDate==='yesterday')?(yLeaderData||{오전:{},오후:{},야간:{}}):mpDataByLeader;
+  var metaSrc=(viewDate==='yesterday')?(yLeaderData||{오전:{},오후:{},야간:{}}):mpMeta;
   var shiftColors={'오전':'var(--navy)','오후':'var(--teal2)','야간':'#6B21A8'};
   var shiftBgs={'오전':'var(--navy-bg)','오후':'var(--teal-bg)','야간':'#F3EEF8'};
   var shiftIcons={'오전':'🌅','오후':'☀️','야간':'🌙'};
@@ -3774,7 +3817,7 @@ function renderLeaderStatus(){
   ['오전','오후','야간'].forEach(function(shift){
     var leaders=LEADERS[shift]||[];
     // DB 기준 완료 여부 (다른 사용자 입력도 반영)
-    var dbDone=Object.keys(mpDataByLeader[shift]||{}).filter(function(k){ return k.indexOf('_')!==0; });
+    var dbDone=Object.keys(dataSrc[shift]||{}).filter(function(k){ return k.indexOf('_')!==0; });
     var done=dbDone;
     var total=leaders.length;
     var doneCount=done.length;
@@ -3802,10 +3845,10 @@ function renderLeaderStatus(){
       var myCode=(me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
       var myTeamNum=(myCode.match(/^\d+팀/)||[''])[0];
       var targetTeamNum=(String(l.team).match(/^\d+팀/)||[''])[0];
-      var canEdit=isAdmin||(me&&me.role==='leader'&&myTeamNum&&myTeamNum===targetTeamNum);
+      var canEdit=viewDate==='today'&&(isAdmin||(me&&me.role==='leader'&&myTeamNum&&myTeamNum===targetTeamNum));
       if(isDone){
         var oc=canEdit?' onclick="openLeaderDataEdit(\''+shift+'\',\''+l.team+'\',\''+l.name+'\')"':'';
-        var meta=(mpMeta[shift]&&mpMeta[shift][l.team])||null;
+        var meta=(metaSrc[shift]&&metaSrc[shift][l.team])||null;
         var proxyTag=(meta&&meta.proxy_writer)?' <span style="font-size:9px;font-weight:700;opacity:.85">(대리:'+meta.proxy_writer+')</span>':'';
         html+='<div'+oc+' style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;'+(canEdit?'cursor:pointer;':'cursor:default;')+'background:'+shiftBgs[shift]+';color:'+shiftColors[shift]+';border:1.5px solid '+shiftColors[shift]+'40">✔ '+l.name+proxyTag+'</div>';
       } else {
@@ -3818,14 +3861,14 @@ function renderLeaderStatus(){
   var allMissing=[];
   ['오전','오후','야간'].forEach(function(shift){
     var leaders=LEADERS[shift]||[];
-    var done=Object.keys(mpDataByLeader[shift]||{}).filter(function(k){ return k.indexOf('_')!==0; });
+    var done=Object.keys(dataSrc[shift]||{}).filter(function(k){ return k.indexOf('_')!==0; });
     leaders.forEach(function(l){
       if(done.indexOf(l.team)===-1) allMissing.push(shift+' '+l.name);
     });
   });
   if(allMissing.length>0){
     html+='<div style="background:var(--danger-bg);border-radius:var(--r2);padding:9px 12px;border-left:3px solid var(--danger)">';
-    html+='<div style="font-size:11px;font-weight:700;color:var(--danger);margin-bottom:5px">⚠️ 미입력 조장 ('+allMissing.length+'명)</div>';
+    html+='<div style="font-size:11px;font-weight:700;color:var(--danger);margin-bottom:5px">⚠️ '+(viewDate==='yesterday'?'전일':'')+' 미입력 조장 ('+allMissing.length+'명)</div>';
     html+='<div style="font-size:11px;color:var(--g5);line-height:1.8">'+allMissing.join(', ')+'</div>';
     html+='</div>';
   } else {
@@ -3866,7 +3909,15 @@ function tabSwitch(prefix,n,count){
     if(p) p.style.display=i===n?'block':'none';
   }
 }
-function mpTab(n){tabSwitch('mp',n,5);if(n===2){renderLeaderStatus();updateMyTeamGrp();checkPrevDayMissing();}if(n===3){loadMpHistory();}if(n===4){loadMgrAttendance();}}
+function mpTab(n){tabSwitch('mp',n,5);if(n===2){
+  var t=document.querySelectorAll('#leaderViewToggle .rp');
+  if(t.length){t.forEach(function(b){b.classList.remove('on');});t[0].classList.add('on');}
+  renderLeaderStatus('today');updateMyTeamGrp();checkPrevDayMissing();
+}if(n===3){loadMpHistory();}if(n===4){
+  var t2=document.querySelectorAll('#mgrAttViewToggle .rp');
+  if(t2.length){t2.forEach(function(b){b.classList.remove('on');});t2[0].classList.add('on');}
+  loadMgrAttendance();
+}}
 function hoTab(n){
   tabSwitch('ho',n,5);
   if(n===4){ var rw=document.getElementById('hoResultEditWrap'); if(rw) rw.style.display='none'; }
@@ -8666,11 +8717,41 @@ async function loadMgrAttendanceYesterday(){
   }
 }
 
-function renderMgrAttendance(){
+var yMgrAttData=null; // 전일 출근 데이터 캐시
+async function fetchYesterdayMgrAttendance(){
+  if(yMgrAttData) return yMgrAttData;
+  var yesterday = new Date(Date.now()+9*3600000-86400000).toISOString().slice(0,10);
+  var data={};
+  try{
+    var res = await sb.from('mgr_attendance').select('*').eq('date', yesterday);
+    if(res.data) res.data.forEach(function(r){ data[r.team+'_'+r.name]=r; });
+  }catch(e){}
+  yMgrAttData=data;
+  return data;
+}
+function switchMgrAttView(btn, mode){
+  document.querySelectorAll('#mgrAttViewToggle .rp').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  var dateEl=document.getElementById('mgrAttDate');
+  if(mode==='yesterday'){
+    document.getElementById('mgrAttBody').innerHTML='<div style="text-align:center;padding:16px;color:var(--g3);font-size:12px">불러오는 중...</div>';
+    fetchYesterdayMgrAttendance().then(function(){
+      if(dateEl){ var y=new Date(Date.now()+9*3600000-86400000).toISOString().slice(0,10); dateEl.textContent=y+' (전일)'; }
+      renderMgrAttendance('yesterday');
+    });
+  } else {
+    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+    if(dateEl) dateEl.textContent=today;
+    renderMgrAttendance('today');
+  }
+}
+function renderMgrAttendance(viewDate){
+  viewDate=viewDate||'today';
   var body = document.getElementById('mgrAttBody');
   if(!body) return;
   var isAdmin = me && (me.role==='admin'||me.role==='manager');
   var myTeam = me ? (me.team||'').replace(/\s*(A|B|C)조장?$/,'').replace(/\s*팀장$/,'').trim() : '';
+  var dataSrc = viewDate==='yesterday' ? (yMgrAttData||{}) : mgrAttData;
 
   var totalCount = 0, checkedCount = 0;
 
@@ -8684,7 +8765,7 @@ function renderMgrAttendance(){
     Object.keys(shiftData).forEach(function(team){
       var members = shiftData[team];
       var teamChecked = members.filter(function(name){
-        return mgrAttData[team+'_'+name] && mgrAttData[team+'_'+name].checked;
+        return dataSrc[team+'_'+name] && dataSrc[team+'_'+name].checked;
       }).length;
       totalCount += members.length;
       checkedCount += teamChecked;
@@ -8699,13 +8780,13 @@ function renderMgrAttendance(){
 
       members.forEach(function(name){
         var key = team+'_'+name;
-        var att = mgrAttData[key];
+        var att = dataSrc[key];
         var isChecked = att && att.checked;
         var checkedBy = att ? att.checked_by : '';
         var checkedTime = att && att.checked_at ? toKSTTime(att.checked_at) : '';
 
-        // 클릭 권한: 관리자 전체, 해당팀 조장/팀장 (운영팀은 관리자만)
-        var canCheck = isAdmin || (team!=='운영' && me && myTeam === team);
+        // 클릭 권한: 당일에만 가능. 관리자 전체, 해당팀 조장/팀장 (운영팀은 관리자만)
+        var canCheck = viewDate==='today' && (isAdmin || (team!=='운영' && me && myTeam === team));
 
         var bg = isChecked ? 'background:var(--teal-bg);border-color:var(--teal2);color:var(--teal2)' : 'background:var(--g1);border-color:var(--g2);color:var(--g4)';
         var cursor = canCheck ? 'cursor:pointer' : 'cursor:default';
@@ -8737,7 +8818,7 @@ function renderMgrAttendance(){
 
   // 요약
   var summaryEl = document.getElementById('mgrAttSummary');
-  if(summaryEl) summaryEl.textContent = '금일 '+checkedCount+'/'+totalCount+'명';
+  if(summaryEl) summaryEl.textContent = (viewDate==='yesterday'?'전일 ':'금일 ')+checkedCount+'/'+totalCount+'명';
 }
 
 function updateDashMgrAtt(){
