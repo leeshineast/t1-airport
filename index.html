@@ -3590,6 +3590,8 @@ async function loadHoList(){
 
 
 // ═══ 조장 입력현황 ═══
+// 대리입력 메타정보: mpMeta[shift][team_code] = {writer, proxy_writer}
+var mpMeta = {오전:{}, 오후:{}, 야간:{}};
 var LEADERS = {
   '오전': [
     {team:'1팀A', name:'1팀 A조'},
@@ -3777,10 +3779,14 @@ function renderLeaderStatus(){
       var isDone=done.indexOf(l.team)!==-1;
       var isAdmin=me&&(me.role==='admin'||me.role==='manager');
       var myCode=(me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
-      var canEdit=isAdmin||(me&&me.role==='leader'&&myCode===l.team);
+      var myTeamNum=(myCode.match(/^\d+팀/)||[''])[0];
+      var targetTeamNum=(String(l.team).match(/^\d+팀/)||[''])[0];
+      var canEdit=isAdmin||(me&&me.role==='leader'&&myTeamNum&&myTeamNum===targetTeamNum);
       if(isDone){
         var oc=canEdit?' onclick="openLeaderDataEdit(\''+shift+'\',\''+l.team+'\',\''+l.name+'\')"':'';
-        html+='<div'+oc+' style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;'+(canEdit?'cursor:pointer;':'cursor:default;')+'background:'+shiftBgs[shift]+';color:'+shiftColors[shift]+';border:1.5px solid '+shiftColors[shift]+'40">✔ '+l.name+'</div>';
+        var meta=(mpMeta[shift]&&mpMeta[shift][l.team])||null;
+        var proxyTag=(meta&&meta.proxy_writer)?' <span style="font-size:9px;font-weight:700;opacity:.85">(대리:'+meta.proxy_writer+')</span>':'';
+        html+='<div'+oc+' style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;'+(canEdit?'cursor:pointer;':'cursor:default;')+'background:'+shiftBgs[shift]+';color:'+shiftColors[shift]+';border:1.5px solid '+shiftColors[shift]+'40">✔ '+l.name+proxyTag+'</div>';
       } else {
         html+='<div style="padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:default;background:var(--g1);color:var(--g3);border:1.5px solid var(--g2)">'+l.name+'</div>';
       }
@@ -3940,8 +3946,16 @@ function confirmMp(){
   document.querySelectorAll('#mpBody .mp-inp').forEach(function(i){i.value='';});
   var el=document.getElementById('mpTot');if(el){el.textContent='0';el.style.color='var(--g3)';}
 
+  // ★ 대리입력 판단: 로그인한 사람의 팀코드와 입력 대상 팀코드가 다르면 대리입력
+  var officialName='';
+  (LEADERS[shKey]||[]).forEach(function(l){ if(l.team===myTeam) officialName=l.name; });
+  var myOwnCode=(me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
+  var isProxy=me&&me.role==='leader'&&myTeam&&myOwnCode&&myOwnCode!==myTeam;
+  var writer=isProxy?(officialName||myTeam):(me?me.name:'');
+  var proxyWriter=isProxy?(me?me.name:''):null;
+
   // DB 저장 후 화면 갱신
-  saveMpToDB(shKey, saveKey, newVals)
+  saveMpToDB(shKey, saveKey, newVals, writer, proxyWriter)
     .then(function(){ loadMpFromDB(); });
 
   // 임시 저장 초기화
@@ -5001,33 +5015,21 @@ function rstShiftTab(n){
     list.innerHTML='<div style="font-size:11px;color:var(--g4);padding:8px">등록된 조장이 없습니다</div>';
     return;
   }
+  var myCode2=(me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
+  var myTeamNum2=(myCode2.match(/^\d+팀/)||[''])[0];
+  var canEditAny2=me&&(me.role==='admin'||me.role==='manager');
   var items='';
-  leaders.forEach(function(l){
-    var isDone=done.indexOf(l.team)!==-1;
-    var bc=isDone?colors[n]:'var(--g2)';
-    var bg=isDone?bgs[n]:'var(--g1)';
-    var co=isDone?colors[n]:'var(--g4)';
-    var div=document.createElement('div');
-    div.className='rp';
-    div.style.cssText='font-size:11px;padding:6px 12px;background:'+bg+';color:'+co+';border-color:'+bc+';cursor:pointer';
-    div.textContent=(isDone?'✔ ':'')+l.name;
-    div.dataset.shift=shift;
-    div.dataset.team=l.team;
-    div.dataset.name=l.name;
-    div.addEventListener('click',function(){openLeaderDataEdit(this.dataset.shift,this.dataset.team,this.dataset.name);});
-    // 조장은 본인 팀만 수정 가능 - 시각적으로 구분
-    if(me&&me.role==='leader'&&l.team!==me.team){ div.style.cursor='default'; }
-    list.appendChild(div);
-  });
   list.innerHTML='';
   leaders.forEach(function(l){
     var isDone=done.indexOf(l.team)!==-1;
     var bc=isDone?colors[n]:'var(--g2)';
     var bg=isDone?bgs[n]:'var(--g1)';
     var co=isDone?colors[n]:'var(--g4)';
+    var targetTeamNum2=(String(l.team).match(/^\d+팀/)||[''])[0];
+    var canEditThis=canEditAny2||(me&&me.role==='leader'&&myTeamNum2&&myTeamNum2===targetTeamNum2);
     var div=document.createElement('div');
     div.className='rp';
-    div.style.cssText='font-size:11px;padding:6px 12px;cursor:pointer;background:'+bg+';color:'+co+';border-color:'+bc;
+    div.style.cssText='font-size:11px;padding:6px 12px;cursor:'+(canEditThis?'pointer':'default')+';background:'+bg+';color:'+co+';border-color:'+bc;
     div.textContent=(isDone?'\u2714 ':'')+l.name;
     div.dataset.shift=shift;
     div.dataset.team=l.team;
@@ -5043,11 +5045,15 @@ function openLeaderDataEdit(shift,team,name){
   if(!me) return;
   var isAdmin=me.role==='admin'||me.role==='manager';
   var myCode=(me.team||'').trim().replace(/\s+/g,'').replace(/조$/,'');
-  var isMyTeam=me.role==='leader'&&(myCode===team||me.team===team);
-  if(!isAdmin&&!isMyTeam){toast('본인 조 데이터만 수정할 수 있습니다');return;}
+  var myTeamNum=(myCode.match(/^\d+팀/)||[''])[0];
+  var targetTeamNum=(String(team).match(/^\d+팀/)||[''])[0];
+  var isMyTeam=me.role==='leader'&&myTeamNum&&myTeamNum===targetTeamNum;
+  if(!isAdmin&&!isMyTeam){toast('같은 팀 데이터만 수정할 수 있습니다');return;}
   editShift=shift; editTeam=team;
   var title=document.getElementById('leaderDataModalTitle');
-  if(title) title.textContent=name+' 입력값 수정 ('+shift+')';
+  var meta=(mpMeta[shift]&&mpMeta[shift][team])||null;
+  var proxyNote=(meta&&meta.proxy_writer)?' (대리입력:'+meta.proxy_writer+')':'';
+  if(title) title.textContent=name+' 입력값 수정 ('+shift+')'+proxyNote;
   var body=document.getElementById('leaderDataEditBody');
   if(!body) return;
   var zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
@@ -5089,7 +5095,13 @@ function saveLeaderDataEdit(){
   updateFloorChart();
   updateMpSummary();
   closeLeaderDataEdit();
-  saveMpToDB(editShift, editTeam, newVals).then(function(){ loadMpFromDB(); });
+  var officialName2='';
+  (LEADERS[editShift]||[]).forEach(function(l){ if(l.team===editTeam) officialName2=l.name; });
+  var myOwnCode2=(me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
+  var isProxy2=me&&me.role==='leader'&&editTeam&&myOwnCode2&&myOwnCode2!==editTeam;
+  var writer2=isProxy2?(officialName2||editTeam):(me?me.name:'');
+  var proxyWriter2=isProxy2?(me?me.name:null):null;
+  saveMpToDB(editShift, editTeam, newVals, writer2, proxyWriter2).then(function(){ loadMpFromDB(); });
   toast('✅ '+editTeam+' 입력값이 수정되었습니다');
 }
 
@@ -7944,11 +7956,12 @@ async function loadFacilityFromDB(){
 }
 
 // 인력현황 - DB 저장 (일별 누적)
-async function saveMpToDB(shift, teamCode, values){
+async function saveMpToDB(shift, teamCode, values, writer, proxyWriter){
   try{
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
+    var payload={date:today, shift:shift, team_code:teamCode, values:values, writer:writer||null, proxy_writer:proxyWriter||null};
     var res=await sb.from('mp_data').upsert(
-      {date:today, shift:shift, team_code:teamCode, values:values},
+      payload,
       {onConflict:'date,shift,team_code'}
     );
     if(res&&res.error) toast('⚠️ 저장오류: '+res.error.message);
@@ -7961,6 +7974,7 @@ async function loadMpFromDB(){
     var res=await sb.from('mp_data').select('*').eq('date',today);
     // 데이터 없어도 반드시 초기화 (이전 날짜 데이터 메모리 잔존 방지)
     mpDataByLeader={오전:{},오후:{},야간:{}};
+    mpMeta={오전:{},오후:{},야간:{}};
     if(res.error||!res.data||!res.data.length){
       recalcMpData(); updateFloorChart(); updateMpSummary(); updateStaff();
       updateMyTeamGrp(); renderLeaderStatus();
@@ -7976,6 +7990,8 @@ async function loadMpFromDB(){
       if(Array.isArray(vals) && Array.isArray(vals[0])){
         mpDataByLeader[row.shift][row.team_code]=vals; // ri=0~3: 층별, ri=4: 관리자
       }
+      if(!mpMeta[row.shift]) mpMeta[row.shift]={};
+      mpMeta[row.shift][row.team_code]={writer:row.writer||'', proxy_writer:row.proxy_writer||''};
     });
     recalcMpData();
     updateFloorChart();
