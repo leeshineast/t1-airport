@@ -1090,6 +1090,10 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <!-- 전체 -->
   <div id="hoP0">
     <div class="pg-hd"><div><h1>전체 인수인계</h1></div></div>
+    <div style="padding:0 13px 10px;display:flex;gap:7px">
+      <input type="month" id="hoFilterMonth" onchange="renderHoList(hoAll)" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
+      <button onclick="document.getElementById('hoFilterMonth').value='';renderHoList(hoAll)" style="padding:8px 12px;background:var(--g1);border:none;border-radius:var(--r2);font-size:12px;font-weight:700;color:var(--g5);cursor:pointer">전체</button>
+    </div>
     <div id="hoAllList">
       <div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">불러오는 중...</div>
     </div>
@@ -1190,6 +1194,14 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <textarea id="hN" style="display:none"></textarea>
     <textarea id="hD" style="display:none"></textarea>
     <textarea id="hE" style="display:none"></textarea>
+
+    <!-- 처리결과 수정 (수정모드에서만 표시) -->
+    <div class="card" id="hoResultEditWrap" style="display:none;margin-bottom:10px"><div class="cb">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
+        <span style="font-size:13px;font-weight:800;color:var(--g7)">📝 처리결과 수정</span>
+      </div>
+      <textarea class="f-ta show" id="hoResultEdit" rows="3" placeholder="처리결과를 수정하세요" style="display:block"></textarea>
+    </div></div>
 
     <div style="padding:0 13px 16px">
       <button class="btn-prim" onclick="subHO()">📋 인수인계 제출</button>
@@ -2866,7 +2878,8 @@ function subHO(){
   const editId=submitBtn?submitBtn._editId:null;
   if(editId){
     // 수정 저장 (update)
-    sb.from('handover').update({
+    var resEditEl=document.getElementById('hoResultEdit');
+    var updatePayload={
       shift: hoData.shift,
       to_shift: hoData.to_shift,
       facility: hoData.facility,
@@ -2877,12 +2890,19 @@ function subHO(){
       notice: hoData.notice,
       special: hoData.special,
       ho_date: hoData.ho_date
-    }).eq('id', editId).then(function(res){
+    };
+    if(resEditEl&&document.getElementById('hoResultEditWrap').style.display!=='none'){
+      updatePayload.result=resEditEl.value.trim();
+      updatePayload.result_by=me?me.name:'';
+      updatePayload.result_at=new Date().toISOString();
+    }
+    sb.from('handover').update(updatePayload).eq('id', editId).then(function(res){
       if(res.error) toast('수정 오류: '+res.error.message);
       else{ loadHandoverFromDB(); toast('✅ 인수인계가 수정되었습니다'); }
     });
     // 버튼 원상복귀
     if(submitBtn){ submitBtn.textContent='📋 인수인계 제출'; delete submitBtn._editId; }
+    var rw=document.getElementById('hoResultEditWrap'); if(rw) rw.style.display='none';
   } else {
     // 신규 저장 (insert)
     saveHandoverToDB(hoData);
@@ -3848,6 +3868,7 @@ function tabSwitch(prefix,n,count){
 function mpTab(n){tabSwitch('mp',n,5);if(n===2){renderLeaderStatus();updateMyTeamGrp();checkPrevDayMissing();}if(n===3){loadMpHistory();}if(n===4){loadMgrAttendance();}}
 function hoTab(n){
   tabSwitch('ho',n,5);
+  if(n===4){ var rw=document.getElementById('hoResultEditWrap'); if(rw) rw.style.display='none'; }
   // 탭 전환 시 해당 팀 데이터 로드
   if(n===0) loadHandoverFromDB(); // 전체
   else if(n===1) loadHandoverByShift('오전팀');
@@ -6470,8 +6491,17 @@ var hoAll=[];
 function renderHoList(data){
   var list=document.getElementById('hoAllList');
   if(!list) return;
+  var mfEl=document.getElementById('hoFilterMonth');
+  var mf=mfEl?mfEl.value:'';
+  if(mf){
+    data=(data||[]).filter(function(r){
+      var baseTs=r.ho_date||r.created_at;
+      var ym=baseTs?new Date(baseTs).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'}).slice(0,7):'';
+      return ym===mf;
+    });
+  }
   if(!data||!data.length){
-    list.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">인수인계 내역이 없습니다</div>';
+    list.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">'+(mf?'해당 월의 인수인계 내역이 없습니다':'인수인계 내역이 없습니다')+'</div>';
     return;
   }
   var todayKst=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
@@ -6555,6 +6585,14 @@ function renderHoList(data){
 // ══════════════════════════════════════════
 function downloadHoExcel(){
   if(!hoAll||!hoAll.length){ toast('다운로드할 데이터가 없습니다'); return; }
+  var mfEl=document.getElementById('hoFilterMonth');
+  var mf=mfEl?mfEl.value:'';
+  var hoExport=mf?hoAll.filter(function(r){
+    var baseTs=r.ho_date||r.created_at;
+    var ym=baseTs?toKSTDate(baseTs).slice(0,7):'';
+    return ym===mf;
+  }):hoAll;
+  if(!hoExport.length){ toast('해당 월의 다운로드할 데이터가 없습니다'); return; }
   try{
     var XLSX=window.XLSX;
     if(!XLSX){ toast('엑셀 라이브러리 로딩 중...'); return; }
@@ -6562,7 +6600,7 @@ function downloadHoExcel(){
     // 날짜별 시트 생성
     var wb=XLSX.utils.book_new();
     var groups={};
-    hoAll.forEach(function(r){
+    hoExport.forEach(function(r){
       var baseTs=r.ho_date||r.created_at;
       var d=baseTs?toKSTDate(baseTs):'미상';
       if(!groups[d]) groups[d]=[];
@@ -6770,6 +6808,13 @@ function editHo(btn){
     if(r.facility&&r.facility!=='없음'){ var fBtn=document.querySelector('[onclick*="togF"][onclick*="hF"][onclick*="true"]'); if(fBtn) togF(fBtn,'hF',true); }
     if(r.complaint&&r.complaint!=='없음'){ var cBtn=document.querySelector('[onclick*="togF"][onclick*="hC"][onclick*="true"]'); if(cBtn) togF(cBtn,'hC',true); }
     if(r.accident&&r.accident!=='없음'){ var aBtn=document.querySelector('[onclick*="togF"][onclick*="hA"][onclick*="true"]'); if(aBtn) togF(aBtn,'hA',true); }
+    // 처리결과 수정란 (확인완료된 건만 표시)
+    var resWrap=document.getElementById('hoResultEditWrap');
+    var resInput=document.getElementById('hoResultEdit');
+    if(resWrap&&resInput){
+      if(r.confirmed){ resWrap.style.display='block'; resInput.value=r.result||''; }
+      else{ resWrap.style.display='none'; resInput.value=''; }
+    }
     // 수정 모드 표시
     var submitBtn=document.querySelector('#hoP4 .btn-prim');
     if(submitBtn){ submitBtn.textContent='✏️ 인수인계 수정'; submitBtn._editId=id; }
