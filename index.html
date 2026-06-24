@@ -5603,8 +5603,8 @@ function parseExcelData(filename, rows){
       if(genderVal.indexOf('남')!==-1){
         td['남개소']++;
         keys.forEach(function(k){
-          if(k.indexOf('양변기')!==-1&&k.indexOf('장애인')!==-1) td['남양변기']+=(parseInt(row[k])||0);
-          if(k.indexOf('세면기')!==-1||k.indexOf('세면대')!==-1) td['남세면기']+=(parseInt(row[k])||0);
+          if(k.indexOf('양변기')!==-1&&k.indexOf('장애인')===-1) td['남양변기']+=(parseInt(row[k])||0);
+          if((k.indexOf('세면기')!==-1||k.indexOf('세면대')!==-1)&&k.indexOf('장애인')===-1) td['남세면기']+=(parseInt(row[k])||0);
           if(k.indexOf('소변기')!==-1) td['남소변기']+=(parseInt(row[k])||0);
         });
         // 가족실: '가족실 유무(*)' = '있음' 인 경우만 개소로 카운트
@@ -5616,8 +5616,8 @@ function parseExcelData(filename, rows){
       } else if(genderVal.indexOf('여')!==-1){
         td['여개소']++;
         keys.forEach(function(k){
-          if(k.indexOf('양변기')!==-1&&k.indexOf('장애인')!==-1) td['여양변기']+=(parseInt(row[k])||0);
-          if(k.indexOf('세면기')!==-1||k.indexOf('세면대')!==-1) td['여세면기']+=(parseInt(row[k])||0);
+          if(k.indexOf('양변기')!==-1&&k.indexOf('장애인')===-1) td['여양변기']+=(parseInt(row[k])||0);
+          if((k.indexOf('세면기')!==-1||k.indexOf('세면대')!==-1)&&k.indexOf('장애인')===-1) td['여세면기']+=(parseInt(row[k])||0);
         });
         // 가족실: '가족실 유무(*)' = '있음' 인 경우만 개소로 카운트
         keys.forEach(function(k){
