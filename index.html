@@ -4023,7 +4023,7 @@ function confirmMp(){
   var officialName='';
   (LEADERS[shKey]||[]).forEach(function(l){ if(l.team===myTeam) officialName=l.name; });
   var myOwnCode=(me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
-  var isProxy=me&&me.role==='leader'&&myTeam&&myOwnCode&&myOwnCode!==myTeam;
+  var isProxy=me&&(me.role==='leader'||me.role==='manager')&&officialName&&me.name&&officialName!==me.name;
   var writer=isProxy?(officialName||myTeam):(me?me.name:'');
   var proxyWriter=isProxy?(me?me.name:''):null;
 
@@ -5185,7 +5185,7 @@ function saveLeaderDataEdit(){
   var officialName2='';
   (LEADERS[editShift]||[]).forEach(function(l){ if(l.team===editTeam) officialName2=l.name; });
   var myOwnCode2=(me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
-  var isProxy2=me&&me.role==='leader'&&editTeam&&myOwnCode2&&myOwnCode2!==editTeam;
+  var isProxy2=me&&(me.role==='leader'||me.role==='manager')&&officialName2&&me.name&&officialName2!==me.name;
   var writer2=isProxy2?(officialName2||editTeam):(me?me.name:'');
   var proxyWriter2=isProxy2?(me?me.name:null):null;
   saveMpToDB(editShift, editTeam, newVals, writer2, proxyWriter2).then(function(){ loadMpFromDB(); });
