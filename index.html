@@ -1249,7 +1249,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div class="card" style="margin-bottom:10px"><div class="cb">
       <div class="fg">
         <label class="f-lbl">📅 발견일자</label>
-        <input type="date" id="lostFoundDate" class="ri" style="margin-bottom:0">
+        <input type="datetime-local" id="lostFoundDate" class="ri" style="margin-bottom:0">
       </div>
     </div></div>
     <div class="card" style="margin-bottom:10px"><div class="cb">
@@ -5959,9 +5959,9 @@ function renderFacilitySummary(){
         h+='<th style="color:#FFD700;padding:7px 4px;text-align:center;border:1px solid rgba(255,255,255,.2);min-width:32px;font-size:9px">정수기</th>';
         h+='</tr></thead><tbody>';
 
-        // L/S 먼저, A/S 나중
-        var lsRows=d.restDetail.filter(function(r){return r.area==='L/S';});
-        var asRows=d.restDetail.filter(function(r){return r.area==='A/S';});
+        // L/S 먼저, A/S 나중 (구역 안에서는 층 순서로 정렬)
+        var lsRows=d.restDetail.filter(function(r){return r.area==='L/S';}).sort(function(a,b){return floorSortKey(a.floor)-floorSortKey(b.floor);});
+        var asRows=d.restDetail.filter(function(r){return r.area==='A/S';}).sort(function(a,b){return floorSortKey(a.floor)-floorSortKey(b.floor);});
         var allRows=lsRows.concat(asRows);
         var totFridge=0,totMicro=0,totWater=0,totOndol=0;
 
@@ -6814,6 +6814,10 @@ async function confirmHandoverDB(id, resultText){
 function renderIndList(data){
   var el=document.getElementById('indList');
   if(!el) return;
+  data=(data||[]).slice().sort(function(a,b){
+    var da=a.date||a.created_at||'', db=b.date||b.created_at||'';
+    return da<db?1:da>db?-1:0;
+  });
   if(!data||!data.length){
     el.innerHTML='<p style="text-align:center;padding:22px;color:var(--g3);font-size:12px">등록된 이력이 없습니다</p>';
     return;
@@ -7130,7 +7134,16 @@ var lostData=[];
 var lostSelectedStatus='접수';
 var lostCompleteSelectedType='완료-폐기';
 
-function lostTab(n){ tabSwitch('lost',n,2); }
+function lostTab(n){
+  tabSwitch('lost',n,2);
+  if(n===0){
+    var dEl=document.getElementById('lostFoundDate');
+    if(dEl&&!dEl.value){
+      var now=new Date(Date.now()+9*3600000);
+      dEl.value=now.toISOString().slice(0,16);
+    }
+  }
+}
 
 function pickLostStatus(el){
   document.querySelectorAll('#lostStatusGrp .rp').forEach(function(p){p.classList.remove('on');});
@@ -7155,7 +7168,7 @@ async function saveLost(){
   var finderName=document.getElementById('lostFinderName').value.trim();
   var note=document.getElementById('lostNote').value.trim();
   var foundDateInput=document.getElementById('lostFoundDate').value;
-  var now=foundDateInput?new Date(foundDateInput+'T00:00:00+09:00').toISOString():new Date(Date.now()+9*3600000).toISOString();
+  var now=foundDateInput?new Date(foundDateInput+':00+09:00').toISOString():new Date(Date.now()+9*3600000).toISOString();
   var btn=document.querySelector('#lostP1 .btn-prim');
   if(btn){btn.disabled=true;btn.textContent='저장 중...';}
   try{
@@ -7214,6 +7227,11 @@ function renderLostList(){
     if(sf&&r.status!==sf) return false;
     if(mf&&toKSTDate(r.found_date||r.created_at).slice(0,7)!==mf) return false;
     return true;
+  });
+  // 화면에 보이는 발견일(found_date) 기준으로 정렬 (입력시각이 아니라 실제 발견일 순서)
+  filtered=filtered.slice().sort(function(a,b){
+    var da=a.found_date||a.created_at||'', db=b.found_date||b.created_at||'';
+    return da<db?1:da>db?-1:0;
   });
   // 통계
   var total=filtered.length;
@@ -7325,7 +7343,7 @@ async function confirmLostReset(){
     } else {
       var filterStr=range==='month'?now.toISOString().slice(0,7):String(now.getFullYear());
       var ids=(lostData||[]).filter(function(r){
-        return toKSTDate(r.created_at).slice(0,filterStr.length)===filterStr;
+        return toKSTDate(r.found_date||r.created_at).slice(0,filterStr.length)===filterStr;
       }).map(function(r){return r.id;});
       for(var i=0;i<ids.length;i++) await sb.from('lost_found').delete().eq('id',ids[i]);
     }
@@ -7341,7 +7359,7 @@ function downloadLostExcel(){
   var mf=filterMonth?filterMonth.value:'';
   var rows=[['연번','접수일시','작성자','발견자 사번','발견자 이름','발견 위치','발견 물품','처리현황','기타']];
   var filtered=lostData.filter(function(r){
-    if(mf&&toKSTDate(r.created_at).slice(0,7)!==mf) return false;
+    if(mf&&toKSTDate(r.found_date||r.created_at).slice(0,7)!==mf) return false;
     return true;
   });
   filtered.forEach(function(r,i){
@@ -7408,6 +7426,14 @@ function eqTab(n){
   if(n===1) renderEquipmentGroup();
 }
 
+function floorSortKey(v){
+  v=String(v||'').trim().toUpperCase();
+  var m=v.match(/^B(\d+)F$/);
+  if(m) return -parseInt(m[1]);
+  m=v.match(/^(\d+)F$/);
+  if(m) return parseInt(m[1]);
+  return 9999;
+}
 function renderEquipmentGroup(){
   var el=document.getElementById('eqGroupList');
   if(!el) return;
@@ -7489,6 +7515,11 @@ function renderEquipment(){
   }
   var headers=equipmentData.headers||[];
   var rows=equipmentData.rows||[];
+  // 층 컬럼이 있으면 층 순서로 정렬 (B2F→B1F→1F→2F...)
+  var floorColIdx=headers.findIndex(function(h){ return String(h).indexOf('층')!==-1; });
+  if(floorColIdx>=0){
+    rows=rows.slice().sort(function(a,b){ return floorSortKey(a[floorColIdx])-floorSortKey(b[floorColIdx]); });
+  }
   // 검색 필터
   var kw=(document.getElementById('eqSearch')||{}).value||'';
   var filtered=rows;
