@@ -5723,9 +5723,13 @@ function parseExcelData(filename, rows){
         if(k.indexOf('NUMBER')!==-1||k.indexOf('Number')!==-1) numVal=String(row[k]);
       });
 
-      // 층 추출 - NUMBER에서 우선
-      var flMatch=(numVal||posVal).match(/([B]?[0-9]+F)/i);
-      var detailFloor=flMatch?flMatch[1].toUpperCase():'기타';
+      // 층 추출 - 이미 감지된 깨끗한 층구분 컬럼(floorVal)을 우선 사용, 없으면 NUMBER/위치 텍스트에서 추출
+      var detailFloor=floorVal;
+      if(!detailFloor){
+        var flMatch=(numVal+' '+posVal).match(/([B]?[0-9]+F)/i);
+        detailFloor=flMatch?flMatch[1].toUpperCase():'기타';
+      }
+      if(!floorVal) floors[detailFloor]=(floors[detailFloor]||0)+1;
 
       // 휴게시설 상세 데이터 (위치별)
       var loc=posVal||'위치 미상';
@@ -6000,9 +6004,9 @@ function renderFacilitySummary(){
         });
         h+='</div>';
 
-      } else {
-        // 기타 시설 세부 현황 칩
-        var detailKeys=Object.keys(d.detail||{}).filter(function(k){return !k.startsWith('종류:');});
+      } else if(type!=='창고'&&type!=='유아휴게실') {
+        // 기타 시설 세부 현황 칩 (내부용 __team__ 키, 종류: 키는 제외)
+        var detailKeys=Object.keys(d.detail||{}).filter(function(k){return !k.startsWith('종류:')&&k.indexOf('__team__')!==0;});
         if(detailKeys.length){
           h+='<div style="font-size:10px;font-weight:700;color:var(--g5);margin-bottom:6px">세부 현황</div>';
           h+='<div style="display:flex;flex-wrap:wrap;gap:5px">';
