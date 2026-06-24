@@ -956,6 +956,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <!-- 입력 -->
   <div id="mpP0">
     <div class="pg-hd"><div><h1>인력 입력</h1><small id="mpDate"></small></div></div>
+    <div id="mpSuccessBanner" style="display:none;margin:0 13px 10px;padding:13px 15px;background:var(--success-bg,#E8F8F0);border:1.5px solid var(--success,#1AA260);border-radius:var(--r2);font-size:13px;font-weight:800;color:var(--success,#1AA260)"></div>
     <div class="card"><div class="cb">
       <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:8px">근무조 선택</div>
       <div style="display:flex;gap:7px" id="shiftGrp">
@@ -3963,7 +3964,6 @@ function confirmMp(){
 
   var total=0;
   for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) total+=mpData[ri][ci];
-  toast('✓ '+shKey+' '+(myTeam||'')+' 인력현황 입력! 금일 누계: '+total+'명');
 
   document.querySelectorAll('#mpBody .mp-inp').forEach(function(i){i.value='';});
   var el=document.getElementById('mpTot');if(el){el.textContent='0';el.style.color='var(--g3)';}
@@ -3976,9 +3976,23 @@ function confirmMp(){
   var writer=isProxy?(officialName||myTeam):(me?me.name:'');
   var proxyWriter=isProxy?(me?me.name:''):null;
 
-  // DB 저장 후 화면 갱신
+  // 팀코드를 "6팀 A조" 형태로 보기 좋게 변환
+  var teamLabel=myTeam?myTeam.replace(/^(\d+팀)([A-Z])$/,'$1 $2조'):shKey;
+
+  // DB 저장 후 화면 갱신 + 명확한 완료 표시
   saveMpToDB(shKey, saveKey, newVals, writer, proxyWriter)
-    .then(function(){ loadMpFromDB(); });
+    .then(function(){
+      loadMpFromDB();
+      var msg='✅ '+teamLabel+' 입력완료'+(isProxy?' (대리입력)':'')+' · 금일 누계 '+total+'명';
+      toast(msg);
+      var banner=document.getElementById('mpSuccessBanner');
+      if(banner){
+        banner.textContent=msg;
+        banner.style.display='block';
+        clearTimeout(banner._t);
+        banner._t=setTimeout(function(){ banner.style.display='none'; },5000);
+      }
+    });
 
   // 임시 저장 초기화
   _mpPending={shKey:'', myTeam:'', newVals:null};
