@@ -3912,7 +3912,7 @@ async function loadHandoverByShift(shift){
       if(r.accident&&r.accident!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🚨 사고</div><div class="ho-val">'+r.accident+'</div></div>';
       if(r.special&&r.special!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🔨 특별작업</div><div class="ho-val">'+r.special+'</div></div>';
       if(!fields) fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
-      var confBtn=renderHoConfBlock(r);
+      var confBtn=renderHoConfBlock(r, 'sh_'+listId+'_');
       html+='<div class="ho-card">'
         +'<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px">'
         +'<span class="t-pill '+(pMap[ps2.group]||'pill-am')+'">'+ps2.team+'</span>'
@@ -6559,7 +6559,7 @@ function renderHoList(data){
     if(r.equipment) fields+='<div class="ho-f"><div class="ho-lbl">🚛 장비·차량</div><div class="ho-val">'+r.equipment+'</div></div>';
     if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📋 공지</div><div class="ho-val">'+r.notice+'</div></div>';
     if(!fields) fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
-    var confBtn=renderHoConfBlock(r);
+    var confBtn=renderHoConfBlock(r, 'all_');
     html+='<div class="ho-card">'
       +'<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px">'
       +'<span class="t-pill '+(pMap[sNm]||'pill-am')+'">'+sNm+'</span>'
@@ -6655,23 +6655,26 @@ function updateHoPending(){
   var el=document.getElementById('dHO'); if(el) el.textContent=cnt;
 }
 
-function renderHoConfBlock(r){
+function renderHoConfBlock(r, prefix){
+  prefix=prefix||'';
+  var domId=prefix+r.id;
   if(r.confirmed){
     var resultHtml=r.result?('<div style="font-size:11px;color:var(--g6);background:var(--g1);border-radius:6px;padding:6px 9px;margin-top:5px;white-space:pre-wrap">📝 처리결과: '+r.result+'</div>'):'';
     return '<div style="font-size:11px;color:var(--success);font-weight:700;padding:6px 0">✅ '+(r.confirmed_by||'')+'님 확인완료</div>'+resultHtml;
   }
-  return '<div class="conf-row"><button class="btn-conf" onclick="openHoResult('+r.id+')">✔ 확인 및 결과입력</button></div>'
-    +'<div id="hoResultBox_'+r.id+'" style="display:none;margin-top:6px">'
-      +'<textarea id="hoResultInput_'+r.id+'" placeholder="처리결과를 입력하세요 (예: 수리 완료 / 자재 주문 중, 내일 처리 예정)" style="width:100%;min-height:54px;padding:8px;border:1.5px solid var(--g2);border-radius:8px;font-size:12px;box-sizing:border-box;font-family:inherit"></textarea>'
-      +'<button onclick="confHODB('+r.id+',this)" style="margin-top:5px;width:100%;padding:8px;background:var(--teal);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">확인 완료</button>'
+  return '<div class="conf-row"><button class="btn-conf" onclick="openHoResult(\''+domId+'\')">✔ 확인 및 결과입력</button></div>'
+    +'<div id="hoResultBox_'+domId+'" style="display:none;margin-top:6px">'
+      +'<textarea id="hoResultInput_'+domId+'" placeholder="처리결과를 입력하세요 (예: 수리 완료 / 자재 주문 중, 내일 처리 예정)" style="width:100%;min-height:54px;padding:8px;border:1.5px solid var(--g2);border-radius:8px;font-size:12px;box-sizing:border-box;font-family:inherit"></textarea>'
+      +'<button onclick="confHODB('+r.id+',this,\''+domId+'\')" style="margin-top:5px;width:100%;padding:8px;background:var(--teal);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">확인 완료</button>'
     +'</div>';
 }
-function openHoResult(id){
-  var box=document.getElementById('hoResultBox_'+id);
+function openHoResult(domId){
+  var box=document.getElementById('hoResultBox_'+domId);
   if(box) box.style.display='block';
 }
-async function confHODB(id, btn){
-  var input=document.getElementById('hoResultInput_'+id);
+async function confHODB(id, btn, domId){
+  domId=domId||id;
+  var input=document.getElementById('hoResultInput_'+domId);
   var resultText=input?input.value.trim():'';
   if(!resultText){ toast('⚠️ 처리결과를 입력해주세요'); return; }
   if(btn) btn.disabled=true;
