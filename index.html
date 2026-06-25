@@ -7961,6 +7961,12 @@ function renderWasteList(){
     if(tfv&&r.team_code!==tfv) return false;
     return true;
   });
+  // 일자 최신순으로 명시적 정렬 (같은 날짜면 입력시각 최신순)
+  filtered=filtered.slice().sort(function(a,b){
+    if(a.waste_date!==b.waste_date) return a.waste_date<b.waste_date?1:-1;
+    var ca=a.created_at||'', cb=b.created_at||'';
+    return ca<cb?1:ca>cb?-1:0;
+  });
   // 월간 합계 + 조별 합산 + 일일 합산
   var VEHICLES=['1팀C','6팀C'];
   var VLABEL={'1팀C':'1팀 C조','6팀C':'6팀 C조'};
@@ -8096,6 +8102,11 @@ function downloadWasteExcel(){
   var mf=document.getElementById('wasteFilterMonth');
   var mfv=mf?mf.value:'';
   var filtered=wasteData.filter(function(r){ return !mfv||r.waste_date.slice(0,7)===mfv; });
+  filtered=filtered.slice().sort(function(a,b){
+    if(a.waste_date!==b.waste_date) return a.waste_date<b.waste_date?1:-1;
+    var ca=a.created_at||'', cb=b.created_at||'';
+    return ca<cb?1:ca>cb?-1:0;
+  });
   var teamLabelMap={'1팀C':'1팀 C조','6팀C':'6팀 C조'};
   var rows=[['일자','조','작성자','생활쓰레기(톤_소각)','폐합성(톤)','음식물쓰레기(톤)','폐지(톤)','폐페트(톤)','폐캔(톤)','병/유리류(톤)','폐고철, 가전(톤)','기타(톤)','총합계(톤)','비고']];
   filtered.forEach(function(r){
