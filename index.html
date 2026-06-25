@@ -299,8 +299,28 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         return obj;
       }
 
+      async function runRpc(fnName, params){
+        try{
+          var url = BASE + '/rpc/' + fnName;
+          var resp = await fetch(url, { method:'POST', headers:H, body: JSON.stringify(params||{}) });
+          var text = await resp.text();
+          var data = text ? JSON.parse(text) : null;
+          if(!resp.ok){
+            var msg=(data&&data.message)?data.message:'HTTP '+resp.status;
+            var code=(data&&data.code)?String(data.code):String(resp.status);
+            console.error('[RPC오류]', fnName, resp.status, msg, data);
+            return { data:null, error:{message:msg, code:code} };
+          }
+          return { data:data, error:null };
+        }catch(e){
+          console.error('[RPC fetch오류]', fnName, e);
+          return { data:null, error:{message:String(e.message||e), code:'fetch_error'} };
+        }
+      }
+
       return {
-        from: function(table){ return builder(table); }
+        from: function(table){ return builder(table); },
+        rpc: function(fnName, params){ return runRpc(fnName, params); }
       };
     })();
   </script>
@@ -2485,11 +2505,6 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 <div id="toast"></div>
 
 <script>
-const USERS=[
-  {id:'admin01',pw:'120025120025',name:'최고관리자',role:'admin',team:'관리',initial:'최'},
-  {id:'team1mgr',pw:'1234',name:'박팀장',role:'manager',team:'오전1팀',initial:'박'},
-  {id:'cho1ldr', pw:'1234',name:'정조장', role:'leader', team:'오전2팀',initial:'정'},
-];
 let me=null,wdT=null,indData=[];
 
 // ─ 유틸 ─
@@ -2648,28 +2663,16 @@ async function doLogin(){
   var pw=document.getElementById('lpw').value;
   if(!id||!pw){toast('아이디와 비밀번호를 입력해주세요');return;}
 
-  // 테스트 계정
-  var testAccounts=[
-    {id:'admin01',pw:'120025120025',name:'최고관리자',role:'admin',team:'관리',initial:'최'},
-    {id:'team1mgr',pw:'1234',name:'박팀장',role:'manager',team:'1팀',initial:'박'},
-    {id:'cho1ldr',pw:'1234',name:'정조장',role:'leader',team:'오전2팀',initial:'정'}
-  ];
-  var testUser=testAccounts.find(function(a){return a.id===id&&a.pw===pw;});
-  if(testUser){
-    me={name:testUser.name,role:testUser.role,team:testUser.team,initial:testUser.initial,email:testUser.id,id:'test_'+testUser.id};
-    finishLogin();
-    return;
-  }
-
-  // Supabase 로그인
+  // Supabase 로그인 (비밀번호는 서버 함수 안에서만 대조, 클라이언트로 노출 안 됨)
   try{
     var btn=document.querySelector('.login-btn');
     if(btn){btn.textContent='로그인 중...';btn.disabled=true;}
-    var res=await sb.from('users').select('*').eq('email',id).eq('password',pw).eq('status','active').maybeSingle();
+    var res=await sb.rpc('login_check', {p_email:id, p_password:pw});
     if(btn){btn.textContent='로그인';btn.disabled=false;}
     if(res.error){toast('로그인 오류: '+res.error.message);return;}
-    if(!res.data){toast('아이디 또는 비밀번호를 확인해주세요');return;}
-    var u=res.data;
+    var rows=res.data;
+    if(!rows||!rows.length){toast('아이디 또는 비밀번호를 확인해주세요');return;}
+    var u=rows[0];
     me={name:u.name,role:u.role,team:u.team,initial:u.name[0],email:u.email,permissions:u.permissions,id:u.id};
     finishLogin();
   }catch(e){toast('오류: '+e.message);}
@@ -2762,10 +2765,10 @@ async function savePwChange(){
   err.style.display='none';
   if(!old){err.textContent='현재 비밀번호를 입력해주세요';err.style.display='block';return;}
   if(!me){err.textContent='로그인 정보가 없습니다';err.style.display='block';return;}
-  // 현재 비밀번호 확인
-  var res=await sb.from('users').select('password').eq('id',me.id).maybeSingle();
-  if(res.error||!res.data){err.textContent='사용자 정보를 불러올 수 없습니다';err.style.display='block';return;}
-  if(res.data.password!==old){err.textContent='현재 비밀번호가 올바르지 않습니다';err.style.display='block';return;}
+  // 현재 비밀번호 확인 (서버 함수로만 대조, 비밀번호 자체는 클라이언트로 노출 안 됨)
+  var res=await sb.rpc('verify_current_password', {p_user_id:me.id, p_password:old});
+  if(res.error){err.textContent='확인 중 오류: '+res.error.message;err.style.display='block';return;}
+  if(!res.data){err.textContent='현재 비밀번호가 올바르지 않습니다';err.style.display='block';return;}
   if(nw.length<6){err.textContent='새 비밀번호는 6자 이상이어야 합니다';err.style.display='block';return;}
   if(nw!==nw2){err.textContent='새 비밀번호가 일치하지 않습니다';err.style.display='block';return;}
   var upd=await sb.from('users').update({password:nw}).eq('id',me.id);
@@ -3574,7 +3577,7 @@ async function dlCSV(type){
 
     // ── 사용자 목록 ──
     if(type==='users'||type==='all'){
-      var ru=await sb.from('users').select('*');
+      var ru=await sb.from('users').select('id,name,email,role,team,permissions,status,created_at');
       if(ru.data&&ru.data.length){
         var usRows=[['이름','역할','소속팀','상태']];
         ru.data.forEach(function(d){
@@ -6416,7 +6419,7 @@ async function loadPendingUsers(){
   var el=document.getElementById('pendList');
   if(!el) return;
   try{
-    var res=await sb.from('users').select('*').eq('status','pending').order('created_at');
+    var res=await sb.from('users').select('id,name,email,role,team,permissions,status,created_at').eq('status','pending').order('created_at');
     if(res.error||!res.data||!res.data.length){
       el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">대기 중인 신청이 없습니다</div>';
       return;
@@ -6458,7 +6461,7 @@ async function loadUserList(){
   var el=document.getElementById('userList');
   if(!el) return;
   try{
-    var res=await sb.from('users').select('*').eq('status','active').order('created_at');
+    var res=await sb.from('users').select('id,name,email,role,team,permissions,status,created_at').eq('status','active').order('created_at');
     if(res.error) return;
     el.innerHTML='<div class="u-row"><div class="u-info"><div class="u-ico" style="background:var(--navy-bg);color:var(--navy)">최</div><div><div class="u-name">최고관리자</div><div class="u-sub">관리자 · 전체권한</div></div></div><span class="chip chip-ok">활성</span></div>';
     (res.data||[]).forEach(function(u){
