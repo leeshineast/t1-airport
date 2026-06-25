@@ -305,6 +305,12 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     })();
   </script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  if(window.pdfjsLib){
+    pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+</script>
 </head>
 <body>
 
@@ -1537,7 +1543,14 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <span id="regViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
       <button onclick="regTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
-    <iframe id="regPdfFrame" src="" style="width:100%;flex:1;border:none;min-height:0"></iframe>
+    <div id="regPdfBox" style="flex:1;overflow:auto;background:#525659;display:flex;justify-content:center;min-height:0">
+      <canvas id="regPdfCanvas" style="margin:14px auto;box-shadow:0 2px 10px rgba(0,0,0,.35);max-width:100%"></canvas>
+    </div>
+    <div id="regPdfNav" style="display:flex;align-items:center;justify-content:center;gap:16px;padding:9px;background:var(--g1);border-top:1px solid var(--g2);flex-shrink:0">
+      <button onclick="regPdfPrevPage()" style="padding:6px 14px;background:white;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">◀</button>
+      <span id="regPdfPageInfo" style="font-size:12px;font-weight:700;color:var(--g6);min-width:60px;text-align:center">- / -</span>
+      <button onclick="regPdfNextPage()" style="padding:6px 14px;background:white;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">▶</button>
+    </div>
   </div>
 
   <!-- 탭2: 업로드 (관리자만) -->
@@ -1596,7 +1609,14 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <span id="isoViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
       <button onclick="isoTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
-    <iframe id="isoPdfFrame" src="" style="width:100%;flex:1;border:none;min-height:0"></iframe>
+    <div id="isoPdfBox" style="flex:1;overflow:auto;background:#525659;display:flex;justify-content:center;min-height:0">
+      <canvas id="isoPdfCanvas" style="margin:14px auto;box-shadow:0 2px 10px rgba(0,0,0,.35);max-width:100%"></canvas>
+    </div>
+    <div id="isoPdfNav" style="display:flex;align-items:center;justify-content:center;gap:16px;padding:9px;background:var(--g1);border-top:1px solid var(--g2);flex-shrink:0">
+      <button onclick="isoPdfPrevPage()" style="padding:6px 14px;background:white;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">◀</button>
+      <span id="isoPdfPageInfo" style="font-size:12px;font-weight:700;color:var(--g6);min-width:60px;text-align:center">- / -</span>
+      <button onclick="isoPdfNextPage()" style="padding:6px 14px;background:white;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">▶</button>
+    </div>
   </div>
 
   <!-- 탭2: 업로드 (관리자만) -->
@@ -8549,15 +8569,63 @@ async function loadIsoList(){
 }
 
 function viewIso(path, name){
-  var frame=document.getElementById('isoPdfFrame');
-  if(!frame) return;
   var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/iso9001/'+encodeURIComponent(path);
-  var viewerUrl='https://docs.google.com/viewer?url='+encodeURIComponent(pdfUrl)+'&embedded=true';
   var t=document.getElementById('isoViewerTitleText');
   if(t) t.textContent='📘 '+name;
-  frame.src=viewerUrl;
   isoTab(1);
+  _openPdfViewer('iso', pdfUrl);
 }
+
+var _pdfState={reg:{doc:null,page:1,total:0},iso:{doc:null,page:1,total:0}};
+
+async function _openPdfViewer(prefix, pdfUrl){
+  var canvas=document.getElementById(prefix+'PdfCanvas');
+  var pageInfo=document.getElementById(prefix+'PdfPageInfo');
+  if(!canvas||!window.pdfjsLib) return;
+  if(pageInfo) pageInfo.textContent='로딩중...';
+  try{
+    var doc=await pdfjsLib.getDocument(pdfUrl).promise;
+    _pdfState[prefix].doc=doc;
+    _pdfState[prefix].page=1;
+    _pdfState[prefix].total=doc.numPages;
+    await _renderPdfPage(prefix);
+  }catch(e){
+    if(pageInfo) pageInfo.textContent='로드 실패';
+    toast('PDF 로드 실패: '+e.message);
+  }
+}
+
+async function _renderPdfPage(prefix){
+  var st=_pdfState[prefix];
+  if(!st.doc) return;
+  var canvas=document.getElementById(prefix+'PdfCanvas');
+  var box=document.getElementById(prefix+'PdfBox');
+  var pageInfo=document.getElementById(prefix+'PdfPageInfo');
+  var page=await st.doc.getPage(st.page);
+  var unscaled=page.getViewport({scale:1});
+  var boxWidth=(box?box.clientWidth:320)-20;
+  var scale=Math.max(0.5, boxWidth/unscaled.width);
+  var viewport=page.getViewport({scale:scale});
+  canvas.width=viewport.width;
+  canvas.height=viewport.height;
+  var ctx=canvas.getContext('2d');
+  await page.render({canvasContext:ctx, viewport:viewport}).promise;
+  if(pageInfo) pageInfo.textContent=st.page+' / '+st.total;
+}
+
+function _pdfPageStep(prefix, delta){
+  var st=_pdfState[prefix];
+  if(!st.doc) return;
+  var next=st.page+delta;
+  if(next<1||next>st.total) return;
+  st.page=next;
+  _renderPdfPage(prefix);
+}
+
+function regPdfPrevPage(){ _pdfPageStep('reg',-1); }
+function regPdfNextPage(){ _pdfPageStep('reg',1); }
+function isoPdfPrevPage(){ _pdfPageStep('iso',-1); }
+function isoPdfNextPage(){ _pdfPageStep('iso',1); }
 
 function handleIsoUpload(files){
   _isoUploadFiles=Array.from(files);
@@ -8719,15 +8787,11 @@ async function loadRegList(){
 }
 
 function viewReg(path, name){
-  var frame=document.getElementById('regPdfFrame');
-  if(!frame) return;
   var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/regulations/'+encodeURIComponent(path);
-  // Google Docs 뷰어 - 모바일 검색/핀치줌 지원
-  var viewerUrl='https://docs.google.com/viewer?url='+encodeURIComponent(pdfUrl)+'&embedded=true';
   var t=document.getElementById('regViewerTitleText');
   if(t) t.textContent='📄 '+name;
-  frame.src=viewerUrl;
   regTab(1);
+  _openPdfViewer('reg', pdfUrl);
 }
 
 function handleRegUpload(files){
