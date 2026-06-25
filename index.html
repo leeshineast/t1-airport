@@ -8005,23 +8005,22 @@ function renderWasteList(){
   if(summaryEl){
     var sh='';
 
-    // ① 일별 합산 (당일만 표시)
-    var dayKeys=Object.keys(dayMap).filter(function(d){return d===today;});
-    if(dayKeys.length){
-      sh+='<div style="margin-bottom:12px">';
-      sh+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">📅 당일 합계</div>';
-      dayKeys.forEach(function(d){
-        var di=dayMap[d];
-        sh+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 11px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:5px">';
-        sh+='<span style="font-size:12px;font-weight:700;color:var(--g7)">'+d+'</span>';
-        sh+='<div style="display:flex;gap:10px">';
-        sh+='<span style="font-size:11px;color:var(--danger)">소각 '+di.inc.toFixed(3)+'톤</span>';
-        sh+='<span style="font-size:11px;color:var(--teal2)">재활용 '+di.rec.toFixed(3)+'톤</span>';
-        sh+='<span style="font-size:12px;font-weight:800;color:var(--navy)">'+( di.inc+di.rec).toFixed(3)+'톤</span>';
-        sh+='</div></div>';
-      });
-      sh+='</div>';
-    }
+    // ① 당일 + 전일 합산 (데이터 없어도 0으로 항상 표시)
+    var yesterday=new Date(Date.now()+9*3600000-86400000).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
+    var todayDi=dayMap[today]||{inc:0,rec:0};
+    var ydayDi=dayMap[yesterday]||{inc:0,rec:0};
+    sh+='<div style="margin-bottom:12px">';
+    sh+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">📅 당일·전일 합계</div>';
+    [['당일',today,todayDi],['전일',yesterday,ydayDi]].forEach(function(row){
+      sh+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 11px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:5px">';
+      sh+='<span style="font-size:12px;font-weight:700;color:var(--g7)">'+row[0]+' <span style="font-weight:400;color:var(--g4)">('+row[1]+')</span></span>';
+      sh+='<div style="display:flex;gap:10px">';
+      sh+='<span style="font-size:11px;color:var(--danger)">소각 '+row[2].inc.toFixed(3)+'톤</span>';
+      sh+='<span style="font-size:11px;color:var(--teal2)">재활용 '+row[2].rec.toFixed(3)+'톤</span>';
+      sh+='<span style="font-size:12px;font-weight:800;color:var(--navy)">'+(row[2].inc+row[2].rec).toFixed(3)+'톤</span>';
+      sh+='</div></div>';
+    });
+    sh+='</div>';
 
     // ② 월별 합계 (소계 카드)
     sh+='<div style="margin-bottom:12px">';
