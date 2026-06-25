@@ -454,15 +454,14 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('waste')">
       <div class="s-lbl">폐기물 현황 <span style="font-size:9px;color:var(--g3);font-weight:500">(이번달 톤)</span></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-top:5px">
-        <div style="font-size:10px;color:var(--g5)">생활 <b id="dW_living" style="color:var(--g7)">0</b></div>
-        <div style="font-size:10px;color:var(--g5)">합성수지 <b id="dW_syn" style="color:var(--g7)">0</b></div>
+        <div style="font-size:10px;color:var(--g5)">생활쓰레기 <b id="dW_living" style="color:var(--g7)">0</b></div>
+        <div style="font-size:10px;color:var(--g5)">폐합성 <b id="dW_syn" style="color:var(--g7)">0</b></div>
         <div style="font-size:10px;color:var(--g5)">음식물 <b id="dW_food" style="color:var(--g7)">0</b></div>
-        <div style="font-size:10px;color:var(--g5)">목재 <b id="dW_wood" style="color:var(--g7)">0</b></div>
-        <div style="font-size:10px;color:var(--g5)">종이 <b id="dW_paper" style="color:var(--g7)">0</b></div>
-        <div style="font-size:10px;color:var(--g5)">플라스틱 <b id="dW_plastic" style="color:var(--g7)">0</b></div>
-        <div style="font-size:10px;color:var(--g5)">캔/고철 <b id="dW_can" style="color:var(--g7)">0</b></div>
+        <div style="font-size:10px;color:var(--g5)">폐지 <b id="dW_paper" style="color:var(--g7)">0</b></div>
+        <div style="font-size:10px;color:var(--g5)">폐페트 <b id="dW_plastic" style="color:var(--g7)">0</b></div>
+        <div style="font-size:10px;color:var(--g5)">폐캔 <b id="dW_can" style="color:var(--g7)">0</b></div>
         <div style="font-size:10px;color:var(--g5)">병/유리 <b id="dW_glass" style="color:var(--g7)">0</b></div>
-        <div style="font-size:10px;color:var(--g5)">기타 <b id="dW_etc" style="color:var(--g7)">0</b></div>
+        <div style="font-size:10px;color:var(--g5)">폐고철,가전 <b id="dW_etc" style="color:var(--g7)">0</b></div>
       </div>
     </div>
   </div>
@@ -1439,7 +1438,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div style="display:flex;gap:7px;align-items:center">
         <input type="month" id="wasteFilterMonth" onchange="renderWasteList()" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
         <select id="wasteFilterTeam" onchange="renderWasteList()" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
-          <option value="">전체 차량</option>
+          <option value="">전체</option>
         </select>
         <button onclick="loadWasteFromDB()" style="padding:8px 13px;background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--g5);cursor:pointer">🔄</button>
         <button onclick="downloadWasteExcel()" style="padding:8px 13px;background:var(--teal-bg);border:1.5px solid var(--teal);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--teal2);cursor:pointer">📥</button>
@@ -1458,42 +1457,26 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div class="fg"><label class="f-lbl">일자 <span style="color:var(--danger)">*</span></label>
         <input type="date" id="wasteDate" class="ri" style="margin-bottom:0">
       </div>
-      <div class="fg" style="margin-top:10px"><label class="f-lbl">근무조 <span style="color:var(--danger)">*</span></label>
-        <div class="rg" id="wasteShiftGrp">
-          <div class="rp on" onclick="pickWasteShift(this)" data-val="오전">오전</div>
-          <div class="rp" onclick="pickWasteShift(this)" data-val="오후">오후</div>
-          <div class="rp" onclick="pickWasteShift(this)" data-val="야간">야간</div>
-        </div>
-      </div>
-      <div class="fg" style="margin-top:10px"><label class="f-lbl">차량번호 <span style="color:var(--danger)">*</span></label>
+      <div class="fg" style="margin-top:10px"><label class="f-lbl">조 선택 <span style="color:var(--danger)">*</span></label>
         <div class="rg" id="wasteTeamGrp" style="flex-wrap:wrap;gap:6px">
-          <div class="rp" onclick="pickWasteTeam(this)" data-val="88러7396">88러 7396</div>
-          <div class="rp" onclick="pickWasteTeam(this)" data-val="88러7397">88러 7397</div>
-          <div class="rp" onclick="pickWasteTeam(this)" data-val="809나1745">809나 1745</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="1팀C">1팀 C조</div>
+          <div class="rp" onclick="pickWasteTeam(this)" data-val="6팀C">6팀 C조</div>
         </div>
       </div>
     </div></div>
 
-    <!-- 소각 -->
+    <!-- 처리현황 -->
     <div class="card" style="margin-bottom:10px"><div class="cb">
-      <div style="font-size:13px;font-weight:800;color:var(--danger);margin-bottom:12px">🔥 소각</div>
+      <div style="font-size:13px;font-weight:800;color:var(--g6);margin-bottom:12px">♻️ 폐기물 처리현황</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="f-lbl" style="font-size:11px">생활쓰레기 (톤)</label><input type="number" id="w_inc_living" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">합성수지류 (톤)</label><input type="number" id="w_inc_syn" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">음식물쓰레기 (톤)</label><input type="number" id="w_inc_food" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">목재류 (톤)</label><input type="number" id="w_inc_wood" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-      </div>
-    </div></div>
-
-    <!-- 재활용 -->
-    <div class="card" style="margin-bottom:10px"><div class="cb">
-      <div style="font-size:13px;font-weight:800;color:var(--teal2);margin-bottom:12px">♻️ 재활용</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div><label class="f-lbl" style="font-size:11px">종이류 (톤)</label><input type="number" id="w_rec_paper" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">플라스틱류 (톤)</label><input type="number" id="w_rec_plastic" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">캔/고철류 (톤)</label><input type="number" id="w_rec_can" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">병/유리류 (톤)</label><input type="number" id="w_rec_glass" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
-        <div><label class="f-lbl" style="font-size:11px">기타 (톤)</label><input type="number" id="w_rec_etc" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">생활쓰레기(톤_소각)</label><input type="number" id="w_inc_living" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">폐합성(톤)</label><input type="number" id="w_inc_syn" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">폐지(톤)</label><input type="number" id="w_rec_paper" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">폐페트(톤)</label><input type="number" id="w_rec_plastic" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">폐캔(톤)</label><input type="number" id="w_rec_can" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">병/유리류(톤)</label><input type="number" id="w_rec_glass" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">폐고철, 가전(톤)</label><input type="number" id="w_rec_etc" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
+        <div><label class="f-lbl" style="font-size:11px">음식물쓰레기(톤)</label><input type="number" id="w_inc_food" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
       </div>
     </div></div>
 
@@ -3350,17 +3333,18 @@ async function dlCSV(type){
     if(type==='waste'||type==='all'){
       var rw=await sb.from('waste_data').select('*').order('waste_date',{ascending:false});
       if(rw.data&&rw.data.length){
-        var wasteRows=[['일자','근무조','팀','작성자',
-          '생활쓰레기(톤)','합성수지류(톤)','음식물쓰레기(톤)','목재류(톤)','소각합계(톤)',
-          '종이류(톤)','플라스틱류(톤)','캔/고철류(톤)','병/유리류(톤)','기타재활용(톤)','재활용합계(톤)',
+        var teamLabelMap2={'1팀C':'1팀 C조','6팀C':'6팀 C조'};
+        var wasteRows=[['일자','조','작성자',
+          '생활쓰레기(톤_소각)','폐합성(톤)','음식물쓰레기(톤)',
+          '폐지(톤)','폐페트(톤)','폐캔(톤)','병/유리류(톤)','폐고철, 가전(톤)',
           '총합계(톤)','비고']];
         rw.data.forEach(function(d){
-          var inc=(d.incineration_living||0)+(d.incineration_synthetic||0)+(d.incineration_food||0)+(d.incineration_wood||0);
+          var inc=(d.incineration_living||0)+(d.incineration_synthetic||0)+(d.incineration_food||0);
           var rec=(d.recycle_paper||0)+(d.recycle_plastic||0)+(d.recycle_can||0)+(d.recycle_glass||0)+(d.recycle_etc||0);
           wasteRows.push([
-            d.waste_date||'',d.shift||'',d.team_code||'',d.writer||'',
-            d.incineration_living||0,d.incineration_synthetic||0,d.incineration_food||0,d.incineration_wood||0,inc,
-            d.recycle_paper||0,d.recycle_plastic||0,d.recycle_can||0,d.recycle_glass||0,d.recycle_etc||0,rec,
+            d.waste_date||'',(teamLabelMap2[d.team_code]||d.team_code||''),d.writer||'',
+            d.incineration_living||0,d.incineration_synthetic||0,d.incineration_food||0,
+            d.recycle_paper||0,d.recycle_plastic||0,d.recycle_can||0,d.recycle_glass||0,d.recycle_etc||0,
             inc+rec,d.note||''
           ]);
         });
@@ -6802,7 +6786,7 @@ function updateAccComplaintCount(){
   var wSum=function(key){ return wasteThisMonth.reduce(function(s,r){ return s+(r[key]||0); },0); };
   var wFields=[
     ['dW_living','incineration_living'],['dW_syn','incineration_synthetic'],
-    ['dW_food','incineration_food'],['dW_wood','incineration_wood'],
+    ['dW_food','incineration_food'],
     ['dW_paper','recycle_paper'],['dW_plastic','recycle_plastic'],
     ['dW_can','recycle_can'],['dW_glass','recycle_glass'],['dW_etc','recycle_etc']
   ];
@@ -7752,17 +7736,15 @@ function pickWasteTeam(el){
 async function saveWaste(){
   var date=document.getElementById('wasteDate').value;
   if(!date){ toast('일자를 선택해주세요'); return; }
-  if(!wasteSelectedTeam){ toast('차량번호를 선택해주세요'); return; }
+  if(!wasteSelectedTeam){ toast('조를 선택해주세요'); return; }
   var getV=function(id){ return parseFloat(document.getElementById(id).value)||0; };
   var data={
     waste_date: date,
-    shift: wasteSelectedShift,
     team_code: wasteSelectedTeam,
     writer: me?me.name:'',
     incineration_living: getV('w_inc_living'),
     incineration_synthetic: getV('w_inc_syn'),
     incineration_food: getV('w_inc_food'),
-    incineration_wood: getV('w_inc_wood'),
     recycle_paper: getV('w_rec_paper'),
     recycle_plastic: getV('w_rec_plastic'),
     recycle_can: getV('w_rec_can'),
@@ -7777,7 +7759,7 @@ async function saveWaste(){
     if(res.error) throw res.error;
     toast('✅ 폐기물 처리현황이 저장되었습니다');
     // 입력 초기화
-    ['w_inc_living','w_inc_syn','w_inc_food','w_inc_wood','w_rec_paper','w_rec_plastic','w_rec_can','w_rec_glass','w_rec_etc'].forEach(function(id){
+    ['w_inc_living','w_inc_syn','w_inc_food','w_rec_paper','w_rec_plastic','w_rec_can','w_rec_glass','w_rec_etc'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.value='';
     });
     document.getElementById('wasteNote').value='';
@@ -7793,15 +7775,15 @@ async function loadWasteFromDB(){
     if(res.error) throw res.error;
     wasteData=res.data||[];
     updateAccComplaintCount();
-    // 차량 필터 옵션 갱신
+    // 조 필터 옵션 갱신
     var teamSel=document.getElementById('wasteFilterTeam');
     if(teamSel){
-      var vehicles=['88러7396','88러7397','809나1745'];
+      var teams=['1팀C','6팀C'];
+      var teamLabels={'1팀C':'1팀 C조','6팀C':'6팀 C조'};
       var cur=teamSel.value;
-      teamSel.innerHTML='<option value="">전체 차량</option>';
-      vehicles.forEach(function(v){
-        var label=v.replace('88러7396','88러 7396').replace('88러7397','88러 7397').replace('809나1745','809나 1745');
-        teamSel.innerHTML+='<option value="'+v+'"'+(v===cur?' selected':'')+'>'+label+'</option>';
+      teamSel.innerHTML='<option value="">전체</option>';
+      teams.forEach(function(v){
+        teamSel.innerHTML+='<option value="'+v+'"'+(v===cur?' selected':'')+'>'+teamLabels[v]+'</option>';
       });
     }
     // 이번 달 기본값
@@ -7830,30 +7812,30 @@ function renderWasteList(){
     if(tfv&&r.team_code!==tfv) return false;
     return true;
   });
-  // 월간 합계 + 차량별 합산 + 일일 합산
-  var VEHICLES=['88러7396','88러7397','809나1745'];
-  var VLABEL={'88러7396':'88러 7396','88러7397':'88러 7397','809나1745':'809나 1745'};
+  // 월간 합계 + 조별 합산 + 일일 합산
+  var VEHICLES=['1팀C','6팀C'];
+  var VLABEL={'1팀C':'1팀 C조','6팀C':'6팀 C조'};
   var totInc=0,totRec=0;
   filtered.forEach(function(r){
-    totInc+=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
+    totInc+=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0);
     totRec+=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
   });
-  // 일별 합산 (날짜별로 그룹화하여 3대 합계)
+  // 일별 합산 (날짜별로 그룹화하여 조별 합계)
   var dayMap={};
   filtered.forEach(function(r){
     var d=r.waste_date||'';
     if(!dayMap[d]) dayMap[d]={inc:0,rec:0,vehicles:{}};
-    var inc=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
+    var inc=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0);
     var rec=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
     dayMap[d].inc+=inc; dayMap[d].rec+=rec;
     dayMap[d].vehicles[r.team_code]=(dayMap[d].vehicles[r.team_code]||0)+(inc+rec);
   });
-  // 차량별 합산
+  // 조별 합산
   var vMap={};
   filtered.forEach(function(r){
     var v=r.team_code||'기타';
     if(!vMap[v]){vMap[v]={inc:0,rec:0};}
-    vMap[v].inc+=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
+    vMap[v].inc+=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0);
     vMap[v].rec+=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
   });
   // 연간 합계
@@ -7861,7 +7843,7 @@ function renderWasteList(){
   var yearInc=0,yearRec=0;
   wasteData.forEach(function(r){
     if((r.waste_date||'').slice(0,4)!==thisYear) return;
-    yearInc+=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
+    yearInc+=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0);
     yearRec+=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
   });
 
@@ -7913,31 +7895,24 @@ function renderWasteList(){
   var isAdminOnly=me&&me.role==='admin';
   var h='';
   filtered.forEach(function(r){
-    var incTotal=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
+    var incTotal=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0);
     var recTotal=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
     h+='<div style="background:white;border-radius:var(--r2);border:1.5px solid var(--g2);padding:13px;margin-bottom:9px">';
     h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
     h+='<div style="display:flex;align-items:center;gap:7px">';
     h+='<span style="font-size:12px;font-weight:800;color:var(--g7)">'+r.waste_date+'</span>';
-    h+='<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--navy-bg);color:var(--navy)">'+r.team_code+'</span>';
-    h+='<span style="font-size:11px;color:var(--g4)">'+r.shift+'</span>';
+    h+='<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--navy-bg);color:var(--navy)">'+(VLABEL[r.team_code]||r.team_code)+'</span>';
     h+='</div>';
     h+='<span style="font-size:10px;color:var(--g4)">'+r.writer+'</span>';
     h+='</div>';
-    // 소각
-    h+='<div style="background:var(--danger-bg);border-radius:8px;padding:8px 10px;margin-bottom:7px">';
-    h+='<div style="font-size:11px;font-weight:700;color:var(--danger);margin-bottom:5px">🔥 소각 합계 '+incTotal.toLocaleString()+'톤</div>';
+    // 처리현황
+    h+='<div style="background:var(--g1);border-radius:8px;padding:8px 10px;margin-bottom:7px">';
+    h+='<div style="font-size:11px;font-weight:700;color:var(--g6);margin-bottom:5px">♻️ 처리합계 '+(incTotal+recTotal).toLocaleString()+'톤</div>';
     h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:11px;color:var(--g6)">';
-    h+='<span>생활: '+(r.incineration_living||0)+'톤</span><span>합성수지: '+(r.incineration_synthetic||0)+'톤</span>';
-    h+='<span>음식물: '+(r.incineration_food||0)+'톤</span><span>목재: '+(r.incineration_wood||0)+'톤</span>';
-    h+='</div></div>';
-    // 재활용
-    h+='<div style="background:var(--teal-bg);border-radius:8px;padding:8px 10px;margin-bottom:7px">';
-    h+='<div style="font-size:11px;font-weight:700;color:var(--teal2);margin-bottom:5px">♻️ 재활용 합계 '+recTotal.toLocaleString()+'톤</div>';
-    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:11px;color:var(--g6)">';
-    h+='<span>종이: '+(r.recycle_paper||0)+'톤</span><span>플라스틱: '+(r.recycle_plastic||0)+'톤</span>';
-    h+='<span>캔/고철: '+(r.recycle_can||0)+'톤</span><span>병/유리: '+(r.recycle_glass||0)+'톤</span>';
-    h+='<span>기타: '+(r.recycle_etc||0)+'톤</span>';
+    h+='<span>생활쓰레기(소각): '+(r.incineration_living||0)+'톤</span><span>폐합성: '+(r.incineration_synthetic||0)+'톤</span>';
+    h+='<span>음식물쓰레기: '+(r.incineration_food||0)+'톤</span><span>폐지: '+(r.recycle_paper||0)+'톤</span>';
+    h+='<span>폐페트: '+(r.recycle_plastic||0)+'톤</span><span>폐캔: '+(r.recycle_can||0)+'톤</span>';
+    h+='<span>병/유리류: '+(r.recycle_glass||0)+'톤</span><span>폐고철,가전: '+(r.recycle_etc||0)+'톤</span>';
     h+='</div></div>';
     if(r.note) h+='<div style="font-size:11px;color:var(--g5);background:var(--g1);border-radius:6px;padding:6px 9px;margin-bottom:7px">📎 '+r.note+'</div>';
     if(isAdminOnly){
@@ -7963,16 +7938,17 @@ function downloadWasteExcel(){
   var mf=document.getElementById('wasteFilterMonth');
   var mfv=mf?mf.value:'';
   var filtered=wasteData.filter(function(r){ return !mfv||r.waste_date.slice(0,7)===mfv; });
-  var rows=[['일자','근무조','팀','작성자','생활쓰레기(톤)','합성수지류(톤)','음식물쓰레기(톤)','목재류(톤)','소각합계(톤)','종이류(톤)','플라스틱류(톤)','캔/고철류(톤)','병/유리류(톤)','기타재활용(톤)','재활용합계(톤)','총합계(톤)','기타']];
+  var teamLabelMap={'1팀C':'1팀 C조','6팀C':'6팀 C조'};
+  var rows=[['일자','조','작성자','생활쓰레기(톤_소각)','폐합성(톤)','음식물쓰레기(톤)','폐지(톤)','폐페트(톤)','폐캔(톤)','병/유리류(톤)','폐고철, 가전(톤)','총합계(톤)','기타']];
   filtered.forEach(function(r){
-    var inc=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.incineration_wood||0);
+    var inc=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0);
     var rec=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
-    rows.push([r.waste_date,r.shift,r.team_code,r.writer,r.incineration_living||0,r.incineration_synthetic||0,r.incineration_food||0,r.incineration_wood||0,inc,r.recycle_paper||0,r.recycle_plastic||0,r.recycle_can||0,r.recycle_glass||0,r.recycle_etc||0,rec,inc+rec,r.note||'']);
+    rows.push([r.waste_date,(teamLabelMap[r.team_code]||r.team_code),r.writer,r.incineration_living||0,r.incineration_synthetic||0,r.incineration_food||0,r.recycle_paper||0,r.recycle_plastic||0,r.recycle_can||0,r.recycle_glass||0,r.recycle_etc||0,inc+rec,r.note||'']);
   });
   try{
     var wb=XLSX.utils.book_new();
     var ws=XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols']=[{wch:12},{wch:8},{wch:6},{wch:10},{wch:14},{wch:14},{wch:16},{wch:10},{wch:12},{wch:10},{wch:14},{wch:12},{wch:12},{wch:14},{wch:14},{wch:12},{wch:16}];
+    ws['!cols']=[{wch:12},{wch:8},{wch:10},{wch:16},{wch:12},{wch:16},{wch:10},{wch:10},{wch:10},{wch:12},{wch:14},{wch:12},{wch:16}];
     XLSX.utils.book_append_sheet(wb,ws,'폐기물처리현황');
     XLSX.writeFile(wb,'T1_폐기물처리현황'+(mfv?'_'+mfv:'')+'.xlsx');
     toast('📥 다운로드 완료');
