@@ -7817,16 +7817,16 @@ function renderWasteList(){
   var VLABEL={'1팀C':'1팀 C조','6팀C':'6팀 C조'};
   var totInc=0,totRec=0;
   filtered.forEach(function(r){
-    totInc+=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0);
-    totRec+=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
+    totInc+=(r.incineration_living||0);
+    totRec+=(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
   });
   // 일별 합산 (날짜별로 그룹화하여 조별 합계)
   var dayMap={};
   filtered.forEach(function(r){
     var d=r.waste_date||'';
     if(!dayMap[d]) dayMap[d]={inc:0,rec:0,vehicles:{}};
-    var inc=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0);
-    var rec=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
+    var inc=(r.incineration_living||0);
+    var rec=(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
     dayMap[d].inc+=inc; dayMap[d].rec+=rec;
     dayMap[d].vehicles[r.team_code]=(dayMap[d].vehicles[r.team_code]||0)+(inc+rec);
   });
@@ -7835,26 +7835,26 @@ function renderWasteList(){
   filtered.forEach(function(r){
     var v=r.team_code||'기타';
     if(!vMap[v]){vMap[v]={inc:0,rec:0};}
-    vMap[v].inc+=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0);
-    vMap[v].rec+=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
+    vMap[v].inc+=(r.incineration_living||0);
+    vMap[v].rec+=(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
   });
   // 연간 합계
   var thisYear=today.slice(0,4);
   var yearInc=0,yearRec=0;
   wasteData.forEach(function(r){
     if((r.waste_date||'').slice(0,4)!==thisYear) return;
-    yearInc+=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0);
-    yearRec+=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
+    yearInc+=(r.incineration_living||0);
+    yearRec+=(r.incineration_synthetic||0)+(r.incineration_food||0)+(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0);
   });
 
   if(summaryEl){
     var sh='';
 
-    // ① 일별 합산 (필터된 월의 날짜별, 최신순)
-    var dayKeys=Object.keys(dayMap).sort().reverse();
+    // ① 일별 합산 (당일만 표시)
+    var dayKeys=Object.keys(dayMap).filter(function(d){return d===today;});
     if(dayKeys.length){
       sh+='<div style="margin-bottom:12px">';
-      sh+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">📅 일별 합계</div>';
+      sh+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">📅 당일 합계</div>';
       dayKeys.forEach(function(d){
         var di=dayMap[d];
         sh+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 11px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:5px">';
