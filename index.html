@@ -1430,7 +1430,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <!-- 탭 -->
   <div style="display:flex;border-bottom:2px solid var(--g2)">
     <div id="wasteT0" onclick="wasteTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">이력 조회</div>
-    <div id="wasteT1" onclick="wasteTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--g3);cursor:pointer">입력</div>
+    <div id="wasteT1" onclick="wasteNewInput()" style="flex:1;text-align:center;padding:10px 0;font-size:13px;font-weight:600;color:var(--g3);cursor:pointer">입력</div>
   </div>
 
   <!-- 이력 조회 탭 -->
@@ -1491,6 +1491,18 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <button onclick="saveWaste()" class="btn-prim" style="width:100%">♻️ 폐기물 처리현황 저장</button>
   </div>
 </div>
+
+<!-- 폐기물 저장 확인 모달 -->
+<div id="wasteConfirmModal" class="modal-bg"><div class="modal">
+  <div class="m-hd" style="background:linear-gradient(135deg,var(--teal),var(--teal2))"><h3>♻️ 입력 내용 확인</h3><button class="m-x" onclick="hideM('wasteConfirmModal')">×</button></div>
+  <div style="padding:15px 17px">
+    <div id="wasteConfirmBody" style="font-size:13px;color:var(--g6)"></div>
+    <div style="display:flex;gap:8px;margin-top:15px">
+      <button onclick="hideM('wasteConfirmModal')" style="flex:1;padding:11px;background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">취소</button>
+      <button onclick="confirmSaveWaste()" class="btn-prim" style="flex:1;margin:0">✅ 저장 확인</button>
+    </div>
+  </div>
+</div></div>
 
 <!-- ══ AI 챗봇 ══ -->
 <div id="sChat" class="scr">
@@ -7721,6 +7733,20 @@ var wasteData=[];
 var wasteSelectedShift='오전';
 var wasteSelectedTeam='';
 
+function wasteNewInput(){
+  wasteEditId=null;
+  document.querySelectorAll('#wasteTeamGrp .rp').forEach(function(b){b.classList.remove('on');});
+  wasteSelectedTeam=null;
+  document.getElementById('wasteDate').value='';
+  ['w_inc_living','w_inc_syn','w_inc_food','w_rec_paper','w_rec_plastic','w_rec_can','w_rec_glass','w_rec_etc','w_misc_etc'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('wasteNote').value='';
+  var btn=document.querySelector('#wasteP1 .btn-prim');
+  if(btn) btn.textContent='♻️ 폐기물 처리현황 저장';
+  wasteTab(1);
+}
+
 function wasteTab(n){ tabSwitch('waste',n,2); }
 
 function pickWasteShift(el){
@@ -7735,10 +7761,76 @@ function pickWasteTeam(el){
   wasteSelectedTeam=el.dataset.val;
 }
 
-async function saveWaste(){
+var wasteEditId=null;
+function openWasteEdit(id){
+  var r=(wasteData||[]).find(function(x){return String(x.id)===String(id);});
+  if(!r){ toast('데이터를 찾을 수 없습니다'); return; }
+  wasteEditId=r.id;
+  wasteTab(1);
+  document.getElementById('wasteDate').value=r.waste_date;
+  document.querySelectorAll('#wasteTeamGrp .rp').forEach(function(b){
+    if(b.dataset.val===r.team_code){ b.classList.add('on'); } else { b.classList.remove('on'); }
+  });
+  wasteSelectedTeam=r.team_code;
+  var setV=function(id2,val){ var el=document.getElementById(id2); if(el) el.value=val||''; };
+  setV('w_inc_living', r.incineration_living);
+  setV('w_inc_syn', r.incineration_synthetic);
+  setV('w_inc_food', r.incineration_food);
+  setV('w_rec_paper', r.recycle_paper);
+  setV('w_rec_plastic', r.recycle_plastic);
+  setV('w_rec_can', r.recycle_can);
+  setV('w_rec_glass', r.recycle_glass);
+  setV('w_rec_etc', r.recycle_etc);
+  setV('w_misc_etc', r.misc_etc);
+  document.getElementById('wasteNote').value=r.note||'';
+  var btn=document.querySelector('#wasteP1 .btn-prim');
+  if(btn) btn.textContent='✏️ 폐기물 처리현황 수정';
+  toast('✏️ 수정 모드 - 값을 변경 후 저장하세요');
+}
+
+function saveWaste(){
   var date=document.getElementById('wasteDate').value;
   if(!date){ toast('일자를 선택해주세요'); return; }
   if(!wasteSelectedTeam){ toast('조를 선택해주세요'); return; }
+  var getV=function(id){ return parseFloat(document.getElementById(id).value)||0; };
+  var items=[
+    ['생활쓰레기(톤_소각)', getV('w_inc_living')],
+    ['폐합성(톤)', getV('w_inc_syn')],
+    ['음식물쓰레기(톤)', getV('w_inc_food')],
+    ['폐지(톤)', getV('w_rec_paper')],
+    ['폐페트(톤)', getV('w_rec_plastic')],
+    ['폐캔(톤)', getV('w_rec_can')],
+    ['병/유리류(톤)', getV('w_rec_glass')],
+    ['폐고철, 가전(톤)', getV('w_rec_etc')],
+    ['기타(톤)', getV('w_misc_etc')]
+  ];
+  var total=items.reduce(function(s,it){return s+it[1];},0);
+  var teamLabel=({'1팀C':'1팀 C조','6팀C':'6팀 C조'})[wasteSelectedTeam]||wasteSelectedTeam;
+  var note=document.getElementById('wasteNote').value.trim();
+
+  var h='';
+  h+='<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1.5px solid var(--g2);margin-bottom:8px">';
+  h+='<span style="font-weight:700;color:var(--g7)">'+date+'</span>';
+  h+='<span style="font-weight:700;color:var(--navy)">'+teamLabel+'</span>';
+  h+='</div>';
+  h+='<div style="display:flex;flex-direction:column;gap:6px">';
+  items.forEach(function(it){
+    h+='<div style="display:flex;justify-content:space-between;font-size:12px">';
+    h+='<span style="color:var(--g5)">'+it[0]+'</span><span style="font-weight:700;color:'+(it[1]>0?'var(--g7)':'var(--g3)')+'">'+it[1]+'톤</span>';
+    h+='</div>';
+  });
+  h+='</div>';
+  h+='<div style="display:flex;justify-content:space-between;padding:10px 0;margin-top:8px;border-top:1.5px solid var(--g2)">';
+  h+='<span style="font-weight:800;color:var(--g7)">합계</span><span style="font-weight:900;color:var(--teal2);font-size:15px">'+total.toFixed(2)+'톤</span>';
+  h+='</div>';
+  if(note) h+='<div style="margin-top:8px;font-size:12px;color:var(--g5);background:var(--g1);border-radius:8px;padding:8px 10px">📎 '+note+'</div>';
+
+  document.getElementById('wasteConfirmBody').innerHTML=h;
+  showM('wasteConfirmModal');
+}
+
+async function confirmSaveWaste(){
+  var date=document.getElementById('wasteDate').value;
   var getV=function(id){ return parseFloat(document.getElementById(id).value)||0; };
   var data={
     waste_date: date,
@@ -7755,21 +7847,30 @@ async function saveWaste(){
     misc_etc: getV('w_misc_etc'),
     note: document.getElementById('wasteNote').value.trim()||null
   };
-  var btn=document.querySelector('#wasteP1 .btn-prim');
-  if(btn){btn.disabled=true;btn.textContent='저장 중...';}
+  var modalBtn=document.querySelector('#wasteConfirmModal .btn-prim');
+  if(modalBtn){modalBtn.disabled=true;modalBtn.textContent='저장 중...';}
   try{
-    var res=await sb.from('waste_data').insert(data);
+    var res;
+    if(wasteEditId){
+      res=await sb.from('waste_data').update(data).eq('id', wasteEditId);
+    } else {
+      res=await sb.from('waste_data').insert(data);
+    }
     if(res.error) throw res.error;
-    toast('✅ 폐기물 처리현황이 저장되었습니다');
+    hideM('wasteConfirmModal');
+    toast(wasteEditId?'✅ 폐기물 처리현황이 수정되었습니다':'✅ 폐기물 처리현황이 저장되었습니다');
+    wasteEditId=null;
     // 입력 초기화
     ['w_inc_living','w_inc_syn','w_inc_food','w_rec_paper','w_rec_plastic','w_rec_can','w_rec_glass','w_rec_etc','w_misc_etc'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.value='';
     });
     document.getElementById('wasteNote').value='';
+    var btn2=document.querySelector('#wasteP1 .btn-prim');
+    if(btn2) btn2.textContent='♻️ 폐기물 처리현황 저장';
     loadWasteFromDB();
     wasteTab(0);
   }catch(e){ toast('⚠️ 저장 실패: '+e.message);
-  }finally{ if(btn){btn.disabled=false;btn.textContent='♻️ 폐기물 처리현황 저장';} }
+  }finally{ if(modalBtn){modalBtn.disabled=false;modalBtn.textContent='✅ 저장 확인';} }
 }
 
 async function loadWasteFromDB(){
@@ -7896,10 +7997,13 @@ function renderWasteList(){
     return;
   }
   var isAdminOnly=me&&me.role==='admin';
+  var isAdminMgr=me&&(me.role==='admin'||me.role==='manager');
+  var myWasteCode=(me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
   var h='';
   filtered.forEach(function(r){
     var incTotal=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0);
     var recTotal=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0)+(r.misc_etc||0);
+    var canEditWaste=isAdminMgr||(me&&me.role==='leader'&&myWasteCode&&myWasteCode===r.team_code);
     h+='<div style="background:white;border-radius:var(--r2);border:1.5px solid var(--g2);padding:13px;margin-bottom:9px">';
     h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
     h+='<div style="display:flex;align-items:center;gap:7px">';
@@ -7919,9 +8023,14 @@ function renderWasteList(){
     h+='<span>기타: '+(r.misc_etc||0)+'톤</span>';
     h+='</div></div>';
     if(r.note) h+='<div style="font-size:11px;color:var(--g5);background:var(--g1);border-radius:6px;padding:6px 9px;margin-bottom:7px">📎 '+r.note+'</div>';
-    if(isAdminOnly){
-      h+='<button data-id="'+r.id+'" onclick="deleteWaste(this.dataset.id)" style="padding:6px 12px;background:white;color:var(--danger);border:1.5px solid var(--danger);border-radius:var(--r2);font-size:11px;font-weight:700;cursor:pointer">🗑️ 삭제</button>';
+    h+='<div style="display:flex;gap:8px">';
+    if(canEditWaste){
+      h+='<button data-id="'+r.id+'" onclick="openWasteEdit(this.dataset.id)" style="flex:1;padding:6px 12px;background:var(--teal-bg);color:var(--teal2);border:1.5px solid var(--teal2);border-radius:var(--r2);font-size:11px;font-weight:700;cursor:pointer">✏️ 수정</button>';
     }
+    if(isAdminOnly){
+      h+='<button data-id="'+r.id+'" onclick="deleteWaste(this.dataset.id)" style="flex:1;padding:6px 12px;background:white;color:var(--danger);border:1.5px solid var(--danger);border-radius:var(--r2);font-size:11px;font-weight:700;cursor:pointer">🗑️ 삭제</button>';
+    }
+    h+='</div>';
     h+='</div>';
   });
   el.innerHTML=h;
