@@ -1352,6 +1352,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div class="rp" onclick="pickLostEditStatus(this)" data-val="완료-기타">완료·기타</div>
     </div>
   </div>
+  <div class="fg"><label class="f-lbl">완료 일시 (해당시)</label><input type="datetime-local" id="lostEditCompletedDate" class="ri" style="margin-bottom:0"></div>
   <div class="fg"><label class="f-lbl">기타</label><textarea id="lostEditNote" class="ri" rows="2" style="resize:vertical;font-size:13px;margin-bottom:0"></textarea></div>
   <div style="display:flex;gap:8px;margin-top:8px">
     <button onclick="hideM('lostEditModal')" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">취소</button>
@@ -1378,6 +1379,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 <!-- 습득물 처리완료 모달 -->
 <div id="lostCompleteModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--teal),var(--teal2))"><h3>✅ 처리 완료</h3><button class="m-x" onclick="hideM('lostCompleteModal')">×</button></div><div style="padding:15px 17px">
   <input type="hidden" id="lostCompleteId">
+  <div class="fg"><label class="f-lbl">완료 일시</label><input type="datetime-local" id="lostCompleteDate" class="ri" style="margin-bottom:0"></div>
   <div class="fg"><label class="f-lbl">처리 유형</label>
     <div class="rg" id="lostCompleteTypeGrp" style="flex-wrap:wrap;gap:7px">
       <div class="rp on" onclick="pickLostCompleteType(this)" data-val="완료-폐기">폐기</div>
@@ -7436,6 +7438,7 @@ async function saveLost(){
       location: location,
       item: item,
       status: lostSelectedStatus,
+      completed_at: lostSelectedStatus.startsWith('완료')?now:null,
       note: note||null
     });
     if(res.error) throw res.error;
@@ -7525,6 +7528,10 @@ function renderLostList(){
     }
     // 위치
     h+='<div style="font-size:11px;color:var(--g5);margin-bottom:5px">📍 '+r.location+'</div>';
+    // 완료일시
+    if(isDone&&r.completed_at){
+      h+='<div style="font-size:11px;color:var(--teal2);margin-bottom:5px">✅ 완료: '+toKSTDateTime(r.completed_at)+'</div>';
+    }
     // 물품
     h+='<div style="font-size:13px;font-weight:700;color:var(--g7);margin-bottom:8px;line-height:1.5">'+r.item+'</div>';
     // 기타
@@ -7562,6 +7569,7 @@ function openLostEdit(btn){
   document.getElementById('lostEditLocation').value=r.location||'';
   document.getElementById('lostEditItem').value=r.item||'';
   document.getElementById('lostEditNote').value=r.note||'';
+  document.getElementById('lostEditCompletedDate').value = r.completed_at ? new Date(new Date(r.completed_at).getTime()+9*3600000).toISOString().slice(0,16) : '';
   // 처리현황 선택
   lostEditSelectedStatus=r.status||'접수';
   document.querySelectorAll('#lostEditStatusGrp .rp').forEach(function(p){
@@ -7575,6 +7583,8 @@ async function confirmLostEdit(){
   var location=document.getElementById('lostEditLocation').value.trim();
   var item=document.getElementById('lostEditItem').value.trim();
   if(!location||!item){ toast('위치와 물품은 필수입니다'); return; }
+  var compInput=document.getElementById('lostEditCompletedDate').value;
+  var completedAt=compInput?new Date(compInput+':00+09:00').toISOString():null;
   try{
     await sb.from('lost_found').update({
       finder_id: document.getElementById('lostEditFinderId').value.trim()||null,
@@ -7582,6 +7592,7 @@ async function confirmLostEdit(){
       location: location,
       item: item,
       status: lostEditSelectedStatus,
+      completed_at: completedAt,
       note: document.getElementById('lostEditNote').value.trim()||null
     }).eq('id',id);
     hideM('lostEditModal');
@@ -7613,7 +7624,7 @@ function downloadLostExcel(){
   if(!lostData||!lostData.length){ toast('다운로드할 데이터가 없습니다'); return; }
   var filterMonth=document.getElementById('lostFilterMonth');
   var mf=filterMonth?filterMonth.value:'';
-  var rows=[['연번','접수일시','작성자','발견자 사번','발견자 이름','발견 위치','발견 물품','처리현황','기타']];
+  var rows=[['연번','접수일시','작성자','발견자 사번','발견자 이름','발견 위치','발견 물품','처리현황','완료일시','기타']];
   var filtered=lostData.filter(function(r){
     if(mf&&toKSTDate(r.found_date||r.created_at).slice(0,7)!==mf) return false;
     return true;
@@ -7628,6 +7639,7 @@ function downloadLostExcel(){
       r.location||'',
       r.item||'',
       r.status||'',
+      r.completed_at?toKSTDateTime(r.completed_at):'',
       r.note||''
     ]);
   });
@@ -7645,6 +7657,8 @@ function downloadLostExcel(){
 function openLostComplete(id){
   document.getElementById('lostCompleteId').value=id;
   document.getElementById('lostCompleteMemo').value='';
+  var nowKST=new Date(Date.now()+9*3600000).toISOString().slice(0,16);
+  document.getElementById('lostCompleteDate').value=nowKST;
   document.querySelectorAll('#lostCompleteTypeGrp .rp').forEach(function(p){p.classList.remove('on');});
   document.querySelector('#lostCompleteTypeGrp .rp').classList.add('on');
   lostCompleteSelectedType='완료-폐기';
@@ -7654,8 +7668,10 @@ function openLostComplete(id){
 async function confirmLostComplete(){
   var id=parseInt(document.getElementById('lostCompleteId').value);
   var memo=document.getElementById('lostCompleteMemo').value.trim();
+  var dateInput=document.getElementById('lostCompleteDate').value;
+  var completedAt=dateInput?new Date(dateInput+':00+09:00').toISOString():new Date().toISOString();
   try{
-    var updateData={status:lostCompleteSelectedType};
+    var updateData={status:lostCompleteSelectedType, completed_at:completedAt};
     if(memo) updateData.note=memo;
     await sb.from('lost_found').update(updateData).eq('id',id);
     hideM('lostCompleteModal');
