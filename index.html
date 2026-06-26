@@ -5833,9 +5833,9 @@ function parseExcelData(filename, rows){
           if((k.indexOf('세면기')!==-1||k.indexOf('세면대')!==-1)&&k.indexOf('장애인')===-1) td['남세면기']+=(parseInt(row[k])||0);
           if(k.indexOf('소변기')!==-1) td['남소변기']+=(parseInt(row[k])||0);
         });
-        // 가족실: '가족실 유무(*)' = '있음' 인 경우만 개소로 카운트
+        // 가족실: 헤더에 '가족실'과 '유무'가 모두 포함되면 (예: '가족실 유무(*)', '가족실(장애인실) 유무(*)') '있음'인 경우만 개소로 카운트
         keys.forEach(function(k){
-          if(k==='가족실 유무(*)'||k==='가족실 유무'){
+          if(k.indexOf('가족실')!==-1&&k.indexOf('유무')!==-1){
             if(String(row[k]).indexOf('있')!==-1) td['남가족']++;
           }
         });
@@ -5845,9 +5845,9 @@ function parseExcelData(filename, rows){
           if(k.indexOf('양변기')!==-1&&k.indexOf('장애인')===-1) td['여양변기']+=(parseInt(row[k])||0);
           if((k.indexOf('세면기')!==-1||k.indexOf('세면대')!==-1)&&k.indexOf('장애인')===-1) td['여세면기']+=(parseInt(row[k])||0);
         });
-        // 가족실: '가족실 유무(*)' = '있음' 인 경우만 개소로 카운트
+        // 가족실: 헤더에 '가족실'과 '유무'가 모두 포함되면 (예: '가족실 유무(*)', '가족실(장애인실) 유무(*)') '있음'인 경우만 개소로 카운트
         keys.forEach(function(k){
-          if(k==='가족실 유무(*)'||k==='가족실 유무'){
+          if(k.indexOf('가족실')!==-1&&k.indexOf('유무')!==-1){
             if(String(row[k]).indexOf('있')!==-1) td['여가족']++;
           }
         });
