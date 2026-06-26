@@ -1566,6 +1566,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <div id="regP1" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
     <div id="regViewerTitle" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:12px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
       <span id="regViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
+      <button id="regViewToggleBtn" onclick="toggleViewerMode('reg')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔄 다른 방식</button>
       <button onclick="regTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
     <iframe id="regPdfFrame" src="" style="width:100%;flex:1;border:none;min-height:0"></iframe>
@@ -1625,6 +1626,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <div id="isoP1" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
     <div id="isoViewerTitle" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:12px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
       <span id="isoViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
+      <button id="isoViewToggleBtn" onclick="toggleViewerMode('iso')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔄 다른 방식</button>
       <button onclick="isoTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
     <iframe id="isoPdfFrame" src="" style="width:100%;flex:1;border:none;min-height:0"></iframe>
@@ -1684,6 +1686,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <div id="safetyP1" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
     <div id="safetyViewerTitle" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:12px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
       <span id="safetyViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
+      <button id="safetyViewToggleBtn" onclick="toggleViewerMode('safety')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔄 다른 방식</button>
       <button onclick="safetyTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
     <iframe id="safetyPdfFrame" src="" style="width:100%;flex:1;border:none;min-height:0"></iframe>
@@ -8716,10 +8719,12 @@ function viewIso(path, name){
   var frame=document.getElementById('isoPdfFrame');
   if(!frame) return;
   var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/iso9001/'+encodeURIComponent(path);
+  window._isoPdfUrl=pdfUrl;
   var viewerUrl='https://docs.google.com/viewer?url='+encodeURIComponent(pdfUrl)+'&embedded=true';
   var t=document.getElementById('isoViewerTitleText');
   if(t) t.textContent='📘 '+name;
   frame.src=viewerUrl;
+  var btn=document.getElementById('isoViewToggleBtn'); if(btn) btn.textContent='🔄 다른 방식';
   isoTab(1);
 }
 
@@ -8889,10 +8894,12 @@ function viewSafety(path, name){
   var frame=document.getElementById('safetyPdfFrame');
   if(!frame) return;
   var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/safety-procedures/'+encodeURIComponent(path);
+  window._safetyPdfUrl=pdfUrl;
   var viewerUrl='https://docs.google.com/viewer?url='+encodeURIComponent(pdfUrl)+'&embedded=true';
   var t=document.getElementById('safetyViewerTitleText');
   if(t) t.textContent='⛑️ '+name;
   frame.src=viewerUrl;
+  var btn=document.getElementById('safetyViewToggleBtn'); if(btn) btn.textContent='🔄 다른 방식';
   safetyTab(1);
 }
 
@@ -9059,12 +9066,29 @@ function viewReg(path, name){
   var frame=document.getElementById('regPdfFrame');
   if(!frame) return;
   var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/regulations/'+encodeURIComponent(path);
+  window._regPdfUrl=pdfUrl;
   // Google Docs 뷰어 - 모바일 검색/핀치줌 지원
   var viewerUrl='https://docs.google.com/viewer?url='+encodeURIComponent(pdfUrl)+'&embedded=true';
   var t=document.getElementById('regViewerTitleText');
   if(t) t.textContent='📄 '+name;
   frame.src=viewerUrl;
+  var btn=document.getElementById('regViewToggleBtn'); if(btn) btn.textContent='🔄 다른 방식';
   regTab(1);
+}
+
+// 화면이 흐리거나 잘릴 때, 구글뷰어 ↔ PDF 직접보기 전환 (사규/ISO9001/안전작업절차서 공용)
+function toggleViewerMode(prefix){
+  var frame=document.getElementById(prefix+'PdfFrame');
+  var btn=document.getElementById(prefix+'ViewToggleBtn');
+  var url=window['_'+prefix+'PdfUrl'];
+  if(!frame||!url) return;
+  if(frame.src.indexOf('docs.google.com')>-1){
+    frame.src=url; // PDF 원본 직접 보기
+    if(btn) btn.textContent='🔄 기본 보기로';
+  }else{
+    frame.src='https://docs.google.com/viewer?url='+encodeURIComponent(url)+'&embedded=true';
+    if(btn) btn.textContent='🔄 다른 방식';
+  }
 }
 
 function handleRegUpload(files){
