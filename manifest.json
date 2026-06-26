@@ -5,7 +5,7 @@
   "start_url": "/t1-airport/",
   "scope": "/t1-airport/",
   "display": "standalone",
-  "orientation": "portrait",
+  "orientation": "any",
   "background_color": "#ffffff",
   "theme_color": "#1B3A6B",
   "lang": "ko",
