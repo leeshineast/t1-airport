@@ -235,6 +235,9 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
             url += (url.includes('?')?'&':'?') + 'on_conflict=' + upsertCol;
           }
           if(method==='DELETE') headers['Prefer'] = 'return=representation';
+          // users 테이블은 password 컬럼 SELECT가 막혀있어서, 변경 후 행을 돌려받으려 하면(return=representation)
+          // 자동으로 permission denied 오류가 남. 응답 데이터가 필요 없으므로 minimal로 강제.
+          if(table==='users' && method!=='GET'){ headers['Prefer'] = 'return=minimal'; }
 
           var opts = { method: method, headers: headers };
           if(body) opts.body = JSON.stringify(body);
