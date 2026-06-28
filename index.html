@@ -521,6 +521,8 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 
     </div>
 
+    <div id="mpDaySummary" style="display:none;font-size:11px;color:var(--g4);padding:0 13px 11px"></div>
+
     <!-- 전체 패널 -->
     <div id="flP_all">
       <div class="card"><div class="tbl-w"><table class="mp-tbl" id="dHome">
@@ -2274,31 +2276,6 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 </div>
 
 <!-- ══ 모달들 ══ -->
-<!-- API 키 설정 모달 (관리자 전용) -->
-<div id="apiKeyModal" class="modal-bg">
-  <div class="modal">
-    <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))">
-      <h3>🔑 Gemini API 키 설정</h3>
-      <button class="m-x" onclick="closeApiModal()">×</button>
-    </div>
-    <div style="padding:16px 17px">
-      <p style="font-size:12px;color:var(--g5);line-height:1.7;margin-bottom:13px">
-        Google AI Studio에서 발급받은 Gemini API 키를 입력하세요.<br>
-        <span style="color:var(--success);font-size:11px">✅ 무료로 사용 가능합니다 (aistudio.google.com)</span><br>
-        <span style="color:var(--danger);font-size:11px">※ 키는 이 기기 브라우저에만 저장됩니다</span>
-      </p>
-      <div class="fg">
-        <label class="f-lbl">API 키</label>
-        <input type="password" id="apiKeyInput" class="ri" placeholder="AIza..." style="margin-bottom:0;font-family:monospace;font-size:13px">
-      </div>
-      <div id="apiKeyStatus" style="display:none;font-size:11px;margin-bottom:10px;padding:7px 10px;border-radius:var(--r2)"></div>
-      <div style="display:flex;gap:7px;margin-top:13px">
-        <button onclick="closeApiModal()" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">취소</button>
-        <button onclick="saveApiKey()" style="flex:2;padding:11px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">저장</button>
-      </div>
-    </div>
-  </div>
-</div>
 
 <div id="mpModal" class="modal-bg">
   <div class="modal">
@@ -2602,6 +2579,7 @@ function go(name){
   if(name==='mp'){
     // 로그인한 사람 근무조/팀 자동 선택
     setTimeout(autoSelectMyShiftTeam, 100);
+    updateMpSummary();
   }
   if(name==='admin'){
     loadPendingUsers();
@@ -2629,6 +2607,10 @@ function go(name){
   if(name==='iso9001'){
     isoTab(0);
     loadIsoList();
+  }
+  if(name==='safety'){
+    safetyTab(0);
+    loadSafetyList();
   }
   if(name==='voc'){
     loadVocFromDB();
@@ -2687,8 +2669,6 @@ function applyRoleUI(){
   var vrb=document.getElementById('vocResetBtn');if(vrb)vrb.style.display=isAdmin?'block':'none';
   // 습득물 초기화 버튼 (admin만)
   var lrb=document.getElementById('lostResetBtn');if(lrb)lrb.style.display=isAdmin?'block':'none';
-  // Gemini API 키 복구
-  try{var gk=localStorage.getItem('t1_gemini_key');if(gk){GEMINI_API_KEY=gk;var btn=document.getElementById('apiKeyBtn');if(btn){btn.textContent='🔑 API키 ✅';btn.style.background='rgba(26,158,117,.3)';}}}catch(e){}
   // 차량 게스트: 차량운행기록만 접근 가능
   if(me.role==='vehicle_guest'){
     // 메뉴 버튼 전체 숨김 후 차량만 표시
@@ -2737,11 +2717,6 @@ async function doLogin(){
 
 function finishLogin(){
   applyRoleUI();
-  if(pdfB64){
-    var b=document.getElementById('pdfBanner');if(b)b.style.display='block';
-    var nb=document.getElementById('pdfNoBanner');if(nb)nb.style.display='none';
-    var nm=document.getElementById('pdfNm');if(nm)nm.textContent=pdfFileName;
-  }
   // 세션 저장 (새로고침 시 자동 로그인)
   try{ localStorage.setItem('t1_me', JSON.stringify(me)); }catch(e){}
   // 메모리 초기화 먼저 (어제 데이터 화면 노출 방지)
@@ -2759,7 +2734,6 @@ function finishLogin(){
   loadMpInputLog();
   setTimeout(initNotifBaseline, 3000); // 데이터 로드 후 baseline 세팅
   loadPerms();
-  autoLoadPdf();
   loadFacilityData();
   loadMpFromDB();
   loadKpiData();
@@ -3219,133 +3193,6 @@ function subInd(){
   updateIndCmp();
   toast('산업재해 등록 완료');
 }
-
-// ─ AI 챗봇 ─
-let pdfB64=null,pdfFileName='',chatLoading=false;
-let pdfList=[]; // 다중 사규 [{b64, name}]
-
-// ─ API 키 관리 ─
-let GEMINI_API_KEY = '';
-function openApiModal(){
-  try{ const saved=localStorage.getItem('t1_gemini_key'); if(saved){document.getElementById('apiKeyInput').value=saved;} }catch(e){}
-  const st=document.getElementById('apiKeyStatus');
-  if(GEMINI_API_KEY){
-    st.textContent='✅ API 키가 설정되어 있습니다';
-    st.style.cssText='display:block;background:var(--success-bg);color:var(--success);font-size:11px;padding:7px 10px;border-radius:var(--r2);margin-bottom:10px';
-  } else { st.style.display='none'; }
-  showM('apiKeyModal');
-}
-function closeApiModal(){ hideM('apiKeyModal'); }
-function saveApiKey(){
-  const key=document.getElementById('apiKeyInput').value.trim();
-  const st=document.getElementById('apiKeyStatus');
-  if(!key){ st.textContent='⚠️ API 키를 입력해주세요'; st.style.cssText='display:block;background:var(--danger-bg);color:var(--danger);font-size:11px;padding:7px 10px;border-radius:var(--r2);margin-bottom:10px'; return; }
-  // Gemini key validation removed
-  GEMINI_API_KEY = key;
-  try{ localStorage.setItem('t1_gemini_key', key); }catch(e){}
-  const btn=document.getElementById('apiKeyBtn');
-  if(btn){ btn.textContent='🔑 API키 ✅'; btn.style.background='rgba(26,158,117,.3)'; }
-  closeApiModal();
-  toast('✅ API 키가 저장되었습니다');
-}
-
-
-async function uploadPdf(input){
-  if(!me||me.role!=='admin'){toast('최고관리자만 사규를 업로드할 수 있습니다');return;}
-  const files=Array.from(input.files);
-  if(!files.length) return;
-  let loaded=0;
-  for(const file of files){
-    if(file.size>20*1024*1024){toast('⚠️ '+file.name+' 파일이 너무 큽니다 (최대 20MB)');continue;}
-    const name=(()=>{try{return decodeURIComponent(file.name);}catch(e){return file.name;}})();
-    addAiMsg('⏳ <strong>'+name+'</strong> 로딩 중...');
-    // FileReader를 Promise로 감싸서 await 가능하게
-    const b64 = await new Promise(function(resolve, reject){
-      const reader=new FileReader();
-      reader.onerror=function(){reject(new Error('읽기 실패'));};
-      reader.onload=function(e){resolve(e.target.result.split(',')[1]);};
-      reader.readAsDataURL(file);
-    }).catch(function(err){addAiMsg('⚠️ '+name+' 읽기 실패: '+err.message);return null;});
-    if(!b64) continue;
-    // 기존 목록에 없으면 추가, 있으면 교체
-    const idx=pdfList.findIndex(function(p){return p.name===name;});
-    if(idx>=0) pdfList[idx]={b64:b64,name:name};
-    else pdfList.push({b64:b64,name:name});
-    pdfB64=b64; pdfFileName=name;
-    const ok=await savePdfToStorage(b64, name);
-    if(!ok){
-      addAiMsg('⚠️ <strong>'+name+'</strong> 서버 저장 실패.<br>브라우저 콘솔(F12→Console)에서 오류를 확인해주세요.<br>이번 세션에서는 임시로 사용 가능합니다.');
-    } else {
-      addAiMsg('💾 <strong>'+name+'</strong> 서버에 영구 저장 완료!');
-    }
-    loaded++;
-    const msgs=document.getElementById('chatMsgs');
-    const last=msgs&&msgs.lastElementChild;
-    if(last&&last.textContent.includes('로딩 중'))last.remove();
-    addAiMsg('✅ <strong>'+name+'</strong> 업로드 완료!<br>📂 현재 등록된 사규: '+pdfList.length+'개');
-    renderPdfList();
-    const banner=document.getElementById('pdfBanner');if(banner)banner.style.display='block';
-    const noBanner=document.getElementById('pdfNoBanner');if(noBanner)noBanner.style.display='none';
-  }
-  if(loaded>0) toast('✅ 사규 '+loaded+'개 업로드 완료');
-}
-
-function renderPdfList(){
-  var nm=document.getElementById('pdfNm');
-  if(nm) nm.textContent=pdfList.length>1?pdfList.length+'개 사규 등록됨':(pdfList[0]?pdfList[0].name:'');
-}
-function quickQ(q){document.getElementById('chatIn').value=q;sendChat();}
-function autoR(el){el.style.height='auto';el.style.height=Math.min(el.scrollHeight,80)+'px';}
-function chatEnter(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}}
-function addAiMsg(h){const w=document.createElement('div');w.className='ai-row';w.innerHTML=`<div class="ai-ico">🤖</div><div><div class="b-ai">${h}</div><div style="font-size:10px;color:var(--g3);margin-top:3px">AI · 사규 기반</div></div>`;const m=document.getElementById('chatMsgs');m.appendChild(w);m.scrollTop=m.scrollHeight;}
-function addUserMsg(t){const w=document.createElement('div');w.className='user-r';w.innerHTML=`<div class="b-user">${t}</div>`;const m=document.getElementById('chatMsgs');m.appendChild(w);m.scrollTop=m.scrollHeight;}
-function addTyping(){const id='ty_'+Date.now();const w=document.createElement('div');w.className='ai-row';w.id=id;w.innerHTML=`<div class="ai-ico">🤖</div><div class="b-ai"><div class="dots"><span></span><span></span><span></span></div></div>`;document.getElementById('chatMsgs').appendChild(w);return id;}
-function rmTyping(id){const e=document.getElementById(id);if(e)e.remove();}
-async function sendChat(){if(chatLoading)return;const inp=document.getElementById('chatIn');const q=inp.value.trim();if(!q)return;if(!pdfB64){
-    if(me&&me.role==='admin'){
-      addAiMsg('⚠️ 아직 사규 PDF가 업로드되지 않았습니다.<br>상단 <strong>📎 사규 업로드</strong> 버튼으로 PDF를 먼저 업로드해 주세요.');
-    } else {
-      addAiMsg('⚠️ 아직 관리자가 사규를 등록하지 않았습니다.<br>관리자에게 사규 등록을 요청해 주세요.');
-    }
-    return;
-  }inp.value='';inp.style.height='auto';addUserMsg(q);document.getElementById('qBtns').style.display='none';const tid=addTyping();chatLoading=true;document.getElementById('sendBtn').style.opacity='.5';try{if(!GEMINI_API_KEY){
-      rmTyping(tid);
-      addAiMsg('⚠️ API 키가 설정되지 않았습니다.<br>상단 <strong>🔑 API키</strong> 버튼을 눌러 Gemini API 키를 먼저 입력해주세요.<br><small style="color:var(--g4)">aistudio.google.com 에서 무료 발급 가능</small>');
-      chatLoading=false;document.getElementById('sendBtn').style.opacity='1';
-      return;
-    }
-    // Gemini API - PDF 인라인 전달
-    const sysP='당신은 T1환경미화사업부의 사규 전문 AI 도우미입니다. 다음 규칙을 반드시 지키세요: 1.업로드된 사규 PDF 문서에 명시된 내용만 답변하세요. 2.사규에 없는 내용은 절대 추측하거나 일반 지식으로 답변하지 마세요. 3.사규에 없으면 반드시 해당 내용은 사규에 명시되어 있지 않습니다 라고만 답하세요. 4.답변 시 관련 조항 번호나 조문을 함께 인용하세요. 5.간결하고 명확하게 팩트만 전달하세요. 6.한국어로 답변하세요.';
-    const gUrl='https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent?key='+GEMINI_API_KEY;
-    // 다중 사규: Gemini 용량 제한(20MB)으로 최대 5개까지만 전송
-    // 5개 초과 시 최근 업로드 순으로 5개 선택
-    const MAX_PDF=5;
-    const sendList=pdfList.length>0?pdfList.slice(-MAX_PDF):[{b64:pdfB64,name:pdfFileName}];
-    const pdfParts=sendList.map(function(p){return {inline_data:{mime_type:'application/pdf',data:p.b64}};});
-    const listInfo=pdfList.length>MAX_PDF?'\n[참고: 전체 '+pdfList.length+'개 사규 중 최근 '+MAX_PDF+'개를 기반으로 답변합니다]':'';
-    const gBody={system_instruction:{parts:[{text:sysP}]},contents:[{role:'user',parts:pdfParts.concat([{text:q+listInfo}])}],generationConfig:{maxOutputTokens:1000,temperature:0.1}};
-    const res=await fetch(gUrl,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(gBody)});
-    rmTyping(tid);
-    const data=await res.json();
-    if(data.error){
-      let msg='⚠️ API 오류: '+data.error.message;
-      if(data.error.code===400||data.error.status==='INVALID_ARGUMENT') msg='⚠️ Gemini API 키가 올바르지 않습니다. 🔑 API키 버튼에서 다시 확인해주세요.';
-      if(data.error.code===429) msg='⚠️ API 요청 한도 초과입니다.<br>너무 많은 사규를 동시에 참조 중입니다. 잠시 후 다시 시도해주세요.';
-      addAiMsg(msg);
-      chatLoading=false;document.getElementById('sendBtn').style.opacity='1';
-      return;
-    }
-    const ans=(data.candidates&&data.candidates[0]&&data.candidates[0].content&&data.candidates[0].content.parts&&data.candidates[0].content.parts[0]&&data.candidates[0].content.parts[0].text)||'답변을 가져오지 못했습니다.';
-    addAiMsg(ans.replace(/\n/g,'<br>'));}catch(err){
-    rmTyping(tid);
-    let errMsg='⚠️ 오류가 발생했습니다.';
-    if(err.message&&err.message.includes('Failed to fetch')){
-      errMsg='⚠️ API 연결 실패.<br>API 키를 확인하거나 네트워크 상태를 확인해주세요.';
-    } else if(err.message){
-      errMsg='⚠️ 오류: '+err.message;
-    }
-    addAiMsg(errMsg);
-  }chatLoading=false;document.getElementById('sendBtn').style.opacity='1';}
 
 // ─ 다운로드 ─
 async function dlCSV(type){
@@ -4279,19 +4126,22 @@ function updateMpSummary(){
   for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) total+=(mpData[ri]&&mpData[ri][ci])||0;
   if(total===0){el.style.display='none';return;}
   el.style.display='block';
-  var shiftColors={'오전':'var(--navy)','오후':'var(--teal2)','야간':'#6B21A8'};
-  var shiftIcons={'오전':'🌅','오후':'☀️','야간':'🌙'};
-  var rows='';
+  var shiftTotal={};
   ['오전','오후','야간'].forEach(function(s){
-    if(!mpDataByShift[s]) return;
+    var leaderData=mpDataByLeader[s]||{};
     var st=0;
-    for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) st+=mpDataByShift[s][ri][ci];
-    rows+='<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--g1)">';
-    rows+='<span style="font-size:12px;color:'+shiftColors[s]+';font-weight:600">'+shiftIcons[s]+' '+s+'팀</span>';
-    rows+='<span style="font-size:15px;font-weight:800;color:'+shiftColors[s]+'">'+st+'<span style="font-size:10px;font-weight:400;color:var(--g4)">명</span></span></div>';
+    Object.keys(leaderData).forEach(function(team){
+      if(team.indexOf('_')===0) return;
+      var vals=leaderData[team];
+      if(!vals||!Array.isArray(vals)) return;
+      for(var ri=0;ri<4;ri++){
+        if(!vals[ri]||!Array.isArray(vals[ri])) continue;
+        for(var ci=0;ci<7;ci++) st+=Number(vals[ri][ci])||0;
+      }
+    });
+    shiftTotal[s]=st;
   });
-  el.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:9px"><span style="font-size:12px;font-weight:700;color:var(--g6)">📊 금일 누계 현황</span><span style="font-size:11px;color:var(--g4)">'+new Date(Date.now()+9*3600000).toLocaleDateString('ko-KR')+'</span></div>'+rows;
-  el.innerHTML+='<div style="display:flex;align-items:center;justify-content:space-between;padding-top:8px;margin-top:2px"><span style="font-size:13px;font-weight:800;color:var(--g7)">금일 총계</span><span style="font-size:22px;font-weight:900;color:var(--teal)">'+total+'<span style="font-size:11px;font-weight:400;color:var(--g4)">명</span></span></div>';
+  el.textContent='오전 '+shiftTotal['오전']+'명 · 오후 '+shiftTotal['오후']+'명 · 야간 '+shiftTotal['야간']+'명';
 }
 
 // ═══ 층별 인력현황 업데이트 ═══
@@ -4365,8 +4215,14 @@ async function saveIndCmp(){
   var v=parseInt(document.getElementById('indCmpInput').value)||0;
   indPrevYear=v;
   // Supabase notices 테이블에 key=ind_prev_year 로 공유 저장
+  // (notices.title은 일반 공지 중복 허용을 위해 더 이상 UNIQUE가 아니므로 upsert 대신 수동 update-or-insert 처리)
   try{
-    await sb.from('notices').upsert({title:'__ind_prev_year__',content:String(v),author:'system'},{onConflict:'title'});
+    var chk=await sb.from('notices').select('id').eq('title','__ind_prev_year__').limit(1);
+    if(chk.data&&chk.data.length){
+      await sb.from('notices').update({content:String(v)}).eq('id',chk.data[0].id);
+    } else {
+      await sb.from('notices').insert({title:'__ind_prev_year__',content:String(v),author:'system'});
+    }
   }catch(e){}
   closeIndCmpEdit();
   updateIndCmp();
@@ -5383,116 +5239,6 @@ function saveLeaderDataEdit(){
   var proxyWriter2=isProxy2?(me?me.name:null):null;
   saveMpToDB(editShift, editTeam, newVals, writer2, proxyWriter2).then(function(){ loadMpFromDB(); });
   toast('✅ '+editTeam+' 입력값이 수정되었습니다');
-}
-
-function openPdfDB(callback){
-  // Supabase Storage로 대체됨 - 하위 호환용
-  if(callback) callback(null);
-  if(pdfDB){callback(pdfDB);return;}
-  // Supabase Storage 방식으로 대체됨
-}
-
-// ── Supabase Storage PDF 관리 ──
-// PDF를 Storage에 업로드하고 목록을 DB 테이블에 저장
-
-async function savePdfToStorage(b64, name){
-  try{
-    // base64 → Blob 변환
-    const byteStr=atob(b64);
-    const ab=new ArrayBuffer(byteStr.length);
-    const ia=new Uint8Array(ab);
-    for(let i=0;i<byteStr.length;i++) ia[i]=byteStr.charCodeAt(i);
-    const blob=new Blob([ab],{type:'application/pdf'});
-
-    // Storage 업로드 (파일명 중복 시 덮어쓰기)
-    // 파일명을 영문+타임스탬프로 변환 (Storage 한글/특수문자 불허)
-    const ts=Date.now();
-    const ext=name.lastIndexOf('.')>=0?name.slice(name.lastIndexOf('.')):'';
-    const safeName='sagu_'+ts+ext;  // 예: sagu_1234567890.pdf
-    const path='pdfs/'+safeName;
-    const STORAGE_URL=SUPABASE_URL+'/storage/v1/object/regulations/'+encodeURIComponent(path);
-    const ANON_KEY=SUPABASE_KEY;
-
-    // 먼저 삭제 시도 (개정본 교체)
-    await fetch(STORAGE_URL,{method:'DELETE',headers:{'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY}});
-
-    // 업로드
-    const res=await fetch(STORAGE_URL,{
-      method:'POST',
-      headers:{'apikey':ANON_KEY,'Authorization':'Bearer '+ANON_KEY,'Content-Type':'application/pdf','x-upsert':'true'},
-      body:blob
-    });
-    if(!res.ok){
-      const t=await res.text();
-      console.error('Storage 업로드 실패:', res.status, t);
-      throw new Error('HTTP '+res.status+': '+t);
-    }
-
-    // 사규 목록 테이블에 기록
-    await sb.from('regulation_files').upsert({
-      name:name,
-      path:path,
-      uploaded_at:new Date().toISOString(),
-      uploaded_by:me?me.name:''
-    },{onConflict:'name'});
-
-    return true;
-  }catch(e){console.error('Storage 업로드 오류:',e);return false;}
-}
-
-async function loadPdfFromStorage(path){
-  try{
-    const STORAGE_URL=SUPABASE_URL+'/storage/v1/object/public/regulations/'+encodeURIComponent(path);
-    const res=await fetch(STORAGE_URL);
-    if(!res.ok) throw new Error('HTTP '+res.status);
-    const ab=await res.arrayBuffer();
-    const bytes=new Uint8Array(ab);
-    let b64='';
-    const chunk=8192;
-    for(let i=0;i<bytes.length;i+=chunk){
-      b64+=String.fromCharCode.apply(null,bytes.subarray(i,Math.min(i+chunk,bytes.length)));
-    }
-    return btoa(b64);
-  }catch(e){console.error('PDF 로드 오류:',e);return null;}
-}
-
-async function autoLoadPdf(){
-  try{
-    // regulation_files 테이블에서 목록 조회
-    const res=await sb.from('regulation_files').select('*').order('uploaded_at',{ascending:false});
-    if(res.error||!res.data||!res.data.length){
-      console.log('등록된 사규 없음');
-      return;
-    }
-    const files=res.data;
-    addAiMsg('📂 저장된 사규 <strong>'+files.length+'개</strong>를 불러오는 중...');
-
-    // 최대 5개만 로드 (Gemini 용량 제한)
-    const toLoad=files.slice(0,5);
-    pdfList=[];
-    let loaded=0;
-    for(const f of toLoad){
-      const b64=await loadPdfFromStorage(f.path);
-      if(b64){
-        pdfList.push({b64:b64,name:f.name});
-        pdfB64=b64; pdfFileName=f.name;
-        loaded++;
-      }
-    }
-    if(loaded>0){
-      const banner=document.getElementById('pdfBanner');if(banner)banner.style.display='block';
-      const noBanner=document.getElementById('pdfNoBanner');if(noBanner)noBanner.style.display='none';
-      renderPdfList();
-      const sub=document.getElementById('chatSubtitle');
-      if(sub) sub.textContent='사규 PDF 기반으로만 답변';
-      const msgs=document.getElementById('chatMsgs');
-      if(msgs){
-        const last=msgs.lastElementChild;
-        if(last&&last.textContent.includes('불러오는 중'))last.remove();
-      }
-      addAiMsg('✅ 사규 <strong>'+loaded+'개</strong> 로드 완료'+(files.length>5?' (전체 '+files.length+'개 중 최신 5개)':'')+'<br>사규에 대해 궁금한 점을 질문해주세요.');
-    }
-  }catch(e){console.error('autoLoadPdf 오류:',e);}
 }
 
 
@@ -8638,8 +8384,6 @@ async function initAppData(){
     loadLostFromDB(),
     loadWasteFromDB()
   ]);
-  // 사규 자동 로드
-  autoLoadPdf();
   // 일별 이력 로드
   loadMpHistory();
   // 전일 근무 인원 로드
