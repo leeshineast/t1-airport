@@ -8893,7 +8893,12 @@ async function loadSafetyList(){
       wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">📭 등록된 안전작업절차서 문서가 없습니다<br><small>관리자에게 업로드 요청하세요</small></div>';
       return;
     }
-    safetyFiles=res.data;
+    safetyFiles=res.data.slice().sort(function(a,b){
+      var ma=(a.name||'').match(/^(\d+)/), mb=(b.name||'').match(/^(\d+)/);
+      var na=ma?parseInt(ma[1],10):999999, nb=mb?parseInt(mb[1],10):999999;
+      if(na!==nb) return na-nb;
+      return (a.name||'').localeCompare(b.name||'','ko');
+    });
     var html='<div style="margin-bottom:11px;font-size:11px;color:var(--g4)">총 '+safetyFiles.length+'개 문서 등록됨 · 탭하여 열기</div>';
     safetyFiles.forEach(function(f){
       var escapedPath=f.path.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
