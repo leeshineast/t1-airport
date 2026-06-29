@@ -555,13 +555,9 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div class="card ns-summary-card" style="display:none;margin-top:0">
         <div class="cb">
           <div style="font-size:12px;font-weight:700;color:#6B21A8;margin-bottom:8px">🌙 야간특별작업 인력현황 (금일)</div>
-          <table class="mp-tbl" style="width:100%;margin-bottom:6px">
-            <thead><tr><th>카페트</th><th>PBB</th><th>왁스</th><th>석재</th><th>우드</th><th>화장실(특별)</th></tr></thead>
-            <tbody><tr><td data-ns="carpet">0</td><td data-ns="pbb">0</td><td data-ns="wax">0</td><td data-ns="stone">0</td><td data-ns="wood">0</td><td data-ns="restroom">0</td></tr></tbody>
-          </table>
           <table class="mp-tbl" style="width:100%">
-            <thead><tr><th>ES</th><th>화장실(일상)</th><th>공용구역</th><th>수거</th><th style="background:#6B21A8;color:white">계</th></tr></thead>
-            <tbody><tr><td data-ns="es">0</td><td data-ns="toilet_daily">0</td><td data-ns="common_area">0</td><td data-ns="collection">0</td><td data-ns="total" style="font-weight:800;color:#6B21A8">0</td></tr></tbody>
+            <thead><tr><th>카페트</th><th>PBB</th><th>왁스</th><th>석재</th><th>우드</th><th>화장실</th><th>ES</th><th>기타</th><th style="background:#6B21A8;color:white">계</th></tr></thead>
+            <tbody><tr><td data-ns="carpet">0</td><td data-ns="pbb">0</td><td data-ns="wax">0</td><td data-ns="stone">0</td><td data-ns="wood">0</td><td data-ns="restroom">0</td><td data-ns="es">0</td><td data-ns="etc">0</td><td data-ns="total" style="font-weight:800;color:#6B21A8">0</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1058,11 +1054,9 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           <div><label style="font-size:11px;color:var(--g4)">왁스</label><input id="nsWax" class="ri" type="number" min="0" placeholder="0" style="margin-bottom:0" oninput="calcNightSpecial()" onfocus="this.select()"></div>
           <div><label style="font-size:11px;color:var(--g4)">석재</label><input id="nsStone" class="ri" type="number" min="0" placeholder="0" style="margin-bottom:0" oninput="calcNightSpecial()" onfocus="this.select()"></div>
           <div><label style="font-size:11px;color:var(--g4)">우드</label><input id="nsWood" class="ri" type="number" min="0" placeholder="0" style="margin-bottom:0" oninput="calcNightSpecial()" onfocus="this.select()"></div>
-          <div><label style="font-size:11px;color:var(--g4)">화장실(특별)</label><input id="nsRestroom" class="ri" type="number" min="0" placeholder="0" style="margin-bottom:0" oninput="calcNightSpecial()" onfocus="this.select()"></div>
+          <div><label style="font-size:11px;color:var(--g4)">화장실</label><input id="nsRestroom" class="ri" type="number" min="0" placeholder="0" style="margin-bottom:0" oninput="calcNightSpecial()" onfocus="this.select()"></div>
           <div><label style="font-size:11px;color:var(--g4)">ES</label><input id="nsEs" class="ri" type="number" min="0" placeholder="0" style="margin-bottom:0" oninput="calcNightSpecial()" onfocus="this.select()"></div>
-          <div><label style="font-size:11px;color:var(--g4)">화장실(일상)</label><input id="nsToiletDaily" class="ri" type="number" min="0" placeholder="0" style="margin-bottom:0" oninput="calcNightSpecial()" onfocus="this.select()"></div>
-          <div><label style="font-size:11px;color:var(--g4)">공용구역</label><input id="nsCommonArea" class="ri" type="number" min="0" placeholder="0" style="margin-bottom:0" oninput="calcNightSpecial()" onfocus="this.select()"></div>
-          <div><label style="font-size:11px;color:var(--g4)">수거</label><input id="nsCollection" class="ri" type="number" min="0" placeholder="0" style="margin-bottom:0" oninput="calcNightSpecial()" onfocus="this.select()"></div>
+          <div><label style="font-size:11px;color:var(--g4)">기타</label><input id="nsEtc" class="ri" type="number" min="0" placeholder="0" style="margin-bottom:0" oninput="calcNightSpecial()" onfocus="this.select()"></div>
         </div>
         <div style="display:flex;align-items:center;justify-content:space-between;margin-top:11px;padding-top:11px;border-top:1px solid var(--g2)">
           <div><div style="font-size:11px;color:var(--g4);margin-bottom:3px">입력 합계</div><div style="font-size:20px;font-weight:900;line-height:1;color:#6B21A8" id="nsTot">0</div></div>
@@ -1101,13 +1095,9 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div class="card ns-summary-card" style="display:none">
       <div class="cb">
         <div style="font-size:12px;font-weight:700;color:#6B21A8;margin-bottom:8px">🌙 야간특별작업 인력현황 (금일)</div>
-        <table class="mp-tbl" style="width:100%;margin-bottom:6px">
-          <thead><tr><th>카페트</th><th>PBB</th><th>왁스</th><th>석재</th><th>우드</th><th>화장실(특별)</th></tr></thead>
-          <tbody><tr><td data-ns="carpet">0</td><td data-ns="pbb">0</td><td data-ns="wax">0</td><td data-ns="stone">0</td><td data-ns="wood">0</td><td data-ns="restroom">0</td></tr></tbody>
-        </table>
         <table class="mp-tbl" style="width:100%">
-          <thead><tr><th>ES</th><th>화장실(일상)</th><th>공용구역</th><th>수거</th><th style="background:#6B21A8;color:white">계</th></tr></thead>
-          <tbody><tr><td data-ns="es">0</td><td data-ns="toilet_daily">0</td><td data-ns="common_area">0</td><td data-ns="collection">0</td><td data-ns="total" style="font-weight:800;color:#6B21A8">0</td></tr></tbody>
+          <thead><tr><th>카페트</th><th>PBB</th><th>왁스</th><th>석재</th><th>우드</th><th>화장실</th><th>ES</th><th>기타</th><th style="background:#6B21A8;color:white">계</th></tr></thead>
+          <tbody><tr><td data-ns="carpet">0</td><td data-ns="pbb">0</td><td data-ns="wax">0</td><td data-ns="stone">0</td><td data-ns="wood">0</td><td data-ns="restroom">0</td><td data-ns="es">0</td><td data-ns="etc">0</td><td data-ns="total" style="font-weight:800;color:#6B21A8">0</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -2343,24 +2333,6 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     </div>
   </div>
 </div>
-
-<div id="nsModal" class="modal-bg">
-  <div class="modal">
-    <div style="background:linear-gradient(135deg,#6B21A8,#8B3FD1);padding:18px;text-align:center">
-      <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:5px" id="nsMTeam">야간특별작업</div>
-      <div style="color:white;font-size:11px;margin-bottom:5px">금회 입력 총 작업량</div>
-      <div style="display:flex;align-items:baseline;justify-content:center;gap:4px"><span style="color:white;font-size:42px;font-weight:900;line-height:1" id="nsMCnt">0</span><span style="color:rgba(255,255,255,.8);font-size:17px;font-weight:700">명</span></div>
-    </div>
-    <div style="padding:15px 17px">
-      <div id="nsMDet" style="font-size:12px;margin-bottom:13px"></div>
-      <div style="background:#F3EEF8;border-radius:var(--r2);padding:9px;font-size:11px;color:#6B21A8;font-weight:600;margin-bottom:13px;text-align:center">✅ 위 내용으로 저장합니다</div>
-      <div style="display:flex;gap:7px">
-        <button onclick="closeNsM()" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">다시 확인</button>
-        <button onclick="confirmNs()" style="flex:2;padding:11px;background:linear-gradient(135deg,#6B21A8,#8B3FD1);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">저장 완료</button>
-      </div>
-    </div>
-  </div>
-</div>
 <div id="wdModal" class="modal-bg"><div class="modal"><div style="background:var(--danger-bg);padding:20px;text-align:center"><div style="font-size:26px;margin-bottom:6px">⚠️</div><div style="font-size:14px;font-weight:800;color:var(--danger)">탈퇴 처리 확인</div></div><div style="padding:17px;text-align:center"><div style="font-size:13px;color:var(--g6);line-height:1.7;margin-bottom:17px"><strong id="wdNm" style="color:var(--danger)">사용자</strong>님을 탈퇴 처리하시겠습니까?</div><div style="display:flex;gap:7px"><button onclick="closeWd()" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">취소</button><button onclick="confirmWd()" style="flex:1;padding:11px;background:var(--danger);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">탈퇴</button></div></div></div></div>
 
 <!-- 비밀번호 변경 모달 -->
@@ -3396,8 +3368,8 @@ async function dlCSV(type){
           if(!nsByDate[d.date]) nsByDate[d.date]=[];
           nsByDate[d.date].push(d);
         });
-        var nsCols=['carpet','pbb','wax','stone','wood','restroom','es','toilet_daily','common_area','collection'];
-        var nsRows=[['날짜','팀','카페트','PBB','왁스','석재','우드','화장실(특별)','ES','화장실(일상)','공용구역','수거','계','작성자']];
+        var nsCols=['carpet','pbb','wax','stone','wood','restroom','es','etc'];
+        var nsRows=[['날짜','팀','카페트','PBB','왁스','석재','우드','화장실','ES','기타','계','작성자']];
         Object.keys(nsByDate).sort().forEach(function(date){
           var teams=nsByDate[date];
           var dayTotal=nsCols.map(function(){return 0;});
@@ -3409,10 +3381,10 @@ async function dlCSV(type){
           });
           var dayTotalSum=dayTotal.reduce(function(a,b){return a+b;},0);
           nsRows.push([date,'계'].concat(dayTotal).concat([dayTotalSum,'']));
-          nsRows.push(['','','','','','','','','','','','','','']); // 빈줄
+          nsRows.push(['','','','','','','','','','','','']); // 빈줄
         });
         var wsNs=XLSX.utils.aoa_to_sheet(nsRows);
-        wsNs['!cols']=[{wch:11},{wch:8},{wch:7},{wch:6},{wch:7},{wch:7},{wch:7},{wch:7},{wch:6},{wch:11},{wch:9},{wch:7},{wch:7},{wch:18}];
+        wsNs['!cols']=[{wch:11},{wch:8},{wch:7},{wch:6},{wch:7},{wch:7},{wch:7},{wch:7},{wch:6},{wch:7},{wch:7},{wch:18}];
         wb.SheetNames.push('야간특별작업');wb.Sheets['야간특별작업']=wsNs;
       }
     }
@@ -3633,32 +3605,28 @@ async function loadPrevStaff(){
   var todayKst=kst.toISOString().slice(0,10);
   var yKst=new Date(kst.getTime()-86400000);
   var yesterday=yKst.toISOString().slice(0,10);
-  var total=0;
   try{
     var res=await sb.from('mp_data').select('values').eq('date',yesterday);
-    if(!res.error&&res.data){
-      res.data.forEach(function(row){
-        var vals=row.values;
-        if(!vals||!Array.isArray(vals)) return;
-        for(var ri=0;ri<4;ri++)
-          for(var ci=0;ci<7;ci++)
-            total+=(vals[ri]&&vals[ri][ci])||0;
-      });
+    if(res.error||!res.data||!res.data.length){
+      var pE=document.getElementById('prevStaff');
+      if(pE) pE.textContent='—';
+      var pU=document.getElementById('prevUnit');
+      if(pU) pU.textContent='미입력';
+      return;
     }
+    var total=0;
+    res.data.forEach(function(row){
+      var vals=row.values;
+      if(!vals||!Array.isArray(vals)) return;
+      for(var ri=0;ri<4;ri++)
+        for(var ci=0;ci<7;ci++)
+          total+=(vals[ri]&&vals[ri][ci])||0;
+    });
+    var pE=document.getElementById('prevStaff');
+    var pU=document.getElementById('prevUnit');
+    if(pE) pE.textContent=total>0?total:'—';
+    if(pU) pU.textContent=total>0?'명 (전일)':'미입력';
   }catch(e){}
-  // ★ 야간특별작업(night_special_data)도 전일 근무인원에 포함
-  try{
-    var nsRes=await sb.from('night_special_data').select('carpet,pbb,wax,stone,wood,restroom,es,toilet_daily,common_area,collection').eq('date',yesterday);
-    if(nsRes.data){
-      nsRes.data.forEach(function(row){
-        total+=(row.carpet||0)+(row.pbb||0)+(row.wax||0)+(row.stone||0)+(row.wood||0)+(row.restroom||0)+(row.es||0)+(row.toilet_daily||0)+(row.common_area||0)+(row.collection||0);
-      });
-    }
-  }catch(e){}
-  var pE=document.getElementById('prevStaff');
-  var pU=document.getElementById('prevUnit');
-  if(pE) pE.textContent=total>0?total:'—';
-  if(pU) pU.textContent=total>0?'명 (전일)':'미입력';
 }
 setInterval(updateStaff,60000);
 
@@ -3921,14 +3889,6 @@ async function fetchYesterdayLeaderData(){
       if(!r.team_code||r.team_code.indexOf('_')===0) return;
       if(!byShift[r.shift]) byShift[r.shift]={};
       byShift[r.shift][r.team_code]={writer:r.writer||'',proxy_writer:r.proxy_writer||''};
-    });
-  }catch(e){}
-  // ★ 야간특별작업은 night_special_data 테이블에 저장되므로 별도 조회해서 합쳐줌
-  try{
-    var nsRes=await sb.from('night_special_data').select('team_code,writer,proxy_writer').eq('date',yesterday);
-    if(nsRes.data) nsRes.data.forEach(function(r){
-      if(!r.team_code) return;
-      byShift['야간'][r.team_code]={writer:r.writer||'',proxy_writer:r.proxy_writer||''};
     });
   }catch(e){}
   yLeaderData=byShift;
@@ -4720,13 +4680,12 @@ function getSelectedTeam(){
   return sel?sel.dataset.team:'';
 }
 
-// ─ 야간특별작업 (카페트/PBB/왁스/석재/우드/화장실/ES/화장실(일상)/공용구역/수거, 5팀·10팀 전용) ─
+// ─ 야간특별작업 (카페트/왁스/석재/우드/화장실/PBB/기타, 5팀·10팀 전용) ─
 var nightSpecialByLeader={};
 var NIGHT_SPECIAL_TEAMS=['5팀A','5팀B','10팀A','10팀B'];
 var NIGHT_SPECIAL_FIELDS=[
-  {id:'nsCarpet',col:'carpet',label:'카페트'},{id:'nsPbb',col:'pbb',label:'PBB'},{id:'nsWax',col:'wax',label:'왁스'},{id:'nsStone',col:'stone',label:'석재'},
-  {id:'nsWood',col:'wood',label:'우드'},{id:'nsRestroom',col:'restroom',label:'화장실(특별)'},{id:'nsEs',col:'es',label:'ES'},
-  {id:'nsToiletDaily',col:'toilet_daily',label:'화장실(일상)'},{id:'nsCommonArea',col:'common_area',label:'공용구역'},{id:'nsCollection',col:'collection',label:'수거'}
+  {id:'nsCarpet',col:'carpet'},{id:'nsPbb',col:'pbb'},{id:'nsWax',col:'wax'},{id:'nsStone',col:'stone'},
+  {id:'nsWood',col:'wood'},{id:'nsRestroom',col:'restroom'},{id:'nsEs',col:'es'},{id:'nsEtc',col:'etc'}
 ];
 function updateNightSpecialVisibility(){
   var card=document.getElementById('nightSpecialCard');
@@ -4759,8 +4718,7 @@ function calcNightSpecial(){
   var el=document.getElementById('nsTot');
   if(el){el.textContent=s;}
 }
-var _nsPending=null;
-function subNightSpecial(){
+async function subNightSpecial(){
   var myPerms=me?userPerms[me.name]:null;
   if(myPerms&&myPerms.write===false){toast('⚠️ 쓰기 권한이 없습니다');return;}
   var team=getSelectedTeam();
@@ -4770,27 +4728,6 @@ function subNightSpecial(){
     var inp=document.getElementById(f.id);
     vals[f.col]=parseInt(inp&&inp.value)||0;
   });
-  var nsTotalCheck=Object.keys(vals).reduce(function(s,k){return s+vals[k];},0);
-  if(nsTotalCheck===0){toast('⚠️ 작업량을 1개 이상 입력해주세요');return;}
-
-  // 전역 임시 저장 → confirmNs에서 사용
-  _nsPending={team:team, vals:vals};
-
-  document.getElementById('nsMTeam').textContent=team+' · 야간특별작업';
-  document.getElementById('nsMCnt').textContent=nsTotalCheck;
-  var det='';
-  NIGHT_SPECIAL_FIELDS.forEach(function(f){
-    var v=vals[f.col];
-    if(v>0) det+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--g1)"><span style="color:var(--g5)">'+f.label+'</span><span style="font-weight:700;color:#6B21A8">'+v+'명</span></div>';
-  });
-  document.getElementById('nsMDet').innerHTML=det||'<div style="color:var(--g4)">입력된 항목 없음</div>';
-  showM('nsModal');
-}
-function closeNsM(){hideM('nsModal');}
-async function confirmNs(){
-  if(!_nsPending) return;
-  hideM('nsModal');
-  var team=_nsPending.team, vals=_nsPending.vals;
   nightSpecialByLeader[team]=vals;
   var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   var officialName='';
@@ -4808,13 +4745,10 @@ async function confirmNs(){
     // (층별 합계에는 전부 0이라 영향 없음)
     if(!mpDataByLeader['야간']) mpDataByLeader['야간']={};
     mpDataByLeader['야간'][team]=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-    if(!mpMeta['야간']) mpMeta['야간']={};
-    mpMeta['야간'][team]={writer:writer, proxy_writer:proxyWriter};
     recalcMpData();
     updateFloorChart();
     logMpInput('야간', team);
   }catch(e){ toast('저장 오류: '+String(e.message||e)); }
-  _nsPending=null;
 }
 async function loadNightSpecialFromDB(){
   try{
@@ -4822,13 +4756,11 @@ async function loadNightSpecialFromDB(){
     var res=await sb.from('night_special_data').select('*').eq('date',today);
     nightSpecialByLeader={};
     if(!mpDataByLeader['야간']) mpDataByLeader['야간']={};
-    if(!mpMeta['야간']) mpMeta['야간']={};
     if(res.data){
       res.data.forEach(function(row){
-        nightSpecialByLeader[row.team_code]={carpet:row.carpet||0,wax:row.wax||0,stone:row.stone||0,wood:row.wood||0,restroom:row.restroom||0,pbb:row.pbb||0,es:row.es||0,toilet_daily:row.toilet_daily||0,common_area:row.common_area||0,collection:row.collection||0};
+        nightSpecialByLeader[row.team_code]={carpet:row.carpet||0,wax:row.wax||0,stone:row.stone||0,wood:row.wood||0,restroom:row.restroom||0,pbb:row.pbb||0,es:row.es||0,etc:row.etc||0};
         // 완료체크용 0값 마커 (층별 합계엔 영향 없음)
         mpDataByLeader['야간'][row.team_code]=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-        mpMeta['야간'][row.team_code]={writer:row.writer||'', proxy_writer:row.proxy_writer||''};
       });
     }
     recalcMpData();
@@ -4836,7 +4768,6 @@ async function loadNightSpecialFromDB(){
     renderNightSpecialSummary();
     updateStaff();
     updateMpSummary();
-    renderLeaderStatus();
   }catch(e){}
 }
 function getNightSpecialTotal(){
@@ -4851,7 +4782,7 @@ function getNightSpecialTotal(){
 function renderNightSpecialSummary(){
   var cards=document.querySelectorAll('.ns-summary-card');
   if(!cards.length) return;
-  var sums={carpet:0,wax:0,stone:0,wood:0,restroom:0,pbb:0,es:0,toilet_daily:0,common_area:0,collection:0};
+  var sums={carpet:0,wax:0,stone:0,wood:0,restroom:0,pbb:0,es:0,etc:0};
   var any=false;
   NIGHT_SPECIAL_TEAMS.forEach(function(team){
     var v=nightSpecialByLeader[team];
@@ -4887,13 +4818,6 @@ async function checkPrevDayMissing(){
       var res=await sb.from('mp_data').select('team_code').eq('date',yesterday);
       if(res.data) res.data.forEach(function(r){
         if(r.team_code && r.team_code.indexOf('_')!==0) doneTeams.push(r.team_code);
-      });
-    }catch(e){}
-    // ★ 야간특별작업(night_special_data)도 전일 입력 완료로 인정
-    try{
-      var nsRes=await sb.from('night_special_data').select('team_code').eq('date',yesterday);
-      if(nsRes.data) nsRes.data.forEach(function(r){
-        if(r.team_code && doneTeams.indexOf(r.team_code)===-1) doneTeams.push(r.team_code);
       });
     }catch(e){}
     // 전체 조장 목록 (LEADERS 전역변수 사용)
@@ -5461,11 +5385,9 @@ function openLeaderDataEdit(shift,team,name){
 
   var headRow=document.getElementById('leaderDataEditHeadRow');
   if(shift==='야간'){
-    var nsMeta=(mpMeta['야간']&&mpMeta['야간'][team])||null;
-    var nsProxyNote=(nsMeta&&nsMeta.proxy_writer)?' (대리입력:'+nsMeta.proxy_writer+')':'';
-    if(title) title.textContent=name+' 입력값 수정 (야간특별작업)'+nsProxyNote;
+    if(title) title.textContent=name+' 입력값 수정 (야간특별작업)';
     var savedNs=nightSpecialByLeader[team]||{};
-    var nsLabels=[{col:'carpet',lbl:'카페트'},{col:'pbb',lbl:'PBB'},{col:'wax',lbl:'왁스'},{col:'stone',lbl:'석재'},{col:'wood',lbl:'우드'},{col:'restroom',lbl:'화장실(특별)'},{col:'es',lbl:'ES'},{col:'toilet_daily',lbl:'화장실(일상)'},{col:'common_area',lbl:'공용구역'},{col:'collection',lbl:'수거'}];
+    var nsLabels=[{col:'carpet',lbl:'카페트'},{col:'pbb',lbl:'PBB'},{col:'wax',lbl:'왁스'},{col:'stone',lbl:'석재'},{col:'wood',lbl:'우드'},{col:'restroom',lbl:'화장실'},{col:'es',lbl:'ES'},{col:'etc',lbl:'기타'}];
     if(headRow){
       headRow.innerHTML=nsLabels.map(function(f){ return '<th style="color:white;font-size:10px;padding:8px 3px;text-align:center">'+f.lbl+'</th>'; }).join('');
     }
@@ -5517,7 +5439,7 @@ function closeLeaderDataEdit(){hideM('leaderDataModal');}
 
 async function saveLeaderDataEdit(){
   if(editShift==='야간'){
-    var nsCols=['carpet','pbb','wax','stone','wood','restroom','es','toilet_daily','common_area','collection'];
+    var nsCols=['carpet','pbb','wax','stone','wood','restroom','es','etc'];
     var vals2={};
     nsCols.forEach(function(c){
       var el=document.getElementById('ledit_ns_'+c);
@@ -5659,14 +5581,11 @@ async function executeDataReset(){
       // 오늘 데이터만 삭제 (이력 보존)
       var todayKst=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
       await sb.from('mp_data').delete().eq('date',todayKst);
-      // ★ 야간특별작업(night_special_data)도 같이 삭제 - 안 지우면 초기화 후에도 야간 데이터가 그대로 남음
-      await sb.from('night_special_data').delete().eq('date',todayKst);
     }catch(e){}
     mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
     mpDataByShift={오전:null,오후:null,야간:null};
     mpDataByLeader={오전:{},오후:{},야간:{}};
     mpInputLog={};
-    nightSpecialByLeader={};
     try{
       localStorage.removeItem('t1_mp');
       localStorage.removeItem('t1_mp_log');
@@ -5675,7 +5594,6 @@ async function executeDataReset(){
     updateFloorChart();
     updateMpSummary();
     renderLeaderStatus();
-    renderNightSpecialSummary();
     done.push('인력현황');
   }
   // 인수인계
@@ -8593,33 +8511,27 @@ async function loadMpFromDB(){
   try{
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
     var res=await sb.from('mp_data').select('*').eq('date',today);
-    var nsRes=await sb.from('night_special_data').select('*').eq('date',today);
     // 데이터 없어도 반드시 초기화 (이전 날짜 데이터 메모리 잔존 방지)
     mpDataByLeader={오전:{},오후:{},야간:{}};
     mpMeta={오전:{},오후:{},야간:{}};
-    nightSpecialByLeader={};
-    if(!res.error&&res.data&&res.data.length){
-      res.data.forEach(function(row){
-        if(!row.shift||!row.team_code||!row.values) return;
-              // 특수 레코드 제외 (_로 시작하는 team_code)
-        if(row.team_code&&row.team_code.indexOf('_')===0) return;
-        if(!mpDataByLeader[row.shift]) mpDataByLeader[row.shift]={};
-        var vals=row.values;
-        if(typeof vals==='string') try{ vals=JSON.parse(vals); }catch(e){}
-        if(Array.isArray(vals) && Array.isArray(vals[0])){
-          mpDataByLeader[row.shift][row.team_code]=vals; // ri=0~3: 층별, ri=4: 관리자
-        }
-        if(!mpMeta[row.shift]) mpMeta[row.shift]={};
-        mpMeta[row.shift][row.team_code]={writer:row.writer||'', proxy_writer:row.proxy_writer||''};
-      });
+    if(res.error||!res.data||!res.data.length){
+      recalcMpData(); updateFloorChart(); updateMpSummary(); updateStaff();
+      updateMyTeamGrp(); renderLeaderStatus(); loadNightSpecialFromDB();
+      return;
     }
-    if(nsRes.data){
-      nsRes.data.forEach(function(row){
-        nightSpecialByLeader[row.team_code]={carpet:row.carpet||0,wax:row.wax||0,stone:row.stone||0,wood:row.wood||0,restroom:row.restroom||0,pbb:row.pbb||0,es:row.es||0,toilet_daily:row.toilet_daily||0,common_area:row.common_area||0,collection:row.collection||0};
-        mpDataByLeader['야간'][row.team_code]=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-        mpMeta['야간'][row.team_code]={writer:row.writer||'', proxy_writer:row.proxy_writer||''};
-      });
-    }
+    res.data.forEach(function(row){
+      if(!row.shift||!row.team_code||!row.values) return;
+            // 특수 레코드 제외 (_로 시작하는 team_code)
+      if(row.team_code&&row.team_code.indexOf('_')===0) return;
+      if(!mpDataByLeader[row.shift]) mpDataByLeader[row.shift]={};
+      var vals=row.values;
+      if(typeof vals==='string') try{ vals=JSON.parse(vals); }catch(e){}
+      if(Array.isArray(vals) && Array.isArray(vals[0])){
+        mpDataByLeader[row.shift][row.team_code]=vals; // ri=0~3: 층별, ri=4: 관리자
+      }
+      if(!mpMeta[row.shift]) mpMeta[row.shift]={};
+      mpMeta[row.shift][row.team_code]={writer:row.writer||'', proxy_writer:row.proxy_writer||''};
+    });
     recalcMpData();
     updateFloorChart();
     updateMpSummary();
@@ -8627,9 +8539,9 @@ async function loadMpFromDB(){
     loadMgrAttendance();
     updateMyTeamGrp();    // 입력 탭 완료 상태 반영
     renderLeaderStatus(); // 입력현황 탭 완료 상태 반영
-    renderNightSpecialSummary();
     checkPrevDayMissing();
     updateAccComplaintCount(); // 폐기물 포함 전체 재집계 // 전일 미입력 조장 확인
+    loadNightSpecialFromDB();
   }catch(e){}
 }
 
@@ -8639,13 +8551,11 @@ async function loadMpFromDB(){
 async function refreshMpDataLight(){
   try{
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-    var mpRes=await sb.from('mp_data').select('*').eq('date',today);
-    var nsRes=await sb.from('night_special_data').select('*').eq('date',today);
+    var res=await sb.from('mp_data').select('*').eq('date',today);
     mpDataByLeader={오전:{},오후:{},야간:{}};
     mpMeta={오전:{},오후:{},야간:{}};
-    nightSpecialByLeader={};
-    if(!mpRes.error&&mpRes.data&&mpRes.data.length){
-      mpRes.data.forEach(function(row){
+    if(!res.error&&res.data&&res.data.length){
+      res.data.forEach(function(row){
         if(!row.shift||!row.team_code||!row.values) return;
         if(row.team_code&&row.team_code.indexOf('_')===0) return;
         if(!mpDataByLeader[row.shift]) mpDataByLeader[row.shift]={};
@@ -8656,22 +8566,13 @@ async function refreshMpDataLight(){
         mpMeta[row.shift][row.team_code]={writer:row.writer||'', proxy_writer:row.proxy_writer||''};
       });
     }
-    if(nsRes.data){
-      nsRes.data.forEach(function(row){
-        nightSpecialByLeader[row.team_code]={carpet:row.carpet||0,wax:row.wax||0,stone:row.stone||0,wood:row.wood||0,restroom:row.restroom||0,pbb:row.pbb||0,es:row.es||0,toilet_daily:row.toilet_daily||0,common_area:row.common_area||0,collection:row.collection||0};
-        // 완료체크용 0값 마커 (층별 합계엔 영향 없음, mpMeta에 작성자/대리입력 정보도 같이)
-        mpDataByLeader['야간'][row.team_code]=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-        mpMeta['야간'][row.team_code]={writer:row.writer||'', proxy_writer:row.proxy_writer||''};
-      });
-    }
-    // ★ 야간 데이터까지 다 합친 뒤 딱 한 번만 렌더링 (깜빡임 방지)
     recalcMpData();
     updateFloorChart();
     updateMpSummary();
     updateStaff();
     updateMyTeamGrp();
     renderLeaderStatus();
-    renderNightSpecialSummary();
+    loadNightSpecialFromDB();
   }catch(e){}
 }
 
@@ -8720,11 +8621,6 @@ async function checkAndShowMissingLeaderPopup(){
     try{
       var res=await sb.from('mp_data').select('team_code').eq('date',yesterday);
       if(res.data) res.data.forEach(function(r){ if(r.team_code&&r.team_code.indexOf('_')!==0) yDoneTeams.push(r.team_code); });
-    }catch(e){}
-    // ★ 야간특별작업(night_special_data)도 전일 입력 완료로 인정
-    try{
-      var nsRes=await sb.from('night_special_data').select('team_code').eq('date',yesterday);
-      if(nsRes.data) nsRes.data.forEach(function(r){ if(r.team_code&&yDoneTeams.indexOf(r.team_code)===-1) yDoneTeams.push(r.team_code); });
     }catch(e){}
     var yesterdayMissing=[];
     ['오전','오후','야간'].forEach(function(shift){
@@ -8989,23 +8885,20 @@ function safetyTab(idx){
   }
 }
 
-// 파일명 앞 숫자를 인식해서 1,2,3...10,11 순서로 정렬 (문자 정렬 시 1,10,11,2,3 순서로 꼬이는 문제 방지)
-function naturalSortByName(a,b){
-  var an=(a.name||''), bn=(b.name||'');
-  var aNum=parseInt(an.match(/^\d+/));
-  var bNum=parseInt(bn.match(/^\d+/));
-  if(!isNaN(aNum)&&!isNaN(bNum)&&aNum!==bNum) return aNum-bNum;
-  return an.localeCompare(bn,'ko');
-}
 async function loadSafetyList(){
   var wrap=document.getElementById('safetyListWrap'); if(!wrap) return;
   try{
-    var res=await sb.from('safety_files').select('*');
+    var res=await sb.from('safety_files').select('*').order('name',{ascending:true});
     if(res.error||!res.data||!res.data.length){
       wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">📭 등록된 안전작업절차서 문서가 없습니다<br><small>관리자에게 업로드 요청하세요</small></div>';
       return;
     }
-    safetyFiles=res.data.sort(naturalSortByName);
+    safetyFiles=res.data.slice().sort(function(a,b){
+      var ma=(a.name||'').match(/^(\d+)/), mb=(b.name||'').match(/^(\d+)/);
+      var na=ma?parseInt(ma[1],10):999999, nb=mb?parseInt(mb[1],10):999999;
+      if(na!==nb) return na-nb;
+      return (a.name||'').localeCompare(b.name||'','ko');
+    });
     var html='<div style="margin-bottom:11px;font-size:11px;color:var(--g4)">총 '+safetyFiles.length+'개 문서 등록됨 · 탭하여 열기</div>';
     safetyFiles.forEach(function(f){
       var escapedPath=f.path.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
@@ -9109,11 +9002,10 @@ async function uploadSafetyFiles(){
 async function loadSafetyManage(){
   var wrap=document.getElementById('safetyManageWrap'); if(!wrap) return;
   try{
-    var res=await sb.from('safety_files').select('*');
+    var res=await sb.from('safety_files').select('*').order('name',{ascending:true});
     if(res.error||!res.data||!res.data.length){ wrap.innerHTML=''; return; }
-    var sortedData=res.data.sort(naturalSortByName);
-    var html='<div class="card"><div class="cb"><div style="font-size:12px;font-weight:800;color:var(--g7);margin-bottom:11px">등록된 문서 관리 ('+sortedData.length+'개)</div>';
-    sortedData.forEach(function(f){
+    var html='<div class="card"><div class="cb"><div style="font-size:12px;font-weight:800;color:var(--g7);margin-bottom:11px">등록된 문서 관리 ('+res.data.length+'개)</div>';
+    res.data.forEach(function(f){
       html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g2)">';
       html+='<span style="font-size:11px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+f.name+'</span>';
       html+='<button data-id="'+f.id+'" data-path="'+encodeURIComponent(f.path)+'" onclick="deleteSafetyById(this)" style="padding:4px 10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>';
@@ -9363,7 +9255,7 @@ async function loadMpHistory(){
   if(!listEl) return;
   try{
     var res = await sb.from('mp_data').select('date,shift,values').order('date',{ascending:false});
-    var nsRes = await sb.from('night_special_data').select('date,carpet,pbb,wax,stone,wood,restroom,es,toilet_daily,common_area,collection');
+    var nsRes = await sb.from('night_special_data').select('date,carpet,wax,stone,wood,restroom,pbb,es,etc');
     if(res.error||!res.data||!res.data.length){
       listEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">이력이 없습니다</div>';
       return;
@@ -9387,7 +9279,7 @@ async function loadMpHistory(){
       nsRes.data.forEach(function(row){
         var d=row.date;
         if(!byDate[d]) byDate[d]={total:0,ls:0,as:0,night:0};
-        var n=(row.carpet||0)+(row.pbb||0)+(row.wax||0)+(row.stone||0)+(row.wood||0)+(row.restroom||0)+(row.es||0)+(row.toilet_daily||0)+(row.common_area||0)+(row.collection||0);
+        var n=(row.carpet||0)+(row.wax||0)+(row.stone||0)+(row.wood||0)+(row.restroom||0)+(row.pbb||0)+(row.es||0)+(row.etc||0);
         byDate[d].night+=n;
         byDate[d].total+=n;
       });
