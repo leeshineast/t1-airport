@@ -4728,6 +4728,8 @@ async function subNightSpecial(){
     var inp=document.getElementById(f.id);
     vals[f.col]=parseInt(inp&&inp.value)||0;
   });
+  var nsTotalCheck=Object.keys(vals).reduce(function(s,k){return s+vals[k];},0);
+  if(nsTotalCheck===0){toast('⚠️ 작업량을 1개 이상 입력해주세요');return;}
   nightSpecialByLeader[team]=vals;
   var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   var officialName='';
@@ -8893,12 +8895,7 @@ async function loadSafetyList(){
       wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">📭 등록된 안전작업절차서 문서가 없습니다<br><small>관리자에게 업로드 요청하세요</small></div>';
       return;
     }
-    safetyFiles=res.data.slice().sort(function(a,b){
-      var ma=(a.name||'').match(/^(\d+)/), mb=(b.name||'').match(/^(\d+)/);
-      var na=ma?parseInt(ma[1],10):999999, nb=mb?parseInt(mb[1],10):999999;
-      if(na!==nb) return na-nb;
-      return (a.name||'').localeCompare(b.name||'','ko');
-    });
+    safetyFiles=res.data;
     var html='<div style="margin-bottom:11px;font-size:11px;color:var(--g4)">총 '+safetyFiles.length+'개 문서 등록됨 · 탭하여 열기</div>';
     safetyFiles.forEach(function(f){
       var escapedPath=f.path.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
