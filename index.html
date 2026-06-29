@@ -3633,28 +3633,32 @@ async function loadPrevStaff(){
   var todayKst=kst.toISOString().slice(0,10);
   var yKst=new Date(kst.getTime()-86400000);
   var yesterday=yKst.toISOString().slice(0,10);
+  var total=0;
   try{
     var res=await sb.from('mp_data').select('values').eq('date',yesterday);
-    if(res.error||!res.data||!res.data.length){
-      var pE=document.getElementById('prevStaff');
-      if(pE) pE.textContent='—';
-      var pU=document.getElementById('prevUnit');
-      if(pU) pU.textContent='미입력';
-      return;
+    if(!res.error&&res.data){
+      res.data.forEach(function(row){
+        var vals=row.values;
+        if(!vals||!Array.isArray(vals)) return;
+        for(var ri=0;ri<4;ri++)
+          for(var ci=0;ci<7;ci++)
+            total+=(vals[ri]&&vals[ri][ci])||0;
+      });
     }
-    var total=0;
-    res.data.forEach(function(row){
-      var vals=row.values;
-      if(!vals||!Array.isArray(vals)) return;
-      for(var ri=0;ri<4;ri++)
-        for(var ci=0;ci<7;ci++)
-          total+=(vals[ri]&&vals[ri][ci])||0;
-    });
-    var pE=document.getElementById('prevStaff');
-    var pU=document.getElementById('prevUnit');
-    if(pE) pE.textContent=total>0?total:'—';
-    if(pU) pU.textContent=total>0?'명 (전일)':'미입력';
   }catch(e){}
+  // ★ 야간특별작업(night_special_data)도 전일 근무인원에 포함
+  try{
+    var nsRes=await sb.from('night_special_data').select('carpet,pbb,wax,stone,wood,restroom,es,toilet_daily,common_area,collection').eq('date',yesterday);
+    if(nsRes.data){
+      nsRes.data.forEach(function(row){
+        total+=(row.carpet||0)+(row.pbb||0)+(row.wax||0)+(row.stone||0)+(row.wood||0)+(row.restroom||0)+(row.es||0)+(row.toilet_daily||0)+(row.common_area||0)+(row.collection||0);
+      });
+    }
+  }catch(e){}
+  var pE=document.getElementById('prevStaff');
+  var pU=document.getElementById('prevUnit');
+  if(pE) pE.textContent=total>0?total:'—';
+  if(pU) pU.textContent=total>0?'명 (전일)':'미입력';
 }
 setInterval(updateStaff,60000);
 
@@ -3917,6 +3921,14 @@ async function fetchYesterdayLeaderData(){
       if(!r.team_code||r.team_code.indexOf('_')===0) return;
       if(!byShift[r.shift]) byShift[r.shift]={};
       byShift[r.shift][r.team_code]={writer:r.writer||'',proxy_writer:r.proxy_writer||''};
+    });
+  }catch(e){}
+  // ★ 야간특별작업은 night_special_data 테이블에 저장되므로 별도 조회해서 합쳐줌
+  try{
+    var nsRes=await sb.from('night_special_data').select('team_code,writer,proxy_writer').eq('date',yesterday);
+    if(nsRes.data) nsRes.data.forEach(function(r){
+      if(!r.team_code) return;
+      byShift['야간'][r.team_code]={writer:r.writer||'',proxy_writer:r.proxy_writer||''};
     });
   }catch(e){}
   yLeaderData=byShift;
@@ -4877,6 +4889,13 @@ async function checkPrevDayMissing(){
         if(r.team_code && r.team_code.indexOf('_')!==0) doneTeams.push(r.team_code);
       });
     }catch(e){}
+    // ★ 야간특별작업(night_special_data)도 전일 입력 완료로 인정
+    try{
+      var nsRes=await sb.from('night_special_data').select('team_code').eq('date',yesterday);
+      if(nsRes.data) nsRes.data.forEach(function(r){
+        if(r.team_code && doneTeams.indexOf(r.team_code)===-1) doneTeams.push(r.team_code);
+      });
+    }catch(e){}
     // 전체 조장 목록 (LEADERS 전역변수 사용)
     var allLeaders=[];
     if(typeof LEADERS!=='undefined'){
@@ -5640,11 +5659,14 @@ async function executeDataReset(){
       // 오늘 데이터만 삭제 (이력 보존)
       var todayKst=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
       await sb.from('mp_data').delete().eq('date',todayKst);
+      // ★ 야간특별작업(night_special_data)도 같이 삭제 - 안 지우면 초기화 후에도 야간 데이터가 그대로 남음
+      await sb.from('night_special_data').delete().eq('date',todayKst);
     }catch(e){}
     mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
     mpDataByShift={오전:null,오후:null,야간:null};
     mpDataByLeader={오전:{},오후:{},야간:{}};
     mpInputLog={};
+    nightSpecialByLeader={};
     try{
       localStorage.removeItem('t1_mp');
       localStorage.removeItem('t1_mp_log');
@@ -5653,6 +5675,7 @@ async function executeDataReset(){
     updateFloorChart();
     updateMpSummary();
     renderLeaderStatus();
+    renderNightSpecialSummary();
     done.push('인력현황');
   }
   // 인수인계
@@ -8697,6 +8720,11 @@ async function checkAndShowMissingLeaderPopup(){
     try{
       var res=await sb.from('mp_data').select('team_code').eq('date',yesterday);
       if(res.data) res.data.forEach(function(r){ if(r.team_code&&r.team_code.indexOf('_')!==0) yDoneTeams.push(r.team_code); });
+    }catch(e){}
+    // ★ 야간특별작업(night_special_data)도 전일 입력 완료로 인정
+    try{
+      var nsRes=await sb.from('night_special_data').select('team_code').eq('date',yesterday);
+      if(nsRes.data) nsRes.data.forEach(function(r){ if(r.team_code&&yDoneTeams.indexOf(r.team_code)===-1) yDoneTeams.push(r.team_code); });
     }catch(e){}
     var yesterdayMissing=[];
     ['오전','오후','야간'].forEach(function(shift){
