@@ -2478,7 +2478,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:13px">
         <table style="width:100%;border-collapse:collapse;min-width:380px">
           <thead>
-            <tr style="background:var(--teal2)">
+            <tr id="leaderDataEditHeadRow" style="background:var(--teal2)">
               <th style="color:white;font-size:11px;padding:8px 6px;text-align:left;min-width:70px">구역</th>
               <th style="color:white;font-size:10px;padding:8px 4px;text-align:center">B2F</th>
               <th style="color:white;font-size:10px;padding:8px 4px;text-align:center">B1F</th>
@@ -5350,11 +5350,38 @@ function openLeaderDataEdit(shift,team,name){
   if(!isAdmin&&!isMyTeam){toast('같은 팀 데이터만 수정할 수 있습니다');return;}
   editShift=shift; editTeam=team;
   var title=document.getElementById('leaderDataModalTitle');
+  var body=document.getElementById('leaderDataEditBody');
+  if(!body) return;
+
+  var headRow=document.getElementById('leaderDataEditHeadRow');
+  if(shift==='야간'){
+    if(title) title.textContent=name+' 입력값 수정 (야간특별작업)';
+    var savedNs=nightSpecialByLeader[team]||{};
+    var nsLabels=[{col:'carpet',lbl:'카페트'},{col:'pbb',lbl:'PBB'},{col:'wax',lbl:'왁스'},{col:'stone',lbl:'석재'},{col:'wood',lbl:'우드'},{col:'restroom',lbl:'화장실'},{col:'es',lbl:'ES'},{col:'etc',lbl:'기타'}];
+    if(headRow){
+      headRow.innerHTML=nsLabels.map(function(f){ return '<th style="color:white;font-size:10px;padding:8px 3px;text-align:center">'+f.lbl+'</th>'; }).join('');
+    }
+    var rows2='<tr>';
+    nsLabels.forEach(function(f){
+      rows2+='<td style="padding:6px 3px;text-align:center">';
+      rows2+='<input type="number" id="ledit_ns_'+f.col+'" value="'+(savedNs[f.col]||0)+'" min="0" '+
+        'style="width:36px;padding:5px 3px;border:1.5px solid #6B21A8;border-radius:6px;font-size:12px;text-align:center;outline:none" '+
+        'onfocus="this.select()">';
+      rows2+='</td>';
+    });
+    rows2+='</tr>';
+    body.innerHTML=rows2;
+    showM('leaderDataModal');
+    return;
+  }
+  if(headRow){
+    headRow.innerHTML='<th style="color:white;font-size:11px;padding:8px 6px;text-align:left;min-width:70px">구역</th>'+
+      ['B2F','B1F','1F','2F','3F','4F','집하장'].map(function(f){ return '<th style="color:white;font-size:10px;padding:8px 4px;text-align:center">'+f+'</th>'; }).join('');
+  }
+
   var meta=(mpMeta[shift]&&mpMeta[shift][team])||null;
   var proxyNote=(meta&&meta.proxy_writer)?' (대리입력:'+meta.proxy_writer+')':'';
   if(title) title.textContent=name+' 입력값 수정 ('+shift+')'+proxyNote;
-  var body=document.getElementById('leaderDataEditBody');
-  if(!body) return;
   var zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
   var floors=['B2F','B1F','1F','2F','3F','4F','집하장'];
   // 현재 저장값 불러오기
@@ -5380,7 +5407,31 @@ function openLeaderDataEdit(shift,team,name){
 
 function closeLeaderDataEdit(){hideM('leaderDataModal');}
 
-function saveLeaderDataEdit(){
+async function saveLeaderDataEdit(){
+  if(editShift==='야간'){
+    var nsCols=['carpet','pbb','wax','stone','wood','restroom','es','etc'];
+    var vals2={};
+    nsCols.forEach(function(c){
+      var el=document.getElementById('ledit_ns_'+c);
+      vals2[c]=el?parseInt(el.value)||0:0;
+    });
+    nightSpecialByLeader[editTeam]=vals2;
+    var today2=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+    var officialName3='';
+    (LEADERS['야간']||[]).forEach(function(l){ if(l.team===editTeam) officialName3=l.name; });
+    var isProxy3=me&&(me.role==='leader'||me.role==='manager')&&officialName3&&me.name&&officialName3!==me.name;
+    var writer3=isProxy3?(officialName3||editTeam):(me?me.name:'');
+    var proxyWriter3=isProxy3?(me?me.name:null):null;
+    try{
+      var payload2=Object.assign({date:today2,team_code:editTeam,writer:writer3,proxy_writer:proxyWriter3},vals2);
+      var res2=await sb.from('night_special_data').upsert(payload2,{onConflict:'date,team_code'});
+      if(res2.error) throw res2.error;
+      closeLeaderDataEdit();
+      loadNightSpecialFromDB();
+      toast('✅ '+editTeam+' 야간특별작업 수정 완료');
+    }catch(e){ toast('저장 오류: '+String(e.message||e)); }
+    return;
+  }
   var newVals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
   for(var ri=0;ri<4;ri++){
     for(var ci=0;ci<7;ci++){
