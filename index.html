@@ -555,9 +555,13 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div class="card ns-summary-card" style="display:none;margin-top:0">
         <div class="cb">
           <div style="font-size:12px;font-weight:700;color:#6B21A8;margin-bottom:8px">🌙 야간특별작업 인력현황 (금일)</div>
+          <table class="mp-tbl" style="width:100%;margin-bottom:6px">
+            <thead><tr><th>카페트</th><th>PBB</th><th>왁스</th><th>석재</th><th>우드</th><th>화장실(특별)</th></tr></thead>
+            <tbody><tr><td data-ns="carpet">0</td><td data-ns="pbb">0</td><td data-ns="wax">0</td><td data-ns="stone">0</td><td data-ns="wood">0</td><td data-ns="restroom">0</td></tr></tbody>
+          </table>
           <table class="mp-tbl" style="width:100%">
-            <thead><tr><th>카페트</th><th>PBB</th><th>왁스</th><th>석재</th><th>우드</th><th>화장실(특별)</th><th>ES</th><th>화장실(일상)</th><th>공용구역</th><th>수거</th><th style="background:#6B21A8;color:white">계</th></tr></thead>
-            <tbody><tr><td data-ns="carpet">0</td><td data-ns="pbb">0</td><td data-ns="wax">0</td><td data-ns="stone">0</td><td data-ns="wood">0</td><td data-ns="restroom">0</td><td data-ns="es">0</td><td data-ns="toilet_daily">0</td><td data-ns="common_area">0</td><td data-ns="collection">0</td><td data-ns="total" style="font-weight:800;color:#6B21A8">0</td></tr></tbody>
+            <thead><tr><th>ES</th><th>화장실(일상)</th><th>공용구역</th><th>수거</th><th style="background:#6B21A8;color:white">계</th></tr></thead>
+            <tbody><tr><td data-ns="es">0</td><td data-ns="toilet_daily">0</td><td data-ns="common_area">0</td><td data-ns="collection">0</td><td data-ns="total" style="font-weight:800;color:#6B21A8">0</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1097,9 +1101,13 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div class="card ns-summary-card" style="display:none">
       <div class="cb">
         <div style="font-size:12px;font-weight:700;color:#6B21A8;margin-bottom:8px">🌙 야간특별작업 인력현황 (금일)</div>
+        <table class="mp-tbl" style="width:100%;margin-bottom:6px">
+          <thead><tr><th>카페트</th><th>PBB</th><th>왁스</th><th>석재</th><th>우드</th><th>화장실(특별)</th></tr></thead>
+          <tbody><tr><td data-ns="carpet">0</td><td data-ns="pbb">0</td><td data-ns="wax">0</td><td data-ns="stone">0</td><td data-ns="wood">0</td><td data-ns="restroom">0</td></tr></tbody>
+        </table>
         <table class="mp-tbl" style="width:100%">
-          <thead><tr><th>카페트</th><th>PBB</th><th>왁스</th><th>석재</th><th>우드</th><th>화장실(특별)</th><th>ES</th><th>화장실(일상)</th><th>공용구역</th><th>수거</th><th style="background:#6B21A8;color:white">계</th></tr></thead>
-          <tbody><tr><td data-ns="carpet">0</td><td data-ns="pbb">0</td><td data-ns="wax">0</td><td data-ns="stone">0</td><td data-ns="wood">0</td><td data-ns="restroom">0</td><td data-ns="es">0</td><td data-ns="toilet_daily">0</td><td data-ns="common_area">0</td><td data-ns="collection">0</td><td data-ns="total" style="font-weight:800;color:#6B21A8">0</td></tr></tbody>
+          <thead><tr><th>ES</th><th>화장실(일상)</th><th>공용구역</th><th>수거</th><th style="background:#6B21A8;color:white">계</th></tr></thead>
+          <tbody><tr><td data-ns="es">0</td><td data-ns="toilet_daily">0</td><td data-ns="common_area">0</td><td data-ns="collection">0</td><td data-ns="total" style="font-weight:800;color:#6B21A8">0</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -2331,6 +2339,24 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div style="display:flex;gap:7px">
         <button onclick="closeMpM()" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">다시 확인</button>
         <button onclick="confirmMp()" style="flex:2;padding:11px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">제출 완료</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="nsModal" class="modal-bg">
+  <div class="modal">
+    <div style="background:linear-gradient(135deg,#6B21A8,#8B3FD1);padding:18px;text-align:center">
+      <div style="font-size:12px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:5px" id="nsMTeam">야간특별작업</div>
+      <div style="color:white;font-size:11px;margin-bottom:5px">금회 입력 총 작업량</div>
+      <div style="display:flex;align-items:baseline;justify-content:center;gap:4px"><span style="color:white;font-size:42px;font-weight:900;line-height:1" id="nsMCnt">0</span><span style="color:rgba(255,255,255,.8);font-size:17px;font-weight:700">명</span></div>
+    </div>
+    <div style="padding:15px 17px">
+      <div id="nsMDet" style="font-size:12px;margin-bottom:13px"></div>
+      <div style="background:#F3EEF8;border-radius:var(--r2);padding:9px;font-size:11px;color:#6B21A8;font-weight:600;margin-bottom:13px;text-align:center">✅ 위 내용으로 저장합니다</div>
+      <div style="display:flex;gap:7px">
+        <button onclick="closeNsM()" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">다시 확인</button>
+        <button onclick="confirmNs()" style="flex:2;padding:11px;background:linear-gradient(135deg,#6B21A8,#8B3FD1);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">저장 완료</button>
       </div>
     </div>
   </div>
@@ -4686,9 +4712,9 @@ function getSelectedTeam(){
 var nightSpecialByLeader={};
 var NIGHT_SPECIAL_TEAMS=['5팀A','5팀B','10팀A','10팀B'];
 var NIGHT_SPECIAL_FIELDS=[
-  {id:'nsCarpet',col:'carpet'},{id:'nsPbb',col:'pbb'},{id:'nsWax',col:'wax'},{id:'nsStone',col:'stone'},
-  {id:'nsWood',col:'wood'},{id:'nsRestroom',col:'restroom'},{id:'nsEs',col:'es'},
-  {id:'nsToiletDaily',col:'toilet_daily'},{id:'nsCommonArea',col:'common_area'},{id:'nsCollection',col:'collection'}
+  {id:'nsCarpet',col:'carpet',label:'카페트'},{id:'nsPbb',col:'pbb',label:'PBB'},{id:'nsWax',col:'wax',label:'왁스'},{id:'nsStone',col:'stone',label:'석재'},
+  {id:'nsWood',col:'wood',label:'우드'},{id:'nsRestroom',col:'restroom',label:'화장실(특별)'},{id:'nsEs',col:'es',label:'ES'},
+  {id:'nsToiletDaily',col:'toilet_daily',label:'화장실(일상)'},{id:'nsCommonArea',col:'common_area',label:'공용구역'},{id:'nsCollection',col:'collection',label:'수거'}
 ];
 function updateNightSpecialVisibility(){
   var card=document.getElementById('nightSpecialCard');
@@ -4721,7 +4747,8 @@ function calcNightSpecial(){
   var el=document.getElementById('nsTot');
   if(el){el.textContent=s;}
 }
-async function subNightSpecial(){
+var _nsPending=null;
+function subNightSpecial(){
   var myPerms=me?userPerms[me.name]:null;
   if(myPerms&&myPerms.write===false){toast('⚠️ 쓰기 권한이 없습니다');return;}
   var team=getSelectedTeam();
@@ -4733,6 +4760,25 @@ async function subNightSpecial(){
   });
   var nsTotalCheck=Object.keys(vals).reduce(function(s,k){return s+vals[k];},0);
   if(nsTotalCheck===0){toast('⚠️ 작업량을 1개 이상 입력해주세요');return;}
+
+  // 전역 임시 저장 → confirmNs에서 사용
+  _nsPending={team:team, vals:vals};
+
+  document.getElementById('nsMTeam').textContent=team+' · 야간특별작업';
+  document.getElementById('nsMCnt').textContent=nsTotalCheck;
+  var det='';
+  NIGHT_SPECIAL_FIELDS.forEach(function(f){
+    var v=vals[f.col];
+    if(v>0) det+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--g1)"><span style="color:var(--g5)">'+f.label+'</span><span style="font-weight:700;color:#6B21A8">'+v+'명</span></div>';
+  });
+  document.getElementById('nsMDet').innerHTML=det||'<div style="color:var(--g4)">입력된 항목 없음</div>';
+  showM('nsModal');
+}
+function closeNsM(){hideM('nsModal');}
+async function confirmNs(){
+  if(!_nsPending) return;
+  hideM('nsModal');
+  var team=_nsPending.team, vals=_nsPending.vals;
   nightSpecialByLeader[team]=vals;
   var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   var officialName='';
@@ -4756,6 +4802,7 @@ async function subNightSpecial(){
     updateFloorChart();
     logMpInput('야간', team);
   }catch(e){ toast('저장 오류: '+String(e.message||e)); }
+  _nsPending=null;
 }
 async function loadNightSpecialFromDB(){
   try{
@@ -9288,7 +9335,7 @@ async function loadMpHistory(){
   if(!listEl) return;
   try{
     var res = await sb.from('mp_data').select('date,shift,values').order('date',{ascending:false});
-    var nsRes = await sb.from('night_special_data').select('date,carpet,wax,stone,wood,restroom,pbb,es,etc');
+    var nsRes = await sb.from('night_special_data').select('date,carpet,pbb,wax,stone,wood,restroom,es,toilet_daily,common_area,collection');
     if(res.error||!res.data||!res.data.length){
       listEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">이력이 없습니다</div>';
       return;
@@ -9312,7 +9359,7 @@ async function loadMpHistory(){
       nsRes.data.forEach(function(row){
         var d=row.date;
         if(!byDate[d]) byDate[d]={total:0,ls:0,as:0,night:0};
-        var n=(row.carpet||0)+(row.wax||0)+(row.stone||0)+(row.wood||0)+(row.restroom||0)+(row.pbb||0)+(row.es||0)+(row.etc||0);
+        var n=(row.carpet||0)+(row.pbb||0)+(row.wax||0)+(row.stone||0)+(row.wood||0)+(row.restroom||0)+(row.es||0)+(row.toilet_daily||0)+(row.common_area||0)+(row.collection||0);
         byDate[d].night+=n;
         byDate[d].total+=n;
       });
