@@ -8887,15 +8887,23 @@ function safetyTab(idx){
   }
 }
 
+// 파일명 앞 숫자를 인식해서 1,2,3...10,11 순서로 정렬 (문자 정렬 시 1,10,11,2,3 순서로 꼬이는 문제 방지)
+function naturalSortByName(a,b){
+  var an=(a.name||''), bn=(b.name||'');
+  var aNum=parseInt(an.match(/^\d+/));
+  var bNum=parseInt(bn.match(/^\d+/));
+  if(!isNaN(aNum)&&!isNaN(bNum)&&aNum!==bNum) return aNum-bNum;
+  return an.localeCompare(bn,'ko');
+}
 async function loadSafetyList(){
   var wrap=document.getElementById('safetyListWrap'); if(!wrap) return;
   try{
-    var res=await sb.from('safety_files').select('*').order('name',{ascending:true});
+    var res=await sb.from('safety_files').select('*');
     if(res.error||!res.data||!res.data.length){
       wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">📭 등록된 안전작업절차서 문서가 없습니다<br><small>관리자에게 업로드 요청하세요</small></div>';
       return;
     }
-    safetyFiles=res.data;
+    safetyFiles=res.data.sort(naturalSortByName);
     var html='<div style="margin-bottom:11px;font-size:11px;color:var(--g4)">총 '+safetyFiles.length+'개 문서 등록됨 · 탭하여 열기</div>';
     safetyFiles.forEach(function(f){
       var escapedPath=f.path.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
