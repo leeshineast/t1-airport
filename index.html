@@ -2618,6 +2618,7 @@ function go(name){
     // 로그인한 사람 근무조/팀 자동 선택
     setTimeout(autoSelectMyShiftTeam, 100);
     updateMpSummary();
+    refreshMpDataLight();
   }
   if(name==='admin'){
     loadPendingUsers();
@@ -4110,7 +4111,8 @@ function confirmMp(){
   // DB 저장 후 화면 갱신 + 명확한 완료 표시
   saveMpToDB(shKey, saveKey, newVals, writer, proxyWriter)
     .then(function(){
-      loadMpFromDB();
+      // ★ 이미 로컬에 반영된 상태라 전체 재조회(loadMpFromDB) 불필요 - 속도 개선
+      updateStaff();
       var msg='✅ '+teamLabel+' 입력완료'+(isProxy?' (대리입력)':'')+' · 금일 누계 '+total+'명';
       toast(msg);
       var banner=document.getElementById('mpSuccessBanner');
@@ -5453,7 +5455,7 @@ async function saveLeaderDataEdit(){
   var isProxy2=me&&(me.role==='leader'||me.role==='manager')&&officialName2&&me.name&&officialName2!==me.name;
   var writer2=isProxy2?(officialName2||editTeam):(me?me.name:'');
   var proxyWriter2=isProxy2?(me?me.name:null):null;
-  saveMpToDB(editShift, editTeam, newVals, writer2, proxyWriter2).then(function(){ loadMpFromDB(); });
+  saveMpToDB(editShift, editTeam, newVals, writer2, proxyWriter2).then(function(){ updateStaff(); });
   toast('✅ '+editTeam+' 입력값이 수정되었습니다');
 }
 
@@ -8514,6 +8516,38 @@ async function loadMpFromDB(){
     loadNightSpecialFromDB();
   }catch(e){}
 }
+
+// ★ 인력현황 화면 진입 시 사용하는 가벼운 재조회 (mp_data + 야간특별작업만)
+// 저장할 때마다 부르던 무거운 loadMpFromDB(관리자출근/전일미입력/ARS·폐기물 재집계 포함)를
+// 화면 진입 시 1회로 줄여서 "저장이 느리다" 문제를 해결함
+async function refreshMpDataLight(){
+  try{
+    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+    var res=await sb.from('mp_data').select('*').eq('date',today);
+    mpDataByLeader={오전:{},오후:{},야간:{}};
+    mpMeta={오전:{},오후:{},야간:{}};
+    if(!res.error&&res.data&&res.data.length){
+      res.data.forEach(function(row){
+        if(!row.shift||!row.team_code||!row.values) return;
+        if(row.team_code&&row.team_code.indexOf('_')===0) return;
+        if(!mpDataByLeader[row.shift]) mpDataByLeader[row.shift]={};
+        var vals=row.values;
+        if(typeof vals==='string') try{ vals=JSON.parse(vals); }catch(e){}
+        if(Array.isArray(vals) && Array.isArray(vals[0])) mpDataByLeader[row.shift][row.team_code]=vals;
+        if(!mpMeta[row.shift]) mpMeta[row.shift]={};
+        mpMeta[row.shift][row.team_code]={writer:row.writer||'', proxy_writer:row.proxy_writer||''};
+      });
+    }
+    recalcMpData();
+    updateFloorChart();
+    updateMpSummary();
+    updateStaff();
+    updateMyTeamGrp();
+    renderLeaderStatus();
+    loadNightSpecialFromDB();
+  }catch(e){}
+}
+
 
 // ─ 초기화 ─
 // 세션 복구 (새로고침 시 자동 로그인)
