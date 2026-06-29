@@ -9007,10 +9007,11 @@ async function uploadSafetyFiles(){
 async function loadSafetyManage(){
   var wrap=document.getElementById('safetyManageWrap'); if(!wrap) return;
   try{
-    var res=await sb.from('safety_files').select('*').order('name',{ascending:true});
+    var res=await sb.from('safety_files').select('*');
     if(res.error||!res.data||!res.data.length){ wrap.innerHTML=''; return; }
-    var html='<div class="card"><div class="cb"><div style="font-size:12px;font-weight:800;color:var(--g7);margin-bottom:11px">등록된 문서 관리 ('+res.data.length+'개)</div>';
-    res.data.forEach(function(f){
+    var sortedData=res.data.sort(naturalSortByName);
+    var html='<div class="card"><div class="cb"><div style="font-size:12px;font-weight:800;color:var(--g7);margin-bottom:11px">등록된 문서 관리 ('+sortedData.length+'개)</div>';
+    sortedData.forEach(function(f){
       html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g2)">';
       html+='<span style="font-size:11px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+f.name+'</span>';
       html+='<button data-id="'+f.id+'" data-path="'+encodeURIComponent(f.path)+'" onclick="deleteSafetyById(this)" style="padding:4px 10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:20px;font-size:10px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>';
