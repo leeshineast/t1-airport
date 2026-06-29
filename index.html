@@ -3359,6 +3359,34 @@ async function dlCSV(type){
         ws1['!cols']=[{wch:12},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8}];
         wb.SheetNames.push('인력현황');wb.Sheets['인력현황']=ws1;
       }
+
+      // ── 야간특별작업 ──
+      var rNs=await sb.from('night_special_data').select('*').order('date',{ascending:true});
+      if(rNs.data&&rNs.data.length){
+        var nsByDate={};
+        rNs.data.forEach(function(d){
+          if(!nsByDate[d.date]) nsByDate[d.date]=[];
+          nsByDate[d.date].push(d);
+        });
+        var nsCols=['carpet','pbb','wax','stone','wood','restroom','es','etc'];
+        var nsRows=[['날짜','팀','카페트','PBB','왁스','석재','우드','화장실','ES','기타','계','작성자']];
+        Object.keys(nsByDate).sort().forEach(function(date){
+          var teams=nsByDate[date];
+          var dayTotal=nsCols.map(function(){return 0;});
+          teams.forEach(function(t){
+            var rowVals=nsCols.map(function(c){ return t[c]||0; });
+            var sum=rowVals.reduce(function(a,b){return a+b;},0);
+            rowVals.forEach(function(v,i){ dayTotal[i]+=v; });
+            nsRows.push([date,t.team_code].concat(rowVals).concat([sum, t.proxy_writer?t.writer+'(대리:'+t.proxy_writer+')':(t.writer||'')]));
+          });
+          var dayTotalSum=dayTotal.reduce(function(a,b){return a+b;},0);
+          nsRows.push([date,'계'].concat(dayTotal).concat([dayTotalSum,'']));
+          nsRows.push(['','','','','','','','','','','','']); // 빈줄
+        });
+        var wsNs=XLSX.utils.aoa_to_sheet(nsRows);
+        wsNs['!cols']=[{wch:11},{wch:8},{wch:7},{wch:6},{wch:7},{wch:7},{wch:7},{wch:7},{wch:6},{wch:7},{wch:7},{wch:18}];
+        wb.SheetNames.push('야간특별작업');wb.Sheets['야간특별작업']=wsNs;
+      }
     }
 
     // ── ARS 민원 ──
