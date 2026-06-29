@@ -4747,6 +4747,8 @@ async function subNightSpecial(){
     // (층별 합계에는 전부 0이라 영향 없음)
     if(!mpDataByLeader['야간']) mpDataByLeader['야간']={};
     mpDataByLeader['야간'][team]=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+    if(!mpMeta['야간']) mpMeta['야간']={};
+    mpMeta['야간'][team]={writer:writer, proxy_writer:proxyWriter};
     recalcMpData();
     updateFloorChart();
     logMpInput('야간', team);
@@ -4758,11 +4760,13 @@ async function loadNightSpecialFromDB(){
     var res=await sb.from('night_special_data').select('*').eq('date',today);
     nightSpecialByLeader={};
     if(!mpDataByLeader['야간']) mpDataByLeader['야간']={};
+    if(!mpMeta['야간']) mpMeta['야간']={};
     if(res.data){
       res.data.forEach(function(row){
         nightSpecialByLeader[row.team_code]={carpet:row.carpet||0,wax:row.wax||0,stone:row.stone||0,wood:row.wood||0,restroom:row.restroom||0,pbb:row.pbb||0,es:row.es||0,etc:row.etc||0};
         // 완료체크용 0값 마커 (층별 합계엔 영향 없음)
         mpDataByLeader['야간'][row.team_code]=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+        mpMeta['야간'][row.team_code]={writer:row.writer||'', proxy_writer:row.proxy_writer||''};
       });
     }
     recalcMpData();
@@ -4770,6 +4774,7 @@ async function loadNightSpecialFromDB(){
     renderNightSpecialSummary();
     updateStaff();
     updateMpSummary();
+    renderLeaderStatus();
   }catch(e){}
 }
 function getNightSpecialTotal(){
@@ -5387,7 +5392,9 @@ function openLeaderDataEdit(shift,team,name){
 
   var headRow=document.getElementById('leaderDataEditHeadRow');
   if(shift==='야간'){
-    if(title) title.textContent=name+' 입력값 수정 (야간특별작업)';
+    var nsMeta=(mpMeta['야간']&&mpMeta['야간'][team])||null;
+    var nsProxyNote=(nsMeta&&nsMeta.proxy_writer)?' (대리입력:'+nsMeta.proxy_writer+')':'';
+    if(title) title.textContent=name+' 입력값 수정 (야간특별작업)'+nsProxyNote;
     var savedNs=nightSpecialByLeader[team]||{};
     var nsLabels=[{col:'carpet',lbl:'카페트'},{col:'pbb',lbl:'PBB'},{col:'wax',lbl:'왁스'},{col:'stone',lbl:'석재'},{col:'wood',lbl:'우드'},{col:'restroom',lbl:'화장실'},{col:'es',lbl:'ES'},{col:'etc',lbl:'기타'}];
     if(headRow){
