@@ -1082,6 +1082,10 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <!-- 전체현황 -->
   <div id="mpP1" style="display:none">
     <div class="pg-hd"><div><h1>전체 현황</h1></div></div>
+    <div style="padding:0 13px 10px;display:flex;gap:7px;align-items:center">
+      <input type="date" id="mpFullDate" onchange="loadFullStatusForDate(this.value)" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
+      <button onclick="resetFullStatusToday()" style="padding:8px 12px;background:var(--g1);border:none;border-radius:var(--r2);font-size:12px;font-weight:700;color:var(--g5);cursor:pointer">오늘</button>
+    </div>
     <div class="card"><div class="tbl-w"><table class="mp-tbl" id="mpFullTable">
       <colgroup>
   <col style="width:11.1%"><!-- 구역 -->
@@ -1107,7 +1111,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     </table></div></div>
     <div class="card ns-summary-card" style="display:none">
       <div class="cb">
-        <div style="font-size:12px;font-weight:700;color:#6B21A8;margin-bottom:8px">🌙 야간특별작업 인력현황 (금일)</div>
+        <div style="font-size:12px;font-weight:700;color:#6B21A8;margin-bottom:8px" id="mpFullNsTitle">🌙 야간특별작업 인력현황 (금일)</div>
         <table class="mp-tbl" style="width:100%;margin-bottom:6px">
           <thead><tr><th>카페트</th><th>PBB</th><th>왁스</th><th>석재</th><th>우드</th><th>화장실<br><span style="font-size:9px;font-weight:500">(특별)</span></th></tr></thead>
           <tbody><tr><td data-ns="carpet">0</td><td data-ns="pbb">0</td><td data-ns="wax">0</td><td data-ns="stone">0</td><td data-ns="wood">0</td><td data-ns="restroom">0</td></tr></tbody>
@@ -4151,7 +4155,10 @@ function tabSwitch(prefix,n,count){
     if(p) p.style.display=i===n?'block':'none';
   }
 }
-function mpTab(n){tabSwitch('mp',n,5);if(n===2){
+function mpTab(n){tabSwitch('mp',n,5);if(n===1){
+  var dEl=document.getElementById('mpFullDate');
+  if(dEl&&!dEl.value){ dEl.value=new Date(Date.now()+9*3600000).toISOString().slice(0,10); }
+}if(n===2){
   var t=document.querySelectorAll('#leaderViewToggle .rp');
   if(t.length){t.forEach(function(b){b.classList.remove('on');});t[0].classList.add('on');}
   renderLeaderStatus('today');updateMyTeamGrp();checkPrevDayMissing();
@@ -4350,6 +4357,79 @@ function updateMpSummary(){
 }
 
 // ═══ 층별 인력현황 업데이트 ═══
+// ═══ 전체현황 탭 전용 날짜별 조회 (다른 탭 전역상태에는 영향 없음) ═══
+async function loadFullStatusForDate(dateStr){
+  if(!dateStr) return;
+  try{
+    var mpRes=await sb.from('mp_data').select('*').eq('date',dateStr);
+    var nsRes=await sb.from('night_special_data').select('*').eq('date',dateStr);
+    // 1) 층별(오전/오후) 합산 - recalcMpData와 동일 로직, 전역 mpData는 건드리지 않음
+    var localMp=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+    if(mpRes.data){
+      mpRes.data.forEach(function(row){
+        if(!row.team_code||row.team_code.indexOf('_')===0) return;
+        if(!row.values) return;
+        var vals=row.values;
+        if(typeof vals==='string'){ try{ vals=JSON.parse(vals); }catch(e){ return; } }
+        if(!Array.isArray(vals)) return;
+        for(var ri=0;ri<4;ri++){
+          if(!vals[ri]||!Array.isArray(vals[ri])) continue;
+          for(var ci=0;ci<7;ci++){ if(vals[ri][ci]!==undefined) localMp[ri][ci]+=Number(vals[ri][ci])||0; }
+        }
+      });
+    }
+    var totals=[0,0,0,0];
+    for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) totals[ri]+=localMp[ri][ci];
+    var grandTotal=totals.reduce(function(a,b){return a+b;},0);
+    var lsSub=[0,0,0,0,0,0,0],asSub=[0,0,0,0,0,0,0],colTot=[0,0,0,0,0,0,0];
+    for(ci=0;ci<7;ci++){
+      lsSub[ci]=localMp[0][ci]+localMp[1][ci];
+      asSub[ci]=localMp[2][ci]+localMp[3][ci];
+      colTot[ci]=lsSub[ci]+asSub[ci];
+    }
+    var lsTotal=lsSub.reduce(function(a,b){return a+b;},0);
+    var asTotal=asSub.reduce(function(a,b){return a+b;},0);
+    var allRows=[[ZONES[0]].concat(localMp[0]).concat([totals[0]]),[ZONES[1]].concat(localMp[1]).concat([totals[1]]),['L/S 소계'].concat(lsSub).concat([lsTotal]),[ZONES[2]].concat(localMp[2]).concat([totals[2]]),[ZONES[3]].concat(localMp[3]).concat([totals[3]]),['A/S 소계'].concat(asSub).concat([asTotal]),['전체 총계'].concat(colTot).concat([grandTotal])];
+    var mpTbl=document.querySelector('#mpFullTable tbody');
+    if(mpTbl){
+      var trs=mpTbl.querySelectorAll('tr');
+      allRows.forEach(function(rowData,ri2){if(!trs[ri2])return;var tds=trs[ri2].querySelectorAll('td');rowData.forEach(function(val,ci2){if(tds[ci2])tds[ci2].textContent=val;});});
+    }
+    // 2) 야간특별작업 합산
+    var sums={carpet:0,wax:0,stone:0,wood:0,restroom:0,pbb:0,es:0,toilet_daily:0,common_area:0,collection:0};
+    var any=false;
+    if(nsRes.data){
+      nsRes.data.forEach(function(row){
+        Object.keys(sums).forEach(function(k){ sums[k]+=Number(row[k])||0; });
+        any=true;
+      });
+    }
+    var nsTotal=Object.keys(sums).reduce(function(s,k){return s+sums[k];},0);
+    var cards=document.querySelectorAll('#mpP1 .ns-summary-card');
+    cards.forEach(function(card){
+      card.style.display=any?'block':'none';
+      Object.keys(sums).forEach(function(k){
+        var cell=card.querySelector('[data-ns="'+k+'"]');
+        if(cell) cell.textContent=sums[k];
+      });
+      var totCell=card.querySelector('[data-ns="total"]');
+      if(totCell) totCell.textContent=nsTotal;
+    });
+    var titleEl=document.getElementById('mpFullNsTitle');
+    if(titleEl) titleEl.textContent='🌙 야간특별작업 인력현황 ('+dateStr+')';
+  }catch(e){ console.error('전체현황 날짜별 조회 오류',e); }
+}
+function resetFullStatusToday(){
+  var todayKst=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+  var dEl=document.getElementById('mpFullDate');
+  if(dEl) dEl.value=todayKst;
+  var titleEl=document.getElementById('mpFullNsTitle');
+  if(titleEl) titleEl.textContent='🌙 야간특별작업 인력현황 (금일)';
+  // 전역 상태(mpData/nightSpecialByLeader) 기준으로 즉시 복원
+  updateFloorChart();
+  renderNightSpecialSummary();
+}
+
 function updateFloorChart(){
   var totals=[0,0,0,0];
   for(var ri=0;ri<4;ri++){
