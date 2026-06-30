@@ -3178,8 +3178,7 @@ async function pubNotice(){const t=document.getElementById('nT').value.trim();co
 
 // ─ 산업재해 ─
 function openInd(){if(!me||(me.role!=='admin'&&me.role!=='manager'&&me.role!=='leader')){toast('팀장 이상만 등록 가능합니다');return;}const now=new Date();const local=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16);document.getElementById('indDate').value=local;['indPer','indLoc','indDesc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});document.querySelectorAll('#indTG .rp').forEach(p=>p.classList.remove('on'));document.getElementById('indErr').style.display='none';showM('indModal');}
-  if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
-  function closeInd(){hideM('indModal');}
+function closeInd(){hideM('indModal');}
 function pickIT(el){
   document.querySelectorAll('#indTG .rp').forEach(p=>p.classList.remove('on'));
   el.classList.add('on');
