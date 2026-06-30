@@ -3509,13 +3509,19 @@ async function dlCSV(type){
       }
     }
 
-    // ── 장비현황 ──
+    // ── 장비현황 (업로드된 원본 엑셀 데이터를 DB에서 직접 조회) ──
     if(type==='equipment'||type==='all'){
-      if(equipmentData&&equipmentData.rows&&equipmentData.rows.length){
-        var eqRows=[equipmentData.headers||[]];
-        (equipmentData.rows||[]).forEach(function(r){ eqRows.push(r); });
-        var wse=XLSX.utils.aoa_to_sheet(eqRows);
-        wb.SheetNames.push('장비현황');wb.Sheets['장비현황']=wse;
+      var eqRes=await sb.from('equipment_data').select('*').order('created_at',{ascending:false}).limit(1);
+      if(eqRes.data&&eqRes.data.length&&eqRes.data[0].data){
+        var eqRaw=eqRes.data[0].data;
+        var eqHeaders=eqRaw.headers||[];
+        var eqDataRows=eqRaw.rows||[];
+        if(eqHeaders.length&&eqDataRows.length){
+          var eqSheet=[eqHeaders];
+          eqDataRows.forEach(function(r){ eqSheet.push(r); });
+          var wse=XLSX.utils.aoa_to_sheet(eqSheet);
+          wb.SheetNames.push('장비현황');wb.Sheets['장비현황']=wse;
+        }
       } else if(type==='equipment'){
         toast('업로드된 장비 데이터가 없습니다'); return;
       }
@@ -3627,19 +3633,6 @@ async function dlCSV(type){
         var wsld=XLSX.utils.aoa_to_sheet(ldRows);
         wsld['!cols']=[{wch:8},{wch:8},{wch:12}];
         wb.SheetNames.push('조장명단');wb.Sheets['조장명단']=wsld;
-      }
-    }
-
-    // ── 장비현황 (DB) ──
-    if(type==='all'){
-      var req=await sb.from('equipment_data').select('*');
-      if(req.data&&req.data.length){
-        var eqDbRows=[['장비명','수량','상태','비고']];
-        req.data.forEach(function(d){
-          eqDbRows.push([d.name||'', d.quantity||'', d.status||'', d.note||'']);
-        });
-        var wsedb=XLSX.utils.aoa_to_sheet(eqDbRows);
-        wb.SheetNames.push('장비현황(DB)');wb.Sheets['장비현황(DB)']=wsedb;
       }
     }
 
