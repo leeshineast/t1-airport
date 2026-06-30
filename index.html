@@ -2401,6 +2401,29 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 <div id="noticeM" class="modal-bg"><div class="modal" style="max-width:350px"><div style="background:linear-gradient(135deg,var(--navy),var(--teal2));padding:15px 17px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">📢</span><div><div style="color:white;font-size:14px;font-weight:800">전체 공지사항</div><div style="color:rgba(255,255,255,.6);font-size:10px" id="noticeD"></div></div></div><button onclick="closeN()" style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:26px;height:26px;color:white;font-size:15px;cursor:pointer">×</button></div><div style="padding:17px;max-height:46vh;overflow-y:auto"><div style="font-size:15px;font-weight:800;color:var(--g7);margin-bottom:9px" id="noticeT"></div><div style="font-size:13px;color:var(--g5);line-height:1.7" id="noticeB"></div></div><div style="padding:11px 17px 17px;display:flex;gap:9px;border-top:1px solid var(--g2)"><label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--g4);cursor:pointer;flex:1"><input type="checkbox" id="noSkip" style="accent-color:var(--teal)"> 오늘 다시 보지 않기</label><button onclick="closeN()" style="padding:9px 17px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer">확인</button></div></div></div>
 
 <!-- 인력현황 미입력 조장 안내 팝업 -->
+<div id="vehEditModal" class="modal-bg"><div class="modal" style="max-width:380px">
+  <div style="background:linear-gradient(135deg,var(--navy),#1a2f4a);padding:15px 17px;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:18px">✏️</span>
+      <div style="color:white;font-size:14px;font-weight:800">차량운행기록 수정</div>
+    </div>
+    <button onclick="closeVehEdit()" style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:26px;height:26px;color:white;font-size:15px;cursor:pointer">×</button>
+  </div>
+  <div style="padding:17px;max-height:70vh;overflow-y:auto">
+    <div class="fg"><label class="f-lbl">📅 사용일자 *</label><input type="date" id="veDate" class="ri" style="margin-bottom:0;width:100%;max-width:100%;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>
+    <div class="fg"><label class="f-lbl">🏢 소속 *</label><input type="text" id="veDept" class="ri" placeholder="예: 오전1팀" style="margin-bottom:0"></div>
+    <div class="fg"><label class="f-lbl">👤 성명 *</label><input type="text" id="veName" class="ri" placeholder="홍길동" style="margin-bottom:0"></div>
+    <div class="fg"><label class="f-lbl">🚗 주행 전 계기판 (km) *</label><input type="number" id="veBefore" class="ri" style="margin-bottom:0"></div>
+    <div class="fg"><label class="f-lbl">🚗 주행 후 계기판 (km) *</label><input type="number" id="veAfter" class="ri" style="margin-bottom:0"></div>
+    <div class="fg"><label class="f-lbl">🕐 출발 시간 *</label><input type="time" id="veStart" class="ri" style="margin-bottom:0;width:100%;max-width:100%;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>
+    <div class="fg"><label class="f-lbl">🕐 도착 시간 *</label><input type="time" id="veEnd" class="ri" style="margin-bottom:0;width:100%;max-width:100%;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>
+    <div class="fg"><label class="f-lbl">📍 목적지(경유지 포함) *</label><input type="text" id="veDest" class="ri" placeholder="예: 신도시, T2" style="margin-bottom:0"></div>
+    <div class="fg"><label class="f-lbl">📋 목적 *</label><input type="text" id="vePurpose" class="ri" placeholder="예: 직원격려 식사, 업무" style="margin-bottom:0"></div>
+    <div class="fg" style="margin-bottom:14px"><label class="f-lbl">📝 기타</label><input type="text" id="veEtc" class="ri" placeholder="예: 주유 8만원, H11구역" style="margin-bottom:0"></div>
+    <button class="btn-prim" style="width:100%" onclick="saveVehEdit()">수정 완료</button>
+  </div>
+</div></div>
+
 <div id="missingLeaderModal" class="modal-bg"><div class="modal" style="max-width:340px">
   <div style="background:linear-gradient(135deg,var(--danger),#b03030);padding:15px 17px;display:flex;align-items:center;justify-content:space-between">
     <div style="display:flex;align-items:center;gap:8px">
@@ -4536,9 +4559,64 @@ function renderVehList(data){
     h+='<span style="font-size:11px;color:var(--g4)">📍</span><span style="font-size:13px;font-weight:600;color:var(--g6)">'+r.dest+'</span>';
     h+='<span style="font-size:11px;color:var(--g3)"> — </span><span style="font-size:12px;color:var(--g5)">'+r.purpose+'</span></div>';
     h+='<div style="display:flex;gap:12px;font-size:11px;color:var(--g4)"><span>'+r.start+' ~ '+r.end+'</span><span>계기 '+(r.before||0).toLocaleString()+'→'+(r.after||0).toLocaleString()+'km</span></div>';
-    h+=etcH+'</div></div>';
+    h+=etcH;
+    h+='<div style="margin-top:8px;text-align:right"><button onclick="openVehEdit('+r.id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button></div>';
+    h+='</div></div>';
   });
   list.innerHTML=h;updateVehStats(data);
+}
+function openVehEdit(id){
+  if(!canWrite()) return;
+  var r=(vehData||[]).find(function(x){return x.id===id;});
+  if(!r){toast('기록을 찾을 수 없습니다');return;}
+  document.getElementById('veDate').value=r.date||'';
+  document.getElementById('veDept').value=r.dept||'';
+  document.getElementById('veName').value=r.name||'';
+  document.getElementById('veBefore').value=r.before||'';
+  document.getElementById('veAfter').value=r.after||'';
+  document.getElementById('veStart').value=r.start||'';
+  document.getElementById('veEnd').value=r.end||'';
+  document.getElementById('veDest').value=r.dest||'';
+  document.getElementById('vePurpose').value=r.purpose||'';
+  document.getElementById('veEtc').value=r.etc||'';
+  document.getElementById('vehEditModal').dataset.editId=id;
+  showM('vehEditModal');
+}
+function closeVehEdit(){ hideM('vehEditModal'); }
+async function saveVehEdit(){
+  if(!canWrite()) return;
+  var id=document.getElementById('vehEditModal').dataset.editId;
+  if(!id){toast('수정 대상을 찾을 수 없습니다');return;}
+  var date=document.getElementById('veDate').value;
+  var dept=document.getElementById('veDept').value.trim();
+  var name=document.getElementById('veName').value.trim();
+  var before=parseInt(document.getElementById('veBefore').value)||0;
+  var after=parseInt(document.getElementById('veAfter').value)||0;
+  var start=document.getElementById('veStart').value;
+  var end=document.getElementById('veEnd').value;
+  var dest=document.getElementById('veDest').value.trim();
+  var purpose=document.getElementById('vePurpose').value.trim();
+  var etc=document.getElementById('veEtc').value.trim();
+  if(!date){toast('사용일자를 입력해주세요');return;}
+  if(!name){toast('성명을 입력해주세요');return;}
+  if(!before){toast('주행 전 계기판을 입력해주세요');return;}
+  if(!after){toast('주행 후 계기판을 입력해주세요');return;}
+  if(after<=before){toast('주행 후 계기판이 주행 전보다 커야 합니다');return;}
+  if(!start){toast('출발 시간을 입력해주세요');return;}
+  if(!end){toast('도착 시간을 입력해주세요');return;}
+  if(!dest){toast('목적지를 입력해주세요');return;}
+  if(!purpose){toast('목적을 입력해주세요');return;}
+  try{
+    var res=await sb.from('vehicle_log').update({
+      date:date, driver:name, team:dept||'T1환경미화사업부', vehicle:dest,
+      purpose:purpose, start_km:before, end_km:after,
+      start_time:start||null, end_time:end||null, etc:etc||null
+    }).eq('id',id);
+    if(res.error){ toast('수정 오류: '+res.error.message); return; }
+    toast('운행 기록이 수정되었습니다');
+    closeVehEdit();
+    await loadVehicleFromDB();
+  }catch(e){ toast('수정 오류: '+String(e.message||e)); }
 }
 function updateVehStats(data){
   var cnt=document.getElementById('vhStatCount');var dist=document.getElementById('vhStatDist');var month=document.getElementById('vhStatMonth');
@@ -7380,6 +7458,7 @@ async function loadVehicleFromDB(){
     // DB 컬럼 → 앱 필드명 변환
     vehData=(res.data||[]).map(function(r){
       return {
+        id: r.id,
         date: r.date,
         name: r.driver,
         dept: r.team,
