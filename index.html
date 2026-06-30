@@ -2082,7 +2082,11 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div class="stat-row" style="grid-template-columns:1fr 1fr 1fr">
       <div class="stat-box"><div class="s-lbl">총 운행횟수</div><div class="s-val c-teal" id="vhStatCount">0</div><div class="s-unit">회</div></div>
       <div class="stat-box"><div class="s-lbl">총 주행거리</div><div class="s-val c-navy" id="vhStatDist">0</div><div class="s-unit">km</div></div>
-      <div class="stat-box"><div class="s-lbl">이번달</div><div class="s-val c-warn" id="vhStatMonth">0</div><div class="s-unit">km</div></div>
+      <div class="stat-box"><div class="s-lbl" id="vhStatMonthLbl">이번달</div><div class="s-val c-warn" id="vhStatMonth">0</div><div class="s-unit">km</div></div>
+    </div>
+    <div style="padding:0 13px 10px;display:flex;gap:7px">
+      <input type="month" id="vhFilterMonth" onchange="renderVehList(vehData)" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
+      <button onclick="document.getElementById('vhFilterMonth').value='';renderVehList(vehData)" style="padding:8px 12px;background:var(--g1);border:none;border-radius:var(--r2);font-size:12px;font-weight:700;color:var(--g5);cursor:pointer">전체</button>
     </div>
     <div id="vhList"><div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">아직 운행 기록이 없습니다</div></div>
     <div style="height:20px"></div>
@@ -4545,9 +4549,16 @@ function subVeh(){
 }
 function renderVehList(data){
   var list=document.getElementById('vhList');if(!list)return;
-  if(!data||!data.length){list.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">아직 운행 기록이 없습니다</div>';updateVehStats(data);return;}
+  var mfEl=document.getElementById('vhFilterMonth');
+  var mf=mfEl?mfEl.value:'';
+  var filtered=(data||[]).filter(function(r){ return !mf || (r.date&&r.date.indexOf(mf)===0); });
+  if(!filtered||!filtered.length){
+    list.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">'+(mf?'해당 월에 운행 기록이 없습니다':'아직 운행 기록이 없습니다')+'</div>';
+    updateVehStats(filtered);
+    return;
+  }
   var h='';
-  data.forEach(function(r){
+  filtered.forEach(function(r){
     var etcH=r.etc?'<div style="margin-top:5px;font-size:11px;color:var(--warn);font-weight:600">📝 '+r.etc+'</div>':'';
     h+='<div style="background:white;border-radius:var(--r);margin:0 13px 10px;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--g2);overflow:hidden">';
     h+='<div style="background:var(--navy-bg);padding:10px 13px;display:flex;align-items:center;justify-content:space-between">';
@@ -4563,7 +4574,7 @@ function renderVehList(data){
     h+='<div style="margin-top:8px;text-align:right"><button onclick="openVehEdit('+r.id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button></div>';
     h+='</div></div>';
   });
-  list.innerHTML=h;updateVehStats(data);
+  list.innerHTML=h;updateVehStats(filtered);
 }
 function openVehEdit(id){
   if(!canWrite()) return;
@@ -4620,12 +4631,16 @@ async function saveVehEdit(){
 }
 function updateVehStats(data){
   var cnt=document.getElementById('vhStatCount');var dist=document.getElementById('vhStatDist');var month=document.getElementById('vhStatMonth');
+  var monthLbl=document.getElementById('vhStatMonthLbl');
   if(cnt)cnt.textContent=data.length.toLocaleString();
   var totalDist=data.reduce(function(s,r){return s+(r.dist||0);},0);
   if(dist)dist.textContent=totalDist.toLocaleString();
-  var now=new Date();var tm=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0');
+  var mfEl=document.getElementById('vhFilterMonth');
+  var mf=mfEl?mfEl.value:'';
+  var now=new Date();var tm=mf||(now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0'));
   var mD=data.filter(function(r){return r.date&&r.date.startsWith(tm);}).reduce(function(s,r){return s+(r.dist||0);},0);
   if(month)month.textContent=mD.toLocaleString();
+  if(monthLbl) monthLbl.textContent=mf?(mf+' 합계'):'이번달';
 }
 function setVhRange(el,range){
   document.querySelectorAll('#vhP2 .rp').forEach(function(p){p.classList.remove('on');});el.classList.add('on');
