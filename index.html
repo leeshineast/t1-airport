@@ -1029,6 +1029,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       </div>
     </div></div>
     <div class="card" id="mpFloorCard">
+      <div id="mpZoneHint" style="display:none;margin:0 13px 9px;padding:9px 12px;background:#FFF4D6;border:1.5px solid #F0B429;border-radius:var(--r2);font-size:12px;font-weight:700;color:#8A5A00"></div>
       <div class="tbl-w">
         <table class="mp-tbl">
           <colgroup>
@@ -2976,6 +2977,32 @@ function getTeamZone(teamCode){
   if(letter==='C' && (num==='1'||num==='6')) return '집하장';
   return null;
 }
+// 입력표에서 선택된 조의 담당구역(동편/서편) 줄을 강조 표시 (대리입력 시 동/서편 혼동 방지)
+function highlightMpZone(teamCode){
+  var hint=document.getElementById('mpZoneHint');
+  var rows=document.querySelectorAll('#mpBody tr');
+  var zone=getTeamZone(teamCode);
+  if(!zone||!rows.length){
+    rows.forEach(function(row){ row.style.opacity=''; row.style.background=''; });
+    if(hint) hint.style.display='none';
+    return;
+  }
+  // L/S 동편(0), L/S 서편(1), A/S 동편(2), A/S 서편(3)
+  var matchIdx = zone==='동편' ? [0,2] : zone==='서편' ? [1,3] : []; // 집하장은 줄 강조 없음(칸 단위)
+  rows.forEach(function(row,ri){
+    var match = matchIdx.length===0 ? true : (matchIdx.indexOf(ri)!==-1);
+    row.style.opacity = match?'1':'0.35';
+    row.style.background = match?'#FFF9E6':'';
+  });
+  if(hint){
+    if(zone==='집하장'){
+      hint.textContent='📍 '+teamCode+' 담당구역: 집하장 — 맨 오른쪽 "집하장" 칸에만 입력하세요';
+    }else{
+      hint.textContent='📍 '+teamCode+' 담당구역: '+zone+' — 강조된 줄(노란 배경)에만 입력하세요';
+    }
+    hint.style.display='block';
+  }
+}
 // newVals[ri][ci] 기준 담당구역 외에 값이 들어갔는지 검사 → 경고 메시지 반환 (없으면 '')
 function checkZoneMismatch(teamCode, newVals){
   var zone=getTeamZone(teamCode);
@@ -4916,6 +4943,7 @@ function updateMyTeamGrp(){
     h+='</div></div>';
   });
   grp.innerHTML=h;
+  highlightMpZone(autoTeam||'');
 }
 
 // 로그인한 사람 근무조/팀 자동 선택
@@ -4973,6 +5001,7 @@ function pickMyTeam(el){
   el.style.color=color;
   el.style.borderColor=color;
   el.style.fontWeight='700';
+  highlightMpZone(el.dataset.team||'');
   updateNightSpecialVisibility();
 }
 function getSelectedTeam(){
