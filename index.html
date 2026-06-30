@@ -3443,19 +3443,21 @@ async function dlCSV(type){
     if(type==='kpi'||type==='all'){
       var rk=await sb.from('kpi_data').select('*').order('year',{ascending:false}).order('month',{ascending:false});
       if(rk.data&&rk.data.length){
-        var kpiRows=[['연도','월','KPI1점수','KPI1메모','KPI2점수','KPI3점수','KPI4점수','KPI5점수','KPI6점수','KPI7점수','작성자']];
+        var kpiRows=[['연도','월','KPI1(VOC)','KPI2','KPI3','KPI4','KPI5','KPI6(ATP)','VOC메모','비고','작성자']];
         rk.data.forEach(function(d){
           kpiRows.push([
-            d.year||'',d.month||'',
-            d.kpi1_score||'',d.kpi1_memo||'',
-            d.kpi2_score||'',d.kpi3_score||'',
-            d.kpi4_score||'',d.kpi5_score||'',
-            d.kpi6_score||'',d.kpi7_score||'',
-            d.writer||''
+            d.year||'', d.month||'',
+            d.kpi1!==null&&d.kpi1!==undefined?d.kpi1:'',
+            d.kpi2!==null&&d.kpi2!==undefined?d.kpi2:'',
+            d.kpi3!==null&&d.kpi3!==undefined?d.kpi3:'',
+            d.kpi4!==null&&d.kpi4!==undefined?d.kpi4:'',
+            d.kpi5!==null&&d.kpi5!==undefined?d.kpi5:'',
+            d.kpi6!==null&&d.kpi6!==undefined?d.kpi6:'',
+            d.kpi1_memo||'', d.note||'', d.writer||''
           ]);
         });
         var wsk=XLSX.utils.aoa_to_sheet(kpiRows);
-        wsk['!cols']=[{wch:6},{wch:4},{wch:8},{wch:20},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:12}];
+        wsk['!cols']=[{wch:6},{wch:4},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:30},{wch:20},{wch:12}];
         wb.SheetNames.push('KPI');wb.Sheets['KPI']=wsk;
       }
     }
@@ -3585,6 +3587,59 @@ async function dlCSV(type){
         });
         var wsu=XLSX.utils.aoa_to_sheet(usRows);
         wb.SheetNames.push('사용자목록');wb.Sheets['사용자목록']=wsu;
+      }
+    }
+
+    // ── ISO9001 파일 목록 ──
+    if(type==='all'){
+      var ri=await sb.from('iso9001_files').select('*').order('name',{ascending:true});
+      if(ri.data&&ri.data.length){
+        var isoRows=[['파일명','업로드일','URL']];
+        ri.data.forEach(function(d){
+          isoRows.push([d.name||'', d.uploaded_at?toKSTDate(d.uploaded_at):'', d.url||d.file_path||'']);
+        });
+        var wsi=XLSX.utils.aoa_to_sheet(isoRows);
+        wb.SheetNames.push('ISO9001파일목록');wb.Sheets['ISO9001파일목록']=wsi;
+      }
+    }
+
+    // ── 안전작업절차서 파일 목록 ──
+    if(type==='all'){
+      var rsa=await sb.from('safety_files').select('*').order('name',{ascending:true});
+      if(rsa.data&&rsa.data.length){
+        var saRows=[['파일명','업로드일','URL']];
+        rsa.data.forEach(function(d){
+          saRows.push([d.name||'', d.uploaded_at?toKSTDate(d.uploaded_at):'', d.url||d.file_path||'']);
+        });
+        var wssa=XLSX.utils.aoa_to_sheet(saRows);
+        wb.SheetNames.push('안전작업절차서목록');wb.Sheets['안전작업절차서목록']=wssa;
+      }
+    }
+
+    // ── 조장 명단 ──
+    if(type==='all'){
+      var rld=await sb.from('leaders').select('*').order('shift',{ascending:true});
+      if(rld.data&&rld.data.length){
+        var ldRows=[['근무조','팀','조장이름']];
+        rld.data.forEach(function(d){
+          ldRows.push([d.shift||'', d.team||'', d.name||'']);
+        });
+        var wsld=XLSX.utils.aoa_to_sheet(ldRows);
+        wsld['!cols']=[{wch:8},{wch:8},{wch:12}];
+        wb.SheetNames.push('조장명단');wb.Sheets['조장명단']=wsld;
+      }
+    }
+
+    // ── 장비현황 (DB) ──
+    if(type==='all'){
+      var req=await sb.from('equipment_data').select('*');
+      if(req.data&&req.data.length){
+        var eqDbRows=[['장비명','수량','상태','비고']];
+        req.data.forEach(function(d){
+          eqDbRows.push([d.name||'', d.quantity||'', d.status||'', d.note||'']);
+        });
+        var wsedb=XLSX.utils.aoa_to_sheet(eqDbRows);
+        wb.SheetNames.push('장비현황(DB)');wb.Sheets['장비현황(DB)']=wsedb;
       }
     }
 
