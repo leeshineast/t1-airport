@@ -3182,6 +3182,8 @@ function pickIT(el){
   if(customEl) customEl.style.display=(el.textContent==='기타')?'block':'none';
 }
 function subInd(){
+  var myPerms=me?userPerms[me.name]:null;
+  if(myPerms&&myPerms.write===false){toast('⚠️ 쓰기 권한이 없습니다');return;}
   const date=document.getElementById('indDate').value;
   const per=document.getElementById('indPer').value.trim();
   const loc=document.getElementById('indLoc').value.trim();
@@ -4451,6 +4453,8 @@ function autoFillBefore(){
   }
 }
 function subVeh(){
+  var myPerms=me?userPerms[me.name]:null;
+  if(myPerms&&myPerms.write===false){toast('⚠️ 쓰기 권한이 없습니다');return;}
   var date=document.getElementById('vhDate').value;
   var name=document.getElementById('vhName').value.trim();
   var before=parseInt(document.getElementById('vhBefore').value)||0;
@@ -4541,6 +4545,8 @@ function setVhRange(el,range){
   else{if(vehData.length){var dates=vehData.map(function(r){return r.date;}).sort();var fd=new Date(dates[0]);var ld=new Date(dates[dates.length-1]);if(from)from.value=fmt(fd);if(to)to.value=fmt(ld);}}
 }
 function dlVeh(){
+  var myPerms=me?userPerms[me.name]:null;
+  if(myPerms&&myPerms.download===false){toast('⚠️ 다운로드 권한이 없습니다');return;}
   var from=document.getElementById('vhDlFrom').value;
   var to=document.getElementById('vhDlTo').value;
   var filtered=vehData.slice();
@@ -4988,7 +4994,9 @@ async function loadPerms(){
     if(res.data&&res.data.length){
       res.data.forEach(function(u){
         if(u.permissions){
-          try{ userPerms[u.name]=JSON.parse(u.permissions); }catch(e){}
+          try{
+            userPerms[u.name]=typeof u.permissions==='string'?JSON.parse(u.permissions):u.permissions;
+          }catch(e){}
         }
       });
     }
@@ -6985,6 +6993,8 @@ function renderHoList(data){
 // 인수인계 엑셀 다운로드
 // ══════════════════════════════════════════
 function downloadHoExcel(){
+  var myPerms=me?userPerms[me.name]:null;
+  if(myPerms&&myPerms.download===false){toast('⚠️ 다운로드 권한이 없습니다');return;}
   if(!hoAll||!hoAll.length){ toast('다운로드할 데이터가 없습니다'); return; }
   var mfEl=document.getElementById('hoFilterMonth');
   var mf=mfEl?mfEl.value:'';
@@ -7813,6 +7823,8 @@ async function confirmLostReset(){
 }
 
 function downloadLostExcel(){
+  var myPerms=me?userPerms[me.name]:null;
+  if(myPerms&&myPerms.download===false){toast('⚠️ 다운로드 권한이 없습니다');return;}
   if(!lostData||!lostData.length){ toast('다운로드할 데이터가 없습니다'); return; }
   var filterMonth=document.getElementById('lostFilterMonth');
   var mf=filterMonth?filterMonth.value:'';
@@ -8141,6 +8153,8 @@ function openWasteEdit(id){
 }
 
 function saveWaste(){
+  var myPerms=me?userPerms[me.name]:null;
+  if(myPerms&&myPerms.write===false){toast('⚠️ 쓰기 권한이 없습니다');return;}
   var date=document.getElementById('wasteDate').value;
   if(!date){ toast('일자를 선택해주세요'); return; }
   if(!wasteSelectedTeam){ toast('조를 선택해주세요'); return; }
@@ -8404,6 +8418,8 @@ async function deleteWaste(id){
 }
 
 function downloadWasteExcel(){
+  var myPerms=me?userPerms[me.name]:null;
+  if(myPerms&&myPerms.download===false){toast('⚠️ 다운로드 권한이 없습니다');return;}
   if(!wasteData||!wasteData.length){ toast('다운로드할 데이터가 없습니다'); return; }
   var mf=document.getElementById('wasteFilterMonth');
   var mfv=mf?mf.value:'';
