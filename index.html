@@ -27,7 +27,7 @@
 body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px;line-height:1.5;min-height:100vh;zoom:1.16}
 
 /* ─ 화면 ─ */
-.scr{display:none}
+.scr{display:none;padding-bottom:60px}
 .scr.on{display:block}
 
 /* ─ 로그인 ─ */
@@ -200,6 +200,32 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 
 /* ─ 토스트 ─ */
 #toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(8px);background:rgba(30,37,48,.92);color:white;padding:9px 18px;border-radius:22px;font-size:12px;font-weight:600;z-index:999;opacity:0;transition:opacity .25s,transform .25s;white-space:nowrap;pointer-events:none}
+.mh-scroller{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.mh-scroller::-webkit-scrollbar{display:none}
+.mh-panel{flex:0 0 100%;scroll-snap-align:start;min-width:100%;max-width:100%;padding-bottom:62px}
+.mh-dots{display:flex;justify-content:center;gap:5px;padding:6px 0 2px}
+.mh-dot{width:5px;height:5px;border-radius:50%;background:var(--g3);transition:all .2s}
+.mh-dot.on{background:var(--teal2);width:16px;border-radius:4px}
+.mh-menu-head{padding:10px 13px 6px}
+.mh-eyebrow-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.mh-eyebrow{font-size:9px;font-weight:800;color:var(--teal2);letter-spacing:.5px}
+.mh-swipe-hint{font-size:9px;color:var(--g5);background:var(--g1);padding:3px 8px;border-radius:20px;font-weight:600}
+.mh-menu-title{font-size:16px;font-weight:800;color:var(--g7)}
+#mhPanelMenu .menu-grid{padding:4px 13px 16px;gap:6px}
+#mhPanelMenu .menu-btn{flex-direction:column;justify-content:center;text-align:center;padding:10px 6px;gap:4px;min-height:80px}
+#mhPanelMenu .menu-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:15px;background:var(--teal)}
+#mhPanelMenu .menu-desc{display:none}
+#mhPanelMenu .menu-title{font-size:11px;margin-bottom:0}
+#mhPanelMenu .menu-btn:nth-child(3) .menu-icon,#mhPanelMenu .menu-btn:nth-child(4) .menu-icon,#mhPanelMenu .menu-btn:nth-child(5) .menu-icon{background:#00A8CC}
+#mhPanelMenu .menu-btn:nth-child(6) .menu-icon,#mhPanelMenu .menu-btn:nth-child(7) .menu-icon{background:#1B4FBE}
+#mhPanelMenu .menu-btn:nth-child(8) .menu-icon,#mhPanelMenu .menu-btn:nth-child(11) .menu-icon{background:#6B7FBE}
+#mhPanelMenu .menu-btn:nth-child(9) .menu-icon,#mhPanelMenu .menu-btn:nth-child(10) .menu-icon{background:#F5A623}
+#mhPanelMenu .menu-btn:nth-child(13) .menu-icon{background:var(--g6)}
+.mh-tabbar{position:fixed;left:0;right:0;bottom:0;height:50px;padding-bottom:env(safe-area-inset-bottom);background:white;border-top:1px solid var(--g2);display:flex;z-index:60}
+.mh-tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.mh-tab-ic{font-size:15px}
+.mh-tab-lb{font-size:8.5px;font-weight:700;color:var(--g4)}
+.mh-tab-item.on .mh-tab-lb{color:var(--teal2)}
 </style>
 <script>
     const SUPABASE_URL = 'https://smfjrnhiodyjobclnwvd.supabase.co';
@@ -359,6 +385,11 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div style="font-size:11px;font-weight:700;color:var(--g4);margin-bottom:5px">비밀번호</div>
     <div class="fi-w"><span class="fi-i">🔒</span><input type="password" id="lpw" class="fi" placeholder="비밀번호" value=""></div>
     <button class="btn-lg" onclick="doLogin()">로그인</button>
+    <div style="display:flex;justify-content:center;gap:14px;margin-top:10px">
+      <span onclick="openFindId()" style="font-size:11.5px;color:var(--g5);font-weight:600;cursor:pointer;text-decoration:underline">아이디 찾기</span>
+      <span style="color:var(--g3)">|</span>
+      <span onclick="openPwReq()" style="font-size:11.5px;color:var(--g5);font-weight:600;cursor:pointer;text-decoration:underline">비밀번호 찾기</span>
+    </div>
     <button class="btn-out" onclick="goReg()">가입 신청</button>
     <div class="login-note">※ 승인된 구성원만 로그인 가능합니다</div>
   </div>
@@ -405,6 +436,12 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 </div>
 
 <!-- ══ 앱 메인 ══ -->
+<div id="globalTabbar" class="mh-tabbar" style="display:none">
+  <div class="mh-tab-item on" onclick="goHomeMain()"><span class="mh-tab-ic">🏠</span><span class="mh-tab-lb">홈</span></div>
+  <div class="mh-tab-item" onclick="go('mp')"><span class="mh-tab-ic">👥</span><span class="mh-tab-lb">인력현황</span></div>
+  <div class="mh-tab-item" onclick="go('ho')"><span class="mh-tab-ic">🔄</span><span class="mh-tab-lb">인수인계</span></div>
+  <div class="mh-tab-item" onclick="go('admin')"><span class="mh-tab-ic">⚙️</span><span class="mh-tab-lb">관리</span></div>
+</div>
 <div id="sMain" class="scr">
   <div class="app-hd">
     <div class="logo-w"><div class="logo-img"><img src="data:image/png;base64,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AAIACgAAAIoAgoCKAIKAigAAACACoAAB4CoCieAB4HgAAKCCoCgAAAAAIoAAAAAAAAAAAAAAKAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAACCgCKAAAB4AgKCAoIoAigAACKAAAICggoACSAAKCoIoAAAIoAAAAAAAAAAAAAAAAAAAAAAAACgAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAACKAAAAAIKAAAAAAAAAAAAAAAAAAAAAigAAAAAAAAAAKACAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAACgAgAAAAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAACAAAAAAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAACgAgAAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAAAAAACAAoAAAAAAAAAAAAAAAAAAAAAAAAAIAAACgAAAAAAAgAKAAACAAAAAAAAAAAAAAoAIAAAAAAAAAAAAAAAAAAACgAAAAAgAAAKAAAAAAACAAoAAAAAAAIABL//Z" alt="T1"></div><div class="logo-t"><h2>T1 환경미화사업부</h2><p>인천공항운영서비스</p></div></div>
@@ -417,6 +454,105 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     </div>
     <div class="user-chip" onclick="showInfo()"><div class="u-av" id="uAv">관</div><span id="uNm">관리자</span></div>
   </div>
+  <div class="mh-dots" id="mhDots">
+    <div class="mh-dot" id="mhDot0"></div>
+    <div class="mh-dot on" id="mhDot1"></div>
+    <div class="mh-dot" id="mhDot2"></div>
+  </div>
+  <div class="mh-scroller" id="mhScroller">
+    <div class="mh-panel" id="mhPanelMenu">
+  <div class="mh-menu-head">
+    <div class="mh-eyebrow-row">
+      <div class="mh-eyebrow">PANEL 1 · MENU</div>
+      <div class="mh-swipe-hint">👈 좌우로 스와이프</div>
+    </div>
+    <div class="mh-menu-title">전체 메뉴</div>
+  </div>
+  <div class="menu-grid">
+    <button class="menu-btn" onclick="go('mp')">
+      <span class="menu-icon">👥</span>
+      <div class="menu-title">인력현황</div>
+      <div class="menu-desc">구역별 인원 입력 및 현황 조회</div>
+      <span class="menu-arrow">입력하기 →</span>
+    </button>
+    <button class="menu-btn" onclick="go('ho')">
+      <span class="menu-icon">🔄</span>
+      <div class="menu-title">인수인계</div>
+      <div class="menu-desc">오전·오후·야간 인계 작성/확인</div>
+      <span class="menu-arrow">작성하기 →</span>
+    </button>
+    <button class="menu-btn" onclick="go('chat')">
+      <span class="menu-icon">📋</span>
+      <div class="menu-title">사규 열람</div>
+      <div class="menu-desc">사내 규정 및 지침서 열람</div>
+      <span class="menu-arrow">열람하기 →</span>
+    </button>
+    <button class="menu-btn" onclick="go('iso9001')">
+      <span class="menu-icon">📘</span>
+      <div class="menu-title">ISO9001</div>
+      <div class="menu-desc">ISO9001 문서 열람</div>
+      <span class="menu-arrow">열람하기 →</span>
+    </button>
+    <button class="menu-btn" onclick="go('safety')">
+      <span class="menu-icon">⛑️</span>
+      <div class="menu-title">안전작업절차서</div>
+      <div class="menu-desc">안전작업절차서 PDF 열람</div>
+      <span class="menu-arrow">열람하기 →</span>
+    </button>
+    <button class="menu-btn" onclick="go('veh')">
+      <span class="menu-icon">🚗</span>
+      <div class="menu-title">차량운행기록</div>
+      <div class="menu-desc">업무용 차량 운행 기록 작성</div>
+      <span class="menu-arrow">작성하기 →</span>
+    </button>
+    <button class="menu-btn" onclick="go('kpi')">
+      <span class="menu-icon">📊</span>
+      <div class="menu-title">과업평가지표</div>
+      <div class="menu-desc">분기 수검 지표 월별 기록</div>
+      <span class="menu-arrow">입력하기 →</span>
+    </button>
+    <button class="menu-btn" onclick="go('facility')">
+      <span class="menu-icon">🏢</span>
+      <div class="menu-title">시설현황</div>
+      <div class="menu-desc">시설물 조사 데이터 집계</div>
+      <span class="menu-arrow">조회하기 →</span>
+    </button>
+    <button class="menu-btn" onclick="go('voc')">
+      <span class="menu-icon">📞</span>
+      <div class="menu-title">ARS 민원</div>
+      <div class="menu-desc">민원 전화 접수 및 처리현황</div>
+      <span class="menu-arrow">접수하기 →</span>
+    </button>
+    <button class="menu-btn" onclick="go('lost')">
+      <span class="menu-icon">🎒</span>
+      <div class="menu-title">습득물 관리</div>
+      <div class="menu-desc">습득물 접수 · 폐기 · 유실물 처리</div>
+      <span class="menu-arrow">관리하기 →</span>
+    </button>
+    <button class="menu-btn" onclick="go('equipment')">
+      <span class="menu-icon">🔧</span>
+      <div class="menu-title">장비현황</div>
+      <div class="menu-desc">장비 목록 엑셀 업로드 및 현황 조회</div>
+      <span class="menu-arrow">조회하기 →</span>
+    </button>
+    <button class="menu-btn" onclick="go('waste')">
+      <span class="menu-icon">♻️</span>
+      <div class="menu-title">폐기물 처리현황</div>
+      <div class="menu-desc">소각·재활용 처리량 입력 및 이력</div>
+      <span class="menu-arrow">입력하기 →</span>
+    </button>
+    <button class="menu-btn" id="adminBtn" onclick="go('admin')" style="display:none;position:relative">
+      <span class="menu-icon">⚙️</span>
+      <div class="menu-title">관리자</div>
+      <div class="menu-desc">승인·사용자·공지·다운로드</div>
+      <div id="pendBadge" style="display:none;position:absolute;top:8px;right:8px;background:var(--danger);color:white;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:800;line-height:18px;text-align:center"></div>
+      <span class="menu-arrow">관리하기 →</span>
+    </button>
+  </div>
+  <div style="height:20px"></div>
+  <div style="height:20px"></div>
+    </div>
+    <div class="mh-panel" id="mhPanelDash">
   <div style="padding:14px 13px 6px;display:flex;align-items:center;justify-content:space-between">
     <div>
       <h1 style="font-size:18px;font-weight:800;color:var(--g7)">운영현황</h1>
@@ -820,6 +956,8 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     </div>
   </div>
 
+    </div>
+    <div class="mh-panel" id="mhPanelNotice">
   <!-- 공지사항 목록 -->
   <div class="sec-lbl">📢 공지사항</div>
   <div class="card" style="margin-bottom:13px"><div style="border-radius:var(--r2);overflow:hidden" id="noticeListWrap">
@@ -912,90 +1050,33 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     </div>
   </div>
 
-  <div class="sec-lbl">메뉴</div>
-  <div class="menu-grid">
-    <button class="menu-btn" onclick="go('mp')">
-      <span class="menu-icon">👥</span>
-      <div class="menu-title">인력현황</div>
-      <div class="menu-desc">구역별 인원 입력 및 현황 조회</div>
-      <span class="menu-arrow">입력하기 →</span>
-    </button>
-    <button class="menu-btn" onclick="go('ho')">
-      <span class="menu-icon">🔄</span>
-      <div class="menu-title">인수인계</div>
-      <div class="menu-desc">오전·오후·야간 인계 작성/확인</div>
-      <span class="menu-arrow">작성하기 →</span>
-    </button>
-    <button class="menu-btn" onclick="go('chat')">
-      <span class="menu-icon">📋</span>
-      <div class="menu-title">사규 열람</div>
-      <div class="menu-desc">사내 규정 및 지침서 열람</div>
-      <span class="menu-arrow">열람하기 →</span>
-    </button>
-    <button class="menu-btn" onclick="go('iso9001')">
-      <span class="menu-icon">📘</span>
-      <div class="menu-title">ISO9001</div>
-      <div class="menu-desc">ISO9001 문서 열람</div>
-      <span class="menu-arrow">열람하기 →</span>
-    </button>
-    <button class="menu-btn" onclick="go('safety')">
-      <span class="menu-icon">⛑️</span>
-      <div class="menu-title">안전작업절차서</div>
-      <div class="menu-desc">안전작업절차서 PDF 열람</div>
-      <span class="menu-arrow">열람하기 →</span>
-    </button>
-    <button class="menu-btn" onclick="go('veh')">
-      <span class="menu-icon">🚗</span>
-      <div class="menu-title">차량운행기록</div>
-      <div class="menu-desc">업무용 차량 운행 기록 작성</div>
-      <span class="menu-arrow">작성하기 →</span>
-    </button>
-    <button class="menu-btn" onclick="go('kpi')">
-      <span class="menu-icon">📊</span>
-      <div class="menu-title">과업평가지표</div>
-      <div class="menu-desc">분기 수검 지표 월별 기록</div>
-      <span class="menu-arrow">입력하기 →</span>
-    </button>
-    <button class="menu-btn" onclick="go('facility')">
-      <span class="menu-icon">🏢</span>
-      <div class="menu-title">시설현황</div>
-      <div class="menu-desc">시설물 조사 데이터 집계</div>
-      <span class="menu-arrow">조회하기 →</span>
-    </button>
-    <button class="menu-btn" onclick="go('voc')">
-      <span class="menu-icon">📞</span>
-      <div class="menu-title">ARS 민원</div>
-      <div class="menu-desc">민원 전화 접수 및 처리현황</div>
-      <span class="menu-arrow">접수하기 →</span>
-    </button>
-    <button class="menu-btn" onclick="go('lost')">
-      <span class="menu-icon">🎒</span>
-      <div class="menu-title">습득물 관리</div>
-      <div class="menu-desc">습득물 접수 · 폐기 · 유실물 처리</div>
-      <span class="menu-arrow">관리하기 →</span>
-    </button>
-    <button class="menu-btn" onclick="go('equipment')">
-      <span class="menu-icon">🔧</span>
-      <div class="menu-title">장비현황</div>
-      <div class="menu-desc">장비 목록 엑셀 업로드 및 현황 조회</div>
-      <span class="menu-arrow">조회하기 →</span>
-    </button>
-    <button class="menu-btn" onclick="go('waste')">
-      <span class="menu-icon">♻️</span>
-      <div class="menu-title">폐기물 처리현황</div>
-      <div class="menu-desc">소각·재활용 처리량 입력 및 이력</div>
-      <span class="menu-arrow">입력하기 →</span>
-    </button>
-    <button class="menu-btn" id="adminBtn" onclick="go('admin')" style="display:none;position:relative">
-      <span class="menu-icon">⚙️</span>
-      <div class="menu-title">관리자</div>
-      <div class="menu-desc">승인·사용자·공지·다운로드</div>
-      <div id="pendBadge" style="display:none;position:absolute;top:8px;right:8px;background:var(--danger);color:white;border-radius:50%;width:18px;height:18px;font-size:10px;font-weight:800;line-height:18px;text-align:center"></div>
-      <span class="menu-arrow">관리하기 →</span>
-    </button>
+    </div>
   </div>
-  <div style="height:20px"></div>
-  <div style="height:20px"></div>
+  <script>
+  (function(){
+    var sc = document.getElementById('mhScroller');
+    var dots = [document.getElementById('mhDot0'), document.getElementById('mhDot1'), document.getElementById('mhDot2')];
+    if(!sc || !dots[0]) return;
+    function updateDots(){
+      var idx = Math.round(sc.scrollLeft / Math.max(sc.clientWidth,1));
+      dots.forEach(function(d,i){ if(d) d.classList.toggle('on', i===idx); });
+    }
+    sc.addEventListener('scroll', updateDots, {passive:true});
+    // 로그인 전에는 화면이 숨겨져 있어(너비 0) 바로 스크롤 위치를 잡을 수 없으므로,
+    // 화면이 실제로 보일 때까지(너비가 생길 때까지) 기다렸다가 패널2(운영현황)로 이동
+    var mhInitTries = 0;
+    function mhInitScroll(){
+      if(sc.clientWidth > 0){
+        sc.scrollLeft = sc.clientWidth;
+        updateDots();
+      } else if(mhInitTries < 100){
+        mhInitTries++;
+        setTimeout(mhInitScroll, 100);
+      }
+    }
+    mhInitScroll();
+  })();
+  </script>
 </div>
 <div id="sMp" class="scr">
   <div class="app-hd">
@@ -2212,6 +2293,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div id="adT2" style="padding:11px 14px;font-size:12px;font-weight:600;color:var(--g3);cursor:pointer;white-space:nowrap" onclick="adTab(2)">공지사항</div>
     <div id="adT3" style="padding:11px 14px;font-size:12px;font-weight:600;color:var(--g3);cursor:pointer;white-space:nowrap" onclick="adTab(3)">산업재해</div>
     <div id="adT4" style="padding:11px 14px;font-size:12px;font-weight:600;color:var(--g3);cursor:pointer;white-space:nowrap" onclick="adTab(4)">다운로드</div>
+    <div id="adT5" style="padding:11px 14px;font-size:12px;font-weight:600;color:var(--g3);cursor:pointer;white-space:nowrap;position:relative" onclick="adTab(5)">비번재설정<span id="pwReqBadge" style="display:none;position:absolute;top:6px;right:2px;background:var(--danger);color:white;border-radius:50%;width:15px;height:15px;font-size:9px;font-weight:800;line-height:15px;text-align:center"></span></div>
   </div>
   <div id="adP0">
     <div class="pg-hd"><div><h1>가입 승인</h1><small id="pendCount" style="color:var(--danger);font-weight:600"></small></div></div>
@@ -2247,7 +2329,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div class="card"><div class="cb" style="padding:0" id="indList"><p style="text-align:center;padding:22px;color:var(--g3);font-size:12px">등록된 이력이 없습니다</p></div></div>
     <div style="height:20px"></div>
   </div>
-  <div   <div id="adP4" style="display:none">
+  <div id="adP4" style="display:none">
     <div class="pg-hd">
       <div><h1>다운로드</h1></div>
       <button onclick="openDataReset()" style="padding:7px 13px;background:var(--danger-bg);color:var(--danger);border:1.5px solid rgba(217,64,64,.3);border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">🗑️ 데이터 초기화</button>
@@ -2334,9 +2416,15 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     </div></div>
     <div style="height:20px"></div>
   </div>
-    
+  <div id="adP5" style="display:none">
+    <div class="pg-hd"><div><h1>비밀번호 재설정 요청</h1></div></div>
+    <div class="card"><div class="cb" style="padding:0" id="pwReqList">
+      <div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">불러오는 중...</div>
+    </div></div>
     <div style="height:20px"></div>
   </div>
+    
+    <div style="height:20px"></div>
 </div>
 
 <!-- ══ 모달들 ══ -->
@@ -2408,6 +2496,38 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   </div>
 </div>
 <div id="regOk" class="modal-bg"><div class="modal"><div style="padding:26px 20px;text-align:center"><div style="font-size:46px;margin-bottom:11px">✅</div><div style="font-size:16px;font-weight:800;color:var(--g7);margin-bottom:7px">신청 완료!</div><div style="font-size:13px;color:var(--g4);line-height:1.65;margin-bottom:20px">관리자 승인 후 로그인하실 수 있습니다.</div><button onclick="closeRegOk()" class="btn-prim">로그인으로 돌아가기</button></div></div></div>
+<div id="mgrAttPickModal" class="modal-bg"><div class="modal" style="max-width:300px">
+  <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3 id="mgrAttPickTitle">상태 선택</h3><button class="m-x" onclick="closeMgrAttPick()">×</button></div>
+  <div style="padding:17px">
+    <button onclick="setMgrAtt('출근')" style="width:100%;padding:12px;margin-bottom:8px;background:var(--teal-bg);color:var(--teal2);border:1.5px solid var(--teal2);border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">✔ 출근</button>
+    <button onclick="setMgrAtt('출장')" style="width:100%;padding:12px;margin-bottom:8px;background:#EBF0FF;color:#1B4FBE;border:1.5px solid #1B4FBE;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">✈ 출장</button>
+    <button onclick="setMgrAtt('교육')" style="width:100%;padding:12px;margin-bottom:8px;background:#F3EEFC;color:#6B21A8;border:1.5px solid #6B21A8;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">📚 교육</button>
+    <button onclick="setMgrAtt('')" style="width:100%;padding:12px;background:var(--g1);color:var(--g5);border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">미확인으로 취소</button>
+  </div>
+</div></div>
+
+<div id="findIdModal" class="modal-bg"><div class="modal" style="max-width:340px">
+  <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🔎 아이디 찾기</h3><button class="m-x" onclick="closeFindId()">×</button></div>
+  <div style="padding:15px 17px">
+    <div class="fg"><label class="f-lbl">이름</label><input type="text" id="fidName" class="ri" placeholder="홍길동" style="margin-bottom:0"></div>
+    <div id="fidErr" style="display:none;background:var(--danger-bg);border-radius:var(--r2);padding:8px 11px;font-size:11px;color:var(--danger);font-weight:600;margin-top:8px"></div>
+    <div id="fidResult" style="display:none;margin-top:10px"></div>
+    <button onclick="doFindId()" class="btn-prim" style="margin-top:12px">조회하기</button>
+  </div>
+</div></div>
+
+<div id="pwReqModal" class="modal-bg"><div class="modal" style="max-width:340px">
+  <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🔒 비밀번호 재설정 요청</h3><button class="m-x" onclick="closePwReq()">×</button></div>
+  <div style="padding:15px 17px">
+    <p style="font-size:11.5px;color:var(--g5);line-height:1.6;margin-bottom:12px">이름·아이디를 남겨주시면 관리자가 본인 확인 후 임시 비밀번호를 발급해드립니다. (전화나 사내 연락으로 안내드릴 수 있어요)</p>
+    <div class="fg"><label class="f-lbl">이름</label><input type="text" id="pwqName" class="ri" placeholder="홍길동" style="margin-bottom:0"></div>
+    <div class="fg"><label class="f-lbl">아이디</label><input type="text" id="pwqId" class="ri" placeholder="본인 아이디" style="margin-bottom:0"></div>
+    <div class="fg"><label class="f-lbl">비고 (연락처 등, 선택)</label><input type="text" id="pwqNote" class="ri" placeholder="연락받을 방법을 남겨주세요" style="margin-bottom:0"></div>
+    <div id="pwqErr" style="display:none;background:var(--danger-bg);border-radius:var(--r2);padding:8px 11px;font-size:11px;color:var(--danger);font-weight:600;margin-top:8px"></div>
+    <button onclick="doSubmitPwReq()" class="btn-prim" style="margin-top:12px">요청 제출</button>
+  </div>
+</div></div>
+
 <div id="indModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--danger),#b03030)"><h3>🚑 산업재해 등록</h3><button class="m-x" onclick="closeInd()">×</button></div><div style="padding:15px 17px;max-height:60vh;overflow-y:auto"><div class="fg"><label class="f-lbl">결정통지일자</label><input type="date" id="indDate" class="ri" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">재해자</label><input type="text" id="indPer" class="ri" placeholder="예: 오전1팀 홍길동" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">발생 장소</label><input type="text" id="indLoc" class="ri" placeholder="예: 3F 동편 화장실" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">재해 유형</label><div class="rg" id="indTG"><div class="rp" onclick="pickIT(this)">전도</div><div class="rp" onclick="pickIT(this)">낙상</div><div class="rp" onclick="pickIT(this)">골절</div><div class="rp" onclick="pickIT(this)">타박상</div><div class="rp" onclick="pickIT(this)">열상</div><div class="rp" onclick="pickIT(this)">요통</div><div class="rp" onclick="pickIT(this)">협착</div><div class="rp" onclick="pickIT(this)">충돌</div><div class="rp" onclick="pickIT(this)">기타</div></div><input type="text" id="indTypeCustom" class="ri" placeholder="재해 유형 직접 입력" style="display:none;margin-top:7px;margin-bottom:0"></div><div class="fg"><label class="f-lbl">발생 경위 및 조치</label><textarea id="indDesc" class="f-ta show" rows="3" placeholder="발생 경위, 응급조치 등"></textarea></div><div id="indErr" style="display:none;background:var(--danger-bg);border-radius:var(--r2);padding:8px 11px;font-size:11px;color:var(--danger);font-weight:600;margin-bottom:10px"></div><button onclick="subInd()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--danger),#b03030);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">등록 완료</button></div></div></div>
 <div id="noticeM" class="modal-bg"><div class="modal" style="max-width:350px"><div style="background:linear-gradient(135deg,var(--navy),var(--teal2));padding:15px 17px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:18px">📢</span><div><div style="color:white;font-size:14px;font-weight:800">전체 공지사항</div><div style="color:rgba(255,255,255,.6);font-size:10px" id="noticeD"></div></div></div><button onclick="closeN()" style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:26px;height:26px;color:white;font-size:15px;cursor:pointer">×</button></div><div style="padding:17px;max-height:46vh;overflow-y:auto"><div style="font-size:15px;font-weight:800;color:var(--g7);margin-bottom:9px" id="noticeT"></div><div style="font-size:13px;color:var(--g5);line-height:1.7" id="noticeB"></div></div><div style="padding:11px 17px 17px;display:flex;gap:9px;border-top:1px solid var(--g2)"><label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--g4);cursor:pointer;flex:1"><input type="checkbox" id="noSkip" style="accent-color:var(--teal)"> 오늘 다시 보지 않기</label><button onclick="closeN()" style="padding:9px 17px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer">확인</button></div></div></div>
 
@@ -2665,6 +2785,13 @@ function hideM(id){document.getElementById(id).classList.remove('on');}
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
 const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sSafety','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste'];
+function goHomeMain(){
+  go('main');
+  setTimeout(function(){
+    var sc = document.getElementById('mhScroller');
+    if(sc) sc.scrollLeft = sc.clientWidth;
+  }, 60);
+}
 function go(name){
   if(me&&me.role==='vehicle_guest'&&name!=='veh'&&name!=='login'){ return; }
   if(name==='admin'&&(!me||me.role!=='admin')){ toast('⚠️ 관리자만 접근할 수 있습니다'); return; }
@@ -2820,6 +2947,7 @@ async function doLogin(){
 
 function finishLogin(){
   applyRoleUI();
+  var gt=document.getElementById('globalTabbar'); if(gt) gt.style.display='flex';
   // 세션 저장 (새로고침 시 자동 로그인)
   try{ localStorage.setItem('t1_me', JSON.stringify(me)); }catch(e){}
   // 메모리 초기화 먼저 (어제 데이터 화면 노출 방지)
@@ -2850,6 +2978,7 @@ function finishLogin(){
     loadPendingUsers();
     loadUserList();
     loadPendingBadge();
+    loadPwReqBadge();
   }
   var now2=new Date(Date.now()+9*3600000);
   var ldl=document.getElementById('leaderDateLbl');if(ldl)ldl.textContent=now2.toLocaleDateString('ko-KR');
@@ -2889,6 +3018,64 @@ function showInfo(){
 function closeMy(){hideM('myInfoModal');}
 function goReg(){go('reg');}
 
+// ── 아이디 찾기 ──
+function openFindId(){
+  document.getElementById('fidName').value='';
+  document.getElementById('fidErr').style.display='none';
+  document.getElementById('fidResult').style.display='none';
+  document.getElementById('fidResult').innerHTML='';
+  showM('findIdModal');
+}
+function closeFindId(){ hideM('findIdModal'); }
+async function doFindId(){
+  var name = (document.getElementById('fidName').value||'').trim();
+  var err = document.getElementById('fidErr');
+  var resultEl = document.getElementById('fidResult');
+  err.style.display='none'; resultEl.style.display='none'; resultEl.innerHTML='';
+  if(!name){ err.textContent='이름을 입력해주세요'; err.style.display='block'; return; }
+  try{
+    var res = await sb.rpc('find_masked_id', {p_name:name});
+    if(res.error) throw res.error;
+    var rows = res.data||[];
+    if(!rows.length){
+      err.textContent='일치하는 계정을 찾을 수 없습니다. 이름을 다시 확인해주세요.';
+      err.style.display='block';
+      return;
+    }
+    resultEl.innerHTML = rows.map(function(r){
+      return '<div style="background:var(--teal-bg);border-radius:var(--r2);padding:10px 12px;margin-bottom:6px">'
+        +'<div style="font-size:11px;color:var(--g5)">'+(r.team||'')+'</div>'
+        +'<div style="font-size:15px;font-weight:800;color:var(--teal2);letter-spacing:.5px">'+r.masked_id+'</div>'
+        +'</div>';
+    }).join('') + '<div style="font-size:10.5px;color:var(--g4);margin-top:4px">앞뒤 일부만 표시됩니다. 정확한 아이디가 기억나지 않으면 관리자에게 문의해주세요.</div>';
+    resultEl.style.display='block';
+  }catch(e){ err.textContent='조회 중 오류: '+String(e.message||e); err.style.display='block'; }
+}
+
+// ── 비밀번호 재설정 요청 ──
+function openPwReq(){
+  document.getElementById('pwqName').value='';
+  document.getElementById('pwqId').value='';
+  document.getElementById('pwqNote').value='';
+  document.getElementById('pwqErr').style.display='none';
+  showM('pwReqModal');
+}
+function closePwReq(){ hideM('pwReqModal'); }
+async function doSubmitPwReq(){
+  var name=(document.getElementById('pwqName').value||'').trim();
+  var claimedId=(document.getElementById('pwqId').value||'').trim();
+  var note=(document.getElementById('pwqNote').value||'').trim();
+  var err=document.getElementById('pwqErr');
+  err.style.display='none';
+  if(!name || !claimedId){ err.textContent='이름과 아이디를 모두 입력해주세요'; err.style.display='block'; return; }
+  try{
+    var res = await sb.rpc('submit_pw_reset_request', {p_name:name, p_claimed_id:claimedId, p_note:note||null});
+    if(res.error) throw res.error;
+    closePwReq();
+    toast('✅ 요청이 접수되었습니다. 관리자 확인 후 안내드릴게요.');
+  }catch(e){ err.textContent='요청 중 오류: '+String(e.message||e); err.style.display='block'; }
+}
+
 // ── 비밀번호 변경 ──
 function closePwChange(){hideM('pwChangeModal');['pwOld','pwNew','pwNew2'].forEach(function(id){var e=document.getElementById(id);if(e)e.value='';});var err=document.getElementById('pwChangeErr');if(err)err.style.display='none';}
 async function savePwChange(){
@@ -2915,6 +3102,7 @@ async function savePwChange(){
 function doLogout(){
   me=null;
   try{localStorage.removeItem('t1_me');}catch(e){}
+  var gt=document.getElementById('globalTabbar'); if(gt) gt.style.display='none';
   goLogin();
   toast('로그아웃되었습니다');
 }
@@ -4258,9 +4446,10 @@ async function loadHandoverByShift(shift){
   }
 }
 function adTab(n){
-  tabSwitch('ad',n,5);
+  tabSwitch('ad',n,6);
   if(n===0) loadPendingUsers();
   if(n===1) loadUserList();
+  if(n===5) loadPwResetRequests();
 }
 function vhTab(n){tabSwitch('vh',n,3);if(n===0)autoFillBefore();}
 
@@ -6842,6 +7031,68 @@ async function loadPendingBadge(){
   }catch(e){}
 }
 
+// ── 비밀번호 재설정 요청 (관리자) ──
+async function loadPwReqBadge(){
+  if(!me||me.role!=='admin') return;
+  try{
+    var res=await sb.from('pw_reset_requests').select('id').eq('status','pending');
+    var cnt=(res.data||[]).length;
+    var badge=document.getElementById('pwReqBadge');
+    if(badge){
+      if(cnt>0){ badge.style.display='block'; badge.textContent=cnt; }
+      else { badge.style.display='none'; }
+    }
+  }catch(e){}
+}
+
+async function loadPwResetRequests(){
+  var el=document.getElementById('pwReqList');
+  if(!el) return;
+  try{
+    var res=await sb.from('pw_reset_requests').select('*').order('created_at',{ascending:false});
+    if(res.error||!res.data||!res.data.length){
+      el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">요청이 없습니다</div>';
+      return;
+    }
+    el.innerHTML='';
+    res.data.forEach(function(r){
+      var div=document.createElement('div');
+      div.className='u-row';
+      div.style.cssText='flex-direction:column;align-items:flex-start;gap:8px';
+      var when=new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleString('ko-KR');
+      var statusPill = r.status==='pending'
+        ? '<span style="padding:3px 9px;background:var(--warn-bg);color:var(--warn);border-radius:20px;font-size:10px;font-weight:700">대기중</span>'
+        : '<span style="padding:3px 9px;background:var(--teal-bg);color:var(--teal2);border-radius:20px;font-size:10px;font-weight:700">처리완료</span>';
+      var actionHtml = r.status==='pending'
+        ? '<div style="display:flex;gap:6px;margin-top:8px;width:100%"><input type="password" class="pwreq-newpw" placeholder="임시 비밀번호(6자 이상)" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px"><button class="pwreq-resolve-btn" data-id="'+r.id+'" data-claimed="'+r.claimed_id+'" style="padding:8px 14px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:11px;font-weight:700;cursor:pointer;white-space:nowrap">발급·완료처리</button></div>'
+        : '';
+      div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="u-info"><div class="u-ico">'+r.name[0]+'</div><div><div class="u-name">'+r.name+' <span style="font-weight:400;color:var(--g4);font-size:11px">('+r.claimed_id+')</span></div><div class="u-sub">'+(r.note?r.note:'비고 없음')+'</div></div></div>'+statusPill+'</div><div style="font-size:10px;color:var(--g4)">'+when+'</div>'+actionHtml;
+      var btn = div.querySelector('.pwreq-resolve-btn');
+      if(btn){
+        btn.onclick=function(){
+          var pwInput = div.querySelector('.pwreq-newpw');
+          resolvePwReq(this.dataset.id, this.dataset.claimed, pwInput.value, r.name);
+        };
+      }
+      el.appendChild(div);
+    });
+  }catch(e){console.error(e);}
+}
+
+async function resolvePwReq(reqId, claimedId, newPw, name){
+  if(!newPw || newPw.length<6){ toast('임시 비밀번호는 6자 이상 입력해주세요'); return; }
+  if(!confirm(claimedId+' 계정의 비밀번호를 새로 발급하시겠습니까?\n(본인 확인 후 진행해주세요)')) return;
+  try{
+    var res = await sb.rpc('admin_reset_user_password', {p_target_email: claimedId, p_new_password: newPw});
+    if(res.error) throw res.error;
+    if(res.data===false){ toast('⚠️ 해당 아이디의 활성 계정을 찾을 수 없습니다. 아이디를 다시 확인해주세요.'); return; }
+    await sb.from('pw_reset_requests').update({status:'resolved', resolved_at:new Date().toISOString(), resolved_by: me?me.name:''}).eq('id', reqId);
+    toast('✅ '+name+'님 비밀번호가 재설정되었습니다');
+    loadPwResetRequests();
+    loadPwReqBadge();
+  }catch(e){ toast('오류: '+String(e.message||e)); }
+}
+
 async function loadPendingUsers(){
   var el=document.getElementById('pendList');
   if(!el) return;
@@ -8994,6 +9245,7 @@ async function refreshMpDataLight(){
     if(saved){
       me = JSON.parse(saved);
       applyRoleUI();
+      var gt0=document.getElementById('globalTabbar'); if(gt0) gt0.style.display='flex';
       // 메모리 초기화 먼저 (어제 데이터 화면 노출 방지)
       mpDataByLeader={오전:{},오후:{},야간:{}};
       mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
@@ -10011,20 +10263,25 @@ function renderMgrAttendance(viewDate){
         var key = team+'_'+name;
         var att = dataSrc[key];
         var isChecked = att && att.checked;
+        var status = att && att.status;
         var checkedBy = att ? att.checked_by : '';
         var checkedTime = att && att.checked_at ? toKSTTime(att.checked_at) : '';
 
         // 클릭 권한: 당일에만 가능. 관리자 전체, 해당팀 조장/팀장 (운영팀은 관리자만)
         var canCheck = viewDate==='today' && (isAdmin || (team!=='운영' && me && myTeam === team));
 
-        var bg = isChecked ? 'background:var(--teal-bg);border-color:var(--teal2);color:var(--teal2)' : 'background:var(--g1);border-color:var(--g2);color:var(--g4)';
+        var statusIcon = status==='출장' ? '✈' : status==='교육' ? '📚' : isChecked ? '✔' : '';
+        var bg = status==='출장' ? 'background:#EBF0FF;border-color:#1B4FBE;color:#1B4FBE'
+               : status==='교육' ? 'background:#F3EEFC;border-color:#6B21A8;color:#6B21A8'
+               : isChecked ? 'background:var(--teal-bg);border-color:var(--teal2);color:var(--teal2)'
+               : 'background:var(--g1);border-color:var(--g2);color:var(--g4)';
         var cursor = canCheck ? 'cursor:pointer' : 'cursor:default';
-        var onclick = canCheck ? 'onclick="toggleMgrAtt(\'' + team + '\',\'' + name + '\')"' : '';
+        var onclick = canCheck ? 'onclick="openMgrAttPicker(\'' + team + '\',\'' + name + '\')"' : '';
 
         h += '<div '+onclick+' style="padding:6px 10px;border-radius:var(--r2);border:1.5px solid;font-size:11px;font-weight:600;'+bg+';'+cursor+';min-width:60px;text-align:center">';
-        h += '<div>'+(isChecked?'✔ ':'')+name+'</div>';
+        h += '<div>'+(statusIcon?statusIcon+' ':'')+name+'</div>';
         if(isChecked && checkedTime){
-          h += '<div style="font-size:9px;color:var(--g4);margin-top:1px">'+checkedTime+(checkedBy&&checkedBy!==me.name?' ('+checkedBy+')':'')+'</div>';
+          h += '<div style="font-size:9px;color:inherit;margin-top:1px;opacity:.85">'+(status&&status!=='출근'?status+' · ':'')+checkedTime+(checkedBy&&checkedBy!==me.name?' ('+checkedBy+')':'')+'</div>';
         }
         h += '</div>';
       });
@@ -10074,11 +10331,21 @@ function updateDashMgrAtt(){
   }).join('<span style="color:var(--g2)"> · </span>');
 }
 
-async function toggleMgrAtt(team, name){
+var mgrAttPickTarget = null;
+function openMgrAttPicker(team, name){
+  mgrAttPickTarget = {team:team, name:name};
+  var t = document.getElementById('mgrAttPickTitle');
+  if(t) t.textContent = name + ' 상태 선택';
+  showM('mgrAttPickModal');
+}
+function closeMgrAttPick(){ hideM('mgrAttPickModal'); mgrAttPickTarget = null; }
+
+async function setMgrAtt(status){
+  if(!mgrAttPickTarget) return;
+  var team = mgrAttPickTarget.team, name = mgrAttPickTarget.name;
   var today = new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   var key = team+'_'+name;
-  var att = mgrAttData[key];
-  var newChecked = !(att && att.checked);
+  var checked = !!status;
   // 순수 UTC로 저장 (KST 보정은 표시 시점 toKSTTime에서만 수행)
   var nowISO = new Date().toISOString();
   var checkerName = me ? me.name : '';
@@ -10089,21 +10356,24 @@ async function toggleMgrAtt(team, name){
       team: team,
       name: name,
       role: name.includes('팀장') ? '팀장' : '조장',
-      checked: newChecked,
-      checked_by: newChecked ? checkerName : null,
-      checked_at: newChecked ? nowISO : null
+      checked: checked,
+      status: checked ? status : null,
+      checked_by: checked ? checkerName : null,
+      checked_at: checked ? nowISO : null
     },{onConflict:'date,team,name'});
     if(res.error) throw res.error;
     // 로컬 즉시 반영
-    if(newChecked){
-      mgrAttData[key] = {team:team, name:name, checked:true, checked_by:checkerName, checked_at:nowISO};
+    if(checked){
+      mgrAttData[key] = {team:team, name:name, checked:true, status:status, checked_by:checkerName, checked_at:nowISO};
     } else {
-      mgrAttData[key] = {team:team, name:name, checked:false, checked_by:null, checked_at:null};
+      mgrAttData[key] = {team:team, name:name, checked:false, status:null, checked_by:null, checked_at:null};
     }
+    closeMgrAttPick();
     renderMgrAttendance();
     updateDashMgrAtt();
   }catch(e){ toast('저장 오류: '+String(e.message||e)); }
 }
+
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', function(){
