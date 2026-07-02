@@ -309,6 +309,9 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           select: function(cols){ _select = cols||'*'; return obj; },
           eq:     function(col,val){ _params[col]='eq.'+val; return obj; },
           neq:    function(col,val){ _params[col]='neq.'+val; return obj; },
+          gte:    function(col,val){ _params[col]='gte.'+val; return obj; },
+          lte:    function(col,val){ _params[col]='lte.'+val; return obj; },
+          offset: function(n){ _params['offset']=n; return obj; },
           order:  function(col,o){ _params['order']=col+(o&&o.ascending===false?'.desc':'.asc'); return obj; },
           limit:  function(n){ _params['limit']=n; return obj; },
           insert: function(body){ _method='POST'; _body=body; return obj; },
@@ -979,6 +982,63 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           <span style="font-size:20px;font-weight:900;color:var(--teal2)">15<span style="font-size:10px;color:var(--g4)">명</span></span>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- 월간 통계 -->
+  <div id="monthlyStatsSec">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 13px 10px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="sec-lbl" id="msSecTitle" style="padding:0">📊 월간 통계</div>
+        <div style="display:flex;background:var(--g2);border-radius:20px;padding:2px">
+          <div id="msModeM" onclick="msSetMode('month')" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;background:white;color:var(--teal2);box-shadow:0 1px 3px rgba(0,0,0,.12)">월간</div>
+          <div id="msModeY" onclick="msSetMode('year')" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;color:var(--g4)">연간</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:5px">
+        <button onclick="msMove(-1)" style="width:26px;height:26px;border:1px solid var(--g2);background:white;border-radius:50%;font-size:10px;color:var(--g5);cursor:pointer;line-height:1">◀</button>
+        <span id="msMonthLbl" style="font-size:12px;font-weight:800;color:var(--g6);min-width:82px;text-align:center">-</span>
+        <button onclick="msMove(1)" id="msNextBtn" style="width:26px;height:26px;border:1px solid var(--g2);background:white;border-radius:50%;font-size:10px;color:var(--g5);cursor:pointer;line-height:1">▶</button>
+      </div>
+    </div>
+    <div id="msErrBanner" style="display:none;margin:0 13px 9px;padding:10px 13px;background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:var(--r2);font-size:11px;color:var(--danger);font-weight:700;align-items:center;justify-content:space-between">
+      <span>⚠️ 통계 데이터를 불러오지 못했습니다</span>
+      <button onclick="loadMonthlyStats()" style="padding:4px 10px;background:var(--danger);color:white;border:none;border-radius:14px;font-size:10px;font-weight:800;cursor:pointer">다시시도</button>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 9px">
+      <!-- 인력현황 -->
+      <div class="ms-card" onclick="msToggle('mp')" id="msCard_mp" style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--teal2))"></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:8px;background:var(--teal-bg);display:flex;align-items:center;justify-content:center;font-size:12px">👥</span><span style="font-size:10px;font-weight:700;color:var(--g5)">인력 일평균</span></div>
+        <div style="display:flex;align-items:baseline;gap:3px"><span id="msV_mp" style="font-size:26px;font-weight:900;color:var(--teal2);line-height:1">-</span><span style="font-size:10px;color:var(--g4)">명</span></div>
+        <div id="msD_mp" style="font-size:9px;font-weight:700;margin-top:5px;color:var(--g4)">&nbsp;</div>
+      </div>
+      <!-- 인수인계 -->
+      <div class="ms-card" onclick="msToggle('ho')" id="msCard_ho" style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--navy),#3E6BB5)"></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:8px;background:var(--navy-bg);display:flex;align-items:center;justify-content:center;font-size:12px">🔄</span><span style="font-size:10px;font-weight:700;color:var(--g5)">인수인계</span></div>
+        <div style="display:flex;align-items:baseline;gap:3px"><span id="msV_ho" style="font-size:26px;font-weight:900;color:var(--navy);line-height:1">-</span><span style="font-size:10px;color:var(--g4)">건</span></div>
+        <div id="msD_ho" style="font-size:9px;font-weight:700;margin-top:5px;color:var(--g4)">&nbsp;</div>
+      </div>
+      <!-- 습득물 -->
+      <div class="ms-card" onclick="msToggle('lost')" id="msCard_lost" style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--warn),#E8A83E)"></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:8px;background:var(--warn-bg);display:flex;align-items:center;justify-content:center;font-size:12px">🧳</span><span style="font-size:10px;font-weight:700;color:var(--g5)">습득물</span></div>
+        <div style="display:flex;align-items:baseline;gap:3px"><span id="msV_lost" style="font-size:26px;font-weight:900;color:var(--warn);line-height:1">-</span><span style="font-size:10px;color:var(--g4)">건</span></div>
+        <div id="msD_lost" style="font-size:9px;font-weight:700;margin-top:5px;color:var(--g4)">&nbsp;</div>
+      </div>
+      <!-- 안전사고 -->
+      <div class="ms-card" onclick="msToggle('acc')" id="msCard_acc" style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--danger),#F07B7B)"></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:8px;background:var(--danger-bg);display:flex;align-items:center;justify-content:center;font-size:12px">⚠️</span><span style="font-size:10px;font-weight:700;color:var(--g5)">안전사고</span></div>
+        <div style="display:flex;align-items:baseline;gap:3px"><span id="msV_acc" style="font-size:26px;font-weight:900;color:var(--danger);line-height:1">-</span><span style="font-size:10px;color:var(--g4)">건</span></div>
+        <div id="msD_acc" style="font-size:9px;font-weight:700;margin-top:5px;color:var(--g4)">&nbsp;</div>
+      </div>
+    </div>
+    <div id="msDetail" style="display:none;background:white;border-radius:var(--r);margin:0 13px 9px;padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:0 15px 6px">
+      <span style="font-size:9px;color:var(--g4)">카드를 누르면 상세가 열립니다</span>
+      <span style="font-size:9px;color:var(--g4)"><span style="color:var(--teal2);font-weight:800">통계 v2</span> · <span id="msUpdated"></span></span>
     </div>
   </div>
 
@@ -3032,6 +3092,9 @@ function go(name){
     if(_kpiP0&&!_canKpi) _kpiP0.style.display='none';
     if(!_canKpi) kpiTab(1);
     loadKpiFromDB();
+  }
+  if(name==='main'){
+    if(typeof loadMonthlyStats==='function') loadMonthlyStats();
   }
 }
 
@@ -8651,6 +8714,21 @@ async function loadEquipmentFromDB(){
   }catch(e){ console.error(e); }
 }
 
+// 종료일 문자열에서 연도 추출 ('2028.2.29', '25.08.01', '2026-03-15' 모두 지원)
+function eqParseEndYear(v){
+  var s=String(v||'').trim();
+  var m=s.match(/^(\d{2,4})/);
+  if(!m) return 0;
+  var y=parseInt(m[1]);
+  if(y<100) y+=2000;
+  return (y>=2000&&y<2100)?y:0;
+}
+var eqEndFilterOn=false;
+function eqToggleEndFilter(){
+  eqEndFilterOn=!eqEndFilterOn;
+  renderEquipment();
+}
+
 function renderEquipment(){
   var infoEl=document.getElementById('eqUploadInfo');
   var statsEl=document.getElementById('eqStats');
@@ -8669,6 +8747,10 @@ function renderEquipment(){
   if(floorColIdx>=0){
     rows=rows.slice().sort(function(a,b){ return floorSortKey(a[floorColIdx])-floorSortKey(b[floorColIdx]); });
   }
+  // 당해년도 종료 집계
+  var endColIdx=headers.findIndex(function(h){ return String(h).indexOf('종료')!==-1; });
+  var curYear=new Date(Date.now()+9*3600000).getUTCFullYear();
+  var endThisYear=endColIdx>=0?rows.filter(function(r){ return eqParseEndYear(r[endColIdx])===curYear; }).length:0;
   // 검색 필터
   var kw=(document.getElementById('eqSearch')||{}).value||'';
   var filtered=rows;
@@ -8676,27 +8758,31 @@ function renderEquipment(){
     var kl=kw.toLowerCase();
     filtered=rows.filter(function(r){ return r.some(function(c){ return String(c||'').toLowerCase().includes(kl); }); });
   }
+  // 당해년도 종료 필터 (카드 클릭 토글)
+  if(eqEndFilterOn&&endColIdx>=0){
+    filtered=filtered.filter(function(r){ return eqParseEndYear(r[endColIdx])===curYear; });
+  }
   // 업로드 정보
   if(infoEl) infoEl.textContent='📅 '+equipmentData.uploadDate+(equipmentData.uploader?' · '+equipmentData.uploader:'')+'  총 '+rows.length+'건';
-  // 통계 (전체/검색결과)
+  // 통계 (전체/검색결과/당해년도 종료)
   if(statsEl){
     statsEl.innerHTML=
       '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--g2)"><div style="font-size:18px;font-weight:900;color:var(--navy)">'+rows.length+'</div><div style="font-size:10px;color:var(--g4)">전체</div></div>'+
       '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--teal)"><div style="font-size:18px;font-weight:900;color:var(--teal2)">'+filtered.length+'</div><div style="font-size:10px;color:var(--g4)">검색결과</div></div>'+
-      '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--g2)"><div style="font-size:18px;font-weight:900;color:var(--g5)">'+headers.length+'</div><div style="font-size:10px;color:var(--g4)">컬럼수</div></div>';
+      '<div onclick="eqToggleEndFilter()" style="background:'+(eqEndFilterOn?'var(--danger-bg)':'white')+';border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid '+(eqEndFilterOn?'var(--danger)':'rgba(217,64,64,.35)')+';cursor:pointer"><div style="font-size:18px;font-weight:900;color:var(--danger)">'+endThisYear+'</div><div style="font-size:10px;color:var(--danger);font-weight:700">'+curYear+'년 종료'+(eqEndFilterOn?' ✓':'')+'</div></div>';
   }
   // 테이블
   var h='<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:500px">';
   h+='<thead><tr>';
   headers.forEach(function(hd,hi){
-    var w=hi===0?'width:36px;':''; // 순번 컬럼 너비 고정
+    var w=hi===0?'width:1%;text-align:center;':''; // 순번 컬럼: 내용 크기에 맞춤
     h+='<th style="'+w+'padding:8px 10px;background:var(--navy);color:white;text-align:left;white-space:nowrap;font-size:11px">'+hd+'</th>';
   });
   h+='</tr></thead><tbody>';
   filtered.forEach(function(r,i){
     h+='<tr style="background:'+(i%2===0?'white':'var(--g1)')+';">';
     r.forEach(function(c,ci){
-      var w=ci===0?'width:36px;text-align:center;':''; // 순번 컬럼
+      var w=ci===0?'width:1%;text-align:center;':''; // 순번 컬럼: 내용 크기에 맞춤
       h+='<td style="'+w+'padding:7px 10px;border-bottom:1px solid var(--g2);white-space:nowrap;color:var(--g7)">'+( c!==null&&c!==undefined?c:'')+'</td>';
     });
     h+='</tr>';
@@ -8715,8 +8801,30 @@ function previewEquipmentFile(input){
       var ws=wb.Sheets[wb.SheetNames[0]];
       var json=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
       if(!json||json.length<2){ toast('데이터가 없습니다'); return; }
-      var headers=json[0].map(function(h){ return String(h); });
-      var rows=json.slice(1).filter(function(r){ return r.some(function(c){ return c!==''; }); });
+      // ── 실제 제목줄(헤더) 자동 탐지: 상위 10행에서 키워드 매칭이 가장 많은 행 선택 ──
+      var hdrKeywords=['순번','관리번호','장비명','품명','모델명','제작사','번호','명칭','규격','수량'];
+      var hdrIdx=0, hdrBest=0;
+      for(var hri=0;hri<Math.min(10,json.length);hri++){
+        var hits=0;
+        (json[hri]||[]).forEach(function(cell){
+          var cs=String(cell||'').trim();
+          if(!cs) return;
+          for(var ki=0;ki<hdrKeywords.length;ki++){
+            if(cs.indexOf(hdrKeywords[ki])!==-1){ hits++; break; }
+          }
+        });
+        if(hits>hdrBest){ hdrBest=hits; hdrIdx=hri; }
+      }
+      // 키워드 2개 이상 매칭된 행만 헤더로 인정, 아니면 기존처럼 1행 사용
+      if(hdrBest<2) hdrIdx=0;
+      var headers=(json[hdrIdx]||[]).map(function(h){ return String(h); });
+      var hdrJoin=headers.join('|');
+      var rows=json.slice(hdrIdx+1).filter(function(r){
+        if(!r.some(function(c){ return c!==''; })) return false; // 빈 행 제거
+        if(r.map(function(c){ return String(c); }).join('|')===hdrJoin) return false; // 중복 헤더행 제거
+        return true;
+      });
+      if(hdrIdx>0) toast('ℹ️ '+(hdrIdx+1)+'행을 제목줄로 인식했습니다 (위 '+hdrIdx+'행 제외)');
       // 미리보기
       var prev=document.getElementById('eqPreview');
       var prevTbl=document.getElementById('eqPreviewTable');
@@ -11053,6 +11161,378 @@ async function setMgrAtt(status){
   }catch(e){ toast('저장 오류: '+String(e.message||e)); }
 }
 
+
+// ═══ 월간/연간 통계 (메인 패널2 · 실시간 집계) ═══
+var msMode='month'; // 'month' | 'year'
+var msY=0, msM=0;
+var msStats=null;
+var msOpenKey=null;
+var msLoading=false;
+
+var MS_NS_COLS=['carpet','pbb','wax','stone','wood','restroom','es','toilet_daily','common_area','collection'];
+var MS_NS_LABELS={carpet:'카페트',pbb:'PBB',wax:'왁스',stone:'석재',wood:'우드',restroom:'화장실(특별)',es:'ES',toilet_daily:'화장실(일상)',common_area:'공용구역',collection:'수거'};
+var MS_FLOORS=['B2F','B1F','1F','2F','3F','4F','집하장'];
+var MS_HOURS=['새벽(0~6시)','오전(6~12시)','오후(12~18시)','야간(18~24시)'];
+
+function msNowKst(){ return new Date(Date.now()+9*3600000); }
+function msPad(n){ return (n<10?'0':'')+n; }
+function msLastDay(y,m){ return new Date(Date.UTC(y,m,0)).getUTCDate(); }
+function msKstDate(iso){ if(!iso) return ''; try{ return new Date(new Date(iso).getTime()+9*3600000).toISOString().slice(0,10); }catch(e){ return ''; } }
+function msKstHourBucket(iso){
+  if(!iso) return -1;
+  try{
+    var h=new Date(new Date(iso).getTime()+9*3600000).getUTCHours();
+    return Math.floor(h/6); // 0:새벽 1:오전 2:오후 3:야간
+  }catch(e){ return -1; }
+}
+function msPrevWord(){ return msMode==='year'?'전년':'전월'; }
+function msPeriodLabel(){ return msMode==='year'?(msY+'년'):(msM+'월'); }
+
+function msSetMode(m){
+  if(msLoading||msMode===m) return;
+  msMode=m;
+  var bm=document.getElementById('msModeM'), by=document.getElementById('msModeY');
+  var onS='background:white;color:var(--teal2);box-shadow:0 1px 3px rgba(0,0,0,.12)';
+  var offS='background:transparent;color:var(--g4);box-shadow:none';
+  var base='padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;';
+  if(bm) bm.style.cssText=base+(m==='month'?onS:offS);
+  if(by) by.style.cssText=base+(m==='year'?onS:offS);
+  var tt=document.getElementById('msSecTitle');
+  if(tt) tt.textContent=m==='year'?'📊 연간 통계':'📊 월간 통계';
+  loadMonthlyStats();
+}
+
+function msMove(dir){
+  if(msLoading) return;
+  var now=msNowKst(), cy=now.getUTCFullYear(), cm=now.getUTCMonth()+1;
+  if(msMode==='year'){
+    var ny=msY+dir;
+    if(ny>cy) return;
+    msY=ny;
+  }else{
+    var y=msY, m=msM+dir;
+    if(m<1){ m=12; y--; }
+    if(m>12){ m=1; y++; }
+    if(y>cy||(y===cy&&m>cm)) return;
+    msY=y; msM=m;
+  }
+  loadMonthlyStats();
+}
+
+// Supabase 1000건 제한 대응: offset 페이지네이션으로 전량 수집
+async function msFetchAll(makeQuery){
+  var all=[], off=0, batch=1000, guard=0;
+  while(guard<30){
+    guard++;
+    var r=await makeQuery().limit(batch).offset(off);
+    if(r.error) return {data:all, error:r.error};
+    var rows=r.data||[];
+    all=all.concat(rows);
+    if(rows.length<batch) break;
+    off+=batch;
+  }
+  return {data:all, error:null};
+}
+
+async function loadMonthlyStats(){
+  var lbl=document.getElementById('msMonthLbl');
+  if(!lbl) return;
+  var now=msNowKst();
+  if(!msY){ msY=now.getUTCFullYear(); msM=now.getUTCMonth()+1; }
+  lbl.textContent=msMode==='year'?(msY+'년'):(msY+'년 '+msM+'월');
+  var nb=document.getElementById('msNextBtn');
+  var atNow=msMode==='year'?(msY===now.getUTCFullYear()):(msY===now.getUTCFullYear()&&msM===now.getUTCMonth()+1);
+  if(nb) nb.style.opacity=atNow?'0.3':'1';
+  if(msLoading) return;
+  msLoading=true;
+  try{
+    var curKey, prevKey, dFrom, dTo;
+    if(msMode==='year'){
+      curKey=msY+'-'; prevKey=(msY-1)+'-';
+      dFrom=(msY-1)+'-01-01'; dTo=msY+'-12-31';
+    }else{
+      var py=msY, pm=msM-1; if(pm<1){ pm=12; py--; }
+      curKey=msY+'-'+msPad(msM); prevKey=py+'-'+msPad(pm);
+      dFrom=py+'-'+msPad(pm)+'-01'; dTo=msY+'-'+msPad(msM)+'-'+msPad(msLastDay(msY,msM));
+    }
+    var tsFrom=new Date(dFrom+'T00:00:00+09:00').toISOString();
+    var tsTo=new Date(dTo+'T23:59:59+09:00').toISOString();
+    var q=await Promise.all([
+      msFetchAll(function(){ return sb.from('mp_data').select('date,shift,team_code,values,proxy_writer').gte('date',dFrom).lte('date',dTo); }),
+      msFetchAll(function(){ return sb.from('night_special_data').select('*').gte('date',dFrom).lte('date',dTo); }),
+      msFetchAll(function(){ return sb.from('handover').select('id,created_at,ho_date,shift,team,confirmed,facility,danger,equipment,notice,special').gte('created_at',tsFrom).lte('created_at',tsTo); }),
+      msFetchAll(function(){ return sb.from('lost_found').select('id,found_date,status,completed_at,location,item').gte('found_date',tsFrom).lte('found_date',tsTo); }),
+      msFetchAll(function(){ return sb.from('safety_accidents').select('id,occurred_at,team,accident_type,location').gte('occurred_at',tsFrom).lte('occurred_at',tsTo); })
+    ]);
+    var anyErr=q.some(function(r){ return r&&r.error; });
+    var banner=document.getElementById('msErrBanner');
+    if(banner) banner.style.display=anyErr?'flex':'none';
+    msStats={ cur:msCalc(q,curKey), prev:msCalc(q,prevKey) };
+    msRenderCards();
+    if(msOpenKey) msRenderDetail(msOpenKey);
+    var up=document.getElementById('msUpdated');
+    if(up){ var t=msNowKst(); up.textContent='업데이트 '+msPad(t.getUTCHours())+':'+msPad(t.getUTCMinutes()); }
+  }catch(e){
+    console.log('통계 로드 오류:', e);
+    var banner2=document.getElementById('msErrBanner');
+    if(banner2) banner2.style.display='flex';
+  }
+  msLoading=false;
+}
+
+function msCalc(q, key){
+  var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorDays:{},nsSum:{}},
+          ho:{total:0,confirmed:0,byTeam:{},byType:{시설물:0,위험요소:0,장비:0,특이사항:0,기타:0}},
+          lost:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byLoc:{},byItem:{},byHour:[0,0,0,0]},
+          acc:{total:0,byType:{},byTeam:{},byLoc:{},byHour:[0,0,0,0]} };
+  MS_NS_COLS.forEach(function(c){ s.mp.nsSum[c]=0; });
+  // ── 인력현황 (mp_data: 오전/오후, night_special_data: 야간)
+  ((q[0]&&q[0].data)||[]).forEach(function(r){
+    if(!r.date||r.date.indexOf(key)!==0) return;
+    if(!r.team_code||r.team_code.indexOf('_')===0) return;
+    var vals=r.values;
+    if(typeof vals==='string'){ try{ vals=JSON.parse(vals); }catch(e){ return; } }
+    if(!Array.isArray(vals)) return;
+    var sum=0;
+    for(var ri=0;ri<4;ri++){
+      if(!vals[ri]||!Array.isArray(vals[ri])) continue;
+      for(var ci=0;ci<7;ci++){
+        var v=Number(vals[ri][ci])||0;
+        sum+=v;
+        s.mp.floorSum[ci]+=v;
+      }
+    }
+    if(sum<=0) return;
+    s.mp.days[r.date]=(s.mp.days[r.date]||0)+sum;
+    s.mp.floorDays[r.date]=1;
+    var sh=(r.shift==='오전'||r.shift==='오후')?r.shift:null;
+    if(sh){ s.mp.shiftSum[sh]+=sum; s.mp.shiftDays[sh][r.date]=1; }
+    if(r.proxy_writer) s.mp.proxy++;
+  });
+  ((q[1]&&q[1].data)||[]).forEach(function(r){
+    if(!r.date||r.date.indexOf(key)!==0) return;
+    var sum=0;
+    MS_NS_COLS.forEach(function(c){
+      var v=Number(r[c])||0;
+      sum+=v;
+      s.mp.nsSum[c]+=v;
+    });
+    if(sum<=0) return;
+    s.mp.days[r.date]=(s.mp.days[r.date]||0)+sum;
+    s.mp.shiftSum['야간']+=sum; s.mp.shiftDays['야간'][r.date]=1;
+    if(r.proxy_writer) s.mp.proxy++;
+  });
+  // ── 인수인계 (ho_date 우선, 없으면 created_at)
+  ((q[2]&&q[2].data)||[]).forEach(function(r){
+    var d=msKstDate(r.ho_date||r.created_at);
+    if(d.indexOf(key)!==0) return;
+    s.ho.total++;
+    if(r.confirmed) s.ho.confirmed++;
+    var t=(r.shift||r.team||'기타').split(' ')[0];
+    s.ho.byTeam[t]=(s.ho.byTeam[t]||0)+1;
+    if(r.facility&&r.facility!=='없음') s.ho.byType['시설물']++;
+    if(r.danger&&r.danger!=='없음') s.ho.byType['위험요소']++;
+    if(r.equipment&&r.equipment!=='이상없음') s.ho.byType['장비']++;
+    if(r.special) s.ho.byType['특이사항']++;
+    if(r.notice) s.ho.byType['기타']++;
+  });
+  // ── 습득물
+  ((q[3]&&q[3].data)||[]).forEach(function(r){
+    var d=msKstDate(r.found_date);
+    if(d.indexOf(key)!==0) return;
+    s.lost.total++;
+    var done=!!r.completed_at||(r.status&&r.status.indexOf('완료')===0);
+    if(done){
+      s.lost.done++;
+      if(r.completed_at&&r.found_date){
+        var dd=(new Date(r.completed_at)-new Date(r.found_date))/86400000;
+        if(dd>=0){ s.lost.doneDaysSum+=dd; s.lost.doneDaysCnt++; }
+      }
+    }
+    if(r.location){ var L=r.location.trim(); s.lost.byLoc[L]=(s.lost.byLoc[L]||0)+1; }
+    if(r.item){ var it=r.item.trim(); s.lost.byItem[it]=(s.lost.byItem[it]||0)+1; }
+    var hb=msKstHourBucket(r.found_date);
+    if(hb>=0) s.lost.byHour[hb]++;
+  });
+  // ── 안전사고
+  ((q[4]&&q[4].data)||[]).forEach(function(r){
+    var d=msKstDate(r.occurred_at);
+    if(d.indexOf(key)!==0) return;
+    s.acc.total++;
+    var ty=r.accident_type||'미분류';
+    s.acc.byType[ty]=(s.acc.byType[ty]||0)+1;
+    var t=r.team||'기타';
+    s.acc.byTeam[t]=(s.acc.byTeam[t]||0)+1;
+    if(r.location){ var L2=r.location.trim(); s.acc.byLoc[L2]=(s.acc.byLoc[L2]||0)+1; }
+    var hb2=msKstHourBucket(r.occurred_at);
+    if(hb2>=0) s.acc.byHour[hb2]++;
+  });
+  return s;
+}
+
+function msMpAvg(mp){
+  var days=Object.keys(mp.days).length;
+  if(!days) return 0;
+  var tot=0; Object.keys(mp.days).forEach(function(d){ tot+=mp.days[d]; });
+  return Math.round(tot/days);
+}
+function msShiftAvg(mp, sh){
+  var days=Object.keys(mp.shiftDays[sh]).length;
+  if(!days) return 0;
+  return Math.round(mp.shiftSum[sh]/days);
+}
+function msDeltaBadge(cur, prev, goodWhenDown, unit){
+  var diff=cur-prev;
+  if(!prev&&!cur) return '<span style="color:var(--g4)">'+msPrevWord()+' 데이터 없음</span>';
+  if(diff===0) return '<span style="color:var(--g4)">'+msPrevWord()+'과 동일</span>';
+  var up=diff>0;
+  var good=goodWhenDown?!up:up;
+  var col=good?'var(--success)':'var(--danger)';
+  return '<span style="color:'+col+'">'+(up?'▲':'▼')+' '+Math.abs(diff)+unit+'</span><span style="color:var(--g4)"> '+msPrevWord()+'대비</span>';
+}
+
+function msRenderCards(){
+  if(!msStats) return;
+  var c=msStats.cur, p=msStats.prev;
+  var el;
+  var mpAvg=msMpAvg(c.mp), mpAvgP=msMpAvg(p.mp);
+  el=document.getElementById('msV_mp'); if(el) el.textContent=mpAvg||'0';
+  el=document.getElementById('msD_mp'); if(el) el.innerHTML=msDeltaBadge(mpAvg,mpAvgP,false,'명');
+  el=document.getElementById('msV_ho'); if(el) el.textContent=c.ho.total;
+  el=document.getElementById('msD_ho'); if(el) el.innerHTML=msDeltaBadge(c.ho.total,p.ho.total,false,'건');
+  el=document.getElementById('msV_lost'); if(el) el.textContent=c.lost.total;
+  el=document.getElementById('msD_lost'); if(el){
+    var rate=c.lost.total?Math.round(c.lost.done/c.lost.total*100):0;
+    el.innerHTML='<span style="color:var(--warn)">반환율 '+rate+'%</span>';
+  }
+  el=document.getElementById('msV_acc'); if(el) el.textContent=c.acc.total;
+  el=document.getElementById('msD_acc'); if(el) el.innerHTML=msDeltaBadge(c.acc.total,p.acc.total,true,'건');
+}
+
+function msBar(label, val, max, color, unit){
+  var w=max?Math.round(val/max*100):0;
+  return '<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:var(--g5);font-weight:600">'+label+'</span><span style="font-weight:800;color:var(--g6)">'+val+(unit||'')+'</span></div><div style="height:6px;background:var(--g1);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+w+'%;background:'+color+';border-radius:3px"></div></div></div>';
+}
+function msRow(label, val){
+  return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--g1);font-size:11px"><span style="color:var(--g5)">'+label+'</span><span style="font-weight:800;color:var(--g6)">'+val+'</span></div>';
+}
+function msTitle(t){
+  return '<div style="font-size:11px;font-weight:800;color:var(--g6);margin-bottom:8px">'+t+'</div>';
+}
+function msSub(t){
+  return '<div style="font-size:10px;font-weight:700;color:var(--g5);margin:12px 0 7px">'+t+'</div>';
+}
+function msTopBars(obj, n, color, unit){
+  var keys=Object.keys(obj).sort(function(a,b){ return obj[b]-obj[a]; }).slice(0,n);
+  if(!keys.length) return '<div style="font-size:10px;color:var(--g4);padding:4px 0">데이터 없음</div>';
+  var mx=obj[keys[0]], h='';
+  keys.forEach(function(k){ h+=msBar(k, obj[k], mx, color, unit); });
+  return h;
+}
+function msHourBars(arr, color){
+  var mx=Math.max.apply(null, arr.concat([1])), h='';
+  for(var i=0;i<4;i++){ h+=msBar(MS_HOURS[i], arr[i], mx, color, '건'); }
+  return h;
+}
+
+function msToggle(key){
+  var det=document.getElementById('msDetail');
+  if(!det) return;
+  ['mp','ho','lost','acc'].forEach(function(k){
+    var card=document.getElementById('msCard_'+k);
+    if(card) card.style.border='1px solid var(--g2)';
+  });
+  if(msOpenKey===key){
+    msOpenKey=null;
+    det.style.display='none';
+    return;
+  }
+  msOpenKey=key;
+  var card=document.getElementById('msCard_'+key);
+  if(card) card.style.border='1.5px solid var(--teal)';
+  msRenderDetail(key);
+  det.style.display='block';
+}
+
+function msRenderDetail(key){
+  var det=document.getElementById('msDetail');
+  if(!det||!msStats) return;
+  var c=msStats.cur, p=msStats.prev, h='';
+  var pw=msPrevWord(), pl=msPeriodLabel();
+  if(key==='mp'){
+    h=msTitle('👥 인력현황 · '+pl);
+    h+=msRow('전체 일평균', msMpAvg(c.mp)+'명 <span style="font-size:9px;font-weight:600;color:var(--g4)">('+pw+' '+msMpAvg(p.mp)+'명)</span>');
+    h+=msRow('오전 일평균', msShiftAvg(c.mp,'오전')+'명');
+    h+=msRow('오후 일평균', msShiftAvg(c.mp,'오후')+'명');
+    h+=msRow('야간 일평균', msShiftAvg(c.mp,'야간')+'명');
+    h+=msRow('데이터 입력일수', Object.keys(c.mp.days).length+'일');
+    h+=msRow('대리입력', c.mp.proxy+'건');
+    // 층별 일평균 (오전/오후 합산 기준) - 데이터 없어도 항상 표시
+    var fDays=Object.keys(c.mp.floorDays).length;
+    h+=msSub('층별 일평균 (오전·오후)');
+    var favg=c.mp.floorSum.map(function(v){ return fDays?Math.round(v/fDays):0; });
+    var fmx=Math.max.apply(null, favg.concat([1]));
+    for(var i=0;i<7;i++){ h+=msBar(MS_FLOORS[i], favg[i], fmx, 'linear-gradient(90deg,var(--teal),var(--teal2))', '명'); }
+    // 야간 작업별 (연인원) - 항상 표시
+    h+=msSub('야간 작업별 투입 연인원 · '+pl);
+    var nsTotal=0; MS_NS_COLS.forEach(function(cc){ nsTotal+=c.mp.nsSum[cc]; });
+    if(nsTotal){
+      var nsObj={};
+      MS_NS_COLS.forEach(function(cc){ if(c.mp.nsSum[cc]>0) nsObj[MS_NS_LABELS[cc]]=c.mp.nsSum[cc]; });
+      h+=msTopBars(nsObj, 10, 'linear-gradient(90deg,#6B21A8,#9D5BD2)', '명');
+    }else{
+      h+='<div style="font-size:10px;color:var(--g4);padding:4px 0">'+pl+' 야간특별작업 데이터 없음</div>';
+    }
+  }else if(key==='ho'){
+    h=msTitle('🔄 인수인계 · '+pl);
+    h+=msRow('총 건수', c.ho.total+'건 <span style="font-size:9px;font-weight:600;color:var(--g4)">('+pw+' '+p.ho.total+'건)</span>');
+    h+=msRow('확인완료', c.ho.confirmed+'건');
+    h+=msRow('미확인', (c.ho.total-c.ho.confirmed)+'건');
+    // 유형별
+    h+=msSub('유형별 건수');
+    var tyKeys=['시설물','위험요소','장비','특이사항','기타'];
+    var tyMax=1; tyKeys.forEach(function(k2){ if(c.ho.byType[k2]>tyMax) tyMax=c.ho.byType[k2]; });
+    tyKeys.forEach(function(k2){ h+=msBar(k2, c.ho.byType[k2]||0, tyMax, 'linear-gradient(90deg,var(--navy),#3E6BB5)', '건'); });
+    var teams=Object.keys(c.ho.byTeam).sort(function(a,b){ return c.ho.byTeam[b]-c.ho.byTeam[a]; }).slice(0,5);
+    if(teams.length){
+      h+=msSub('팀별 발생 TOP'+teams.length);
+      var mx=c.ho.byTeam[teams[0]];
+      teams.forEach(function(t){ h+=msBar(t, c.ho.byTeam[t], mx, 'linear-gradient(90deg,var(--navy),#3E6BB5)', '건'); });
+    }
+  }else if(key==='lost'){
+    var rate=c.lost.total?Math.round(c.lost.done/c.lost.total*100):0;
+    var pRate=p.lost.total?Math.round(p.lost.done/p.lost.total*100):0;
+    h=msTitle('🧳 습득물 · '+pl);
+    h+=msRow('접수', c.lost.total+'건 <span style="font-size:9px;font-weight:600;color:var(--g4)">('+pw+' '+p.lost.total+'건)</span>');
+    h+=msRow('반환완료', c.lost.done+'건');
+    h+=msRow('반환율', rate+'% <span style="font-size:9px;font-weight:600;color:var(--g4)">('+pw+' '+pRate+'%)</span>');
+    h+=msRow('평균 처리기간', c.lost.doneDaysCnt?(Math.round(c.lost.doneDaysSum/c.lost.doneDaysCnt*10)/10)+'일':'-');
+    h+=msSub('품목 TOP3');
+    h+=msTopBars(c.lost.byItem, 3, 'linear-gradient(90deg,var(--warn),#E8A83E)', '건');
+    h+=msSub('습득 장소 TOP3');
+    h+=msTopBars(c.lost.byLoc, 3, 'linear-gradient(90deg,var(--warn),#E8A83E)', '건');
+    h+=msSub('시간대별 분포');
+    h+=msHourBars(c.lost.byHour, 'linear-gradient(90deg,var(--warn),#E8A83E)');
+  }else if(key==='acc'){
+    h=msTitle('⚠️ 안전사고 · '+pl);
+    h+=msRow('발생 건수', c.acc.total+'건 <span style="font-size:9px;font-weight:600;color:var(--g4)">('+pw+' '+p.acc.total+'건)</span>');
+    if(!c.acc.total){
+      h+='<div style="text-align:center;padding:10px;margin:4px 0;background:var(--success-bg);border-radius:var(--r2);color:var(--success);font-size:11px;font-weight:700">✅ '+pl+' 무사고</div>';
+    }
+    h+=msSub('재해형태별');
+    h+=msTopBars(c.acc.byType, 10, 'linear-gradient(90deg,var(--danger),#F07B7B)', '건');
+    h+=msSub('시간대별 분포');
+    h+=msHourBars(c.acc.byHour, 'linear-gradient(90deg,var(--danger),#F07B7B)');
+    h+=msSub('장소 TOP3');
+    h+=msTopBars(c.acc.byLoc, 3, 'linear-gradient(90deg,var(--danger),#F07B7B)', '건');
+    var ats=Object.keys(c.acc.byTeam).sort(function(a,b){ return c.acc.byTeam[b]-c.acc.byTeam[a]; });
+    if(ats.length){
+      h+=msSub('팀별');
+      ats.forEach(function(t){ h+=msRow(t, c.acc.byTeam[t]+'건'); });
+    }
+  }
+  det.innerHTML=h;
+}
 
 if('serviceWorker' in navigator){
   window.addEventListener('load', function(){
