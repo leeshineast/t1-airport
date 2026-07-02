@@ -440,7 +440,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <div class="mh-tab-item on" onclick="goHomeMain()"><span class="mh-tab-ic">🏠</span><span class="mh-tab-lb">홈</span></div>
   <div class="mh-tab-item" onclick="go('mp')"><span class="mh-tab-ic">👥</span><span class="mh-tab-lb">인력현황</span></div>
   <div class="mh-tab-item" onclick="go('ho')"><span class="mh-tab-ic">🔄</span><span class="mh-tab-lb">인수인계</span></div>
-  <div class="mh-tab-item" onclick="go('admin')"><span class="mh-tab-ic">⚙️</span><span class="mh-tab-lb">관리</span></div>
+  <div class="mh-tab-item" id="gcTabItem" onclick="go('groupchat')"><span class="mh-tab-ic" style="position:relative">💬<span id="gcTabBadge" style="display:none;position:absolute;top:-4px;right:-8px;background:var(--danger);color:white;border-radius:50%;min-width:15px;height:15px;padding:0 3px;font-size:9px;font-weight:800;line-height:15px;text-align:center;box-sizing:border-box"></span></span><span class="mh-tab-lb">채팅</span></div>
 </div>
 <div id="sMain" class="scr">
   <div class="app-hd">
@@ -512,7 +512,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <span class="menu-arrow">등록/조회 →</span>
     </button>
     <button class="menu-btn" id="groupChatMenuBtn" onclick="go('groupchat')">
-      <span class="menu-icon">💬</span>
+      <span class="menu-icon" style="display:flex;align-items:center;justify-content:center;color:white"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
       <div class="menu-title">전체채팅</div>
       <div class="menu-desc">전 직원 단체 대화방</div>
       <span class="menu-arrow">대화하기 →</span>
@@ -2999,6 +2999,7 @@ function go(name){
   if(name==='groupchat'){
     loadGroupChat();
     startGroupChatPolling();
+    markGroupChatRead();
   } else {
     stopGroupChatPolling();
   }
@@ -3058,6 +3059,7 @@ function applyRoleUI(){
   var lrb=document.getElementById('lostResetBtn');if(lrb)lrb.style.display=isAdmin?'block':'none';
   // 전체채팅 메뉴 (게스트는 아예 접근 불가 - 메뉴 자체를 숨김)
   var gcb=document.getElementById('groupChatMenuBtn');if(gcb)gcb.style.display=(me.role==='guest')?'none':'block';
+  var gcTab=document.getElementById('gcTabItem');if(gcTab)gcTab.style.display=(me.role==='guest')?'none':'flex';
   // 차량 게스트: 차량운행기록만 접근 가능
   if(me.role==='vehicle_guest'){
     // 메뉴 버튼 전체 숨김 후 차량만 표시
@@ -10265,7 +10267,7 @@ var gcLastCount=0;
 
 function startGroupChatPolling(){
   stopGroupChatPolling();
-  gcPollTimer=setInterval(loadGroupChat, 7000);
+  gcPollTimer=setInterval(function(){ loadGroupChat(); markGroupChatRead(); }, 7000);
 }
 function stopGroupChatPolling(){
   if(gcPollTimer){ clearInterval(gcPollTimer); gcPollTimer=null; }
@@ -10277,7 +10279,41 @@ async function loadGroupChat(){
     if(res.error) return;
     gcAll=res.data||[];
     renderGroupChat();
+    updateGcBadge();
   }catch(e){}
+}
+
+// 화면에 안 들어가 있어도 안읽음 배지만 가볍게 갱신 (전역 30초 폴링용)
+async function pollGroupChatBadge(){
+  if(!me||me.role==='guest') return;
+  try{
+    var res=await sb.from('chat_messages').select('*').order('created_at',{ascending:true}).limit(200);
+    if(res.error) return;
+    gcAll=res.data||[];
+    updateGcBadge();
+  }catch(e){}
+}
+
+function updateGcBadge(){
+  var badge=document.getElementById('gcTabBadge');
+  if(!badge||!me) return;
+  var lastSeen=localStorage.getItem('t1_chat_last_seen')||'1970-01-01T00:00:00.000Z';
+  var unread=(gcAll||[]).filter(function(m){
+    return m.sender_name!==me.name && m.created_at && m.created_at>lastSeen;
+  }).length;
+  if(unread>0){
+    badge.textContent=unread>9?'9+':String(unread);
+    badge.style.display='flex';
+    badge.style.alignItems='center';
+    badge.style.justifyContent='center';
+  } else {
+    badge.style.display='none';
+  }
+}
+
+function markGroupChatRead(){
+  try{ localStorage.setItem('t1_chat_last_seen', new Date().toISOString()); }catch(e){}
+  updateGcBadge();
 }
 
 function renderGroupChat(){
@@ -10763,8 +10799,8 @@ function checkShiftReset(){
   });
 }
 setInterval(checkShiftReset, 60000);
-// 인력현황 30초마다 자동 갱신 + 알림 체크
-setInterval(function(){ if(me){ loadMpFromDB(); checkNotifUpdates(); } }, 30000);
+// 인력현황 30초마다 자동 갱신 + 알림 체크 + 전체채팅 안읽음 배지 체크
+setInterval(function(){ if(me){ loadMpFromDB(); checkNotifUpdates(); pollGroupChatBadge(); } }, 30000);
 checkShiftReset();
 </script>
 <script>
