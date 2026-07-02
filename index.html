@@ -7102,6 +7102,13 @@ async function subReg(){
   if(pw!==pw2){err.textContent='⚠️ 비밀번호가 일치하지 않습니다';err.style.display='block';return;}
   if(!team){err.textContent='⚠️ 소속 팀을 선택해주세요';err.style.display='block';return;}
   if(!roleVal){err.textContent='⚠️ 직급을 선택해주세요';err.style.display='block';return;}
+  var regJoMap={
+    '1팀':['A조','B조','C조'],'2팀':['A조','B조'],'3팀':['A조','B조'],'4팀':['A조','B조'],
+    '6팀':['A조','B조','C조'],'7팀':['A조','B조'],'8팀':['A조','B조'],'9팀':['A조','B조'],
+    '5팀':['A조','B조'],'10팀':['A조','B조']
+  };
+  var needsJo=(roleVal==='조장'||roleVal==='조장대행');
+  if(needsJo&&regJoMap[team]&&!jo){err.textContent='⚠️ 조를 선택해주세요';err.style.display='block';return;}
 
   // Supabase 연결 확인
   if(typeof sb==='undefined'){
