@@ -511,6 +511,12 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div class="menu-desc">안전사고 등록 및 조치현황</div>
       <span class="menu-arrow">등록/조회 →</span>
     </button>
+    <button class="menu-btn" id="groupChatMenuBtn" onclick="go('groupchat')">
+      <span class="menu-icon">💬</span>
+      <div class="menu-title">전체채팅</div>
+      <div class="menu-desc">전 직원 단체 대화방</div>
+      <span class="menu-arrow">대화하기 →</span>
+    </button>
     <button class="menu-btn" onclick="go('veh')">
       <span class="menu-icon">🚗</span>
       <div class="menu-title">차량운행기록</div>
@@ -1985,6 +1991,21 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   </div>
 </div>
 
+<!-- ══ 전체채팅 ══ -->
+<div id="sGroupChat" class="scr">
+  <div class="pg-hd">
+    <div><h1>💬 전체채팅</h1><small>전 직원 단체 대화방</small></div>
+    <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">← 메인</button>
+  </div>
+  <div id="gcMsgList" style="padding:13px;padding-bottom:90px;min-height:60vh;display:flex;flex-direction:column;gap:9px">
+    <div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">불러오는 중...</div>
+  </div>
+  <div style="position:fixed;bottom:56px;left:0;right:0;max-width:480px;margin:0 auto;background:white;border-top:1.5px solid var(--g2);padding:9px 11px;display:flex;gap:7px;align-items:flex-end;z-index:50">
+    <textarea id="gcInput" rows="1" placeholder="메시지를 입력하세요" style="flex:1;padding:9px 12px;border:1.5px solid var(--g2);border-radius:20px;font-size:13px;resize:none;font-family:inherit;max-height:90px;box-sizing:border-box" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGroupChat();}"></textarea>
+    <button onclick="sendGroupChat()" style="width:40px;height:40px;border-radius:50%;background:var(--teal);color:white;border:none;font-size:16px;cursor:pointer;flex-shrink:0">➤</button>
+  </div>
+</div>
+
 <!-- ══ 과업평가지표 ══ -->
 <div id="sKpi" class="scr">
   <div class="app-hd">
@@ -2905,7 +2926,7 @@ function showM(id){document.getElementById(id).classList.add('on');}
 function hideM(id){document.getElementById(id).classList.remove('on');}
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sSafety','sManual','sAccident','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sSafety','sManual','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste'];
 function goHomeMain(){
   go('main');
   setTimeout(function(){
@@ -2916,7 +2937,8 @@ function goHomeMain(){
 function go(name){
   if(me&&me.role==='vehicle_guest'&&name!=='veh'&&name!=='login'){ return; }
   if(name==='admin'&&(!me||me.role!=='admin')){ toast('⚠️ 관리자만 접근할 수 있습니다'); return; }
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',safety:'sSafety',manual:'sManual',accident:'sAccident',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste'};
+  if(name==='groupchat'&&me&&me.role==='guest'){ toast('⚠️ 게스트 계정은 이용할 수 없는 기능입니다'); return; }
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',safety:'sSafety',manual:'sManual',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -2974,6 +2996,12 @@ function go(name){
     accTab(0);
     loadAccidentFromDB();
   }
+  if(name==='groupchat'){
+    loadGroupChat();
+    startGroupChatPolling();
+  } else {
+    stopGroupChatPolling();
+  }
   if(name==='voc'){
     loadVocFromDB();
   }
@@ -3028,6 +3056,8 @@ function applyRoleUI(){
   var vrb=document.getElementById('vocResetBtn');if(vrb)vrb.style.display=isAdmin?'block':'none';
   // 습득물 초기화 버튼 (admin만)
   var lrb=document.getElementById('lostResetBtn');if(lrb)lrb.style.display=isAdmin?'block':'none';
+  // 전체채팅 메뉴 (게스트는 아예 접근 불가 - 메뉴 자체를 숨김)
+  var gcb=document.getElementById('groupChatMenuBtn');if(gcb)gcb.style.display=(me.role==='guest')?'none':'block';
   // 차량 게스트: 차량운행기록만 접근 가능
   if(me.role==='vehicle_guest'){
     // 메뉴 버튼 전체 숨김 후 차량만 표시
@@ -10227,6 +10257,92 @@ async function confAccDB(id, btn, domId){
     toast('✅ 확인 및 결과입력 완료되었습니다');
   }catch(e){ toast('처리 오류: '+e.message); if(btn) btn.disabled=false; }
 }
+
+// ══ 전체채팅 (전 직원 단체방, 7초 주기 새로고침) ══
+var gcAll=[];
+var gcPollTimer=null;
+var gcLastCount=0;
+
+function startGroupChatPolling(){
+  stopGroupChatPolling();
+  gcPollTimer=setInterval(loadGroupChat, 7000);
+}
+function stopGroupChatPolling(){
+  if(gcPollTimer){ clearInterval(gcPollTimer); gcPollTimer=null; }
+}
+
+async function loadGroupChat(){
+  try{
+    var res=await sb.from('chat_messages').select('*').order('created_at',{ascending:true}).limit(200);
+    if(res.error) return;
+    gcAll=res.data||[];
+    renderGroupChat();
+  }catch(e){}
+}
+
+function renderGroupChat(){
+  var wrap=document.getElementById('gcMsgList');
+  if(!wrap) return;
+  if(!gcAll.length){
+    wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">아직 메시지가 없습니다. 첫 메시지를 남겨보세요!</div>';
+    return;
+  }
+  var myName=me?me.name:'';
+  var html='';
+  var lastDate='';
+  gcAll.forEach(function(m){
+    var dKst=m.created_at?new Date(m.created_at).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul',month:'long',day:'numeric',weekday:'short'}):'';
+    if(dKst&&dKst!==lastDate){
+      html+='<div style="text-align:center;margin:9px 0"><span style="font-size:10px;color:var(--g4);background:var(--g1);padding:4px 11px;border-radius:20px">'+dKst+'</span></div>';
+      lastDate=dKst;
+    }
+    var isMine=(m.sender_name===myName);
+    var ts=m.created_at?new Date(m.created_at).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false}):'';
+    var safeMsg=(m.message||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    if(isMine){
+      html+='<div style="align-self:flex-end;max-width:78%;display:flex;flex-direction:column;align-items:flex-end">'
+        +'<div style="background:var(--teal);color:white;padding:9px 13px;border-radius:16px 16px 4px 16px;font-size:13px;line-height:1.5;word-break:break-word">'+safeMsg+'</div>'
+        +'<div style="font-size:9.5px;color:var(--g3);margin-top:3px">'+ts+'</div>'
+        +'</div>';
+    } else {
+      var initial=(m.sender_name||'?')[0];
+      html+='<div style="align-self:flex-start;max-width:78%;display:flex;gap:7px">'
+        +'<div style="width:28px;height:28px;border-radius:50%;background:var(--navy);color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0">'+initial+'</div>'
+        +'<div style="display:flex;flex-direction:column;align-items:flex-start">'
+        +'<div style="font-size:10.5px;color:var(--g4);margin-bottom:3px;font-weight:700">'+(m.sender_name||'')+(m.sender_team?' · '+m.sender_team:'')+'</div>'
+        +'<div style="background:var(--g1);color:var(--g7);padding:9px 13px;border-radius:16px 16px 16px 4px;font-size:13px;line-height:1.5;word-break:break-word">'+safeMsg+'</div>'
+        +'<div style="font-size:9.5px;color:var(--g3);margin-top:3px">'+ts+'</div>'
+        +'</div></div>';
+    }
+  });
+  var wasNearBottom = (wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight) < 120;
+  var isFirstRender = (gcLastCount===0);
+  wrap.innerHTML=html;
+  if(isFirstRender || wasNearBottom || gcAll.length!==gcLastCount){
+    wrap.scrollTop=wrap.scrollHeight;
+  }
+  gcLastCount=gcAll.length;
+}
+
+async function sendGroupChat(){
+  if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
+  if(!me){toast('로그인이 필요합니다');return;}
+  var input=document.getElementById('gcInput');
+  var msg=input?input.value.trim():'';
+  if(!msg) return;
+  input.value='';
+  try{
+    await sb.from('chat_messages').insert({
+      sender_name: me.name,
+      sender_role: me.role,
+      sender_team: me.team||null,
+      message: msg
+    });
+    await loadGroupChat();
+  }catch(e){ toast('전송 오류: '+e.message); }
+}
+
+
 
 
 function regTab(idx){
