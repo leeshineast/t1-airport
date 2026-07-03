@@ -11321,7 +11321,8 @@ async function loadMonthlyStats(){
       msFetchAll(function(){ return sb.from('night_special_data').select('*').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('handover').select('id,created_at,ho_date,shift,team,confirmed,facility,danger,equipment,notice,special').gte('created_at',tsFrom).lte('created_at',tsTo); }),
       msFetchAll(function(){ return sb.from('lost_found').select('id,found_date,status,completed_at,location,item').gte('found_date',tsFrom).lte('found_date',tsTo); }),
-      msFetchAll(function(){ return sb.from('safety_accidents').select('id,occurred_at,team,accident_type,location').gte('occurred_at',tsFrom).lte('occurred_at',tsTo); })
+      msFetchAll(function(){ return sb.from('safety_accidents').select('id,occurred_at,team,accident_type,location').gte('occurred_at',tsFrom).lte('occurred_at',tsTo); }),
+      msFetchAll(function(){ return sb.from('mgr_attendance').select('date,checked,status').gte('date',dFrom).lte('date',dTo); })
     ]);
     var anyErr=q.some(function(r){ return r&&r.error; });
     var banner=document.getElementById('msErrBanner');
@@ -11386,10 +11387,11 @@ function msClassifyItem(text){
 }
 
 function msCalc(q, key){
-  var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorDays:{},nsSum:{}},
+  var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorDays:{},nsSum:{},lsSum:0,asSum:0},
+          mgr:{days:{},trip:0,edu:0},
           ho:{total:0,confirmed:0,byTeam:{},byType:{시설물:0,위험요소:0,장비:0,특이사항:0,기타:0}},
-          lost:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byLoc:{},byItem:{},byHour:[0,0,0,0]},
-          acc:{total:0,byType:{},byTeam:{},byLoc:{},byHour:[0,0,0,0]} };
+          lost:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byLoc:{},byItem:{},byHour:[0,0,0,0],hourUnknown:0,itemEtc:[],locEtc:[]},
+          acc:{total:0,byType:{},byTeam:{},byLoc:{},byHour:[0,0,0,0],locEtc:[]} };
   MS_NS_COLS.forEach(function(c){ s.mp.nsSum[c]=0; });
   // ── 인력현황 (mp_data: 오전/오후, night_special_data: 야간)
   ((q[0]&&q[0].data)||[]).forEach(function(r){
@@ -11405,6 +11407,7 @@ function msCalc(q, key){
         var v=Number(vals[ri][ci])||0;
         sum+=v;
         s.mp.floorSum[ci]+=v;
+        if(ri<2) s.mp.lsSum+=v; else s.mp.asSum+=v; // ri 0,1=L/S · 2,3=A/S
       }
     }
     if(sum<=0) return;
@@ -11455,9 +11458,16 @@ function msCalc(q, key){
       }
     }
     var L=msClassifyLoc(r.location); s.lost.byLoc[L]=(s.lost.byLoc[L]||0)+1;
+    if(L==='기타'&&r.location) s.lost.locEtc.push(String(r.location).trim());
     var it=msClassifyItem(r.item); s.lost.byItem[it]=(s.lost.byItem[it]||0)+1;
-    var hb=msKstHourBucket(r.found_date);
-    if(hb>=0) s.lost.byHour[hb]++;
+    if(it==='기타'&&r.item) s.lost.itemEtc.push(String(r.item).trim());
+    // 00:00:00 정각 = 예전 방식(시간 미기록) → 시간대 분포에서 제외
+    var kstT=r.found_date?new Date(new Date(r.found_date).getTime()+9*3600000).toISOString().slice(11,19):'';
+    if(kstT==='00:00:00'){ s.lost.hourUnknown++; }
+    else{
+      var hb=msKstHourBucket(r.found_date);
+      if(hb>=0) s.lost.byHour[hb]++;
+    }
   });
   // ── 안전사고
   ((q[4]&&q[4].data)||[]).forEach(function(r){
@@ -11469,10 +11479,26 @@ function msCalc(q, key){
     var t=r.team||'기타';
     s.acc.byTeam[t]=(s.acc.byTeam[t]||0)+1;
     var L2=msClassifyLoc(r.location); s.acc.byLoc[L2]=(s.acc.byLoc[L2]||0)+1;
+    if(L2==='기타'&&r.location) s.acc.locEtc.push(String(r.location).trim());
     var hb2=msKstHourBucket(r.occurred_at);
     if(hb2>=0) s.acc.byHour[hb2]++;
   });
+  // ── 관리자 출근 (mgr_attendance)
+  ((q[5]&&q[5].data)||[]).forEach(function(r){
+    if(!r.date||r.date.indexOf(key)!==0) return;
+    if(!r.checked) return;
+    s.mgr.days[r.date]=(s.mgr.days[r.date]||0)+1;
+    if(r.status==='출장') s.mgr.trip++;
+    if(r.status==='교육') s.mgr.edu++;
+  });
   return s;
+}
+
+function msMgrAvg(mgr){
+  var days=Object.keys(mgr.days).length;
+  if(!days) return 0;
+  var tot=0; Object.keys(mgr.days).forEach(function(d){ tot+=mgr.days[d]; });
+  return Math.round(tot/days*10)/10;
 }
 
 function msMpAvg(mp){
@@ -11527,6 +11553,16 @@ function msTitle(t){
 function msSub(t){
   return '<div style="font-size:10px;font-weight:700;color:var(--g5);margin:12px 0 7px">'+t+'</div>';
 }
+// 기타 항목에 원문 샘플을 괄호로 병기: 기타 (말보로, 서류봉투 등)
+function msWithEtc(obj, etcArr){
+  if(!obj['기타']||!etcArr||!etcArr.length) return obj;
+  var uniq=[];
+  etcArr.forEach(function(t){ if(t&&uniq.indexOf(t)<0) uniq.push(t); });
+  var label='기타 ('+uniq.slice(0,3).join(', ')+(uniq.length>3?' 등':'')+')';
+  var out={};
+  Object.keys(obj).forEach(function(k){ out[k==='기타'?label:k]=obj[k]; });
+  return out;
+}
 function msTopBars(obj, n, color, unit){
   var keys=Object.keys(obj).sort(function(a,b){ return obj[b]-obj[a]; }).slice(0,n);
   if(!keys.length) return '<div style="font-size:10px;color:var(--g4);padding:4px 0">데이터 없음</div>';
@@ -11570,8 +11606,12 @@ function msRenderDetail(key){
     h+=msRow('오전 일평균', msShiftAvg(c.mp,'오전')+'명');
     h+=msRow('오후 일평균', msShiftAvg(c.mp,'오후')+'명');
     h+=msRow('야간 일평균', msShiftAvg(c.mp,'야간')+'명');
-    h+=msRow('데이터 입력일수', Object.keys(c.mp.days).length+'일');
-    h+=msRow('대리입력', c.mp.proxy+'건');
+    var fd=Object.keys(c.mp.floorDays).length;
+    h+=msRow('L/S 일평균', (fd?Math.round(c.mp.lsSum/fd):0)+'명');
+    h+=msRow('A/S 일평균', (fd?Math.round(c.mp.asSum/fd):0)+'명');
+    h+=msSub('관리자 출근 현황');
+    h+=msRow('일평균 출근 관리자', msMgrAvg(c.mgr)+'명 <span style="font-size:9px;font-weight:600;color:var(--g4)">('+pw+' '+msMgrAvg(p.mgr)+'명)</span>');
+    h+=msRow('출장 / 교육', c.mgr.trip+'건 / '+c.mgr.edu+'건');
     // 층별 일평균 (오전/오후 합산 기준) - 데이터 없어도 항상 표시
     var fDays=Object.keys(c.mp.floorDays).length;
     h+=msSub('층별 일평균 (오전·오후)');
@@ -11613,11 +11653,12 @@ function msRenderDetail(key){
     h+=msRow('반환율', rate+'% <span style="font-size:9px;font-weight:600;color:var(--g4)">('+pw+' '+pRate+'%)</span>');
     h+=msRow('평균 처리기간', c.lost.doneDaysCnt?(Math.round(c.lost.doneDaysSum/c.lost.doneDaysCnt*10)/10)+'일':'-');
     h+=msSub('품목 분류별 TOP5');
-    h+=msTopBars(c.lost.byItem, 5, 'linear-gradient(90deg,var(--warn),#E8A83E)', '건');
+    h+=msTopBars(msWithEtc(c.lost.byItem,c.lost.itemEtc), 5, 'linear-gradient(90deg,var(--warn),#E8A83E)', '건');
     h+=msSub('장소 분류별 TOP5');
-    h+=msTopBars(c.lost.byLoc, 5, 'linear-gradient(90deg,var(--warn),#E8A83E)', '건');
+    h+=msTopBars(msWithEtc(c.lost.byLoc,c.lost.locEtc), 5, 'linear-gradient(90deg,var(--warn),#E8A83E)', '건');
     h+=msSub('시간대별 분포');
     h+=msHourBars(c.lost.byHour, 'linear-gradient(90deg,var(--warn),#E8A83E)');
+    if(c.lost.hourUnknown) h+='<div style="font-size:9px;color:var(--g4);margin-top:2px">⏱ 시간미상 '+c.lost.hourUnknown+'건 제외 (예전 입력분)</div>';
   }else if(key==='acc'){
     h=msTitle('⚠️ 안전사고 · '+pl);
     h+=msRow('발생 건수', c.acc.total+'건 <span style="font-size:9px;font-weight:600;color:var(--g4)">('+pw+' '+p.acc.total+'건)</span>');
@@ -11629,7 +11670,7 @@ function msRenderDetail(key){
     h+=msSub('시간대별 분포');
     h+=msHourBars(c.acc.byHour, 'linear-gradient(90deg,var(--danger),#F07B7B)');
     h+=msSub('장소 분류별 TOP5');
-    h+=msTopBars(c.acc.byLoc, 5, 'linear-gradient(90deg,var(--danger),#F07B7B)', '건');
+    h+=msTopBars(msWithEtc(c.acc.byLoc,c.acc.locEtc), 5, 'linear-gradient(90deg,var(--danger),#F07B7B)', '건');
     var ats=Object.keys(c.acc.byTeam).sort(function(a,b){ return c.acc.byTeam[b]-c.acc.byTeam[a]; });
     if(ats.length){
       h+=msSub('팀별');
