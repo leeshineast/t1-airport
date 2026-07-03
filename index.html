@@ -379,7 +379,10 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 <div id="notifDrawer" style="position:fixed;top:0;right:-320px;width:300px;height:100%;background:white;box-shadow:-4px 0 20px rgba(0,0,0,.15);z-index:401;transition:right .3s;overflow-y:auto;display:flex;flex-direction:column">
   <div style="background:linear-gradient(135deg,var(--navy),var(--teal));padding:16px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
     <div style="color:white;font-size:14px;font-weight:800">🔔 알림</div>
-    <button onclick="markAllNotifRead()" style="background:rgba(255,255,255,.2);color:white;border:none;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer">모두 읽음</button>
+    <div style="display:flex;align-items:center;gap:6px">
+      <button onclick="markAllNotifRead()" style="background:rgba(255,255,255,.2);color:white;border:none;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:700;cursor:pointer">모두 읽음</button>
+      <button onclick="closeNotifDrawer()" style="background:rgba(255,255,255,.25);color:white;border:none;border-radius:50%;width:28px;height:28px;font-size:13px;font-weight:800;cursor:pointer;line-height:1">✕</button>
+    </div>
   </div>
   <div id="notifList" style="flex:1;overflow-y:auto">
     <div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">알림이 없습니다</div>
@@ -2041,14 +2044,14 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div class="fg">
       <label class="f-lbl">재해형태</label>
       <div class="rg" id="accTypeGrp" style="flex-wrap:wrap">
-        <div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">떨어짐</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">넘어짐</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">깔림·뒤집힘</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">부딪힘</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">물체에 맞음</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">무너짐</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">끼임</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">절단·베임·찔림</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">감전</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">화재·폭발·파열</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">이상온도 접촉</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">화학물질 누출·접촉</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">산소결핍</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">빠짐·익사</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">기타</div>
+        <div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">떨어짐</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">넘어짐</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">깔림·뒤집힘</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">부딪힘</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">물체에 맞음</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">무너짐</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">끼임</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">절단·베임·찔림</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">감전</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">화재·폭발·파열</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">이상온도 접촉</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">화학물질 누출·접촉</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">산소결핍</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">빠짐·익사</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">불안정한 동작</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">무리한 동작</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">사업장 내 교통사고</div><div class="rp" onclick="pickAccChip(this,'accTypeGrp','accTypeCustom')">기타</div>
       </div>
       <input type="text" id="accTypeCustom" class="ri" placeholder="재해형태 직접 입력" style="display:none;margin-top:7px;margin-bottom:0">
     </div>
     <div class="fg">
       <label class="f-lbl">상해종류</label>
       <div class="rg" id="accInjGrp" style="flex-wrap:wrap">
-        <div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">골절</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">타박상</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">열상</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">화상</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">염좌</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">절단</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">기타</div>
+        <div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">골절</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">타박상</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">열상</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">화상</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">염좌</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">절단</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">절상</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">자상</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">찰과상</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">좌상</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">탈구</div><div class="rp" onclick="pickAccChip(this,'accInjGrp','accInjCustom')">기타</div>
       </div>
       <input type="text" id="accInjCustom" class="ri" placeholder="상해종류 직접 입력" style="display:none;margin-top:7px;margin-bottom:0">
     </div>
@@ -10213,6 +10216,8 @@ function resetAccForm(){
   ['accTypeCustom','accInjCustom'].forEach(function(id){ var e=document.getElementById(id); if(e){ e.value=''; e.style.display='none'; } });
   ['accVictim','accDuty','accLoc','accDesc','accLeaveDays','accAction'].forEach(function(id){ var e=document.getElementById(id); if(e) e.value=''; });
   var errEl=document.getElementById('accErr'); if(errEl) errEl.style.display='none';
+  var sBtn=document.querySelector('button[onclick="subAcc()"]');
+  if(sBtn){ sBtn.textContent='🚑 안전사고 등록'; sBtn._editId=null; }
 }
 
 async function subAcc(){
@@ -10251,9 +10256,16 @@ async function subAcc(){
     confirmed: false
   };
   try{
-    var res=await sb.from('safety_accidents').insert(payload);
+    var editBtn=document.querySelector('button[onclick="subAcc()"]');
+    var editId=editBtn?editBtn._editId:null;
+    var res;
+    if(editId){
+      res=await sb.from('safety_accidents').update(payload).eq('id',editId);
+    }else{
+      res=await sb.from('safety_accidents').insert(payload);
+    }
     if(res.error){ toast('저장 오류: '+res.error.message); return; }
-    toast('✅ 안전사고 등록 완료');
+    toast(editId?'✅ 안전사고 수정 완료':'✅ 안전사고 등록 완료');
     resetAccForm();
     await loadAccidentFromDB();
     accTab(0);
@@ -10328,7 +10340,9 @@ function renderAccList(data){
         +'<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px">'
         +'<span class="t-pill pill-am">'+teamLabel+'</span>'
         +'<span class="chip '+(isDone?'chip-ok':'chip-warn')+'"><span class="chip-dot"></span>'+(isDone?'조치완료':'대기')+'</span>'
-        +'</div><span class="ho-time">'+ts+'</span></div>'
+        +'</div><div style="display:flex;align-items:center;gap:7px">'
+        +((me&&['admin','manager','leader','acting_leader'].indexOf(me.role)>=0)?'<span onclick="editAccident('+r.id+')" style="font-size:10px;color:var(--teal2);font-weight:700;cursor:pointer;padding:2px 6px;border:1px solid var(--teal);border-radius:10px">✏️ 수정</span>':'')
+        +'<span class="ho-time">'+ts+'</span></div></div>'
         +'<div class="w-row"><div class="w-av" style="background:var(--danger)">'+initial+'</div>'
         +'<span class="w-nm">'+writer+' 작성</span></div>'
         +'<div class="ho-body">'+fields+'</div>'
@@ -10337,6 +10351,51 @@ function renderAccList(data){
     });
   });
   list.innerHTML=html;
+}
+
+function setAccChip(groupId, customId, value){
+  var chips=document.querySelectorAll('#'+groupId+' .rp');
+  chips.forEach(function(p){ p.classList.remove('on'); });
+  var customEl=document.getElementById(customId);
+  if(customEl){ customEl.value=''; customEl.style.display='none'; }
+  if(!value) return;
+  var found=null;
+  chips.forEach(function(p){ if(p.textContent===value) found=p; });
+  if(found){ found.classList.add('on'); if(value==='기타'&&customEl) customEl.style.display='block'; }
+  else{
+    // 목록에 없는 값 → 기타 선택 + 직접입력 채움
+    chips.forEach(function(p){ if(p.textContent==='기타'){ p.classList.add('on'); } });
+    if(customEl){ customEl.value=value; customEl.style.display='block'; }
+  }
+}
+
+function editAccident(id){
+  if(!me||['admin','manager','leader','acting_leader'].indexOf(me.role)<0){ toast('⚠️ 조장 이상만 수정할 수 있습니다'); return; }
+  var r=(accidentAll||[]).filter(function(x){ return x.id===id; })[0];
+  if(!r){ toast('데이터를 찾을 수 없습니다'); return; }
+  accTab(1); // 등록 탭으로 (내부에서 resetAccForm 실행됨)
+  // 일자·시간 (KST)
+  if(r.occurred_at){
+    var k=new Date(new Date(r.occurred_at).getTime()+9*3600000).toISOString();
+    var dEl=document.getElementById('accDate'); if(dEl) dEl.value=k.slice(0,10);
+    var tEl=document.getElementById('accTime'); if(tEl) tEl.value=k.slice(11,16);
+  }
+  // 발생팀
+  document.querySelectorAll('#accTeamGrp .t-btn').forEach(function(b){
+    if(b.textContent.trim()===(r.team||'')) b.classList.add('on');
+  });
+  var set=function(fid,val){ var e=document.getElementById(fid); if(e) e.value=(val===null||val===undefined)?'':val; };
+  set('accVictim', r.related_staff);
+  set('accDuty', r.job_duty);
+  set('accLoc', r.location);
+  set('accDesc', r.description);
+  set('accLeaveDays', r.expected_leave_days);
+  set('accAction', r.action);
+  setAccChip('accTypeGrp','accTypeCustom', r.accident_type);
+  setAccChip('accInjGrp','accInjCustom', r.injury_type);
+  var btn=document.querySelector('#accP1 .btn-prim')||document.querySelector('button[onclick="subAcc()"]');
+  if(btn){ btn.textContent='✏️ 안전사고 수정'; btn._editId=id; }
+  toast('✏️ 수정 모드: 내용 수정 후 저장하세요');
 }
 
 function renderAccConfBlock(r){
@@ -11280,6 +11339,52 @@ async function loadMonthlyStats(){
   msLoading=false;
 }
 
+// ── 장소 자동 분류 (통계 공통): 시설 키워드 우선, 없으면 층 ──
+var MS_LOC_RULES=[
+  ['화장실', /화장실|변기|세면/],
+  ['휴게실', /휴게|대기실/],
+  ['집하장', /집하/],
+  ['출국장', /출국/],
+  ['입국장', /입국|도착장/],
+  ['사무실·창고', /사무|창고/],
+  ['공용구역', /공용|복도|로비|중앙|에스컬|엘리베이터|무빙워크/],
+  ['4층', /4\s*층|4F|4f/],
+  ['3층', /3\s*층|3F|3f/],
+  ['2층', /2\s*층|2F|2f/],
+  ['1층', /1\s*층|1F|1f/],
+  ['지하', /지하|B1|B2|b1|b2/]
+];
+function msClassifyLoc(text){
+  var s=String(text||'').trim();
+  if(!s) return '기타';
+  for(var i=0;i<MS_LOC_RULES.length;i++){
+    if(MS_LOC_RULES[i][1].test(s)) return MS_LOC_RULES[i][0];
+  }
+  return '기타';
+}
+// ── 습득물 품목 대분류: 내용물 키워드 우선 (예: 쇼핑백(과자) → 식품) ──
+var MS_ITEM_RULES=[
+  ['현금류', /현금|지폐|수표|동전|외화|달러|엔화|위안/],
+  ['여권·신분증', /여권|신분증|주민등록|면허|비자|등록증/],
+  ['귀금속·시계', /시계|반지|목걸이|귀걸이|팔찌|귀금속/],
+  ['휴대폰·전자기기', /휴대폰|핸드폰|아이폰|갤럭시|태블릿|아이패드|노트북|이어폰|에어팟|버즈|충전기|보조배터리|카메라|전자/],
+  ['주류', /주류|소주|위스키|와인|맥주|양주|술/],
+  ['기호식품', /담배|라이터|커피|홍삼|인삼/],
+  ['식품', /과자|식품|음식|빵|초콜릿|초콜렛|과일|먹거리|건강식품|영양제/],
+  ['유아용품', /유아|아기|유모차|젖병|장난감|기저귀/],
+  ['지갑류', /지갑|카드/],
+  ['의류·잡화', /의류|자켓|점퍼|모자|장갑|목도리|우산|신발|스카프|안경|선글라스|옷/],
+  ['가방류', /가방|백팩|캐리어|쇼핑백|파우치|배낭|보스턴백/]
+];
+function msClassifyItem(text){
+  var s=String(text||'').trim();
+  if(!s) return '기타';
+  for(var i=0;i<MS_ITEM_RULES.length;i++){
+    if(MS_ITEM_RULES[i][1].test(s)) return MS_ITEM_RULES[i][0];
+  }
+  return '기타';
+}
+
 function msCalc(q, key){
   var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorDays:{},nsSum:{}},
           ho:{total:0,confirmed:0,byTeam:{},byType:{시설물:0,위험요소:0,장비:0,특이사항:0,기타:0}},
@@ -11349,8 +11454,8 @@ function msCalc(q, key){
         if(dd>=0){ s.lost.doneDaysSum+=dd; s.lost.doneDaysCnt++; }
       }
     }
-    if(r.location){ var L=r.location.trim(); s.lost.byLoc[L]=(s.lost.byLoc[L]||0)+1; }
-    if(r.item){ var it=r.item.trim(); s.lost.byItem[it]=(s.lost.byItem[it]||0)+1; }
+    var L=msClassifyLoc(r.location); s.lost.byLoc[L]=(s.lost.byLoc[L]||0)+1;
+    var it=msClassifyItem(r.item); s.lost.byItem[it]=(s.lost.byItem[it]||0)+1;
     var hb=msKstHourBucket(r.found_date);
     if(hb>=0) s.lost.byHour[hb]++;
   });
@@ -11363,7 +11468,7 @@ function msCalc(q, key){
     s.acc.byType[ty]=(s.acc.byType[ty]||0)+1;
     var t=r.team||'기타';
     s.acc.byTeam[t]=(s.acc.byTeam[t]||0)+1;
-    if(r.location){ var L2=r.location.trim(); s.acc.byLoc[L2]=(s.acc.byLoc[L2]||0)+1; }
+    var L2=msClassifyLoc(r.location); s.acc.byLoc[L2]=(s.acc.byLoc[L2]||0)+1;
     var hb2=msKstHourBucket(r.occurred_at);
     if(hb2>=0) s.acc.byHour[hb2]++;
   });
@@ -11507,10 +11612,10 @@ function msRenderDetail(key){
     h+=msRow('반환완료', c.lost.done+'건');
     h+=msRow('반환율', rate+'% <span style="font-size:9px;font-weight:600;color:var(--g4)">('+pw+' '+pRate+'%)</span>');
     h+=msRow('평균 처리기간', c.lost.doneDaysCnt?(Math.round(c.lost.doneDaysSum/c.lost.doneDaysCnt*10)/10)+'일':'-');
-    h+=msSub('품목 TOP3');
-    h+=msTopBars(c.lost.byItem, 3, 'linear-gradient(90deg,var(--warn),#E8A83E)', '건');
-    h+=msSub('습득 장소 TOP3');
-    h+=msTopBars(c.lost.byLoc, 3, 'linear-gradient(90deg,var(--warn),#E8A83E)', '건');
+    h+=msSub('품목 분류별 TOP5');
+    h+=msTopBars(c.lost.byItem, 5, 'linear-gradient(90deg,var(--warn),#E8A83E)', '건');
+    h+=msSub('장소 분류별 TOP5');
+    h+=msTopBars(c.lost.byLoc, 5, 'linear-gradient(90deg,var(--warn),#E8A83E)', '건');
     h+=msSub('시간대별 분포');
     h+=msHourBars(c.lost.byHour, 'linear-gradient(90deg,var(--warn),#E8A83E)');
   }else if(key==='acc'){
@@ -11523,8 +11628,8 @@ function msRenderDetail(key){
     h+=msTopBars(c.acc.byType, 10, 'linear-gradient(90deg,var(--danger),#F07B7B)', '건');
     h+=msSub('시간대별 분포');
     h+=msHourBars(c.acc.byHour, 'linear-gradient(90deg,var(--danger),#F07B7B)');
-    h+=msSub('장소 TOP3');
-    h+=msTopBars(c.acc.byLoc, 3, 'linear-gradient(90deg,var(--danger),#F07B7B)', '건');
+    h+=msSub('장소 분류별 TOP5');
+    h+=msTopBars(c.acc.byLoc, 5, 'linear-gradient(90deg,var(--danger),#F07B7B)', '건');
     var ats=Object.keys(c.acc.byTeam).sort(function(a,b){ return c.acc.byTeam[b]-c.acc.byTeam[a]; });
     if(ats.length){
       h+=msSub('팀별');
