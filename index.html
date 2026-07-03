@@ -3135,7 +3135,7 @@ function applyRoleUI(){
   // 습득물 초기화 버튼 (admin만)
   var lrb=document.getElementById('lostResetBtn');if(lrb)lrb.style.display=isAdmin?'block':'none';
   // 전체채팅 메뉴 (게스트는 아예 접근 불가 - 메뉴 자체를 숨김)
-  var gcb=document.getElementById('groupChatMenuBtn');if(gcb)gcb.style.display=(me.role==='guest')?'none':'block';
+  var gcb=document.getElementById('groupChatMenuBtn');if(gcb)gcb.style.display=(me.role==='guest')?'none':'';
   var gcTab=document.getElementById('gcTabItem');if(gcTab)gcTab.style.display=(me.role==='guest')?'none':'flex';
   // 차량 게스트: 차량운행기록만 접근 가능
   if(me.role==='vehicle_guest'){
