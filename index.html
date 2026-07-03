@@ -11340,55 +11340,111 @@ async function loadMonthlyStats(){
   msLoading=false;
 }
 
-// ── 장소 자동 분류 (통계 공통): 시설 키워드 우선, 없으면 층 ──
+// ── 통계 자동 분류 엔진: 키워드 정확 매칭 → 오타 허용(자모 유사) 최근접 강제 배정 ──
+// '기타' 없음: 텍스트가 있으면 반드시 가장 가까운 분류에 배정
 var MS_LOC_RULES=[
-  // 우선순위: 구체 구역 → 직원구역 → 승객대기 → 시설 → 일반 → 층
-  ['출국장', /출국|체크인|카운터|발권|출발/],
-  ['면세구역', /면세|듀티프리|DF/],
-  ['입국장', /입국|도착|수하물|수취|세관/],
-  ['직원구역', /직원|미화|사무|창고|휴게|집하|방재|기계실|경비/],
-  ['탑승게이트·승객대기', /게이트|탑승|라운지|대기|승객/],
-  ['화장실', /화장실|변기|세면/],
-  ['상업·편의시설', /식당|푸드|카페|매장|편의점|약국|은행|환전|음식|레스토랑|상업/],
-  ['교통·주차', /주차|버스|택시|교통센터|승강장|정류장|셔틀/],
-  ['공용구역', /공용|복도|로비|중앙|에스컬|엘리베이터|무빙워크|승강기|홀/],
-  ['4층', /4\s*층|4F|4f/],
-  ['3층', /3\s*층|3F|3f/],
-  ['2층', /2\s*층|2F|2f/],
-  ['1층', /1\s*층|1F|1f/],
-  ['지하', /지하|B1|B2|b1|b2/]
+  ['출국장', ['출국','체크인','카운터','발권','출발']],
+  ['면세구역', ['면세구역','듀티프리','DF']],
+  ['입국장', ['입국','도착','수하물','수취','세관']],
+  ['직원구역', ['직원','미화','사무','창고','휴게','집하','방재','기계실','경비']],
+  ['탑승게이트·승객대기', ['게이트','탑승','라운지','대기','승객','의자','좌석','벤치']],
+  ['화장실', ['화장실','변기','세면']],
+  ['상업·편의시설', ['식당','푸드','카페','매장','편의점','약국','은행','환전','음식','레스토랑','상업','면세점']],
+  ['교통·주차', ['주차','버스','택시','교통센터','승강장','정류장','셔틀']],
+  ['공용구역', ['공용','복도','로비','중앙','에스컬레이터','엘리베이터','무빙워크','승강기','홀','통로']],
+  ['4층', ['4층','4F']],
+  ['3층', ['3층','3F']],
+  ['2층', ['2층','2F']],
+  ['1층', ['1층','1F']],
+  ['지하', ['지하','B1','B2']]
 ];
-function msClassifyLoc(text){
-  var s=String(text||'').trim();
-  if(!s) return '기타';
-  for(var i=0;i<MS_LOC_RULES.length;i++){
-    if(MS_LOC_RULES[i][1].test(s)) return MS_LOC_RULES[i][0];
-  }
-  return '기타';
-}
-// ── 습득물 품목 대분류: 내용물 키워드 우선 (예: 쇼핑백(과자) → 식품) ──
 var MS_ITEM_RULES=[
-  ['현금류', /현금|지폐|수표|동전|외화|달러|엔화|위안/],
-  ['여권·신분증', /여권|신분증|주민등록|면허|비자|등록증/],
-  ['의약품', /의약품|마약|알약|처방약|상비약|약품|약통|약봉|연고|파스|인슐린|안약|영양제|비타민|해열제|진통제|감기약|혈압약|당뇨약/],
-  ['귀금속·시계', /시계|반지|목걸이|귀걸이|팔찌|귀금속/],
-  ['휴대폰·전자기기', /휴대폰|핸드폰|전화|아이폰|갤럭시|태블릿|아이패드|노트북|이어폰|에어팟|버즈|충전기|보조배터리|카메라|전자/],
-  ['주류', /주류|소주|위스키|와인|맥주|양주|술|발렌타인|조니워커|시바스|잭다니엘|헤네시|참이슬|처음처럼|막걸리|사케|보드카|데킬라|꼬냑|샴페인|하이볼/],
-  ['기호식품', /담배|시가|궐련|라이터|커피|홍삼|인삼|말보로|에쎄|던힐|메비우스|팔리아멘트|아이코스|릴|전자담배|카멜|보그|레종/],
-  ['식품', /과자|식품|음식|빵|초콜릿|초콜렛|과일|먹거리|건강식품/],
-  ['유아용품', /유아|아기|유모차|젖병|장난감|기저귀/],
-  ['지갑류', /지갑|카드/],
-  ['의류·잡화', /의류|자켓|점퍼|모자|장갑|목도리|우산|신발|스카프|안경|선글라스|옷/],
-  ['가방류', /가방|백팩|캐리어|쇼핑백|파우치|배낭|보스턴백/]
+  ['현금류', ['현금','지폐','수표','동전','외화','달러','엔화','위안','유로']],
+  ['여권·신분증', ['여권','신분증','주민등록','면허','비자','등록증']],
+  ['의약품', ['의약품','마약','알약','처방약','상비약','약품','약통','약봉','연고','파스','인슐린','안약','영양제','비타민','해열제','진통제','감기약','혈압약','당뇨약']],
+  ['귀금속·시계', ['시계','반지','목걸이','귀걸이','팔찌','귀금속','주얼리']],
+  ['휴대폰·전자기기', ['휴대폰','핸드폰','전화','아이폰','갤럭시','태블릿','아이패드','노트북','이어폰','에어팟','버즈','충전기','보조배터리','카메라','전자','워치','스마트','USB','유심']],
+  ['화장품·향수', ['화장품','향수','립스틱','크림','로션','스킨','틴트','선크림','썬크림','마스크팩','파운데이션','미스트']],
+  ['주류', ['주류','소주','위스키','와인','맥주','양주','발렌타인','조니워커','시바스','잭다니엘','헤네시','참이슬','처음처럼','막걸리','사케','보드카','데킬라','꼬냑','샴페인','하이볼']],
+  ['기호식품', ['담배','시가','궐련','라이터','커피','홍삼','인삼','말보로','에쎄','던힐','메비우스','팔리아멘트','아이코스','전자담배','카멜','레종']],
+  ['식품', ['과자','식품','음식','빵','초콜릿','초콜렛','과일','먹거리','건강식품','라면','김치','음료','생수']],
+  ['유아용품', ['유아','아기','유모차','젖병','장난감','기저귀']],
+  ['열쇠', ['열쇠','차키','키홀더','키링']],
+  ['도서·서류', ['책','도서','서류','다이어리','노트','수첩','봉투','문서','계약서']],
+  ['지갑류', ['지갑','카드']],
+  ['의류·잡화', ['의류','자켓','점퍼','모자','장갑','목도리','우산','신발','스카프','안경','선글라스','썬글라스','샌들','슬리퍼','벨트','넥타이','머플러','옷']],
+  ['가방류', ['가방','백팩','캐리어','쇼핑백','파우치','배낭','보스턴백','에코백','힙색','크로스백']],
+  ['면세품', ['면세품','면세','기내면세']]
 ];
-function msClassifyItem(text){
-  var s=String(text||'').trim();
-  if(!s) return '기타';
-  for(var i=0;i<MS_ITEM_RULES.length;i++){
-    if(MS_ITEM_RULES[i][1].test(s)) return MS_ITEM_RULES[i][0];
+// 한글 → 자모 분해 (오타 비교용)
+var MS_CHO='ㄱㄲㄴㄷㄸㄹㅁㅂㅃㅅㅆㅇㅈㅉㅊㅋㅌㅍㅎ';
+var MS_JUNG='ㅏㅐㅑㅒㅓㅔㅕㅖㅗㅘㅙㅚㅛㅜㅝㅞㅟㅠㅡㅢㅣ';
+var MS_JONG=['','ㄱ','ㄲ','ㄳ','ㄴ','ㄵ','ㄶ','ㄷ','ㄹ','ㄺ','ㄻ','ㄼ','ㄽ','ㄾ','ㄿ','ㅀ','ㅁ','ㅂ','ㅄ','ㅅ','ㅆ','ㅇ','ㅈ','ㅊ','ㅋ','ㅌ','ㅍ','ㅎ'];
+function msJamo(str){
+  var out='';
+  for(var i=0;i<str.length;i++){
+    var c=str.charCodeAt(i);
+    if(c>=0xAC00&&c<=0xD7A3){
+      var o=c-0xAC00;
+      out+=MS_CHO[Math.floor(o/588)]+MS_JUNG[Math.floor((o%588)/28)]+MS_JONG[o%28];
+    }else out+=str[i];
   }
-  return '기타';
+  return out;
 }
+function msEditDist(a,b){
+  var m=a.length,n=b.length;
+  if(!m) return n; if(!n) return m;
+  var prev=[],cur=[];
+  for(var j=0;j<=n;j++) prev[j]=j;
+  for(var i=1;i<=m;i++){
+    cur[0]=i;
+    for(var j2=1;j2<=n;j2++){
+      cur[j2]=Math.min(prev[j2]+1, cur[j2-1]+1, prev[j2-1]+(a[i-1]===b[j2-1]?0:1));
+    }
+    prev=cur.slice();
+  }
+  return prev[n];
+}
+var MS_FLOOR_NAMES=['4층','3층','2층','1층','지하'];
+function msClassify(text, rules){
+  var s=String(text||'').trim();
+  if(!s) return null; // 빈 값은 분류 차트에서 제외
+  var low=s.toLowerCase();
+  // 1) 정확 포함 매칭 (규칙 순서 = 우선순위)
+  var floorHit=null;
+  for(var i=0;i<rules.length;i++){
+    var kws=rules[i][1];
+    for(var k=0;k<kws.length;k++){
+      if(low.indexOf(kws[k].toLowerCase())!==-1){
+        if(MS_FLOOR_NAMES.indexOf(rules[i][0])>=0){ floorHit=rules[i][0]; break; }
+        return rules[i][0];
+      }
+    }
+    if(floorHit) break;
+  }
+  // 2) 오타 허용: 토큰 vs 키워드 자모 편집거리 최소인 분류로 강제 배정
+  var tokens=s.split(/[\s,()\[\]\/·.-]+/).filter(function(t){ return t.length>=2; });
+  if(!tokens.length) tokens=[s];
+  var best={score:Infinity, name:rules[rules.length-1][0]};
+  for(var i2=0;i2<rules.length;i2++){
+    if(MS_FLOOR_NAMES.indexOf(rules[i2][0])>=0) continue; // 층은 오타 보정 대상 아님
+    var kws2=rules[i2][1].concat(rules[i2][0].split('·')); // 분류명 자체도 비교 대상에 포함
+    for(var k2=0;k2<kws2.length;k2++){
+      var kj=msJamo(kws2[k2].toLowerCase());
+      for(var t=0;t<tokens.length;t++){
+        var tj=msJamo(tokens[t].toLowerCase());
+        var d=msEditDist(tj,kj);
+        var norm=d/Math.max(tj.length,kj.length);
+        if(norm<best.score){ best={score:norm, name:rules[i2][0]}; }
+      }
+    }
+  }
+  // 층에만 걸린 경우: 오타 보정이 매우 근접(≤0.25)하면 그 분류 우선, 아니면 층 유지
+  if(floorHit) return (best.score<=0.25)?best.name:floorHit;
+  return best.name;
+}
+function msClassifyLoc(text){ return msClassify(text, MS_LOC_RULES); }
+function msClassifyItem(text){ return msClassify(text, MS_ITEM_RULES); }
 
 function msCalc(q, key){
   var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorDays:{},nsSum:{},lsSum:0,asSum:0},
@@ -11461,10 +11517,8 @@ function msCalc(q, key){
         if(dd>=0){ s.lost.doneDaysSum+=dd; s.lost.doneDaysCnt++; }
       }
     }
-    var L=msClassifyLoc(r.location); s.lost.byLoc[L]=(s.lost.byLoc[L]||0)+1;
-    if(L==='기타'&&r.location) s.lost.locEtc.push(String(r.location).trim());
-    var it=msClassifyItem(r.item); s.lost.byItem[it]=(s.lost.byItem[it]||0)+1;
-    if(it==='기타'&&r.item) s.lost.itemEtc.push(String(r.item).trim());
+    var L=msClassifyLoc(r.location); if(L) s.lost.byLoc[L]=(s.lost.byLoc[L]||0)+1;
+    var it=msClassifyItem(r.item); if(it) s.lost.byItem[it]=(s.lost.byItem[it]||0)+1;
     // 00:00:00 정각 = 예전 방식(시간 미기록) → 시간대 분포에서 제외
     var kstT=r.found_date?new Date(new Date(r.found_date).getTime()+9*3600000).toISOString().slice(11,19):'';
     if(kstT==='00:00:00'){ s.lost.hourUnknown++; }
@@ -11482,8 +11536,7 @@ function msCalc(q, key){
     s.acc.byType[ty]=(s.acc.byType[ty]||0)+1;
     var t=r.team||'기타';
     s.acc.byTeam[t]=(s.acc.byTeam[t]||0)+1;
-    var L2=msClassifyLoc(r.location); s.acc.byLoc[L2]=(s.acc.byLoc[L2]||0)+1;
-    if(L2==='기타'&&r.location) s.acc.locEtc.push(String(r.location).trim());
+    var L2=msClassifyLoc(r.location); if(L2) s.acc.byLoc[L2]=(s.acc.byLoc[L2]||0)+1;
     var hb2=msKstHourBucket(r.occurred_at);
     if(hb2>=0) s.acc.byHour[hb2]++;
   });
