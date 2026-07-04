@@ -6182,9 +6182,9 @@ function openLeaderDataEdit(shift,team,name){
   var isMyTeam=(me.role==='leader'||me.role==='acting_leader')&&myTeamNum&&myTeamNum===targetTeamNum;
   if(!isAdmin&&!isMyTeam){toast('같은 팀 데이터만 수정할 수 있습니다');return;}
   editShift=shift; editTeam=team;
-  // 당일 초기화 버튼: 관리자만 노출 (조장 오조작 방지)
+  // 당일 초기화 버튼: 최고관리자(admin)만 노출
   var rstBtn=document.getElementById('leaderDataResetBtn');
-  if(rstBtn) rstBtn.style.display=isAdmin?'block':'none';
+  if(rstBtn) rstBtn.style.display=(me&&me.role==='admin')?'block':'none';
   var title=document.getElementById('leaderDataModalTitle');
   var body=document.getElementById('leaderDataEditBody');
   if(!body) return;
@@ -6245,9 +6245,9 @@ function openLeaderDataEdit(shift,team,name){
 
 function closeLeaderDataEdit(){hideM('leaderDataModal');}
 
-// ─ 당일 입력 초기화 (조별, 관리자 전용) ─
+// ─ 당일 입력 초기화 (조별, 최고관리자 전용) ─
 async function resetLeaderDataToday(){
-  if(!me||!(me.role==='admin'||me.role==='manager')){toast('관리자만 초기화할 수 있습니다');return;}
+  if(!me||me.role!=='admin'){toast('최고관리자만 초기화할 수 있습니다');return;}
   if(!editShift||!editTeam) return;
   if(!confirm(editTeam+' '+editShift+' 당일 입력을 초기화할까요?\n\n오늘 입력값만 삭제되며, 해당 조장이 처음부터 다시 입력할 수 있습니다.\n(과거 이력은 그대로 보존됩니다)')) return;
   var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
