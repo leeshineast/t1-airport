@@ -1040,6 +1040,20 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <div style="display:flex;align-items:baseline;gap:3px"><span id="msV_acc" style="font-size:26px;font-weight:900;color:var(--danger);line-height:1">-</span><span style="font-size:10px;color:var(--g4)">건</span></div>
         <div id="msD_acc" style="font-size:9px;font-weight:700;margin-top:5px;color:var(--g4)">&nbsp;</div>
       </div>
+      <!-- 민원 -->
+      <div class="ms-card" onclick="msToggle('voc')" id="msCard_voc" style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#6B21A8,#9D5BD2)"></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:8px;background:#F3E8FF;display:flex;align-items:center;justify-content:center;font-size:12px">📞</span><span style="font-size:10px;font-weight:700;color:var(--g5)">민원</span></div>
+        <div style="display:flex;align-items:baseline;gap:3px"><span id="msV_voc" style="font-size:26px;font-weight:900;color:#6B21A8;line-height:1">-</span><span style="font-size:10px;color:var(--g4)">건</span></div>
+        <div id="msD_voc" style="font-size:9px;font-weight:700;margin-top:5px;color:var(--g4)">&nbsp;</div>
+      </div>
+      <!-- 폐기물 -->
+      <div class="ms-card" onclick="msToggle('waste')" id="msCard_waste" style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--success),#5BBF8A)"></div>
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:8px;background:var(--success-bg);display:flex;align-items:center;justify-content:center;font-size:12px">♻️</span><span style="font-size:10px;font-weight:700;color:var(--g5)">폐기물</span></div>
+        <div style="display:flex;align-items:baseline;gap:3px"><span id="msV_waste" style="font-size:26px;font-weight:900;color:var(--success);line-height:1">-</span><span style="font-size:10px;color:var(--g4)">톤</span></div>
+        <div id="msD_waste" style="font-size:9px;font-weight:700;margin-top:5px;color:var(--g4)">&nbsp;</div>
+      </div>
     </div>
     <div id="msDetail" style="display:none;background:white;border-radius:var(--r);margin:0 13px 9px;padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:0 15px 6px">
@@ -11374,7 +11388,9 @@ async function loadMonthlyStats(){
       msFetchAll(function(){ return sb.from('handover').select('id,created_at,ho_date,shift,team,confirmed,facility,danger,equipment,notice,special').gte('created_at',tsFrom).lte('created_at',tsTo); }),
       msFetchAll(function(){ return sb.from('lost_found').select('id,found_date,status,completed_at,location,item').gte('found_date',tsFrom).lte('found_date',tsTo); }),
       msFetchAll(function(){ return sb.from('safety_accidents').select('id,occurred_at,team,accident_type,location').gte('occurred_at',tsFrom).lte('occurred_at',tsTo); }),
-      msFetchAll(function(){ return sb.from('mgr_attendance').select('date,checked,status').gte('date',dFrom).lte('date',dTo); })
+      msFetchAll(function(){ return sb.from('mgr_attendance').select('date,checked,status').gte('date',dFrom).lte('date',dTo); }),
+      msFetchAll(function(){ return sb.from('voc_data').select('id,voc_date,status,completed_at,content').gte('voc_date',dFrom).lte('voc_date',dTo); }),
+      msFetchAll(function(){ return sb.from('waste_data').select('waste_date,incineration_living,incineration_synthetic,incineration_food,incineration_wood,recycle_paper,recycle_plastic,recycle_can,recycle_glass,recycle_etc,misc_etc').gte('waste_date',dFrom).lte('waste_date',dTo); })
     ]);
     var anyErr=q.some(function(r){ return r&&r.error; });
     var banner=document.getElementById('msErrBanner');
@@ -11398,11 +11414,11 @@ var MS_LOC_RULES=[
   ['출국장', ['출국','체크인','카운터','발권','출발']],
   ['면세구역', ['면세구역','듀티프리','DF']],
   ['입국장', ['입국','도착','수하물','수취','세관']],
-  ['직원구역', ['직원','미화','사무','창고','휴게','집하','방재','기계실','경비']],
+  ['직원구역', ['직원','미화','사무','창고','휴게','집하','방재','기계실','경비','탕비실','하역장']],
+  ['교통·주차', ['주차','버스','택시','교통센터','승강장','정류장','셔틀']],
   ['탑승게이트·승객대기', ['게이트','탑승','라운지','대기','승객','의자','좌석','벤치']],
   ['화장실', ['화장실','변기','세면']],
   ['상업·편의시설', ['식당','푸드','카페','매장','편의점','약국','은행','환전','음식','레스토랑','상업','면세점']],
-  ['교통·주차', ['주차','버스','택시','교통센터','승강장','정류장','셔틀']],
   ['공용구역', ['공용','복도','로비','중앙','에스컬레이터','엘리베이터','무빙워크','승강기','홀','통로']],
   ['4층', ['4층','4F']],
   ['3층', ['3층','3F']],
@@ -11497,13 +11513,28 @@ function msClassify(text, rules){
 }
 function msClassifyLoc(text){ return msClassify(text, MS_LOC_RULES); }
 function msClassifyItem(text){ return msClassify(text, MS_ITEM_RULES); }
+// 민원 유형 분류 규칙 (순서 = 우선순위, 실데이터 기반)
+var MS_VOC_RULES=[
+  ['토사물', ['토사물','구토','토했','토함']],
+  ['파손·깨짐', ['깨짐','깨져','깨진','파손','부러','고장','금이간']],
+  ['화장실·설비', ['막힘','막혔','누수','세면대','변기','수전','배수구','비데','장애인실','탕비실','화장지','하부장']],
+  ['악취·냄새', ['악취','냄새']],
+  ['액체·음료 유출', ['쏟','흘림','흘렸','음료','커피','물기','액체','우유','주스']],
+  ['분실물', ['분실','습득','여권','지갑']],
+  ['서비스·응대', ['욕설','불친절','태도','칭찬','면담','확인서','컴플레인']],
+  ['안내·문의', ['안내','전화번호','연락처','문의','재연락','출입']],
+  ['청소·오염', ['얼룩','먼지','오염','토사','청소','처리']]
+];
+function msClassifyVoc(text){ return msClassify(text, MS_VOC_RULES); }
 
 function msCalc(q, key){
   var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorDays:{},nsSum:{},lsSum:0,asSum:0},
           mgr:{days:{},trip:0,edu:0},
           ho:{total:0,confirmed:0,byTeam:{},byType:{시설물:0,위험요소:0,장비:0,특이사항:0,기타:0}},
           lost:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byLoc:{},byItem:{},byHour:[0,0,0,0],hourUnknown:0,itemEtc:[],locEtc:[]},
-          acc:{total:0,byType:{},byTeam:{},byLoc:{},byHour:[0,0,0,0],locEtc:[]} };
+          acc:{total:0,byType:{},byTeam:{},byLoc:{},byHour:[0,0,0,0],locEtc:[]},
+          voc:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byType:{},byLoc:{}},
+          waste:{inc:0,rec:0,misc:0,byItem:{}} };
   MS_NS_COLS.forEach(function(c){ s.mp.nsSum[c]=0; });
   // ── 인력현황 (mp_data: 오전/오후, night_special_data: 야간)
   ((q[0]&&q[0].data)||[]).forEach(function(r){
@@ -11600,6 +11631,37 @@ function msCalc(q, key){
     if(r.status==='출장') s.mgr.trip++;
     if(r.status==='교육') s.mgr.edu++;
   });
+  // ── 민원 (voc_data)
+  ((q[6]&&q[6].data)||[]).forEach(function(r){
+    if(!r.voc_date||r.voc_date.indexOf(key)!==0) return;
+    s.voc.total++;
+    var vt=msClassifyVoc(r.content); if(vt) s.voc.byType[vt]=(s.voc.byType[vt]||0)+1;
+    var vL=msClassifyLoc(r.content); if(vL) s.voc.byLoc[vL]=(s.voc.byLoc[vL]||0)+1;
+    var done=!!r.completed_at||(r.status&&r.status.indexOf('완료')>=0);
+    if(done){
+      s.voc.done++;
+      if(r.completed_at&&r.voc_date){
+        var dd=(new Date(r.completed_at)-new Date(r.voc_date+'T00:00:00+09:00'))/86400000;
+        if(dd>=0){ s.voc.doneDaysSum+=dd; s.voc.doneDaysCnt++; }
+      }
+    }
+  });
+  // ── 폐기물 (waste_data · 톤)
+  var MS_W_INC={incineration_living:'생활쓰레기',incineration_synthetic:'폐합성수지',incineration_food:'음식물',incineration_wood:'폐목재'};
+  var MS_W_REC={recycle_paper:'폐지',recycle_plastic:'플라스틱',recycle_can:'캔',recycle_glass:'유리',recycle_etc:'재활용 기타'};
+  ((q[7]&&q[7].data)||[]).forEach(function(r){
+    if(!r.waste_date||r.waste_date.indexOf(key)!==0) return;
+    Object.keys(MS_W_INC).forEach(function(c2){
+      var v=Number(r[c2])||0; if(!v) return;
+      s.waste.inc+=v; s.waste.byItem[MS_W_INC[c2]]=(s.waste.byItem[MS_W_INC[c2]]||0)+v;
+    });
+    Object.keys(MS_W_REC).forEach(function(c2){
+      var v=Number(r[c2])||0; if(!v) return;
+      s.waste.rec+=v; s.waste.byItem[MS_W_REC[c2]]=(s.waste.byItem[MS_W_REC[c2]]||0)+v;
+    });
+    var mv=Number(r.misc_etc)||0;
+    if(mv){ s.waste.misc+=mv; s.waste.byItem['기타']=(s.waste.byItem['기타']||0)+mv; }
+  });
   return s;
 }
 
@@ -11647,6 +11709,17 @@ function msRenderCards(){
   }
   el=document.getElementById('msV_acc'); if(el) el.textContent=c.acc.total;
   el=document.getElementById('msD_acc'); if(el) el.innerHTML=msDeltaBadge(c.acc.total,p.acc.total,true,'건');
+  // 민원 (적을수록 좋음)
+  el=document.getElementById('msV_voc'); if(el) el.textContent=c.voc.total;
+  el=document.getElementById('msD_voc'); if(el) el.innerHTML=msDeltaBadge(c.voc.total,p.voc.total,true,'건');
+  // 폐기물 (총 처리량 톤 · 재활용률 표시)
+  var wTot=Math.round((c.waste.inc+c.waste.rec+c.waste.misc)*10)/10;
+  el=document.getElementById('msV_waste'); if(el) el.textContent=wTot;
+  el=document.getElementById('msD_waste'); if(el){
+    var wAll=c.waste.inc+c.waste.rec+c.waste.misc;
+    var wRate=wAll?Math.round(c.waste.rec/wAll*100):0;
+    el.innerHTML='<span style="color:var(--success)">재활용률 '+wRate+'%</span>';
+  }
 }
 
 function msBar(label, val, max, color, unit){
@@ -11688,7 +11761,7 @@ function msHourBars(arr, color){
 function msToggle(key){
   var det=document.getElementById('msDetail');
   if(!det) return;
-  ['mp','ho','lost','acc'].forEach(function(k){
+  ['mp','ho','lost','acc','voc','waste'].forEach(function(k){
     var card=document.getElementById('msCard_'+k);
     if(card) card.style.border='1px solid var(--g2)';
   });
@@ -11785,6 +11858,36 @@ function msRenderDetail(key){
       h+=msSub('팀별');
       ats.forEach(function(t){ h+=msRow(t, c.acc.byTeam[t]+'건'); });
     }
+  }else if(key==='voc'){
+    var vRate=c.voc.total?Math.round(c.voc.done/c.voc.total*100):0;
+    var vRateP=p.voc.total?Math.round(p.voc.done/p.voc.total*100):0;
+    h=msTitle('📞 민원 · '+pl);
+    h+=msRow('접수', c.voc.total+'건 <span style="font-size:9px;font-weight:600;color:var(--g4)">('+pw+' '+p.voc.total+'건)</span>');
+    h+=msRow('처리완료', c.voc.done+'건');
+    h+=msRow('미처리', (c.voc.total-c.voc.done)+'건');
+    h+=msRow('처리율', vRate+'% <span style="font-size:9px;font-weight:600;color:var(--g4)">('+pw+' '+vRateP+'%)</span>');
+    h+=msRow('평균 처리기간', c.voc.doneDaysCnt?(Math.round(c.voc.doneDaysSum/c.voc.doneDaysCnt*10)/10)+'일':'-');
+    h+=msSub('유형별 분류');
+    h+=msTopBars(c.voc.byType, 9, 'linear-gradient(90deg,#6B21A8,#9D5BD2)', '건');
+    h+=msSub('장소 분류별 TOP5');
+    h+=msTopBars(c.voc.byLoc, 5, 'linear-gradient(90deg,#6B21A8,#9D5BD2)', '건');
+    if(!c.voc.total){
+      h+='<div style="text-align:center;padding:10px;margin:8px 0 0;background:var(--success-bg);border-radius:var(--r2);color:var(--success);font-size:11px;font-weight:700">✅ '+pl+' 민원 없음</div>';
+    }
+  }else if(key==='waste'){
+    var wT=c.waste.inc+c.waste.rec+c.waste.misc, wTP=p.waste.inc+p.waste.rec+p.waste.misc;
+    var wR=wT?Math.round(c.waste.rec/wT*100):0;
+    var wRP=wTP?Math.round(p.waste.rec/wTP*100):0;
+    h=msTitle('♻️ 폐기물 · '+pl);
+    h+=msRow('총 처리량', (Math.round(wT*100)/100)+'톤 <span style="font-size:9px;font-weight:600;color:var(--g4)">('+pw+' '+(Math.round(wTP*100)/100)+'톤)</span>');
+    h+=msRow('소각 소계', (Math.round(c.waste.inc*100)/100)+'톤');
+    h+=msRow('재활용 소계', (Math.round(c.waste.rec*100)/100)+'톤');
+    if(c.waste.misc) h+=msRow('기타', (Math.round(c.waste.misc*100)/100)+'톤');
+    h+=msRow('재활용률', wR+'% <span style="font-size:9px;font-weight:600;color:var(--g4)">('+pw+' '+wRP+'%)</span>');
+    h+=msSub('품목별 처리량');
+    var wObj={};
+    Object.keys(c.waste.byItem).forEach(function(k3){ var rv=Math.round(c.waste.byItem[k3]*100)/100; if(rv>0) wObj[k3]=rv; });
+    h+=msTopBars(wObj, 10, 'linear-gradient(90deg,var(--success),#5BBF8A)', '톤');
   }
   det.innerHTML=h;
 }
