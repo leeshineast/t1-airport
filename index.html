@@ -9615,7 +9615,7 @@ async function refreshMpDataLight(){
       mpDataByLeader={오전:{},오후:{},야간:{}};
       mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
       go('main');
-      setTimeout(function(){ applyRoleUI(); initAppData(); updateStaff(); updateFloorChart(); updateMpSummary(); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); }, 500);
+      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); }, 500);
       return;
     }
   }catch(e){}
@@ -9699,9 +9699,6 @@ async function initAppData(){
   loadMpHistory();
   // 전일 근무 인원 로드
   loadPrevStaff();
-  // 인수인계 미확인 알림: 모든 데이터 로드 완료 후 한 번만 실행
-  checkHoPending();
-  startHoPoll();
   // 당일/전일 미입력 조장 안내 팝업 (다른 팝업과 겹치지 않게 약간의 지연)
   setTimeout(function(){ checkAndShowMissingLeaderPopup(); }, 800);
 }
