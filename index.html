@@ -3064,8 +3064,6 @@ function go(name){
   }
   if(name==='ho'){
     loadHandoverFromDB();
-  startHoPoll();
-  
     // 인계팀 자동선택: 로그인 사용자 팀을 기본 선택
     setTimeout(autoSelectHandoverTeam, 200);
   }
@@ -8057,7 +8055,6 @@ async function loadHandoverFromDB(){
     renderHoList(hoAll);
     updateHoPending();
     updateAccComplaintCount();
-    checkHoPending();
   }catch(e){}
 }
 
@@ -9702,6 +9699,9 @@ async function initAppData(){
   loadMpHistory();
   // 전일 근무 인원 로드
   loadPrevStaff();
+  // 인수인계 미확인 알림: 모든 데이터 로드 완료 후 한 번만 실행
+  checkHoPending();
+  startHoPoll();
   // 당일/전일 미입력 조장 안내 팝업 (다른 팝업과 겹치지 않게 약간의 지연)
   setTimeout(function(){ checkAndShowMissingLeaderPopup(); }, 800);
 }
@@ -11919,7 +11919,7 @@ function msRenderDetail(key){
 var t1SoundOn = localStorage.getItem('t1_sound_on')!=='0'; // 기본: 켬
 var _t1AudioCtx=null, _t1LastBeep=0;
 var _t1PrevNotif=null, _t1PrevGc=null;
-var _t1PrevHoPending=null, _t1HoPollTimer=null;
+var _t1PrevHoPending=-1, _t1HoPollTimer=null;
 
 // 브라우저 정책: 사용자 터치 후에만 오디오 활성화 가능
 document.addEventListener('click', function(){
@@ -11952,7 +11952,7 @@ function checkHoPending(){
     return false;
   });
   var cnt=pending.length;
-  var isFirst=(_t1PrevHoPending===null);
+  var isFirst=(_t1PrevHoPending===-1);
   // 처음 로드 시: 미확인 건 있으면 바로 배너 표시 (소리 없이)
   // 이후 폴링: 새로 늘어난 경우에만 소리 + 배너
   if(isFirst){
