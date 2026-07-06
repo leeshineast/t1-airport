@@ -11952,16 +11952,29 @@ function checkHoPending(){
     return false;
   });
   var cnt=pending.length;
-  // 처음 로드 시에는 조용히 (null → cnt 전환)
-  if(_t1PrevHoPending===null){ _t1PrevHoPending=cnt; return; }
-  // 새 미확인 인계가 늘었을 때만 알림
+  var isFirst=(_t1PrevHoPending===null);
+  // 처음 로드 시: 미확인 건 있으면 바로 배너 표시 (소리 없이)
+  // 이후 폴링: 새로 늘어난 경우에만 소리 + 배너
+  if(isFirst){
+    _t1PrevHoPending=cnt;
+    if(cnt>0){
+      var msg0='미확인 인계 '+cnt+'건이 있습니다';
+      var b0=document.getElementById('hoAlertBanner');
+      var bm0=document.getElementById('hoAlertMsg');
+      if(b0&&bm0){ bm0.textContent=msg0; b0.style.display='block';
+        setTimeout(function(){ if(b0&&b0.style.display!=='none') b0.style.display='none'; }, 10000);
+      }
+    }
+    return;
+  }
+  // 새 미확인 인계가 늘었을 때 소리 + 배너
   if(cnt>_t1PrevHoPending){
     var newCnt=cnt-_t1PrevHoPending;
     var msg='미확인 인계 '+cnt+'건 ('+newCnt+'건 새로 추가)';
     var b=document.getElementById('hoAlertBanner');
     var bm=document.getElementById('hoAlertMsg');
     if(b&&bm){ bm.textContent=msg; b.style.display='block';
-      setTimeout(function(){ if(b.style.display!=='none') b.style.display='none'; }, 8000);
+      setTimeout(function(){ if(b&&b.style.display!=='none') b.style.display='none'; }, 8000);
     }
     if(typeof playNotifSound==='function') playNotifSound();
   }
@@ -11978,7 +11991,7 @@ function startHoPoll(){
       var res=await sb.from('handover').select('*').order('created_at',{ascending:false});
       if(!res.error){ hoAll=res.data||[]; checkHoPending(); }
     }catch(e){}
-  }, 30000);
+  }, 7200000); // 2시간
 }
 
 function playNotifSound(){
