@@ -1014,8 +1014,21 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       </div>
       <div style="display:flex;align-items:center;gap:5px">
         <button onclick="msMove(-1)" style="width:26px;height:26px;border:1px solid var(--g2);background:white;border-radius:50%;font-size:10px;color:var(--g5);cursor:pointer;line-height:1">◀</button>
-        <span id="msMonthLbl" style="font-size:12px;font-weight:800;color:var(--g6);min-width:82px;text-align:center">-</span>
+        <button id="msMonthLbl" onclick="msPickerOpen()" style="font-size:12px;font-weight:800;color:var(--g6);min-width:82px;text-align:center;background:var(--g1);border:1px solid var(--g2);border-radius:14px;padding:3px 10px;cursor:pointer">-</button>
         <button onclick="msMove(1)" id="msNextBtn" style="width:26px;height:26px;border:1px solid var(--g2);background:white;border-radius:50%;font-size:10px;color:var(--g5);cursor:pointer;line-height:1">▶</button>
+      </div>
+    </div>
+    <!-- 기간 피커 드롭다운 -->
+    <div id="msPickerDrop" style="display:none;margin:0 13px 9px;background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:12px;box-shadow:0 4px 16px rgba(0,0,0,.1)">
+      <div id="msPickerYearRow" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <button onclick="msPickerYearMove(-1)" style="width:26px;height:26px;border:1px solid var(--g2);background:white;border-radius:50%;font-size:10px;color:var(--g5);cursor:pointer">◀</button>
+        <span id="msPickerYearLbl" style="font-size:13px;font-weight:800;color:var(--g7)">-</span>
+        <button onclick="msPickerYearMove(1)" style="width:26px;height:26px;border:1px solid var(--g2);background:white;border-radius:50%;font-size:10px;color:var(--g5);cursor:pointer">▶</button>
+      </div>
+      <div id="msPickerMonthGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px"></div>
+      <div style="display:flex;gap:8px;margin-top:10px">
+        <button onclick="msPickerClose()" style="flex:1;padding:8px;background:var(--g1);border:none;border-radius:var(--r2);font-size:11px;font-weight:700;color:var(--g5);cursor:pointer">취소</button>
+        <button onclick="msPickerApply()" style="flex:2;padding:8px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:11px;font-weight:700;cursor:pointer">적용</button>
       </div>
     </div>
     <div id="msErrBanner" style="display:none;margin:0 13px 9px;padding:10px 13px;background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:var(--r2);font-size:11px;color:var(--danger);font-weight:700;align-items:center;justify-content:space-between">
@@ -11333,6 +11346,64 @@ function msKstHourBucket(iso){
 function msPrevWord(){ return msMode==='year'?'전년':'전월'; }
 function msPeriodLabel(){ return msMode==='year'?(msY+'년'):(msM+'월'); }
 
+// ── 기간 피커 ──
+var msPickerTmpY=0, msPickerTmpM=0;
+
+function msPickerOpen(){
+  var now=msNowKst();
+  msPickerTmpY=msY||now.getUTCFullYear();
+  msPickerTmpM=msM||(now.getUTCMonth()+1);
+  msPickerRender();
+  var d=document.getElementById('msPickerDrop');
+  if(d) d.style.display='block';
+}
+function msPickerClose(){
+  var d=document.getElementById('msPickerDrop');
+  if(d) d.style.display='none';
+}
+function msPickerYearMove(dir){
+  var now=msNowKst(), cy=now.getUTCFullYear();
+  var ny=msPickerTmpY+dir;
+  if(ny<2024||ny>cy) return;
+  msPickerTmpY=ny;
+  msPickerRender();
+}
+function msPickerRender(){
+  var now=msNowKst(), cy=now.getUTCFullYear(), cm=now.getUTCMonth()+1;
+  var yl=document.getElementById('msPickerYearLbl');
+  if(yl) yl.textContent=msPickerTmpY+'년';
+  var mg=document.getElementById('msPickerMonthGrid');
+  if(!mg) return;
+  // 연간 모드: 연도만 선택 (월 그리드 숨김)
+  if(msMode==='year'){
+    mg.style.display='none';
+    return;
+  }
+  mg.style.display='grid';
+  var html='';
+  for(var i=1;i<=12;i++){
+    var disabled=(msPickerTmpY===cy&&i>cm)||(msPickerTmpY>cy);
+    var isSel=(i===msPickerTmpM);
+    var bg=isSel?'background:var(--teal);color:white;':'background:var(--g1);color:var(--g6);';
+    var opacity=disabled?'opacity:.35;pointer-events:none;':'cursor:pointer;';
+    html+='<button onclick="msPickerSelM('+i+')" style="padding:6px 0;border:none;border-radius:var(--r2);font-size:11px;font-weight:700;'+bg+opacity+'">'+i+'월</button>';
+  }
+  mg.innerHTML=html;
+}
+function msPickerSelM(m){ msPickerTmpM=m; msPickerRender(); }
+function msPickerApply(){
+  var now=msNowKst(), cy=now.getUTCFullYear(), cm=now.getUTCMonth()+1;
+  if(msMode==='year'){
+    if(msPickerTmpY>cy) return;
+    msY=msPickerTmpY;
+  }else{
+    if(msPickerTmpY>cy||(msPickerTmpY===cy&&msPickerTmpM>cm)) return;
+    msY=msPickerTmpY; msM=msPickerTmpM;
+  }
+  msPickerClose();
+  loadMonthlyStats();
+}
+
 function msSetMode(m){
   if(msLoading||msMode===m) return;
   msMode=m;
@@ -11820,12 +11891,13 @@ function msRenderDetail(key){
     var favg=c.mp.floorSum.map(function(v){ return fDays?Math.round(v/fDays):0; });
     var fmx=Math.max.apply(null, favg.concat([1]));
     for(var i=0;i<7;i++){ h+=msBar(MS_FLOORS[i], favg[i], fmx, 'linear-gradient(90deg,var(--teal),var(--teal2))', '명'); }
-    // 야간 작업별 (연인원) - 항상 표시
-    h+=msSub('야간 작업별 투입 연인원 · '+pl);
+    // 야간 작업별 (일평균) - 층별과 동일하게 날짜 수로 나눔
+    var nsDays=Object.keys(c.mp.shiftDays['야간']||{}).length||1;
+    h+=msSub('야간 작업별 투입 일평균 · '+pl);
     var nsTotal=0; MS_NS_COLS.forEach(function(cc){ nsTotal+=c.mp.nsSum[cc]; });
     if(nsTotal){
       var nsObj={};
-      MS_NS_COLS.forEach(function(cc){ if(c.mp.nsSum[cc]>0) nsObj[MS_NS_LABELS[cc]]=c.mp.nsSum[cc]; });
+      MS_NS_COLS.forEach(function(cc){ var avg=Math.round(c.mp.nsSum[cc]/nsDays); if(avg>0) nsObj[MS_NS_LABELS[cc]]=avg; });
       h+=msTopBars(nsObj, 10, 'linear-gradient(90deg,#6B21A8,#9D5BD2)', '명');
     }else{
       h+='<div style="font-size:10px;color:var(--g4);padding:4px 0">'+pl+' 야간특별작업 데이터 없음</div>';
