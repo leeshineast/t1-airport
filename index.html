@@ -10596,10 +10596,12 @@ function renderGroupChat(){
   var newCount = gcAll.length;
   wrap.innerHTML=html;
   if(isFirstRender || wasNearBottom || newCount !== gcLastCount){
-    // innerHTML 직후 브라우저 레이아웃 확정 전이므로 rAF 2중으로 감싸 실행
+    // .scr 전체 페이지 스크롤 구조: 스크롤 컨테이너는 html/body이므로
+    // 마지막 메시지 요소로 scrollIntoView 사용
     requestAnimationFrame(function(){
       requestAnimationFrame(function(){
-        wrap.scrollTop=wrap.scrollHeight;
+        var last=wrap.lastElementChild;
+        if(last) last.scrollIntoView({block:'end'});
       });
     });
   }
