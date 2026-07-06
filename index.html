@@ -3086,6 +3086,7 @@ function go(name){
     loadAccidentFromDB();
   }
   if(name==='groupchat'){
+    gcLastCount=0; // 진입할 때마다 첫 렌더로 처리 → 항상 맨 아래로
     loadGroupChat();
     startGroupChatPolling();
     markGroupChatRead();
@@ -10590,13 +10591,19 @@ function renderGroupChat(){
         +'</div></div>';
     }
   });
-  var wasNearBottom = (wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight) < 120;
   var isFirstRender = (gcLastCount===0);
+  var wasNearBottom = isFirstRender || (wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight) < 120;
+  var newCount = gcAll.length;
   wrap.innerHTML=html;
-  if(isFirstRender || wasNearBottom || gcAll.length!==gcLastCount){
-    wrap.scrollTop=wrap.scrollHeight;
+  if(isFirstRender || wasNearBottom || newCount !== gcLastCount){
+    // innerHTML 직후 브라우저 레이아웃 확정 전이므로 rAF 2중으로 감싸 실행
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        wrap.scrollTop=wrap.scrollHeight;
+      });
+    });
   }
-  gcLastCount=gcAll.length;
+  gcLastCount=newCount;
 }
 
 async function sendGroupChat(){
