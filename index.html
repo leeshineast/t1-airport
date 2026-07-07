@@ -11619,7 +11619,7 @@ var MS_VOC_RULES=[
 function msClassifyVoc(text){ return msClassify(text, MS_VOC_RULES); }
 
 function msCalc(q, key){
-  var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorDays:{},nsSum:{},lsSum:0,asSum:0,hourly:new Array(24).fill(0),hourlyDays:new Array(24).fill(0)},
+  var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorDays:{},nsSum:{},lsSum:0,asSum:0,hourly:new Array(24).fill(0),hourlyDays:new Array(24).fill(0),hourlyByShift:{오전:new Array(24).fill(0),오후:new Array(24).fill(0),야간:new Array(24).fill(0)}},
           mgr:{days:{},trip:0,edu:0},
           ho:{total:0,confirmed:0,byTeam:{},byType:{시설물:0,위험요소:0,장비:0,특이사항:0,기타:0}},
           lost:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byLoc:{},byItem:{},byHour:[0,0,0,0],hourUnknown:0,itemEtc:[],locEtc:[]},
@@ -11655,6 +11655,7 @@ function msCalc(q, key){
     if(sh&&sum>0&&hrRanges[sh]){
       for(var hri=hrRanges[sh][0];hri<=hrRanges[sh][1];hri++){
         s.mp.hourly[hri]+=sum; s.mp.hourlyDays[hri]++;
+        s.mp.hourlyByShift[sh][hri]+=sum;
       }
     }
   });
@@ -11671,7 +11672,7 @@ function msCalc(q, key){
     s.mp.shiftSum['야간']+=sum; s.mp.shiftDays['야간'][r.date]=1;
     if(r.proxy_writer) s.mp.proxy++;
     // 시간대별: 야간 22~23, 0~6
-    [22,23,0,1,2,3,4,5,6].forEach(function(hri){ s.mp.hourly[hri]+=sum; s.mp.hourlyDays[hri]++; });
+    [22,23,0,1,2,3,4,5,6].forEach(function(hri){ s.mp.hourly[hri]+=sum; s.mp.hourlyDays[hri]++; s.mp.hourlyByShift['야간'][hri]+=sum; });
   });
   // ── 인수인계 (ho_date 우선, 없으면 created_at)
   ((q[2]&&q[2].data)||[]).forEach(function(r){
@@ -11900,46 +11901,78 @@ function msRenderDetail(key){
     var favg=c.mp.floorSum.map(function(v){ return fDays?Math.round(v/fDays):0; });
     var fmx=Math.max.apply(null, favg.concat([1]));
     for(var i=0;i<7;i++){ h+=msBar(MS_FLOORS[i], favg[i], fmx, 'linear-gradient(90deg,var(--teal),var(--teal2))', '명'); }
-    // 시간대별 인원 일평균 (구간별 카드)
+    // 시간대별 인원 일평균 (구간별 카드) - shiftDays 기준 정확한 평균
     h+=msSub('시간대별 인원 일평균');
-    var hrAvg=c.mp.hourly.map(function(v,i){ return c.mp.hourlyDays[i]?Math.round(v/c.mp.hourlyDays[i]):0; });
-    // 구간 정의: {label, 시간범위 설명, 팀별 데이터, 왼쪽바 색, 배경색}
-    var hrSlots=[
-      {range:'07:00 ~ 12:00', teams:[{name:'오전팀',color:'#1D9E75',hours:[7,8,9,10,11]}], border:'#1D9E75'},
-      {range:'12:00 ~ 16:30', teams:[{name:'오전팀',color:'#1D9E75',hours:[12,13,14,15,16]},{name:'오후팀',color:'#1A6B8A',hours:[12,13,14,15,16]}], border:'#C9962A'},
-      {range:'16:30 ~ 21:30', teams:[{name:'오후팀',color:'#1A6B8A',hours:[17,18,19,20,21]}], border:'#1A6B8A'},
-      {range:'21:30 ~ 22:00', teams:[{name:'오후팀',color:'#1A6B8A',hours:[21]},{name:'야간팀',color:'#1E3A5F',hours:[21]}], border:'#C9962A'},
-      {range:'22:00 ~ 07:00', teams:[{name:'야간팀',color:'#1E3A5F',hours:[22,23,0,1,2,3,4,5,6]}], border:'#1E3A5F'}
-    ];
-    function hrSlotAvg(hours){ var s=0,cnt=0; hours.forEach(function(hi){ if(hrAvg[hi]){s+=hrAvg[hi];cnt++;} }); return cnt?Math.round(s/cnt):0; }
-    var slotMax=1;
-    hrSlots.forEach(function(sl){
-      var tot=sl.teams.reduce(function(a,t){ return a+hrSlotAvg(t.hours); },0);
-      if(tot>slotMax) slotMax=tot;
-    });
-    hrSlots.forEach(function(sl){
-      var teamAvgs=sl.teams.map(function(t){ return {name:t.name,color:t.color,avg:hrSlotAvg(t.hours)}; });
-      var total=teamAvgs.reduce(function(a,t){ return a+t.avg; },0);
-      if(!total) return;
-      h+='<div style="background:var(--g1);border-radius:var(--r2);border:1px solid var(--g2);overflow:hidden;margin-bottom:7px">';
-      h+='<div style="padding:9px 12px;display:flex;align-items:center;justify-content:space-between;border-left:4px solid '+sl.border+'">';
-      h+='<span style="font-size:12px;font-weight:700;color:var(--g6)">'+sl.range+'</span>';
-      h+='<span style="font-size:16px;font-weight:900;color:var(--g7)">'+total+'<span style="font-size:10px;font-weight:400;color:var(--g4);margin-left:2px">명</span></span>';
-      h+='</div>';
-      h+='<div style="padding:7px 12px 10px;display:flex;flex-direction:column;gap:5px">';
-      teamAvgs.forEach(function(t){
-        if(!t.avg) return;
-        var pct=Math.round(t.avg/slotMax*100);
-        h+='<div style="display:flex;gap:6px;align-items:center">';
-        h+='<span style="font-size:10px;color:var(--g4);width:38px">'+t.name+'</span>';
-        h+='<div style="flex:1;background:var(--g2);border-radius:3px;height:14px">';
-        h+='<div style="width:'+pct+'%;height:100%;background:'+t.color+';border-radius:3px"></div>';
-        h+='</div>';
-        h+='<span style="font-size:11px;font-weight:700;color:var(--g6);width:34px;text-align:right">'+t.avg+'명</span>';
-        h+='</div>';
-      });
-      h+='</div></div>';
-    });
+    var amDays=Object.keys(c.mp.shiftDays['오전']||{}).length||1;
+    var pmDays=Object.keys(c.mp.shiftDays['오후']||{}).length||1;
+    var ntDays=Object.keys(c.mp.shiftDays['야간']||{}).length||1;
+    var amAvg=Math.round(c.mp.shiftSum['오전']/amDays);
+    var pmAvg=Math.round(c.mp.shiftSum['오후']/pmDays);
+    var ntAvg=Math.round(c.mp.shiftSum['야간']/ntDays);
+    var slotMax=Math.max(amAvg+pmAvg, amAvg, pmAvg, ntAvg, 1);
+    var csCard='background:var(--g1);border-radius:var(--r2);border:1px solid var(--g2);overflow:hidden;margin-bottom:6px';
+    var csHd='padding:8px 12px;display:flex;align-items:center;justify-content:space-between;border-left:4px solid ';
+    var csRange='font-size:11px;font-weight:700;color:var(--g6)';
+    var csTot='font-size:15px;font-weight:900;color:var(--g7)';
+    var csBd='padding:6px 12px 9px;display:flex;flex-direction:column;gap:4px';
+    function hrRow(label,color,avg){
+      var pct=Math.round(avg/slotMax*100);
+      return '<div style="display:flex;gap:5px;align-items:center">'
+        +'<span style="font-size:10px;color:var(--g4);width:38px">'+label+'</span>'
+        +'<div style="flex:1;background:var(--g2);border-radius:3px;height:12px">'
+        +'<div style="width:'+pct+'%;height:100%;background:'+color+';border-radius:3px"></div></div>'
+        +'<span style="font-size:10px;font-weight:700;color:var(--g6);width:34px;text-align:right">'+avg+'명</span>'
+        +'</div>';
+    }
+    // 1) 07:00~12:00 오전전용
+    if(amAvg){
+      h+='<div style="'+csCard+'"><div style="'+csHd+'#1D9E75">'
+        +'<span style="'+csRange+'">07:00 ~ 12:00</span>'
+        +'<span style="'+csTot+'">'+amAvg+'<span style="font-size:10px;font-weight:400;color:var(--g4);margin-left:2px">명</span></span>'
+        +'</div><div style="'+csBd+'">'+hrRow('오전팀','#1D9E75',amAvg)+'</div></div>';
+    }
+    // 2) 12:00~16:30 오전+오후 겹침
+    if(amAvg||pmAvg){
+      var tot12=(amAvg||0)+(pmAvg||0);
+      h+='<div style="'+csCard+'"><div style="'+csHd+'#C9962A">'
+        +'<span style="'+csRange+'">12:00 ~ 16:30</span>'
+        +'<span style="'+csTot+'">'+tot12+'<span style="font-size:10px;font-weight:400;color:var(--g4);margin-left:2px">명</span></span>'
+        +'</div><div style="'+csBd+'">'
+        +(amAvg?hrRow('오전팀','#1D9E75',amAvg):'')
+        +(pmAvg?hrRow('오후팀','#1A6B8A',pmAvg):'')
+        +'</div></div>';
+    }
+    // 3) 16:30~21:30 오후전용
+    if(pmAvg){
+      h+='<div style="'+csCard+'"><div style="'+csHd+'#1A6B8A">'
+        +'<span style="'+csRange+'">16:30 ~ 21:30</span>'
+        +'<span style="'+csTot+'">'+pmAvg+'<span style="font-size:10px;font-weight:400;color:var(--g4);margin-left:2px">명</span></span>'
+        +'</div><div style="'+csBd+'">'+hrRow('오후팀','#1A6B8A',pmAvg)+'</div></div>';
+    }
+    // 4) 21:30~22:00 오후+야간 겹침
+    if(pmAvg||ntAvg){
+      var tot21=(pmAvg||0)+(ntAvg||0);
+      h+='<div style="'+csCard+'"><div style="'+csHd+'#C9962A">'
+        +'<span style="'+csRange+'">21:30 ~ 22:00</span>'
+        +'<span style="'+csTot+'">'+tot21+'<span style="font-size:10px;font-weight:400;color:var(--g4);margin-left:2px">명</span></span>'
+        +'</div><div style="'+csBd+'">'
+        +(pmAvg?hrRow('오후팀','#1A6B8A',pmAvg):'')
+        +(ntAvg?hrRow('야간팀','#1E3A5F',ntAvg):'')
+        +'</div></div>';
+    }
+    // 5) 22:00~07:00 야간전용
+    if(ntAvg){
+      h+='<div style="'+csCard+'"><div style="'+csHd+'#1E3A5F">'
+        +'<span style="'+csRange+'">22:00 ~ 07:00</span>'
+        +'<span style="'+csTot+'">'+ntAvg+'<span style="font-size:10px;font-weight:400;color:var(--g4);margin-left:2px">명</span></span>'
+        +'</div><div style="'+csBd+'">'+hrRow('야간팀','#1E3A5F',ntAvg)+'</div></div>';
+    }
+    // 6) 총 일평균 합계 카드
+    var grandAvg=amAvg+pmAvg+ntAvg;
+    h+='<div style="background:linear-gradient(135deg,var(--teal),var(--teal2));border-radius:var(--r2);padding:10px 14px;display:flex;align-items:center;justify-content:space-between;margin-top:4px">'
+      +'<span style="font-size:11px;font-weight:700;color:rgba(255,255,255,.85)">전체 시간대 합계</span>'
+      +'<span style="font-size:18px;font-weight:900;color:white">'+grandAvg+'<span style="font-size:10px;font-weight:400;margin-left:2px">명</span></span>'
+      +'</div>';
     // 야간 작업별 (일평균) - 층별과 동일하게 날짜 수로 나눔
     var nsDays=Object.keys(c.mp.shiftDays['야간']||{}).length||1;
     h+=msSub('야간 작업별 투입 일평균 · '+pl);
