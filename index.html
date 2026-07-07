@@ -1407,9 +1407,18 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <!-- 전체 -->
   <div id="hoP0">
     <div class="pg-hd"><div><h1>전체 인수인계</h1></div></div>
-    <div style="padding:0 13px 10px;display:flex;gap:7px">
-      <input type="month" id="hoFilterMonth" onchange="renderHoList(hoAll)" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
-      <button onclick="document.getElementById('hoFilterMonth').value='';renderHoList(hoAll)" style="padding:8px 12px;background:var(--g1);border:none;border-radius:var(--r2);font-size:12px;font-weight:700;color:var(--g5);cursor:pointer">전체</button>
+    <div style="padding:0 13px 10px;display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;gap:7px">
+        <input type="month" id="hoFilterMonth" onchange="renderHoList(hoAll)" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
+        <button onclick="document.getElementById('hoFilterMonth').value='';document.getElementById('hoFilterTeam').value='';renderHoList(hoAll)" style="padding:8px 12px;background:var(--g1);border:none;border-radius:var(--r2);font-size:12px;font-weight:700;color:var(--g5);cursor:pointer">전체</button>
+      </div>
+      <select id="hoFilterTeam" onchange="renderHoList(hoAll)" style="width:100%;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white;color:var(--g6)">
+        <option value="">-- 팀 전체 --</option>
+        <option value="1팀">1팀</option><option value="2팀">2팀</option><option value="3팀">3팀</option>
+        <option value="4팀">4팀</option><option value="5팀">5팀</option><option value="6팀">6팀</option>
+        <option value="7팀">7팀</option><option value="8팀">8팀</option><option value="9팀">9팀</option>
+        <option value="10팀">10팀</option>
+      </select>
     </div>
     <div id="hoAllList">
       <div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">불러오는 중...</div>
@@ -1466,10 +1475,36 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <span style="font-size:13px;font-weight:800;color:var(--g7)">🔧 시설물 고장</span>
       </div>
       <div class="rg" style="margin-bottom:8px">
-        <div class="rp on" onclick="togF(this,'hF',false)">없음</div>
-        <div class="rp" onclick="togF(this,'hF',true)">있음</div>
+        <div class="rp on" onclick="togF(this,'hFWrap',false)">없음</div>
+        <div class="rp" onclick="togF(this,'hFWrap',true)">있음</div>
       </div>
-      <textarea class="f-ta" id="hF" rows="2" placeholder="고장 내용 및 조치사항"></textarea>
+      <div class="f-ta" id="hFWrap" style="display:none;padding:0;border:none;background:none">
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div>
+            <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">① 장소</label>
+            <input id="hFLoc" type="text" class="ri" placeholder="예) 3층 남자화장실 2번 칸" style="margin-bottom:0">
+          </div>
+          <div>
+            <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">② 고장 내용</label>
+            <input id="hFDesc" type="text" class="ri" placeholder="예) 변기 막힘" style="margin-bottom:0">
+          </div>
+          <div>
+            <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">③ 신고 구분</label>
+            <div class="rg" id="hFTypeG" style="flex-wrap:wrap;gap:6px">
+              <div class="rp on" onclick="selFType(this)">기계</div>
+              <div class="rp" onclick="selFType(this)">건축</div>
+              <div class="rp" onclick="selFType(this)">토목</div>
+              <div class="rp" onclick="selFType(this)">전기</div>
+              <div class="rp" onclick="selFType(this,'hFEtc')">기타</div>
+            </div>
+            <input id="hFEtc" type="text" class="ri" placeholder="기타 내용 직접 입력" style="display:none;margin-top:5px;margin-bottom:0">
+          </div>
+          <div>
+            <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">④ 접수자</label>
+            <input id="hFRcv" type="text" class="ri" placeholder="예) 홍길동" style="margin-bottom:0">
+          </div>
+        </div>
+      </div>
     </div></div>
 
     <!-- 3. 업무 진행 사항 및 특이사항 -->
@@ -3558,12 +3593,22 @@ function autoSelectHandoverTeam(){
     if(warn) warn.style.display='none';
   }
 }
+function selFType(el,etcId){
+  var g=document.getElementById('hFTypeG');
+  g.querySelectorAll('.rp').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');
+  var etcEl=document.getElementById('hFEtc');
+  if(etcEl) etcEl.style.display=etcId?'block':'none';
+}
 function togF(el,id,show){
   const g=el.parentElement;
   g.querySelectorAll('.rp').forEach(p=>p.classList.remove('on','on-d'));
   el.classList.add(id==='hA'&&show?'on-d':'on');
   const ta=document.getElementById(id);
-  if(ta){ta.classList.toggle('show',show);}
+  if(ta){
+    if(ta.tagName==='DIV'){ta.style.display=show?'flex':'none';}
+    else{ta.classList.toggle('show',show);}
+  }
 }
 function confHO(btn){
   btn.textContent='✓ 인수 확인 완료';btn.classList.add('done');btn.disabled=true;
@@ -3586,9 +3631,24 @@ function subHO(){
   const pMap={'오전팀':'pill-am','오후팀':'pill-pm','야간팀':'pill-nt'};
   const avC={'오전팀':'var(--navy)','오후팀':'var(--teal2)','야간팀':'#6B21A8'};
   const toNm=toMap[sNm];
-  const fE=document.getElementById('hF');
+  const fWrap=document.getElementById('hFWrap');
   const dE=document.getElementById('hD'),eE=document.getElementById('hE');
-  const fT=(fE&&fE.classList.contains('show')&&fE.value?fE.value:'없음');
+  var fT='없음';
+  if(fWrap&&fWrap.style.display!=='none'){
+    var fLoc=document.getElementById('hFLoc');
+    var fDesc=document.getElementById('hFDesc');
+    var fTypeEl=document.querySelector('#hFTypeG .rp.on');
+    var fType=fTypeEl?fTypeEl.textContent.trim():'';
+    var fEtcEl=document.getElementById('hFEtc');
+    if(fType==='기타'&&fEtcEl&&fEtcEl.value.trim()) fType='기타: '+fEtcEl.value.trim();
+    var fRcv=document.getElementById('hFRcv');
+    var parts=[];
+    if(fLoc&&fLoc.value.trim()) parts.push('[장소] '+fLoc.value.trim());
+    if(fDesc&&fDesc.value.trim()) parts.push('[내용] '+fDesc.value.trim());
+    if(fType) parts.push('[신고] '+fType);
+    if(fRcv&&fRcv.value.trim()) parts.push('[접수자] '+fRcv.value.trim());
+    if(parts.length) fT=parts.join(' / ');
+  }
   const dT=(dE&&dE.classList.contains('show')&&dE.value?dE.value:'없음');
   const eT=(eE&&eE.classList.contains('show')&&eE.value)?eE.value:'이상없음';
   // ★ DB 저장용 데이터 먼저 캡처 (폼 초기화 전)
@@ -3603,7 +3663,12 @@ function subHO(){
   // 폼 초기화
   document.querySelectorAll('#hoSG .rp').forEach(p=>p.classList.remove('on'));
   document.getElementById('hoW').style.display='none';
-  ['hF','hD','hE','hSp'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';e.classList.remove('show');}});
+  ['hD','hE','hSp'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';e.classList.remove('show');}});
+  var fWrapEl=document.getElementById('hFWrap');if(fWrapEl)fWrapEl.style.display='none';
+  ['hFLoc','hFDesc','hFEtc','hFRcv'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});
+  var hFTypeG=document.getElementById('hFTypeG');if(hFTypeG){hFTypeG.querySelectorAll('.rp').forEach(p=>p.classList.remove('on'));var fp=hFTypeG.querySelector('.rp');if(fp)fp.classList.add('on');}
+  var fEtcEl=document.getElementById('hFEtc');if(fEtcEl)fEtcEl.style.display='none';
+  var fNoneBtn=document.querySelector('#hoP2 .rg .rp');if(fNoneBtn){document.querySelector('#hoP2 .rg').querySelectorAll('.rp').forEach(p=>p.classList.remove('on'));fNoneBtn.classList.add('on');}
   var hEtcEl=document.getElementById('hEtc');if(hEtcEl)hEtcEl.value='';
   ['hN'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   if(_dateInputEl) _dateInputEl.value='';
@@ -7733,11 +7798,19 @@ function renderHoList(data){
   if(!list) return;
   var mfEl=document.getElementById('hoFilterMonth');
   var mf=mfEl?mfEl.value:'';
+  var tfEl=document.getElementById('hoFilterTeam');
+  var tf=tfEl?tfEl.value:'';
   if(mf){
     data=(data||[]).filter(function(r){
       var baseTs=r.ho_date||r.created_at;
       var ym=baseTs?new Date(baseTs).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'}).slice(0,7):'';
       return ym===mf;
+    });
+  }
+  if(tf){
+    data=(data||[]).filter(function(r){
+      // shift 컬럼: '1팀 (오전팀)' 형식
+      return r.shift&&r.shift.indexOf(tf)===0;
     });
   }
   if(!data||!data.length){
@@ -7905,7 +7978,7 @@ function renderHoConfBlock(r, prefix){
   }
   return '<div class="conf-row"><button class="btn-conf" onclick="openHoResult(\''+domId+'\')">✔ 확인 및 결과입력</button></div>'
     +'<div id="hoResultBox_'+domId+'" style="display:none;margin-top:6px">'
-      +'<textarea id="hoResultInput_'+domId+'" placeholder="처리결과를 입력하세요 (예: 수리 완료 / 자재 주문 중, 내일 처리 예정)" style="width:100%;min-height:54px;padding:8px;border:1.5px solid var(--g2);border-radius:8px;font-size:12px;box-sizing:border-box;font-family:inherit"></textarea>'
+      +'<textarea id="hoResultInput_'+domId+'" placeholder="전달사항 입력 (선택)" style="width:100%;min-height:54px;padding:8px;border:1.5px solid var(--g2);border-radius:8px;font-size:12px;box-sizing:border-box;font-family:inherit"></textarea>'
       +'<button onclick="confHODB('+r.id+',this,\''+domId+'\')" style="margin-top:5px;width:100%;padding:8px;background:var(--teal);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">확인 완료</button>'
     +'</div>';
 }
@@ -7917,7 +7990,7 @@ async function confHODB(id, btn, domId){
   domId=domId||id;
   var input=document.getElementById('hoResultInput_'+domId);
   var resultText=input?input.value.trim():'';
-  if(!resultText){ toast('⚠️ 처리결과를 입력해주세요'); return; }
+  // 빈값도 저장 허용
   if(btn) btn.disabled=true;
   await confirmHandoverDB(id, resultText);
 }
@@ -8036,7 +8109,8 @@ function editHo(btn){
     var teamBtns=document.querySelectorAll('#hoSG .rp');
     teamBtns.forEach(function(b){ if(b.textContent.trim()===r.shift) b.classList.add('on'); });
     // 내용 채우기
-    var hF=document.getElementById('hF'); if(hF) hF.value=r.facility||'';
+    // 수정 시 시설물 고장 텍스트를 hFDesc에 복원 (legacy)
+    var hFDesc=document.getElementById('hFDesc');if(hFDesc)hFDesc.value=r.facility||'';
     var hEtc=document.getElementById('hEtc'); if(hEtc) hEtc.value=r.notice||r.etc||'';
     // 인계 일시 채우기 (KST 기준 datetime-local 문자열로 변환)
     var hoDateEl=document.getElementById('hoDateInput');
@@ -8083,7 +8157,7 @@ async function confirmHandoverDB(id, resultText){
   try{
     await sb.from('handover').update({
       confirmed:true,
-      confirmed_by:me?me.name:'',
+      confirmed_by:me?(me.team||me.name):'',
       confirmed_at:new Date().toISOString(),
       result:resultText||'',
       result_by:me?me.name:'',
