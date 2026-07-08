@@ -1623,6 +1623,17 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     </div></div>
     <div class="card" style="margin-bottom:10px"><div class="cb">
       <div class="fg">
+        <label class="f-lbl">접수 경로</label>
+        <div class="rg" id="lostRouteGrp" style="flex-wrap:wrap;gap:7px">
+          <div class="rp on" onclick="pickLostRoute(this)" data-val="현장접수">현장접수</div>
+          <div class="rp" onclick="pickLostRoute(this)" data-val="T1습득물 오픈채널접수">T1습득물 오픈채널접수</div>
+          <div class="rp" onclick="pickLostRoute(this)" data-val="기타">기타</div>
+        </div>
+        <input type="text" id="lostRouteEtc" class="ri" placeholder="기타 접수 경로 작성" style="margin-top:8px;margin-bottom:0;display:none">
+      </div>
+    </div></div>
+    <div class="card" style="margin-bottom:10px"><div class="cb">
+      <div class="fg">
         <label class="f-lbl">처리현황</label>
         <div class="rg" id="lostStatusGrp" style="flex-wrap:wrap;gap:7px">
           <div class="rp on" onclick="pickLostStatus(this)" data-val="접수">접수</div>
@@ -1630,6 +1641,19 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           <div class="rp" onclick="pickLostStatus(this)" data-val="완료-유실물">완료 · 유실물</div>
           <div class="rp" onclick="pickLostStatus(this)" data-val="완료-인계">완료 · 인계</div>
           <div class="rp" onclick="pickLostStatus(this)" data-val="완료-기타">완료 · 기타</div>
+        </div>
+        <div id="lostHandoverBox" style="display:none;margin-top:12px">
+          <label class="f-lbl">인계처</label>
+          <div class="rg" id="lostHandGrp" style="flex-wrap:wrap;gap:7px">
+            <div class="rp" onclick="pickLostHand(this)" data-val="유실물관리소">유실물관리소</div>
+            <div class="rp" onclick="pickLostHand(this)" data-val="안내데스크">안내데스크</div>
+            <div class="rp" onclick="pickLostHand(this)" data-val="세관">세관</div>
+            <div class="rp" onclick="pickLostHand(this)" data-val="고객">고객</div>
+            <div class="rp" onclick="pickLostHand(this)" data-val="기타">기타</div>
+          </div>
+          <input type="text" id="lostHandEtc" class="ri" placeholder="기타 인계처 작성" style="margin-top:8px;margin-bottom:0;display:none">
+          <label class="f-lbl" style="margin-top:10px">접수자</label>
+          <input type="text" id="lostReceiver" class="ri" placeholder="예: 홍길동" style="margin-bottom:0">
         </div>
       </div>
     </div></div>
@@ -1650,6 +1674,14 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <div class="fg"><label class="f-lbl">발견자 이름</label><input type="text" id="lostEditFinderName" class="ri" style="margin-bottom:0"></div>
   <div class="fg"><label class="f-lbl">발견 위치 *</label><input type="text" id="lostEditLocation" class="ri" style="margin-bottom:0"></div>
   <div class="fg"><label class="f-lbl">발견 물품 *</label><textarea id="lostEditItem" class="ri" rows="3" style="resize:vertical;font-size:13px;margin-bottom:0"></textarea></div>
+  <div class="fg"><label class="f-lbl">접수 경로</label>
+    <div class="rg" id="lostEditRouteGrp" style="flex-wrap:wrap;gap:7px">
+      <div class="rp" onclick="pickLostEditRoute(this)" data-val="현장접수">현장접수</div>
+      <div class="rp" onclick="pickLostEditRoute(this)" data-val="T1습득물 오픈채널접수">오픈채널</div>
+      <div class="rp" onclick="pickLostEditRoute(this)" data-val="기타">기타</div>
+    </div>
+    <input type="text" id="lostEditRouteEtc" class="ri" placeholder="기타 접수 경로" style="margin-top:8px;margin-bottom:0;display:none">
+  </div>
   <div class="fg"><label class="f-lbl">처리현황</label>
     <div class="rg" id="lostEditStatusGrp" style="flex-wrap:wrap;gap:7px">
       <div class="rp on" onclick="pickLostEditStatus(this)" data-val="접수">접수</div>
@@ -1657,6 +1689,19 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div class="rp" onclick="pickLostEditStatus(this)" data-val="완료-유실물">완료·유실물</div>
       <div class="rp" onclick="pickLostEditStatus(this)" data-val="완료-인계">완료·인계</div>
       <div class="rp" onclick="pickLostEditStatus(this)" data-val="완료-기타">완료·기타</div>
+    </div>
+    <div id="lostEditHandoverBox" style="display:none;margin-top:10px">
+      <label class="f-lbl">인계처</label>
+      <div class="rg" id="lostEditHandGrp" style="flex-wrap:wrap;gap:7px">
+        <div class="rp" onclick="pickLostEditHand(this)" data-val="유실물관리소">유실물관리소</div>
+        <div class="rp" onclick="pickLostEditHand(this)" data-val="안내데스크">안내데스크</div>
+        <div class="rp" onclick="pickLostEditHand(this)" data-val="세관">세관</div>
+        <div class="rp" onclick="pickLostEditHand(this)" data-val="고객">고객</div>
+        <div class="rp" onclick="pickLostEditHand(this)" data-val="기타">기타</div>
+      </div>
+      <input type="text" id="lostEditHandEtc" class="ri" placeholder="기타 인계처" style="margin-top:8px;margin-bottom:0;display:none">
+      <label class="f-lbl" style="margin-top:8px">접수자</label>
+      <input type="text" id="lostEditReceiver" class="ri" placeholder="예: 홍길동" style="margin-bottom:0">
     </div>
   </div>
   <div class="fg"><label class="f-lbl">완료 일시 (해당시)</label><input type="datetime-local" id="lostEditCompletedDate" class="ri" style="margin-bottom:0"></div>
@@ -1694,6 +1739,19 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div class="rp" onclick="pickLostCompleteType(this)" data-val="완료-인계">인계</div>
       <div class="rp" onclick="pickLostCompleteType(this)" data-val="완료-기타">기타</div>
     </div>
+  </div>
+  <div class="fg"><label class="f-lbl">인계처</label>
+    <div class="rg" id="lostCompHandGrp" style="flex-wrap:wrap;gap:7px">
+      <div class="rp" onclick="pickLostCompHand(this)" data-val="유실물관리소">유실물관리소</div>
+      <div class="rp" onclick="pickLostCompHand(this)" data-val="안내데스크">안내데스크</div>
+      <div class="rp" onclick="pickLostCompHand(this)" data-val="세관">세관</div>
+      <div class="rp" onclick="pickLostCompHand(this)" data-val="고객">고객</div>
+      <div class="rp" onclick="pickLostCompHand(this)" data-val="기타">기타</div>
+    </div>
+    <input type="text" id="lostCompHandEtc" class="ri" placeholder="기타 인계처 작성" style="margin-top:8px;margin-bottom:0;display:none">
+  </div>
+  <div class="fg"><label class="f-lbl">접수자</label>
+    <input type="text" id="lostCompReceiver" class="ri" placeholder="예: 홍길동" style="margin-bottom:0">
   </div>
   <div class="fg"><label class="f-lbl">처리 내용 (선택)</label>
     <textarea id="lostCompleteMemo" class="ri" rows="3" placeholder="처리 내용, 담당자 등" style="resize:vertical;font-size:13px;margin-bottom:0"></textarea>
@@ -8511,10 +8569,52 @@ function lostTab(n){
   }
 }
 
+var lostSelectedRoute='현장접수';
+var lostSelectedHand='';
+var lostCompSelectedHand='';
+var lostEditSelectedRoute='현장접수';
+var lostEditSelectedHand='';
 function pickLostStatus(el){
   document.querySelectorAll('#lostStatusGrp .rp').forEach(function(p){p.classList.remove('on');});
   el.classList.add('on');
   lostSelectedStatus=el.dataset.val;
+  // 완료 선택 시 인계처·접수자 표시
+  var box=document.getElementById('lostHandoverBox');
+  if(box) box.style.display = lostSelectedStatus.indexOf('완료')===0 ? 'block' : 'none';
+}
+function pickLostRoute(el){
+  document.querySelectorAll('#lostRouteGrp .rp').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  lostSelectedRoute=el.dataset.val;
+  document.getElementById('lostRouteEtc').style.display = lostSelectedRoute==='기타' ? 'block' : 'none';
+}
+function pickLostHand(el){
+  document.querySelectorAll('#lostHandGrp .rp').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  lostSelectedHand=el.dataset.val;
+  document.getElementById('lostHandEtc').style.display = lostSelectedHand==='기타' ? 'block' : 'none';
+}
+function pickLostCompHand(el){
+  document.querySelectorAll('#lostCompHandGrp .rp').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  lostCompSelectedHand=el.dataset.val;
+  document.getElementById('lostCompHandEtc').style.display = lostCompSelectedHand==='기타' ? 'block' : 'none';
+}
+function pickLostEditRoute(el){
+  document.querySelectorAll('#lostEditRouteGrp .rp').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  lostEditSelectedRoute=el.dataset.val;
+  document.getElementById('lostEditRouteEtc').style.display = lostEditSelectedRoute==='기타' ? 'block' : 'none';
+}
+function pickLostEditHand(el){
+  document.querySelectorAll('#lostEditHandGrp .rp').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  lostEditSelectedHand=el.dataset.val;
+  document.getElementById('lostEditHandEtc').style.display = lostEditSelectedHand==='기타' ? 'block' : 'none';
+}
+function lostRouteVal(sel, etcId){
+  if(sel==='기타'){ var t=document.getElementById(etcId).value.trim(); return t?('기타-'+t):'기타'; }
+  return sel||null;
 }
 
 function pickLostCompleteType(el){
@@ -8547,16 +8647,26 @@ async function saveLost(){
       item: item,
       status: lostSelectedStatus,
       completed_at: lostSelectedStatus.startsWith('완료')?now:null,
-      note: note||null
+      note: note||null,
+      receipt_route: lostRouteVal(lostSelectedRoute,'lostRouteEtc'),
+      handover_to: lostSelectedStatus.startsWith('완료') ? lostRouteVal(lostSelectedHand,'lostHandEtc') : null,
+      receiver_name: lostSelectedStatus.startsWith('완료') ? (document.getElementById('lostReceiver').value.trim()||null) : null
     });
     if(res.error) throw res.error;
     toast('✅ 습득물이 접수되었습니다');
-    ['lostFinderId','lostFinderName','lostFoundDate','lostLocation','lostItem','lostNote'].forEach(function(id){
+    ['lostFinderId','lostFinderName','lostFoundDate','lostLocation','lostItem','lostNote','lostRouteEtc','lostHandEtc','lostReceiver'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.value='';
     });
     document.querySelectorAll('#lostStatusGrp .rp').forEach(function(p){p.classList.remove('on');});
     document.querySelector('#lostStatusGrp .rp').classList.add('on');
     lostSelectedStatus='접수';
+    document.querySelectorAll('#lostRouteGrp .rp').forEach(function(p){p.classList.remove('on');});
+    document.querySelector('#lostRouteGrp .rp').classList.add('on');
+    lostSelectedRoute='현장접수'; lostSelectedHand='';
+    document.querySelectorAll('#lostHandGrp .rp').forEach(function(p){p.classList.remove('on');});
+    document.getElementById('lostRouteEtc').style.display='none';
+    document.getElementById('lostHandEtc').style.display='none';
+    document.getElementById('lostHandoverBox').style.display='none';
     loadLostFromDB();
     lostTab(0);
   }catch(e){
@@ -8636,9 +8746,17 @@ function renderLostList(){
     }
     // 위치
     h+='<div style="font-size:11px;color:var(--g5);margin-bottom:5px">📍 '+r.location+'</div>';
+    // 접수 경로
+    if(r.receipt_route){
+      h+='<div style="font-size:11px;color:var(--g5);margin-bottom:5px">📥 접수: '+String(r.receipt_route).replace('기타-','기타 · ')+'</div>';
+    }
     // 완료일시
     if(isDone&&r.completed_at){
       h+='<div style="font-size:11px;color:var(--teal2);margin-bottom:5px">✅ 완료: '+toKSTDateTime(r.completed_at)+'</div>';
+    }
+    // 인계처·접수자
+    if(isDone&&(r.handover_to||r.receiver_name)){
+      h+='<div style="font-size:11px;color:var(--navy);margin-bottom:5px">➡️ 인계: '+String(r.handover_to||'-').replace('기타-','기타 · ')+(r.receiver_name?' · 접수자 '+r.receiver_name:'')+'</div>';
     }
     // 물품
     h+='<div style="font-size:13px;font-weight:700;color:var(--g7);margin-bottom:8px;line-height:1.5">'+r.item+'</div>';
@@ -8667,6 +8785,8 @@ function pickLostEditStatus(el){
   document.querySelectorAll('#lostEditStatusGrp .rp').forEach(function(p){p.classList.remove('on');});
   el.classList.add('on');
   lostEditSelectedStatus=el.dataset.val;
+  var box=document.getElementById('lostEditHandoverBox');
+  if(box) box.style.display = lostEditSelectedStatus.indexOf('완료')===0 ? 'block' : 'none';
 }
 
 function openLostEdit(btn){
@@ -8683,6 +8803,28 @@ function openLostEdit(btn){
   document.querySelectorAll('#lostEditStatusGrp .rp').forEach(function(p){
     p.classList.toggle('on', p.dataset.val===lostEditSelectedStatus);
   });
+  // 접수 경로 복원
+  var route=r.receipt_route||'현장접수';
+  var routeEtc='';
+  if(route.indexOf('기타')===0){ routeEtc=route.indexOf('기타-')===0?route.slice(3):''; route='기타'; }
+  lostEditSelectedRoute=route;
+  document.querySelectorAll('#lostEditRouteGrp .rp').forEach(function(p){
+    p.classList.toggle('on', p.dataset.val===route);
+  });
+  document.getElementById('lostEditRouteEtc').value=routeEtc;
+  document.getElementById('lostEditRouteEtc').style.display=route==='기타'?'block':'none';
+  // 인계처·접수자 복원
+  var hand=r.handover_to||'';
+  var handEtc='';
+  if(hand.indexOf('기타')===0){ handEtc=hand.indexOf('기타-')===0?hand.slice(3):''; hand='기타'; }
+  lostEditSelectedHand=hand;
+  document.querySelectorAll('#lostEditHandGrp .rp').forEach(function(p){
+    p.classList.toggle('on', p.dataset.val===hand);
+  });
+  document.getElementById('lostEditHandEtc').value=handEtc;
+  document.getElementById('lostEditHandEtc').style.display=hand==='기타'?'block':'none';
+  document.getElementById('lostEditReceiver').value=r.receiver_name||'';
+  document.getElementById('lostEditHandoverBox').style.display=lostEditSelectedStatus.indexOf('완료')===0?'block':'none';
   showM('lostEditModal');
 }
 
@@ -8701,7 +8843,10 @@ async function confirmLostEdit(){
       item: item,
       status: lostEditSelectedStatus,
       completed_at: completedAt,
-      note: document.getElementById('lostEditNote').value.trim()||null
+      note: document.getElementById('lostEditNote').value.trim()||null,
+      receipt_route: lostRouteVal(lostEditSelectedRoute,'lostEditRouteEtc'),
+      handover_to: lostEditSelectedStatus.indexOf('완료')===0 ? lostRouteVal(lostEditSelectedHand,'lostEditHandEtc') : null,
+      receiver_name: lostEditSelectedStatus.indexOf('완료')===0 ? (document.getElementById('lostEditReceiver').value.trim()||null) : null
     }).eq('id',id);
     hideM('lostEditModal');
     toast('✅ 수정되었습니다');
@@ -8771,6 +8916,10 @@ function openLostComplete(id){
   document.querySelectorAll('#lostCompleteTypeGrp .rp').forEach(function(p){p.classList.remove('on');});
   document.querySelector('#lostCompleteTypeGrp .rp').classList.add('on');
   lostCompleteSelectedType='완료-폐기';
+  lostCompSelectedHand='';
+  document.querySelectorAll('#lostCompHandGrp .rp').forEach(function(p){p.classList.remove('on');});
+  document.getElementById('lostCompHandEtc').value=''; document.getElementById('lostCompHandEtc').style.display='none';
+  document.getElementById('lostCompReceiver').value='';
   showM('lostCompleteModal');
 }
 
@@ -8782,6 +8931,8 @@ async function confirmLostComplete(){
   try{
     var updateData={status:lostCompleteSelectedType, completed_at:completedAt};
     if(memo) updateData.note=memo;
+    updateData.handover_to=lostRouteVal(lostCompSelectedHand,'lostCompHandEtc');
+    updateData.receiver_name=document.getElementById('lostCompReceiver').value.trim()||null;
     await sb.from('lost_found').update(updateData).eq('id',id);
     hideM('lostCompleteModal');
     toast('✅ 처리완료 되었습니다');
