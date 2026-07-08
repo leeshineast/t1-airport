@@ -71,11 +71,23 @@ textarea:focus{border-color:var(--sky)}
 .chip{font-size:10.5px;background:var(--g1);border-radius:99px;padding:3px 10px;color:var(--g4);font-weight:600}
 .chip.ok{background:var(--okBg);color:#047857}
 /* 현황 */
-.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px}
-.stat-card{background:#fff;border:1px solid var(--g2);border-radius:var(--r2);padding:12px}
-.stat-lb{font-size:11px;color:var(--g4);font-weight:600}
-.stat-v{font-size:21px;font-weight:800;margin-top:2px}
-.stat-v small{font-size:12px;color:var(--g3);font-weight:600}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat-card{background:#fff;border:1px solid var(--g2);border-radius:var(--r3);padding:13px 13px 12px;position:relative;overflow:hidden}
+.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:var(--ac,var(--sky2))}
+.stat-hd{display:flex;align-items:center;gap:8px}
+.icon-chip{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px;background:var(--acbg,var(--g1));flex-shrink:0}
+.stat-lb{font-size:12.5px;color:var(--g4);font-weight:700}
+.stat-v{font-size:25px;font-weight:800;margin-top:7px;color:var(--ac,var(--g5));letter-spacing:-.5px}
+.stat-v small{font-size:12px;color:var(--g3);font-weight:600;letter-spacing:0}
+.stat-sub{font-size:11px;font-weight:700;margin-top:3px;color:var(--g4)}
+.stat-sub.good{color:#059669}
+.stat-sub.bad{color:#dc2626}
+.sum-card{background:#fff;border:1px solid var(--g2);border-radius:var(--r3);padding:6px 14px 8px;margin-bottom:14px}
+.sum-title{font-size:13px;font-weight:800;padding:11px 0 7px;display:flex;align-items:center;gap:6px}
+.sum-row{display:flex;justify-content:space-between;align-items:center;padding:11px 2px;border-top:1px solid var(--g1);font-size:13px;color:var(--g4)}
+.sum-row b{font-size:14.5px;color:var(--g5)}
+.sum-row b small{font-size:11px;color:var(--g3);font-weight:600}
+.sum-row.hl b{color:#dc2626}
 .x-card{background:var(--dangerBg);border-radius:var(--r2);padding:10px 12px;margin-bottom:7px}
 .x-t{font-size:12.5px;font-weight:700;color:#b91c1c}
 .x-s{font-size:11px;color:#dc2626;margin-top:2px}
@@ -180,7 +192,7 @@ textarea:focus{border-color:var(--sky)}
     <button class="sub-back" onclick="showScr('scrMain')">← 모듈 선택</button>
 
     <div class="card">
-      <div class="f-label">교대</div>
+      <div class="f-label">교대 <span id="inpDate" style="font-weight:400;color:var(--g3)"></span></div>
       <div class="shift-seg" id="shiftSeg">
         <button class="seg-btn" data-s="오전" onclick="setShift('오전')">오전</button>
         <button class="seg-btn" data-s="오후" onclick="setShift('오후')">오후</button>
@@ -194,6 +206,16 @@ textarea:focus{border-color:var(--sky)}
         <div>
           <div class="f-label">조</div>
           <input type="text" id="inpJo" placeholder="예: A조">
+        </div>
+      </div>
+      <div class="f-row" id="timeRow">
+        <div>
+          <div class="f-label">점검 시작 <span style="font-weight:400;color:var(--g3)">(선택)</span></div>
+          <select id="iT1"></select>
+        </div>
+        <div>
+          <div class="f-label">점검 종료</div>
+          <select id="iT2"></select>
         </div>
       </div>
     </div>
@@ -210,8 +232,10 @@ textarea:focus{border-color:var(--sky)}
         </select>
       </div>
       <div class="f-row one">
-        <select id="tSel" onchange="onToiletSel()"></select>
+        <select id="tNum" onchange="fillToiletGenders()"></select>
       </div>
+      <div class="f-label" style="margin-top:8px">남/여 선택 <span style="font-weight:400;color:var(--g3)">(중복 가능 — 함께 점검 시 둘 다 체크)</span></div>
+      <div class="shift-seg" style="grid-template-columns:1fr 1fr" id="tGenBox"></div>
       <div class="info-chips" id="tChips"></div>
     </div>
 
@@ -258,14 +282,19 @@ textarea:focus{border-color:var(--sky)}
         <select id="cFloor"></select>
         <select id="cZone"></select>
       </div>
+      <div class="f-row one" style="margin-top:8px">
+        <div>
+          <div class="f-label">세부위치 <span style="font-weight:400;color:var(--g3)">(선택 — 안 써도 저장 가능)</span></div>
+          <input type="text" id="cDetail" placeholder="예: 3번 출입구 앞, 동편 에스컬레이터 주변">
+        </div>
+      </div>
     </div>
 
     <!-- 대상 선택: PBB -->
     <div class="card" id="tgtPbb" style="display:none">
       <div class="f-label">게이트 선택</div>
-      <div class="f-row">
+      <div class="f-row one">
         <select id="pSel"></select>
-        <input type="text" id="pTime" placeholder="청소시간 예: 07:20~08:20">
       </div>
     </div>
 
@@ -291,12 +320,46 @@ textarea:focus{border-color:var(--sky)}
     <button class="sub-back" onclick="showScr('scrMain')">← 모듈 선택</button>
     <div class="sec-title">📊 오늘의 점검 현황 <span id="dashDate" style="font-weight:400;color:var(--g3);font-size:11px"></span></div>
     <div class="stat-grid">
-      <div class="stat-card"><div class="stat-lb">🚻 화장실</div><div class="stat-v" id="dToilet">-<small></small></div></div>
-      <div class="stat-card"><div class="stat-lb">🛋️ 휴게시설</div><div class="stat-v" id="dRest">-<small></small></div></div>
-      <div class="stat-card"><div class="stat-lb">🔧 장비</div><div class="stat-v" id="dEquip">-<small></small></div></div>
-      <div class="stat-card"><div class="stat-lb">✈️ PBB</div><div class="stat-v" id="dPbb">-<small></small></div></div>
-      <div class="stat-card"><div class="stat-lb">🧹 공용구역</div><div class="stat-v" id="dCommon">-<small></small></div></div>
-      <div class="stat-card"><div class="stat-lb">📈 총 점검</div><div class="stat-v" id="dTotal">-<small>건</small></div></div>
+      <div class="stat-card" style="--ac:#0d9488;--acbg:#ccfbf1">
+        <div class="stat-hd"><span class="icon-chip">🚻</span><span class="stat-lb">화장실</span></div>
+        <div class="stat-v" id="dToilet">-<small></small></div>
+        <div class="stat-sub" id="dToiletSub"></div>
+      </div>
+      <div class="stat-card" style="--ac:#2563eb;--acbg:#dbeafe">
+        <div class="stat-hd"><span class="icon-chip">🛋️</span><span class="stat-lb">휴게시설</span></div>
+        <div class="stat-v" id="dRest">-<small></small></div>
+        <div class="stat-sub" id="dRestSub"></div>
+      </div>
+      <div class="stat-card" style="--ac:#d97706;--acbg:#fef3c7">
+        <div class="stat-hd"><span class="icon-chip">🔧</span><span class="stat-lb">장비</span></div>
+        <div class="stat-v" id="dEquip">-<small></small></div>
+        <div class="stat-sub" id="dEquipSub"></div>
+      </div>
+      <div class="stat-card" style="--ac:#0284c7;--acbg:#e0f2fe">
+        <div class="stat-hd"><span class="icon-chip">✈️</span><span class="stat-lb">PBB</span></div>
+        <div class="stat-v" id="dPbb">-<small></small></div>
+        <div class="stat-sub" id="dPbbSub"></div>
+      </div>
+      <div class="stat-card" style="--ac:#7c3aed;--acbg:#ede9fe">
+        <div class="stat-hd"><span class="icon-chip">🧹</span><span class="stat-lb">공용구역</span></div>
+        <div class="stat-v" id="dCommon">-<small></small></div>
+        <div class="stat-sub" id="dCommonSub"></div>
+      </div>
+      <div class="stat-card" style="--ac:#dc2626;--acbg:#fee2e2">
+        <div class="stat-hd"><span class="icon-chip">🔴</span><span class="stat-lb">불량 발생</span></div>
+        <div class="stat-v" id="dX">-<small>건</small></div>
+        <div class="stat-sub" id="dXSub"></div>
+      </div>
+    </div>
+
+    <div class="sum-card">
+      <div class="sum-title">🧾 오늘 점검 요약</div>
+      <div class="sum-row"><span>총 점검</span><b id="sumTotal">-</b></div>
+      <div class="sum-row"><span>오전</span><b id="sumAM">-</b></div>
+      <div class="sum-row"><span>오후</span><b id="sumPM">-</b></div>
+      <div class="sum-row"><span>야간</span><b id="sumNight">-</b></div>
+      <div class="sum-row hl"><span>불량(X) 발생</span><b id="sumX">-</b></div>
+      <div class="sum-row"><span>점검 참여 관리자</span><b id="sumJoin">-</b></div>
     </div>
     <div class="sec-title">👤 관리자 점검 참여 <span id="joinCnt" style="font-weight:400;color:var(--g3);font-size:11px"></span></div>
     <div class="card" id="joinBox" style="padding:11px 13px">
@@ -484,11 +547,19 @@ function onTeamChange(){
 }
 
 // ─ 모듈 열기 ─
+function inspTime(){
+  var a=document.getElementById('iT1').value, b=document.getElementById('iT2').value;
+  return (a&&b)?(a+'~'+b):(a||b||null);
+}
 function openMod(mod){
   if(!canInput()){
     curMod=mod; openDash(); toast('입력 권한이 없어 현황만 조회됩니다'); return;
   }
   curMod=mod; editRec=null; chkStates={};
+  document.getElementById('inpDate').textContent='· '+todayStr();
+  fillTimeSels();
+  document.getElementById('iT1').value=''; document.getElementById('iT2').value='';
+  document.getElementById('timeRow').style.display = mod==='equip' ? 'none' : 'grid';
   document.getElementById('tgtToilet').style.display = mod==='toilet'?'block':'none';
   document.getElementById('tgtRest').style.display = mod==='rest'?'block':'none';
   document.getElementById('tgtEquip').style.display = mod==='equip'?'block':'none';
@@ -500,8 +571,8 @@ function openMod(mod){
   if(mod==='toilet'){ fillToiletFloors(); fillToiletList(); }
   if(mod==='rest'){ fillRestList(); }
   if(mod==='equip'){ fillEquipTypes(); fillTimeSels(); document.getElementById('eArea').value='';document.getElementById('eUser').value=''; }
-  if(mod==='pbb'){ fillPbbList(); document.getElementById('pTime').value=''; }
-  if(mod==='common'){ fillCommonSels(); }
+  if(mod==='pbb'){ fillPbbList(); }
+  if(mod==='common'){ fillCommonSels(); document.getElementById('cDetail').value=''; }
   renderChecklist();
   document.getElementById('btnSave').textContent='점검 저장';
   showScr('scrInput');
@@ -513,43 +584,81 @@ function fillToiletFloors(){
   var floors=['1F','2F','3F','4F','B1F','B2F'];
   for(var i=0;i<floors.length;i++){var o=document.createElement('option');o.value=floors[i];o.textContent=floors[i];sel.appendChild(o);}
 }
+var tGenSel={}; // {toiletId: true} 선택된 남/여
+function toiletTeamOk(t){
+  var team=document.getElementById('selTeam').value;
+  if(team==='관리팀')return true;
+  if(team==='5팀')return t.zone==='Landside';
+  if(team==='10팀')return t.zone==='Airside';
+  if(!t.team)return true;
+  return String(t.team).split(/\s+/).indexOf(team)>=0;
+}
 function fillToiletList(){
   var fl=document.getElementById('tFloor').value;
   var zn=document.getElementById('tZone').value;
-  var team=document.getElementById('selTeam').value;
-  var sel=document.getElementById('tSel'); sel.innerHTML='';
-  // 담당팀 필터: 오전/오후팀은 team 컬럼(예: "1팀 6팀"), 야간은 5팀=L/S 전체·10팀=A/S 전체
-  function teamOk(t){
-    if(team==='관리팀')return true;
-    if(team==='5팀')return t.zone==='Landside';
-    if(team==='10팀')return t.zone==='Airside';
-    if(!t.team)return true; // 미배정은 전체 표시
-    return String(t.team).split(/\s+/).indexOf(team)>=0;
-  }
-  var list=TOILETS.filter(function(t){return t.floor===fl&&(!zn||t.zone===zn)&&teamOk(t);});
-  if(!list.length){var o=document.createElement('option');o.value='';o.textContent='해당 조건 화장실 없음';sel.appendChild(o);}
-  for(var i=0;i<list.length;i++){
-    var t=list[i];
-    var o=document.createElement('option'); o.value=t.id;
-    o.textContent=t.number+' · '+(t.gender||'').replace(' 화장실','')+' ('+(t.zone==='Airside'?'A/S':'L/S')+(t.category?' · '+t.category:'')+')';
+  var sel=document.getElementById('tNum'); sel.innerHTML='';
+  var list=TOILETS.filter(function(t){return t.floor===fl&&(!zn||t.zone===zn)&&toiletTeamOk(t);});
+  // 번호 단위로 묶기 (같은 번호의 남/여 페어)
+  var nums=[], seen={};
+  list.forEach(function(t){
+    var key=t.zone+'|'+t.number;
+    if(!seen[key]){ seen[key]=true; nums.push({key:key, zone:t.zone, number:t.number}); }
+  });
+  if(!nums.length){var o=document.createElement('option');o.value='';o.textContent='해당 조건 화장실 없음';sel.appendChild(o);}
+  nums.forEach(function(n){
+    var pair=list.filter(function(t){return t.zone===n.zone&&t.number===n.number;});
+    var genders=pair.map(function(t){return (t.gender||'').indexOf('남')>=0?'남':'여';});
+    var o=document.createElement('option'); o.value=n.key;
+    o.textContent=n.number+' ('+(n.zone==='Airside'?'A/S':'L/S')+' · '+genders.join('/')+')';
     sel.appendChild(o);
-  }
+  });
+  fillToiletGenders();
+}
+function toiletPair(){
+  var fl=document.getElementById('tFloor').value;
+  var key=document.getElementById('tNum').value;
+  if(!key)return [];
+  var parts=key.split('|');
+  return TOILETS.filter(function(t){return t.floor===fl&&t.zone===parts[0]&&t.number===parts[1]&&toiletTeamOk(t);});
+}
+function fillToiletGenders(){
+  var pair=toiletPair();
+  var box=document.getElementById('tGenBox'); box.innerHTML='';
+  tGenSel={};
+  pair.forEach(function(t){
+    tGenSel[t.id]=true; // 기본: 전체 선택 (페어 동시 점검)
+    var b=document.createElement('button');
+    b.className='seg-btn on';
+    b.textContent=((t.gender||'').indexOf('남')>=0?'남자':'여자')+(t.category&&t.category!=='일반'?' ('+t.category+')':'');
+    b.onclick=function(){
+      tGenSel[t.id]=!tGenSel[t.id];
+      b.classList.toggle('on',tGenSel[t.id]);
+      onToiletSel();
+    };
+    box.appendChild(b);
+  });
   onToiletSel();
 }
+function selectedToilets(){
+  return toiletPair().filter(function(t){return tGenSel[t.id];});
+}
 function onToiletSel(){
-  var id=document.getElementById('tSel').value;
-  var t=TOILETS.find(function(x){return String(x.id)===String(id);});
+  var sels=selectedToilets();
   var c=document.getElementById('tChips'); c.innerHTML='';
-  if(!t)return;
-  var chips=[t.floor, t.zone==='Airside'?'Airside':'Landside'];
-  if(t.family_room==='있음')chips.push('가족실 있음');
-  if(t.toilet_cnt)chips.push('양변기 '+t.toilet_cnt);
-  if(t.urinal_cnt)chips.push('소변기 '+t.urinal_cnt);
-  for(var i=0;i<chips.length;i++){var s=document.createElement('span');s.className='chip';s.textContent=chips[i];c.appendChild(s);}
-  // 소변기 없는 화장실(여자 등)은 소변기 항목 N/A 자동 설정
+  if(!sels.length)return;
+  var t0=sels[0];
+  var chips=[t0.floor, t0.zone==='Airside'?'Airside':'Landside'];
+  var anyUrinal=false, anyFam=false, tc=0;
+  sels.forEach(function(t){ if(t.urinal_cnt)anyUrinal=true; if(t.family_room==='있음')anyFam=true; tc+=(t.toilet_cnt||0); });
+  if(anyFam)chips.push('가족실 있음');
+  if(tc)chips.push('양변기 '+tc);
+  if(anyUrinal)chips.push('소변기 있음');
+  if(sels.length>1)chips.push('남/여 동시 점검');
+  for(var i=0;i<chips.length;i++){var s=document.createElement('span');s.className='chip'+(chips[i]==='남/여 동시 점검'?' ok':'');s.textContent=chips[i];c.appendChild(s);}
+  // 선택된 화장실 전부 소변기가 없으면 N/A 자동
   if(curMod==='toilet'){
-    if(!t.urinal_cnt){ chkStates['소변기 청결']='D'; }
-    else if(chkStates['소변기 청결']==='D'){ delete chkStates['소변기 청결']; }
+    if(sels.length && !anyUrinal){ chkStates['소변기 청결']='D'; }
+    else if(chkStates['소변기 청결']==='D' && anyUrinal){ delete chkStates['소변기 청결']; }
     renderChecklist();
   }
 }
@@ -612,7 +721,7 @@ function fillEquipList(){
   onEquipSel();
 }
 function fillTimeSels(){
-  ['eT1','eT2'].forEach(function(id){
+  ['eT1','eT2','iT1','iT2'].forEach(function(id){
     var sel=document.getElementById(id); sel.innerHTML='';
     var o0=document.createElement('option'); o0.value=''; o0.textContent='선택'; sel.appendChild(o0);
     for(var h=0;h<24;h++){ for(var m=0;m<60;m+=30){
@@ -698,12 +807,6 @@ function updateNoteReq(){
 
 // ─ 저장 ─
 function targetInfo(){
-  if(curMod==='toilet'){
-    var id=document.getElementById('tSel').value;
-    var t=TOILETS.find(function(x){return String(x.id)===String(id);});
-    if(!t)return null;
-    return {target_id:String(t.id), target_label:toiletLabel(t)};
-  }
   if(curMod==='rest'){
     var i=document.getElementById('rSel').value;
     if(i==='')return null;
@@ -716,7 +819,8 @@ function targetInfo(){
   if(curMod==='common'){
     var f=document.getElementById('cFloor').value;
     var z=document.getElementById('cZone').value;
-    return {target_id:f+'|'+z, target_label:f+' '+z};
+    var dt=document.getElementById('cDetail').value.trim();
+    return {target_id:f+'|'+z, target_label:f+' '+z+(dt?' · '+dt:'')};
   }
   return null;
 }
@@ -758,13 +862,44 @@ function saveInsp(){
     return;
   }
 
+  if(curMod==='toilet'){
+    var sels=selectedToilets();
+    if(!sels.length){ done(false,'남/여를 하나 이상 선택하세요'); return; }
+    var t0=sels[0];
+    var label = sels.length>1
+      ? t0.floor+' '+(t0.zone==='Airside'?'A/S':'L/S')+' '+t0.number+' (남/여)'
+      : toiletLabel(t0);
+    var doneCnt=0, failed=false;
+    sels.forEach(function(t){
+      var res={}; for(var k in results)res[k]=results[k];
+      if(!t.urinal_cnt)res['소변기 청결']='D'; // 소변기 없는 쪽은 자동 N/A
+      var rec3={
+        insp_type:'toilet', target_id:String(t.id), target_label:label,
+        insp_date:todayStr(), shift:curShift, team:team, jo:jo,
+        inspector:me.name, results:res, note:note.trim(), work_time:inspTime(),
+        updated_at:new Date().toISOString()
+      };
+      upsert('inspection_data',
+        '/inspection_data?insp_type=eq.toilet&target_id=eq.'+t.id+'&insp_date=eq.'+todayStr()+'&shift=eq.'+encodeURIComponent(curShift)+'&select=id',
+        rec3, function(ok){
+          if(!ok)failed=true;
+          doneCnt++;
+          if(doneCnt===sels.length){
+            if(!failed && sels.length>1){ btn.disabled=false; toast('✓ 남/여 '+sels.length+'건 저장 완료'); chkStates={}; renderChecklist(); document.getElementById('noteX').value='';document.getElementById('noteN').value=''; onToiletSel(); }
+            else done(!failed);
+          }
+        });
+    });
+    return;
+  }
+
   var tgt=targetInfo();
   if(!tgt){ done(false,'대상을 선택하세요'); return; }
   var rec2={
     insp_type:curMod, target_id:tgt.target_id, target_label:tgt.target_label,
     insp_date:todayStr(), shift:curShift, team:team, jo:jo,
     inspector:me.name, results:results, note:note.trim(),
-    work_time: curMod==='pbb' ? document.getElementById('pTime').value.trim() : null,
+    work_time: inspTime(),
     updated_at:new Date().toISOString()
   };
   upsert('inspection_data',
@@ -792,8 +927,8 @@ function openDash(){
   document.getElementById('dashDate').textContent=todayStr();
   var d=todayStr();
   Promise.all([
-    sbFetch('/inspection_data?insp_date=eq.'+d+'&select=id,insp_type,target_id,target_label,shift,team,jo,inspector,results,note,created_at&order=created_at.desc').then(function(r){return r.json();}),
-    sbFetch('/equip_inspection_data?insp_date=eq.'+d+'&select=id,equip_id,mgmt_no,shift,team,jo,inspector,results,note,use_area,use_time,user_name,created_at&order=created_at.desc').then(function(r){return r.json();}),
+    sbFetch('/inspection_data?insp_date=eq.'+d+'&select=id,insp_type,target_id,target_label,insp_date,work_time,shift,team,jo,inspector,results,note,created_at&order=created_at.desc').then(function(r){return r.json();}),
+    sbFetch('/equip_inspection_data?insp_date=eq.'+d+'&select=id,equip_id,mgmt_no,insp_date,shift,team,jo,inspector,results,note,use_area,use_time,user_name,created_at&order=created_at.desc').then(function(r){return r.json();}),
     sbFetch('/leaders?select=shift,team,name').then(function(r){return r.json();})
   ]).then(function(res){
     var insp=Array.isArray(res[0])?res[0]:[];
@@ -815,18 +950,36 @@ function renderDash(insp,eq,leaders){
   var rst=insp.filter(function(r){return r.insp_type==='rest';});
   var pb=insp.filter(function(r){return r.insp_type==='pbb';});
   var cm=insp.filter(function(r){return r.insp_type==='common';});
-  function setStat(id,n,total){
+  function xCntOf(list){ var n=0; list.forEach(function(r){ if(hasXin(r.results))n++; }); return n; }
+  function setStat(id,n,total,xn){
     var el=document.getElementById(id);
-    var pct=(total&&total>0)?' · '+Math.round(n/total*100)+'%':'';
-    el.innerHTML=n+'<small>'+(total?('/'+total+pct):'건')+'</small>';
+    el.innerHTML=n+'<small>'+(total?('/'+total):'건')+'</small>';
+    var sub=document.getElementById(id+'Sub');
+    if(sub){
+      if(xn>0){ sub.textContent='🔴 불량 '+xn+'건'; sub.className='stat-sub bad'; }
+      else if(total){ sub.textContent='완료율 '+Math.round(n/total*100)+'%'; sub.className='stat-sub '+(n>0?'good':''); }
+      else { sub.textContent=n>0?'양호':'기록 없음'; sub.className='stat-sub'; }
+    }
   }
   var eqDistinct={}; for(var i=0;i<eq.length;i++)eqDistinct[eq[i].equip_id||eq[i].mgmt_no]=1;
-  setStat('dToilet',t.length,TOILETS.length||300);
-  setStat('dRest',rst.length,RESTS.length||16);
-  setStat('dEquip',Object.keys(eqDistinct).length,EQUIPS.length||172);
-  setStat('dPbb',pb.length,0);
-  setStat('dCommon',cm.length,0);
-  setStat('dTotal',insp.length+eq.length,0);
+  setStat('dToilet',t.length,TOILETS.length||300,xCntOf(t));
+  setStat('dRest',rst.length,RESTS.length||16,xCntOf(rst));
+  setStat('dEquip',Object.keys(eqDistinct).length,EQUIPS.length||172,xCntOf(eq));
+  setStat('dPbb',pb.length,0,xCntOf(pb));
+  setStat('dCommon',cm.length,0,xCntOf(cm));
+  var totalX=xCntOf(insp)+xCntOf(eq);
+  document.getElementById('dX').innerHTML=totalX+'<small>건</small>';
+  document.getElementById('dXSub').textContent=totalX>0?'즉시 조치 확인 필요':'오늘 불량 없음 ✓';
+  document.getElementById('dXSub').className='stat-sub '+(totalX>0?'bad':'good');
+
+  // 리스트형 요약
+  var all=insp.concat(eq);
+  function shiftCnt(sh){ var n=0; all.forEach(function(r){ if(r.shift===sh)n++; }); return n; }
+  document.getElementById('sumTotal').innerHTML=all.length+'건';
+  document.getElementById('sumAM').innerHTML=shiftCnt('오전')+'건';
+  document.getElementById('sumPM').innerHTML=shiftCnt('오후')+'건';
+  document.getElementById('sumNight').innerHTML=shiftCnt('야간')+'건';
+  document.getElementById('sumX').innerHTML=totalX+'건';
 
   // 관리자 점검 참여: 교대별 조장 명단 vs 오늘 점검자
   var doneBy={};
@@ -836,6 +989,7 @@ function renderDash(insp,eq,leaders){
   if(!leaders||!leaders.length){
     jb.innerHTML='<div class="empty">조장 명단 없음</div>';
     document.getElementById('joinCnt').textContent='';
+    document.getElementById('sumJoin').textContent='-';
   }else{
     var shifts=['오전','오후','야간'];
     var html=''; var doneN=0, allN=0;
@@ -853,6 +1007,7 @@ function renderDash(insp,eq,leaders){
     });
     jb.innerHTML=html||'<div class="empty">조장 명단 없음</div>';
     document.getElementById('joinCnt').textContent='점검 '+doneN+' / 전체 '+allN+'명';
+    document.getElementById('sumJoin').innerHTML=doneN+'명 <small>/ '+allN+'명</small>';
   }
 
   // 불량
@@ -896,7 +1051,9 @@ function renderRecList(){
     var t=document.createElement('div'); t.className='rec-t';
     t.textContent=(icons[d.kind]||'')+' '+(d.kind==='equip'?(r.mgmt_no+' '+(r.use_area||'')):r.target_label);
     var s=document.createElement('div'); s.className='rec-s';
-    s.textContent=r.shift+' · '+(r.team||'')+' '+(r.jo||'')+' · '+r.inspector;
+    var tm=r.work_time||r.use_time||'';
+    var ct=r.created_at?String(r.created_at).slice(11,16):'';
+    s.textContent=(r.insp_date||todayStr())+(tm?' '+tm:(ct?' '+ct+' 입력':''))+' · '+r.shift+' · '+(r.team||'')+' '+(r.jo||'')+' · '+r.inspector;
     main.appendChild(t); main.appendChild(s);
     var bad=hasXin(r.results);
     var bd=document.createElement('span'); bd.className='rec-badge '+(bad?'bad':'ok'); bd.textContent=bad?'불량':'양호';
@@ -927,6 +1084,14 @@ function openModForEdit(d){
   document.getElementById('tgtEquip').style.display = mod==='equip'?'block':'none';
   document.getElementById('tgtPbb').style.display = mod==='pbb'?'block':'none';
   document.getElementById('tgtCommon').style.display = mod==='common'?'block':'none';
+  document.getElementById('inpDate').textContent='· '+(r.insp_date||todayStr());
+  fillTimeSels();
+  document.getElementById('timeRow').style.display = mod==='equip' ? 'none' : 'grid';
+  if(mod!=='equip'){
+    var wt=String(r.work_time||'').split('~');
+    document.getElementById('iT1').value=wt[0]||'';
+    document.getElementById('iT2').value=wt[1]||'';
+  }
   setShift(r.shift||autoShift());
   if(r.team)document.getElementById('selTeam').value=r.team;
   document.getElementById('inpJo').value=r.jo||'';
@@ -937,17 +1102,29 @@ function openModForEdit(d){
     var t=TOILETS.find(function(x){return String(x.id)===String(r.target_id);});
     if(t){ document.getElementById('tFloor').value=t.floor; document.getElementById('tZone').value=t.zone; }
     fillToiletList();
-    if(t)document.getElementById('tSel').value=String(t.id);
+    if(t){
+      document.getElementById('tNum').value=t.zone+'|'+t.number;
+      fillToiletGenders();
+      // 이 기록의 화장실만 선택 상태로
+      var pair=toiletPair();
+      var box=document.getElementById('tGenBox');
+      pair.forEach(function(pt,idx){
+        tGenSel[pt.id]=(String(pt.id)===String(r.target_id));
+        if(box.children[idx])box.children[idx].classList.toggle('on',tGenSel[pt.id]);
+      });
+    }
     if(r.results){ for(var kt in r.results)chkStates[kt]=r.results[kt]; }
     onToiletSel();
   }
   if(mod==='rest'){ fillRestList(); document.getElementById('rSel').value=r.target_id; }
-  if(mod==='pbb'){ fillPbbList(); document.getElementById('pSel').value=r.target_id; document.getElementById('pTime').value=''; }
+  if(mod==='pbb'){ fillPbbList(); document.getElementById('pSel').value=r.target_id; }
   if(mod==='common'){
     fillCommonSels();
     var parts=String(r.target_id||'').split('|');
     if(parts[0])document.getElementById('cFloor').value=parts[0];
     if(parts[1])document.getElementById('cZone').value=parts[1];
+    var lb=String(r.target_label||'');
+    document.getElementById('cDetail').value = lb.indexOf(' · ')>=0 ? lb.split(' · ').slice(1).join(' · ') : '';
   }
   if(mod==='equip'){
     fillEquipTypes(); fillTimeSels();
