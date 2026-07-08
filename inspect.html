@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#38bdf8">
 <title>T1OS 현장점검</title>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
 <style>
 :root{
   --sky:#38bdf8; --sky2:#0ea5e9; --sky3:#0284c7;
@@ -19,7 +20,8 @@ select,input[type=text]{width:100%;padding:11px 12px;border:1.5px solid var(--g2
 select:focus,input[type=text]:focus{border-color:var(--sky)}
 textarea{width:100%;padding:11px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;font-family:inherit;background:#fff;color:var(--g5);outline:none;resize:vertical;min-height:64px}
 textarea:focus{border-color:var(--sky)}
-.hdr{background:linear-gradient(135deg,#7dd3fc 0%,#38bdf8 45%,#0ea5e9 100%);padding:14px 16px 16px;color:#fff;border-radius:0 0 20px 20px;box-shadow:0 4px 14px rgba(14,165,233,.22);position:sticky;top:0;z-index:10}
+.hdr{background:linear-gradient(135deg,#7dd3fc 0%,#38bdf8 45%,#0ea5e9 100%);padding:14px 16px 16px;padding-top:calc(14px + env(safe-area-inset-top, 10px));color:#fff;border-radius:0 0 20px 20px;box-shadow:0 4px 14px rgba(14,165,233,.22);position:sticky;top:0;z-index:10}
+.back-btn{width:40px;height:40px;font-size:19px}
 .hdr-top{display:flex;align-items:center;gap:10px}
 .back-btn{background:rgba(255,255,255,.22);border:none;color:#fff;width:34px;height:34px;border-radius:10px;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .hdr-title{font-size:16px;font-weight:800;letter-spacing:-.3px}
@@ -88,7 +90,21 @@ textarea:focus{border-color:var(--sky)}
 .filter-seg .seg-btn{padding:7px 13px;font-size:11.5px;white-space:nowrap;flex-shrink:0}
 .empty{text-align:center;color:var(--g3);font-size:12px;padding:26px 0}
 .sub-back{background:var(--g1);border:none;border-radius:var(--r1);padding:7px 13px;font-size:12px;font-weight:700;color:var(--g4);cursor:pointer;margin-bottom:10px}
-#toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--g5);color:#fff;padding:10px 18px;border-radius:99px;font-size:12.5px;font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:99;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+#toast{position:fixed;bottom:26px;left:50%;transform:translateX(-50%) translateY(8px);background:var(--g5);color:#fff;padding:10px 18px;border-radius:99px;font-size:12.5px;font-weight:600;opacity:0;transition:.25s;pointer-events:none;z-index:99;white-space:nowrap;max-width:92vw;overflow:hidden;text-overflow:ellipsis}
+/* 출력 미리보기 */
+.prev-scroll{background:#fff;border:1px solid var(--g2);border-radius:var(--r2);overflow:auto;padding:10px;-webkit-overflow-scrolling:touch}
+.prn table{border-collapse:collapse;font-family:'Malgun Gothic','Noto Sans KR',sans-serif}
+.prn td{border:1px solid #333;font-size:9pt;padding:2px 3px;text-align:center;white-space:nowrap}
+.prn .tt{font-size:16pt;font-weight:800;letter-spacing:4px;border:none;padding:6px 0 10px}
+.prn .hd{background:#f0f0f0;font-weight:700}
+.prn .lf{text-align:left;white-space:normal}
+.prn .bx{color:#c00;font-weight:700}
+#printArea{display:none}
+@media print{
+  body>*{display:none !important}
+  #printArea{display:block !important}
+  body{padding:0;background:#fff}
+}
 </style>
 </head>
 <body>
@@ -135,13 +151,23 @@ textarea:focus{border-color:var(--sky)}
       <button class="mod-card" onclick="openMod('pbb')">
         <span class="mod-icon">✈️</span>
         <div class="mod-name">PBB 청소일지</div>
-        <div class="mod-desc">게이트별 5항목 체크</div>
+        <div class="mod-desc">GATE별 5항목 체크</div>
         <span class="mod-cnt">GATE 1~50</span>
+      </button>
+      <button class="mod-card" onclick="openMod('common')">
+        <span class="mod-icon">🧹</span>
+        <div class="mod-name">공용구역 점검</div>
+        <div class="mod-desc">층별 · L/S · A/S 6항목</div>
+        <span class="mod-cnt">전 구역</span>
       </button>
     </div>
     <button class="dash-btn" onclick="openDash()">
       <span style="font-size:18px">📊</span> 실시간 현황
       <span class="arrow">오늘 완료율·불량 보기 →</span>
+    </button>
+    <button class="dash-btn" onclick="openPrint()">
+      <span style="font-size:18px">🖨️</span> 출력 / 다운로드
+      <span class="arrow">월간 양식 엑셀·A4 인쇄 →</span>
     </button>
     <div class="db-banner">
       <span class="dot" id="dbDot"></span>
@@ -198,16 +224,23 @@ textarea:focus{border-color:var(--sky)}
     <!-- 대상 선택: 장비 -->
     <div class="card" id="tgtEquip" style="display:none">
       <div class="f-label">장비 선택 <span style="font-weight:400;color:var(--g3)">(팀 선택 시 해당 팀 장비만)</span></div>
+      <div class="f-row one"><select id="eType" onchange="fillEquipList()"></select></div>
       <div class="f-row one"><select id="eSel" onchange="onEquipSel()"></select></div>
       <div class="info-chips" id="eChips"></div>
-      <div class="f-row" style="margin-top:10px">
+      <div class="f-row one" style="margin-top:10px">
         <div>
-          <div class="f-label">사용구역</div>
-          <input type="text" id="eArea" placeholder="예: B1 서측 복도">
+          <div class="f-label">보관장소 <span style="font-weight:400;color:var(--g3)">(자동 입력 — 수정 가능)</span></div>
+          <input type="text" id="eArea" placeholder="예: F1 중앙창고">
+        </div>
+      </div>
+      <div class="f-row">
+        <div>
+          <div class="f-label">사용 시작</div>
+          <select id="eT1"></select>
         </div>
         <div>
-          <div class="f-label">사용시간</div>
-          <input type="text" id="eTime" placeholder="예: 22:30~01:10">
+          <div class="f-label">사용 종료</div>
+          <select id="eT2"></select>
         </div>
       </div>
       <div class="f-row one">
@@ -215,6 +248,15 @@ textarea:focus{border-color:var(--sky)}
           <div class="f-label">사용자</div>
           <input type="text" id="eUser" placeholder="사용자 성명">
         </div>
+      </div>
+    </div>
+
+    <!-- 대상 선택: 공용구역 -->
+    <div class="card" id="tgtCommon" style="display:none">
+      <div class="f-label">공용구역 선택</div>
+      <div class="f-row">
+        <select id="cFloor"></select>
+        <select id="cZone"></select>
       </div>
     </div>
 
@@ -253,6 +295,12 @@ textarea:focus{border-color:var(--sky)}
       <div class="stat-card"><div class="stat-lb">🛋️ 휴게시설</div><div class="stat-v" id="dRest">-<small></small></div></div>
       <div class="stat-card"><div class="stat-lb">🔧 장비</div><div class="stat-v" id="dEquip">-<small></small></div></div>
       <div class="stat-card"><div class="stat-lb">✈️ PBB</div><div class="stat-v" id="dPbb">-<small></small></div></div>
+      <div class="stat-card"><div class="stat-lb">🧹 공용구역</div><div class="stat-v" id="dCommon">-<small></small></div></div>
+      <div class="stat-card"><div class="stat-lb">📈 총 점검</div><div class="stat-v" id="dTotal">-<small>건</small></div></div>
+    </div>
+    <div class="sec-title">👤 관리자 점검 참여 <span id="joinCnt" style="font-weight:400;color:var(--g3);font-size:11px"></span></div>
+    <div class="card" id="joinBox" style="padding:11px 13px">
+      <div class="empty">불러오는 중…</div>
     </div>
     <div class="sec-title" style="color:#b91c1c">🔴 불량(X) 발생 <span id="xCnt" style="font-size:11px;font-weight:400"></span></div>
     <div id="xList"><div class="empty">불량 없음</div></div>
@@ -263,11 +311,57 @@ textarea:focus{border-color:var(--sky)}
       <button class="seg-btn" data-f="rest" onclick="setDashFilter('rest')">휴게시설</button>
       <button class="seg-btn" data-f="equip" onclick="setDashFilter('equip')">장비</button>
       <button class="seg-btn" data-f="pbb" onclick="setDashFilter('pbb')">PBB</button>
+      <button class="seg-btn" data-f="common" onclick="setDashFilter('common')">공용</button>
     </div>
     <div id="recList"><div class="empty">기록 없음</div></div>
   </div>
 
+  <!-- 출력 / 다운로드 -->
+  <div class="screen" id="scrPrint">
+    <button class="sub-back" onclick="showScr('scrMain')">← 모듈 선택</button>
+    <div class="sec-title">🖨️ 월간 양식 출력</div>
+    <div class="card">
+      <div class="f-row">
+        <div>
+          <div class="f-label">점검 종류</div>
+          <select id="prMod" onchange="fillPrTargets()">
+            <option value="toilet">🚻 화장실 점검표</option>
+            <option value="rest">🛋️ 휴게시설 관리점검표</option>
+            <option value="equip">🔧 장비 사용·점검 일지</option>
+            <option value="pbb">✈️ PBB 청소일지</option>
+            <option value="common">🧹 공용구역 점검표</option>
+          </select>
+        </div>
+        <div>
+          <div class="f-label">월</div>
+          <select id="prMonth"></select>
+        </div>
+      </div>
+      <div class="f-row one">
+        <div>
+          <div class="f-label">대상</div>
+          <select id="prTarget"></select>
+        </div>
+      </div>
+      <div class="f-row" style="margin-top:6px">
+        <button class="save-btn" style="margin:0" onclick="prExcel()">📥 엑셀 다운로드</button>
+        <button class="save-btn" style="margin:0;background:var(--g5)" onclick="prPreview()">🖨️ A4 미리보기</button>
+      </div>
+      <div style="font-size:10.5px;color:var(--g3);margin-top:8px;line-height:1.5">엑셀: 열 너비·양식 포함 파일 저장 · A4 미리보기: 화면 확인 후 인쇄/PDF 저장</div>
+    </div>
+  </div>
+
+  <!-- A4 미리보기 -->
+  <div class="screen" id="scrPreview">
+    <button class="sub-back" onclick="showScr('scrPrint')">← 출력 선택</button>
+    <div class="sec-title" id="pvTitle">A4 미리보기</div>
+    <div class="prev-scroll prn" id="prevScroll"></div>
+    <button class="save-btn" style="margin-top:10px" onclick="doPrint()">🖨️ 인쇄 / PDF 저장</button>
+  </div>
+
 </div>
+
+<div id="printArea" class="prn"></div>
 
 <div id="toast"></div>
 
@@ -288,10 +382,11 @@ var dashRecs = [];
 var dashFilterV = 'all';
 
 var MOD_META = {
-  toilet: { name:'🚻 화장실 점검', items:['소모품(휴지·타올·비누) 리필','변기(대/소) 내·외부 청결','세면대·거울·선반 청결','바닥 청결·물기 없음','쓰레기통 비움 상태','설비 작동(드라이어·문·칸막이)','악취 여부'], states:3 },
+  toilet: { name:'🚻 화장실 점검', items:['소모품(휴지·타올·비누) 리필','변기(대/소) 내·외부 청결','소변기 청결','세면대·거울·선반 청결','바닥 청결·물기 없음','쓰레기통 비움 상태','설비 작동(드라이어·문·칸막이)','냄새 여부'], states:3, naItems:['소변기 청결'] },
   rest:   { name:'🛋️ 휴게시설 점검', items:['청소·청결, 목적 외 이용금지','온도·습도·조명·환기 적정','비품·설비 이상 여부','화기 단속','문단속','점검자 확인'], states:4 },
   equip:  { name:'🔧 장비점검', items:[], states:3 },
-  pbb:    { name:'✈️ PBB 청소일지', items:['바닥 청소 상태','유리·창 청결','핸드레일·벽면 청결','쓰레기 수거 상태','출입구·연결부 청결'], states:3 }
+  pbb:    { name:'✈️ PBB 청소일지', items:['바닥 청소 상태','유리·창 청결','핸드레일·벽면 청결','쓰레기 수거 상태','출입구·연결부 청결'], states:3 },
+  common: { name:'🧹 공용구역 점검', items:['바닥 청소 상태(오염물·얼룩)','쓰레기통 수거 상태','유리·거울·스테인리스 청결','시설물(벤치·안내데스크 등) 청결','청소도구 정리·보관','안전 위해요소 없음(물기·장애물)'], states:3 }
 };
 
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(8px)';},2600);}
@@ -327,7 +422,7 @@ function showScr(id){
   var s=document.querySelectorAll('.screen');
   for(var i=0;i<s.length;i++)s[i].classList.remove('on');
   document.getElementById(id).classList.add('on');
-  document.getElementById('hdrTitle').textContent = id==='scrMain' ? '📝 현장점검' : (id==='scrDash' ? '📊 실시간 현황' : (MOD_META[curMod]?MOD_META[curMod].name:'점검 입력'));
+  document.getElementById('hdrTitle').textContent = id==='scrMain' ? '📝 현장점검' : (id==='scrDash' ? '📊 실시간 현황' : (id==='scrPrint'||id==='scrPreview') ? '🖨️ 출력 / 다운로드' : (MOD_META[curMod]?MOD_META[curMod].name:'점검 입력'));
   if(id==='scrMain'){ editRec=null; }
   window.scrollTo(0,0);
 }
@@ -380,8 +475,13 @@ function setShift(s){
   curShift=s;
   var btns=document.querySelectorAll('#shiftSeg .seg-btn');
   for(var i=0;i<btns.length;i++)btns[i].classList.toggle('on',btns[i].getAttribute('data-s')===s);
+  if(curMod==='toilet')fillToiletList();
 }
-function onTeamChange(){ if(curMod==='equip')fillEquipList(); }
+function onTeamChange(){
+  if(curMod==='equip')fillEquipTypes();
+  if(curMod==='rest')fillRestList();
+  if(curMod==='toilet')fillToiletList();
+}
 
 // ─ 모듈 열기 ─
 function openMod(mod){
@@ -393,13 +493,15 @@ function openMod(mod){
   document.getElementById('tgtRest').style.display = mod==='rest'?'block':'none';
   document.getElementById('tgtEquip').style.display = mod==='equip'?'block':'none';
   document.getElementById('tgtPbb').style.display = mod==='pbb'?'block':'none';
+  document.getElementById('tgtCommon').style.display = mod==='common'?'block':'none';
   document.getElementById('noteX').value=''; document.getElementById('noteN').value='';
   setShift(autoShift());
   document.getElementById('inpJo').value='';
   if(mod==='toilet'){ fillToiletFloors(); fillToiletList(); }
   if(mod==='rest'){ fillRestList(); }
-  if(mod==='equip'){ fillEquipList(); document.getElementById('eArea').value='';document.getElementById('eTime').value='';document.getElementById('eUser').value=''; }
+  if(mod==='equip'){ fillEquipTypes(); fillTimeSels(); document.getElementById('eArea').value='';document.getElementById('eUser').value=''; }
   if(mod==='pbb'){ fillPbbList(); document.getElementById('pTime').value=''; }
+  if(mod==='common'){ fillCommonSels(); }
   renderChecklist();
   document.getElementById('btnSave').textContent='점검 저장';
   showScr('scrInput');
@@ -414,8 +516,17 @@ function fillToiletFloors(){
 function fillToiletList(){
   var fl=document.getElementById('tFloor').value;
   var zn=document.getElementById('tZone').value;
+  var team=document.getElementById('selTeam').value;
   var sel=document.getElementById('tSel'); sel.innerHTML='';
-  var list=TOILETS.filter(function(t){return t.floor===fl&&(!zn||t.zone===zn);});
+  // 담당팀 필터: 오전/오후팀은 team 컬럼(예: "1팀 6팀"), 야간은 5팀=L/S 전체·10팀=A/S 전체
+  function teamOk(t){
+    if(team==='관리팀')return true;
+    if(team==='5팀')return t.zone==='Landside';
+    if(team==='10팀')return t.zone==='Airside';
+    if(!t.team)return true; // 미배정은 전체 표시
+    return String(t.team).split(/\s+/).indexOf(team)>=0;
+  }
+  var list=TOILETS.filter(function(t){return t.floor===fl&&(!zn||t.zone===zn)&&teamOk(t);});
   if(!list.length){var o=document.createElement('option');o.value='';o.textContent='해당 조건 화장실 없음';sel.appendChild(o);}
   for(var i=0;i<list.length;i++){
     var t=list[i];
@@ -433,7 +544,14 @@ function onToiletSel(){
   var chips=[t.floor, t.zone==='Airside'?'Airside':'Landside'];
   if(t.family_room==='있음')chips.push('가족실 있음');
   if(t.toilet_cnt)chips.push('양변기 '+t.toilet_cnt);
+  if(t.urinal_cnt)chips.push('소변기 '+t.urinal_cnt);
   for(var i=0;i<chips.length;i++){var s=document.createElement('span');s.className='chip';s.textContent=chips[i];c.appendChild(s);}
+  // 소변기 없는 화장실(여자 등)은 소변기 항목 N/A 자동 설정
+  if(curMod==='toilet'){
+    if(!t.urinal_cnt){ chkStates['소변기 청결']='D'; }
+    else if(chkStates['소변기 청결']==='D'){ delete chkStates['소변기 청결']; }
+    renderChecklist();
+  }
 }
 function toiletLabel(t){
   return t.floor+' '+(t.zone==='Airside'?'A/S':'L/S')+' '+t.number+' '+(t.gender||'').replace(' 화장실','');
@@ -443,10 +561,17 @@ function toiletLabel(t){
 function fillRestList(){
   var sel=document.getElementById('rSel'); sel.innerHTML='';
   if(!RESTS.length){var o=document.createElement('option');o.value='';o.textContent='휴게시설 목록 없음 (시설현황 업로드 필요)';sel.appendChild(o);return;}
+  var team=document.getElementById('selTeam').value;
+  var idxList=[];
   for(var i=0;i<RESTS.length;i++){
-    var r=RESTS[i];
+    var tm=String(RESTS[i].team||'');
+    if(team==='관리팀'||!tm||tm.indexOf(team)>=0||tm.indexOf(team.replace('팀',''))===0)idxList.push(i);
+  }
+  if(!idxList.length){ for(var j=0;j<RESTS.length;j++)idxList.push(j); }
+  for(var k=0;k<idxList.length;k++){
+    var r=RESTS[idxList[k]];
     var label=(r.loc||'')+' '+(r.num||'')+' '+(r.area?'· '+r.area:'')+(r.gender?' ('+r.gender+')':'');
-    var o=document.createElement('option'); o.value=i; o.textContent=label.trim(); sel.appendChild(o);
+    var o=document.createElement('option'); o.value=idxList[k]; o.textContent=label.trim(); sel.appendChild(o);
   }
 }
 function restLabel(i){
@@ -455,23 +580,46 @@ function restLabel(i){
 }
 
 // ─ 장비 ─
-function fillEquipList(){
+function teamEquips(){
   var team=document.getElementById('selTeam').value;
-  var sel=document.getElementById('eSel'); sel.innerHTML='';
-  var tn=team.replace('팀','');
   var list=EQUIPS.filter(function(e){
     if(team==='관리팀')return true;
     var d=String(e.dept||'');
     return d.split(/\s+/).indexOf(team)>=0 || d===team;
   });
-  if(!list.length)list=EQUIPS;
+  return list.length?list:EQUIPS;
+}
+function fillEquipTypes(){
+  var sel=document.getElementById('eType'); sel.innerHTML='';
+  var list=teamEquips();
+  var types=[]; 
+  for(var i=0;i<list.length;i++){ if(types.indexOf(list[i].name)<0)types.push(list[i].name); }
+  for(var j=0;j<types.length;j++){
+    var o=document.createElement('option'); o.value=types[j]; o.textContent=types[j]; sel.appendChild(o);
+  }
+  fillEquipList();
+}
+function fillEquipList(){
+  var sel=document.getElementById('eSel'); sel.innerHTML='';
+  var type=document.getElementById('eType').value;
+  var list=teamEquips().filter(function(e){return !type||e.name===type;});
   for(var i=0;i<list.length;i++){
     var e=list[i];
     var o=document.createElement('option'); o.value=e.id;
-    o.textContent=e.mgmt_no+' · '+e.name+(e.model?' '+e.model:'');
+    o.textContent=e.mgmt_no+(e.model?' · '+e.model:'')+(e.location?' · '+e.location:'');
     sel.appendChild(o);
   }
   onEquipSel();
+}
+function fillTimeSels(){
+  ['eT1','eT2'].forEach(function(id){
+    var sel=document.getElementById(id); sel.innerHTML='';
+    var o0=document.createElement('option'); o0.value=''; o0.textContent='선택'; sel.appendChild(o0);
+    for(var h=0;h<24;h++){ for(var m=0;m<60;m+=30){
+      var v=String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+      var o=document.createElement('option'); o.value=v; o.textContent=v; sel.appendChild(o);
+    }}
+  });
 }
 function onEquipSel(){
   var id=document.getElementById('eSel').value;
@@ -480,6 +628,12 @@ function onEquipSel(){
   if(!e)return;
   var chips=[e.dept||'-', e.location||'보관장소 미등록'];
   for(var i=0;i<chips.length;i++){var s=document.createElement('span');s.className='chip';s.textContent=chips[i];c.appendChild(s);}
+  // 사용구역 자동 입력 (보관장소 기준, 수정 가능)
+  var area=document.getElementById('eArea');
+  if(area && (!area.value || area.dataset.auto==='1')){
+    area.value=e.location||''; area.dataset.auto='1';
+    area.oninput=function(){ area.dataset.auto='0'; };
+  }
   if(curMod==='equip'){ chkStates={}; renderChecklist(); }
 }
 
@@ -487,8 +641,19 @@ function onEquipSel(){
 function fillPbbList(){
   var sel=document.getElementById('pSel'); sel.innerHTML='';
   for(var g=1;g<=50;g++){
-    var o=document.createElement('option'); o.value=String(g); o.textContent='게이트 '+g; sel.appendChild(o);
+    if(g===4||g===44)continue; // 존재하지 않는 게이트
+    var o=document.createElement('option'); o.value=String(g); o.textContent='GATE '+g; sel.appendChild(o);
   }
+}
+
+// ─ 공용구역 ─
+function fillCommonSels(){
+  var f=document.getElementById('cFloor'); f.innerHTML='';
+  var floors=['B2F','B1F','1F','2F','3F','4F'];
+  for(var i=0;i<floors.length;i++){var o=document.createElement('option');o.value=floors[i];o.textContent=floors[i];f.appendChild(o);}
+  var z=document.getElementById('cZone'); z.innerHTML='';
+  var zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편','중앙'];
+  for(var j=0;j<zones.length;j++){var o2=document.createElement('option');o2.value=zones[j];o2.textContent=zones[j];z.appendChild(o2);}
 }
 
 // ─ 체크리스트 렌더 ─
@@ -503,6 +668,7 @@ function currentItems(){
 function renderChecklist(){
   var items=currentItems();
   var states=MOD_META[curMod]?MOD_META[curMod].states:3;
+  var naItems=(MOD_META[curMod]&&MOD_META[curMod].naItems)||[];
   var box=document.getElementById('chkList'); box.innerHTML='';
   document.getElementById('chkTitle').textContent='점검항목'+(curMod==='equip'?' — 선택 장비 전용':'')+' ('+items.length+'개)';
   for(var i=0;i<items.length;i++){
@@ -511,13 +677,15 @@ function renderChecklist(){
     var bt=document.createElement('div'); bt.className='chk-btns';
     var defs=[['O','○','sO'],['T','△','sT'],['X','X','sX']];
     if(states===4)defs.push(['D','－','sD']);
+    else if(naItems.indexOf(items[i])>=0)defs.push(['D','N/A','sD']);
     for(var j=0;j<defs.length;j++){
-      (function(item,code,cls){
-        var b=document.createElement('button'); b.className='st-btn'; b.textContent=defs[j][1];
+      (function(item,code,cls,label){
+        var b=document.createElement('button'); b.className='st-btn'; b.textContent=label;
+        if(label==='N/A')b.style.fontSize='10px';
         if(chkStates[item]===code)b.classList.add(cls);
         b.onclick=function(){ chkStates[item]=code; renderChecklist(); updateNoteReq(); };
         bt.appendChild(b);
-      })(items[i],defs[j][0],defs[j][2]);
+      })(items[i],defs[j][0],defs[j][2],defs[j][1]);
     }
     row.appendChild(nm); row.appendChild(bt); box.appendChild(row);
   }
@@ -543,7 +711,12 @@ function targetInfo(){
   }
   if(curMod==='pbb'){
     var g=document.getElementById('pSel').value;
-    return {target_id:g, target_label:'게이트 '+g};
+    return {target_id:g, target_label:'GATE '+g};
+  }
+  if(curMod==='common'){
+    var f=document.getElementById('cFloor').value;
+    var z=document.getElementById('cZone').value;
+    return {target_id:f+'|'+z, target_label:f+' '+z};
   }
   return null;
 }
@@ -571,10 +744,11 @@ function saveInsp(){
     var eid=document.getElementById('eSel').value;
     var e=EQUIPS.find(function(x){return String(x.id)===String(eid);});
     if(!e){ done(false,'장비를 선택하세요'); return; }
+    var t1=document.getElementById('eT1').value, t2=document.getElementById('eT2').value;
     var rec={
       equip_id:e.id, mgmt_no:e.mgmt_no, insp_date:todayStr(), shift:curShift,
       use_area:document.getElementById('eArea').value.trim(),
-      use_time:document.getElementById('eTime').value.trim(),
+      use_time:(t1&&t2)?(t1+'~'+t2):(t1||t2||''),
       user_name:document.getElementById('eUser').value.trim(),
       team:team, jo:jo, inspector:me.name, results:results, note:note.trim(), updated_at:new Date().toISOString()
     };
@@ -589,7 +763,9 @@ function saveInsp(){
   var rec2={
     insp_type:curMod, target_id:tgt.target_id, target_label:tgt.target_label,
     insp_date:todayStr(), shift:curShift, team:team, jo:jo,
-    inspector:me.name, results:results, note:note.trim(), updated_at:new Date().toISOString()
+    inspector:me.name, results:results, note:note.trim(),
+    work_time: curMod==='pbb' ? document.getElementById('pTime').value.trim() : null,
+    updated_at:new Date().toISOString()
   };
   upsert('inspection_data',
     '/inspection_data?insp_type=eq.'+curMod+'&target_id=eq.'+encodeURIComponent(tgt.target_id)+'&insp_date=eq.'+todayStr()+'&shift=eq.'+encodeURIComponent(curShift)+'&select=id',
@@ -616,12 +792,14 @@ function openDash(){
   document.getElementById('dashDate').textContent=todayStr();
   var d=todayStr();
   Promise.all([
-    sbFetch('/inspection_data?insp_date=eq.'+d+'&select=id,insp_type,target_label,shift,team,jo,inspector,results,note,created_at&order=created_at.desc').then(function(r){return r.json();}),
-    sbFetch('/equip_inspection_data?insp_date=eq.'+d+'&select=id,equip_id,mgmt_no,shift,team,jo,inspector,results,note,use_area,created_at&order=created_at.desc').then(function(r){return r.json();})
+    sbFetch('/inspection_data?insp_date=eq.'+d+'&select=id,insp_type,target_id,target_label,shift,team,jo,inspector,results,note,created_at&order=created_at.desc').then(function(r){return r.json();}),
+    sbFetch('/equip_inspection_data?insp_date=eq.'+d+'&select=id,equip_id,mgmt_no,shift,team,jo,inspector,results,note,use_area,use_time,user_name,created_at&order=created_at.desc').then(function(r){return r.json();}),
+    sbFetch('/leaders?select=shift,team,name').then(function(r){return r.json();})
   ]).then(function(res){
     var insp=Array.isArray(res[0])?res[0]:[];
     var eq=Array.isArray(res[1])?res[1]:[];
-    renderDash(insp,eq);
+    var leaders=Array.isArray(res[2])?res[2]:[];
+    renderDash(insp,eq,leaders);
   }).catch(function(){ toast('현황 로드 실패'); });
 }
 function hasXin(results){
@@ -632,19 +810,50 @@ function hasXin(results){
 function xItems(results){
   var arr=[]; for(var k in results){ if(results[k]==='X')arr.push(k); } return arr;
 }
-function renderDash(insp,eq){
+function renderDash(insp,eq,leaders){
   var t=insp.filter(function(r){return r.insp_type==='toilet';});
   var rst=insp.filter(function(r){return r.insp_type==='rest';});
   var pb=insp.filter(function(r){return r.insp_type==='pbb';});
+  var cm=insp.filter(function(r){return r.insp_type==='common';});
   function setStat(id,n,total){
     var el=document.getElementById(id);
-    el.innerHTML=n+'<small>'+(total?('/'+total):'건')+'</small>';
+    var pct=(total&&total>0)?' · '+Math.round(n/total*100)+'%':'';
+    el.innerHTML=n+'<small>'+(total?('/'+total+pct):'건')+'</small>';
   }
   var eqDistinct={}; for(var i=0;i<eq.length;i++)eqDistinct[eq[i].equip_id||eq[i].mgmt_no]=1;
   setStat('dToilet',t.length,TOILETS.length||300);
   setStat('dRest',rst.length,RESTS.length||16);
   setStat('dEquip',Object.keys(eqDistinct).length,EQUIPS.length||172);
   setStat('dPbb',pb.length,0);
+  setStat('dCommon',cm.length,0);
+  setStat('dTotal',insp.length+eq.length,0);
+
+  // 관리자 점검 참여: 교대별 조장 명단 vs 오늘 점검자
+  var doneBy={};
+  insp.forEach(function(r){ doneBy[(r.shift||'')+'|'+(r.inspector||'')]=1; doneBy['*|'+(r.inspector||'')]=1; });
+  eq.forEach(function(r){ doneBy[(r.shift||'')+'|'+(r.inspector||'')]=1; doneBy['*|'+(r.inspector||'')]=1; });
+  var jb=document.getElementById('joinBox');
+  if(!leaders||!leaders.length){
+    jb.innerHTML='<div class="empty">조장 명단 없음</div>';
+    document.getElementById('joinCnt').textContent='';
+  }else{
+    var shifts=['오전','오후','야간'];
+    var html=''; var doneN=0, allN=0;
+    shifts.forEach(function(sh){
+      var Ls=leaders.filter(function(l){return l.shift===sh;});
+      if(!Ls.length)return;
+      html+='<div style="font-size:11px;font-weight:800;color:var(--g4);margin:6px 0 4px">'+sh+'</div><div style="display:flex;flex-wrap:wrap;gap:5px">';
+      Ls.forEach(function(l){
+        allN++;
+        var did=doneBy[sh+'|'+l.name]||doneBy['*|'+l.name];
+        if(did)doneN++;
+        html+='<span class="chip" style="'+(did?'background:var(--okBg);color:#047857':'background:var(--dangerBg);color:#b91c1c')+'">'+(did?'✓ ':'✗ ')+(l.team||'')+' '+l.name+'</span>';
+      });
+      html+='</div>';
+    });
+    jb.innerHTML=html||'<div class="empty">조장 명단 없음</div>';
+    document.getElementById('joinCnt').textContent='점검 '+doneN+' / 전체 '+allN+'명';
+  }
 
   // 불량
   var xs=[];
@@ -679,7 +888,7 @@ function renderRecList(){
   var box=document.getElementById('recList'); box.innerHTML='';
   var list=dashRecs.filter(function(d){return dashFilterV==='all'||d.kind===dashFilterV;});
   if(!list.length){ box.innerHTML='<div class="empty">기록 없음</div>'; return; }
-  var icons={toilet:'🚻',rest:'🛋️',equip:'🔧',pbb:'✈️'};
+  var icons={toilet:'🚻',rest:'🛋️',equip:'🔧',pbb:'✈️',common:'🧹'};
   list.forEach(function(d){
     var r=d.rec;
     var row=document.createElement('div'); row.className='rec-row';
@@ -717,6 +926,7 @@ function openModForEdit(d){
   document.getElementById('tgtRest').style.display = mod==='rest'?'block':'none';
   document.getElementById('tgtEquip').style.display = mod==='equip'?'block':'none';
   document.getElementById('tgtPbb').style.display = mod==='pbb'?'block':'none';
+  document.getElementById('tgtCommon').style.display = mod==='common'?'block':'none';
   setShift(r.shift||autoShift());
   if(r.team)document.getElementById('selTeam').value=r.team;
   document.getElementById('inpJo').value=r.jo||'';
@@ -728,17 +938,28 @@ function openModForEdit(d){
     if(t){ document.getElementById('tFloor').value=t.floor; document.getElementById('tZone').value=t.zone; }
     fillToiletList();
     if(t)document.getElementById('tSel').value=String(t.id);
+    if(r.results){ for(var kt in r.results)chkStates[kt]=r.results[kt]; }
     onToiletSel();
   }
   if(mod==='rest'){ fillRestList(); document.getElementById('rSel').value=r.target_id; }
   if(mod==='pbb'){ fillPbbList(); document.getElementById('pSel').value=r.target_id; document.getElementById('pTime').value=''; }
+  if(mod==='common'){
+    fillCommonSels();
+    var parts=String(r.target_id||'').split('|');
+    if(parts[0])document.getElementById('cFloor').value=parts[0];
+    if(parts[1])document.getElementById('cZone').value=parts[1];
+  }
   if(mod==='equip'){
-    fillEquipList();
-    if(r.equip_id)document.getElementById('eSel').value=String(r.equip_id);
+    fillEquipTypes(); fillTimeSels();
+    var eObj=EQUIPS.find(function(x){return String(x.id)===String(r.equip_id);});
+    if(eObj){ document.getElementById('eType').value=eObj.name; fillEquipList(); document.getElementById('eSel').value=String(eObj.id); }
     onEquipSel();
     if(r.results){ for(var k2 in r.results)chkStates[k2]=r.results[k2]; }
     document.getElementById('eArea').value=r.use_area||'';
-    document.getElementById('eTime').value=r.use_time||'';
+    document.getElementById('eArea').dataset.auto = r.use_area ? '0' : '1';
+    var tm=String(r.use_time||'').split('~');
+    document.getElementById('eT1').value=tm[0]||'';
+    document.getElementById('eT2').value=tm[1]||'';
     document.getElementById('eUser').value=r.user_name||'';
   }
   var note=r.note||'';
@@ -754,6 +975,335 @@ function openModForEdit(d){
   document.getElementById('btnSave').textContent='수정 저장';
   showScr('scrInput');
   toast('기록 수정 모드');
+}
+
+// ═══════════ 출력 / 다운로드 ═══════════
+var SYM={O:'○',T:'△',X:'X',D:'－'};
+var PR_ORIENT='portrait';
+
+function openPrint(){
+  fillPrMonths(); fillPrTargets(); showScr('scrPrint');
+}
+function fillPrMonths(){
+  var sel=document.getElementById('prMonth'); sel.innerHTML='';
+  var n=new Date();
+  for(var i=0;i<12;i++){
+    var d=new Date(n.getFullYear(),n.getMonth()-i,1);
+    var v=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');
+    var o=document.createElement('option'); o.value=v; o.textContent=d.getFullYear()+'년 '+(d.getMonth()+1)+'월'; sel.appendChild(o);
+  }
+}
+function fillPrTargets(){
+  var mod=document.getElementById('prMod').value;
+  var sel=document.getElementById('prTarget'); sel.innerHTML='';
+  function addGroup(label){ var g=document.createElement('optgroup'); g.label=label; sel.appendChild(g); return g; }
+  if(mod==='toilet'){
+    var floors=['1F','2F','3F','4F','B1F','B2F'];
+    floors.forEach(function(fl){
+      var list=TOILETS.filter(function(t){return t.floor===fl;});
+      if(!list.length)return;
+      var g=addGroup(fl);
+      list.forEach(function(t){
+        var o=document.createElement('option'); o.value=String(t.id);
+        o.textContent=(t.zone==='Airside'?'A/S':'L/S')+' '+t.number+' '+(t.gender||'').replace(' 화장실','');
+        g.appendChild(o);
+      });
+    });
+  }else if(mod==='rest'){
+    RESTS.forEach(function(r,i){
+      var o=document.createElement('option'); o.value=String(i);
+      o.textContent=((r.loc||'')+' '+(r.num||'')+(r.gender?' ('+r.gender+')':'')).trim();
+      sel.appendChild(o);
+    });
+    if(!RESTS.length){var o0=document.createElement('option');o0.value='';o0.textContent='목록 없음';sel.appendChild(o0);}
+  }else if(mod==='equip'){
+    var types=[];
+    EQUIPS.forEach(function(e){ if(types.indexOf(e.name)<0)types.push(e.name); });
+    types.forEach(function(tp){
+      var g=addGroup(tp);
+      EQUIPS.filter(function(e){return e.name===tp;}).forEach(function(e){
+        var o=document.createElement('option'); o.value=String(e.id);
+        o.textContent=e.mgmt_no+(e.dept?' · '+e.dept:'');
+        g.appendChild(o);
+      });
+    });
+  }else if(mod==='pbb'){
+    for(var gN=1;gN<=50;gN++){
+      if(gN===4||gN===44)continue;
+      var o1=document.createElement('option'); o1.value=String(gN); o1.textContent='GATE '+gN; sel.appendChild(o1);
+    }
+  }else if(mod==='common'){
+    var fls=['B2F','B1F','1F','2F','3F','4F'], zns=['L/S 동편','L/S 서편','A/S 동편','A/S 서편','중앙'];
+    fls.forEach(function(f){
+      var g=addGroup(f);
+      zns.forEach(function(z){
+        var o=document.createElement('option'); o.value=f+'|'+z; o.textContent=f+' '+z; g.appendChild(o);
+      });
+    });
+  }
+}
+function monthInfo(){
+  var ym=document.getElementById('prMonth').value.split('-');
+  var y=Number(ym[0]), m=Number(ym[1]);
+  var days=new Date(y,m,0).getDate();
+  var from=ym[0]+'-'+ym[1]+'-01';
+  var toD=new Date(y,m,1);
+  var to=toD.getFullYear()+'-'+String(toD.getMonth()+1).padStart(2,'0')+'-01';
+  return {y:y,m:m,days:days,from:from,to:to,label:y+'년 '+m+'월'};
+}
+function fetchMonth(cb){
+  var mod=document.getElementById('prMod').value;
+  var tid=document.getElementById('prTarget').value;
+  var mi=monthInfo();
+  var path;
+  if(mod==='equip'){
+    path='/equip_inspection_data?equip_id=eq.'+tid+'&insp_date=gte.'+mi.from+'&insp_date=lt.'+mi.to+'&order=insp_date,shift';
+  }else{
+    path='/inspection_data?insp_type=eq.'+mod+'&target_id=eq.'+encodeURIComponent(tid)+'&insp_date=gte.'+mi.from+'&insp_date=lt.'+mi.to+'&order=insp_date,shift';
+  }
+  sbFetch(path).then(function(r){return r.json();}).then(function(rows){
+    cb(Array.isArray(rows)?rows:[], mod, tid, mi);
+  }).catch(function(){ toast('데이터 조회 실패'); });
+}
+function dayOf(r){ return Number(String(r.insp_date).slice(8,10)); }
+// 하루 여러 교대 기록 → 최악 우선(X>△>○>－)
+function worstOf(recs, item){
+  var rank={X:3,T:2,O:1,D:0}, best=null;
+  recs.forEach(function(r){
+    var v=r.results?r.results[item]:null;
+    if(v!=null && (best===null || rank[v]>rank[best])) best=v;
+  });
+  return best;
+}
+function collectNotes(recs){
+  var out=[];
+  recs.forEach(function(r){
+    var n=(r.note||'').replace('[불량] ','').trim();
+    if(n)out.push(dayOf(r)+'일: '+n+' ('+(r.inspector||'')+')');
+  });
+  return out.join(' / ');
+}
+// ─ 공통: 그리드형 (화장실·휴게시설·공용) ─
+function buildGridDoc(title, locLabel, items, legend, records, mi){
+  var byDay={}; records.forEach(function(r){ (byDay[dayOf(r)]=byDay[dayOf(r)]||[]).push(r); });
+  var rows=[];
+  var half1=16, totalCols=2+half1; // No+항목+16일
+  rows.push([{v:title+' ('+mi.label+')',cs:totalCols,cls:'tt'}]);
+  rows.push([
+    {v:'위치',cls:'hd'},{v:locLabel,cs:9,cls:'lf'},
+    {v:'범례',cls:'hd'},{v:legend,cs:5,cls:'lf'},{v:'부서장:      (인)',cs:2,cls:'lf'}
+  ]);
+  function block(d1,d2){
+    var hd=[{v:'No',cls:'hd'},{v:'점검항목',cls:'hd'}];
+    for(var d=d1;d<=d2;d++)hd.push({v:String(d),cls:'hd'});
+    for(var pad=d2-d1+1;pad<half1;pad++)hd.push({v:'',cls:'hd'});
+    rows.push(hd);
+    items.forEach(function(it,i){
+      var row=[{v:String(i+1)},{v:it,cls:'lf'}];
+      for(var d=d1;d<=d2;d++){
+        var w=byDay[d]?worstOf(byDay[d],it):null;
+        row.push({v:w?SYM[w]:'',cls:w==='X'?'bx':''});
+      }
+      for(var pad=d2-d1+1;pad<half1;pad++)row.push({v:''});
+      rows.push(row);
+    });
+  }
+  block(1,16);
+  block(17,mi.days);
+  rows.push([{v:'특이사항',cs:2,cls:'hd'},{v:collectNotes(records)||'-',cs:totalCols-2,cls:'lf'}]);
+  var cols=[3.5,20]; for(var c=0;c<half1;c++)cols.push(3.1);
+  return {rows:rows, cols:cols, orient:'portrait', title:title, fname:title.replace(/\s/g,'')+'_'+locLabel.replace(/[\/\s]/g,'')+'_'+mi.y+'-'+String(mi.m).padStart(2,'0')};
+}
+// ─ 장비 일지 ─
+function buildEquipDoc(records, tid, mi){
+  var e=EQUIPS.find(function(x){return String(x.id)===String(tid);})||{};
+  var items=(Array.isArray(e.check_items)&&e.check_items.length)?e.check_items:['작동상태','외관·부속 상태','충전·전원 상태','청소상태'];
+  var totalCols=5+items.length+1; // 일,구역,시간,사용자 + 항목 + 점검자... 일1 구역1 시간1 사용자1 items4 점검자1 = 9 → +비고
+  totalCols=5+items.length; // 아래 헤더 기준
+  var rows=[];
+  var headCells=[{v:'일',cls:'hd'},{v:'보관장소',cls:'hd'},{v:'사용시간',cls:'hd'},{v:'사용자',cls:'hd'}];
+  items.forEach(function(it){headCells.push({v:it,cls:'hd'});});
+  headCells.push({v:'점검자',cls:'hd'});
+  var W=headCells.length;
+  rows.push([{v:'T1 환경미화장비 사용 및 점검 일지 ('+mi.label+')',cs:W,cls:'tt'}]);
+  rows.push([
+    {v:'관리부서',cls:'hd'},{v:e.dept||'-'},{v:'장비명',cls:'hd'},{v:(e.name||'')+' '+(e.model||''),cs:3,cls:'lf'},
+    {v:'관리번호',cls:'hd'},{v:e.mgmt_no||'-',cs:W-7,cls:'lf'}
+  ]);
+  rows.push([
+    {v:'보관장소',cls:'hd'},{v:e.location||'-',cs:3,cls:'lf'},
+    {v:'범례',cls:'hd'},{v:'○ 양호  △ 보통  X 불량',cs:W-5,cls:'lf'}
+  ]);
+  rows.push(headCells);
+  var byDay={}; records.forEach(function(r){ (byDay[dayOf(r)]=byDay[dayOf(r)]||[]).push(r); });
+  for(var d=1;d<=mi.days;d++){
+    var recs=byDay[d];
+    if(!recs){ 
+      var er=[{v:String(d)},{v:''},{v:''},{v:''}];
+      items.forEach(function(){er.push({v:''});});
+      er.push({v:''}); rows.push(er);
+      continue;
+    }
+    recs.forEach(function(r){
+      var row=[{v:String(d)},{v:r.use_area||'',cls:'lf'},{v:r.use_time||''},{v:r.user_name||''}];
+      items.forEach(function(it){
+        var v=r.results?r.results[it]:null;
+        row.push({v:v?SYM[v]:'',cls:v==='X'?'bx':''});
+      });
+      row.push({v:r.inspector||''});
+      rows.push(row);
+    });
+  }
+  rows.push([{v:'특기사항 및 조치사항',cs:4,cls:'hd'},{v:collectNotes(records)||'-',cs:W-4,cls:'lf'}]);
+  var cols=[3.5,16,11,8]; items.forEach(function(){cols.push(6.5);}); cols.push(8);
+  return {rows:rows, cols:cols, orient:'landscape', title:'장비 사용·점검 일지',
+    fname:'장비일지_'+(e.mgmt_no||tid)+'_'+mi.y+'-'+String(mi.m).padStart(2,'0')};
+}
+// ─ PBB 일지 ─
+function buildPbbDoc(records, tid, mi){
+  var items=MOD_META.pbb.items;
+  var head=[{v:'일',cls:'hd'},{v:'청소시간',cls:'hd'}];
+  items.forEach(function(it){head.push({v:it,cls:'hd'});});
+  head.push({v:'점검자',cls:'hd'}); head.push({v:'비고',cls:'hd'});
+  var W=head.length;
+  var rows=[];
+  rows.push([{v:'PBB 청소일지 — GATE '+tid+' ('+mi.label+')',cs:W,cls:'tt'}]);
+  rows.push([{v:'범례',cls:'hd'},{v:'○ 양호  △ 보통  X 불량',cs:W-3,cls:'lf'},{v:'부서장:      (인)',cs:2,cls:'lf'}]);
+  rows.push(head);
+  var byDay={}; records.forEach(function(r){ (byDay[dayOf(r)]=byDay[dayOf(r)]||[]).push(r); });
+  for(var d=1;d<=mi.days;d++){
+    var recs=byDay[d];
+    if(!recs){
+      var er=[{v:String(d)},{v:''}]; items.forEach(function(){er.push({v:''});});
+      er.push({v:''});er.push({v:''}); rows.push(er); continue;
+    }
+    recs.forEach(function(r){
+      var row=[{v:String(d)},{v:r.work_time||''}];
+      items.forEach(function(it){
+        var v=r.results?r.results[it]:null;
+        row.push({v:v?SYM[v]:'',cls:v==='X'?'bx':''});
+      });
+      row.push({v:r.inspector||''});
+      row.push({v:(r.note||'').replace('[불량] ',''),cls:'lf'});
+      rows.push(row);
+    });
+  }
+  var cols=[3.5,11]; items.forEach(function(){cols.push(7);}); cols.push(8); cols.push(20);
+  return {rows:rows, cols:cols, orient:'landscape', title:'PBB 청소일지',
+    fname:'PBB청소일지_GATE'+tid+'_'+mi.y+'-'+String(mi.m).padStart(2,'0')};
+}
+function buildDoc(records, mod, tid, mi){
+  if(mod==='equip')return buildEquipDoc(records,tid,mi);
+  if(mod==='pbb')return buildPbbDoc(records,tid,mi);
+  if(mod==='toilet'){
+    var t=TOILETS.find(function(x){return String(x.id)===String(tid);})||{};
+    return buildGridDoc('화장실 점검표', toiletLabel(t)||('ID '+tid), MOD_META.toilet.items, '○양호 △보통 X불량 －해당없음', records, mi);
+  }
+  if(mod==='rest'){
+    return buildGridDoc('휴게시설 관리 점검표', restLabel(Number(tid)), MOD_META.rest.items, '○적합 △미흡 ×부적합 －해당없음', records, mi);
+  }
+  return buildGridDoc('공용구역 점검표', String(tid).replace('|',' '), MOD_META.common.items, '○양호 △보통 X불량', records, mi);
+}
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function docToHTML(doc){
+  // A4 높이 채움: 행 높이(mm) 배분
+  var usableMM = doc.orient==='landscape' ? 190 : 278;
+  var n=doc.rows.length;
+  var rowMM = Math.max(6, Math.min(15, Math.floor((usableMM-12)/(n-1))));
+  var h='<table style="width:100%">';
+  doc.rows.forEach(function(r,ri){
+    h+='<tr style="height:'+(ri===0?12:rowMM)+'mm">';
+    r.forEach(function(c){
+      var cls=c.cls||'';
+      var st=cls==='tt'?' style="border:none"':'';
+      h+='<td'+(c.cs>1?' colspan="'+c.cs+'"':'')+(cls?' class="'+cls+'"':'')+st+'>'+esc(c.v)+'</td>';
+    });
+    h+='</tr>';
+  });
+  return h+'</table>';
+}
+function docToSheet(doc){
+  var aoa=[], merges=[], clsMap={};
+  doc.rows.forEach(function(r,ri){
+    var row=[], ci=0;
+    r.forEach(function(c){
+      row[ci]=c.v;
+      var cs=c.cs||1;
+      for(var k=0;k<cs;k++) clsMap[ri+'_'+(ci+k)]=c.cls||'';
+      if(cs>1){
+        merges.push({s:{r:ri,c:ci},e:{r:ri,c:ci+cs-1}});
+        for(var k2=1;k2<cs;k2++)row[ci+k2]='';
+      }
+      ci+=cs;
+    });
+    aoa.push(row);
+  });
+  var ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!merges']=merges;
+  // A4 세로 기준 상하좌우 채움 (엑셀은 용지방향 저장 불가 → 세로 통일, 가로 인쇄는 A4 미리보기 사용)
+  var targetW = 86; // A4 세로 폭 (문자 단위, 여백 0.25in)
+  var sumW=0; for(var i=0;i<doc.cols.length;i++)sumW+=doc.cols[i];
+  var f=targetW/sumW;
+  ws['!cols']=doc.cols.map(function(w){return {wch:Math.round(w*f*10)/10};});
+  ws['!margins']={left:0.25,right:0.25,top:0.35,bottom:0.35,header:0.2,footer:0.2};
+  // 스타일: 제목행 제외 전 셀 테두리, 헤더 음영, 불량 빨강
+  var nRows=doc.rows.length, nCols=doc.cols.length;
+  var bd={style:'thin',color:{rgb:'FF333333'}};
+  // A4 세로 높이 채움: 행 높이 배분
+  var usableH = 780; // pt
+  var titleH = 32;
+  var dataH = Math.max(18, Math.min(44, Math.floor((usableH - titleH)/(nRows-1))));
+  var rowHs=[];
+  for(var r=0;r<nRows;r++){
+    rowHs.push({hpt:r===0?titleH:dataH});
+    for(var c=0;c<nCols;c++){
+      var addr=XLSX.utils.encode_cell({r:r,c:c});
+      if(!ws[addr])ws[addr]={t:'s',v:''};
+      var cls=clsMap[r+'_'+c]||'';
+      var s={
+        alignment:{horizontal:cls==='lf'?'left':'center',vertical:'center',wrapText:cls==='lf'},
+        font:{sz:9,name:'맑은 고딕'}
+      };
+      if(cls==='tt'){
+        s.font={sz:15,bold:true,name:'맑은 고딕'};
+        s.alignment={horizontal:'center',vertical:'center'};
+      }else{
+        s.border={top:bd,bottom:bd,left:bd,right:bd};
+        if(cls==='hd'){ s.font.bold=true; s.fill={patternType:'solid',fgColor:{rgb:'FFF0F0F0'}}; s.alignment.wrapText=true; }
+        if(cls==='bx'){ s.font.bold=true; s.font.color={rgb:'FFCC0000'}; }
+      }
+      ws[addr].s=s;
+    }
+  }
+  ws['!rows']=rowHs;
+  return ws;
+}
+function prExcel(){
+  fetchMonth(function(records,mod,tid,mi){
+    if(typeof XLSX==='undefined'){ toast('엑셀 모듈 로드 실패 — 네트워크 확인'); return; }
+    var doc=buildDoc(records,mod,tid,mi);
+    var wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, docToSheet(doc), mi.m+'월');
+    XLSX.writeFile(wb, doc.fname+'.xlsx');
+    toast('✓ 엑셀 저장: '+doc.fname+'.xlsx'+(records.length?'':' (기록 없음 — 빈 양식)'));
+  });
+}
+function prPreview(){
+  fetchMonth(function(records,mod,tid,mi){
+    var doc=buildDoc(records,mod,tid,mi);
+    PR_ORIENT=doc.orient;
+    document.getElementById('prevScroll').innerHTML=docToHTML(doc);
+    document.getElementById('pvTitle').textContent='A4 '+(doc.orient==='landscape'?'가로':'세로')+' 미리보기 — '+doc.title+(records.length?'':' (기록 없음)');
+    showScr('scrPreview');
+  });
+}
+function doPrint(){
+  var pa=document.getElementById('printArea');
+  pa.innerHTML=document.getElementById('prevScroll').innerHTML;
+  var st=document.getElementById('pageStyle');
+  if(!st){ st=document.createElement('style'); st.id='pageStyle'; document.head.appendChild(st); }
+  st.textContent='@page{size:A4 '+PR_ORIENT+';margin:8mm} @media print{ .prn table{width:100%} }';
+  window.print();
 }
 
 // ─ 초기화 ─
