@@ -111,6 +111,7 @@ textarea:focus{border-color:var(--sky)}
 .prn .hd{background:#f0f0f0;font-weight:700}
 .prn .lf{text-align:left;white-space:normal}
 .prn .bx{color:#c00;font-weight:700}
+.prn .ok{color:#047857;font-weight:700;text-align:left}
 #printArea{display:none}
 @media print{
   body>*{display:none !important}
@@ -162,8 +163,8 @@ textarea:focus{border-color:var(--sky)}
       </button>
       <button class="mod-card" onclick="openMod('pbb')">
         <span class="mod-icon">✈️</span>
-        <div class="mod-name">PBB 청소일지</div>
-        <div class="mod-desc">GATE별 5항목 체크</div>
+        <div class="mod-name">게이트 관리 일지</div>
+        <div class="mod-desc">브릿지·E/L·방화문 등 10항목</div>
         <span class="mod-cnt">GATE 1~50</span>
       </button>
       <button class="mod-card" onclick="openMod('common')">
@@ -290,12 +291,20 @@ textarea:focus{border-color:var(--sky)}
       </div>
     </div>
 
-    <!-- 대상 선택: PBB -->
+    <!-- 대상 선택: PBB (게이트 관리 일지) -->
     <div class="card" id="tgtPbb" style="display:none">
       <div class="f-label">게이트 선택</div>
-      <div class="f-row one">
+      <div class="f-row">
         <select id="pSel"></select>
+        <div>
+          <div class="f-label" style="margin-top:0">PBB 개수</div>
+          <select id="pCnt">
+            <option value="">선택</option>
+            <option>1</option><option>2</option><option>3</option>
+          </select>
+        </div>
       </div>
+      <div style="font-size:10.5px;color:var(--g3);margin-top:6px">시작·종료 시간은 위 "점검 시작/종료"에 선택하세요</div>
     </div>
 
     <!-- 체크리스트 -->
@@ -397,13 +406,19 @@ textarea:focus{border-color:var(--sky)}
         </div>
         <div>
           <div class="f-label">월</div>
-          <select id="prMonth"></select>
+          <select id="prMonth" onchange="if(document.getElementById('prMod').value==='pbb')fillPrDays()"></select>
         </div>
       </div>
-      <div class="f-row one">
+      <div class="f-row one" id="prTargetRow">
         <div>
           <div class="f-label">대상</div>
           <select id="prTarget"></select>
+        </div>
+      </div>
+      <div class="f-row one" id="prDayRow" style="display:none">
+        <div>
+          <div class="f-label">일자 <span style="font-weight:400;color:var(--g3)">(해당일 전체 게이트 일지 1장)</span></div>
+          <select id="prDay"></select>
         </div>
       </div>
       <div class="f-row" style="margin-top:6px">
@@ -418,6 +433,7 @@ textarea:focus{border-color:var(--sky)}
   <div class="screen" id="scrPreview">
     <button class="sub-back" onclick="showScr('scrPrint')">← 출력 선택</button>
     <div class="sec-title" id="pvTitle">A4 미리보기</div>
+    <div id="signBox" style="margin-bottom:10px"></div>
     <div class="prev-scroll prn" id="prevScroll"></div>
     <button class="save-btn" style="margin-top:10px" onclick="doPrint()">🖨️ 인쇄 / PDF 저장</button>
   </div>
@@ -448,7 +464,7 @@ var MOD_META = {
   toilet: { name:'🚻 화장실 점검', items:['소모품(휴지·타올·비누) 리필','변기(대/소) 내·외부 청결','소변기 청결','세면대·거울·선반 청결','바닥 청결·물기 없음','쓰레기통 비움 상태','설비 작동(드라이어·문·칸막이)','냄새 여부'], states:3, naItems:['소변기 청결'] },
   rest:   { name:'🛋️ 휴게시설 점검', items:['청소·청결, 목적 외 이용금지','온도·습도·조명·환기 적정','비품·설비 이상 여부','화기 단속','문단속','점검자 확인'], states:4 },
   equip:  { name:'🔧 장비점검', items:[], states:3 },
-  pbb:    { name:'✈️ PBB 청소일지', items:['바닥 청소 상태','유리·창 청결','핸드레일·벽면 청결','쓰레기 수거 상태','출입구·연결부 청결'], states:3 },
+  pbb:    { name:'✈️ 게이트 관리 일지', items:['이동브릿지 관리여부','고정브릿지','하단 디퓨저','2단 창틀','E/L 내부','E/L 1층','E/S','계단','2층 방화문','3층 방화문'], states:4 },
   common: { name:'🧹 공용구역 점검', items:['바닥 청소 상태(오염물·얼룩)','쓰레기통 수거 상태','유리·거울·스테인리스 청결','시설물(벤치·안내데스크 등) 청결','청소도구 정리·보관','안전 위해요소 없음(물기·장애물)'], states:3 }
 };
 
@@ -571,7 +587,7 @@ function openMod(mod){
   if(mod==='toilet'){ fillToiletFloors(); fillToiletList(); }
   if(mod==='rest'){ fillRestList(); }
   if(mod==='equip'){ fillEquipTypes(); fillTimeSels(); document.getElementById('eArea').value='';document.getElementById('eUser').value=''; }
-  if(mod==='pbb'){ fillPbbList(); }
+  if(mod==='pbb'){ fillPbbList(); document.getElementById('pCnt').value=''; }
   if(mod==='common'){ fillCommonSels(); document.getElementById('cDetail').value=''; }
   renderChecklist();
   document.getElementById('btnSave').textContent='점검 저장';
@@ -895,6 +911,10 @@ function saveInsp(){
 
   var tgt=targetInfo();
   if(!tgt){ done(false,'대상을 선택하세요'); return; }
+  if(curMod==='pbb'){
+    var pc=document.getElementById('pCnt').value;
+    if(pc)results['PBB개수']=pc;
+  }
   var rec2={
     insp_type:curMod, target_id:tgt.target_id, target_label:tgt.target_label,
     insp_date:todayStr(), shift:curShift, team:team, jo:jo,
@@ -1117,7 +1137,11 @@ function openModForEdit(d){
     onToiletSel();
   }
   if(mod==='rest'){ fillRestList(); document.getElementById('rSel').value=r.target_id; }
-  if(mod==='pbb'){ fillPbbList(); document.getElementById('pSel').value=r.target_id; }
+  if(mod==='pbb'){
+    fillPbbList(); document.getElementById('pSel').value=r.target_id;
+    document.getElementById('pCnt').value=(r.results&&r.results['PBB개수'])||'';
+    if(chkStates['PBB개수']!==undefined)delete chkStates['PBB개수'];
+  }
   if(mod==='common'){
     fillCommonSels();
     var parts=String(r.target_id||'').split('|');
@@ -1173,6 +1197,9 @@ function fillPrMonths(){
 function fillPrTargets(){
   var mod=document.getElementById('prMod').value;
   var sel=document.getElementById('prTarget'); sel.innerHTML='';
+  document.getElementById('prTargetRow').style.display = mod==='pbb' ? 'none' : 'block';
+  document.getElementById('prDayRow').style.display = mod==='pbb' ? 'block' : 'none';
+  if(mod==='pbb'){ fillPrDays(); }
   function addGroup(label){ var g=document.createElement('optgroup'); g.label=label; sel.appendChild(g); return g; }
   if(mod==='toilet'){
     var floors=['1F','2F','3F','4F','B1F','B2F'];
@@ -1219,6 +1246,19 @@ function fillPrTargets(){
     });
   }
 }
+function fillPrDays(){
+  var ym=document.getElementById('prMonth').value.split('-');
+  var y=Number(ym[0]), m=Number(ym[1]);
+  var days=new Date(y,m,0).getDate();
+  var sel=document.getElementById('prDay'); sel.innerHTML='';
+  var todayD=new Date();
+  var isCur=(y===todayD.getFullYear()&&m===todayD.getMonth()+1);
+  for(var d=1;d<=days;d++){
+    var o=document.createElement('option'); o.value=String(d); o.textContent=m+'월 '+d+'일';
+    sel.appendChild(o);
+  }
+  if(isCur)sel.value=String(todayD.getDate());
+}
 function monthInfo(){
   var ym=document.getElementById('prMonth').value.split('-');
   var y=Number(ym[0]), m=Number(ym[1]);
@@ -1232,6 +1272,15 @@ function fetchMonth(cb){
   var mod=document.getElementById('prMod').value;
   var tid=document.getElementById('prTarget').value;
   var mi=monthInfo();
+  if(mod==='pbb'){
+    var dsel=document.getElementById('prDay').value||'1';
+    var dateStr=mi.y+'-'+String(mi.m).padStart(2,'0')+'-'+String(dsel).padStart(2,'0');
+    var path2='/inspection_data?insp_type=eq.pbb&insp_date=eq.'+dateStr+'&order=created_at';
+    sbFetch(path2).then(function(r){return r.json();}).then(function(rows){
+      cb(Array.isArray(rows)?rows:[], mod, dateStr, mi);
+    }).catch(function(){ toast('데이터 조회 실패'); });
+    return;
+  }
   var path;
   if(mod==='equip'){
     path='/equip_inspection_data?equip_id=eq.'+tid+'&insp_date=gte.'+mi.from+'&insp_date=lt.'+mi.to+'&order=insp_date,shift';
@@ -1260,15 +1309,20 @@ function collectNotes(recs){
   });
   return out.join(' / ');
 }
+function sigCellText(appr){
+  if(!appr) return '부서장:      (인)';
+  var dt=String(appr.approved_at||'').slice(0,16).replace('T',' ');
+  return '✅ 확인: '+appr.approver+' ('+dt+')';
+}
 // ─ 공통: 그리드형 (화장실·휴게시설·공용) ─
-function buildGridDoc(title, locLabel, items, legend, records, mi){
+function buildGridDoc(title, locLabel, items, legend, records, mi, appr){
   var byDay={}; records.forEach(function(r){ (byDay[dayOf(r)]=byDay[dayOf(r)]||[]).push(r); });
   var rows=[];
   var half1=16, totalCols=2+half1; // No+항목+16일
   rows.push([{v:title+' ('+mi.label+')',cs:totalCols,cls:'tt'}]);
   rows.push([
     {v:'위치',cls:'hd'},{v:locLabel,cs:9,cls:'lf'},
-    {v:'범례',cls:'hd'},{v:legend,cs:5,cls:'lf'},{v:'부서장:      (인)',cs:2,cls:'lf'}
+    {v:'범례',cls:'hd'},{v:legend,cs:5,cls:'lf'},{v:sigCellText(appr),cs:2,cls:appr?'ok':'lf'}
   ]);
   function block(d1,d2){
     var hd=[{v:'No',cls:'hd'},{v:'점검항목',cls:'hd'}];
@@ -1292,7 +1346,7 @@ function buildGridDoc(title, locLabel, items, legend, records, mi){
   return {rows:rows, cols:cols, orient:'portrait', title:title, fname:title.replace(/\s/g,'')+'_'+locLabel.replace(/[\/\s]/g,'')+'_'+mi.y+'-'+String(mi.m).padStart(2,'0')};
 }
 // ─ 장비 일지 ─
-function buildEquipDoc(records, tid, mi){
+function buildEquipDoc(records, tid, mi, appr){
   var e=EQUIPS.find(function(x){return String(x.id)===String(tid);})||{};
   var items=(Array.isArray(e.check_items)&&e.check_items.length)?e.check_items:['작동상태','외관·부속 상태','충전·전원 상태','청소상태'];
   var totalCols=5+items.length+1; // 일,구역,시간,사용자 + 항목 + 점검자... 일1 구역1 시간1 사용자1 items4 점검자1 = 9 → +비고
@@ -1309,7 +1363,8 @@ function buildEquipDoc(records, tid, mi){
   ]);
   rows.push([
     {v:'보관장소',cls:'hd'},{v:e.location||'-',cs:3,cls:'lf'},
-    {v:'범례',cls:'hd'},{v:'○ 양호  △ 보통  X 불량',cs:W-5,cls:'lf'}
+    {v:appr?'확인':'범례',cls:'hd'},
+    {v:appr?sigCellText(appr):'○ 양호  △ 보통  X 불량',cs:W-5,cls:appr?'ok':'lf'}
   ]);
   rows.push(headCells);
   var byDay={}; records.forEach(function(r){ (byDay[dayOf(r)]=byDay[dayOf(r)]||[]).push(r); });
@@ -1337,49 +1392,57 @@ function buildEquipDoc(records, tid, mi){
     fname:'장비일지_'+(e.mgmt_no||tid)+'_'+mi.y+'-'+String(mi.m).padStart(2,'0')};
 }
 // ─ PBB 일지 ─
-function buildPbbDoc(records, tid, mi){
-  var items=MOD_META.pbb.items;
-  var head=[{v:'일',cls:'hd'},{v:'청소시간',cls:'hd'}];
-  items.forEach(function(it){head.push({v:it,cls:'hd'});});
+function buildGateLogDoc(records, dateStr, mi, appr){
+  var items=MOD_META.pbb.items; // 10항목 (이동브릿지 관리여부, 고정브릿지, 하단 디퓨저, 2단 창틀, E/L 내부, E/L 1층, E/S, 계단, 2층 방화문, 3층 방화문)
+  var shortHd=['관리여부','고정브릿지','하단디퓨저','2단창틀','E/L내부','E/L1층','E/S','계단','2층방화문','3층방화문'];
+  var head=[{v:'GATE\nNO.',cls:'hd'},{v:'시작\n시간',cls:'hd'},{v:'종료\n시간',cls:'hd'},{v:'PBB\n개수',cls:'hd'}];
+  shortHd.forEach(function(h){head.push({v:h,cls:'hd'});});
   head.push({v:'점검자',cls:'hd'}); head.push({v:'비고',cls:'hd'});
   var W=head.length;
   var rows=[];
-  rows.push([{v:'PBB 청소일지 — GATE '+tid+' ('+mi.label+')',cs:W,cls:'tt'}]);
-  rows.push([{v:'범례',cls:'hd'},{v:'○ 양호  △ 보통  X 불량',cs:W-3,cls:'lf'},{v:'부서장:      (인)',cs:2,cls:'lf'}]);
+  var dObj=new Date(dateStr+'T00:00:00');
+  var wdays=['일','월','화','수','목','금','토'];
+  rows.push([{v:'게이트 관리 일지 ('+dateStr+' '+wdays[dObj.getDay()]+'요일)',cs:W,cls:'tt'}]);
+  var insNames=[]; records.forEach(function(r){ if(r.inspector && insNames.indexOf(r.inspector)<0) insNames.push(r.inspector); });
+  rows.push([{v:'작업자',cls:'hd'},{v:insNames.join(', ')||'-',cs:W-3,cls:'lf'},{v:sigCellText(appr),cs:2,cls:appr?'ok':'lf'}]);
+  rows.push([{v:'범례',cls:'hd'},{v:'○양호 △보통 X불량 －해당없음',cs:W-1,cls:'lf'}]);
   rows.push(head);
-  var byDay={}; records.forEach(function(r){ (byDay[dayOf(r)]=byDay[dayOf(r)]||[]).push(r); });
-  for(var d=1;d<=mi.days;d++){
-    var recs=byDay[d];
-    if(!recs){
-      var er=[{v:String(d)},{v:''}]; items.forEach(function(){er.push({v:''});});
-      er.push({v:''});er.push({v:''}); rows.push(er); continue;
-    }
-    recs.forEach(function(r){
-      var row=[{v:String(d)},{v:r.work_time||''}];
-      items.forEach(function(it){
-        var v=r.results?r.results[it]:null;
-        row.push({v:v?SYM[v]:'',cls:v==='X'?'bx':''});
-      });
-      row.push({v:r.inspector||''});
-      row.push({v:(r.note||'').replace('[불량] ',''),cls:'lf'});
-      rows.push(row);
+  // 게이트 번호(숫자) 기준 정렬
+  var sorted=records.slice().sort(function(a,b){ return Number(a.target_id)-Number(b.target_id); });
+  sorted.forEach(function(r){
+    var tm=String(r.work_time||'').split('~');
+    var row=[{v:r.target_id||''},{v:tm[0]||''},{v:tm[1]||''},{v:(r.results&&r.results['PBB개수'])||''}];
+    items.forEach(function(it){
+      var v=r.results?r.results[it]:null;
+      row.push({v:v?SYM[v]:'',cls:v==='X'?'bx':''});
     });
+    row.push({v:r.inspector||''});
+    row.push({v:(r.note||'').replace('[불량] ',''),cls:'lf'});
+    rows.push(row);
+  });
+  // 빈 행 여유분 (수기 추가 기입용)
+  var blankN=Math.max(0, 14-sorted.length);
+  for(var b=0;b<blankN;b++){
+    var er=[{v:''},{v:''},{v:''},{v:''}];
+    items.forEach(function(){er.push({v:''});});
+    er.push({v:''});er.push({v:''});
+    rows.push(er);
   }
-  var cols=[3.5,10]; items.forEach(function(){cols.push(7);}); cols.push(8); cols.push(14);
-  return {rows:rows, cols:cols, orient:'portrait', title:'PBB 청소일지',
-    fname:'PBB청소일지_GATE'+tid+'_'+mi.y+'-'+String(mi.m).padStart(2,'0')};
+  var cols=[6,7,7,6]; shortHd.forEach(function(){cols.push(7.5);}); cols.push(8); cols.push(16);
+  return {rows:rows, cols:cols, orient:'landscape', title:'게이트 관리 일지',
+    fname:'게이트관리일지_'+dateStr};
 }
-function buildDoc(records, mod, tid, mi){
-  if(mod==='equip')return buildEquipDoc(records,tid,mi);
-  if(mod==='pbb')return buildPbbDoc(records,tid,mi);
+function buildDoc(records, mod, tid, mi, appr){
+  if(mod==='equip')return buildEquipDoc(records,tid,mi,appr);
+  if(mod==='pbb')return buildGateLogDoc(records,tid,mi,appr);
   if(mod==='toilet'){
     var t=TOILETS.find(function(x){return String(x.id)===String(tid);})||{};
-    return buildGridDoc('화장실 점검표', toiletLabel(t)||('ID '+tid), MOD_META.toilet.items, '○양호 △보통 X불량 －해당없음', records, mi);
+    return buildGridDoc('화장실 점검표', toiletLabel(t)||('ID '+tid), MOD_META.toilet.items, '○양호 △보통 X불량 －해당없음', records, mi, appr);
   }
   if(mod==='rest'){
-    return buildGridDoc('휴게시설 관리 점검표', restLabel(Number(tid)), MOD_META.rest.items, '○적합 △미흡 ×부적합 －해당없음', records, mi);
+    return buildGridDoc('휴게시설 관리 점검표', restLabel(Number(tid)), MOD_META.rest.items, '○적합 △미흡 ×부적합 －해당없음', records, mi, appr);
   }
-  return buildGridDoc('공용구역 점검표', String(tid).replace('|',' '), MOD_META.common.items, '○양호 △보통 X불량', records, mi);
+  return buildGridDoc('공용구역 점검표', String(tid).replace('|',' '), MOD_META.common.items, '○양호 △보통 X불량', records, mi, appr);
 }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function docToHTML(doc){
@@ -1398,7 +1461,7 @@ function docToHTML(doc){
     r.forEach(function(c){
       var cls=c.cls||'';
       var st=cls==='tt'?' style="border:none"':'';
-      h+='<td'+(c.cs>1?' colspan="'+c.cs+'"':'')+(cls?' class="'+cls+'"':'')+st+'>'+esc(c.v)+'</td>';
+      h+='<td'+(c.cs>1?' colspan="'+c.cs+'"':'')+(cls?' class="'+cls+'"':'')+st+'>'+esc(c.v).replace(/\n/g,'<br>')+'</td>';
     });
     h+='</tr>';
   });
@@ -1443,7 +1506,7 @@ function docToSheet(doc){
       if(!ws[addr])ws[addr]={t:'s',v:''};
       var cls=clsMap[r+'_'+c]||'';
       var s={
-        alignment:{horizontal:cls==='lf'?'left':'center',vertical:'center',wrapText:cls==='lf'},
+        alignment:{horizontal:(cls==='lf'||cls==='ok')?'left':'center',vertical:'center',wrapText:(cls==='lf'||cls==='ok')},
         font:{sz:9,name:'맑은 고딕'}
       };
       if(cls==='tt'){
@@ -1453,6 +1516,7 @@ function docToSheet(doc){
         s.border={top:bd,bottom:bd,left:bd,right:bd};
         if(cls==='hd'){ s.font.bold=true; s.fill={patternType:'solid',fgColor:{rgb:'FFF0F0F0'}}; s.alignment.wrapText=true; }
         if(cls==='bx'){ s.font.bold=true; s.font.color={rgb:'FFCC0000'}; }
+        if(cls==='ok'){ s.font.bold=true; s.font.color={rgb:'FF047857'}; }
       }
       ws[addr].s=s;
     }
@@ -1460,24 +1524,73 @@ function docToSheet(doc){
   ws['!rows']=rowHs;
   return ws;
 }
+// ─ 전자서명(확인) ─
+var curApprCtx=null; // {mod,target,period}
+function approvalCtx(mod,tid,mi){
+  if(mod==='pbb') return {mod:mod, target:'ALL', period:tid}; // tid=dateStr
+  return {mod:mod, target:String(tid), period:mi.y+'-'+String(mi.m).padStart(2,'0')};
+}
+function fetchApproval(ctx, cb){
+  sbFetch('/doc_approvals?mod=eq.'+ctx.mod+'&target_id=eq.'+encodeURIComponent(ctx.target)+'&period=eq.'+ctx.period+'&select=approver,approved_at&limit=1')
+    .then(function(r){return r.json();})
+    .then(function(rows){ cb(Array.isArray(rows)&&rows[0]?rows[0]:null); })
+    .catch(function(){ cb(null); });
+}
 function prExcel(){
   fetchMonth(function(records,mod,tid,mi){
     if(typeof XLSX==='undefined'){ toast('엑셀 모듈 로드 실패 — 네트워크 확인'); return; }
-    var doc=buildDoc(records,mod,tid,mi);
-    var wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, docToSheet(doc), mi.m+'월');
-    XLSX.writeFile(wb, doc.fname+'.xlsx');
-    toast('✓ 엑셀 저장: '+doc.fname+'.xlsx'+(records.length?'':' (기록 없음 — 빈 양식)'));
+    var ctx=approvalCtx(mod,tid,mi);
+    fetchApproval(ctx, function(appr){
+      var doc=buildDoc(records,mod,tid,mi,appr);
+      var wb=XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, docToSheet(doc), mi.m+'월');
+      XLSX.writeFile(wb, doc.fname+'.xlsx');
+      toast('✓ 엑셀 저장: '+doc.fname+'.xlsx'+(records.length?'':' (기록 없음 — 빈 양식)'));
+    });
   });
 }
 function prPreview(){
   fetchMonth(function(records,mod,tid,mi){
-    var doc=buildDoc(records,mod,tid,mi);
-    PR_ORIENT=doc.orient;
-    document.getElementById('prevScroll').innerHTML=docToHTML(doc);
-    document.getElementById('pvTitle').textContent='A4 '+(doc.orient==='landscape'?'가로':'세로')+' 미리보기 — '+doc.title+(records.length?'':' (기록 없음)');
-    showScr('scrPreview');
+    var ctx=approvalCtx(mod,tid,mi);
+    curApprCtx=ctx;
+    fetchApproval(ctx, function(appr){
+      var doc=buildDoc(records,mod,tid,mi,appr);
+      PR_ORIENT=doc.orient;
+      document.getElementById('prevScroll').innerHTML=docToHTML(doc);
+      document.getElementById('pvTitle').textContent='A4 '+(doc.orient==='landscape'?'가로':'세로')+' 미리보기 — '+doc.title+(records.length?'':' (기록 없음)');
+      renderSignBox(appr);
+      showScr('scrPreview');
+    });
   });
+}
+function renderSignBox(appr){
+  var box=document.getElementById('signBox');
+  if(!box)return;
+  if(!isAdmin()){
+    box.innerHTML = appr ? '<div class="chip ok">✅ '+appr.approver+' 확인 · '+String(appr.approved_at).slice(0,16).replace('T',' ')+'</div>' : '';
+    return;
+  }
+  if(appr){
+    box.innerHTML = '<div class="chip ok">✅ '+appr.approver+' 확인 · '+String(appr.approved_at).slice(0,16).replace('T',' ')+'</div>'
+      + '<button class="dash-btn" style="margin-top:8px" onclick="doApprove()">🖊️ 재서명 (덮어쓰기)</button>';
+  }else{
+    box.innerHTML = '<button class="dash-btn" style="margin-top:0" onclick="doApprove()">🖊️ 확인 서명 (전자서명)</button>';
+  }
+}
+function doApprove(){
+  if(!curApprCtx||!isAdmin()) return;
+  if(!confirm(me.name+' 님 이름으로 이 문서를 확인 서명하시겠습니까?')) return;
+  var rec={mod:curApprCtx.mod, target_id:curApprCtx.target, period:curApprCtx.period, approver:me.name, approved_at:new Date().toISOString()};
+  sbFetch('/doc_approvals?mod=eq.'+curApprCtx.mod+'&target_id=eq.'+encodeURIComponent(curApprCtx.target)+'&period=eq.'+curApprCtx.period+'&select=id')
+    .then(function(r){return r.json();})
+    .then(function(rows){
+      if(Array.isArray(rows)&&rows.length){
+        return sbFetch('/doc_approvals?id=eq.'+rows[0].id,{method:'PATCH',body:{approver:me.name,approved_at:rec.approved_at},headers:{'Prefer':'return=minimal'}});
+      }
+      return sbFetch('/doc_approvals',{method:'POST',body:rec,headers:{'Prefer':'return=minimal'}});
+    })
+    .then(function(){ toast('✓ 전자서명 완료'); prPreview(); })
+    .catch(function(){ toast('서명 저장 실패'); });
 }
 function doPrint(){
   var pa=document.getElementById('printArea');
