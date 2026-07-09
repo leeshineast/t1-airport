@@ -12177,7 +12177,7 @@ function msCalc(q, key){
           ho:{total:0,confirmed:0,byTeam:{},byType:{시설물:0,위험요소:0,장비:0,특이사항:0,기타:0}},
           lost:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byLoc:{},byItem:{},byHour:[0,0,0,0],hourUnknown:0,itemEtc:[],locEtc:[],byRoute:{},routeEtc:[],byHandover:{},handoverEtc:[]},
           acc:{total:0,byType:{},byTeam:{},byLoc:{},byHour:[0,0,0,0],locEtc:[]},
-          voc:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byType:{},byLoc:{}},
+          voc:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byType:{},byLoc:{},byChannel:{}},
           waste:{inc:0,rec:0,misc:0,byItem:{}} };
   MS_NS_COLS.forEach(function(c){ s.mp.nsSum[c]=0; });
   // ── 인력현황 (mp_data: 오전/오후, night_special_data: 야간)
@@ -12303,8 +12303,11 @@ function msCalc(q, key){
   ((q[6]&&q[6].data)||[]).forEach(function(r){
     if(!r.voc_date||r.voc_date.indexOf(key)!==0) return;
     s.voc.total++;
-    var vt=msClassifyVoc(r.content); if(vt) s.voc.byType[vt]=(s.voc.byType[vt]||0)+1;
-    var vL=msClassifyLoc(r.content); if(vL) s.voc.byLoc[vL]=(s.voc.byLoc[vL]||0)+1;
+    var vt=r.category==='기타'&&r.category_etc?r.category_etc:r.category;
+    if(vt) s.voc.byType[vt]=(s.voc.byType[vt]||0)+1;
+    var vL=[r.loc_zone,r.loc_side,r.loc_floor].filter(Boolean).join(' ');
+    if(vL) s.voc.byLoc[vL]=(s.voc.byLoc[vL]||0)+1;
+    if(r.channel) s.voc.byChannel[r.channel]=(s.voc.byChannel[r.channel]||0)+1;
     var done=!!r.completed_at||(r.status&&r.status.indexOf('완료')>=0);
     if(done){
       s.voc.done++;
@@ -12618,6 +12621,8 @@ function msRenderDetail(key){
     h+=msTopBars(c.voc.byType, 9, 'linear-gradient(90deg,#6B21A8,#9D5BD2)', '건');
     h+=msSub('장소 분류별 TOP5');
     h+=msTopBars(c.voc.byLoc, 5, 'linear-gradient(90deg,#6B21A8,#9D5BD2)', '건');
+    h+=msSub('접수경로별');
+    h+=msTopBars(c.voc.byChannel, 6, 'linear-gradient(90deg,#0EA5E9,#38BDF8)', '건');
     if(!c.voc.total){
       h+='<div style="text-align:center;padding:10px;margin:8px 0 0;background:var(--success-bg);border-radius:var(--r2);color:var(--success);font-size:11px;font-weight:700">✅ '+pl+' 민원 없음</div>';
     }
