@@ -12307,7 +12307,7 @@ function msCalc(q, key){
     s.voc.total++;
     var vt=r.category==='기타'&&r.category_etc?r.category_etc:r.category;
     if(vt) s.voc.byType[vt]=(s.voc.byType[vt]||0)+1;
-    var vL=[r.loc_zone,r.loc_side,r.loc_floor].filter(Boolean).join(' ');
+    var vL=[r.loc_zone,r.loc_floor].filter(Boolean).join(' ');
     if(vL) s.voc.byLoc[vL]=(s.voc.byLoc[vL]||0)+1;
     if(r.channel) s.voc.byChannel[r.channel]=(s.voc.byChannel[r.channel]||0)+1;
     var done=!!r.completed_at||(r.status&&r.status.indexOf('완료')>=0);
