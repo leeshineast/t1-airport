@@ -3021,7 +3021,11 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div style="padding:14px 15px">
       <div style="font-size:11px;color:var(--g4);margin-bottom:13px;line-height:1.6">
         해당 조장이 입력한 값을 수정합니다.<br>
-        <span style="color:var(--danger);font-size:10px">수정 후 저장하면 전체 합계에 즉시 반영됩니다.</span>
+        <span style="color:var(--danger);font-size:10px">수정 후 저장하면 전체 합계에 즉시 반영됩니다.</span><br>
+        <span style="display:inline-flex;align-items:center;gap:5px;margin-top:6px;font-size:10px;color:var(--teal2);font-weight:700">
+          <span style="width:12px;height:12px;border-radius:3px;background:var(--teal-bg);border:1.5px solid var(--teal2);display:inline-block"></span>
+          입력된 값(0 초과)은 초록으로 표시됩니다 — 구역·층 위치를 확인하세요
+        </span>
       </div>
       <!-- 입력 테이블 -->
       <div style="overflow-x:auto;-webkit-overflow-scrolling:touch;margin-bottom:13px">
@@ -4701,7 +4705,7 @@ function renderLeaderStatus(viewDate){
     var dbDone=Object.keys(dataSrc[shift]||{}).filter(function(k){ return k.indexOf('_')!==0; });
     var done=dbDone;
     var total=leaders.length;
-    var doneCount=done.length;
+    var doneCount=leaders.filter(function(l){ return done.indexOf(l.team)!==-1; }).length;
     var pct=total>0?Math.round(doneCount/total*100):0;
     html+='<div style="margin-bottom:13px">';
     html+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:7px">';
@@ -6427,9 +6431,12 @@ function openLeaderDataEdit(shift,team,name){
     rows+='<td style="font-size:11px;font-weight:600;color:var(--g6);padding:7px 6px">'+zone+'</td>';
 
     floors.forEach(function(fl,ci){
-      rows+='<td style="padding:4px 3px;text-align:center">';
-      rows+='<input type="number" id="ledit_'+ri+'_'+ci+'" value="'+(cur[ri][ci]||0)+'" min="0" '+
-        'style="width:36px;padding:5px 3px;border:1.5px solid var(--g2);border-radius:6px;font-size:12px;text-align:center;outline:none" '+
+      var v=cur[ri][ci]||0;
+      var filled=v>0;
+      rows+='<td style="padding:4px 3px;text-align:center;'+(filled?'background:var(--teal-bg);border-radius:6px':'')+'">';
+      rows+='<input type="number" id="ledit_'+ri+'_'+ci+'" value="'+v+'" min="0" '+
+        'oninput="this.style.background=(Number(this.value)>0)?\'var(--teal-bg)\':\'#fff\';this.style.borderColor=(Number(this.value)>0)?\'var(--teal2)\':\'var(--g2)\';this.style.color=(Number(this.value)>0)?\'var(--teal2)\':\'var(--g6)\';this.style.fontWeight=(Number(this.value)>0)?\'800\':\'400\';" '+
+        'style="width:36px;padding:5px 3px;border:1.5px solid '+(filled?'var(--teal2)':'var(--g2)')+';border-radius:6px;font-size:12px;text-align:center;outline:none;background:'+(filled?'var(--teal-bg)':'#fff')+';color:'+(filled?'var(--teal2)':'var(--g6)')+';font-weight:'+(filled?'800':'400')+'" '+
         'onfocus="this.select()">';
       rows+='</td>';
     });
