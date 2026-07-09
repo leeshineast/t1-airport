@@ -6,6 +6,7 @@
 <meta name="theme-color" content="#38bdf8">
 <title>T1OS 현장점검</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root{
   --sky:#38bdf8; --sky2:#0ea5e9; --sky3:#0284c7;
@@ -419,6 +420,12 @@ textarea:focus{border-color:var(--sky)}
         <div>
           <div class="f-label">일자 <span style="font-weight:400;color:var(--g3)">(해당일 전체 게이트 일지 1장)</span></div>
           <select id="prDay"></select>
+        </div>
+      </div>
+      <div class="f-row one" id="prWorkerRow" style="display:none">
+        <div>
+          <div class="f-label">작업자 <span style="font-weight:400;color:var(--g3)">(직접 입력 — 비우면 그날 점검자 자동 표기)</span></div>
+          <input type="text" id="prPbbWorker" placeholder="예: 김이동, 정관식">
         </div>
       </div>
       <div class="f-row" style="margin-top:6px">
@@ -1199,6 +1206,7 @@ function fillPrTargets(){
   var sel=document.getElementById('prTarget'); sel.innerHTML='';
   document.getElementById('prTargetRow').style.display = mod==='pbb' ? 'none' : 'block';
   document.getElementById('prDayRow').style.display = mod==='pbb' ? 'block' : 'none';
+  document.getElementById('prWorkerRow').style.display = mod==='pbb' ? 'block' : 'none';
   if(mod==='pbb'){ fillPrDays(); }
   function addGroup(label){ var g=document.createElement('optgroup'); g.label=label; sel.appendChild(g); return g; }
   if(mod==='toilet'){
@@ -1392,7 +1400,7 @@ function buildEquipDoc(records, tid, mi, appr){
     fname:'장비일지_'+(e.mgmt_no||tid)+'_'+mi.y+'-'+String(mi.m).padStart(2,'0')};
 }
 // ─ PBB 일지 ─
-function buildGateLogDoc(records, dateStr, mi, appr){
+function buildGateLogDoc(records, dateStr, mi, appr, workerOverride){
   var items=MOD_META.pbb.items; // 10항목 (이동브릿지 관리여부, 고정브릿지, 하단 디퓨저, 2단 창틀, E/L 내부, E/L 1층, E/S, 계단, 2층 방화문, 3층 방화문)
   var shortHd=['관리여부','고정브릿지','하단디퓨저','2단창틀','E/L내부','E/L1층','E/S','계단','2층방화문','3층방화문'];
   var head=[{v:'GATE\nNO.',cls:'hd'},{v:'시작\n시간',cls:'hd'},{v:'종료\n시간',cls:'hd'},{v:'PBB\n개수',cls:'hd'}];
@@ -1404,7 +1412,8 @@ function buildGateLogDoc(records, dateStr, mi, appr){
   var wdays=['일','월','화','수','목','금','토'];
   rows.push([{v:'게이트 관리 일지 ('+dateStr+' '+wdays[dObj.getDay()]+'요일)',cs:W,cls:'tt'}]);
   var insNames=[]; records.forEach(function(r){ if(r.inspector && insNames.indexOf(r.inspector)<0) insNames.push(r.inspector); });
-  rows.push([{v:'작업자',cls:'hd'},{v:insNames.join(', ')||'-',cs:W-3,cls:'lf'},{v:sigCellText(appr),cs:2,cls:appr?'ok':'lf'}]);
+  var workerText = (workerOverride&&workerOverride.trim()) ? workerOverride.trim() : (insNames.join(', ')||'-');
+  rows.push([{v:'작업자',cls:'hd'},{v:workerText,cs:W-3,cls:'lf'},{v:sigCellText(appr),cs:2,cls:appr?'ok':'lf'}]);
   rows.push([{v:'범례',cls:'hd'},{v:'○양호 △보통 X불량 －해당없음',cs:W-1,cls:'lf'}]);
   rows.push(head);
   // 게이트 번호(숫자) 기준 정렬
@@ -1432,9 +1441,9 @@ function buildGateLogDoc(records, dateStr, mi, appr){
   return {rows:rows, cols:cols, orient:'landscape', title:'게이트 관리 일지',
     fname:'게이트관리일지_'+dateStr};
 }
-function buildDoc(records, mod, tid, mi, appr){
+function buildDoc(records, mod, tid, mi, appr, workerOverride){
   if(mod==='equip')return buildEquipDoc(records,tid,mi,appr);
-  if(mod==='pbb')return buildGateLogDoc(records,tid,mi,appr);
+  if(mod==='pbb')return buildGateLogDoc(records,tid,mi,appr,workerOverride);
   if(mod==='toilet'){
     var t=TOILETS.find(function(x){return String(x.id)===String(tid);})||{};
     return buildGridDoc('화장실 점검표', toiletLabel(t)||('ID '+tid), MOD_META.toilet.items, '○양호 △보통 X불량 －해당없음', records, mi, appr);
@@ -1485,8 +1494,9 @@ function docToSheet(doc){
   });
   var ws=XLSX.utils.aoa_to_sheet(aoa);
   ws['!merges']=merges;
-  // A4 세로 기준 상하좌우 채움 (엑셀은 용지방향 저장 불가 → 세로 통일, 가로 인쇄는 A4 미리보기 사용)
-  var targetW = 86; // A4 세로 폭 (문자 단위, 여백 0.25in)
+  // 문서 방향에 맞춰 A4 상하좌우 채움 (landscape 문서는 JSZip 후처리로 용지방향도 가로 저장됨)
+  var isLand = doc.orient==='landscape';
+  var targetW = isLand ? 128 : 86; // 문자 단위, 여백 0.25in 기준
   var sumW=0; for(var i=0;i<doc.cols.length;i++)sumW+=doc.cols[i];
   var f=targetW/sumW;
   ws['!cols']=doc.cols.map(function(w){return {wch:Math.round(w*f*10)/10};});
@@ -1494,10 +1504,10 @@ function docToSheet(doc){
   // 스타일: 제목행 제외 전 셀 테두리, 헤더 음영, 불량 빨강
   var nRows=doc.rows.length, nCols=doc.cols.length;
   var bd={style:'thin',color:{rgb:'FF333333'}};
-  // A4 세로 높이 채움: 행 높이 배분
-  var usableH = 780; // pt
+  // A4 높이 채움: 행 높이 배분 (가로 문서는 짧은 변 기준)
+  var usableH = isLand ? 540 : 780; // pt
   var titleH = 32;
-  var dataH = Math.max(18, Math.min(44, Math.floor((usableH - titleH)/(nRows-1))));
+  var dataH = Math.max(16, Math.min(44, Math.floor((usableH - titleH)/(nRows-1))));
   var rowHs=[];
   for(var r=0;r<nRows;r++){
     rowHs.push({hpt:r===0?titleH:dataH});
@@ -1536,15 +1546,46 @@ function fetchApproval(ctx, cb){
     .then(function(rows){ cb(Array.isArray(rows)&&rows[0]?rows[0]:null); })
     .catch(function(){ cb(null); });
 }
+// ─ 엑셀 저장 (landscape 문서는 JSZip으로 페이지방향 후처리) ─
+function writeXlsxSmart(wb, doc){
+  if(doc.orient!=='landscape' || typeof JSZip==='undefined'){
+    XLSX.writeFile(wb, doc.fname+'.xlsx');
+    return;
+  }
+  try{
+    var buf=XLSX.write(wb,{type:'array',bookType:'xlsx'});
+    JSZip.loadAsync(buf).then(function(zip){
+      var f=zip.file('xl/worksheets/sheet1.xml');
+      if(!f){ throw new Error('sheet not found'); }
+      return f.async('string').then(function(xml){
+        xml=xml.replace(/(<worksheet[^>]*>)/, '$1<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>');
+        var pageSetupTag='<pageSetup orientation="landscape" paperSize="9" fitToWidth="1" fitToHeight="0" scale="100"/>';
+        if(xml.indexOf('<pageMargins')>=0){
+          xml=xml.replace(/(<pageMargins[^>]*\/>)/, '$1'+pageSetupTag);
+        }else{
+          xml=xml.replace('</worksheet>', pageSetupTag+'</worksheet>');
+        }
+        zip.file('xl/worksheets/sheet1.xml', xml);
+        return zip.generateAsync({type:'blob'});
+      });
+    }).then(function(blob){
+      var url=URL.createObjectURL(blob);
+      var a=document.createElement('a'); a.href=url; a.download=doc.fname+'.xlsx';
+      document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(function(){URL.revokeObjectURL(url);}, 4000);
+    }).catch(function(){ XLSX.writeFile(wb, doc.fname+'.xlsx'); });
+  }catch(e){ XLSX.writeFile(wb, doc.fname+'.xlsx'); }
+}
 function prExcel(){
   fetchMonth(function(records,mod,tid,mi){
     if(typeof XLSX==='undefined'){ toast('엑셀 모듈 로드 실패 — 네트워크 확인'); return; }
     var ctx=approvalCtx(mod,tid,mi);
+    var worker = mod==='pbb' ? document.getElementById('prPbbWorker').value : null;
     fetchApproval(ctx, function(appr){
-      var doc=buildDoc(records,mod,tid,mi,appr);
+      var doc=buildDoc(records,mod,tid,mi,appr,worker);
       var wb=XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, docToSheet(doc), mi.m+'월');
-      XLSX.writeFile(wb, doc.fname+'.xlsx');
+      writeXlsxSmart(wb, doc);
       toast('✓ 엑셀 저장: '+doc.fname+'.xlsx'+(records.length?'':' (기록 없음 — 빈 양식)'));
     });
   });
@@ -1553,8 +1594,9 @@ function prPreview(){
   fetchMonth(function(records,mod,tid,mi){
     var ctx=approvalCtx(mod,tid,mi);
     curApprCtx=ctx;
+    var worker = mod==='pbb' ? document.getElementById('prPbbWorker').value : null;
     fetchApproval(ctx, function(appr){
-      var doc=buildDoc(records,mod,tid,mi,appr);
+      var doc=buildDoc(records,mod,tid,mi,appr,worker);
       PR_ORIENT=doc.orient;
       document.getElementById('prevScroll').innerHTML=docToHTML(doc);
       document.getElementById('pvTitle').textContent='A4 '+(doc.orient==='landscape'?'가로':'세로')+' 미리보기 — '+doc.title+(records.length?'':' (기록 없음)');
