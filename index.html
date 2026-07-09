@@ -571,7 +571,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     </button>
     <button class="menu-btn" onclick="go('voc')">
       <span class="menu-icon">📞</span>
-      <div class="menu-title">ARS 민원</div>
+      <div class="menu-title">민원(서비스응대)</div>
       <div class="menu-desc">민원 전화 접수 및 처리현황</div>
       <span class="menu-arrow">접수하기 →</span>
     </button>
@@ -644,7 +644,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div style="font-size:10px;color:var(--g4)">누적 <span id="dAccT" style="font-weight:700;color:var(--g5)">0</span>건</div>
     </div>
     <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('voc')">
-      <div class="s-lbl">ARS 민원</div>
+      <div class="s-lbl">민원(서비스응대)</div>
       <div style="display:flex;align-items:baseline;gap:3px">
         <div class="s-val c-warn" id="dComp" style="font-size:20px">0</div>
         <div style="font-size:9px;color:var(--warn);font-weight:700">금일</div>
@@ -2566,7 +2566,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 <div id="sVoc" class="scr" style="display:none">
   <div class="pg-hd">
     <button class="back-btn" onclick="go('main')">←</button>
-    <div><h1>📞 ARS 민원</h1><div class="pg-sub">민원 접수 및 처리현황</div></div>
+    <div><h1>📞 민원(서비스응대)</h1><div class="pg-sub">민원 접수 및 처리현황</div></div>
   </div>
 
   <!-- 탭 -->
@@ -2618,10 +2618,55 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           <input type="text" id="vocWriter" class="ri" placeholder="자동입력" readonly style="background:var(--g1);font-size:13px">
         </div>
       </div>
-      <!-- 민원 내용 -->
+      <!-- ① 접수경로 -->
       <div style="margin-bottom:12px">
-        <label class="f-lbl">민원 내용 <span style="color:var(--danger)">*</span></label>
-        <textarea id="vocContent" class="ri" rows="4" placeholder="민원 내용을 입력하세요&#10;예) 3F 화장실 청결 상태 불량 민원, 고객 직접 전화 접수" style="resize:vertical;font-size:13px;line-height:1.6"></textarea>
+        <label class="f-lbl">① 접수경로 <span style="color:var(--danger)">*</span></label>
+        <div style="display:flex;gap:7px;margin-top:6px;flex-wrap:wrap" id="vocChannelWrap">
+          <div class="rp" data-v="ARS" onclick="pickVocChannel(this)">ARS</div>
+          <div class="rp" data-v="일반전화" onclick="pickVocChannel(this)">일반전화</div>
+          <div class="rp" data-v="현장" onclick="pickVocChannel(this)">현장</div>
+          <div class="rp" data-v="공사" onclick="pickVocChannel(this)">공사</div>
+          <div class="rp" data-v="사업부장" onclick="pickVocChannel(this)">사업부장</div>
+          <div class="rp" data-v="기타" onclick="pickVocChannel(this)">기타</div>
+        </div>
+      </div>
+      <!-- ② 민원내용 유형 -->
+      <div style="margin-bottom:12px">
+        <label class="f-lbl">② 민원내용 유형 <span style="color:var(--danger)">*</span></label>
+        <div style="display:flex;gap:7px;margin-top:6px;flex-wrap:wrap" id="vocCategoryWrap">
+          <div class="rp" data-v="청소요청" onclick="pickVocCategory(this)">청소요청</div>
+          <div class="rp" data-v="시설물고장" onclick="pickVocCategory(this)">시설물고장</div>
+          <div class="rp" data-v="안내" onclick="pickVocCategory(this)">안내</div>
+          <div class="rp" data-v="서비스응대" onclick="pickVocCategory(this)">서비스응대</div>
+          <div class="rp" data-v="기타" onclick="pickVocCategory(this)">기타</div>
+        </div>
+        <input type="text" id="vocCategoryEtc" class="ri" placeholder="기타 내용 직접 입력" style="display:none;margin-top:8px;font-size:13px">
+      </div>
+      <!-- ③ 위치선택 -->
+      <div style="margin-bottom:12px">
+        <label class="f-lbl">③ 위치선택 <span style="color:var(--danger)">*</span></label>
+        <div style="display:flex;gap:7px;margin-top:6px" id="vocZoneWrap">
+          <div class="rp" data-v="L/S" onclick="pickVocZone(this)" style="flex:1;text-align:center">L/S</div>
+          <div class="rp" data-v="A/S" onclick="pickVocZone(this)" style="flex:1;text-align:center">A/S</div>
+        </div>
+        <div style="display:none;gap:7px;margin-top:8px" id="vocSideWrap">
+          <div class="rp" data-v="동편" onclick="pickVocSide(this)" style="flex:1;text-align:center">동편</div>
+          <div class="rp" data-v="서편" onclick="pickVocSide(this)" style="flex:1;text-align:center">서편</div>
+        </div>
+        <select id="vocFloor" class="ri" style="margin-top:8px;display:none;font-size:13px">
+          <option value="">층 선택</option>
+          <option value="B2F">B2F</option>
+          <option value="B1F">B1F</option>
+          <option value="1F">1F</option>
+          <option value="2F">2F</option>
+          <option value="3F">3F</option>
+          <option value="4F">4F</option>
+        </select>
+      </div>
+      <!-- ④ 상세내용 -->
+      <div style="margin-bottom:12px">
+        <label class="f-lbl">④ 상세내용 <span style="color:var(--danger)">*</span></label>
+        <textarea id="vocContent" class="ri" rows="4" placeholder="상세 내용을 입력하세요&#10;예) 3F 화장실 청결 상태 불량 민원, 고객 직접 전화 접수" style="resize:vertical;font-size:13px;line-height:1.6"></textarea>
       </div>
       <!-- 처리상태 -->
       <div style="margin-bottom:12px">
@@ -2744,7 +2789,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         </div>
         <div class="dl-item" onclick="dlCSV('voc')">
           <div class="dl-ico">📞</div>
-          <div><div class="dl-title">ARS 민원</div><div class="dl-sub">민원 접수 및 처리현황 (.xlsx)</div></div>
+          <div><div class="dl-title">민원(서비스응대)</div><div class="dl-sub">민원 접수 및 처리현황 (.xlsx)</div></div>
         </div>
         <div class="dl-item" onclick="dlCSV('lost')">
           <div class="dl-ico">🎒</div>
@@ -2936,7 +2981,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 <div id="vocCompleteModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--teal),var(--teal2))"><h3>✅ 민원 완료 처리</h3><button class="m-x" onclick="hideM('vocCompleteModal')">×</button></div><div style="padding:15px 17px"><div class="fg"><label class="f-lbl">완료 일자</label><input type="date" id="vocCompleteDate" class="ri" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">완료 시각</label><input type="time" id="vocCompleteTime" class="ri" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">처리 내용 (선택)</label><textarea id="vocCompleteMemo" class="ri" rows="3" placeholder="처리 결과, 담당자 등" style="resize:vertical;font-size:13px;margin-bottom:0"></textarea></div><div style="display:flex;gap:8px;margin-top:4px"><button onclick="hideM('vocCompleteModal')" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">취소</button><button onclick="confirmVocComplete()" style="flex:1;padding:11px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">완료 확인</button></div></div></div></div>
 
 <!-- ARS 민원 수정 모달 -->
-<div id="vocEditModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>✏️ 민원 수정</h3><button class="m-x" onclick="hideM('vocEditModal')">×</button></div><div style="padding:15px 17px"><input type="hidden" id="vocEditId"><div class="fg"><label class="f-lbl">민원 일자</label><input type="date" id="vocEditDate" class="ri" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">민원 내용</label><textarea id="vocEditContent" class="ri" rows="4" placeholder="민원 내용" style="resize:vertical;font-size:13px;margin-bottom:0"></textarea></div><div class="fg"><label class="f-lbl">비고</label><textarea id="vocEditNote" class="ri" rows="2" placeholder="처리결과, 담당자 등" style="resize:vertical;font-size:13px;margin-bottom:0"></textarea></div><div style="display:flex;gap:8px;margin-top:4px"><button onclick="hideM('vocEditModal')" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">취소</button><button onclick="confirmVocEdit()" style="flex:1;padding:11px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">수정 저장</button></div></div></div></div>
+<div id="vocEditModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>✏️ 민원 수정</h3><button class="m-x" onclick="hideM('vocEditModal')">×</button></div><div style="padding:15px 17px;max-height:75vh;overflow-y:auto"><input type="hidden" id="vocEditId"><div class="fg"><label class="f-lbl">민원 일자</label><input type="date" id="vocEditDate" class="ri" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">① 접수경로</label><div style="display:flex;gap:6px;flex-wrap:wrap" id="vocEditChannelWrap"><div class="rp" data-v="ARS" onclick="pickVocEditChannel(this)">ARS</div><div class="rp" data-v="일반전화" onclick="pickVocEditChannel(this)">일반전화</div><div class="rp" data-v="현장" onclick="pickVocEditChannel(this)">현장</div><div class="rp" data-v="공사" onclick="pickVocEditChannel(this)">공사</div><div class="rp" data-v="사업부장" onclick="pickVocEditChannel(this)">사업부장</div><div class="rp" data-v="기타" onclick="pickVocEditChannel(this)">기타</div></div></div><div class="fg"><label class="f-lbl">② 민원내용 유형</label><div style="display:flex;gap:6px;flex-wrap:wrap" id="vocEditCategoryWrap"><div class="rp" data-v="청소요청" onclick="pickVocEditCategory(this)">청소요청</div><div class="rp" data-v="시설물고장" onclick="pickVocEditCategory(this)">시설물고장</div><div class="rp" data-v="안내" onclick="pickVocEditCategory(this)">안내</div><div class="rp" data-v="서비스응대" onclick="pickVocEditCategory(this)">서비스응대</div><div class="rp" data-v="기타" onclick="pickVocEditCategory(this)">기타</div></div><input type="text" id="vocEditCategoryEtc" class="ri" placeholder="기타 내용 직접 입력" style="display:none;margin-top:8px;margin-bottom:0;font-size:13px"></div><div class="fg"><label class="f-lbl">③ 위치</label><div style="display:flex;gap:6px" id="vocEditZoneWrap"><div class="rp" data-v="L/S" onclick="pickVocEditZone(this)" style="flex:1;text-align:center">L/S</div><div class="rp" data-v="A/S" onclick="pickVocEditZone(this)" style="flex:1;text-align:center">A/S</div></div><div style="display:flex;gap:6px;margin-top:8px" id="vocEditSideWrap"><div class="rp" data-v="동편" onclick="pickVocEditSide(this)" style="flex:1;text-align:center">동편</div><div class="rp" data-v="서편" onclick="pickVocEditSide(this)" style="flex:1;text-align:center">서편</div></div><select id="vocEditFloor" class="ri" style="margin-top:8px;margin-bottom:0;font-size:13px"><option value="">층 선택</option><option value="B2F">B2F</option><option value="B1F">B1F</option><option value="1F">1F</option><option value="2F">2F</option><option value="3F">3F</option><option value="4F">4F</option></select></div><div class="fg"><label class="f-lbl">④ 상세내용</label><textarea id="vocEditContent" class="ri" rows="4" placeholder="상세내용" style="resize:vertical;font-size:13px;margin-bottom:0"></textarea></div><div class="fg"><label class="f-lbl">비고</label><textarea id="vocEditNote" class="ri" rows="2" placeholder="처리결과, 담당자 등" style="resize:vertical;font-size:13px;margin-bottom:0"></textarea></div><div style="display:flex;gap:8px;margin-top:4px"><button onclick="hideM('vocEditModal')" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">취소</button><button onclick="confirmVocEdit()" style="flex:1;padding:11px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">수정 저장</button></div></div></div></div>
 
 <!-- ARS 민원 초기화 확인 모달 -->
 <div id="vocResetModal" class="modal-bg"><div class="modal"><div style="padding:22px 20px;text-align:center"><div style="font-size:32px;margin-bottom:10px">⚠️</div><div style="font-size:15px;font-weight:800;color:var(--danger);margin-bottom:8px">민원 초기화</div><div style="font-size:13px;color:var(--g5);line-height:1.7;margin-bottom:18px">선택한 기간의 민원 데이터를<br>모두 삭제합니다. 복구 불가합니다.</div><select id="vocResetRange" class="ri" style="margin-bottom:14px"><option value="all">전체 초기화</option><option value="month">이번 달만</option><option value="year">올해만</option></select><div style="display:flex;gap:8px"><button onclick="hideM('vocResetModal')" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">취소</button><button onclick="confirmVocReset()" style="flex:1;padding:11px;background:var(--danger);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">삭제</button></div></div></div></div>
@@ -3094,7 +3139,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         </label>
         <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
           <input type="checkbox" id="rst_voc" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--teal);cursor:pointer">
-          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">📞 ARS 민원</div><div style="font-size:10px;color:var(--g4)">전체 이력</div></div>
+          <div><div style="font-size:12px;font-weight:700;color:var(--g7)">📞 민원(서비스응대)</div><div style="font-size:10px;color:var(--g4)">전체 이력</div></div>
         </label>
         <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer">
           <input type="checkbox" id="rst_lost" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--teal);cursor:pointer">
@@ -4084,16 +4129,19 @@ async function dlCSV(type){
       }
     }
 
-    // ── ARS 민원 ──
+    // ── 민원(서비스응대) ──
     if(type==='voc'||type==='all'){
       var rv=await sb.from('voc_data').select('*').order('voc_date',{ascending:false});
       if(rv.data&&rv.data.length){
-        var vocRows=[['연번','일자','작성자','민원내용','처리상태','비고','접수일시']];
+        var vocRows=[['연번','일자','작성자','접수경로','민원유형','위치','상세내용','처리상태','비고','접수일시']];
         rv.data.forEach(function(d,idx){
           vocRows.push([
             idx+1,
             d.voc_date||'',
             d.writer||'',
+            d.channel||'',
+            d.category==='기타'&&d.category_etc?d.category_etc:(d.category||''),
+            [d.loc_zone,d.loc_side,d.loc_floor].filter(Boolean).join(' '),
             d.content||'',
             d.status||'',
             d.note||'',
@@ -4101,8 +4149,8 @@ async function dlCSV(type){
           ]);
         });
         var wsv=XLSX.utils.aoa_to_sheet(vocRows);
-        wsv['!cols']=[{wch:6},{wch:12},{wch:14},{wch:40},{wch:10},{wch:20},{wch:18}];
-        wb.SheetNames.push('ARS민원');wb.Sheets['ARS민원']=wsv;
+        wsv['!cols']=[{wch:6},{wch:12},{wch:14},{wch:10},{wch:12},{wch:14},{wch:40},{wch:10},{wch:20},{wch:18}];
+        wb.SheetNames.push('민원(서비스응대)');wb.Sheets['민원(서비스응대)']=wsv;
       }
     }
 
@@ -6709,7 +6757,7 @@ async function executeDataReset(){
     try{ await sb.from('voc_data').delete().neq('id',0); }catch(e){}
     vocData=[];
     var vl=document.getElementById('vocList'); if(vl) vl.innerHTML='';
-    done.push('ARS민원');
+    done.push('민원(서비스응대)');
   }
   // 습득물
   if(document.getElementById('rst_lost')&&document.getElementById('rst_lost').checked){
@@ -8493,6 +8541,10 @@ async function saveKpiToDB(y, m, entry){
 // ══════════════════════════════════════════
 var vocData = [];
 var vocSelectedStatus = '접수';
+var vocSelectedChannel = '';
+var vocSelectedCategory = '';
+var vocSelectedZone = '';
+var vocSelectedSide = '';
 
 function vocTab(n){ tabSwitch('voc',n,2); }
 
@@ -8503,6 +8555,43 @@ function pickVocStatus(status, el){
     if(btn) btn.classList.remove('on');
   });
   if(el) el.classList.add('on');
+}
+
+function pickVocChannel(el){
+  vocSelectedChannel=el.getAttribute('data-v');
+  var wrap=document.getElementById('vocChannelWrap');
+  if(wrap) Array.prototype.forEach.call(wrap.children,function(c){ c.classList.remove('on'); });
+  el.classList.add('on');
+}
+
+function pickVocCategory(el){
+  vocSelectedCategory=el.getAttribute('data-v');
+  var wrap=document.getElementById('vocCategoryWrap');
+  if(wrap) Array.prototype.forEach.call(wrap.children,function(c){ c.classList.remove('on'); });
+  el.classList.add('on');
+  var etcEl=document.getElementById('vocCategoryEtc');
+  if(etcEl){
+    if(vocSelectedCategory==='기타'){ etcEl.style.display='block'; }
+    else { etcEl.style.display='none'; etcEl.value=''; }
+  }
+}
+
+function pickVocZone(el){
+  vocSelectedZone=el.getAttribute('data-v');
+  var wrap=document.getElementById('vocZoneWrap');
+  if(wrap) Array.prototype.forEach.call(wrap.children,function(c){ c.classList.remove('on'); });
+  el.classList.add('on');
+  var sideWrap=document.getElementById('vocSideWrap');
+  if(sideWrap) sideWrap.style.display='flex';
+}
+
+function pickVocSide(el){
+  vocSelectedSide=el.getAttribute('data-v');
+  var wrap=document.getElementById('vocSideWrap');
+  if(wrap) Array.prototype.forEach.call(wrap.children,function(c){ c.classList.remove('on'); });
+  el.classList.add('on');
+  var floorEl=document.getElementById('vocFloor');
+  if(floorEl) floorEl.style.display='block';
 }
 
 // 탭 진입 시 초기화
@@ -8520,6 +8609,15 @@ function initVocForm(){
     var btn=document.getElementById(id);
     if(btn){ btn.classList.remove('on'); if(i===0) btn.classList.add('on'); }
   });
+  // 접수경로/유형/위치 초기화
+  vocSelectedChannel=''; vocSelectedCategory=''; vocSelectedZone=''; vocSelectedSide='';
+  ['vocChannelWrap','vocCategoryWrap','vocZoneWrap','vocSideWrap'].forEach(function(id){
+    var wrap=document.getElementById(id);
+    if(wrap) Array.prototype.forEach.call(wrap.children,function(c){ c.classList.remove('on'); });
+  });
+  var sideWrap=document.getElementById('vocSideWrap'); if(sideWrap) sideWrap.style.display='none';
+  var floorEl=document.getElementById('vocFloor'); if(floorEl){ floorEl.style.display='none'; floorEl.value=''; }
+  var etcEl=document.getElementById('vocCategoryEtc'); if(etcEl){ etcEl.style.display='none'; etcEl.value=''; }
   // 내용/비고 초기화
   ['vocContent','vocNote'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
@@ -8532,7 +8630,15 @@ async function saveVoc(){
   }
   var date=document.getElementById('vocDate').value;
   var content=document.getElementById('vocContent').value.trim();
-  if(!date||!content){ toast('일자와 민원 내용을 입력해주세요'); return; }
+  if(!date||!content){ toast('일자와 상세내용을 입력해주세요'); return; }
+  if(!vocSelectedChannel){ toast('① 접수경로를 선택해주세요'); return; }
+  if(!vocSelectedCategory){ toast('② 민원내용 유형을 선택해주세요'); return; }
+  var categoryEtc=document.getElementById('vocCategoryEtc').value.trim();
+  if(vocSelectedCategory==='기타'&&!categoryEtc){ toast('기타 내용을 입력해주세요'); return; }
+  if(!vocSelectedZone){ toast('③ 위치(L/S, A/S)를 선택해주세요'); return; }
+  if(!vocSelectedSide){ toast('③ 위치(동편, 서편)를 선택해주세요'); return; }
+  var floor=document.getElementById('vocFloor').value;
+  if(!floor){ toast('③ 층을 선택해주세요'); return; }
   var note=document.getElementById('vocNote').value.trim();
   var btn=document.querySelector('#vocP1 .btn-prim');
   if(btn){ btn.disabled=true; btn.textContent='저장 중...'; }
@@ -8543,6 +8649,12 @@ async function saveVoc(){
       content: content,
       status: vocSelectedStatus,
       note: note||null,
+      channel: vocSelectedChannel,
+      category: vocSelectedCategory,
+      category_etc: vocSelectedCategory==='기타'?categoryEtc:null,
+      loc_zone: vocSelectedZone,
+      loc_side: vocSelectedSide,
+      loc_floor: floor,
       created_at: new Date().toISOString()
     });
     if(res.error) throw res.error;
@@ -8614,15 +8726,66 @@ async function deleteVoc(id){
   }catch(e){ toast('⚠️ 삭제 실패'); }
 }
 
-function openVocEdit(btn){
-  var id=btn.dataset.id;
-  var date=btn.dataset.date;
-  var content=decodeURIComponent(btn.dataset.content);
-  var note=decodeURIComponent(btn.dataset.note);
-  document.getElementById('vocEditId').value=id;
-  document.getElementById('vocEditDate').value=date;
-  document.getElementById('vocEditContent').value=content;
-  document.getElementById('vocEditNote').value=note;
+var vocEditSelectedChannel='';
+var vocEditSelectedCategory='';
+var vocEditSelectedZone='';
+var vocEditSelectedSide='';
+
+function pickVocEditChannel(el){
+  vocEditSelectedChannel=el.getAttribute('data-v');
+  var wrap=document.getElementById('vocEditChannelWrap');
+  if(wrap) Array.prototype.forEach.call(wrap.children,function(c){ c.classList.remove('on'); });
+  el.classList.add('on');
+}
+function pickVocEditCategory(el){
+  vocEditSelectedCategory=el.getAttribute('data-v');
+  var wrap=document.getElementById('vocEditCategoryWrap');
+  if(wrap) Array.prototype.forEach.call(wrap.children,function(c){ c.classList.remove('on'); });
+  el.classList.add('on');
+  var etcEl=document.getElementById('vocEditCategoryEtc');
+  if(etcEl){
+    if(vocEditSelectedCategory==='기타'){ etcEl.style.display='block'; }
+    else { etcEl.style.display='none'; etcEl.value=''; }
+  }
+}
+function pickVocEditZone(el){
+  vocEditSelectedZone=el.getAttribute('data-v');
+  var wrap=document.getElementById('vocEditZoneWrap');
+  if(wrap) Array.prototype.forEach.call(wrap.children,function(c){ c.classList.remove('on'); });
+  el.classList.add('on');
+}
+function pickVocEditSide(el){
+  vocEditSelectedSide=el.getAttribute('data-v');
+  var wrap=document.getElementById('vocEditSideWrap');
+  if(wrap) Array.prototype.forEach.call(wrap.children,function(c){ c.classList.remove('on'); });
+  el.classList.add('on');
+}
+
+function openVocEdit(id){
+  var r=(vocData||[]).find(function(x){ return String(x.id)===String(id); });
+  if(!r){ toast('⚠️ 데이터를 찾을 수 없습니다'); return; }
+  document.getElementById('vocEditId').value=r.id;
+  document.getElementById('vocEditDate').value=r.voc_date;
+  document.getElementById('vocEditContent').value=r.content||'';
+  document.getElementById('vocEditNote').value=r.note||'';
+  document.getElementById('vocEditCategoryEtc').value=r.category_etc||'';
+  document.getElementById('vocEditCategoryEtc').style.display=r.category==='기타'?'block':'none';
+  document.getElementById('vocEditFloor').value=r.loc_floor||'';
+  vocEditSelectedChannel=r.channel||'';
+  vocEditSelectedCategory=r.category||'';
+  vocEditSelectedZone=r.loc_zone||'';
+  vocEditSelectedSide=r.loc_side||'';
+  ['vocEditChannelWrap','vocEditCategoryWrap','vocEditZoneWrap','vocEditSideWrap'].forEach(function(wid){
+    var wrap=document.getElementById(wid);
+    if(!wrap) return;
+    Array.prototype.forEach.call(wrap.children,function(c){
+      c.classList.toggle('on', c.getAttribute('data-v')===(
+        wid==='vocEditChannelWrap'?vocEditSelectedChannel:
+        wid==='vocEditCategoryWrap'?vocEditSelectedCategory:
+        wid==='vocEditZoneWrap'?vocEditSelectedZone:vocEditSelectedSide
+      ));
+    });
+  });
   showM('vocEditModal');
 }
 
@@ -8631,9 +8794,21 @@ async function confirmVocEdit(){
   var date=document.getElementById('vocEditDate').value;
   var content=document.getElementById('vocEditContent').value.trim();
   var note=document.getElementById('vocEditNote').value.trim();
-  if(!date||!content){ toast('일자와 민원 내용을 입력해주세요'); return; }
+  var categoryEtc=document.getElementById('vocEditCategoryEtc').value.trim();
+  var floor=document.getElementById('vocEditFloor').value;
+  if(!date||!content){ toast('일자와 상세내용을 입력해주세요'); return; }
   try{
-    await sb.from('voc_data').update({voc_date:date,content:content,note:note||null}).eq('id',id);
+    await sb.from('voc_data').update({
+      voc_date:date,
+      content:content,
+      note:note||null,
+      channel:vocEditSelectedChannel||null,
+      category:vocEditSelectedCategory||null,
+      category_etc:vocEditSelectedCategory==='기타'?(categoryEtc||null):null,
+      loc_zone:vocEditSelectedZone||null,
+      loc_side:vocEditSelectedSide||null,
+      loc_floor:floor||null
+    }).eq('id',id);
     hideM('vocEditModal');
     toast('✅ 수정되었습니다');
     loadVocFromDB();
@@ -9760,6 +9935,14 @@ function renderVocList(){
     h+='</div>';
     h+='<span style="font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;background:'+stBg[r.status]+';color:'+stColor[r.status]+'">'+r.status+'</span>';
     h+='</div>';
+    // 접수경로/유형/위치 칩
+    if(r.channel||r.category||r.loc_zone){
+      h+='<div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px">';
+      if(r.channel) h+='<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--g1);color:var(--g5)">'+r.channel+'</span>';
+      if(r.category) h+='<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:#F3E8FF;color:#6B21A8">'+(r.category==='기타'&&r.category_etc?r.category_etc:r.category)+'</span>';
+      if(r.loc_zone) h+='<span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--teal-bg);color:var(--teal2)">'+[r.loc_zone,r.loc_side,r.loc_floor].filter(Boolean).join(' ')+'</span>';
+      h+='</div>';
+    }
     // 민원 내용
     h+='<div style="font-size:13px;color:var(--g7);line-height:1.6;margin-bottom:8px;white-space:pre-wrap">'+r.content+'</div>';
     // 비고
@@ -9780,7 +9963,7 @@ function renderVocList(){
         h+='<button data-id="'+r.id+'" data-status="'+s+'" onclick="updateVocStatus(this.dataset.id,this.dataset.status)" style="padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid '+(active?stColor[s]:'var(--g2)')+';background:'+(active?stBg[s]:'white')+';color:'+(active?stColor[s]:'var(--g4)')+'">'+s+'</button>';
       });
       if(isAdminOnly){h+='<button data-id="'+r.id+'" onclick="deleteVoc(this.dataset.id)" style="margin-left:auto;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--g2);background:white;color:var(--g4)">🗑️</button>';}
-      h+='<button data-id="'+r.id+'" data-date="'+r.voc_date+'" data-content="'+encodeURIComponent(r.content)+'" data-note="'+encodeURIComponent(r.note||'')+'" onclick="openVocEdit(this)" style="padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--g2);background:white;color:var(--g4)">✏️</button>';
+      h+='<button data-id="'+r.id+'" onclick="openVocEdit(this.dataset.id)" style="padding:5px 11px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;border:1.5px solid var(--g2);background:white;color:var(--g4)">✏️</button>';
       h+='</div>';
     }
     h+='</div>';
