@@ -305,6 +305,12 @@ textarea:focus{border-color:var(--sky)}
           </select>
         </div>
       </div>
+      <div class="f-row one" style="margin-top:8px">
+        <div>
+          <div class="f-label">작업자 <span style="font-weight:400;color:var(--g3)">(일지에 표기될 이름 — 여러 명은 쉼표로)</span></div>
+          <input type="text" id="pWorker" placeholder="예: 김이동, 정관식">
+        </div>
+      </div>
       <div style="font-size:10.5px;color:var(--g3);margin-top:6px">시작·종료 시간은 위 "점검 시작/종료"에 선택하세요</div>
     </div>
 
@@ -328,7 +334,15 @@ textarea:focus{border-color:var(--sky)}
   <!-- 실시간 현황 -->
   <div class="screen" id="scrDash">
     <button class="sub-back" onclick="showScr('scrMain')">← 모듈 선택</button>
-    <div class="sec-title">📊 오늘의 점검 현황 <span id="dashDate" style="font-weight:400;color:var(--g3);font-size:11px"></span></div>
+    <div class="sec-title">📊 점검 현황 <span id="dashDate" style="font-weight:400;color:var(--g3);font-size:11px"></span></div>
+    <div class="card" style="padding:11px 13px;margin-bottom:12px">
+      <div class="shift-seg" id="dashScopeSeg">
+        <button class="seg-btn on" data-sc="day" onclick="setDashScope('day')">일</button>
+        <button class="seg-btn" data-sc="month" onclick="setDashScope('month')">월</button>
+        <button class="seg-btn" data-sc="year" onclick="setDashScope('year')">연</button>
+      </div>
+      <div class="f-row one" id="dashScopeVal" style="margin-top:8px"></div>
+    </div>
     <div class="stat-grid">
       <div class="stat-card" style="--ac:#0d9488;--acbg:#ccfbf1">
         <div class="stat-hd"><span class="icon-chip">🚻</span><span class="stat-lb">화장실</span></div>
@@ -363,7 +377,7 @@ textarea:focus{border-color:var(--sky)}
     </div>
 
     <div class="sum-card">
-      <div class="sum-title">🧾 오늘 점검 요약</div>
+      <div class="sum-title">🧾 점검 요약</div>
       <div class="sum-row"><span>총 점검</span><b id="sumTotal">-</b></div>
       <div class="sum-row"><span>오전</span><b id="sumAM">-</b></div>
       <div class="sum-row"><span>오후</span><b id="sumPM">-</b></div>
@@ -371,13 +385,9 @@ textarea:focus{border-color:var(--sky)}
       <div class="sum-row hl"><span>불량(X) 발생</span><b id="sumX">-</b></div>
       <div class="sum-row"><span>점검 참여 관리자</span><b id="sumJoin">-</b></div>
     </div>
-    <div class="sec-title">👤 관리자 점검 참여 <span id="joinCnt" style="font-weight:400;color:var(--g3);font-size:11px"></span></div>
-    <div class="card" id="joinBox" style="padding:11px 13px">
-      <div class="empty">불러오는 중…</div>
-    </div>
     <div class="sec-title" style="color:#b91c1c">🔴 불량(X) 발생 <span id="xCnt" style="font-size:11px;font-weight:400"></span></div>
     <div id="xList"><div class="empty">불량 없음</div></div>
-    <div class="sec-title" style="margin-top:16px">오늘 점검 기록 <span style="font-weight:400;color:var(--g3);font-size:11px">(터치하면 수정)</span></div>
+    <div class="sec-title" style="margin-top:16px">점검 기록 <span style="font-weight:400;color:var(--g3);font-size:11px">(터치하면 수정)</span></div>
     <div class="filter-seg" id="dashFilter">
       <button class="seg-btn on" data-f="all" onclick="setDashFilter('all')">전체</button>
       <button class="seg-btn" data-f="toilet" onclick="setDashFilter('toilet')">화장실</button>
@@ -387,6 +397,10 @@ textarea:focus{border-color:var(--sky)}
       <button class="seg-btn" data-f="common" onclick="setDashFilter('common')">공용</button>
     </div>
     <div id="recList"><div class="empty">기록 없음</div></div>
+    <div class="sec-title" style="margin-top:16px">👤 관리자 점검 참여 <span id="joinCnt" style="font-weight:400;color:var(--g3);font-size:11px"></span></div>
+    <div class="card" id="joinBox" style="padding:11px 13px">
+      <div class="empty">불러오는 중…</div>
+    </div>
   </div>
 
   <!-- 출력 / 다운로드 -->
@@ -594,7 +608,7 @@ function openMod(mod){
   if(mod==='toilet'){ fillToiletFloors(); fillToiletList(); }
   if(mod==='rest'){ fillRestList(); }
   if(mod==='equip'){ fillEquipTypes(); fillTimeSels(); document.getElementById('eArea').value='';document.getElementById('eUser').value=''; }
-  if(mod==='pbb'){ fillPbbList(); document.getElementById('pCnt').value=''; }
+  if(mod==='pbb'){ fillPbbList(); document.getElementById('pCnt').value=''; document.getElementById('pWorker').value=me.name||''; }
   if(mod==='common'){ fillCommonSels(); document.getElementById('cDetail').value=''; }
   renderChecklist();
   document.getElementById('btnSave').textContent='점검 저장';
@@ -921,6 +935,8 @@ function saveInsp(){
   if(curMod==='pbb'){
     var pc=document.getElementById('pCnt').value;
     if(pc)results['PBB개수']=pc;
+    var pw=document.getElementById('pWorker').value.trim();
+    if(pw)results['작업자']=pw;
   }
   var rec2={
     insp_type:curMod, target_id:tgt.target_id, target_label:tgt.target_label,
@@ -949,20 +965,67 @@ function upsert(table, checkPath, rec, done){
 }
 
 // ─ 실시간 현황 ─
-function openDash(){
-  showScr('scrDash');
-  document.getElementById('dashDate').textContent=todayStr();
-  var d=todayStr();
+var dashScope='day';
+function pad2(n){return String(n).padStart(2,'0');}
+function ymd(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+function setDashScope(sc){
+  dashScope=sc;
+  var btns=document.querySelectorAll('#dashScopeSeg .seg-btn');
+  for(var i=0;i<btns.length;i++)btns[i].classList.toggle('on',btns[i].getAttribute('data-sc')===sc);
+  renderScopePicker();
+  loadDash();
+}
+function renderScopePicker(){
+  var box=document.getElementById('dashScopeVal');
+  var now=new Date();
+  if(dashScope==='day'){
+    box.innerHTML='<input type="date" id="dashDateInput" onchange="loadDash()">';
+    document.getElementById('dashDateInput').value=todayStr();
+  }else if(dashScope==='month'){
+    box.innerHTML='<input type="month" id="dashMonthInput" onchange="loadDash()">';
+    document.getElementById('dashMonthInput').value=now.getFullYear()+'-'+pad2(now.getMonth()+1);
+  }else{
+    var sel='<select id="dashYearInput" onchange="loadDash()">';
+    for(var y=now.getFullYear();y>=now.getFullYear()-4;y--){ sel+='<option value="'+y+'">'+y+'년</option>'; }
+    sel+='</select>';
+    box.innerHTML=sel;
+  }
+}
+function dashRange(){
+  if(dashScope==='day'){
+    var v=document.getElementById('dashDateInput').value||todayStr();
+    var d0=new Date(v+'T00:00:00'); var d1=new Date(d0); d1.setDate(d1.getDate()+1);
+    return {from:v, to:ymd(d1), label:v};
+  }
+  if(dashScope==='month'){
+    var v2=document.getElementById('dashMonthInput').value||(new Date().getFullYear()+'-'+pad2(new Date().getMonth()+1));
+    var ym=v2.split('-'); var y=Number(ym[0]), m=Number(ym[1]);
+    var from=y+'-'+pad2(m)+'-01';
+    var nd=new Date(y,m,1);
+    var to=nd.getFullYear()+'-'+pad2(nd.getMonth()+1)+'-01';
+    return {from:from, to:to, label:y+'년 '+m+'월'};
+  }
+  var y3=Number(document.getElementById('dashYearInput').value)||new Date().getFullYear();
+  return {from:y3+'-01-01', to:(y3+1)+'-01-01', label:y3+'년'};
+}
+function loadDash(){
+  var r=dashRange();
+  document.getElementById('dashDate').textContent=r.label;
   Promise.all([
-    sbFetch('/inspection_data?insp_date=eq.'+d+'&select=id,insp_type,target_id,target_label,insp_date,work_time,shift,team,jo,inspector,results,note,created_at&order=created_at.desc').then(function(r){return r.json();}),
-    sbFetch('/equip_inspection_data?insp_date=eq.'+d+'&select=id,equip_id,mgmt_no,insp_date,shift,team,jo,inspector,results,note,use_area,use_time,user_name,created_at&order=created_at.desc').then(function(r){return r.json();}),
-    sbFetch('/leaders?select=shift,team,name').then(function(r){return r.json();})
+    sbFetch('/inspection_data?insp_date=gte.'+r.from+'&insp_date=lt.'+r.to+'&select=id,insp_type,target_id,target_label,insp_date,work_time,shift,team,jo,inspector,results,note,created_at&order=created_at.desc').then(function(rr){return rr.json();}),
+    sbFetch('/equip_inspection_data?insp_date=gte.'+r.from+'&insp_date=lt.'+r.to+'&select=id,equip_id,mgmt_no,insp_date,shift,team,jo,inspector,results,note,use_area,use_time,user_name,created_at&order=created_at.desc').then(function(rr){return rr.json();}),
+    sbFetch('/leaders?select=shift,team,name').then(function(rr){return rr.json();})
   ]).then(function(res){
     var insp=Array.isArray(res[0])?res[0]:[];
     var eq=Array.isArray(res[1])?res[1]:[];
     var leaders=Array.isArray(res[2])?res[2]:[];
     renderDash(insp,eq,leaders);
   }).catch(function(){ toast('현황 로드 실패'); });
+}
+function openDash(){
+  showScr('scrDash');
+  renderScopePicker();
+  loadDash();
 }
 function hasXin(results){
   if(!results)return false;
@@ -980,12 +1043,13 @@ function renderDash(insp,eq,leaders){
   function xCntOf(list){ var n=0; list.forEach(function(r){ if(hasXin(r.results))n++; }); return n; }
   function setStat(id,n,total,xn){
     var el=document.getElementById(id);
-    el.innerHTML=n+'<small>'+(total?('/'+total):'건')+'</small>';
+    var showTotal = (dashScope==='day') && total;
+    el.innerHTML=n+'<small>'+(showTotal?('/'+total):'건')+'</small>';
     var sub=document.getElementById(id+'Sub');
     if(sub){
       if(xn>0){ sub.textContent='🔴 불량 '+xn+'건'; sub.className='stat-sub bad'; }
-      else if(total){ sub.textContent='완료율 '+Math.round(n/total*100)+'%'; sub.className='stat-sub '+(n>0?'good':''); }
-      else { sub.textContent=n>0?'양호':'기록 없음'; sub.className='stat-sub'; }
+      else if(showTotal){ sub.textContent='완료율 '+Math.round(n/total*100)+'%'; sub.className='stat-sub '+(n>0?'good':''); }
+      else { sub.textContent=n>0?'점검 '+n+'건':'기록 없음'; sub.className='stat-sub'; }
     }
   }
   var eqDistinct={}; for(var i=0;i<eq.length;i++)eqDistinct[eq[i].equip_id||eq[i].mgmt_no]=1;
@@ -1147,7 +1211,9 @@ function openModForEdit(d){
   if(mod==='pbb'){
     fillPbbList(); document.getElementById('pSel').value=r.target_id;
     document.getElementById('pCnt').value=(r.results&&r.results['PBB개수'])||'';
+    document.getElementById('pWorker').value=(r.results&&r.results['작업자'])||r.inspector||'';
     if(chkStates['PBB개수']!==undefined)delete chkStates['PBB개수'];
+    if(chkStates['작업자']!==undefined)delete chkStates['작업자'];
   }
   if(mod==='common'){
     fillCommonSels();
@@ -1411,7 +1477,14 @@ function buildGateLogDoc(records, dateStr, mi, appr, workerOverride){
   var dObj=new Date(dateStr+'T00:00:00');
   var wdays=['일','월','화','수','목','금','토'];
   rows.push([{v:'게이트 관리 일지 ('+dateStr+' '+wdays[dObj.getDay()]+'요일)',cs:W,cls:'tt'}]);
-  var insNames=[]; records.forEach(function(r){ if(r.inspector && insNames.indexOf(r.inspector)<0) insNames.push(r.inspector); });
+  var insNames=[];
+  records.forEach(function(r){
+    var raw = (r.results && r.results['작업자']) ? r.results['작업자'] : r.inspector;
+    String(raw||'').split(',').forEach(function(nm){
+      nm=nm.trim();
+      if(nm && insNames.indexOf(nm)<0) insNames.push(nm);
+    });
+  });
   var workerText = (workerOverride&&workerOverride.trim()) ? workerOverride.trim() : (insNames.join(', ')||'-');
   rows.push([{v:'작업자',cls:'hd'},{v:workerText,cs:W-3,cls:'lf'},{v:sigCellText(appr),cs:2,cls:appr?'ok':'lf'}]);
   rows.push([{v:'범례',cls:'hd'},{v:'○양호 △보통 X불량 －해당없음',cs:W-1,cls:'lf'}]);

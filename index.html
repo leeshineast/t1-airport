@@ -11708,7 +11708,7 @@ async function loadMonthlyStats(){
       msFetchAll(function(){ return sb.from('mp_data').select('date,shift,team_code,values,proxy_writer').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('night_special_data').select('*').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('handover').select('id,created_at,ho_date,shift,team,confirmed,facility,danger,equipment,notice,special').gte('created_at',tsFrom).lte('created_at',tsTo); }),
-      msFetchAll(function(){ return sb.from('lost_found').select('id,found_date,status,completed_at,location,item').gte('found_date',tsFrom).lte('found_date',tsTo); }),
+      msFetchAll(function(){ return sb.from('lost_found').select('id,found_date,status,completed_at,location,item,receipt_route,handover_to,receiver_name').gte('found_date',tsFrom).lte('found_date',tsTo); }),
       msFetchAll(function(){ return sb.from('safety_accidents').select('id,occurred_at,team,accident_type,location').gte('occurred_at',tsFrom).lte('occurred_at',tsTo); }),
       msFetchAll(function(){ return sb.from('mgr_attendance').select('date,checked,status').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('voc_data').select('id,voc_date,status,completed_at,content').gte('voc_date',dFrom).lte('voc_date',dTo); }),
@@ -11853,7 +11853,7 @@ function msCalc(q, key){
   var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorDays:{},nsSum:{},lsSum:0,asSum:0,hourly:new Array(24).fill(0),hourlyDays:new Array(24).fill(0),hourlyByShift:{오전:new Array(24).fill(0),오후:new Array(24).fill(0),야간:new Array(24).fill(0)}},
           mgr:{days:{},trip:0,edu:0},
           ho:{total:0,confirmed:0,byTeam:{},byType:{시설물:0,위험요소:0,장비:0,특이사항:0,기타:0}},
-          lost:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byLoc:{},byItem:{},byHour:[0,0,0,0],hourUnknown:0,itemEtc:[],locEtc:[]},
+          lost:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byLoc:{},byItem:{},byHour:[0,0,0,0],hourUnknown:0,itemEtc:[],locEtc:[],byRoute:{},routeEtc:[],byHandover:{},handoverEtc:[]},
           acc:{total:0,byType:{},byTeam:{},byLoc:{},byHour:[0,0,0,0],locEtc:[]},
           voc:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byType:{},byLoc:{}},
           waste:{inc:0,rec:0,misc:0,byItem:{}} };
@@ -11934,6 +11934,20 @@ function msCalc(q, key){
     }
     var L=msClassifyLoc(r.location); if(L) s.lost.byLoc[L]=(s.lost.byLoc[L]||0)+1;
     var it=msClassifyItem(r.item); if(it) s.lost.byItem[it]=(s.lost.byItem[it]||0)+1;
+    // 접수 경로 (현장접수/오픈채널접수/기타-직접입력)
+    if(r.receipt_route){
+      var rb=r.receipt_route, rEtc=null;
+      if(rb.indexOf('기타')===0){ if(rb.indexOf('기타-')===0){ rEtc=rb.slice(3); } rb='기타'; }
+      s.lost.byRoute[rb]=(s.lost.byRoute[rb]||0)+1;
+      if(rEtc) s.lost.routeEtc.push(rEtc);
+    }
+    // 인계처 (완료 건만 집계)
+    if(done&&r.handover_to){
+      var hb2=r.handover_to, hEtc=null;
+      if(hb2.indexOf('기타')===0){ if(hb2.indexOf('기타-')===0){ hEtc=hb2.slice(3); } hb2='기타'; }
+      s.lost.byHandover[hb2]=(s.lost.byHandover[hb2]||0)+1;
+      if(hEtc) s.lost.handoverEtc.push(hEtc);
+    }
     // 00:00:00 정각 = 예전 방식(시간 미기록) → 시간대 분포에서 제외
     var kstT=r.found_date?new Date(new Date(r.found_date).getTime()+9*3600000).toISOString().slice(11,19):'';
     if(kstT==='00:00:00'){ s.lost.hourUnknown++; }
@@ -12243,6 +12257,12 @@ function msRenderDetail(key){
     h+=msTopBars(msWithEtc(c.lost.byItem,c.lost.itemEtc), 5, 'linear-gradient(90deg,var(--warn),#E8A83E)', '건');
     h+=msSub('장소 분류별 TOP5');
     h+=msTopBars(msWithEtc(c.lost.byLoc,c.lost.locEtc), 5, 'linear-gradient(90deg,var(--warn),#E8A83E)', '건');
+    h+=msSub('접수 경로별');
+    h+=msTopBars(msWithEtc(c.lost.byRoute,c.lost.routeEtc), 5, 'linear-gradient(90deg,#0EA5E9,#38BDF8)', '건');
+    var openCh=c.lost.byRoute['T1습득물 오픈채널접수']||0;
+    if(openCh) h+='<div style="font-size:9px;color:var(--g4);margin-top:2px">📱 오픈채널 접수 비중 '+(c.lost.total?Math.round(openCh/c.lost.total*100):0)+'%</div>';
+    h+=msSub('인계처별 (반환완료 건 기준)');
+    h+=msTopBars(msWithEtc(c.lost.byHandover,c.lost.handoverEtc), 5, 'linear-gradient(90deg,var(--navy),#3E6BB5)', '건');
     h+=msSub('시간대별 분포');
     h+=msHourBars(c.lost.byHour, 'linear-gradient(90deg,var(--warn),#E8A83E)');
     if(c.lost.hourUnknown) h+='<div style="font-size:9px;color:var(--g4);margin-top:2px">⏱ 시간미상 '+c.lost.hourUnknown+'건 제외 (예전 입력분)</div>';
