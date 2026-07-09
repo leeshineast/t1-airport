@@ -4686,8 +4686,17 @@ function renderLeaderStatus(viewDate){
   var shiftBgs={'오전':'var(--navy-bg)','오후':'var(--teal-bg)','야간':'#F3EEF8'};
   var shiftIcons={'오전':'🌅','오후':'☀️','야간':'🌙'};
   var html='';
+  var __isMgmt=me&&(me.role==='admin'||me.role==='manager');
+  var __isLeaderRole=me&&(me.role==='leader'||me.role==='acting_leader');
+  var __myCode=(me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
+  var __myTeamNum=(__myCode.match(/^\d+팀/)||[''])[0];
   ['오전','오후','야간'].forEach(function(shift){
     var leaders=LEADERS[shift]||[];
+    // 조장/대리는 본인 팀 항목만 보이도록 제한 (관리자·매니저는 전체 유지)
+    if(__isLeaderRole&&__myTeamNum){
+      leaders=leaders.filter(function(l){ return (String(l.team).match(/^\d+팀/)||[''])[0]===__myTeamNum; });
+    }
+    if(__isLeaderRole&&__myTeamNum&&!leaders.length) return; // 본인 소속이 없는 교대는 섹션 자체 생략
     // DB 기준 완료 여부 (다른 사용자 입력도 반영)
     var dbDone=Object.keys(dataSrc[shift]||{}).filter(function(k){ return k.indexOf('_')!==0; });
     var done=dbDone;
@@ -4733,6 +4742,9 @@ function renderLeaderStatus(viewDate){
   var allMissing=[];
   ['오전','오후','야간'].forEach(function(shift){
     var leaders=LEADERS[shift]||[];
+    if(__isLeaderRole&&__myTeamNum){
+      leaders=leaders.filter(function(l){ return (String(l.team).match(/^\d+팀/)||[''])[0]===__myTeamNum; });
+    }
     var done=Object.keys(dataSrc[shift]||{}).filter(function(k){ return k.indexOf('_')!==0; });
     leaders.forEach(function(l){
       if(done.indexOf(l.team)===-1) allMissing.push(shift+' '+l.name);
@@ -4744,10 +4756,10 @@ function renderLeaderStatus(viewDate){
     html+='<div style="font-size:11px;color:var(--g5);line-height:1.8">'+allMissing.join(', ')+'</div>';
     html+='</div>';
   } else {
-    var totalAll=Object.values(LEADERS).reduce(function(s,l){return s+l.length;},0);
+    var totalAll=(__isLeaderRole&&__myTeamNum)?1:Object.values(LEADERS).reduce(function(s,l){return s+l.length;},0);
     if(totalAll>0){
       html+='<div style="background:var(--success-bg);border-radius:var(--r2);padding:9px 12px;text-align:center">';
-      html+='<span style="font-size:12px;font-weight:700;color:var(--success)">🎉 전체 조장 입력 완료!</span>';
+      html+='<span style="font-size:12px;font-weight:700;color:var(--success)">🎉 '+((__isLeaderRole&&__myTeamNum)?'입력 완료!':'전체 조장 입력 완료!')+'</span>';
       html+='</div>';
     }
   }
@@ -5798,12 +5810,19 @@ async function checkPrevDayMissing(){
         if(r.team_code && doneTeams.indexOf(r.team_code)===-1) doneTeams.push(r.team_code);
       });
     }catch(e){}
-    // 전체 조장 목록 (LEADERS 전역변수 사용)
+    // 전체 조장 목록 (LEADERS 전역변수 사용) — 조장/대리는 본인 팀만
+    var __isMgmt2=me&&(me.role==='admin'||me.role==='manager');
+    var __isLeaderRole2=me&&(me.role==='leader'||me.role==='acting_leader');
+    var __myCode2=(me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
+    var __myTeamNum2=(__myCode2.match(/^\d+팀/)||[''])[0];
     var allLeaders=[];
     if(typeof LEADERS!=='undefined'){
       ['오전','오후','야간'].forEach(function(sh){
         (LEADERS[sh]||[]).forEach(function(l){ allLeaders.push(l); });
       });
+    }
+    if(__isLeaderRole2&&__myTeamNum2){
+      allLeaders=allLeaders.filter(function(l){ return (String(l.team).match(/^\d+팀/)||[''])[0]===__myTeamNum2; });
     }
     if(!allLeaders.length){box.style.display='none';return;}
     var missing=allLeaders.filter(function(l){return doneTeams.indexOf(l.team)===-1;});
