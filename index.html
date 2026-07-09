@@ -12033,7 +12033,7 @@ async function loadMonthlyStats(){
       msFetchAll(function(){ return sb.from('lost_found').select('id,found_date,status,completed_at,location,item,receipt_route,handover_to,receiver_name').gte('found_date',tsFrom).lte('found_date',tsTo); }),
       msFetchAll(function(){ return sb.from('safety_accidents').select('id,occurred_at,team,accident_type,location').gte('occurred_at',tsFrom).lte('occurred_at',tsTo); }),
       msFetchAll(function(){ return sb.from('mgr_attendance').select('date,checked,status').gte('date',dFrom).lte('date',dTo); }),
-      msFetchAll(function(){ return sb.from('voc_data').select('id,voc_date,status,completed_at,content').gte('voc_date',dFrom).lte('voc_date',dTo); }),
+      msFetchAll(function(){ return sb.from('voc_data').select('id,voc_date,status,completed_at,content,channel,category,category_etc,loc_zone,loc_side,loc_floor').gte('voc_date',dFrom).lte('voc_date',dTo); }),
       msFetchAll(function(){ return sb.from('waste_data').select('waste_date,incineration_living,incineration_synthetic,incineration_food,incineration_wood,recycle_paper,recycle_plastic,recycle_can,recycle_glass,recycle_etc,misc_etc').gte('waste_date',dFrom).lte('waste_date',dTo); })
     ]);
     var anyErr=q.some(function(r){ return r&&r.error; });
