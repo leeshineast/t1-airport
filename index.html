@@ -12486,9 +12486,7 @@ function checkHoPending(){
   var pending=hoAll.filter(function(r){
     if(r.confirmed) return false;
     if(me.role==='admin'||me.role==='manager') return true; // admin·manager: 전체
-    // 작성자 본인
-    if(r.author&&r.author===me.name) return true;
-    // 받는 팀 일치 (to_shift에 내 교대팀명 포함)
+    // 받는 팀 일치 (to_shift에 내 교대팀명 포함) — 오전 작성→오후 알림, 오후 작성→야간 알림, 야간 작성→오전 알림
     if(myShift&&r.to_shift&&r.to_shift.indexOf(myShift)>=0) return true;
     return false;
   });
