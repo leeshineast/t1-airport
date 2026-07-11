@@ -12191,7 +12191,7 @@ function msClassifyVoc(text){ return msClassify(text, MS_VOC_RULES); }
 function msCalc(q, key){
   var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorDays:{},nsSum:{},lsSum:0,asSum:0,hourly:new Array(24).fill(0),hourlyDays:new Array(24).fill(0),hourlyByShift:{오전:new Array(24).fill(0),오후:new Array(24).fill(0),야간:new Array(24).fill(0)}},
           mgr:{days:{},trip:0,edu:0},
-          ho:{total:0,confirmed:0,byTeam:{},byType:{시설물:0,위험요소:0,장비:0,특이사항:0,기타:0}},
+          ho:{total:0,confirmed:0,byTeam:{},byType:{시설물:0,위험요소:0,장비:0,특이사항:0,기타:0},byFacLoc:{},byFacDesc:{},byFacType:{}},
           lost:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byLoc:{},byItem:{},byHour:[0,0,0,0],hourUnknown:0,itemEtc:[],locEtc:[],byRoute:{},routeEtc:[],byHandover:{},handoverEtc:[]},
           acc:{total:0,byType:{},byTeam:{},byLoc:{},byHour:[0,0,0,0],locEtc:[]},
           voc:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byType:{},byLoc:{},byChannel:{}},
@@ -12252,7 +12252,15 @@ function msCalc(q, key){
     if(r.confirmed) s.ho.confirmed++;
     var t=(r.shift||r.team||'기타').split(' ')[0];
     s.ho.byTeam[t]=(s.ho.byTeam[t]||0)+1;
-    if(r.facility&&r.facility!=='없음') s.ho.byType['시설물']++;
+    if(r.facility&&r.facility!=='없음'){
+      s.ho.byType['시설물']++;
+      var fp=parseHoFacility(r.facility);
+      if(fp){
+        if(fp.loc){ var fl=msClassifyLoc(fp.loc); if(fl) s.ho.byFacLoc[fl]=(s.ho.byFacLoc[fl]||0)+1; }
+        if(fp.desc){ var fd=msClassifyVoc(fp.desc); if(fd) s.ho.byFacDesc[fd]=(s.ho.byFacDesc[fd]||0)+1; }
+        if(fp.type) s.ho.byFacType[fp.type]=(s.ho.byFacType[fp.type]||0)+1;
+      }
+    }
     if(r.danger&&r.danger!=='없음') s.ho.byType['위험요소']++;
     if(r.equipment&&r.equipment!=='이상없음') s.ho.byType['장비']++;
     if(r.special) s.ho.byType['특이사항']++;
@@ -12416,6 +12424,16 @@ function msBar(label, val, max, color, unit){
 }
 function msRow(label, val){
   return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--g1);font-size:11px"><span style="color:var(--g5)">'+label+'</span><span style="font-weight:800;color:var(--g6)">'+val+'</span></div>';
+}
+// 인수인계 시설물고장 텍스트 파싱: "[장소] X / [내용] Y / [신고] Z" 형식
+function parseHoFacility(text){
+  if(!text||text==='없음') return null;
+  var mLoc=text.match(/\[장소\]\s*([^\/]+?)(?=\s*\/\s*\[|$)/);
+  var mDesc=text.match(/\[내용\]\s*([^\/]+?)(?=\s*\/\s*\[|$)/);
+  var mType=text.match(/\[신고\]\s*([^\/]+?)(?=\s*\/\s*\[|$)/);
+  var type=mType?mType[1].trim():null;
+  if(type&&type.indexOf('기타')===0) type='기타';
+  return {loc:mLoc?mLoc[1].trim():null, desc:mDesc?mDesc[1].trim():null, type:type};
 }
 function msTitle(t){
   return '<div style="font-size:11px;font-weight:800;color:var(--g6);margin-bottom:8px">'+t+'</div>';
@@ -12586,6 +12604,14 @@ function msRenderDetail(key){
       h+=msSub('팀별 발생 TOP'+teams.length);
       var mx=c.ho.byTeam[teams[0]];
       teams.forEach(function(t){ h+=msBar(t, c.ho.byTeam[t], mx, 'linear-gradient(90deg,var(--navy),#3E6BB5)', '건'); });
+    }
+    if(c.ho.byType['시설물']){
+      h+=msSub('🔧 시설물고장 · 신고구분별');
+      h+=msTopBars(c.ho.byFacType, 5, 'linear-gradient(90deg,#D97706,#F59E0B)', '건');
+      h+=msSub('🔧 시설물고장 · 장소별 TOP5');
+      h+=msTopBars(c.ho.byFacLoc, 5, 'linear-gradient(90deg,#D97706,#F59E0B)', '건');
+      h+=msSub('🔧 시설물고장 · 내용 유형별 TOP5');
+      h+=msTopBars(c.ho.byFacDesc, 5, 'linear-gradient(90deg,#D97706,#F59E0B)', '건');
     }
   }else if(key==='lost'){
     var rate=c.lost.total?Math.round(c.lost.done/c.lost.total*100):0;
