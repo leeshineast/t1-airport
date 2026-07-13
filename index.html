@@ -509,6 +509,12 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div class="menu-desc">오전·오후·야간 인계 작성/확인</div>
       <span class="menu-arrow">작성하기 →</span>
     </button>
+    <button class="menu-btn" onclick="go('notice')">
+      <span class="menu-icon">📢</span>
+      <div class="menu-title">공지사항</div>
+      <div class="menu-desc">전체 공지사항 목록 확인</div>
+      <span class="menu-arrow">전체보기 →</span>
+    </button>
     <button class="menu-btn" onclick="go('chat')">
       <span class="menu-icon">📋</span>
       <div class="menu-title">사규 열람</div>
@@ -1966,6 +1972,19 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   </div>
 </div>
 
+<!-- ══ 공지사항 (전체 목록, 조회 전용) ══ -->
+<div id="sNotice" class="scr">
+  <div class="pg-hd">
+    <div><h1>📢 공지사항</h1><small>전체 공지사항 목록</small></div>
+    <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">← 메인</button>
+  </div>
+  <div style="padding:13px">
+    <div id="noticeScreenListWrap">
+      <div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">공지사항을 불러오는 중...</div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ ISO9001 ══ -->
 <div id="sIso9001" class="scr">
   <div class="pg-hd">
@@ -3198,7 +3217,7 @@ function showM(id){document.getElementById(id).classList.add('on');}
 function hideM(id){document.getElementById(id).classList.remove('on');}
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sSafety','sManual','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sSafety','sManual','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice'];
 function goHomeMain(){
   go('main');
   setTimeout(function(){
@@ -3210,7 +3229,7 @@ function go(name){
   if(me&&me.role==='vehicle_guest'&&name!=='veh'&&name!=='login'){ return; }
   if(name==='admin'&&(!me||me.role!=='admin')){ toast('⚠️ 관리자만 접근할 수 있습니다'); return; }
   if(name==='groupchat'&&me&&me.role==='guest'){ toast('⚠️ 게스트 계정은 이용할 수 없는 기능입니다'); return; }
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',safety:'sSafety',manual:'sManual',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',safety:'sSafety',manual:'sManual',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -3247,6 +3266,9 @@ function go(name){
   }
   if(name==='facility'){
     loadFacilityFromDB();
+  }
+  if(name==='notice'){
+    loadNoticeScreen();
   }
   if(name==='chat'){
     regTab(0);
@@ -7801,8 +7823,18 @@ async function loadNoticesFromDB(){
   }catch(e){}
 }
 
-function renderNoticeList(data){
-  var wrap=document.getElementById('noticeListWrap'); if(!wrap) return;
+// 공지사항 메뉴 화면: 전체 목록 (조회 전용)
+async function loadNoticeScreen(){
+  var wrap=document.getElementById('noticeScreenListWrap');
+  try{
+    var res=await sb.from('notices').select('*').neq('title','__ind_prev_year__').order('created_at',{ascending:false});
+    if(res.error){ if(wrap) wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:12px">불러오기 실패</div>'; return; }
+    renderNoticeList(res.data||[], 'noticeScreenListWrap');
+  }catch(e){ if(wrap) wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:12px">불러오기 실패</div>'; }
+}
+
+function renderNoticeList(data, targetId){
+  var wrap=document.getElementById(targetId||'noticeListWrap'); if(!wrap) return;
   if(!data||!data.length){
     wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">등록된 공지사항이 없습니다</div>';
     return;
