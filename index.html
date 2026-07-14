@@ -1106,12 +1106,6 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">공지사항을 불러오는 중...</div>
   </div></div>
 
-  <!-- 특별작업 현황 -->
-  <div id="specialWorkWrap" style="display:none;margin-bottom:13px">
-    <div class="sec-lbl">🔨 특별작업 현황</div>
-    <div class="card"><div style="padding:11px 13px" id="specialWorkList"></div></div>
-  </div>
-
   <!-- 산업재해 현황 -->
   <div class="sec-lbl">산업재해 현황</div>
   <div class="card" style="margin-bottom:11px">
@@ -1529,19 +1523,6 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <span style="font-size:13px;font-weight:800;color:var(--g7)">업무 진행 사항 및 특이사항</span>
       </div>
       <textarea class="f-ta show" id="hEtc" rows="3" placeholder="업무 진행 내용, 특이사항 등 자유롭게 작성" style="display:block"></textarea>
-    </div></div>
-
-    <!-- 4. 특별작업 (구 5번 -> 번호 조정) -->
-    <div class="card" style="margin-bottom:10px"><div class="cb">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
-        <div style="width:24px;height:24px;border-radius:50%;background:var(--navy);color:white;font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">4</div>
-        <span style="font-size:13px;font-weight:800;color:var(--g7)">🔨 특별작업</span>
-      </div>
-      <div class="rg" style="margin-bottom:8px">
-        <div class="rp on" onclick="togF(this,'hSp',false)">없음</div>
-        <div class="rp" onclick="togF(this,'hSp',true)">있음</div>
-      </div>
-      <textarea class="f-ta" id="hSp" rows="2" placeholder="특별작업 내용 및 진행사항"></textarea>
     </div></div>
 
     <!-- DB 호환용 hidden -->
@@ -3733,6 +3714,50 @@ function closeMpM(){hideM('mpModal');}
 
 
 // ─ 인수인계 ─
+// 중복(반복) 시설물고장 신고 감지용 유틸
+function hoBigrams(str){
+  str=(str||'').replace(/\s+/g,'');
+  if(str.length<2) return str?[str]:[];
+  var arr=[];
+  for(var i=0;i<str.length-1;i++) arr.push(str.substr(i,2));
+  return arr;
+}
+function hoSimilarity(a,b){
+  var A=hoBigrams(a), B=hoBigrams(b);
+  if(!A.length&&!B.length) return 0;
+  var cnt={}; B.forEach(function(x){cnt[x]=(cnt[x]||0)+1;});
+  var inter=0;
+  A.forEach(function(x){ if(cnt[x]>0){inter++; cnt[x]--;} });
+  var union=A.length+B.length-inter;
+  return union? inter/union : 0;
+}
+function hoExtractRoomCode(str){
+  var m=(str||'').match(/[Rr]\s?\d{3,5}(-\d+)?/);
+  return m? m[0].replace(/\s+/g,'').toUpperCase() : null;
+}
+// 최근 14일 내 유사한 장소·내용의 시설물고장 신고 탐색 (처리완료 포함 - 실제 수리여부는 알 수 없으므로)
+function findDupFacilityReport(locText, descText){
+  if(!locText || typeof hoAll==='undefined' || !hoAll || !hoAll.length) return null;
+  var cutoff = Date.now() - 14*24*3600*1000;
+  var myCode = hoExtractRoomCode(locText);
+  var best=null, bestScore=0;
+  hoAll.forEach(function(r){
+    if(!r.facility || r.facility==='없음') return;
+    var ts = r.ho_date||r.created_at;
+    if(!ts) return;
+    var t = new Date(ts).getTime();
+    if(t < cutoff) return;
+    var fp = parseHoFacility(r.facility);
+    if(!fp || !fp.loc) return;
+    var locSim = hoSimilarity(locText, fp.loc);
+    var otherCode = hoExtractRoomCode(fp.loc);
+    if(myCode && otherCode && myCode===otherCode) locSim = Math.max(locSim, 0.95);
+    var descSim = descText? hoSimilarity(descText, fp.desc||'') : 0;
+    var score = locSim*0.6 + descSim*0.4;
+    if(score > bestScore){ bestScore=score; best={r:r, fp:fp, score:score}; }
+  });
+  return (best && best.score>=0.45) ? best : null;
+}
 function pickHS(el){document.querySelectorAll('#hoSG .rp').forEach(p=>p.classList.remove('on'));el.classList.add('on');document.getElementById('hoW').style.display='none';}
 
 function autoSelectHandoverTeam(){
@@ -3789,6 +3814,7 @@ function subHO(){
   var shiftMap={1:'오전팀',2:'오전팀',3:'오전팀',4:'오전팀',5:'야간팀',6:'오후팀',7:'오후팀',8:'오후팀',9:'오후팀',10:'야간팀'};
   let sNm=shiftMap[teamNum]||'오전팀';
   const toMap={'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'};
+  const zoneChain=([1,2,5,6,7].indexOf(teamNum)>=0)?'LS':(([3,4,8,9,10].indexOf(teamNum)>=0)?'AS':null);
   const pMap={'오전팀':'pill-am','오후팀':'pill-pm','야간팀':'pill-nt'};
   const avC={'오전팀':'var(--navy)','오후팀':'var(--teal2)','야간팀':'#6B21A8'};
   const toNm=toMap[sNm];
@@ -3809,13 +3835,21 @@ function subHO(){
     if(fType) parts.push('[신고] '+fType);
     if(fRcv&&fRcv.value.trim()) parts.push('[접수자] '+fRcv.value.trim());
     if(parts.length) fT=parts.join(' / ');
+    // 중복(반복) 신고 감지 — 최근 14일 내 비슷한 위치·내용의 시설물고장 신고가 있으면 확인
+    if(fLoc&&fLoc.value.trim()){
+      var _dup=findDupFacilityReport(fLoc.value.trim(), fDesc?fDesc.value.trim():'');
+      if(_dup){
+        var _dupTs=_dup.r.ho_date||_dup.r.created_at;
+        var _dupDate=_dupTs?new Date(_dupTs).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit'}):'';
+        var _dupMsg='⚠️ 최근 14일 내 비슷한 위치에 유사한 신고가 있어요.\n\n['+_dupDate+' '+(_dup.r.author||'작성자')+' 작성]\n장소: '+(_dup.fp.loc||'')+'\n내용: '+(_dup.fp.desc||'')+(_dup.r.confirmed?' (확인됨)':' (미확인)')+'\n\n같은 문제라도 아직 안 고쳐졌다면 그대로 제출해주세요.\n계속 제출할까요?';
+        if(!confirm(_dupMsg)) return;
+      }
+    }
   }
   const dT=(dE&&dE.classList.contains('show')&&dE.value?dE.value:'없음');
   const eT=(eE&&eE.classList.contains('show')&&eE.value)?eE.value:'이상없음';
   // ★ DB 저장용 데이터 먼저 캡처 (폼 초기화 전)
   var _hEtcVal=document.getElementById('hEtc')?document.getElementById('hEtc').value||null:null;
-  var _hSpEl=document.getElementById('hSp');
-  var _special=(_hSpEl&&_hSpEl.value&&_hSpEl.value.trim())?_hSpEl.value.trim():null;
   // ★ 인계 일시 캡처 (사용자가 선택한 값, 없으면 현재 KST)
   var _dateInputEl=document.getElementById('hoDateInput');
   var _dateLocal=(_dateInputEl&&_dateInputEl.value)?_dateInputEl.value:new Date(Date.now()+9*3600000).toISOString().slice(0,16);
@@ -3824,7 +3858,7 @@ function subHO(){
   // 폼 초기화
   document.querySelectorAll('#hoSG .rp').forEach(p=>p.classList.remove('on'));
   document.getElementById('hoW').style.display='none';
-  ['hD','hE','hSp'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';e.classList.remove('show');}});
+  ['hD','hE'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';e.classList.remove('show');}});
   var fWrapEl=document.getElementById('hFWrap');if(fWrapEl)fWrapEl.style.display='none';
   ['hFLoc','hFDesc','hFEtc','hFRcv'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});
   var hFTypeG=document.getElementById('hFTypeG');if(hFTypeG){hFTypeG.querySelectorAll('.rp').forEach(p=>p.classList.remove('on'));var fp=hFTypeG.querySelector('.rp');if(fp)fp.classList.add('on');}
@@ -3847,8 +3881,6 @@ function subHO(){
   card.className='ho-card';
   card.innerHTML=`<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px"><span class="t-pill ${pMap[sNm]}">${raw}</span><span style="color:var(--g3)">→</span><span class="t-pill ${pMap[toNm]}">${toNm}</span><span class="chip chip-warn"><span class="chip-dot"></span>대기</span></div><span class="ho-time">${ts}</span></div><div class="w-row"><div class="w-av" style="background:${avC[sNm]}">${me?me.initial:'?'}</div><span class="w-nm">${me?me.name:'작성자'} · ${me?me.team:''} 작성</span></div><div class="ho-body">${fields}</div><div class="conf-row"><button class="btn-conf" onclick="confHO(this)">✔ 인수 확인</button></div>`;
   // ① DB에 저장 (전체 공유)
-  var hSpEl=document.getElementById('hSp');
-  var special=(hSpEl&&hSpEl.classList.contains('show')&&hSpEl.value)?hSpEl.value:'없음';
   var hoData = {
     shift: raw+' ('+sNm+')', // '4팀 (오전팀)' 형식으로 저장
     to_shift: toNm,
@@ -3860,9 +3892,9 @@ function subHO(){
     accident: null,
     equipment: eT!=='이상없음'?eT:null,
     notice: _hEtcVal,
-    special: _special,
     confirmed: false,
-    ho_date: _hoDateISO
+    ho_date: _hoDateISO,
+    zone_chain: zoneChain
   };
   // ① 수정 모드면 update, 신규면 insert
   const submitBtn=document.querySelector('#hoP4 .btn-prim');
@@ -3879,8 +3911,8 @@ function subHO(){
       accident: submitBtn&&submitBtn._origAccident!==undefined?submitBtn._origAccident:hoData.accident,
       equipment: hoData.equipment,
       notice: hoData.notice,
-      special: hoData.special,
-      ho_date: hoData.ho_date
+      ho_date: hoData.ho_date,
+      zone_chain: hoData.zone_chain
     };
     if(resEditEl&&document.getElementById('hoResultEditWrap').style.display!=='none'){
       updatePayload.result=resEditEl.value.trim();
@@ -4931,7 +4963,12 @@ async function loadHandoverByShift(shift){
   if(!el) return;
   el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">불러오는 중...</div>';
   try{
-    var res = await sb.from('handover').select('*').eq('to_shift',shift).order('created_at',{ascending:false}).limit(30);
+    var myTeamNumSh=me&&me.team?parseInt((me.team.match(/\d+/)||[])[0]):0;
+    var myChainSh=([1,2,5,6,7].indexOf(myTeamNumSh)>=0)?'LS':(([3,4,8,9,10].indexOf(myTeamNumSh)>=0)?'AS':null);
+    var isAdminMgr=me&&me.role==='admin';
+    var q=sb.from('handover').select('*').eq('to_shift',shift);
+    if(!isAdminMgr&&myChainSh) q=q.eq('zone_chain',myChainSh);
+    var res = await q.order('created_at',{ascending:false}).limit(30);
     if(res.data) res.data=res.data.filter(function(r){return !r.confirmed;});
     if(res.error || !res.data || !res.data.length){
       el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">✅ 확인할 인수인계가 없습니다</div>';
@@ -4950,9 +4987,6 @@ async function loadHandoverByShift(shift){
       var fields='';
       if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📝 업무내용</div><div class="ho-val">'+r.notice+'</div></div>';
       if(r.facility&&r.facility!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🔧 시설물</div><div class="ho-val">'+r.facility+'</div></div>';
-      if(r.complaint&&r.complaint!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">📢 민원</div><div class="ho-val">'+r.complaint+'</div></div>';
-      if(r.accident&&r.accident!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🚨 사고</div><div class="ho-val">'+r.accident+'</div></div>';
-      if(r.special&&r.special!=='없음') fields+='<div class="ho-f"><div class="ho-lbl">🔨 특별작업</div><div class="ho-val">'+r.special+'</div></div>';
       if(!fields) fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
       var confBtn=renderHoConfBlock(r, 'sh_'+listId+'_');
       html+='<div class="ho-card">'
@@ -8079,9 +8113,7 @@ function renderHoList(data){
     var initial=author[0]||'?';
     var fields='';
     if(r.facility) fields+='<div class="ho-f"><div class="ho-lbl">🔧 시설물 고장</div><div class="ho-val">'+r.facility+'</div></div>';
-    if(r.complaint) fields+='<div class="ho-f"><div class="ho-lbl">📢 민원</div><div class="ho-val">'+r.complaint+'</div></div>';
     if(r.danger) fields+='<div class="ho-f"><div class="ho-lbl">⚠️ 위험구역</div><div class="ho-val">'+r.danger+'</div></div>';
-    if(r.accident) fields+='<div class="ho-f"><div class="ho-lbl">🚨 안전사고</div><div class="ho-val">'+r.accident+'</div></div>';
     if(r.equipment) fields+='<div class="ho-f"><div class="ho-lbl">🚛 장비·차량</div><div class="ho-val">'+r.equipment+'</div></div>';
     if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📋 공지</div><div class="ho-val">'+r.notice+'</div></div>';
     if(!fields) fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
@@ -8137,7 +8169,7 @@ function downloadHoExcel(){
     var dates=Object.keys(groups).sort().reverse();
 
     // 전체 시트
-    var allRows=[['날짜','시간','인계팀','인수팀','작성자','소속','시설고장','민원','위험구역','안전사고','장비차량','공지사항','확인여부','확인자','처리결과']];
+    var allRows=[['날짜','시간','인계팀','인수팀','작성자','소속','시설고장','위험구역','장비차량','공지사항','확인여부','확인자','처리결과']];
     dates.forEach(function(d){
       groups[d].forEach(function(r){
         var ts=(r.ho_date||r.created_at)?new Date(r.ho_date||r.created_at).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false}):'';
@@ -8145,8 +8177,8 @@ function downloadHoExcel(){
           d, ts,
           r.shift||'', r.to_shift||'',
           r.author||'', r.team||'',
-          r.facility||'', r.complaint||'',
-          r.danger||'', r.accident||'',
+          r.facility||'',
+          r.danger||'',
           r.equipment||'', r.notice||'',
           r.confirmed?'확인완료':'미확인', r.confirmed_by||'', r.result||''
         ]);
@@ -8155,18 +8187,18 @@ function downloadHoExcel(){
     });
     var ws=XLSX.utils.aoa_to_sheet(allRows);
     // 열 너비
-    ws['!cols']=[{wch:12},{wch:8},{wch:8},{wch:8},{wch:10},{wch:12},{wch:20},{wch:20},{wch:15},{wch:15},{wch:15},{wch:20},{wch:10},{wch:10},{wch:25}];
+    ws['!cols']=[{wch:12},{wch:8},{wch:8},{wch:8},{wch:10},{wch:12},{wch:20},{wch:15},{wch:15},{wch:20},{wch:10},{wch:10},{wch:25}];
     XLSX.utils.book_append_sheet(wb,'전체인수인계',ws);
 
     // 날짜별 시트 (최근 7일)
     dates.slice(0,7).forEach(function(d){
-      var rows=[['시간','인계팀','인수팀','작성자','소속','시설고장','민원','위험구역','안전사고','장비차량','공지사항','확인여부','처리결과']];
+      var rows=[['시간','인계팀','인수팀','작성자','소속','시설고장','위험구역','장비차량','공지사항','확인여부','처리결과']];
       groups[d].forEach(function(r){
         var ts=(r.ho_date||r.created_at)?new Date(r.ho_date||r.created_at).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false}):'';
-        rows.push([ts, r.shift||'', r.to_shift||'', r.author||'', r.team||'', r.facility||'', r.complaint||'', r.danger||'', r.accident||'', r.equipment||'', r.notice||'', r.confirmed?'✅':'❌', r.result||'']);
+        rows.push([ts, r.shift||'', r.to_shift||'', r.author||'', r.team||'', r.facility||'', r.danger||'', r.equipment||'', r.notice||'', r.confirmed?'✅':'❌', r.result||'']);
       });
       var ws2=XLSX.utils.aoa_to_sheet(rows);
-      ws2['!cols']=[{wch:8},{wch:8},{wch:8},{wch:10},{wch:12},{wch:20},{wch:20},{wch:15},{wch:15},{wch:15},{wch:20},{wch:8},{wch:25}];
+      ws2['!cols']=[{wch:8},{wch:8},{wch:8},{wch:10},{wch:12},{wch:20},{wch:15},{wch:15},{wch:20},{wch:8},{wch:25}];
       var sheetName=d.replace(/-/g,'').slice(4); // 0612 형식
       XLSX.utils.book_append_sheet(wb,sheetName,ws2);
     });
@@ -8272,26 +8304,6 @@ function updateAccComplaintCount(){
     }
   });
 
-  // 특별작업 현황 (오늘 건)
-  var todaySpecial=(hoAll||[]).filter(function(r){
-    var d=r.created_at||'';
-    var dKst=d?new Date(d).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'}):'';
-    return dKst===today && r.special && r.special!=='없음';
-  });
-  var spWrap=document.getElementById('specialWorkWrap');
-  var spList=document.getElementById('specialWorkList');
-  if(spWrap) spWrap.style.display=todaySpecial.length?'block':'none';
-  if(spList&&todaySpecial.length){
-    var h='';
-    todaySpecial.forEach(function(r){
-      var ps=parseShift(r.shift);
-      h+='<div style="padding:8px 0;border-bottom:1px solid var(--g1);display:flex;gap:8px;align-items:flex-start">';
-      h+='<span style="font-size:10px;font-weight:700;background:var(--navy);color:white;border-radius:20px;padding:2px 8px;flex-shrink:0">'+ps.team+'</span>';
-      h+='<span style="font-size:12px;color:var(--g6)">'+r.special+'</span>';
-      h+='</div>';
-    });
-    spList.innerHTML=h;
-  }
 }
 
 
@@ -8373,16 +8385,6 @@ function editHo(btn){
 
     // 업무 진행 사항 및 특이사항
     var hEtc=document.getElementById('hEtc'); if(hEtc) hEtc.value=r.notice||r.etc||'';
-
-    // 특별작업
-    var hSp=document.getElementById('hSp');
-    var spBtns=document.querySelectorAll('[onclick*="togF(this,\'hSp\'"]');
-    var hasSpecial=!!(r.special&&r.special!=='없음');
-    if(hSp){ hSp.value=hasSpecial?r.special:''; hSp.classList.toggle('show', hasSpecial); }
-    spBtns.forEach(function(sb){
-      var isTrueBtn=/togF\(this,'hSp',\s*true\)/.test(sb.getAttribute('onclick')||'');
-      sb.classList.toggle('on', isTrueBtn===hasSpecial);
-    });
 
     // 인계 일시 채우기 (KST 기준 datetime-local 문자열로 변환)
     var hoDateEl=document.getElementById('hoDateInput');
@@ -12078,7 +12080,7 @@ async function loadMonthlyStats(){
     var q=await Promise.all([
       msFetchAll(function(){ return sb.from('mp_data').select('date,shift,team_code,values,proxy_writer').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('night_special_data').select('*').gte('date',dFrom).lte('date',dTo); }),
-      msFetchAll(function(){ return sb.from('handover').select('id,created_at,ho_date,shift,team,confirmed,facility,danger,equipment,notice,special').gte('created_at',tsFrom).lte('created_at',tsTo); }),
+      msFetchAll(function(){ return sb.from('handover').select('id,created_at,ho_date,shift,team,confirmed,facility,danger,equipment,notice').gte('created_at',tsFrom).lte('created_at',tsTo); }),
       msFetchAll(function(){ return sb.from('lost_found').select('id,found_date,status,completed_at,location,item,receipt_route,handover_to,receiver_name').gte('found_date',tsFrom).lte('found_date',tsTo); }),
       msFetchAll(function(){ return sb.from('safety_accidents').select('id,occurred_at,team,accident_type,location').gte('occurred_at',tsFrom).lte('occurred_at',tsTo); }),
       msFetchAll(function(){ return sb.from('mgr_attendance').select('date,checked,status').gte('date',dFrom).lte('date',dTo); }),
@@ -12223,7 +12225,7 @@ function msClassifyVoc(text){ return msClassify(text, MS_VOC_RULES); }
 function msCalc(q, key){
   var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorDays:{},nsSum:{},lsSum:0,asSum:0,hourly:new Array(24).fill(0),hourlyDays:new Array(24).fill(0),hourlyByShift:{오전:new Array(24).fill(0),오후:new Array(24).fill(0),야간:new Array(24).fill(0)}},
           mgr:{days:{},trip:0,edu:0},
-          ho:{total:0,confirmed:0,byTeam:{},byType:{시설물:0,위험요소:0,장비:0,특이사항:0,기타:0},byFacLoc:{},byFacDesc:{},byFacType:{}},
+          ho:{total:0,confirmed:0,byTeam:{},byType:{시설물:0,위험요소:0,장비:0,기타:0},byFacLoc:{},byFacDesc:{},byFacType:{}},
           lost:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byLoc:{},byItem:{},byHour:[0,0,0,0],hourUnknown:0,itemEtc:[],locEtc:[],byRoute:{},routeEtc:[],byHandover:{},handoverEtc:[]},
           acc:{total:0,byType:{},byTeam:{},byLoc:{},byHour:[0,0,0,0],locEtc:[]},
           voc:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byType:{},byLoc:{},byChannel:{}},
@@ -12295,7 +12297,6 @@ function msCalc(q, key){
     }
     if(r.danger&&r.danger!=='없음') s.ho.byType['위험요소']++;
     if(r.equipment&&r.equipment!=='이상없음') s.ho.byType['장비']++;
-    if(r.special) s.ho.byType['특이사항']++;
     if(r.notice) s.ho.byType['기타']++;
   });
   // ── 습득물
@@ -12746,11 +12747,15 @@ function checkHoPending(){
   var myShiftMap={1:'오전팀',2:'오전팀',3:'오전팀',4:'오전팀',5:'야간팀',6:'오후팀',7:'오후팀',8:'오후팀',9:'오후팀',10:'야간팀'};
   var myTeamNum=me.team?parseInt((me.team.match(/\d+/)||[])[0]):0;
   var myShift=myShiftMap[myTeamNum]||'';
+  var myChain=([1,2,5,6,7].indexOf(myTeamNum)>=0)?'LS':(([3,4,8,9,10].indexOf(myTeamNum)>=0)?'AS':null);
   var pending=hoAll.filter(function(r){
     if(r.confirmed) return false;
-    if(me.role==='admin'||me.role==='manager') return true; // admin·manager: 전체
-    // 받는 팀 일치 (to_shift에 내 교대팀명 포함) — 오전 작성→오후 알림, 오후 작성→야간 알림, 야간 작성→오전 알림
-    if(myShift&&r.to_shift&&r.to_shift.indexOf(myShift)>=0) return true;
+    if(me.role==='admin') return true; // admin: 전체
+    // 받는 팀 일치 (to_shift에 내 교대팀명 포함) + 같은 구역 체인(L/S·A/S)인 경우만
+    if(myShift&&r.to_shift&&r.to_shift.indexOf(myShift)>=0){
+      if(myChain&&r.zone_chain){ return r.zone_chain===myChain; }
+      return true; // 체인 정보가 없는 과거 데이터는 기존처럼 표시
+    }
     return false;
   });
   var cnt=pending.length;
