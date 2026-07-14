@@ -415,7 +415,6 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     })();
   </script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
 
@@ -1497,8 +1496,9 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div id="edTrend30" onclick="edSetTrendRange(30)" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;color:var(--g4)">30일</div>
     </div>
   </div>
-  <div style="margin:0 13px 10px;background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:12px;height:220px">
-    <canvas id="edTrendChart"></canvas>
+  <div style="margin:0 13px 10px;background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:12px 12px 6px">
+    <div id="edTrendChart" style="height:200px"></div>
+    <div id="edTrendLegend" style="display:flex;gap:14px;justify-content:center;padding:6px 0 2px"></div>
   </div>
 
   <!-- 오늘 운영현황 -->
@@ -3320,8 +3320,6 @@ function goStatsDash(){
 // ═══ 관리자 전용 현황판(Executive Dashboard) ═══
 var ED_TOTAL_STAFF=398; // 사업부 총원 (근무율 계산 기준)
 var edTrendRange=7;
-var edTrendChartObj=null;
-var edDonutObjs={};
 
 function edKst(){ return new Date(Date.now()+9*3600000); }
 function edToday(){ return edKst().toISOString().slice(0,10); }
@@ -3397,20 +3395,16 @@ async function loadExecDashboard(){
     kpiHtml+=edKpiCard('📌','오늘 특이사항', issueTotal, '건', issueTotal===0?'ok':'neutral');
     var kg=document.getElementById('edKpiGrid'); if(kg) kg.innerHTML=kpiHtml;
 
-    // ── 완료율 도넛 (Chart.js) — 캔버스 컨테이너 먼저 구성
+    // ── 완료율 도넛 (CSS conic-gradient — CDN 의존성 없음, 이미 검증된 컴포넌트)
     var dg=document.getElementById('edDonutGrid');
-    if(dg && !document.getElementById('edDonutHo')){
-      dg.innerHTML=['ho','voc','lost'].map(function(k){
-        var lbl={ho:'인수인계',voc:'VOC 처리',lost:'유실물'}[k];
-        return '<div style="background:white;border-radius:var(--r2);padding:10px;border:1px solid var(--g2);text-align:center">'
-          +'<div style="height:90px;position:relative"><canvas id="edDonut'+(k==='ho'?'Ho':k==='voc'?'Voc':'Lost')+'"></canvas>'
-          +'<div id="edDonutTxt'+(k==='ho'?'Ho':k==='voc'?'Voc':'Lost')+'" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:900;color:var(--g7)"></div></div>'
-          +'<div style="font-size:10px;font-weight:700;color:var(--g5);margin-top:4px">'+lbl+'</div></div>';
+    if(dg){
+      var donutDefs=[{k:'ho',lbl:'인수인계',pct:hoRate,color:'#1B3A6B'},{k:'voc',lbl:'VOC 처리',pct:vocRate,color:'#00A99D'},{k:'lost',lbl:'유실물',pct:lostRate,color:'#D97706'}];
+      dg.innerHTML=donutDefs.map(function(d){
+        return '<div style="background:white;border-radius:var(--r2);padding:14px 10px;border:1px solid var(--g2);text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px">'
+          +'<div class="ms-donut" style="width:64px;height:64px;background:conic-gradient('+d.color+' calc('+d.pct+'*1%),var(--g2) 0)"><span class="ms-donut-txt" style="font-size:13px">'+d.pct+'%</span></div>'
+          +'<div style="font-size:10px;font-weight:700;color:var(--g5)">'+d.lbl+'</div></div>';
       }).join('');
     }
-    edRenderDonut('edDonutHo','인수인계',hoRate,'#1B3A6B');
-    edRenderDonut('edDonutVoc','VOC 처리',vocRate,'#00A99D');
-    edRenderDonut('edDonutLost','유실물',lostRate,'#D97706');
 
     // ── 오전/오후/야간 카드
     var shiftColors={'오전':'#00A99D','오후':'#1A6B8A','야간':'#1E3A5F'};
@@ -3449,19 +3443,6 @@ async function loadExecDashboard(){
 
     edLoadTrend(edTrendRange);
   }catch(e){ console.log('현황판 로드 오류:', e); }
-}
-
-function edRenderDonut(canvasId, label, pct, color){
-  var el=document.getElementById(canvasId);
-  if(!el) return;
-  var txtEl=document.getElementById(canvasId.replace('edDonut','edDonutTxt'));
-  if(txtEl) txtEl.textContent=pct+'%';
-  if(edDonutObjs[canvasId]){ edDonutObjs[canvasId].destroy(); }
-  edDonutObjs[canvasId]=new Chart(el, {
-    type:'doughnut',
-    data:{ labels:[label,''], datasets:[{ data:[pct,100-pct], backgroundColor:[color,'#EEF1F0'], borderWidth:0 }] },
-    options:{ cutout:'72%', plugins:{legend:{display:false},tooltip:{enabled:false}}, animation:{duration:400} }
-  });
 }
 
 function edSetTrendRange(days){
@@ -3505,28 +3486,56 @@ async function edLoadTrend(days){
     var vocData=Object.keys(vocByDate).sort().map(function(d){return vocByDate[d];});
     var lostData=Object.keys(lostByDate).sort().map(function(d){return lostByDate[d];});
 
-    var el=document.getElementById('edTrendChart');
-    if(!el) return;
-    if(edTrendChartObj){ edTrendChartObj.destroy(); }
-    edTrendChartObj=new Chart(el, {
-      type:'line',
-      data:{ labels:labels, datasets:[
-        { label:'근무인원', data:mpData, borderColor:'#1B3A6B', backgroundColor:'transparent', tension:.3, yAxisID:'y' },
-        { label:'VOC', data:vocData, borderColor:'#00A99D', backgroundColor:'transparent', tension:.3, yAxisID:'y1' },
-        { label:'유실물', data:lostData, borderColor:'#D97706', backgroundColor:'transparent', tension:.3, yAxisID:'y1' }
-      ]},
-      options:{
-        responsive:true, maintainAspectRatio:false,
-        plugins:{ legend:{position:'bottom',labels:{boxWidth:8,font:{size:10}}} },
-        scales:{
-          y:{ position:'left', ticks:{font:{size:9}} },
-          y1:{ position:'right', grid:{drawOnChartArea:false}, ticks:{font:{size:9}} },
-          x:{ ticks:{font:{size:9}} }
-        },
-        animation:{duration:400}
-      }
-    });
+    edDrawSvgTrend(labels, [
+      {name:'근무인원', data:mpData, color:'#1B3A6B'},
+      {name:'VOC', data:vocData, color:'#00A99D'},
+      {name:'유실물', data:lostData, color:'#D97706'}
+    ]);
   }catch(e){ console.log('추세 로드 오류:', e); }
+}
+
+// SVG 기반 다중 라인 트렌드 차트 (외부 라이브러리 없이 자체 구현)
+function edDrawSvgTrend(labels, series){
+  var host=document.getElementById('edTrendChart');
+  var legendHost=document.getElementById('edTrendLegend');
+  if(!host) return;
+  var W=host.clientWidth||600, H=200, padL=30, padR=10, padT=10, padB=22;
+  var innerW=W-padL-padR, innerH=H-padT-padB;
+  var allVals=[].concat.apply([],series.map(function(s){return s.data;}));
+  var maxV=Math.max.apply(null, allVals.concat([1]));
+  var n=labels.length;
+  function xAt(i){ return padL + (n<=1?0:(innerW*i/(n-1))); }
+  function yAt(v){ return padT + innerH - (innerH*v/maxV); }
+
+  var svg='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:'+H+'px;display:block">';
+  // 격자선
+  for(var g=0;g<=4;g++){
+    var gy=padT+innerH*g/4;
+    svg+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(W-padR)+'" y2="'+gy+'" stroke="#EEF1F0" stroke-width="1"/>';
+    svg+='<text x="'+(padL-6)+'" y="'+(gy+3)+'" font-size="9" fill="#9CA3AF" text-anchor="end">'+Math.round(maxV*(4-g)/4)+'</text>';
+  }
+  // x축 라벨 (너무 많으면 일부만)
+  var step=Math.ceil(n/7);
+  for(var i=0;i<n;i+=step){
+    svg+='<text x="'+xAt(i)+'" y="'+(H-6)+'" font-size="9" fill="#9CA3AF" text-anchor="middle">'+labels[i]+'</text>';
+  }
+  // 라인들
+  series.forEach(function(s){
+    var pts=s.data.map(function(v,i){ return xAt(i)+','+yAt(v); }).join(' ');
+    svg+='<polyline points="'+pts+'" fill="none" stroke="'+s.color+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    s.data.forEach(function(v,i){
+      svg+='<circle cx="'+xAt(i)+'" cy="'+yAt(v)+'" r="2.5" fill="'+s.color+'"/>';
+    });
+  });
+  svg+='</svg>';
+  host.innerHTML=svg;
+
+  if(legendHost){
+    legendHost.innerHTML=series.map(function(s){
+      return '<span style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--g5)">'
+        +'<span style="width:8px;height:8px;border-radius:2px;background:'+s.color+';display:inline-block"></span>'+s.name+'</span>';
+    }).join('');
+  }
 }
 
 function goHomeMain(){
@@ -3552,6 +3561,10 @@ function go(name){
       el.style.display=(s===id)?'block':'none';
     }
   });
+  // PC 화면에서 하단탭바 폭을 현재 활성 화면의 프레임 폭에 맞춰 동기화
+  var tbWidthMap={sStatsDash:'1200px', sExecDash:'1280px'};
+  var gtb=document.getElementById('globalTabbar');
+  if(gtb) gtb.style.maxWidth=tbWidthMap[id]||'720px';
   window.scrollTo(0,0);
   // 화면 진입 시 자동 새로고침
   if(name==='mp'){
