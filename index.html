@@ -25,6 +25,13 @@
   --font:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;
 }
 body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px;line-height:1.5;min-height:100vh;zoom:1.16}
+@media (min-width:768px){
+  body{background:#DCE1E6}
+  .scr{max-width:720px;margin:0 auto;min-height:100vh;background:var(--g1);box-shadow:0 0 40px rgba(0,0,0,.12);position:relative}
+  .mh-tabbar,#hoAlertBanner{max-width:720px;margin:0 auto;left:50%;transform:translateX(-50%);right:auto;width:100%}
+  #mhPanelDash .stat-row{gap:12px}
+  #monthlyStatsSec>div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:repeat(4,1fr)!important}
+}
 
 /* ─ 화면 ─ */
 .scr{display:none;padding-bottom:60px}
@@ -513,6 +520,12 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div class="mh-menu-title">전체 메뉴</div>
   </div>
   <div class="menu-grid">
+    <button class="menu-btn" onclick="goStatsDash()">
+      <span class="menu-icon">📊</span>
+      <div class="menu-title">통계 대시보드</div>
+      <div class="menu-desc">일간·월간·연간 운영 통계 한눈에</div>
+      <span class="menu-arrow">보기 →</span>
+    </button>
     <button class="menu-btn" onclick="go('mp')">
       <span class="menu-icon">👥</span>
       <div class="menu-title">인력현황</div>
@@ -1041,6 +1054,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div style="display:flex;align-items:center;gap:8px">
         <div class="sec-lbl" id="msSecTitle" style="padding:0">📊 월간 통계</div>
         <div style="display:flex;background:var(--g2);border-radius:20px;padding:2px">
+          <div id="msModeD" onclick="msSetMode('day')" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;color:var(--g4)">일간</div>
           <div id="msModeM" onclick="msSetMode('month')" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;background:white;color:var(--teal2);box-shadow:0 1px 3px rgba(0,0,0,.12)">월간</div>
           <div id="msModeY" onclick="msSetMode('year')" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;color:var(--g4)">연간</div>
         </div>
@@ -3226,6 +3240,13 @@ function hideM(id){document.getElementById(id).classList.remove('on');}
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
 const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sSafety','sManual','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice'];
+function goStatsDash(){
+  goHomeMain();
+  setTimeout(function(){
+    var sec=document.getElementById('monthlyStatsSec');
+    if(sec) sec.scrollIntoView({behavior:'smooth',block:'start'});
+  }, 150);
+}
 function goHomeMain(){
   go('main');
   setTimeout(function(){
@@ -12091,8 +12112,8 @@ async function setMgrAtt(status){
 
 
 // ═══ 월간/연간 통계 (메인 패널2 · 실시간 집계) ═══
-var msMode='month'; // 'month' | 'year'
-var msY=0, msM=0;
+var msMode='month'; // 'day' | 'month' | 'year'
+var msY=0, msM=0, msD=0;
 var msStats=null;
 var msOpenKey=null;
 var msLoading=false;
@@ -12113,13 +12134,14 @@ function msKstHourBucket(iso){
     return Math.floor(h/6); // 0:새벽 1:오전 2:오후 3:야간
   }catch(e){ return -1; }
 }
-function msPrevWord(){ return msMode==='year'?'전년':'전월'; }
-function msPeriodLabel(){ return msMode==='year'?(msY+'년'):(msM+'월'); }
+function msPrevWord(){ return msMode==='year'?'전년':(msMode==='day'?'전일':'전월'); }
+function msPeriodLabel(){ return msMode==='year'?(msY+'년'):(msMode==='day'?(msD+'일'):(msM+'월')); }
 
 // ── 기간 피커 ──
 var msPickerTmpY=0, msPickerTmpM=0;
 
 function msPickerOpen(){
+  if(msMode==='day'){ toast('◀ ▶ 버튼으로 날짜를 이동하세요'); return; }
   var now=msNowKst();
   msPickerTmpY=msY||now.getUTCFullYear();
   msPickerTmpM=msM||(now.getUTCMonth()+1);
@@ -12177,24 +12199,32 @@ function msPickerApply(){
 function msSetMode(m){
   if(msLoading||msMode===m) return;
   msMode=m;
-  var bm=document.getElementById('msModeM'), by=document.getElementById('msModeY');
+  if(m==='day'&&!msD){ var n=msNowKst(); msY=n.getUTCFullYear(); msM=n.getUTCMonth()+1; msD=n.getUTCDate(); }
+  var bd=document.getElementById('msModeD'), bm=document.getElementById('msModeM'), by=document.getElementById('msModeY');
   var onS='background:white;color:var(--teal2);box-shadow:0 1px 3px rgba(0,0,0,.12)';
   var offS='background:transparent;color:var(--g4);box-shadow:none';
   var base='padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;';
+  if(bd) bd.style.cssText=base+(m==='day'?onS:offS);
   if(bm) bm.style.cssText=base+(m==='month'?onS:offS);
   if(by) by.style.cssText=base+(m==='year'?onS:offS);
   var tt=document.getElementById('msSecTitle');
-  if(tt) tt.textContent=m==='year'?'📊 연간 통계':'📊 월간 통계';
+  if(tt) tt.textContent=m==='year'?'📊 연간 통계':(m==='day'?'📊 일간 통계':'📊 월간 통계');
   loadMonthlyStats();
 }
 
 function msMove(dir){
   if(msLoading) return;
-  var now=msNowKst(), cy=now.getUTCFullYear(), cm=now.getUTCMonth()+1;
+  var now=msNowKst(), cy=now.getUTCFullYear(), cm=now.getUTCMonth()+1, cd=now.getUTCDate();
   if(msMode==='year'){
     var ny=msY+dir;
     if(ny>cy) return;
     msY=ny;
+  }else if(msMode==='day'){
+    var cur=new Date(Date.UTC(msY,msM-1,msD));
+    cur.setUTCDate(cur.getUTCDate()+dir);
+    var ny2=cur.getUTCFullYear(), nm2=cur.getUTCMonth()+1, nd2=cur.getUTCDate();
+    if(ny2>cy||(ny2===cy&&nm2>cm)||(ny2===cy&&nm2===cm&&nd2>cd)) return;
+    msY=ny2; msM=nm2; msD=nd2;
   }else{
     var y=msY, m=msM+dir;
     if(m<1){ m=12; y--; }
@@ -12225,9 +12255,10 @@ async function loadMonthlyStats(){
   if(!lbl) return;
   var now=msNowKst();
   if(!msY){ msY=now.getUTCFullYear(); msM=now.getUTCMonth()+1; }
-  lbl.textContent=msMode==='year'?(msY+'년'):(msY+'년 '+msM+'월');
+  if(msMode==='day'&&!msD) msD=now.getUTCDate();
+  lbl.textContent=msMode==='year'?(msY+'년'):(msMode==='day'?(msY+'년 '+msM+'월 '+msD+'일'):(msY+'년 '+msM+'월'));
   var nb=document.getElementById('msNextBtn');
-  var atNow=msMode==='year'?(msY===now.getUTCFullYear()):(msY===now.getUTCFullYear()&&msM===now.getUTCMonth()+1);
+  var atNow=msMode==='year'?(msY===now.getUTCFullYear()):(msMode==='day'?(msY===now.getUTCFullYear()&&msM===now.getUTCMonth()+1&&msD===now.getUTCDate()):(msY===now.getUTCFullYear()&&msM===now.getUTCMonth()+1));
   if(nb) nb.style.opacity=atNow?'0.3':'1';
   if(msLoading) return;
   msLoading=true;
@@ -12236,6 +12267,11 @@ async function loadMonthlyStats(){
     if(msMode==='year'){
       curKey=msY+'-'; prevKey=(msY-1)+'-';
       dFrom=(msY-1)+'-01-01'; dTo=msY+'-12-31';
+    }else if(msMode==='day'){
+      curKey=msY+'-'+msPad(msM)+'-'+msPad(msD);
+      var prevD=new Date(Date.UTC(msY,msM-1,msD)); prevD.setUTCDate(prevD.getUTCDate()-1);
+      prevKey=prevD.getUTCFullYear()+'-'+msPad(prevD.getUTCMonth()+1)+'-'+msPad(prevD.getUTCDate());
+      dFrom=prevKey; dTo=curKey;
     }else{
       var py=msY, pm=msM-1; if(pm<1){ pm=12; py--; }
       curKey=msY+'-'+msPad(msM); prevKey=py+'-'+msPad(pm);
