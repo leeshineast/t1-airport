@@ -31,7 +31,16 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   .mh-tabbar,#hoAlertBanner{max-width:720px;margin:0 auto;left:50%;transform:translateX(-50%);right:auto;width:100%}
   #mhPanelDash .stat-row{gap:12px}
   #sStatsDash.scr{max-width:1200px}
-  #sStatsDash #monthlyStatsSec>div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:repeat(4,1fr)!important}
+  #sStatsDash #monthlyStatsSec>div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:repeat(6,1fr)!important;gap:10px!important}
+  #sStatsDash .ms-card{padding:11px 10px!important}
+  #sStatsDash .ms-card [id^="msV_"]{font-size:20px!important}
+  #sStatsDash .ms-bargroup{display:flex;align-items:flex-end;gap:16px;padding:8px 4px 12px;overflow-x:auto}
+  #sStatsDash .ms-bar{flex:0 0 auto;width:60px;margin-bottom:0!important;display:flex;flex-direction:column;align-items:center}
+  #sStatsDash .ms-bar-track{order:1;width:26px;height:150px;margin:0 auto 8px;display:flex;flex-direction:column;justify-content:flex-end;background:var(--g1);border-radius:4px 4px 2px 2px}
+  #sStatsDash .ms-bar-fill{width:100%;height:var(--pct);border-radius:4px 4px 2px 2px}
+  #sStatsDash .ms-bar-labelrow{order:2;display:flex;flex-direction:column;align-items:center;gap:2px;width:100%;text-align:center;margin-bottom:0!important}
+  #sStatsDash .ms-bar-val{font-size:12px}
+  #sStatsDash .ms-bar-label{font-size:10px;white-space:nowrap}
 }
 
 /* ─ 화면 ─ */
@@ -146,6 +155,10 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 .chip-dot{width:5px;height:5px;border-radius:50%;background:currentColor;flex-shrink:0}
 .chip-ok{background:var(--success-bg);color:var(--success)}
 .chip-warn{background:var(--warn-bg);color:var(--warn)}
+.ms-bar-fill{display:block;height:100%;width:var(--pct)}
+.ms-donut{width:30px;height:30px;border-radius:50%;flex-shrink:0;position:relative;display:flex;align-items:center;justify-content:center}
+.ms-donut::before{content:'';position:absolute;inset:4px;background:white;border-radius:50%}
+.ms-donut-txt{position:relative;font-size:7px;font-weight:800;color:var(--g6);z-index:1}
 .ho-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 8px;border-radius:8px;font-size:11px;font-weight:700;border-left:4px solid transparent}
 .ho-badge-am{border-left-color:var(--navy)}
 .ho-badge-pm{border-left-color:var(--teal2)}
@@ -481,7 +494,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <div class="mh-tab-item on" onclick="goHomeMain()"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg></span><span class="mh-tab-lb">홈</span></div>
   <div class="mh-tab-item" onclick="go('mp')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="mh-tab-lb">인력현황</span></div>
   <div class="mh-tab-item" onclick="go('ho')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span><span class="mh-tab-lb">인수인계</span></div>
-  <div class="mh-tab-item" id="gcTabItem" onclick="go('groupchat')"><span class="mh-tab-ic" style="position:relative"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z"/></svg><span id="gcTabBadge" style="display:none;position:absolute;top:-5px;right:-9px;background:var(--danger);color:white;border-radius:50%;min-width:15px;height:15px;padding:0 3px;font-size:9px;font-weight:800;line-height:15px;text-align:center;box-sizing:border-box"></span></span><span class="mh-tab-lb">채팅</span></div>
+  <div class="mh-tab-item" id="gcTabItem" onclick="goStatsDash()"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15v3"/><path d="M11 11v7"/><path d="M15 8v10"/><path d="M19 5v13"/></svg></span><span class="mh-tab-lb">통계</span></div>
 </div>
 <!-- ══ 미확인 인계 알림 배너 ══ -->
 <div id="hoAlertBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;max-width:480px;margin:0 auto;background:linear-gradient(135deg,#1E3A5F,#0F5132);color:white;padding:13px 16px;box-shadow:0 4px 16px rgba(0,0,0,.3);cursor:pointer" onclick="hoAlertGo()">
@@ -1394,42 +1407,42 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <!-- 인력현황 -->
       <div class="ms-card" onclick="msToggle('mp')" id="msCard_mp" style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative;overflow:hidden">
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--teal2))"></div>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:8px;background:var(--teal-bg);display:flex;align-items:center;justify-content:center;font-size:12px">👥</span><span style="font-size:10px;font-weight:700;color:var(--g5)">인력 일평균</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px"><span style="display:flex;align-items:center;gap:6px"><span style="width:24px;height:24px;border-radius:8px;background:var(--teal-bg);display:flex;align-items:center;justify-content:center;font-size:12px">👥</span><span style="font-size:10px;font-weight:700;color:var(--g5)">인력 일평균</span></span><div class="ms-donut" id="msDonut_mp"></div></div>
         <div style="display:flex;align-items:baseline;gap:3px"><span id="msV_mp" style="font-size:26px;font-weight:900;color:var(--teal2);line-height:1">-</span><span style="font-size:10px;color:var(--g4)">명</span></div>
         <div id="msD_mp" style="font-size:9px;font-weight:700;margin-top:5px;color:var(--g4)">&nbsp;</div>
       </div>
       <!-- 인수인계 -->
       <div class="ms-card" onclick="msToggle('ho')" id="msCard_ho" style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative;overflow:hidden">
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--navy),#3E6BB5)"></div>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:8px;background:var(--navy-bg);display:flex;align-items:center;justify-content:center;font-size:12px">🔄</span><span style="font-size:10px;font-weight:700;color:var(--g5)">인수인계</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px"><span style="display:flex;align-items:center;gap:6px"><span style="width:24px;height:24px;border-radius:8px;background:var(--navy-bg);display:flex;align-items:center;justify-content:center;font-size:12px">🔄</span><span style="font-size:10px;font-weight:700;color:var(--g5)">인수인계</span></span><div class="ms-donut" id="msDonut_ho"></div></div>
         <div style="display:flex;align-items:baseline;gap:3px"><span id="msV_ho" style="font-size:26px;font-weight:900;color:var(--navy);line-height:1">-</span><span style="font-size:10px;color:var(--g4)">건</span></div>
         <div id="msD_ho" style="font-size:9px;font-weight:700;margin-top:5px;color:var(--g4)">&nbsp;</div>
       </div>
       <!-- 습득물 -->
       <div class="ms-card" onclick="msToggle('lost')" id="msCard_lost" style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative;overflow:hidden">
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--warn),#E8A83E)"></div>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:8px;background:var(--warn-bg);display:flex;align-items:center;justify-content:center;font-size:12px">🧳</span><span style="font-size:10px;font-weight:700;color:var(--g5)">습득물</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px"><span style="display:flex;align-items:center;gap:6px"><span style="width:24px;height:24px;border-radius:8px;background:var(--warn-bg);display:flex;align-items:center;justify-content:center;font-size:12px">🧳</span><span style="font-size:10px;font-weight:700;color:var(--g5)">습득물</span></span><div class="ms-donut" id="msDonut_lost"></div></div>
         <div style="display:flex;align-items:baseline;gap:3px"><span id="msV_lost" style="font-size:26px;font-weight:900;color:var(--warn);line-height:1">-</span><span style="font-size:10px;color:var(--g4)">건</span></div>
         <div id="msD_lost" style="font-size:9px;font-weight:700;margin-top:5px;color:var(--g4)">&nbsp;</div>
       </div>
       <!-- 안전사고 -->
       <div class="ms-card" onclick="msToggle('acc')" id="msCard_acc" style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative;overflow:hidden">
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--danger),#F07B7B)"></div>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:8px;background:var(--danger-bg);display:flex;align-items:center;justify-content:center;font-size:12px">⚠️</span><span style="font-size:10px;font-weight:700;color:var(--g5)">안전사고</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px"><span style="display:flex;align-items:center;gap:6px"><span style="width:24px;height:24px;border-radius:8px;background:var(--danger-bg);display:flex;align-items:center;justify-content:center;font-size:12px">⚠️</span><span style="font-size:10px;font-weight:700;color:var(--g5)">안전사고</span></span><div class="ms-donut" id="msDonut_acc"></div></div>
         <div style="display:flex;align-items:baseline;gap:3px"><span id="msV_acc" style="font-size:26px;font-weight:900;color:var(--danger);line-height:1">-</span><span style="font-size:10px;color:var(--g4)">건</span></div>
         <div id="msD_acc" style="font-size:9px;font-weight:700;margin-top:5px;color:var(--g4)">&nbsp;</div>
       </div>
       <!-- 민원 -->
       <div class="ms-card" onclick="msToggle('voc')" id="msCard_voc" style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative;overflow:hidden">
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,#6B21A8,#9D5BD2)"></div>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:8px;background:#F3E8FF;display:flex;align-items:center;justify-content:center;font-size:12px">📞</span><span style="font-size:10px;font-weight:700;color:var(--g5)">민원</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px"><span style="display:flex;align-items:center;gap:6px"><span style="width:24px;height:24px;border-radius:8px;background:#F3E8FF;display:flex;align-items:center;justify-content:center;font-size:12px">📞</span><span style="font-size:10px;font-weight:700;color:var(--g5)">민원</span></span><div class="ms-donut" id="msDonut_voc"></div></div>
         <div style="display:flex;align-items:baseline;gap:3px"><span id="msV_voc" style="font-size:26px;font-weight:900;color:#6B21A8;line-height:1">-</span><span style="font-size:10px;color:var(--g4)">건</span></div>
         <div id="msD_voc" style="font-size:9px;font-weight:700;margin-top:5px;color:var(--g4)">&nbsp;</div>
       </div>
       <!-- 폐기물 -->
       <div class="ms-card" onclick="msToggle('waste')" id="msCard_waste" style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative;overflow:hidden">
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--success),#5BBF8A)"></div>
-        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px"><span style="width:24px;height:24px;border-radius:8px;background:var(--success-bg);display:flex;align-items:center;justify-content:center;font-size:12px">♻️</span><span style="font-size:10px;font-weight:700;color:var(--g5)">폐기물</span></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px"><span style="display:flex;align-items:center;gap:6px"><span style="width:24px;height:24px;border-radius:8px;background:var(--success-bg);display:flex;align-items:center;justify-content:center;font-size:12px">♻️</span><span style="font-size:10px;font-weight:700;color:var(--g5)">폐기물</span></span><div class="ms-donut" id="msDonut_waste"></div></div>
         <div style="display:flex;align-items:baseline;gap:3px"><span id="msV_waste" style="font-size:26px;font-weight:900;color:var(--success);line-height:1">-</span><span style="font-size:10px;color:var(--g4)">톤</span></div>
         <div id="msD_waste" style="font-size:9px;font-weight:700;margin-top:5px;color:var(--g4)">&nbsp;</div>
       </div>
@@ -12648,6 +12661,13 @@ function msDeltaBadge(cur, prev, goodWhenDown, unit){
   return '<span style="color:'+col+'">'+(up?'▲':'▼')+' '+Math.abs(diff)+unit+'</span><span style="color:var(--g4)"> '+msPrevWord()+'대비</span>';
 }
 
+function msSetDonut(id, pct, color){
+  var el=document.getElementById(id);
+  if(!el) return;
+  var p=Math.max(0,Math.min(100,pct));
+  el.style.background='conic-gradient('+color+' calc('+p+'*1%),var(--g2) 0)';
+  el.innerHTML='<span class="ms-donut-txt">'+p+'%</span>';
+}
 function msRenderCards(){
   if(!msStats) return;
   var c=msStats.cur, p=msStats.prev;
@@ -12655,18 +12675,28 @@ function msRenderCards(){
   var mpAvg=msMpAvg(c.mp), mpAvgP=msMpAvg(p.mp);
   el=document.getElementById('msV_mp'); if(el) el.textContent=mpAvg||'0';
   el=document.getElementById('msD_mp'); if(el) el.innerHTML=msDeltaBadge(mpAvg,mpAvgP,false,'명');
+  msSetDonut('msDonut_mp', mpAvgP?Math.round(mpAvg/mpAvgP*100):(mpAvg?100:0), 'var(--teal2)');
+
   el=document.getElementById('msV_ho'); if(el) el.textContent=c.ho.total;
   el=document.getElementById('msD_ho'); if(el) el.innerHTML=msDeltaBadge(c.ho.total,p.ho.total,false,'건');
+  msSetDonut('msDonut_ho', c.ho.total?Math.round(c.ho.confirmed/c.ho.total*100):0, 'var(--navy)');
+
   el=document.getElementById('msV_lost'); if(el) el.textContent=c.lost.total;
   el=document.getElementById('msD_lost'); if(el){
     var rate=c.lost.total?Math.round(c.lost.done/c.lost.total*100):0;
     el.innerHTML='<span style="color:var(--warn)">반환율 '+rate+'%</span>';
   }
+  msSetDonut('msDonut_lost', c.lost.total?Math.round(c.lost.done/c.lost.total*100):0, 'var(--warn)');
+
   el=document.getElementById('msV_acc'); if(el) el.textContent=c.acc.total;
   el=document.getElementById('msD_acc'); if(el) el.innerHTML=msDeltaBadge(c.acc.total,p.acc.total,true,'건');
+  msSetDonut('msDonut_acc', p.acc.total?Math.round(c.acc.total/p.acc.total*100):(c.acc.total?100:0), 'var(--danger)');
+
   // 민원 (적을수록 좋음)
   el=document.getElementById('msV_voc'); if(el) el.textContent=c.voc.total;
   el=document.getElementById('msD_voc'); if(el) el.innerHTML=msDeltaBadge(c.voc.total,p.voc.total,true,'건');
+  msSetDonut('msDonut_voc', p.voc.total?Math.round(c.voc.total/p.voc.total*100):(c.voc.total?100:0), '#6B21A8');
+
   // 폐기물 (총 처리량 톤 · 재활용률 표시)
   var wTot=Math.round((c.waste.inc+c.waste.rec+c.waste.misc)*10)/10;
   el=document.getElementById('msV_waste'); if(el) el.textContent=wTot;
@@ -12675,11 +12705,18 @@ function msRenderCards(){
     var wRate=wAll?Math.round(c.waste.rec/wAll*100):0;
     el.innerHTML='<span style="color:var(--success)">재활용률 '+wRate+'%</span>';
   }
+  var wAll2=c.waste.inc+c.waste.rec+c.waste.misc;
+  msSetDonut('msDonut_waste', wAll2?Math.round(c.waste.rec/wAll2*100):0, 'var(--success)');
 }
 
 function msBar(label, val, max, color, unit){
   var w=max?Math.round(val/max*100):0;
-  return '<div style="margin-bottom:7px"><div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px"><span style="color:var(--g5);font-weight:600">'+label+'</span><span style="font-weight:800;color:var(--g6)">'+val+(unit||'')+'</span></div><div style="height:6px;background:var(--g1);border-radius:3px;overflow:hidden"><div style="height:100%;width:'+w+'%;background:'+color+';border-radius:3px"></div></div></div>';
+  return '<div class="ms-bar" style="margin-bottom:7px">'
+    +'<div class="ms-bar-labelrow" style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:3px">'
+    +'<span class="ms-bar-label" style="color:var(--g5);font-weight:600">'+label+'</span>'
+    +'<span class="ms-bar-val" style="font-weight:800;color:var(--g6)">'+val+(unit||'')+'</span></div>'
+    +'<div class="ms-bar-track" style="height:6px;background:var(--g1);border-radius:3px;overflow:hidden">'
+    +'<div class="ms-bar-fill" style="border-radius:3px;background:'+color+';--pct:'+w+'%"></div></div></div>';
 }
 function msRow(label, val){
   return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--g1);font-size:11px"><span style="color:var(--g5)">'+label+'</span><span style="font-weight:800;color:var(--g6)">'+val+'</span></div>';
@@ -12715,12 +12752,12 @@ function msTopBars(obj, n, color, unit){
   if(!keys.length) return '<div style="font-size:10px;color:var(--g4);padding:4px 0">데이터 없음</div>';
   var mx=obj[keys[0]], h='';
   keys.forEach(function(k){ h+=msBar(k, obj[k], mx, color, unit); });
-  return h;
+  return '<div class="ms-bargroup">'+h+'</div>';
 }
 function msHourBars(arr, color){
   var mx=Math.max.apply(null, arr.concat([1])), h='';
   for(var i=0;i<4;i++){ h+=msBar(MS_HOURS[i], arr[i], mx, color, '건'); }
-  return h;
+  return '<div class="ms-bargroup">'+h+'</div>';
 }
 
 function msToggle(key){
@@ -12764,7 +12801,9 @@ function msRenderDetail(key){
     h+=msSub('층별 일평균 (오전·오후)');
     var favg=c.mp.floorSum.map(function(v){ return fDays?Math.round(v/fDays):0; });
     var fmx=Math.max.apply(null, favg.concat([1]));
-    for(var i=0;i<7;i++){ h+=msBar(MS_FLOORS[i], favg[i], fmx, 'linear-gradient(90deg,var(--teal),var(--teal2))', '명'); }
+    var floorBarsHtml='';
+    for(var fi=0;fi<7;fi++){ floorBarsHtml+=msBar(MS_FLOORS[fi], favg[fi], fmx, 'linear-gradient(90deg,var(--teal),var(--teal2))', '명'); }
+    h+='<div class="ms-bargroup">'+floorBarsHtml+'</div>';
     // 시간대별 인원 일평균 (구간별 카드) - shiftDays 기준 정확한 평균
     h+=msSub('시간대별 인원 일평균');
     var amDays=Object.keys(c.mp.shiftDays['오전']||{}).length||1;
@@ -12855,14 +12894,16 @@ function msRenderDetail(key){
     h+=msRow('미확인', (c.ho.total-c.ho.confirmed)+'건');
     // 유형별
     h+=msSub('유형별 건수');
-    var tyKeys=['시설물','위험요소','장비','특이사항','기타'];
+    var tyKeys=['시설물','기타'];
     var tyMax=1; tyKeys.forEach(function(k2){ if(c.ho.byType[k2]>tyMax) tyMax=c.ho.byType[k2]; });
-    tyKeys.forEach(function(k2){ h+=msBar(k2, c.ho.byType[k2]||0, tyMax, 'linear-gradient(90deg,var(--navy),#3E6BB5)', '건'); });
+    var tyBarsHtml=''; tyKeys.forEach(function(k2){ tyBarsHtml+=msBar(k2, c.ho.byType[k2]||0, tyMax, 'linear-gradient(90deg,var(--navy),#3E6BB5)', '건'); });
+    h+='<div class="ms-bargroup">'+tyBarsHtml+'</div>';
     var teams=Object.keys(c.ho.byTeam).sort(function(a,b){ return c.ho.byTeam[b]-c.ho.byTeam[a]; }).slice(0,5);
     if(teams.length){
       h+=msSub('팀별 발생 TOP'+teams.length);
       var mx=c.ho.byTeam[teams[0]];
-      teams.forEach(function(t){ h+=msBar(t, c.ho.byTeam[t], mx, 'linear-gradient(90deg,var(--navy),#3E6BB5)', '건'); });
+      var teamBarsHtml=''; teams.forEach(function(t){ teamBarsHtml+=msBar(t, c.ho.byTeam[t], mx, 'linear-gradient(90deg,var(--navy),#3E6BB5)', '건'); });
+      h+='<div class="ms-bargroup">'+teamBarsHtml+'</div>';
     }
     if(c.ho.byType['시설물']){
       h+=msSub('🔧 시설물고장 · 신고구분별');
