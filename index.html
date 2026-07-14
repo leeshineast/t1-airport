@@ -38,7 +38,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   #sExecDash #edKpiGrid{grid-template-columns:repeat(8,1fr)!important}
   #sExecDash #edMainGrid{display:grid;grid-template-columns:1fr 1.6fr;gap:16px;align-items:start}
   #sExecDash #edDonutGrid{grid-template-columns:repeat(3,1fr)!important}
-  #sExecDash #edShiftRow{grid-template-columns:repeat(3,1fr)!important}
+  #sExecDash #edShiftRow{grid-template-columns:repeat(4,1fr)!important}
   #sExecDash #edHeatmap{grid-template-columns:repeat(7,1fr)!important}
   #sExecDash .ms-donut{width:52px!important;height:52px!important}
   #sStatsDash .ms-bargroup{display:flex;align-items:flex-end;gap:16px;padding:8px 4px 12px;overflow-x:auto}
@@ -1505,7 +1505,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div id="edMainCol2">
     <!-- 오전/오후/야간 + 층별 히트맵 -->
     <div class="sec-lbl" style="padding:2px 0 6px;font-size:10px">인력현황</div>
-    <div id="edShiftRow" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px"></div>
+    <div id="edShiftRow" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px"></div>
     <div style="margin-bottom:8px;background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px">
       <div id="edHeatmap" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px"></div>
     </div>
@@ -3347,7 +3347,7 @@ function goStatsDash(){
   loadMonthlyStats();
 }
 // ═══ 관리자 전용 현황판(Executive Dashboard) ═══
-var ED_TOTAL_STAFF=398; // 사업부 총원 (근무율 계산 기준)
+var ED_TOTAL_STAFF=395; // 사업부 총원 (근무율 계산 기준)
 var edTrendRange=7;
 var edMode='day'; // 'day' | 'month' | 'year'
 
@@ -3396,13 +3396,15 @@ async function loadExecDashboard(){
       msFetchAll(function(){ return sb.from('handover').select('id,confirmed').gte('created_at',tsFrom).lte('created_at',tsTo); }),
       msFetchAll(function(){ return sb.from('voc_data').select('id,status').gte('voc_date',dFrom).lte('voc_date',dTo); }),
       msFetchAll(function(){ return sb.from('lost_found').select('id,status').gte('found_date',tsFrom).lte('found_date',tsTo); }),
-      msFetchAll(function(){ return sb.from('safety_accidents').select('id').gte('occurred_at',tsFrom).lte('occurred_at',tsTo); })
+      msFetchAll(function(){ return sb.from('safety_accidents').select('id').gte('occurred_at',tsFrom).lte('occurred_at',tsTo); }),
+      msFetchAll(function(){ return sb.from('night_special_data').select('date,team_code,carpet,pbb,wax,stone,wood,restroom,es,toilet_daily,common_area,collection').gte('date',dFrom).lte('date',dTo); }),
+      msFetchAll(function(){ return sb.from('mgr_attendance').select('date,checked,status').gte('date',dFrom).lte('date',dTo); })
     ]);
-    var mpRows=(q[0]&&q[0].data)||[], hoRows=(q[1]&&q[1].data)||[], vocRows=(q[2]&&q[2].data)||[], lostRows=(q[3]&&q[3].data)||[], accRows=(q[4]&&q[4].data)||[];
+    var mpRows=(q[0]&&q[0].data)||[], hoRows=(q[1]&&q[1].data)||[], vocRows=(q[2]&&q[2].data)||[], lostRows=(q[3]&&q[3].data)||[], accRows=(q[4]&&q[4].data)||[], nsRows=(q[5]&&q[5].data)||[], mgrRows=(q[6]&&q[6].data)||[];
 
     // 인력 집계 (층별 7 + 교대별) — 기간 내 일수로 나눠 일평균 산출
     var floorSum=[0,0,0,0,0,0,0];
-    var shiftSum={'오전':0,'오후':0,'야간':0};
+    var shiftSum={'오전':0,'오후':0,'야간':0,'관리자':0};
     var daysSet={};
     mpRows.forEach(function(r){
       if(!r.team_code||r.team_code.indexOf('_')===0) return;
@@ -3418,11 +3420,25 @@ async function loadExecDashboard(){
       var sh=(r.shift==='오전'||r.shift==='오후'||r.shift==='야간')?r.shift:null;
       if(sh) shiftSum[sh]+=sum;
     });
+    // 야간(night_special_data)은 층별 그리드가 아니라 10개 작업항목 방식이므로, 인원 합계(오전/오후/야간 카드)에만 반영
+    var NS_COLS=['carpet','pbb','wax','stone','wood','restroom','es','toilet_daily','common_area','collection'];
+    nsRows.forEach(function(r){
+      var sum=0;
+      NS_COLS.forEach(function(c){ sum+=Number(r[c])||0; });
+      if(sum>0) daysSet[r.date]=1;
+      shiftSum['야간']+=sum;
+    });
+    // 관리자 출근 현황(mgr_attendance) — 체크된 인원 수를 근무인원에 합산
+    mgrRows.forEach(function(r){
+      if(!r.checked) return;
+      daysSet[r.date]=1;
+      shiftSum['관리자']++;
+    });
     var dayCount=Math.max(Object.keys(daysSet).length,1);
     var isAvg=edMode!=='day';
     var floorShow=floorSum.map(function(v){ return isAvg?Math.round(v/dayCount):v; });
     var shiftShow={}; Object.keys(shiftSum).forEach(function(k){ shiftShow[k]=isAvg?Math.round(shiftSum[k]/dayCount):shiftSum[k]; });
-    var totalStaffShow=shiftShow['오전']+shiftShow['오후']+shiftShow['야간'];
+    var totalStaffShow=shiftShow['오전']+shiftShow['오후']+shiftShow['야간']+shiftShow['관리자'];
     var attendRate=Math.round(totalStaffShow/ED_TOTAL_STAFF*100);
 
     var hoTotal=hoRows.length, hoConfirmed=hoRows.filter(function(r){return r.confirmed;}).length;
@@ -3461,15 +3477,16 @@ async function loadExecDashboard(){
       }).join('');
     }
 
-    // ── 오전/오후/야간 카드
-    var shiftColors={'오전':'#00A99D','오후':'#1A6B8A','야간':'#1E3A5F'};
+    // ── 오전/오후/야간/관리자 카드
+    var shiftColors={'오전':'#00A99D','오후':'#1A6B8A','야간':'#1E3A5F','관리자':'#8B5CF6'};
     var shHtml='';
-    ['오전','오후','야간'].forEach(function(s){
+    ['오전','오후','야간','관리자'].forEach(function(s){
       shHtml+='<div style="background:white;border-radius:var(--r2);padding:8px;border:1px solid var(--g2);text-align:center">'
-        +'<div style="font-size:9px;font-weight:700;color:var(--g5);margin-bottom:3px">'+s+'팀</div>'
+        +'<div style="font-size:9px;font-weight:700;color:var(--g5);margin-bottom:3px">'+(s==='관리자'?s:s+'팀')+'</div>'
         +'<div style="font-size:16px;font-weight:900;color:'+shiftColors[s]+'">'+shiftShow[s]+'<span style="font-size:8px;font-weight:600;color:var(--g4)">명</span></div></div>';
     });
     var sr=document.getElementById('edShiftRow'); if(sr) sr.innerHTML=shHtml;
+
 
     // ── 층별 히트맵
     var maxFloor=Math.max.apply(null, floorShow.concat([1]));
