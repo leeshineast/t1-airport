@@ -35,11 +35,12 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   #sStatsDash .ms-card{padding:11px 10px!important}
   #sStatsDash .ms-card [id^="msV_"]{font-size:20px!important}
   #sExecDash.scr{max-width:1280px}
-  #sExecDash #edKpiGrid{grid-template-columns:repeat(4,1fr)!important}
+  #sExecDash #edKpiGrid{grid-template-columns:repeat(8,1fr)!important}
+  #sExecDash #edMainGrid{display:grid;grid-template-columns:1fr 1.6fr;gap:16px;align-items:start}
   #sExecDash #edDonutGrid{grid-template-columns:repeat(3,1fr)!important}
   #sExecDash #edShiftRow{grid-template-columns:repeat(3,1fr)!important}
-  #sExecDash #edTodayGrid{grid-template-columns:repeat(4,1fr)!important}
   #sExecDash #edHeatmap{grid-template-columns:repeat(7,1fr)!important}
+  #sExecDash .ms-donut{width:52px!important;height:52px!important}
   #sStatsDash .ms-bargroup{display:flex;align-items:flex-end;gap:16px;padding:8px 4px 12px;overflow-x:auto}
   #sStatsDash .ms-bar{flex:0 0 auto;width:60px;margin-bottom:0!important;display:flex;flex-direction:column;align-items:center}
   #sStatsDash .ms-bar-track{order:1;width:26px;height:150px;margin:0 auto 8px;display:flex;flex-direction:column;justify-content:flex-end;background:var(--g1);border-radius:4px 4px 2px 2px}
@@ -1471,39 +1472,49 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <button class="back-hd" onclick="go('main')">← 메인</button>
     <div class="user-chip"><div class="u-av">👑</div><span>현황판</span></div>
   </div>
-  <div class="pg-hd"><div><h1>현황판</h1><small id="edUpdated">실시간 운영 현황 · 관리자 전용</small></div></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 13px 6px;flex-wrap:wrap;gap:6px">
+    <div><h1 style="font-size:16px;font-weight:900;color:var(--g7);margin:0">현황판</h1><small id="edUpdated" style="font-size:10px;color:var(--g4)">실시간 운영 현황</small></div>
+    <div style="display:flex;background:var(--g2);border-radius:20px;padding:2px">
+      <div id="edModeD" onclick="edSetMode('day')" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;background:white;color:var(--teal2);box-shadow:0 1px 3px rgba(0,0,0,.12)">일간</div>
+      <div id="edModeM" onclick="edSetMode('month')" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;color:var(--g4)">월간</div>
+      <div id="edModeY" onclick="edSetMode('year')" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;color:var(--g4)">연간</div>
+    </div>
+  </div>
 
   <!-- KPI 카드 -->
-  <div id="edKpiGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 13px 4px"></div>
+  <div id="edKpiGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 13px 4px"></div>
 
-  <!-- 완료율 도넛 -->
-  <div class="sec-lbl" style="padding:16px 13px 8px">운영 완료율</div>
-  <div id="edDonutGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 13px 4px"></div>
+  <div id="edMainGrid" style="padding:0 13px">
+    <div id="edMainCol1">
+    <!-- 완료율 도넛 -->
+    <div class="sec-lbl" style="padding:10px 0 6px;font-size:10px">운영 완료율</div>
+    <div id="edDonutGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px"></div>
+    </div>
 
-  <!-- 오전/오후/야간 + 층별 히트맵 -->
-  <div class="sec-lbl" style="padding:16px 13px 8px">실시간 인력현황</div>
-  <div id="edShiftRow" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 13px 10px"></div>
-  <div style="margin:0 13px 4px;background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:12px">
-    <div style="font-size:11px;font-weight:800;color:var(--g6);margin-bottom:8px">층별 인력 히트맵</div>
-    <div id="edHeatmap" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px"></div>
+    <div id="edMainCol2">
+    <!-- 오전/오후/야간 + 층별 히트맵 -->
+    <div class="sec-lbl" style="padding:2px 0 6px;font-size:10px">인력현황</div>
+    <div id="edShiftRow" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:6px"></div>
+    <div style="margin-bottom:8px;background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px">
+      <div id="edHeatmap" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px"></div>
+    </div>
+    </div>
   </div>
 
   <!-- 운영 추세 -->
-  <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 13px 8px">
-    <div class="sec-lbl" style="padding:0">운영 추세</div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:6px 13px 6px">
+    <div class="sec-lbl" style="padding:0;font-size:10px">운영 추세 (일별)</div>
     <div style="display:flex;background:var(--g2);border-radius:20px;padding:2px">
       <div id="edTrend7" onclick="edSetTrendRange(7)" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;background:white;color:var(--teal2);box-shadow:0 1px 3px rgba(0,0,0,.12)">7일</div>
       <div id="edTrend30" onclick="edSetTrendRange(30)" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;color:var(--g4)">30일</div>
     </div>
   </div>
-  <div style="margin:0 13px 10px;background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:12px 12px 6px">
-    <div id="edTrendChart" style="height:200px"></div>
-    <div id="edTrendLegend" style="display:flex;gap:14px;justify-content:center;padding:6px 0 2px"></div>
+  <div style="margin:0 13px 12px;background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:8px 10px 4px">
+    <div id="edTrendChart" style="height:130px"></div>
+    <div id="edTrendLegend" style="display:flex;gap:14px;justify-content:center;padding:4px 0 2px"></div>
   </div>
 
-  <!-- 오늘 운영현황 -->
-  <div class="sec-lbl" style="padding:6px 13px 8px">오늘 운영현황</div>
-  <div id="edTodayGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 13px 20px"></div>
+  <div style="height:8px"></div>
 </div>
 <div id="sHo" class="scr">
   <div class="app-hd">
@@ -3320,41 +3331,61 @@ function goStatsDash(){
 // ═══ 관리자 전용 현황판(Executive Dashboard) ═══
 var ED_TOTAL_STAFF=398; // 사업부 총원 (근무율 계산 기준)
 var edTrendRange=7;
+var edMode='day'; // 'day' | 'month' | 'year'
 
 function edKst(){ return new Date(Date.now()+9*3600000); }
 function edToday(){ return edKst().toISOString().slice(0,10); }
+function edPad(n){ return (n<10?'0':'')+n; }
 
 function edKpiCard(icon, label, value, unit, level){
   var colMap={ok:'var(--success)',warn:'var(--warn)',danger:'var(--danger)',neutral:'var(--navy)'};
   var bgMap={ok:'var(--success-bg)',warn:'var(--warn-bg)',danger:'var(--danger-bg)',neutral:'var(--navy-bg)'};
   var col=colMap[level]||colMap.neutral, bg=bgMap[level]||bgMap.neutral;
-  return '<div style="background:white;border-radius:var(--r2);padding:12px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">'
-    +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:7px">'
-    +'<span style="width:24px;height:24px;border-radius:8px;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:12px">'+icon+'</span>'
-    +'<span style="font-size:10px;font-weight:700;color:var(--g5)">'+label+'</span></div>'
-    +'<div style="font-size:22px;font-weight:900;color:'+col+';line-height:1">'+value+'<span style="font-size:10px;font-weight:600;color:var(--g4);margin-left:2px">'+(unit||'')+'</span></div>'
+  return '<div style="background:white;border-radius:var(--r2);padding:9px 10px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">'
+    +'<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">'
+    +'<span style="width:20px;height:20px;border-radius:7px;background:'+bg+';display:flex;align-items:center;justify-content:center;font-size:10px">'+icon+'</span>'
+    +'<span style="font-size:9px;font-weight:700;color:var(--g5)">'+label+'</span></div>'
+    +'<div style="font-size:19px;font-weight:900;color:'+col+';line-height:1">'+value+'<span style="font-size:9px;font-weight:600;color:var(--g4);margin-left:2px">'+(unit||'')+'</span></div>'
     +'</div>';
+}
+
+function edSetMode(m){
+  edMode=m;
+  var bd=document.getElementById('edModeD'), bm=document.getElementById('edModeM'), by=document.getElementById('edModeY');
+  var onS='background:white;color:var(--teal2);box-shadow:0 1px 3px rgba(0,0,0,.12)';
+  var offS='background:transparent;color:var(--g4);box-shadow:none';
+  var base='padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;';
+  if(bd) bd.style.cssText=base+(m==='day'?onS:offS);
+  if(bm) bm.style.cssText=base+(m==='month'?onS:offS);
+  if(by) by.style.cssText=base+(m==='year'?onS:offS);
+  loadExecDashboard();
 }
 
 async function loadExecDashboard(){
   if(!me||me.role!=='admin') return;
   try{
+    var now=edKst();
     var today=edToday();
-    var tsFrom=new Date(today+'T00:00:00+09:00').toISOString();
-    var tsTo=new Date(today+'T23:59:59+09:00').toISOString();
+    var dFrom, dTo=today, periodLabel;
+    if(edMode==='day'){ dFrom=today; periodLabel='오늘'; }
+    else if(edMode==='month'){ dFrom=now.getUTCFullYear()+'-'+edPad(now.getUTCMonth()+1)+'-01'; periodLabel='이번달'; }
+    else { dFrom=now.getUTCFullYear()+'-01-01'; periodLabel='올해'; }
+    var tsFrom=new Date(dFrom+'T00:00:00+09:00').toISOString();
+    var tsTo=new Date(dTo+'T23:59:59+09:00').toISOString();
 
     var q=await Promise.all([
-      sb.from('mp_data').select('shift,team_code,values').eq('date',today),
-      sb.from('handover').select('id,confirmed').gte('created_at',tsFrom).lte('created_at',tsTo),
-      sb.from('voc_data').select('id,status').gte('voc_date',today).lte('voc_date',today),
-      sb.from('lost_found').select('id,status').gte('found_date',tsFrom).lte('found_date',tsTo),
-      sb.from('safety_accidents').select('id').gte('occurred_at',tsFrom).lte('occurred_at',tsTo)
+      msFetchAll(function(){ return sb.from('mp_data').select('date,shift,team_code,values').gte('date',dFrom).lte('date',dTo); }),
+      msFetchAll(function(){ return sb.from('handover').select('id,confirmed').gte('created_at',tsFrom).lte('created_at',tsTo); }),
+      msFetchAll(function(){ return sb.from('voc_data').select('id,status').gte('voc_date',dFrom).lte('voc_date',dTo); }),
+      msFetchAll(function(){ return sb.from('lost_found').select('id,status').gte('found_date',tsFrom).lte('found_date',tsTo); }),
+      msFetchAll(function(){ return sb.from('safety_accidents').select('id').gte('occurred_at',tsFrom).lte('occurred_at',tsTo); })
     ]);
     var mpRows=(q[0]&&q[0].data)||[], hoRows=(q[1]&&q[1].data)||[], vocRows=(q[2]&&q[2].data)||[], lostRows=(q[3]&&q[3].data)||[], accRows=(q[4]&&q[4].data)||[];
 
-    // 인력 집계 (층별 7 + 교대별)
+    // 인력 집계 (층별 7 + 교대별) — 기간 내 일수로 나눠 일평균 산출
     var floorSum=[0,0,0,0,0,0,0];
     var shiftSum={'오전':0,'오후':0,'야간':0};
+    var daysSet={};
     mpRows.forEach(function(r){
       if(!r.team_code||r.team_code.indexOf('_')===0) return;
       var vals=r.values;
@@ -3365,11 +3396,16 @@ async function loadExecDashboard(){
         if(!vals[ri]||!Array.isArray(vals[ri])) continue;
         for(var ci=0;ci<7;ci++){ var v=Number(vals[ri][ci])||0; sum+=v; floorSum[ci]+=v; }
       }
+      if(sum>0) daysSet[r.date]=1;
       var sh=(r.shift==='오전'||r.shift==='오후'||r.shift==='야간')?r.shift:null;
       if(sh) shiftSum[sh]+=sum;
     });
-    var totalStaffToday=shiftSum['오전']+shiftSum['오후']+shiftSum['야간'];
-    var attendRate=Math.round(totalStaffToday/ED_TOTAL_STAFF*100);
+    var dayCount=Math.max(Object.keys(daysSet).length,1);
+    var isAvg=edMode!=='day';
+    var floorShow=floorSum.map(function(v){ return isAvg?Math.round(v/dayCount):v; });
+    var shiftShow={}; Object.keys(shiftSum).forEach(function(k){ shiftShow[k]=isAvg?Math.round(shiftSum[k]/dayCount):shiftSum[k]; });
+    var totalStaffShow=shiftShow['오전']+shiftShow['오후']+shiftShow['야간'];
+    var attendRate=Math.round(totalStaffShow/ED_TOTAL_STAFF*100);
 
     var hoTotal=hoRows.length, hoConfirmed=hoRows.filter(function(r){return r.confirmed;}).length;
     var hoRate=hoTotal?Math.round(hoConfirmed/hoTotal*100):100;
@@ -3382,17 +3418,18 @@ async function loadExecDashboard(){
 
     var accTotal=accRows.length;
     var issueTotal=vocTotal+lostTotal+accTotal;
+    var staffLabel=isAvg?(periodLabel+' 일평균 근무인원'):(periodLabel+' 근무인원');
 
     // ── KPI 카드
     var kpiHtml='';
-    kpiHtml+=edKpiCard('👥','총 근무인원', totalStaffToday, '명','neutral');
-    kpiHtml+=edKpiCard('📊','근무율', attendRate, '%', attendRate>=80?'ok':(attendRate>=60?'warn':'danger'));
-    kpiHtml+=edKpiCard('🔄','인수인계 완료율', hoRate, '%', hoRate>=90?'ok':(hoRate>=70?'warn':'danger'));
-    kpiHtml+=edKpiCard('📞','VOC 처리건수', vocTotal, '건','neutral');
-    kpiHtml+=edKpiCard('🧳','유실물 처리건수', lostTotal, '건','neutral');
-    kpiHtml+=edKpiCard('⚠️','안전사고', accTotal, '건', accTotal===0?'ok':'danger');
-    kpiHtml+=edKpiCard('❗','미확인 인계', hoTotal-hoConfirmed, '건', (hoTotal-hoConfirmed)===0?'ok':'warn');
-    kpiHtml+=edKpiCard('📌','오늘 특이사항', issueTotal, '건', issueTotal===0?'ok':'neutral');
+    kpiHtml+=edKpiCard('👥',staffLabel, totalStaffShow, '명','neutral');
+    kpiHtml+=edKpiCard('📊',periodLabel+' 근무율', attendRate, '%', attendRate>=80?'ok':(attendRate>=60?'warn':'danger'));
+    kpiHtml+=edKpiCard('🔄',periodLabel+' 인수인계 완료율', hoRate, '%', hoRate>=90?'ok':(hoRate>=70?'warn':'danger'));
+    kpiHtml+=edKpiCard('📞',periodLabel+' VOC 접수건수', vocTotal, '건','neutral');
+    kpiHtml+=edKpiCard('🧳',periodLabel+' 유실물 접수건수', lostTotal, '건','neutral');
+    kpiHtml+=edKpiCard('⚠️',periodLabel+' 안전사고', accTotal, '건', accTotal===0?'ok':'danger');
+    kpiHtml+=edKpiCard('❗','현재 미확인 인계', hoTotal-hoConfirmed, '건', (hoTotal-hoConfirmed)===0?'ok':'warn');
+    kpiHtml+=edKpiCard('📌',periodLabel+' 특이사항 합계', issueTotal, '건', issueTotal===0?'ok':'neutral');
     var kg=document.getElementById('edKpiGrid'); if(kg) kg.innerHTML=kpiHtml;
 
     // ── 완료율 도넛 (CSS conic-gradient — CDN 의존성 없음, 이미 검증된 컴포넌트)
@@ -3400,9 +3437,9 @@ async function loadExecDashboard(){
     if(dg){
       var donutDefs=[{k:'ho',lbl:'인수인계',pct:hoRate,color:'#1B3A6B'},{k:'voc',lbl:'VOC 처리',pct:vocRate,color:'#00A99D'},{k:'lost',lbl:'유실물',pct:lostRate,color:'#D97706'}];
       dg.innerHTML=donutDefs.map(function(d){
-        return '<div style="background:white;border-radius:var(--r2);padding:14px 10px;border:1px solid var(--g2);text-align:center;display:flex;flex-direction:column;align-items:center;gap:8px">'
-          +'<div class="ms-donut" style="width:64px;height:64px;background:conic-gradient('+d.color+' calc('+d.pct+'*1%),var(--g2) 0)"><span class="ms-donut-txt" style="font-size:13px">'+d.pct+'%</span></div>'
-          +'<div style="font-size:10px;font-weight:700;color:var(--g5)">'+d.lbl+'</div></div>';
+        return '<div style="background:white;border-radius:var(--r2);padding:10px 6px;border:1px solid var(--g2);text-align:center;display:flex;flex-direction:column;align-items:center;gap:6px">'
+          +'<div class="ms-donut" style="width:52px;height:52px;background:conic-gradient('+d.color+' calc('+d.pct+'*1%),var(--g2) 0)"><span class="ms-donut-txt" style="font-size:11px">'+d.pct+'%</span></div>'
+          +'<div style="font-size:9px;font-weight:700;color:var(--g5)">'+d.lbl+'</div></div>';
       }).join('');
     }
 
@@ -3410,36 +3447,28 @@ async function loadExecDashboard(){
     var shiftColors={'오전':'#00A99D','오후':'#1A6B8A','야간':'#1E3A5F'};
     var shHtml='';
     ['오전','오후','야간'].forEach(function(s){
-      shHtml+='<div style="background:white;border-radius:var(--r2);padding:11px;border:1px solid var(--g2);text-align:center">'
-        +'<div style="font-size:10px;font-weight:700;color:var(--g5);margin-bottom:4px">'+s+'팀</div>'
-        +'<div style="font-size:20px;font-weight:900;color:'+shiftColors[s]+'">'+shiftSum[s]+'<span style="font-size:9px;font-weight:600;color:var(--g4)">명</span></div></div>';
+      shHtml+='<div style="background:white;border-radius:var(--r2);padding:8px;border:1px solid var(--g2);text-align:center">'
+        +'<div style="font-size:9px;font-weight:700;color:var(--g5);margin-bottom:3px">'+s+'팀</div>'
+        +'<div style="font-size:16px;font-weight:900;color:'+shiftColors[s]+'">'+shiftShow[s]+'<span style="font-size:8px;font-weight:600;color:var(--g4)">명</span></div></div>';
     });
     var sr=document.getElementById('edShiftRow'); if(sr) sr.innerHTML=shHtml;
 
     // ── 층별 히트맵
-    var maxFloor=Math.max.apply(null, floorSum.concat([1]));
+    var maxFloor=Math.max.apply(null, floorShow.concat([1]));
     var heatHtml='';
     MS_FLOORS.forEach(function(fl,i){
-      var v=floorSum[i];
+      var v=floorShow[i];
       var intensity=maxFloor?v/maxFloor:0;
       var bg='rgba(0,169,157,'+(0.12+intensity*0.75).toFixed(2)+')';
       var txtCol=intensity>0.55?'white':'var(--g7)';
-      heatHtml+='<div style="background:'+bg+';border-radius:8px;padding:9px 4px;text-align:center">'
-        +'<div style="font-size:9px;font-weight:700;color:'+txtCol+';opacity:.85">'+fl+'</div>'
-        +'<div style="font-size:14px;font-weight:900;color:'+txtCol+'">'+v+'</div></div>';
+      heatHtml+='<div style="background:'+bg+';border-radius:8px;padding:6px 3px;text-align:center">'
+        +'<div style="font-size:8px;font-weight:700;color:'+txtCol+';opacity:.85">'+fl+'</div>'
+        +'<div style="font-size:12px;font-weight:900;color:'+txtCol+'">'+v+'</div></div>';
     });
     var hm=document.getElementById('edHeatmap'); if(hm) hm.innerHTML=heatHtml;
 
-    // ── 오늘 운영현황 카드
-    var todayHtml='';
-    todayHtml+=edKpiCard('📞','VOC', vocTotal, '건','neutral');
-    todayHtml+=edKpiCard('🧳','유실물', lostTotal, '건','neutral');
-    todayHtml+=edKpiCard('⚠️','안전 이상', accTotal, '건', accTotal===0?'ok':'danger');
-    todayHtml+=edKpiCard('❗','미확인 인계', hoTotal-hoConfirmed, '건', (hoTotal-hoConfirmed)===0?'ok':'warn');
-    var tg=document.getElementById('edTodayGrid'); if(tg) tg.innerHTML=todayHtml;
-
     var upd=document.getElementById('edUpdated');
-    if(upd) upd.textContent='실시간 운영 현황 · 업데이트 '+edKst().toTimeString().slice(0,5);
+    if(upd) upd.textContent=periodLabel+' 기준('+dFrom+(dFrom!==dTo?' ~ '+dTo:'')+') · 업데이트 '+edKst().toTimeString().slice(0,5);
 
     edLoadTrend(edTrendRange);
   }catch(e){ console.log('현황판 로드 오류:', e); }
