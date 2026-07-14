@@ -3759,8 +3759,10 @@ function hoSimilarity(a,b){
   return union? inter/union : 0;
 }
 function hoExtractRoomCode(str){
-  var m=(str||'').match(/[Rr]\s?\d{3,5}(-\d+)?/);
-  return m? m[0].replace(/\s+/g,'').toUpperCase() : null;
+  // 공백·점·하이픈을 제거한 뒤 매칭 (R3 505, RB 0079, 랜드R3.007 같은 실제 표기 편차 흡수)
+  var compact=(str||'').replace(/[\s.\-]/g,'');
+  var m=compact.match(/R[A-Za-z]?\d{3,6}/i);
+  return m? m[0].toUpperCase() : null;
 }
 // 최근 14일 내 유사한 장소·내용의 시설물고장 신고 탐색 (처리완료 포함 - 실제 수리여부는 알 수 없으므로)
 function findDupFacilityReport(locText, descText){
