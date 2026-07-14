@@ -1485,10 +1485,17 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   </div>
   <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 13px 6px;flex-wrap:wrap;gap:6px">
     <div><h1 style="font-size:16px;font-weight:900;color:var(--g7);margin:0">현황판</h1><small id="edUpdated" style="font-size:10px;color:var(--g4)">실시간 운영 현황</small></div>
-    <div style="display:flex;background:var(--g2);border-radius:20px;padding:2px">
-      <div id="edModeD" onclick="edSetMode('day')" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;background:white;color:var(--teal2);box-shadow:0 1px 3px rgba(0,0,0,.12)">일간</div>
-      <div id="edModeM" onclick="edSetMode('month')" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;color:var(--g4)">월간</div>
-      <div id="edModeY" onclick="edSetMode('year')" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;color:var(--g4)">연간</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="display:flex;align-items:center;gap:4px">
+        <span onclick="edMove(-1)" style="cursor:pointer;padding:3px 7px;border-radius:8px;background:var(--g1);font-size:12px;font-weight:800;color:var(--g5)">◀</span>
+        <span id="edPeriodLbl" style="font-size:11px;font-weight:800;color:var(--g6);min-width:74px;text-align:center">오늘</span>
+        <span id="edNextBtn" onclick="edMove(1)" style="cursor:pointer;padding:3px 7px;border-radius:8px;background:var(--g1);font-size:12px;font-weight:800;color:var(--g5)">▶</span>
+      </div>
+      <div style="display:flex;background:var(--g2);border-radius:20px;padding:2px">
+        <div id="edModeD" onclick="edSetMode('day')" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;background:white;color:var(--teal2);box-shadow:0 1px 3px rgba(0,0,0,.12)">일간</div>
+        <div id="edModeM" onclick="edSetMode('month')" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;color:var(--g4)">월간</div>
+        <div id="edModeY" onclick="edSetMode('year')" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;color:var(--g4)">연간</div>
+      </div>
     </div>
   </div>
 
@@ -1520,17 +1527,14 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div id="edTrend30" onclick="edSetTrendRange(30)" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;color:var(--g4)">30일</div>
     </div>
   </div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 13px 12px" id="edTrendWrap">
-    <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:8px 10px 4px">
-      <div style="font-size:9px;font-weight:700;color:var(--g5);margin-bottom:2px">👥 근무인원 추세</div>
-      <div id="edTrendChartMp" style="height:110px"></div>
-    </div>
-    <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:8px 10px 4px">
-      <div style="font-size:9px;font-weight:700;color:var(--g5);margin-bottom:2px">📞 VOC·🧳 유실물 추세</div>
-      <div id="edTrendChartEv" style="height:110px"></div>
-      <div id="edTrendLegend" style="display:flex;gap:12px;justify-content:center;padding:2px 0 2px"></div>
+  <div style="margin:0 13px 12px" id="edTrendWrap">
+    <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px 12px 6px">
+      <div style="font-size:10px;font-weight:700;color:var(--g5);margin-bottom:3px">📞 민원 · 🧳 습득물 추세</div>
+      <div id="edTrendChartEv" style="height:150px"></div>
+      <div id="edTrendLegend" style="display:flex;gap:12px;justify-content:center;padding:4px 0 2px"></div>
     </div>
   </div>
+
 
   <div style="height:8px"></div>
 </div>
@@ -3350,10 +3354,51 @@ function goStatsDash(){
 var ED_TOTAL_STAFF=395; // 사업부 총원 (근무율 계산 기준)
 var edTrendRange=7;
 var edMode='day'; // 'day' | 'month' | 'year'
+var edY=0, edM=0, edD=0;
 
 function edKst(){ return new Date(Date.now()+9*3600000); }
 function edToday(){ return edKst().toISOString().slice(0,10); }
 function edPad(n){ return (n<10?'0':'')+n; }
+function edLastDay(y,m){ return new Date(Date.UTC(y,m,0)).getUTCDate(); }
+function edInitDate(){
+  var n=edKst();
+  if(!edY){ edY=n.getUTCFullYear(); edM=n.getUTCMonth()+1; edD=n.getUTCDate(); }
+}
+function edUpdatePeriodLbl(){
+  var lbl=document.getElementById('edPeriodLbl');
+  if(!lbl) return;
+  var n=edKst();
+  var isToday=(edY===n.getUTCFullYear()&&edM===n.getUTCMonth()+1&&edD===n.getUTCDate());
+  var isThisMonth=(edY===n.getUTCFullYear()&&edM===n.getUTCMonth()+1);
+  var isThisYear=(edY===n.getUTCFullYear());
+  if(edMode==='day') lbl.textContent=isToday?'오늘':(edY+'.'+edPad(edM)+'.'+edPad(edD));
+  else if(edMode==='month') lbl.textContent=isThisMonth?'이번달':(edY+'년 '+edM+'월');
+  else lbl.textContent=isThisYear?'올해':(edY+'년');
+  var nb=document.getElementById('edNextBtn');
+  var atMax=edMode==='day'?isToday:(edMode==='month'?isThisMonth:isThisYear);
+  if(nb) nb.style.opacity=atMax?'0.3':'1';
+}
+function edMove(dir){
+  edInitDate();
+  var n=edKst(), cy=n.getUTCFullYear(), cm=n.getUTCMonth()+1, cd=n.getUTCDate();
+  if(edMode==='day'){
+    var cur=new Date(Date.UTC(edY,edM-1,edD));
+    cur.setUTCDate(cur.getUTCDate()+dir);
+    var ny=cur.getUTCFullYear(), nm=cur.getUTCMonth()+1, nd=cur.getUTCDate();
+    if(ny>cy||(ny===cy&&nm>cm)||(ny===cy&&nm===cm&&nd>cd)) return;
+    edY=ny; edM=nm; edD=nd;
+  }else if(edMode==='month'){
+    var y=edY, m=edM+dir;
+    if(m<1){ m=12; y--; } if(m>12){ m=1; y++; }
+    if(y>cy||(y===cy&&m>cm)) return;
+    edY=y; edM=m;
+  }else{
+    var ny2=edY+dir;
+    if(ny2>cy) return;
+    edY=ny2;
+  }
+  loadExecDashboard();
+}
 
 function edKpiCard(icon, label, value, unit, level){
   var colMap={ok:'var(--success)',warn:'var(--warn)',danger:'var(--danger)',neutral:'var(--navy)'};
@@ -3382,12 +3427,25 @@ function edSetMode(m){
 async function loadExecDashboard(){
   if(!me||me.role!=='admin') return;
   try{
-    var now=edKst();
+    edInitDate();
+    edUpdatePeriodLbl();
     var today=edToday();
-    var dFrom, dTo=today, periodLabel;
-    if(edMode==='day'){ dFrom=today; periodLabel='오늘'; }
-    else if(edMode==='month'){ dFrom=now.getUTCFullYear()+'-'+edPad(now.getUTCMonth()+1)+'-01'; periodLabel='이번달'; }
-    else { dFrom=now.getUTCFullYear()+'-01-01'; periodLabel='올해'; }
+    var dFrom, dTo, periodLabel;
+    if(edMode==='day'){
+      dFrom=dTo=edY+'-'+edPad(edM)+'-'+edPad(edD);
+      periodLabel=(dFrom===today)?'오늘':dFrom;
+    }else if(edMode==='month'){
+      dFrom=edY+'-'+edPad(edM)+'-01';
+      var lastD=edLastDay(edY,edM);
+      var monthEnd=edY+'-'+edPad(edM)+'-'+edPad(lastD);
+      dTo=(monthEnd>today)?today:monthEnd;
+      periodLabel=(edY+'-'+edPad(edM)===today.slice(0,7))?'이번달':(edY+'년 '+edM+'월');
+    }else{
+      dFrom=edY+'-01-01';
+      var yearEnd=edY+'-12-31';
+      dTo=(yearEnd>today)?today:yearEnd;
+      periodLabel=(String(edY)===today.slice(0,4))?'올해':(edY+'년');
+    }
     var tsFrom=new Date(dFrom+'T00:00:00+09:00').toISOString();
     var tsTo=new Date(dTo+'T23:59:59+09:00').toISOString();
 
@@ -3526,36 +3584,23 @@ async function edLoadTrend(days){
     var dFrom=new Date(now.getTime()-(days-1)*86400000).toISOString().slice(0,10);
     var dTo=now.toISOString().slice(0,10);
     var q=await Promise.all([
-      msFetchAll(function(){ return sb.from('mp_data').select('date,team_code,values').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('voc_data').select('voc_date').gte('voc_date',dFrom).lte('voc_date',dTo); }),
       msFetchAll(function(){ return sb.from('lost_found').select('found_date').gte('found_date',dFrom).lte('found_date',dTo); })
     ]);
-    var labels=[], mpByDate={}, vocByDate={}, lostByDate={};
+    var labels=[], vocByDate={}, lostByDate={};
     for(var i=0;i<days;i++){
       var d=new Date(new Date(dFrom+'T00:00:00+09:00').getTime()+i*86400000).toISOString().slice(0,10);
-      labels.push(d.slice(5)); mpByDate[d]=0; vocByDate[d]=0; lostByDate[d]=0;
+      labels.push(d.slice(5)); vocByDate[d]=0; lostByDate[d]=0;
     }
-    (q[0]&&q[0].data||[]).forEach(function(r){
-      if(!r.team_code||r.team_code.indexOf('_')===0) return;
-      var vals=r.values; if(typeof vals==='string'){ try{ vals=JSON.parse(vals); }catch(e){ return; } }
-      if(!Array.isArray(vals)) return;
-      var sum=0;
-      for(var ri=0;ri<4;ri++){ if(vals[ri]&&Array.isArray(vals[ri])) for(var ci=0;ci<7;ci++) sum+=Number(vals[ri][ci])||0; }
-      if(mpByDate[r.date]!==undefined) mpByDate[r.date]+=sum;
-    });
-    (q[1]&&q[1].data||[]).forEach(function(r){ var d=(r.voc_date||'').slice(0,10); if(vocByDate[d]!==undefined) vocByDate[d]++; });
-    (q[2]&&q[2].data||[]).forEach(function(r){ var d=(r.found_date||'').slice(0,10); if(lostByDate[d]!==undefined) lostByDate[d]++; });
+    (q[0]&&q[0].data||[]).forEach(function(r){ var d=(r.voc_date||'').slice(0,10); if(vocByDate[d]!==undefined) vocByDate[d]++; });
+    (q[1]&&q[1].data||[]).forEach(function(r){ var d=(r.found_date||'').slice(0,10); if(lostByDate[d]!==undefined) lostByDate[d]++; });
 
-    var mpData=Object.keys(mpByDate).sort().map(function(d){return mpByDate[d];});
     var vocData=Object.keys(vocByDate).sort().map(function(d){return vocByDate[d];});
     var lostData=Object.keys(lostByDate).sort().map(function(d){return lostByDate[d];});
 
-    edDrawSvgTrend('edTrendChartMp', labels, [
-      {name:'근무인원', data:mpData, color:'#1B3A6B'}
-    ], false);
     edDrawSvgTrend('edTrendChartEv', labels, [
-      {name:'VOC', data:vocData, color:'#00A99D'},
-      {name:'유실물', data:lostData, color:'#D97706'}
+      {name:'민원', data:vocData, color:'#00A99D'},
+      {name:'습득물', data:lostData, color:'#D97706'}
     ], true);
   }catch(e){ console.log('추세 로드 오류:', e); }
 }
@@ -4202,18 +4247,32 @@ function getFacLocFrequency(){
   });
   return freq;
 }
-// 자주 입력되는 장소 Top10 칩 렌더링
+// 최근 사용한 시설물 장소 추출 (최신순, 중복 제거, 최대 5개)
+function getRecentFacLocs(){
+  if(typeof hoAll==='undefined'||!hoAll) return [];
+  var rows=hoAll.slice().sort(function(a,b){
+    var ta=new Date(a.ho_date||a.created_at||0).getTime();
+    var tb=new Date(b.ho_date||b.created_at||0).getTime();
+    return tb-ta; // 최신순
+  });
+  var locs=[];
+  rows.forEach(function(r){
+    if(!r.facility||r.facility==='없음') return;
+    var fp=(typeof parseHoFacility==='function')?parseHoFacility(r.facility):null;
+    if(!fp||!fp.loc) return;
+    var key=fp.loc.trim().replace(/\s+/g,' ');
+    if(key && locs.indexOf(key)<0) locs.push(key);
+  });
+  return locs.slice(0,5);
+}
+// 최근 장소 5개 칩 렌더링
 function loadFacLocTop10(){
   var wrap=document.getElementById('hFLocTop10');
   if(!wrap) return;
-  var freq=getFacLocFrequency();
-  var top=Object.keys(freq).map(function(k){return {loc:k, cnt:freq[k]};})
-    .filter(function(x){return x.cnt>=2;}) // 1회성 장소는 제외
-    .sort(function(a,b){return b.cnt-a.cnt;})
-    .slice(0,10);
-  if(!top.length){ wrap.innerHTML=''; return; }
-  wrap.innerHTML=top.map(function(x){
-    return '<span class="fac-chip" onclick="pickFacLoc(\''+x.loc.replace(/'/g,"\\'")+'\')">'+x.loc+' <span style="opacity:.6">'+x.cnt+'회</span></span>';
+  var recent=getRecentFacLocs();
+  if(!recent.length){ wrap.innerHTML=''; return; }
+  wrap.innerHTML=recent.map(function(loc){
+    return '<span class="fac-chip" onclick="pickFacLoc(\''+loc.replace(/'/g,"\\'")+'\')">'+loc+'</span>';
   }).join('');
 }
 // Top10 칩 또는 자동완성 항목 클릭 시 장소 자동입력
