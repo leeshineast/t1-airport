@@ -28,7 +28,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 @media (min-width:768px){
   body{background:#DCE1E6}
   .scr{max-width:720px;margin:0 auto;min-height:100vh;background:var(--g1);box-shadow:0 0 40px rgba(0,0,0,.12);position:relative}
-  .mh-tabbar,#hoAlertBanner{max-width:720px;margin:0 auto;left:50%;transform:translateX(-50%);right:auto;width:100%}
+  .mh-tabbar,#hoAlertBanner{max-width:720px!important;margin:0 auto!important}
   #mhPanelDash .stat-row{gap:12px}
   #sStatsDash.scr{max-width:1200px}
   #sStatsDash #monthlyStatsSec>div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:repeat(6,1fr)!important;gap:10px!important}
@@ -307,7 +307,12 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           var qs = [];
           if(params){
             Object.entries(params).forEach(function([k,v]){
-              qs.push(k + '=' + encodeURIComponent(v));
+              if(Array.isArray(v)){
+                // 같은 컬럼에 여러 조건(gte+lte 등) → PostgREST는 동일 키 반복을 AND로 처리
+                v.forEach(function(vv){ qs.push(k + '=' + encodeURIComponent(vv)); });
+              } else {
+                qs.push(k + '=' + encodeURIComponent(v));
+              }
             });
           }
           if(method==='GET' && qs.length) url += '?' + qs.join('&');
@@ -350,13 +355,19 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         var _body = null;
         var _upsertCol = null;
         var _select = null;
+        // 같은 컬럼에 여러 조건(예: gte+lte 범위조건)이 걸릴 수 있으므로 배열로 누적
+        function _addParam(col,val){
+          if(_params[col]===undefined){ _params[col]=val; }
+          else if(Array.isArray(_params[col])){ _params[col].push(val); }
+          else { _params[col]=[_params[col],val]; }
+        }
 
         var obj = {
           select: function(cols){ _select = cols||'*'; return obj; },
-          eq:     function(col,val){ _params[col]='eq.'+val; return obj; },
-          neq:    function(col,val){ _params[col]='neq.'+val; return obj; },
-          gte:    function(col,val){ _params[col]='gte.'+val; return obj; },
-          lte:    function(col,val){ _params[col]='lte.'+val; return obj; },
+          eq:     function(col,val){ _addParam(col,'eq.'+val); return obj; },
+          neq:    function(col,val){ _addParam(col,'neq.'+val); return obj; },
+          gte:    function(col,val){ _addParam(col,'gte.'+val); return obj; },
+          lte:    function(col,val){ _addParam(col,'lte.'+val); return obj; },
           offset: function(n){ _params['offset']=n; return obj; },
           order:  function(col,o){ _params['order']=col+(o&&o.ascending===false?'.desc':'.asc'); return obj; },
           limit:  function(n){ _params['limit']=n; return obj; },
@@ -1509,9 +1520,16 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div id="edTrend30" onclick="edSetTrendRange(30)" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;color:var(--g4)">30일</div>
     </div>
   </div>
-  <div style="margin:0 13px 12px;background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:8px 10px 4px">
-    <div id="edTrendChart" style="height:130px"></div>
-    <div id="edTrendLegend" style="display:flex;gap:14px;justify-content:center;padding:4px 0 2px"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:0 13px 12px" id="edTrendWrap">
+    <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:8px 10px 4px">
+      <div style="font-size:9px;font-weight:700;color:var(--g5);margin-bottom:2px">👥 근무인원 추세</div>
+      <div id="edTrendChartMp" style="height:110px"></div>
+    </div>
+    <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:8px 10px 4px">
+      <div style="font-size:9px;font-weight:700;color:var(--g5);margin-bottom:2px">📞 VOC·🧳 유실물 추세</div>
+      <div id="edTrendChartEv" style="height:110px"></div>
+      <div id="edTrendLegend" style="display:flex;gap:12px;justify-content:center;padding:2px 0 2px"></div>
+    </div>
   </div>
 
   <div style="height:8px"></div>
@@ -3515,20 +3533,23 @@ async function edLoadTrend(days){
     var vocData=Object.keys(vocByDate).sort().map(function(d){return vocByDate[d];});
     var lostData=Object.keys(lostByDate).sort().map(function(d){return lostByDate[d];});
 
-    edDrawSvgTrend(labels, [
-      {name:'근무인원', data:mpData, color:'#1B3A6B'},
+    edDrawSvgTrend('edTrendChartMp', labels, [
+      {name:'근무인원', data:mpData, color:'#1B3A6B'}
+    ], false);
+    edDrawSvgTrend('edTrendChartEv', labels, [
       {name:'VOC', data:vocData, color:'#00A99D'},
       {name:'유실물', data:lostData, color:'#D97706'}
-    ]);
+    ], true);
   }catch(e){ console.log('추세 로드 오류:', e); }
 }
 
-// SVG 기반 다중 라인 트렌드 차트 (외부 라이브러리 없이 자체 구현)
-function edDrawSvgTrend(labels, series){
-  var host=document.getElementById('edTrendChart');
+// SVG 기반 라인 트렌드 차트 (외부 라이브러리 없이 자체 구현)
+// 근무인원(수백 단위)과 VOC·유실물(한 자릿수)을 같은 축에 섞으면 작은 값이 안 보이므로 차트를 분리해서 각자의 스케일로 그림
+function edDrawSvgTrend(hostId, labels, series, showLegend){
+  var host=document.getElementById(hostId);
   var legendHost=document.getElementById('edTrendLegend');
   if(!host) return;
-  var W=host.clientWidth||600, H=200, padL=30, padR=10, padT=10, padB=22;
+  var W=host.clientWidth||280, H=108, padL=28, padR=8, padT=8, padB=18;
   var innerW=W-padL-padR, innerH=H-padT-padB;
   var allVals=[].concat.apply([],series.map(function(s){return s.data;}));
   var maxV=Math.max.apply(null, allVals.concat([1]));
@@ -3559,10 +3580,10 @@ function edDrawSvgTrend(labels, series){
   svg+='</svg>';
   host.innerHTML=svg;
 
-  if(legendHost){
+  if(showLegend&&legendHost){
     legendHost.innerHTML=series.map(function(s){
-      return '<span style="display:flex;align-items:center;gap:4px;font-size:10px;font-weight:700;color:var(--g5)">'
-        +'<span style="width:8px;height:8px;border-radius:2px;background:'+s.color+';display:inline-block"></span>'+s.name+'</span>';
+      return '<span style="display:flex;align-items:center;gap:4px;font-size:9px;font-weight:700;color:var(--g5)">'
+        +'<span style="width:7px;height:7px;border-radius:2px;background:'+s.color+';display:inline-block"></span>'+s.name+'</span>';
     }).join('');
   }
 }
@@ -3593,7 +3614,7 @@ function go(name){
   // PC 화면에서 하단탭바 폭을 현재 활성 화면의 프레임 폭에 맞춰 동기화
   var tbWidthMap={sStatsDash:'1200px', sExecDash:'1280px'};
   var gtb=document.getElementById('globalTabbar');
-  if(gtb) gtb.style.maxWidth=tbWidthMap[id]||'720px';
+  if(gtb) gtb.style.setProperty('max-width', tbWidthMap[id]||'720px', 'important');
   window.scrollTo(0,0);
   // 화면 진입 시 자동 새로고침
   if(name==='mp'){
