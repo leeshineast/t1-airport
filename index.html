@@ -1491,12 +1491,13 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <div style="display:flex;flex-direction:column;gap:7px">
           <div>
             <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">① 장소</label>
-            <input id="hFLoc" type="text" class="ri" placeholder="예) 3층 남자화장실 2번 칸" style="margin-bottom:0">
+            <input id="hFLoc" type="text" class="ri" placeholder="예) 3층 남자화장실 2번 칸" style="margin-bottom:0" oninput="checkHoDupWarn()">
           </div>
           <div>
             <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">② 고장 내용</label>
-            <input id="hFDesc" type="text" class="ri" placeholder="예) 변기 막힘" style="margin-bottom:0">
+            <input id="hFDesc" type="text" class="ri" placeholder="예) 변기 막힘" style="margin-bottom:0" oninput="checkHoDupWarn()">
           </div>
+          <div id="hFDupWarn" style="display:none;background:var(--warn-bg,#FFF7E0);border:1px solid var(--warn,#E8A93B);border-radius:8px;padding:8px 10px;font-size:11px;color:#8A6100;line-height:1.5"></div>
           <div>
             <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">③ 신고 구분</label>
             <div class="rg" id="hFTypeG" style="flex-wrap:wrap;gap:6px">
@@ -3758,6 +3759,33 @@ function findDupFacilityReport(locText, descText){
   });
   return (best && best.score>=0.45) ? best : null;
 }
+// 작성 팀번호 → 실제 인계 대상 팀번호 라벨 (구역 체인 기준)
+function hoNextTeamLabel(teamNum){
+  var m={1:'6,7팀',2:'6,7팀',6:'5팀',7:'5팀',5:'1,2팀',3:'8,9팀',4:'8,9팀',8:'10팀',9:'10팀',10:'3,4팀'};
+  return m[teamNum]||null;
+}
+var _hoDupWarnTimer=null;
+function checkHoDupWarn(){
+  clearTimeout(_hoDupWarnTimer);
+  _hoDupWarnTimer=setTimeout(function(){
+    try{
+      var box=document.getElementById('hFDupWarn');
+      if(!box) return;
+      var locEl=document.getElementById('hFLoc'), descEl=document.getElementById('hFDesc');
+      var locVal=locEl?locEl.value.trim():'';
+      if(!locVal){ box.style.display='none'; return; }
+      var _dup=findDupFacilityReport(locVal, descEl?descEl.value.trim():'');
+      if(_dup){
+        var _dupTs=_dup.r.ho_date||_dup.r.created_at;
+        var _dupDate=_dupTs?new Date(_dupTs).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit'}):'';
+        box.innerHTML='⚠️ <b>최근 14일 내 비슷한 신고가 있어요</b><br>['+_dupDate+' '+(_dup.r.author||'작성자')+' 작성'+(_dup.r.confirmed?', 확인됨':', 미확인')+']<br>'+(_dup.fp.desc||'')+'<br><span style="opacity:.8">같은 문제가 아직 안 고쳐졌다면 그대로 제출하셔도 됩니다.</span>';
+        box.style.display='block';
+      } else {
+        box.style.display='none';
+      }
+    }catch(e){ /* 경고 기능 오류는 제출에 영향 주지 않도록 무시 */ }
+  }, 400);
+}
 function pickHS(el){document.querySelectorAll('#hoSG .rp').forEach(p=>p.classList.remove('on'));el.classList.add('on');document.getElementById('hoW').style.display='none';}
 
 function autoSelectHandoverTeam(){
@@ -3818,6 +3846,7 @@ function subHO(){
   const pMap={'오전팀':'pill-am','오후팀':'pill-pm','야간팀':'pill-nt'};
   const avC={'오전팀':'var(--navy)','오후팀':'var(--teal2)','야간팀':'#6B21A8'};
   const toNm=toMap[sNm];
+  const toLabel=hoNextTeamLabel(teamNum)||toNm;
   const fWrap=document.getElementById('hFWrap');
   const dE=document.getElementById('hD'),eE=document.getElementById('hE');
   var fT='없음';
@@ -3835,16 +3864,6 @@ function subHO(){
     if(fType) parts.push('[신고] '+fType);
     if(fRcv&&fRcv.value.trim()) parts.push('[접수자] '+fRcv.value.trim());
     if(parts.length) fT=parts.join(' / ');
-    // 중복(반복) 신고 감지 — 최근 14일 내 비슷한 위치·내용의 시설물고장 신고가 있으면 확인
-    if(fLoc&&fLoc.value.trim()){
-      var _dup=findDupFacilityReport(fLoc.value.trim(), fDesc?fDesc.value.trim():'');
-      if(_dup){
-        var _dupTs=_dup.r.ho_date||_dup.r.created_at;
-        var _dupDate=_dupTs?new Date(_dupTs).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit'}):'';
-        var _dupMsg='⚠️ 최근 14일 내 비슷한 위치에 유사한 신고가 있어요.\n\n['+_dupDate+' '+(_dup.r.author||'작성자')+' 작성]\n장소: '+(_dup.fp.loc||'')+'\n내용: '+(_dup.fp.desc||'')+(_dup.r.confirmed?' (확인됨)':' (미확인)')+'\n\n같은 문제라도 아직 안 고쳐졌다면 그대로 제출해주세요.\n계속 제출할까요?';
-        if(!confirm(_dupMsg)) return;
-      }
-    }
   }
   const dT=(dE&&dE.classList.contains('show')&&dE.value?dE.value:'없음');
   const eT=(eE&&eE.classList.contains('show')&&eE.value)?eE.value:'이상없음';
@@ -3861,6 +3880,7 @@ function subHO(){
   ['hD','hE'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';e.classList.remove('show');}});
   var fWrapEl=document.getElementById('hFWrap');if(fWrapEl)fWrapEl.style.display='none';
   ['hFLoc','hFDesc','hFEtc','hFRcv'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});
+  var fDupWarnEl=document.getElementById('hFDupWarn');if(fDupWarnEl)fDupWarnEl.style.display='none';
   var hFTypeG=document.getElementById('hFTypeG');if(hFTypeG){hFTypeG.querySelectorAll('.rp').forEach(p=>p.classList.remove('on'));var fp=hFTypeG.querySelector('.rp');if(fp)fp.classList.add('on');}
   var fEtcEl=document.getElementById('hFEtc');if(fEtcEl)fEtcEl.style.display='none';
   var fNoneBtn=document.querySelector('#hoP2 .rg .rp');if(fNoneBtn){document.querySelector('#hoP2 .rg').querySelectorAll('.rp').forEach(p=>p.classList.remove('on'));fNoneBtn.classList.add('on');}
@@ -3879,7 +3899,7 @@ function subHO(){
   if(!fields)fields='<p style="font-size:11px;color:var(--g4);font-style:italic">이상 없음</p>';
   const card=document.createElement('div');
   card.className='ho-card';
-  card.innerHTML=`<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px"><span class="t-pill ${pMap[sNm]}">${raw}</span><span style="color:var(--g3)">→</span><span class="t-pill ${pMap[toNm]}">${toNm}</span><span class="chip chip-warn"><span class="chip-dot"></span>대기</span></div><span class="ho-time">${ts}</span></div><div class="w-row"><div class="w-av" style="background:${avC[sNm]}">${me?me.initial:'?'}</div><span class="w-nm">${me?me.name:'작성자'} · ${me?me.team:''} 작성</span></div><div class="ho-body">${fields}</div><div class="conf-row"><button class="btn-conf" onclick="confHO(this)">✔ 인수 확인</button></div>`;
+  card.innerHTML=`<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px"><span class="t-pill ${pMap[sNm]}">${raw}</span><span style="color:var(--g3)">→</span><span class="t-pill ${pMap[toNm]}">${toLabel}</span><span class="chip chip-warn"><span class="chip-dot"></span>대기</span></div><span class="ho-time">${ts}</span></div><div class="w-row"><div class="w-av" style="background:${avC[sNm]}">${me?me.initial:'?'}</div><span class="w-nm">${me?me.name:'작성자'} · ${me?me.team:''} 작성</span></div><div class="ho-body">${fields}</div><div class="conf-row"><button class="btn-conf" onclick="confHO(this)">✔ 인수 확인</button></div>`;
   // ① DB에 저장 (전체 공유)
   var hoData = {
     shift: raw+' ('+sNm+')', // '4팀 (오전팀)' 형식으로 저장
@@ -4981,6 +5001,7 @@ async function loadHandoverByShift(shift){
     res.data.forEach(function(r){
       var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[r.shift]);
       var ps2=parseShift(r.shift);
+      var toLabel=hoNextTeamLabel(parseInt(ps2.team))||toNm;
       var isDone=r.confirmed;
       var ts=(r.ho_date||r.created_at)?new Date(r.ho_date||r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
       var author=r.author||'작성자';
@@ -4993,7 +5014,7 @@ async function loadHandoverByShift(shift){
         +'<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px">'
         +'<span class="t-pill '+(pMap[ps2.group]||'pill-am')+'">'+ps2.team+'</span>'
         +'<span style="color:var(--g3)">→</span>'
-        +'<span class="t-pill '+(pMap[toNm]||'pill-pm')+'">'+(toNm||'')+'</span>'
+        +'<span class="t-pill '+(pMap[toNm]||'pill-pm')+'">'+(toLabel||'')+'</span>'
         +'<span class="chip '+(isDone?'chip-ok':'chip-warn')+'"><span class="chip-dot"></span>'+(isDone?'확인완료':'대기')+'</span>'
         +'</div><span class="ho-time">'+ts+'</span></div>'
         +'<div class="w-row"><div class="w-av" style="background:'+(avC[ps2.group]||'var(--navy)')+'">'+author[0]+'</div>'
@@ -8107,6 +8128,8 @@ function renderHoList(data){
     dayData.forEach(function(r){
     var sNm=r.shift||'오전팀';
     var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[sNm]);
+    var _teamNumAll=parseInt((sNm.match(/\d+/)||[])[0]);
+    var toLabel=hoNextTeamLabel(_teamNumAll)||toNm;
     var isDone=r.confirmed;
     var ts=(r.ho_date||r.created_at)?new Date(r.ho_date||r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
     var author=r.author||'작성자';
@@ -8122,7 +8145,7 @@ function renderHoList(data){
       +'<div class="ho-hd"><div style="display:flex;align-items:center;gap:5px">'
       +'<span class="t-pill '+(pMap[sNm]||'pill-am')+'">'+sNm+'</span>'
       +'<span style="color:var(--g3)">→</span>'
-      +'<span class="t-pill '+(pMap[toNm]||'pill-pm')+'">'+toNm+'</span>'
+      +'<span class="t-pill '+(pMap[toNm]||'pill-pm')+'">'+toLabel+'</span>'
       +'<span class="chip '+(isDone?'chip-ok':'chip-warn')+'"><span class="chip-dot"></span>'+(isDone?'확인완료':'대기')+'</span>'
       +'</div><span class="ho-time">'+ts+'</span></div>'
       +'<div class="w-row"><div class="w-av" style="background:'+(avC[sNm]||'var(--navy)')+'">'+initial+'</div>'
