@@ -608,6 +608,12 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <div class="menu-desc">일간·월간·연간 운영 통계 한눈에</div>
       <span class="menu-arrow">보기 →</span>
     </button>
+    <button class="menu-btn" id="downloadCenterMenuBtn" style="display:none" onclick="go('downloadcenter')">
+      <span class="menu-icon">📥</span>
+      <div class="menu-title">전체 다운로드</div>
+      <div class="menu-desc">인력·인수인계·습득물 등 전체 엑셀 다운로드</div>
+      <span class="menu-arrow">보기 →</span>
+    </button>
     <button class="menu-btn" onclick="go('mp')">
       <span class="menu-icon">👥</span>
       <div class="menu-title">인력현황</div>
@@ -1585,6 +1591,69 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   </div>
 
   <div style="height:8px"></div>
+</div>
+<div id="sDownloadCenter" class="scr">
+  <div class="app-hd">
+    <button class="back-hd" onclick="go('main')">← 메인</button>
+    <div class="user-chip"><div class="u-av">📥</div><span>다운로드</span></div>
+  </div>
+  <div class="pg-hd"><div><h1>전체 다운로드</h1><small>조장·팀장·관리자 공통 이용 가능</small></div></div>
+  <div class="card" style="margin:0 13px 20px"><div class="cb">
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <div class="dl-item" onclick="dlCSV('all')">
+        <div class="dl-ico">📋</div>
+        <div><div class="dl-title">전체 다운로드 (운영앱 전체)</div><div class="dl-sub">인력·관리자출근·인수인계·민원·사고·차량·KPI·습득물·폐기물·장비·시설·공지·사규·사용자 (.xlsx)</div></div>
+      </div>
+      <div class="dl-item" onclick="dlCSV('mp')">
+        <div class="dl-ico">👥</div>
+        <div><div class="dl-title">인력현황</div><div class="dl-sub">구역별 층별 현황 (.xlsx)</div></div>
+      </div>
+      <div class="dl-item" onclick="dlCSV('mgrattend')">
+        <div class="dl-ico">👔</div>
+        <div><div class="dl-title">관리자 출근 현황</div><div class="dl-sub">팀장·조장·운영팀 출근 이력 전체 (.xlsx)</div></div>
+      </div>
+      <div class="dl-item" onclick="dlCSV('ho')">
+        <div class="dl-ico">🔄</div>
+        <div><div class="dl-title">인수인계</div><div class="dl-sub">전체 인계 이력 (.xlsx)</div></div>
+      </div>
+      <div class="dl-item" onclick="dlCSV('ind')">
+        <div class="dl-ico">🚑</div>
+        <div><div class="dl-title">산업재해</div><div class="dl-sub">전체 재해 이력 (.xlsx)</div></div>
+      </div>
+      <div class="dl-item" onclick="dlCSV('veh')">
+        <div class="dl-ico">🚗</div>
+        <div><div class="dl-title">차량운행기록</div><div class="dl-sub">운행 이력 (.xlsx)</div></div>
+      </div>
+      <div class="dl-item" onclick="dlCSV('kpi')">
+        <div class="dl-ico">📊</div>
+        <div><div class="dl-title">과업평가지표(KPI)</div><div class="dl-sub">월별 지표 데이터 (.xlsx)</div></div>
+      </div>
+      <div class="dl-item" onclick="dlCSV('voc')">
+        <div class="dl-ico">📞</div>
+        <div><div class="dl-title">민원(서비스응대)</div><div class="dl-sub">민원 접수 및 처리현황 (.xlsx)</div></div>
+      </div>
+      <div class="dl-item" onclick="dlCSV('lost')">
+        <div class="dl-ico">🎒</div>
+        <div><div class="dl-title">습득물 관리</div><div class="dl-sub">전체 습득물 이력 (.xlsx)</div></div>
+      </div>
+      <div class="dl-item" onclick="dlCSV('waste')">
+        <div class="dl-ico">♻️</div>
+        <div><div class="dl-title">폐기물 처리현황</div><div class="dl-sub">성상별 처리량 (.xlsx)</div></div>
+      </div>
+      <div class="dl-item" onclick="dlCSV('equipment')">
+        <div class="dl-ico">🔧</div>
+        <div><div class="dl-title">장비현황</div><div class="dl-sub">장비 목록 전체 (.xlsx)</div></div>
+      </div>
+      <div class="dl-item" onclick="dlCSV('facility')">
+        <div class="dl-ico">🏢</div>
+        <div><div class="dl-title">시설현황</div><div class="dl-sub">화장실·흡연실·창고 등 전체 (.xlsx)</div></div>
+      </div>
+      <div class="dl-item" onclick="dlCSV('notice')">
+        <div class="dl-ico">📢</div>
+        <div><div class="dl-title">공지사항</div><div class="dl-sub">전체 공지 이력 (.xlsx)</div></div>
+      </div>
+    </div>
+  </div></div>
 </div>
 <div id="sHo" class="scr">
   <div class="app-hd">
@@ -3393,7 +3462,7 @@ function showM(id){document.getElementById(id).classList.add('on');}
 function hideM(id){document.getElementById(id).classList.remove('on');}
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sSafety','sManual','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sSafety','sManual','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter'];
 function goStatsDash(){
   go('statsdash');
   loadMonthlyStats();
@@ -3697,8 +3766,9 @@ function go(name){
   if(me&&me.role==='vehicle_guest'&&name!=='veh'&&name!=='login'){ return; }
   if(name==='admin'&&(!me||me.role!=='admin')){ toast('⚠️ 관리자만 접근할 수 있습니다'); return; }
   if(name==='execdash'&&(!me||me.role!=='admin')){ toast('⚠️ 관리자만 접근할 수 있습니다'); return; }
+  if(name==='downloadcenter'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(name==='groupchat'&&me&&me.role==='guest'){ toast('⚠️ 게스트 계정은 이용할 수 없는 기능입니다'); return; }
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',safety:'sSafety',manual:'sManual',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',safety:'sSafety',manual:'sManual',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -3824,6 +3894,8 @@ function applyRoleUI(){
   if(ab) ab.style.display=isAdmin?'block':'none';
   var edb=document.getElementById('execDashMenuBtn');
   if(edb) edb.style.display=isAdmin?'flex':'none';
+  var dcb=document.getElementById('downloadCenterMenuBtn');
+  if(dcb) dcb.style.display=isMgr?'flex':'none';
   // 산업재해 등록 버튼 (admin만)
   var ib=document.getElementById('mainIndBtn');
   if(ib) ib.style.display=isMgr?'block':'none';
@@ -4671,7 +4743,7 @@ function subInd(){
 
 // ─ 다운로드 ─
 async function dlCSV(type){
-  if(!me||me.role!=='admin'){toast('최고관리자만 다운로드할 수 있습니다');return;}
+  if(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader')){toast('⚠️ 조장 이상만 다운로드할 수 있습니다');return;}
   toast('📥 엑셀 다운로드 준비 중...');
   try{
     var wb={SheetNames:[],Sheets:{}};
