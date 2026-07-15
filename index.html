@@ -3471,6 +3471,18 @@ function edSetMode(m){
   loadExecDashboard();
 }
 
+// 현황판 자동 갱신 — 상황실 TV처럼 계속 띄워두는 화면이라 1분마다 새로고침
+var _edPollTimer=null;
+function startExecDashPoll(){
+  if(_edPollTimer) return;
+  _edPollTimer=setInterval(function(){
+    // 지금 실제로 현황판 화면이 보이고 있을 때만 갱신 (불필요한 조회 방지)
+    var scr=document.getElementById('sExecDash');
+    if(!scr||scr.style.display==='none') return;
+    if(typeof loadExecDashboard==='function') loadExecDashboard();
+  }, 60000); // 60초
+}
+
 async function loadExecDashboard(){
   if(!me||me.role!=='admin') return;
   try{
@@ -3786,6 +3798,7 @@ function go(name){
   }
   if(name==='execdash'){
     if(typeof loadExecDashboard==='function') loadExecDashboard();
+    if(typeof startExecDashPoll==='function') startExecDashPoll();
   }
 }
 
