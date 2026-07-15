@@ -599,7 +599,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <button class="menu-btn" id="execDashMenuBtn" style="display:none" onclick="go('execdash')">
       <span class="menu-icon">👑</span>
       <div class="menu-title">현황판</div>
-      <div class="menu-desc">경영진 실시간 운영 현황판 (관리자 전용)</div>
+      <div class="menu-desc">경영진 실시간 운영 현황판 (팀장 이상)</div>
       <span class="menu-arrow">보기 →</span>
     </button>
     <button class="menu-btn" onclick="goStatsDash()">
@@ -1546,6 +1546,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <div id="edModeM" onclick="edSetMode('month')" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;color:var(--g4)">월간</div>
         <div id="edModeY" onclick="edSetMode('year')" style="padding:4px 11px;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;color:var(--g4)">연간</div>
       </div>
+      <button id="edDownloadBtn" onclick="edDownloadExcel()" style="display:none;padding:5px 12px;background:var(--teal);color:white;border:none;border-radius:16px;font-size:10px;font-weight:800;cursor:pointer;white-space:nowrap">📥 엑셀 다운로드</button>
     </div>
   </div>
 
@@ -3553,7 +3554,7 @@ function startExecDashPoll(){
 }
 
 async function loadExecDashboard(){
-  if(!me||me.role!=='admin') return;
+  if(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader')) return;
   try{
     edInitDate();
     edUpdatePeriodLbl();
@@ -3633,7 +3634,7 @@ async function loadExecDashboard(){
     var vocTotal=vocRows.length, vocDone=vocRows.filter(function(r){return r.status==='완료';}).length;
     var vocRate=vocTotal?Math.round(vocDone/vocTotal*100):100;
 
-    var lostTotal=lostRows.length, lostDone=lostRows.filter(function(r){return r.status==='완료';}).length;
+    var lostTotal=lostRows.length, lostDone=lostRows.filter(function(r){return (r.status||'').startsWith('완료');}).length;
     var lostRate=lostTotal?Math.round(lostDone/lostTotal*100):100;
 
     var accTotal=accRows.length;
@@ -3750,10 +3751,71 @@ async function loadExecDashboard(){
 
     var upd=document.getElementById('edUpdated');
     if(upd) upd.textContent=periodLabel+' 기준('+dFrom+(dFrom!==dTo?' ~ '+dTo:'')+') · 업데이트 '+edKst().toTimeString().slice(0,5);
+
+    // 엑셀 다운로드용 스냅샷 저장
+    window.edLastData={
+      periodLabel:periodLabel, dFrom:dFrom, dTo:dTo,
+      totalStaffShow:totalStaffShow, attendRate:attendRate,
+      hoTotal:hoTotal, hoConfirmed:hoConfirmed, hoRate:hoRate,
+      vocTotal:vocTotal, vocRate:vocRate,
+      lostTotal:lostTotal, lostRate:lostRate,
+      accTotal:accTotal, issueTotal:issueTotal,
+      shiftShow:shiftShow, floorShow:floorShow,
+      facTypeCount:facTypeCount, accTypeCount:accTypeCount, vocTypeCount:vocTypeCount
+    };
   }catch(e){ console.log('현황판 로드 오류:', e); }
 }
 
 
+
+// 현황판 엑셀 다운로드 (admin 전용)
+function edDownloadExcel(){
+  if(!me||me.role!=='admin'){ toast('⚠️ 관리자만 다운로드할 수 있습니다'); return; }
+  var d=window.edLastData;
+  if(!d){ toast('먼저 현황판 데이터를 불러온 뒤 다시 시도해주세요'); return; }
+  try{
+    var rows=[];
+    rows.push(['T1 현황판', d.periodLabel+' ('+d.dFrom+(d.dFrom!==d.dTo?' ~ '+d.dTo:'')+')']);
+    rows.push([]);
+    rows.push(['[KPI]']);
+    rows.push(['근무인원(명)', d.totalStaffShow]);
+    rows.push(['근무율(%)', d.attendRate]);
+    rows.push(['인수인계 완료율(%)', d.hoRate]);
+    rows.push(['인수인계 총건수', d.hoTotal]);
+    rows.push(['인수인계 확인완료', d.hoConfirmed]);
+    rows.push(['현재 미확인 인계', d.hoTotal-d.hoConfirmed]);
+    rows.push(['VOC 접수건수', d.vocTotal]);
+    rows.push(['VOC 처리율(%)', d.vocRate]);
+    rows.push(['유실물 접수건수', d.lostTotal]);
+    rows.push(['유실물 처리율(%)', d.lostRate]);
+    rows.push(['안전사고', d.accTotal]);
+    rows.push(['특이사항 합계', d.issueTotal]);
+    rows.push([]);
+    rows.push(['[인력현황]']);
+    rows.push(['오전팀(명)', d.shiftShow['오전']]);
+    rows.push(['오후팀(명)', d.shiftShow['오후']]);
+    rows.push(['야간팀(명)', d.shiftShow['야간']]);
+    rows.push(['관리자(명)', d.shiftShow['관리자']]);
+    rows.push([]);
+    rows.push(['[층별 인력]']);
+    MS_FLOORS.forEach(function(fl,i){ rows.push([fl, d.floorShow[i]]); });
+    rows.push([]);
+    rows.push(['[시설물고장 유형]']);
+    Object.keys(d.facTypeCount).forEach(function(k){ rows.push([k, d.facTypeCount[k]]); });
+    rows.push([]);
+    rows.push(['[안전사고 재해형태]']);
+    Object.keys(d.accTypeCount).forEach(function(k){ rows.push([k, d.accTypeCount[k]]); });
+    rows.push([]);
+    rows.push(['[민원 유형]']);
+    Object.keys(d.vocTypeCount).forEach(function(k){ rows.push([k, d.vocTypeCount[k]]); });
+
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:22},{wch:20}];
+    var wb={SheetNames:['현황판'],Sheets:{'현황판':ws}};
+    XLSX.writeFile(wb,'T1_현황판_'+d.dFrom+(d.dFrom!==d.dTo?'~'+d.dTo:'')+'.xlsx');
+    toast('✅ 현황판 엑셀 다운로드 완료');
+  }catch(e){ toast('다운로드 오류: '+e.message); }
+}
 
 function goHomeMain(){
   go('main');
@@ -3765,7 +3827,7 @@ function goHomeMain(){
 function go(name){
   if(me&&me.role==='vehicle_guest'&&name!=='veh'&&name!=='login'){ return; }
   if(name==='admin'&&(!me||me.role!=='admin')){ toast('⚠️ 관리자만 접근할 수 있습니다'); return; }
-  if(name==='execdash'&&(!me||me.role!=='admin')){ toast('⚠️ 관리자만 접근할 수 있습니다'); return; }
+  if(name==='execdash'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='downloadcenter'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(name==='groupchat'&&me&&me.role==='guest'){ toast('⚠️ 게스트 계정은 이용할 수 없는 기능입니다'); return; }
   const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',safety:'sSafety',manual:'sManual',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter'};
@@ -3893,7 +3955,10 @@ function applyRoleUI(){
   var ab=document.getElementById('adminBtn');
   if(ab) ab.style.display=isAdmin?'block':'none';
   var edb=document.getElementById('execDashMenuBtn');
-  if(edb) edb.style.display=isAdmin?'flex':'none';
+  var isExecView=me.role==='admin'||me.role==='manager'||me.role==='leader';
+  if(edb) edb.style.display=isExecView?'flex':'none';
+  var eddl=document.getElementById('edDownloadBtn');
+  if(eddl) eddl.style.display=isAdmin?'inline-block':'none';
   var dcb=document.getElementById('downloadCenterMenuBtn');
   if(dcb) dcb.style.display=isMgr?'flex':'none';
   // 산업재해 등록 버튼 (admin만)
