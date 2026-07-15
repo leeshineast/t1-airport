@@ -51,6 +51,49 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   #sStatsDash .ms-bar-label{font-size:10px;white-space:nowrap}
 }
 
+/* ═══ 관리자 현황판 전용 "상황실" 레이아웃 — 대형 모니터(1200px+)에서 화면 꽉 채움 ═══ */
+@media (min-width:1200px){
+  #sExecDash.scr{max-width:100%!important;width:100%;box-shadow:none!important;padding:0 32px}
+  #sExecDash .app-hd{padding-left:0;padding-right:0}
+  #sExecDash h1{font-size:26px!important}
+  #sExecDash small{font-size:14px!important}
+  /* KPI 카드 */
+  #sExecDash #edKpiGrid{gap:14px!important}
+  #sExecDash #edKpiGrid>div{padding:18px 20px!important}
+  #sExecDash #edKpiGrid [style*="width:20px;height:20px"]{width:34px!important;height:34px!important;border-radius:10px!important;font-size:16px!important}
+  #sExecDash #edKpiGrid span[style*="font-size:9px;font-weight:700"]{font-size:14px!important}
+  #sExecDash #edKpiGrid div[style*="font-size:19px"]{font-size:40px!important}
+  #sExecDash #edKpiGrid span[style*="font-size:9px;font-weight:600"]{font-size:14px!important}
+  /* 섹션 제목 */
+  #sExecDash .sec-lbl{font-size:15px!important;padding-top:22px!important;padding-bottom:12px!important}
+  /* 완료율 도넛 */
+  #sExecDash #edDonutGrid{gap:14px!important}
+  #sExecDash #edDonutGrid>div{padding:22px 14px!important;gap:12px!important}
+  #sExecDash .ms-donut{width:110px!important;height:110px!important}
+  #sExecDash .ms-donut::before{inset:12px!important}
+  #sExecDash .ms-donut-txt{font-size:24px!important}
+  #sExecDash #edDonutGrid div[style*="font-size:9px;font-weight:700"]{font-size:15px!important}
+  /* 인력현황 카드 */
+  #sExecDash #edShiftRow{gap:14px!important}
+  #sExecDash #edShiftRow>div{padding:18px!important}
+  #sExecDash #edShiftRow div[style*="font-size:9px;font-weight:700"]{font-size:14px!important}
+  #sExecDash #edShiftRow div[style*="font-size:16px;font-weight:900"]{font-size:36px!important}
+  /* 층별 히트맵 */
+  #sExecDash #edHeatmap{gap:10px!important}
+  #sExecDash #edHeatmap>div{padding:16px 6px!important}
+  #sExecDash #edHeatmap div[style*="font-size:8px;font-weight:700"]{font-size:13px!important}
+  #sExecDash #edHeatmap div[style*="font-size:12px;font-weight:900"]{font-size:26px!important}
+  /* 현황 분석 4패널 */
+  #sExecDash #edAnalysisGrid{gap:14px!important}
+  #sExecDash #edAnalysisGrid>div{padding:18px 20px!important}
+  #sExecDash #edAnalysisGrid>div>div:first-child{font-size:16px!important;margin-bottom:14px!important}
+  #sExecDash #edHourPanel>div,#sExecDash #edFacTypePanel>div,#sExecDash #edAccTypePanel>div,#sExecDash #edVocTypePanel>div{margin-bottom:11px!important}
+  #sExecDash #edHourPanel span[style*="width:52px"],#sExecDash #edFacTypePanel span[style*="width:52px"],#sExecDash #edAccTypePanel span[style*="width:52px"],#sExecDash #edVocTypePanel span[style*="width:52px"]{font-size:14px!important;width:100px!important}
+  #sExecDash #edHourPanel div[style*="height:7px"],#sExecDash #edFacTypePanel div[style*="height:7px"],#sExecDash #edAccTypePanel div[style*="height:7px"],#sExecDash #edVocTypePanel div[style*="height:7px"]{height:14px!important;border-radius:6px!important}
+  #sExecDash #edHourPanel span[style*="width:16px"],#sExecDash #edFacTypePanel span[style*="width:16px"],#sExecDash #edAccTypePanel span[style*="width:16px"],#sExecDash #edVocTypePanel span[style*="width:16px"]{font-size:15px!important;width:30px!important}
+  #sExecDash #edAccTypePanel div[style*="color:var(--success)"]{font-size:16px!important;padding:16px 0!important}
+}
+
 /* ─ 화면 ─ */
 .scr{display:none;padding-bottom:60px}
 .scr.on{display:block}
@@ -3655,7 +3698,7 @@ function go(name){
     }
   });
   // PC 화면에서 하단탭바 폭을 현재 활성 화면의 프레임 폭에 맞춰 동기화
-  var tbWidthMap={sStatsDash:'1200px', sExecDash:'1280px'};
+  var tbWidthMap={sStatsDash:'1200px', sExecDash:'100%'};
   var gtb=document.getElementById('globalTabbar');
   if(gtb) gtb.style.setProperty('max-width', tbWidthMap[id]||'720px', 'important');
   window.scrollTo(0,0);
