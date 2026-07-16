@@ -3712,9 +3712,9 @@ async function loadExecDashboard(){
     // 1) 시간대별 인원 (오전·오후·야간 3구간)
     var hourHtml='';
     var hourMax=Math.max(shiftShow['오전'],shiftShow['오후'],shiftShow['야간'],1);
-    hourHtml+=edMiniBar('오전(~16:30)', shiftShow['오전'], hourMax, '#00A99D');
-    hourHtml+=edMiniBar('오후(~21:30)', shiftShow['오후'], hourMax, '#1A6B8A');
-    hourHtml+=edMiniBar('야간(22~07)', shiftShow['야간'], hourMax, '#1E3A5F');
+    hourHtml+=edMiniBar('오전(07~12)', shiftShow['오전'], hourMax, '#00A99D');
+    hourHtml+=edMiniBar('오후(12~21)', shiftShow['오후'], hourMax, '#1A6B8A');
+    hourHtml+=edMiniBar('야간(21~07)', shiftShow['야간'], hourMax, '#1E3A5F');
     var hp=document.getElementById('edHourPanel'); if(hp) hp.innerHTML=hourHtml;
 
     // 2) 시설물고장 유형별
