@@ -3469,7 +3469,16 @@ function goStatsDash(){
   loadMonthlyStats();
 }
 // ═══ 관리자 전용 현황판(Executive Dashboard) ═══
-var ED_TOTAL_STAFF=395; // 사업부 총원 (근무율 계산 기준)
+var ED_TOTAL_STAFF=396; // 사업부 총원 (관리자 포함, 근무율 계산 기준)
+// 실시간(당일) 보기일 때 시간대별 누적 정원 — 오전조만 근무중인 이른 시간에는 정원을 낮게 잡아 근무율을 왜곡 없이 계산
+// 00:00~12:29=오전 정원, 12:30~21:29=오전+오후 누적 정원, 21:30~24:00=전체 정원
+function edStaffQuota(){
+  var n=edKst();
+  var t=n.getUTCHours()*60+n.getUTCMinutes();
+  if(t<750) return 171;
+  if(t<1290) return 324;
+  return 396;
+}
 var edMode='day'; // 'day' | 'month' | 'year'
 var edY=0, edM=0, edD=0;
 
@@ -3626,7 +3635,9 @@ async function loadExecDashboard(){
     var floorShow=floorSum.map(function(v){ return isAvg?Math.round(v/dayCount):v; });
     var shiftShow={}; Object.keys(shiftSum).forEach(function(k){ shiftShow[k]=isAvg?Math.round(shiftSum[k]/dayCount):shiftSum[k]; });
     var totalStaffShow=shiftShow['오전']+shiftShow['오후']+shiftShow['야간']+shiftShow['관리자'];
-    var attendRate=Math.round(totalStaffShow/ED_TOTAL_STAFF*100);
+    var isLiveToday=(edMode==='day'&&dFrom===today);
+    var staffQuota=isLiveToday?edStaffQuota():ED_TOTAL_STAFF;
+    var attendRate=Math.round(totalStaffShow/staffQuota*100);
 
     var hoTotal=hoRows.length, hoConfirmed=hoRows.filter(function(r){return r.confirmed;}).length;
     var hoRate=hoTotal?Math.round(hoConfirmed/hoTotal*100):100;
@@ -3644,7 +3655,7 @@ async function loadExecDashboard(){
     // ── KPI 카드
     var kpiHtml='';
     kpiHtml+=edKpiCard('👥',staffLabel, totalStaffShow, '명','neutral');
-    kpiHtml+=edKpiCard('📊',periodLabel+' 근무율', attendRate, '%', attendRate>=80?'ok':(attendRate>=60?'warn':'danger'));
+    kpiHtml+=edKpiCard('📊',periodLabel+' 근무율'+(isLiveToday?' (정원'+staffQuota+')':''), attendRate, '%', attendRate>=80?'ok':(attendRate>=60?'warn':'danger'));
     kpiHtml+=edKpiCard('🔄',periodLabel+' 인수인계 완료율', hoRate, '%', hoRate>=90?'ok':(hoRate>=70?'warn':'danger'));
     kpiHtml+=edKpiCard('📞',periodLabel+' VOC 접수건수', vocTotal, '건','neutral');
     kpiHtml+=edKpiCard('🧳',periodLabel+' 유실물 접수건수', lostTotal, '건','neutral');
@@ -12776,11 +12787,22 @@ function msTeamNumShift(teamStr){
 function msHourShift3(iso){
   if(!iso) return null;
   try{
-    var kh=new Date(new Date(iso).getTime()+9*3600000).getUTCHours();
-    if(kh>=6&&kh<14) return '오전';
-    if(kh>=14&&kh<22) return '오후';
-    return '야간';
+    var d=new Date(new Date(iso).getTime()+9*3600000);
+    var t=d.getUTCHours()*60+d.getUTCMinutes();
+    if(t>=420&&t<=720) return '오전';   // 07:00~12:00
+    if(t>=730&&t<=1290) return '오후';  // 12:10~21:30
+    return '야간';                       // 21:31~익일 06:59
   }catch(e){ return null; }
+}
+// 습득물·민원용: 시간대 라벨에 실제 시각 범위를 병기 (오전팀/오후팀/야간팀이 아님을 명시)
+function msShiftBarsTime(byShift){
+  var mx=Math.max(byShift.오전||0, byShift.오후||0, byShift.야간||0, 1);
+  var hh='<div class="ms-bargroup">';
+  hh+=msBar('오전 (07:00~12:00)', byShift.오전||0, mx, 'var(--warn)', '건');
+  hh+=msBar('오후 (12:10~21:30)', byShift.오후||0, mx, 'var(--teal)', '건');
+  hh+=msBar('야간 (21:31~06:59)', byShift.야간||0, mx, 'var(--navy)', '건');
+  hh+='</div>';
+  return hh;
 }
 function msShiftBars(byShift){
   var mx=Math.max(byShift.오전||0, byShift.오후||0, byShift.야간||0, 1);
@@ -13616,8 +13638,8 @@ function msRenderDetail(key){
     h+=msSub('시간대별 분포');
     h+=msHourBars(c.lost.byHour, 'linear-gradient(90deg,var(--warn),#E8A83E)');
     if(c.lost.hourUnknown) h+='<div style="font-size:9px;color:var(--g4);margin-top:2px">⏱ 시간미상 '+c.lost.hourUnknown+'건 제외 (예전 입력분)</div>';
-    h+=msSub('오전팀 · 오후팀 · 야간팀 비교 <span style="font-size:9px;font-weight:500;color:var(--g4)">(접수 시각 기준 추정)</span>');
-    h+=msShiftBars(c.lost.byShift);
+    h+=msSub('오전 · 오후 · 야간 비교 <span style="font-size:9px;font-weight:500;color:var(--g4)">(접수 시각 기준, 팀 구분 아님)</span>');
+    h+=msShiftBarsTime(c.lost.byShift);
   }else if(key==='acc'){
     h=msTitle('⚠️ 안전사고 · '+pl);
     h+=msRow('발생 건수', c.acc.total+'건 <span style="font-size:9px;font-weight:600;color:var(--g4)">('+pw+' '+p.acc.total+'건)</span>');
@@ -13652,8 +13674,8 @@ function msRenderDetail(key){
     h+=msTopBars(c.voc.byLoc, 5, 'linear-gradient(90deg,#6B21A8,#9D5BD2)', '건');
     h+=msSub('접수경로별');
     h+=msTopBars(c.voc.byChannel, 6, 'linear-gradient(90deg,#0EA5E9,#38BDF8)', '건');
-    h+=msSub('오전팀 · 오후팀 · 야간팀 비교 <span style="font-size:9px;font-weight:500;color:var(--g4)">(접수 시각 기준 추정)</span>');
-    h+=msShiftBars(c.voc.byShift);
+    h+=msSub('오전 · 오후 · 야간 비교 <span style="font-size:9px;font-weight:500;color:var(--g4)">(접수 시각 기준, 팀 구분 아님)</span>');
+    h+=msShiftBarsTime(c.voc.byShift);
     if(!c.voc.total){
       h+='<div style="text-align:center;padding:10px;margin:8px 0 0;background:var(--success-bg);border-radius:var(--r2);color:var(--success);font-size:11px;font-weight:700">✅ '+pl+' 민원 없음</div>';
     }
