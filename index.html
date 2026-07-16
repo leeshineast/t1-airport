@@ -13635,11 +13635,9 @@ function msRenderDetail(key){
     if(openCh) h+='<div style="font-size:9px;color:var(--g4);margin-top:2px">📱 오픈채널 접수 비중 '+(c.lost.total?Math.round(openCh/c.lost.total*100):0)+'%</div>';
     h+=msSub('인계처별 (반환완료 건 기준)');
     h+=msTopBars(msWithEtc(c.lost.byHandover,c.lost.handoverEtc), 5, 'linear-gradient(90deg,var(--navy),#3E6BB5)', '건');
-    h+=msSub('시간대별 분포');
-    h+=msHourBars(c.lost.byHour, 'linear-gradient(90deg,var(--warn),#E8A83E)');
-    if(c.lost.hourUnknown) h+='<div style="font-size:9px;color:var(--g4);margin-top:2px">⏱ 시간미상 '+c.lost.hourUnknown+'건 제외 (예전 입력분)</div>';
     h+=msSub('오전 · 오후 · 야간 비교 <span style="font-size:9px;font-weight:500;color:var(--g4)">(접수 시각 기준, 팀 구분 아님)</span>');
     h+=msShiftBarsTime(c.lost.byShift);
+    if(c.lost.hourUnknown) h+='<div style="font-size:9px;color:var(--g4);margin-top:2px">⏱ 시간미상 '+c.lost.hourUnknown+'건 제외 (예전 입력분)</div>';
   }else if(key==='acc'){
     h=msTitle('⚠️ 안전사고 · '+pl);
     h+=msRow('발생 건수', c.acc.total+'건 <span style="font-size:9px;font-weight:600;color:var(--g4)">('+pw+' '+p.acc.total+'건)</span>');
