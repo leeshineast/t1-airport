@@ -10313,6 +10313,8 @@ function renderEquipment(){
       '<div onclick="eqToggleEndFilter()" style="background:'+(eqEndFilterOn?'var(--danger-bg)':'white')+';border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid '+(eqEndFilterOn?'var(--danger)':'rgba(217,64,64,.35)')+';cursor:pointer"><div style="font-size:18px;font-weight:900;color:var(--danger)">'+endThisYear+'</div><div style="font-size:10px;color:var(--danger);font-weight:700">'+curYear+'년 종료'+(eqEndFilterOn?' ✓':'')+'</div></div>';
   }
   // 테이블
+  var mgmtColIdx=headers.findIndex(function(h){ return String(h).indexOf('관리번호')!==-1; });
+  var nameColIdx=headers.findIndex(function(h){ return String(h).indexOf('장비명')!==-1; });
   var h='<table style="width:100%;border-collapse:collapse;font-size:12px;min-width:500px">';
   h+='<thead><tr>';
   headers.forEach(function(hd,hi){
@@ -10322,9 +10324,15 @@ function renderEquipment(){
   h+='</tr></thead><tbody>';
   filtered.forEach(function(r,i){
     h+='<tr style="background:'+(i%2===0?'white':'var(--g1)')+';">';
+    var mgmtNo=mgmtColIdx>=0?r[mgmtColIdx]:null;
     r.forEach(function(c,ci){
       var w=ci===0?'width:1%;text-align:center;':''; // 순번 컬럼: 내용 크기에 맞춤
-      h+='<td style="'+w+'padding:7px 10px;border-bottom:1px solid var(--g2);white-space:nowrap;color:var(--g7)">'+( c!==null&&c!==undefined?c:'')+'</td>';
+      var val=(c!==null&&c!==undefined?c:'');
+      var isLink=mgmtNo&&(ci===mgmtColIdx||ci===nameColIdx);
+      var tdStyle='padding:7px 10px;border-bottom:1px solid var(--g2);white-space:nowrap;'+w
+        +(isLink?'color:var(--teal2);font-weight:700;text-decoration:underline;cursor:pointer':'color:var(--g7)');
+      var onclickAttr=isLink?' onclick="location.href=\'inspect.html?openEquip=\'+encodeURIComponent(\''+String(mgmtNo).replace(/'/g,"\\'")+'\')"':'';
+      h+='<td style="'+tdStyle+'"'+onclickAttr+'>'+val+'</td>';
     });
     h+='</tr>';
   });

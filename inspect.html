@@ -550,9 +550,28 @@ function loadMasters(){
   ];
   Promise.all(jobs).then(function(){
     dot.className='dot ok'; msg.textContent='데이터 연결 정상 · 화장실 '+TOILETS.length+' · 장비 '+EQUIPS.length+' · 휴게시설 '+RESTS.length;
+    handleEquipDeepLink();
   }).catch(function(e){
     dot.className='dot err'; msg.textContent='데이터 로드 실패 — 네트워크 확인';
   });
+}
+
+// index.html 장비현황 화면에서 특정 장비(관리번호)로 바로 점검 화면 열기
+function handleEquipDeepLink(){
+  try{
+    var params=new URLSearchParams(location.search);
+    var mgmtNo=params.get('openEquip');
+    if(!mgmtNo) return;
+    var e=EQUIPS.find(function(x){ return String(x.mgmt_no)===String(mgmtNo); });
+    if(!e){ toast('장비를 찾을 수 없습니다: '+mgmtNo); return; }
+    openMod('equip');
+    var typeSel=document.getElementById('eType');
+    typeSel.value=e.name;
+    fillEquipList();
+    var eSel=document.getElementById('eSel');
+    eSel.value=e.id;
+    onEquipSel();
+  }catch(err){}
 }
 
 // ─ 공통 폼 채우기 ─
