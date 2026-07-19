@@ -1136,6 +1136,27 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     </div>
   </div>
 
+  <!-- 장비현황 요약 -->
+  <div style="margin:0">
+    <div class="sec-lbl" style="padding:16px 13px 8px">🔧 장비현황</div>
+    <div class="card" style="margin:0 13px 13px;cursor:pointer" onclick="go('equipment')">
+      <div class="cb">
+        <div id="eqHomeInfo" style="font-size:11px;color:var(--g4);margin-bottom:9px">불러오는 중...</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+          <div style="background:var(--navy-bg);border-radius:var(--r2);padding:11px 13px">
+            <div style="font-size:10px;font-weight:700;color:var(--navy)">전체 장비</div>
+            <div id="eqHomeTotal" style="font-size:24px;font-weight:900;color:var(--navy)">-</div>
+          </div>
+          <div style="background:var(--danger-bg);border-radius:var(--r2);padding:11px 13px">
+            <div style="font-size:10px;font-weight:700;color:var(--danger)" id="eqHomeYearLbl">올해 종료 예정</div>
+            <div id="eqHomeEndYear" style="font-size:24px;font-weight:900;color:var(--danger)">-</div>
+          </div>
+        </div>
+        <div style="text-align:right;margin-top:9px"><span style="font-size:11px;font-weight:700;color:var(--teal2)">전체 보기 →</span></div>
+      </div>
+    </div>
+  </div>
+
   <!-- 월간 통계 -->
   
 
@@ -10190,6 +10211,34 @@ function renderEquipmentGroup(){
 }
 
 
+// 홈 화면 - 장비현황 요약 위젯
+async function loadEqHomeSummary(){
+  try{
+    var res=await sb.from('equipment_data').select('*').order('created_at',{ascending:false}).limit(1);
+    var infoEl=document.getElementById('eqHomeInfo');
+    var totalEl=document.getElementById('eqHomeTotal');
+    var endEl=document.getElementById('eqHomeEndYear');
+    var lblEl=document.getElementById('eqHomeYearLbl');
+    if(res.error||!res.data||!res.data.length||!res.data[0].data){
+      if(infoEl) infoEl.textContent='등록된 장비 데이터가 없습니다';
+      if(totalEl) totalEl.textContent='0';
+      if(endEl) endEl.textContent='0';
+      return;
+    }
+    var row=res.data[0];
+    var d=row.data||{};
+    var headers=d.headers||[];
+    var rows=d.rows||[];
+    var endColIdx=headers.findIndex(function(h){ return String(h).indexOf('종료')!==-1; });
+    var curYear=new Date(Date.now()+9*3600000).getUTCFullYear();
+    var endThisYear=endColIdx>=0?rows.filter(function(r){ return eqParseEndYear(r[endColIdx])===curYear; }).length:0;
+    if(infoEl) infoEl.textContent='📅 '+toKSTDate(row.created_at)+(row.uploader?' · '+row.uploader:'')+' 업데이트';
+    if(totalEl) totalEl.textContent=rows.length;
+    if(endEl) endEl.textContent=endThisYear;
+    if(lblEl) lblEl.textContent=curYear+'년 종료 예정';
+  }catch(e){}
+}
+
 async function loadEquipmentFromDB(){
   try{
     var res=await sb.from('equipment_data').select('*').order('created_at',{ascending:false}).limit(1);
@@ -11053,7 +11102,7 @@ async function refreshMpDataLight(){
       mpDataByLeader={오전:{},오후:{},야간:{}};
       mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
       go('main');
-      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); }, 500);
+      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); }, 500);
       return;
     }
   }catch(e){}
@@ -13637,7 +13686,6 @@ function msRenderDetail(key){
     h+=msTopBars(msWithEtc(c.lost.byHandover,c.lost.handoverEtc), 5, 'linear-gradient(90deg,var(--navy),#3E6BB5)', '건');
     h+=msSub('오전 · 오후 · 야간 비교 <span style="font-size:9px;font-weight:500;color:var(--g4)">(접수 시각 기준, 팀 구분 아님)</span>');
     h+=msShiftBarsTime(c.lost.byShift);
-    if(c.lost.hourUnknown) h+='<div style="font-size:9px;color:var(--g4);margin-top:2px">⏱ 시간미상 '+c.lost.hourUnknown+'건 제외 (예전 입력분)</div>';
   }else if(key==='acc'){
     h=msTitle('⚠️ 안전사고 · '+pl);
     h+=msRow('발생 건수', c.acc.total+'건 <span style="font-size:9px;font-weight:600;color:var(--g4)">('+pw+' '+p.acc.total+'건)</span>');
