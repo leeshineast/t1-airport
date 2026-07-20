@@ -5110,20 +5110,20 @@ async function dlCSV(type){
     if(type==='lost'||type==='all'){
       var rl=await sb.from('lost_found').select('*').order('created_at',{ascending:false});
       if(rl.data&&rl.data.length){
-        var lostRows=[['접수일시','발견자사번','발견자이름','발견위치','물품내용','상태','처리내용','기타']];
+        var lostRows=[['접수일시','발견자사번','발견자이름','발견위치','접수경로','물품내용','상태','처리내용','기타']];
         rl.data.forEach(function(d){
           lostRows.push([
             d.created_at?toKSTDateTime(d.created_at):'',
             d.finder_id||'',d.finder_name||'',
-            d.location||'',d.item||'',
+            d.location||'',d.receipt_route||'',d.item||'',
             d.status||'',d.complete_memo||'',d.note||''
           ]);
         });
         var lostRange=dlDateRangeStr(rl.data.map(function(d){return d.created_at;}));
-        var lostWrap=dlWithTitle(lostRows,'T1환경미화사업부 습득물 처리현황',lostRange,8);
+        var lostWrap=dlWithTitle(lostRows,'T1환경미화사업부 습득물 처리현황',lostRange,9);
         var wsl=XLSX.utils.aoa_to_sheet(lostWrap.rows);
         wsl['!merges']=lostWrap.merges;
-        wsl['!cols']=[{wch:18},{wch:10},{wch:12},{wch:20},{wch:24},{wch:10},{wch:20},{wch:16}];
+        wsl['!cols']=[{wch:18},{wch:10},{wch:12},{wch:20},{wch:16},{wch:24},{wch:10},{wch:20},{wch:16}];
         wb.SheetNames.push('습득물');wb.Sheets['습득물']=wsl;
       }
     }
@@ -5764,13 +5764,13 @@ function renderLeaderStatus(viewDate){
 var userPerms={};
 function canWrite(){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return false;}
-  var p=me?userPerms[me.name]:null;
+  var p=me?userPerms[me.id]:null;
   if(p&&p.write===false){toast('⚠️ 쓰기 권한이 없습니다');return false;}
   return true;
 }
 function canDownload(){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return false;}
-  var p=me?userPerms[me.name]:null;
+  var p=me?userPerms[me.id]:null;
   if(p&&p.download===false){toast('⚠️ 다운로드 권한이 없습니다');return false;}
   return true;
 }
@@ -6842,13 +6842,13 @@ function updatePermChips(userName, perms){
 }
 async function loadPerms(){
   try{
-    // DB에서 권한 로드
-    var res=await sb.from('users').select('name,permissions').eq('status','active');
+    // DB에서 권한 로드 (id 기준 — name은 "게스트"처럼 여러 계정이 공유할 수 있어 충돌 위험)
+    var res=await sb.from('users').select('id,name,permissions').eq('status','active');
     if(res.data&&res.data.length){
       res.data.forEach(function(u){
         if(u.permissions){
           try{
-            userPerms[u.name]=typeof u.permissions==='string'?JSON.parse(u.permissions):u.permissions;
+            userPerms[u.id]=typeof u.permissions==='string'?JSON.parse(u.permissions):u.permissions;
           }catch(e){}
         }
       });
@@ -8635,13 +8635,13 @@ async function loadUserList(){
       row.className='u-row';
       var p={};
       try{ p=typeof u.permissions==='string'?JSON.parse(u.permissions):(u.permissions||{}); }catch(e){ p={}; }
-      // userPerms 동기화
-      if(u.name) userPerms[u.name]=p;
+      // userPerms 동기화 (id 기준 — name은 "게스트"처럼 중복될 수 있음)
+      if(u.id) userPerms[u.id]=p;
       var permChips=['read','write','edit','download'].map(function(k){
         var labels={read:'읽기',write:'쓰기',edit:'수정',download:'다운로드'};
         return '<span style="font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;background:'+(p[k]?'var(--success-bg)':'var(--g1)')+';color:'+(p[k]?'var(--success)':'var(--g3)')+'">'+labels[k]+'</span>';
       }).join('');
-      row.innerHTML='<div style="display:flex;flex-direction:column;width:100%;gap:5px"><div style="display:flex;align-items:center;justify-content:space-between"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' · '+u.role+'</div></div></div><div style="display:flex;gap:6px;align-items:center"><span class="chip chip-ok">활성</span><button class="perm-btn" data-name="'+u.name+'" data-id="'+u.id+'" style="padding:4px 9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer">🔐 권한</button><button class="withdraw-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:5px 9px;background:var(--danger-bg);color:var(--danger);border:1.5px solid rgba(217,64,64,.2);border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">탈퇴</button></div></div><div id="perm-'+u.name+'" style="display:flex;flex-wrap:wrap;gap:4px">'+permChips+'</div></div>';
+      row.innerHTML='<div style="display:flex;flex-direction:column;width:100%;gap:5px"><div style="display:flex;align-items:center;justify-content:space-between"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' · '+u.role+'</div></div></div><div style="display:flex;gap:6px;align-items:center"><span class="chip chip-ok">활성</span><button class="perm-btn" data-name="'+u.name+'" data-id="'+u.id+'" style="padding:4px 9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:20px;font-size:10px;font-weight:700;cursor:pointer">🔐 권한</button><button class="withdraw-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:5px 9px;background:var(--danger-bg);color:var(--danger);border:1.5px solid rgba(217,64,64,.2);border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">탈퇴</button></div></div><div id="perm-'+u.id+'" style="display:flex;flex-wrap:wrap;gap:4px">'+permChips+'</div></div>';
       row.querySelector('.perm-btn').onclick=function(){openPermEdit(this,this.dataset.name,this.dataset.id);};
       row.querySelector('.withdraw-btn').onclick=function(){withdrawUserDB(this.dataset.id,this.dataset.name);};
       el.appendChild(row);
@@ -8663,7 +8663,7 @@ function openPermEdit(btn, userName, userId){
   currentPermUser=userName;
   currentPermUserId=userId||'';
   document.getElementById('permUserName').textContent=userName+' 권한 설정';
-  var perms=userPerms[userName]||{read:true,write:true,edit:false,download:false};
+  var perms=userPerms[userId]||userPerms[userName]||{read:true,write:true,edit:false,download:false};
   ['read','write','edit','download'].forEach(function(p){
     var el=document.getElementById('perm-'+p);
     if(el) el.checked=perms[p]||false;
@@ -8686,7 +8686,7 @@ async function savePermEdit(){
     var el=document.getElementById('perm-'+p);
     perms[p]=el?el.checked:false;
   });
-  userPerms[currentPermUser]=perms;
+  if(currentPermUserId) userPerms[currentPermUserId]=perms;
   try{ localStorage.setItem('t1_perms',JSON.stringify(userPerms)); }catch(e){}
   // DB 저장: id로 찾아서 permissions를 JSON 문자열로 저장
   try{
@@ -10111,7 +10111,7 @@ function downloadLostExcel(){
   if(!lostData||!lostData.length){ toast('다운로드할 데이터가 없습니다'); return; }
   var filterMonth=document.getElementById('lostFilterMonth');
   var mf=filterMonth?filterMonth.value:'';
-  var rows=[['접수일시','발견자사번','발견자이름','발견위치','물품내용','상태','처리내용','기타']];
+  var rows=[['접수일시','발견자사번','발견자이름','발견위치','접수경로','물품내용','상태','처리내용','기타']];
   var filtered=lostData.filter(function(r){
     if(mf&&toKSTDate(r.found_date||r.created_at).slice(0,7)!==mf) return false;
     return true;
@@ -10122,6 +10122,7 @@ function downloadLostExcel(){
       r.finder_id||'',
       r.finder_name||'',
       r.location||'',
+      r.receipt_route||'',
       r.item||'',
       r.status||'',
       r.complete_memo||'',
@@ -10131,10 +10132,10 @@ function downloadLostExcel(){
   try{
     var wb=XLSX.utils.book_new();
     var range=(typeof dlDateRangeStr==='function')?dlDateRangeStr(filtered.map(function(r){return r.created_at;})):'';
-    var wrap=(typeof dlWithTitle==='function')?dlWithTitle(rows,'T1환경미화사업부 습득물 처리현황',range,8):{rows:rows,merges:[]};
+    var wrap=(typeof dlWithTitle==='function')?dlWithTitle(rows,'T1환경미화사업부 습득물 처리현황',range,9):{rows:rows,merges:[]};
     var ws=XLSX.utils.aoa_to_sheet(wrap.rows);
     ws['!merges']=wrap.merges;
-    ws['!cols']=[{wch:18},{wch:10},{wch:12},{wch:20},{wch:24},{wch:10},{wch:20},{wch:16}];
+    ws['!cols']=[{wch:18},{wch:10},{wch:12},{wch:20},{wch:16},{wch:24},{wch:10},{wch:20},{wch:16}];
     XLSX.utils.book_append_sheet(wb,ws,'습득물');
     var fname='T1_습득물관리'+(mf?'_'+mf:'')+'.xlsx';
     XLSX.writeFile(wb,fname);
