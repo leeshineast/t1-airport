@@ -3344,6 +3344,21 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   </div>
 </div>
 
+<!-- 시설현황 상세보기 모달 (업로드한 엑셀 원본 컬럼 그대로 검색 가능) -->
+<div id="facDetailModal" class="modal-bg">
+  <div class="modal" style="max-width:96vw;width:640px;max-height:88vh">
+    <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))">
+      <h3 id="facDetailTitle">🏢 시설 상세</h3>
+      <button class="m-x" onclick="hideM('facDetailModal')">×</button>
+    </div>
+    <div style="padding:13px 15px;overflow:auto;max-height:calc(88vh - 60px)">
+      <input id="facDetailSearch" type="text" placeholder="검색..." oninput="renderFacDetailTable()" style="width:100%;padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;margin-bottom:10px;box-sizing:border-box">
+      <div id="facDetailCount" style="font-size:11px;color:var(--g4);margin-bottom:8px"></div>
+      <div id="facDetailTableWrap" style="overflow-x:auto"></div>
+    </div>
+  </div>
+</div>
+
 <!-- 조장 입력값 수정 모달 (관리자 전용) -->
 <div id="leaderDataModal" class="modal-bg">
   <div class="modal" style="max-height:90vh;overflow-y:auto">
@@ -8103,6 +8118,52 @@ function parseExcelData(filename, rows){
   });
 
   facilityData[type]={total:total,ls:ls,as:as,floors:floors,detail:detail,toiletDetail:toiletDetail,restDetail:restDetailArr};
+  // 원본 엑셀 컬럼 그대로 보관 (상세 목록/검색용) - 업로드된 실제 헤더에 맞춰 매번 새로 구성됨
+  if(rows.length){
+    var rawHeaders=Object.keys(rows[0]);
+    var rawRows=rows.map(function(r){ return rawHeaders.map(function(h){ return r[h]; }); });
+    facilityData[type].raw={headers:rawHeaders, rows:rawRows};
+  }
+}
+
+// 시설현황 상세보기 (업로드한 엑셀 원본 컬럼 그대로, 검색 가능)
+var _facDetailType='';
+function openFacDetail(type){
+  var d=facilityData[type];
+  if(!d||!d.raw||!d.raw.rows||!d.raw.rows.length){ toast('상세 데이터가 없습니다. 엑셀을 다시 업로드해주세요.'); return; }
+  _facDetailType=type;
+  var titleEl=document.getElementById('facDetailTitle');
+  if(titleEl) titleEl.textContent='🏢 '+type+' 상세 ('+d.raw.rows.length+'건)';
+  var searchEl=document.getElementById('facDetailSearch');
+  if(searchEl) searchEl.value='';
+  renderFacDetailTable();
+  showM('facDetailModal');
+}
+function renderFacDetailTable(){
+  var d=facilityData[_facDetailType];
+  var wrap=document.getElementById('facDetailTableWrap');
+  var countEl=document.getElementById('facDetailCount');
+  if(!d||!d.raw||!wrap) return;
+  var headers=d.raw.headers, rows=d.raw.rows;
+  var q=(document.getElementById('facDetailSearch').value||'').trim().toLowerCase();
+  var filtered=rows;
+  if(q){
+    filtered=rows.filter(function(r){
+      return r.some(function(c){ return String(c!=null?c:'').toLowerCase().indexOf(q)!==-1; });
+    });
+  }
+  if(countEl) countEl.textContent='전체 '+rows.length+'건 중 '+filtered.length+'건 표시';
+  var h='<table style="width:100%;border-collapse:collapse;font-size:11px;min-width:400px">';
+  h+='<thead><tr>';
+  headers.forEach(function(hd){ h+='<th style="padding:6px 8px;background:var(--navy);color:white;text-align:left;white-space:nowrap;position:sticky;top:0">'+hd+'</th>'; });
+  h+='</tr></thead><tbody>';
+  filtered.forEach(function(r,i){
+    h+='<tr style="background:'+(i%2===0?'white':'var(--g1)')+';">';
+    r.forEach(function(c){ h+='<td style="padding:5px 8px;border-bottom:1px solid var(--g2);white-space:nowrap;color:var(--g7)">'+(c!=null?c:'')+'</td>'; });
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  wrap.innerHTML=h;
 }
 
 function renderFacilitySummary(){
@@ -8125,10 +8186,10 @@ function renderFacilitySummary(){
     var bg=bgs[type];
     h+='<div class="card" style="margin-bottom:10px"><div class="cb">';
 
-    // ── 헤더 ──
-    h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">';
+    // ── 헤더 (클릭 시 상세보기) ──
+    h+='<div onclick="openFacDetail(\''+type+'\')" style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;cursor:pointer">';
     h+='<div style="display:flex;align-items:center;gap:8px"><span style="font-size:20px">'+icons[type]+'</span>';
-    h+='<span style="font-size:15px;font-weight:800;color:'+color+'">'+type+'</span></div>';
+    h+='<span style="font-size:15px;font-weight:800;color:'+color+'">'+type+'</span>'+(d.raw&&d.raw.rows&&d.raw.rows.length?'<span style="font-size:10px;font-weight:700;color:var(--teal2);background:var(--teal-bg);padding:2px 8px;border-radius:20px">상세보기 →</span>':'')+'</div>';
     h+='<span style="font-size:24px;font-weight:900;color:'+color+'">'+d.total+'<span style="font-size:11px;font-weight:400;color:var(--g4)"> 개소</span></span>';
     h+='</div>';
 
