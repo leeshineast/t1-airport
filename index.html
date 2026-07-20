@@ -5708,13 +5708,14 @@ function renderLeaderStatus(viewDate){
 var userPerms={};
 function canWrite(){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return false;}
-  var p=me?userPerms[me.name]:null;
+  // 이름이 같은 계정이 여러 개 있을 수 있어 userPerms(이름 키) 대신 me.permissions(로그인 계정 고유값)를 사용
+  var p=me?(me.permissions||userPerms[me.name]):null;
   if(p&&p.write===false){toast('⚠️ 쓰기 권한이 없습니다');return false;}
   return true;
 }
 function canDownload(){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return false;}
-  var p=me?userPerms[me.name]:null;
+  var p=me?(me.permissions||userPerms[me.name]):null;
   if(p&&p.download===false){toast('⚠️ 다운로드 권한이 없습니다');return false;}
   return true;
 }
@@ -6241,10 +6242,21 @@ function renderVehList(data){
     h+='<span style="font-size:11px;color:var(--g3)"> — </span><span style="font-size:12px;color:var(--g5)">'+r.purpose+'</span></div>';
     h+='<div style="display:flex;gap:12px;font-size:11px;color:var(--g4)"><span>'+r.start+' ~ '+r.end+'</span><span>계기 '+(r.before||0).toLocaleString()+'→'+(r.after||0).toLocaleString()+'km</span></div>';
     h+=etcH;
-    h+='<div style="margin-top:8px;text-align:right"><button onclick="openVehEdit('+r.id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button></div>';
+    var delBtnH=(me&&me.role==='admin')?('<button onclick="deleteVehLog('+r.id+')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--danger);cursor:pointer;margin-left:6px">🗑️ 삭제</button>'):'';
+    h+='<div style="margin-top:8px;text-align:right"><button onclick="openVehEdit('+r.id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button>'+delBtnH+'</div>';
     h+='</div></div>';
   });
   list.innerHTML=h;updateVehStats(filtered);
+}
+async function deleteVehLog(id){
+  if(!me||me.role!=='admin'){toast('⚠️ 관리자만 삭제할 수 있습니다');return;}
+  if(!confirm('이 운행 기록을 삭제하시겠습니까? 삭제 후 되돌릴 수 없습니다.')) return;
+  try{
+    var res=await sb.from('vehicle_log').delete().eq('id',id);
+    if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    toast('✅ 운행 기록이 삭제되었습니다');
+    await loadVehicleFromDB();
+  }catch(e){ toast('삭제 오류: '+String(e.message||e)); }
 }
 function syncTimeSel(prefix){
   var h=document.getElementById(prefix+'H').value;
