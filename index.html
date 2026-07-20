@@ -4860,6 +4860,27 @@ function subInd(){
 }
 
 // ─ 다운로드 ─
+function dlFmtDate(d){
+  if(!d) return '';
+  var s=String(d).slice(0,10);
+  var m=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m) return m[1].slice(2)+'.'+m[2]+'.'+m[3];
+  return s;
+}
+function dlDateRangeStr(dates){
+  var valid=dates.filter(Boolean).map(String).sort();
+  if(!valid.length) return '00.00.00 ~ 00.00.00';
+  return dlFmtDate(valid[0])+' ~ '+dlFmtDate(valid[valid.length-1]);
+}
+// 제목/기간 행을 데이터 위에 붙이고, 헤더 폭만큼 제목/기간 셀을 병합
+function dlWithTitle(rows, title, rangeStr, colCount){
+  var out=[[title], [rangeStr]].concat(rows);
+  var merges=[
+    {s:{r:0,c:0},e:{r:0,c:colCount-1}},
+    {s:{r:1,c:0},e:{r:1,c:colCount-1}}
+  ];
+  return {rows:out, merges:merges};
+}
 async function dlCSV(type){
   if(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader')){toast('⚠️ 조장 이상만 다운로드할 수 있습니다');return;}
   toast('📥 엑셀 다운로드 준비 중...');
@@ -4871,16 +4892,32 @@ async function dlCSV(type){
     if(type==='ho'||type==='all'){
       var r2=await sb.from('handover').select('*').order('created_at',{ascending:false});
       if(r2.data&&r2.data.length){
-        var hoRows=[['날짜','인계조','인수조','작성자','팀','시설물','업무내용','확인여부','확인자']];
+        var hoRows=[];
         r2.data.forEach(function(d){
+          var fp=(typeof parseHoFacility==='function')?parseHoFacility(d.facility||''):null;
+          var rcvMatch=(d.facility||'').match(/\[접수자\]\s*([^\/]+?)(?=\s*\/\s*\[|$)/);
+          var receiver=rcvMatch?rcvMatch[1].trim():'';
           hoRows.push([
             (d.ho_date||d.created_at)?toKSTDate(d.ho_date||d.created_at):'',
             d.shift||'',d.to_shift||'',d.author||'',d.team||'',
-            d.facility||'',d.notice||'',
+            (fp&&fp.loc)||'', (fp&&fp.desc)||'', (fp&&fp.type)||'', receiver,
+            d.notice||'',
             d.confirmed?'확인':'대기',d.confirmed_by||''
           ]);
         });
-        var ws2=XLSX.utils.aoa_to_sheet(hoRows);
+        var hoRange=dlDateRangeStr(r2.data.map(function(d){return d.ho_date||d.created_at;}));
+        var hoHead1=['날짜','인계조','인수조','작성자','팀','시설물','','','','업무내용','확인여부','확인자'];
+        var hoHead2=['','','','','','장소','내용','신고','접수자','','',''];
+        var hoOut=[['T1환경미화사업부 인수인계 현황'],[hoRange],hoHead1,hoHead2].concat(hoRows);
+        var ws2=XLSX.utils.aoa_to_sheet(hoOut);
+        ws2['!merges']=[
+          {s:{r:0,c:0},e:{r:0,c:11}}, {s:{r:1,c:0},e:{r:1,c:11}},
+          {s:{r:2,c:0},e:{r:3,c:0}}, {s:{r:2,c:1},e:{r:3,c:1}}, {s:{r:2,c:2},e:{r:3,c:2}},
+          {s:{r:2,c:3},e:{r:3,c:3}}, {s:{r:2,c:4},e:{r:3,c:4}},
+          {s:{r:2,c:5},e:{r:2,c:8}},
+          {s:{r:2,c:9},e:{r:3,c:9}}, {s:{r:2,c:10},e:{r:3,c:10}}, {s:{r:2,c:11},e:{r:3,c:11}}
+        ];
+        ws2['!cols']=[{wch:11},{wch:9},{wch:9},{wch:9},{wch:9},{wch:18},{wch:20},{wch:8},{wch:9},{wch:16},{wch:8},{wch:9}];
         wb.SheetNames.push('인수인계');wb.Sheets['인수인계']=ws2;
       }
     }
@@ -4898,7 +4935,10 @@ async function dlCSV(type){
             d.vehicle||'', d.purpose||'', d.etc||''
           ]);
         });
-        var ws3=XLSX.utils.aoa_to_sheet(vRows);
+        var vRange=dlDateRangeStr(r3.data.map(function(d){return d.date;}));
+        var vWrap=dlWithTitle(vRows,'T1환경미화사업부 차량운행일지',vRange,11);
+        var ws3=XLSX.utils.aoa_to_sheet(vWrap.rows);
+        ws3['!merges']=vWrap.merges;
         wb.SheetNames.push('차량운행');wb.Sheets['차량운행']=ws3;
       }
     }
@@ -5032,8 +5072,13 @@ async function dlCSV(type){
             d.created_at?toKSTDateTime(d.created_at):''
           ]);
         });
-        var wsv=XLSX.utils.aoa_to_sheet(vocRows);
+        var vocRange=dlDateRangeStr(rv.data.map(function(d){return d.voc_date;}));
+        var vocWrap={rows:[['T1환경미화사업부 자체 VOC 현황'],[],[vocRange]].concat(vocRows), merges:[
+          {s:{r:0,c:0},e:{r:0,c:9}}, {s:{r:2,c:0},e:{r:2,c:9}}
+        ]};
+        var wsv=XLSX.utils.aoa_to_sheet(vocWrap.rows);
         wsv['!cols']=[{wch:6},{wch:12},{wch:14},{wch:10},{wch:12},{wch:14},{wch:40},{wch:10},{wch:20},{wch:18}];
+        wsv['!merges']=vocWrap.merges;
         wb.SheetNames.push('민원(서비스응대)');wb.Sheets['민원(서비스응대)']=wsv;
       }
     }
@@ -5074,7 +5119,10 @@ async function dlCSV(type){
             d.status||'',d.complete_memo||'',d.note||''
           ]);
         });
-        var wsl=XLSX.utils.aoa_to_sheet(lostRows);
+        var lostRange=dlDateRangeStr(rl.data.map(function(d){return d.created_at;}));
+        var lostWrap=dlWithTitle(lostRows,'T1환경미화사업부 습득물 처리현황',lostRange,8);
+        var wsl=XLSX.utils.aoa_to_sheet(lostWrap.rows);
+        wsl['!merges']=lostWrap.merges;
         wsl['!cols']=[{wch:18},{wch:10},{wch:12},{wch:20},{wch:24},{wch:10},{wch:20},{wch:16}];
         wb.SheetNames.push('습득물');wb.Sheets['습득물']=wsl;
       }
@@ -5147,11 +5195,19 @@ async function dlCSV(type){
     if(type==='facility'||type==='all'){
       var rf=await sb.from('facility_data').select('*');
       if(rf.data&&rf.data.length){
-        var facRows=[['시설구분','데이터(JSON)']];
+        var facRows=[['시설구분','A/S','L/S','총계','층별 현황','세부 내역']];
         rf.data.forEach(function(d){
-          facRows.push([d.facility_type||'', d.data?JSON.stringify(d.data):'']);
+          var v=d.data||{};
+          var floorsStr=v.floors?Object.keys(v.floors).map(function(k){ return k+':'+v.floors[k]; }).join(', '):'';
+          var detailStr='';
+          if(v.detail){
+            detailStr=Object.keys(v.detail).filter(function(k){ return k.indexOf('__team__')!==0; })
+              .map(function(k){ return k+':'+v.detail[k]; }).join(', ');
+          }
+          facRows.push([d.facility_type||'', v.as!=null?v.as:'', v.ls!=null?v.ls:'', v.total!=null?v.total:'', floorsStr, detailStr]);
         });
         var wsf=XLSX.utils.aoa_to_sheet(facRows);
+        wsf['!cols']=[{wch:14},{wch:8},{wch:8},{wch:8},{wch:30},{wch:50}];
         wb.SheetNames.push('시설현황');wb.Sheets['시설현황']=wsf;
       }
     }
@@ -5708,14 +5764,13 @@ function renderLeaderStatus(viewDate){
 var userPerms={};
 function canWrite(){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return false;}
-  // 이름이 같은 계정이 여러 개 있을 수 있어 userPerms(이름 키) 대신 me.permissions(로그인 계정 고유값)를 사용
-  var p=me?(me.permissions||userPerms[me.name]):null;
+  var p=me?userPerms[me.name]:null;
   if(p&&p.write===false){toast('⚠️ 쓰기 권한이 없습니다');return false;}
   return true;
 }
 function canDownload(){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return false;}
-  var p=me?(me.permissions||userPerms[me.name]):null;
+  var p=me?userPerms[me.name]:null;
   if(p&&p.download===false){toast('⚠️ 다운로드 권한이 없습니다');return false;}
   return true;
 }
@@ -6242,21 +6297,10 @@ function renderVehList(data){
     h+='<span style="font-size:11px;color:var(--g3)"> — </span><span style="font-size:12px;color:var(--g5)">'+r.purpose+'</span></div>';
     h+='<div style="display:flex;gap:12px;font-size:11px;color:var(--g4)"><span>'+r.start+' ~ '+r.end+'</span><span>계기 '+(r.before||0).toLocaleString()+'→'+(r.after||0).toLocaleString()+'km</span></div>';
     h+=etcH;
-    var delBtnH=(me&&me.role==='admin')?('<button onclick="deleteVehLog('+r.id+')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--danger);cursor:pointer;margin-left:6px">🗑️ 삭제</button>'):'';
-    h+='<div style="margin-top:8px;text-align:right"><button onclick="openVehEdit('+r.id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button>'+delBtnH+'</div>';
+    h+='<div style="margin-top:8px;text-align:right"><button onclick="openVehEdit('+r.id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button></div>';
     h+='</div></div>';
   });
   list.innerHTML=h;updateVehStats(filtered);
-}
-async function deleteVehLog(id){
-  if(!me||me.role!=='admin'){toast('⚠️ 관리자만 삭제할 수 있습니다');return;}
-  if(!confirm('이 운행 기록을 삭제하시겠습니까? 삭제 후 되돌릴 수 없습니다.')) return;
-  try{
-    var res=await sb.from('vehicle_log').delete().eq('id',id);
-    if(res.error){ toast('삭제 오류: '+res.error.message); return; }
-    toast('✅ 운행 기록이 삭제되었습니다');
-    await loadVehicleFromDB();
-  }catch(e){ toast('삭제 오류: '+String(e.message||e)); }
 }
 function syncTimeSel(prefix){
   var h=document.getElementById(prefix+'H').value;
@@ -6356,23 +6400,20 @@ function dlVeh(){
   if(from)filtered=filtered.filter(function(r){return r.date.slice(0,7)>=from;});
   if(to)filtered=filtered.filter(function(r){return r.date.slice(0,7)<=to;});
   if(!filtered.length){toast('해당 기간에 운행 기록이 없습니다');return;}
-  var NL='\n';var Q='"';var SEP=',';
-  var esc=function(c){return Q+String(c||'').replace(/"/g,Q+Q)+Q;};
-  var header=['사용일자','부서','성명','주행전계기판(km)','주행후계기판(km)','주행거리(km)','출발시간','도착시간','목적지(경유지포함)','목적','기타'];
-  var rows=[];
-  rows.push(['업무용차량 운행기록부 - T1환경미화사업부 스타리아 821로8915'].map(esc).join(SEP));
-  rows.push(header.map(esc).join(SEP));
+  var header=['사용일자','소속','성명','주행 전 계기판(km)','주행 후 계기판(km)','주행거리','출발 시간','도착 시간','목적지','목적','기타'];
+  var rows=[header];
   filtered.forEach(function(r){
-    var row=[r.date,r.dept||'T1환경미화사업부',r.name,r.before,r.after,r.dist,r.start,r.end,r.dest,r.purpose,r.etc||''];
-    rows.push(row.map(esc).join(SEP));
+    rows.push([r.date, r.dept||'T1운영', r.name, r.before||0, r.after||0, r.dist||0, r.start||'', r.end||'', r.dest||'', r.purpose||'', r.etc||'']);
   });
-  var BOM='\uFEFF';var csv=BOM+rows.join(NL);
-  var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
-  var url=URL.createObjectURL(blob);var a=document.createElement('a');
-  a.href=url;a.download='차량운행기록부_'+(from&&to?from+'_'+to:'전체')+'.csv';a.click();
-  URL.revokeObjectURL(url);
+  var range=(typeof dlDateRangeStr==='function')?dlDateRangeStr(filtered.map(function(r){return r.date;})):'';
+  var wrap=(typeof dlWithTitle==='function')?dlWithTitle(rows,'T1환경미화사업부 차량운행일지',range,11):{rows:rows,merges:[]};
+  var ws=XLSX.utils.aoa_to_sheet(wrap.rows);
+  ws['!merges']=wrap.merges;
+  ws['!cols']=[{wch:11},{wch:9},{wch:9},{wch:14},{wch:14},{wch:9},{wch:9},{wch:9},{wch:12},{wch:14},{wch:12}];
+  var wb={SheetNames:['차량운행일지'],Sheets:{'차량운행일지':ws}};
+  XLSX.writeFile(wb,'차량운행일지_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
   var info=document.getElementById('vhDlInfo');if(info)info.textContent='완료: '+filtered.length+'건';
-  toast('차량운행기록부 다운로드 완료 ('+filtered.length+'건)');
+  toast('차량운행일지 다운로드 완료 ('+filtered.length+'건)');
 }
 function loadVehData(){
   // 소속/성명 자동 입력
@@ -8975,50 +9016,38 @@ function downloadHoExcel(){
     var XLSX=window.XLSX;
     if(!XLSX){ toast('엑셀 라이브러리 로딩 중...'); return; }
 
-    // 날짜별 시트 생성
     var wb=XLSX.utils.book_new();
-    var groups={};
-    hoExport.forEach(function(r){
-      var baseTs=r.ho_date||r.created_at;
-      var d=baseTs?toKSTDate(baseTs):'미상';
-      if(!groups[d]) groups[d]=[];
-      groups[d].push(r);
+    var hoRows=[];
+    hoExport.slice().sort(function(a,b){
+      var ta=new Date(a.ho_date||a.created_at||0).getTime();
+      var tb=new Date(b.ho_date||b.created_at||0).getTime();
+      return tb-ta;
+    }).forEach(function(r){
+      var fp=(typeof parseHoFacility==='function')?parseHoFacility(r.facility||''):null;
+      var rcvMatch=(r.facility||'').match(/\[접수자\]\s*([^\/]+?)(?=\s*\/\s*\[|$)/);
+      var receiver=rcvMatch?rcvMatch[1].trim():'';
+      hoRows.push([
+        (r.ho_date||r.created_at)?toKSTDate(r.ho_date||r.created_at):'',
+        r.shift||'',r.to_shift||'',r.author||'',r.team||'',
+        (fp&&fp.loc)||'', (fp&&fp.desc)||'', (fp&&fp.type)||'', receiver,
+        r.notice||'',
+        r.confirmed?'확인':'대기',r.confirmed_by||''
+      ]);
     });
-
-    var dates=Object.keys(groups).sort().reverse();
-
-    // 전체 시트
-    var allRows=[['날짜','시간','인계팀','인수팀','작성자','소속','시설고장','업무내용','확인여부','확인자','처리결과']];
-    dates.forEach(function(d){
-      groups[d].forEach(function(r){
-        var ts=(r.ho_date||r.created_at)?new Date(r.ho_date||r.created_at).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false}):'';
-        allRows.push([
-          d, ts,
-          r.shift||'', r.to_shift||'',
-          r.author||'', r.team||'',
-          r.facility||'', r.notice||'',
-          r.confirmed?'확인완료':'미확인', r.confirmed_by||'', r.result||''
-        ]);
-      });
-      allRows.push([]); // 날짜 구분 빈줄
-    });
-    var ws=XLSX.utils.aoa_to_sheet(allRows);
-    // 열 너비
-    ws['!cols']=[{wch:12},{wch:8},{wch:8},{wch:8},{wch:10},{wch:12},{wch:20},{wch:20},{wch:10},{wch:10},{wch:25}];
-    XLSX.utils.book_append_sheet(wb,'전체인수인계',ws);
-
-    // 날짜별 시트 (최근 7일)
-    dates.slice(0,7).forEach(function(d){
-      var rows=[['시간','인계팀','인수팀','작성자','소속','시설고장','업무내용','확인여부','처리결과']];
-      groups[d].forEach(function(r){
-        var ts=(r.ho_date||r.created_at)?new Date(r.ho_date||r.created_at).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false}):'';
-        rows.push([ts, r.shift||'', r.to_shift||'', r.author||'', r.team||'', r.facility||'', r.notice||'', r.confirmed?'✅':'❌', r.result||'']);
-      });
-      var ws2=XLSX.utils.aoa_to_sheet(rows);
-      ws2['!cols']=[{wch:8},{wch:8},{wch:8},{wch:10},{wch:12},{wch:20},{wch:20},{wch:8},{wch:25}];
-      var sheetName=d.replace(/-/g,'').slice(4); // 0612 형식
-      XLSX.utils.book_append_sheet(wb,sheetName,ws2);
-    });
+    var hoRange=(typeof dlDateRangeStr==='function')?dlDateRangeStr(hoExport.map(function(r){return r.ho_date||r.created_at;})):'';
+    var hoHead1=['날짜','인계조','인수조','작성자','팀','시설물','','','','업무내용','확인여부','확인자'];
+    var hoHead2=['','','','','','장소','내용','신고','접수자','','',''];
+    var hoOut=[['T1환경미화사업부 인수인계 현황'],[hoRange],hoHead1,hoHead2].concat(hoRows);
+    var ws=XLSX.utils.aoa_to_sheet(hoOut);
+    ws['!merges']=[
+      {s:{r:0,c:0},e:{r:0,c:11}}, {s:{r:1,c:0},e:{r:1,c:11}},
+      {s:{r:2,c:0},e:{r:3,c:0}}, {s:{r:2,c:1},e:{r:3,c:1}}, {s:{r:2,c:2},e:{r:3,c:2}},
+      {s:{r:2,c:3},e:{r:3,c:3}}, {s:{r:2,c:4},e:{r:3,c:4}},
+      {s:{r:2,c:5},e:{r:2,c:8}},
+      {s:{r:2,c:9},e:{r:3,c:9}}, {s:{r:2,c:10},e:{r:3,c:10}}, {s:{r:2,c:11},e:{r:3,c:11}}
+    ];
+    ws['!cols']=[{wch:11},{wch:9},{wch:9},{wch:9},{wch:9},{wch:18},{wch:20},{wch:8},{wch:9},{wch:16},{wch:8},{wch:9}];
+    XLSX.utils.book_append_sheet(wb,'인수인계',ws);
 
     var now=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
     XLSX.writeFile(wb,'인수인계_'+now+'.xlsx');
@@ -10082,30 +10111,31 @@ function downloadLostExcel(){
   if(!lostData||!lostData.length){ toast('다운로드할 데이터가 없습니다'); return; }
   var filterMonth=document.getElementById('lostFilterMonth');
   var mf=filterMonth?filterMonth.value:'';
-  var rows=[['연번','접수일시','작성자','발견자 사번','발견자 이름','발견 위치','발견 물품','처리현황','완료일시','기타']];
+  var rows=[['접수일시','발견자사번','발견자이름','발견위치','물품내용','상태','처리내용','기타']];
   var filtered=lostData.filter(function(r){
     if(mf&&toKSTDate(r.found_date||r.created_at).slice(0,7)!==mf) return false;
     return true;
   });
-  filtered.forEach(function(r,i){
+  filtered.forEach(function(r){
     rows.push([
-      i+1,
       toKSTDateTime(r.created_at),
-      r.writer||'',
       r.finder_id||'',
       r.finder_name||'',
       r.location||'',
       r.item||'',
       r.status||'',
-      r.completed_at?toKSTDateTime(r.completed_at):'',
+      r.complete_memo||'',
       r.note||''
     ]);
   });
   try{
     var wb=XLSX.utils.book_new();
-    var ws=XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols']=[{wch:6},{wch:18},{wch:12},{wch:10},{wch:10},{wch:20},{wch:30},{wch:12},{wch:20}];
-    XLSX.utils.book_append_sheet(wb,ws,'습득물관리');
+    var range=(typeof dlDateRangeStr==='function')?dlDateRangeStr(filtered.map(function(r){return r.created_at;})):'';
+    var wrap=(typeof dlWithTitle==='function')?dlWithTitle(rows,'T1환경미화사업부 습득물 처리현황',range,8):{rows:rows,merges:[]};
+    var ws=XLSX.utils.aoa_to_sheet(wrap.rows);
+    ws['!merges']=wrap.merges;
+    ws['!cols']=[{wch:18},{wch:10},{wch:12},{wch:20},{wch:24},{wch:10},{wch:20},{wch:16}];
+    XLSX.utils.book_append_sheet(wb,ws,'습득물');
     var fname='T1_습득물관리'+(mf?'_'+mf:'')+'.xlsx';
     XLSX.writeFile(wb,fname);
     toast('📥 다운로드 완료');
