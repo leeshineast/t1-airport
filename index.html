@@ -12127,15 +12127,36 @@ function editAccident(id){
 function renderAccConfBlock(r){
   var domId='acc_'+r.id;
   if(r.confirmed){
+    var indHtml='';
+    if(r.is_industrial===true) indHtml='<div style="font-size:11px;color:var(--danger);font-weight:700;margin-top:5px">🏭 산업재해'+(r.decision_date?(' · 결정통지일자 '+r.decision_date):'')+'</div>';
+    else if(r.is_industrial===false) indHtml='<div style="font-size:11px;color:var(--g5);font-weight:700;margin-top:5px">🛟 안전사고 (산업재해 아님)</div>';
     var resultHtml=r.result?('<div style="font-size:11px;color:var(--g6);background:var(--g1);border-radius:6px;padding:6px 9px;margin-top:5px;white-space:pre-wrap">🛡️ 재발방지대책: '+r.result+'</div>'):'';
-    return '<div style="font-size:11px;color:var(--success);font-weight:700;padding:6px 0">✅ '+(r.confirmed_by||'')+'님 확인 및 결과입력 완료</div>'+resultHtml;
+    return '<div style="font-size:11px;color:var(--success);font-weight:700;padding:6px 0">✅ '+(r.confirmed_by||'')+'님 확인 및 결과입력 완료</div>'+indHtml+resultHtml;
   }
   if(!me||!(me.role==='admin'||me.role==='manager')) return '';
   return '<div class="conf-row"><button class="btn-conf" onclick="openAccResult(\''+domId+'\')">✔ 확인 및 결과입력</button></div>'
     +'<div id="accResultBox_'+domId+'" style="display:none;margin-top:6px">'
+      +'<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:5px">산업재해 여부</div>'
+      +'<div style="display:flex;gap:6px;margin-bottom:8px">'
+        +'<div id="accInd_'+domId+'_0" class="rp" onclick="selAccIndustrial(\''+domId+'\',false)" style="flex:1;text-align:center">🛟 안전사고</div>'
+        +'<div id="accInd_'+domId+'_1" class="rp" onclick="selAccIndustrial(\''+domId+'\',true)" style="flex:1;text-align:center">🏭 산업재해</div>'
+      +'</div>'
+      +'<div id="accDecisionWrap_'+domId+'" style="display:none;margin-bottom:8px">'
+        +'<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:5px">결정통지일자</div>'
+        +'<input type="date" id="accDecisionDate_'+domId+'" class="ri" style="margin-bottom:0">'
+      +'</div>'
       +'<textarea id="accResultInput_'+domId+'" placeholder="재발방지대책을 입력하세요" style="width:100%;min-height:54px;padding:8px;border:1.5px solid var(--g2);border-radius:8px;font-size:12px;box-sizing:border-box;font-family:inherit"></textarea>'
       +'<button onclick="confAccDB('+r.id+',this,\''+domId+'\')" style="margin-top:5px;width:100%;padding:8px;background:var(--teal);color:white;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">재발방지대책 저장</button>'
     +'</div>';
+}
+var _accIndSel={};
+function selAccIndustrial(domId, isIndustrial){
+  _accIndSel[domId]=isIndustrial;
+  var b0=document.getElementById('accInd_'+domId+'_0'), b1=document.getElementById('accInd_'+domId+'_1');
+  if(b0) b0.classList.toggle('on', !isIndustrial);
+  if(b1) b1.classList.toggle('on', isIndustrial);
+  var wrap=document.getElementById('accDecisionWrap_'+domId);
+  if(wrap) wrap.style.display=isIndustrial?'block':'none';
 }
 function openAccResult(domId){
   var box=document.getElementById('accResultBox_'+domId);
@@ -12146,6 +12167,14 @@ async function confAccDB(id, btn, domId){
   var input=document.getElementById('accResultInput_'+domId);
   var resultText=input?input.value.trim():'';
   if(!resultText){ toast('⚠️ 재발방지대책을 입력해주세요'); return; }
+  if(_accIndSel[domId]===undefined){ toast('⚠️ 산업재해 여부를 선택해주세요'); return; }
+  var isIndustrial=_accIndSel[domId];
+  var decisionDate=null;
+  if(isIndustrial){
+    var dEl=document.getElementById('accDecisionDate_'+domId);
+    decisionDate=dEl?dEl.value:'';
+    if(!decisionDate){ toast('⚠️ 결정통지일자를 입력해주세요'); return; }
+  }
   if(btn) btn.disabled=true;
   try{
     await sb.from('safety_accidents').update({
@@ -12154,7 +12183,9 @@ async function confAccDB(id, btn, domId){
       confirmed_at:new Date().toISOString(),
       result:resultText,
       result_by:me.name,
-      result_at:new Date().toISOString()
+      result_at:new Date().toISOString(),
+      is_industrial:isIndustrial,
+      decision_date:decisionDate
     }).eq('id',id);
     await loadAccidentFromDB();
     toast('✅ 확인 및 결과입력 완료되었습니다');
@@ -14097,5 +14128,94 @@ if('serviceWorker' in navigator){
   });
 }
 </script>
+
+<script>
+// ══ 이모지 → 라인 아이콘 자동 치환 (비침습적: 기존 로직/데이터는 전혀 건드리지 않고, 렌더링된 화면만 시각적으로 변환) ══
+(function(){
+  var EMOJI_ICON_MAP = {"\u26a0":"<path d=\"M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z\"/><line x1=\"12\" y1=\"9\" x2=\"12\" y2=\"13\"/><line x1=\"12\" y1=\"17\" x2=\"12.01\" y2=\"17\"/>","\u2705":"<path d=\"M22 11.08V12a10 10 0 1 1-5.93-9.14\"/><polyline points=\"22 4 12 14.01 9 11.01\"/>","\u2714":"<polyline points=\"20 6 9 17 4 12\"/>","\u2713":"<polyline points=\"20 6 9 17 4 12\"/>","\ud83d\udd04":"<polyline points=\"17 1 21 5 17 9\"/><path d=\"M3 11V9a4 4 0 0 1 4-4h14\"/><polyline points=\"7 23 3 19 7 15\"/><path d=\"M21 13v2a4 4 0 0 1-4 4H3\"/>","\ud83d\udcca":"<line x1=\"18\" y1=\"20\" x2=\"18\" y2=\"10\"/><line x1=\"12\" y1=\"20\" x2=\"12\" y2=\"4\"/><line x1=\"6\" y1=\"20\" x2=\"6\" y2=\"14\"/>","\ud83d\udd27":"<path d=\"M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z\"/>","\ud83d\udcc4":"<path d=\"M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z\"/><polyline points=\"14 2 14 8 20 8\"/>","\u2605":"<polygon points=\"12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2\"/>","\ud83d\udccb":"<path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\"/><rect x=\"8\" y=\"2\" width=\"8\" height=\"4\" rx=\"1\" ry=\"1\"/>","\u270f":"<path d=\"M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7\"/><path d=\"M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z\"/>","\ud83d\uddd1":"<polyline points=\"3 6 5 6 21 6\"/><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"/>","\ud83c\udf19":"<path d=\"M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z\"/>","\ud83d\udce5":"<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"7 10 12 15 17 10\"/><line x1=\"12\" y1=\"15\" x2=\"12\" y2=\"3\"/>","\ud83d\udcdd":"<path d=\"M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7\"/><path d=\"M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4z\"/>","\u267b":"<path d=\"M7 19H4.815a1.83 1.83 0 0 1-1.57-.881 1.785 1.785 0 0 1-.004-1.784L7.196 9.5\"/><path d=\"M11 19h8.203a1.83 1.83 0 0 0 1.556-.89 1.784 1.784 0 0 0 0-1.775l-1.226-2.12\"/><path d=\"m14 16-3 3 3 3\"/><path d=\"M8.293 13.596 7.196 9.5 3.1 10.598\"/><path d=\"m9.344 5.811 1.093-1.892A1.83 1.83 0 0 1 12 3a1.784 1.784 0 0 1 1.545.888l3.943 6.843\"/><path d=\"m13.378 9.633 4.096 1.098 1.097-4.096\"/>","\ud83d\udcc5":"<rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"/><line x1=\"16\" y1=\"2\" x2=\"16\" y2=\"6\"/><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"6\"/><line x1=\"3\" y1=\"10\" x2=\"21\" y2=\"10\"/>","\ud83c\udfe2":"<path d=\"M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z\"/><path d=\"M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2\"/><path d=\"M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2\"/><line x1=\"10\" y1=\"6\" x2=\"10\" y2=\"6\"/><line x1=\"14\" y1=\"6\" x2=\"14\" y2=\"6\"/><line x1=\"10\" y1=\"10\" x2=\"10\" y2=\"10\"/><line x1=\"14\" y1=\"10\" x2=\"14\" y2=\"10\"/><line x1=\"10\" y1=\"14\" x2=\"10\" y2=\"14\"/><line x1=\"14\" y1=\"14\" x2=\"14\" y2=\"14\"/>","\ud83d\ude91":"<path d=\"M8 19V5a2 2 0 0 1 2-2h8l4 4v12a2 2 0 0 1-2 2H10a2 2 0 0 1-2-2Z\"/><path d=\"M2 19V9h4\"/><line x1=\"14\" y1=\"9\" x2=\"14\" y2=\"15\"/><line x1=\"11\" y1=\"12\" x2=\"17\" y2=\"12\"/>","\ud83d\udce2":"<path d=\"m3 11 18-5v12L3 14v-3z\"/><path d=\"M11.6 16.8a3 3 0 1 1-5.8-1.6\"/>","\ud83d\udcde":"<path d=\"M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z\"/>","\ud83d\udccd":"<path d=\"M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z\"/><circle cx=\"12\" cy=\"10\" r=\"3\"/>","\ud83d\udc65":"<path d=\"M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2\"/><circle cx=\"9\" cy=\"7\" r=\"4\"/><path d=\"M23 21v-2a4 4 0 0 0-3-3.87\"/><path d=\"M16 3.13a4 4 0 0 1 0 7.75\"/>","\ud83d\udc64":"<path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"/><circle cx=\"12\" cy=\"7\" r=\"4\"/>","\ud83d\ude97":"<path d=\"M5 17H3v-6l2-5h11l4 5v6h-2\"/><circle cx=\"7.5\" cy=\"17.5\" r=\"2.5\"/><circle cx=\"16.5\" cy=\"17.5\" r=\"2.5\"/><path d=\"M9 17h6\"/>","\u2b06":"<line x1=\"12\" y1=\"19\" x2=\"12\" y2=\"5\"/><polyline points=\"5 12 12 5 19 12\"/>","\ud83d\udcce":"<path d=\"m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48\"/>","\ud83c\udf92":"<rect x=\"5\" y=\"8\" width=\"14\" height=\"13\" rx=\"2\"/><path d=\"M8 8V6a4 4 0 0 1 8 0v2\"/><path d=\"M9 12h6\"/><path d=\"M9 16h6\"/>","\ud83d\udd14":"<path d=\"M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9\"/><path d=\"M13.73 21a2 2 0 0 1-3.46 0\"/>","\ud83d\udd12":"<rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\" ry=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"/>","\ud83c\udf05":"<path d=\"M17 18a5 5 0 0 0-10 0\"/><line x1=\"12\" y1=\"2\" x2=\"12\" y2=\"9\"/><line x1=\"4.22\" y1=\"10.22\" x2=\"5.64\" y2=\"11.64\"/><line x1=\"1\" y1=\"18\" x2=\"3\" y2=\"18\"/><line x1=\"21\" y1=\"18\" x2=\"23\" y2=\"18\"/><line x1=\"18.36\" y1=\"11.64\" x2=\"19.78\" y2=\"10.22\"/><line x1=\"23\" y1=\"22\" x2=\"1\" y2=\"22\"/><polyline points=\"8 6 12 2 16 6\"/>","\u2600":"<circle cx=\"12\" cy=\"12\" r=\"5\"/><line x1=\"12\" y1=\"1\" x2=\"12\" y2=\"3\"/><line x1=\"12\" y1=\"21\" x2=\"12\" y2=\"23\"/><line x1=\"4.22\" y1=\"4.22\" x2=\"5.64\" y2=\"5.64\"/><line x1=\"18.36\" y1=\"18.36\" x2=\"19.78\" y2=\"19.78\"/><line x1=\"1\" y1=\"12\" x2=\"3\" y2=\"12\"/><line x1=\"21\" y1=\"12\" x2=\"23\" y2=\"12\"/><line x1=\"4.22\" y1=\"19.78\" x2=\"5.64\" y2=\"18.36\"/><line x1=\"18.36\" y1=\"5.64\" x2=\"19.78\" y2=\"4.22\"/>","\ud83d\udd50":"<circle cx=\"12\" cy=\"12\" r=\"10\"/><polyline points=\"12 6 12 12 16.5 14.5\"/>","\ud83d\udcc2":"<path d=\"M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z\"/>","\ud83d\udcd8":"<path d=\"M4 19.5A2.5 2.5 0 0 1 6.5 17H20\"/><path d=\"M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\"/>","\ud83d\udcd7":"<path d=\"M4 19.5A2.5 2.5 0 0 1 6.5 17H20\"/><path d=\"M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z\"/>","\u26d1":"<path d=\"M12 3a7 7 0 0 0-7 7v3H3v3h18v-3h-2v-3a7 7 0 0 0-7-7z\"/><path d=\"M9 20a3 3 0 0 0 6 0\"/>","\ud83d\udced":"<path d=\"M22 12h-6l-2 3h-4l-2-3H2\"/><path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"/>","\u2715":"<line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"/><line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"/>","\u2699":"<circle cx=\"12\" cy=\"12\" r=\"3\"/><path d=\"M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z\"/>","\ud83d\udc54":"<path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"/><circle cx=\"12\" cy=\"7\" r=\"4\"/>","\ud83e\uddf3":"<rect x=\"3\" y=\"7\" width=\"18\" height=\"13\" rx=\"2\"/><path d=\"M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"/><line x1=\"12\" y1=\"11\" x2=\"12\" y2=\"16\"/>","\ud83d\udebf":"<path d=\"M4 4 2.5 5.5\"/><path d=\"M21 15.5a5.5 5.5 0 0 0-11 0c0 3-2.5 4.5-2.5 4.5h13S21 18.5 21 15.5z\"/><path d=\"m14 4-1 1\"/><path d=\"m18 8-1 1\"/><path d=\"M10 4V2\"/><path d=\"M14 22v-5\"/><path d=\"M10 22v-2\"/>","\ud83d\udce6":"<path d=\"M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z\"/><polyline points=\"3.27 6.96 12 12.01 20.73 6.96\"/><line x1=\"12\" y1=\"22.08\" x2=\"12\" y2=\"12\"/>","\ud83d\udd15":"<path d=\"M13.73 21a2 2 0 0 1-3.46 0\"/><path d=\"M18.63 13A17.89 17.89 0 0 1 18 8\"/><path d=\"M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14\"/><path d=\"M18 8a6 6 0 0 0-9.33-5\"/><line x1=\"1\" y1=\"1\" x2=\"23\" y2=\"23\"/>","\ud83d\udc51":"<path d=\"m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14\"/>","\u270d":"<path d=\"M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z\"/>","\ud83d\udca1":"<path d=\"M9 18h6\"/><path d=\"M10 22h4\"/><path d=\"M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5A4.61 4.61 0 0 1 8.91 14\"/>","\u2708":"<path d=\"M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z\"/>","\ud83d\udcda":"<path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"/><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\"/>","\ud83d\udd10":"<rect x=\"3\" y=\"11\" width=\"18\" height=\"11\" rx=\"2\" ry=\"2\"/><path d=\"M7 11V7a5 5 0 0 1 10 0v4\"/>","\ud83c\udfed":"<path d=\"M17 18h1a1 1 0 0 0 1-1v-3l-6 3v-3l-6 3v-6.5L2 13v6a1 1 0 0 0 1 1h1\"/><path d=\"M17 18v-5.5\"/><rect x=\"4\" y=\"18\" width=\"16\" height=\"3\"/>","\ud83d\udedf":"<circle cx=\"12\" cy=\"12\" r=\"10\"/><circle cx=\"12\" cy=\"12\" r=\"4\"/><line x1=\"4.93\" y1=\"4.93\" x2=\"9.17\" y2=\"9.17\"/><line x1=\"14.83\" y1=\"14.83\" x2=\"19.07\" y2=\"19.07\"/><line x1=\"14.83\" y1=\"9.17\" x2=\"19.07\" y2=\"4.93\"/><line x1=\"14.83\" y1=\"9.17\" x2=\"18.36\" y2=\"5.64\"/><line x1=\"4.93\" y1=\"19.07\" x2=\"9.17\" y2=\"14.83\"/>","\ud83d\udebb":"<circle cx=\"8\" cy=\"6\" r=\"3\"/><path d=\"M8 10a4 4 0 0 0-4 4v6h8v-6a4 4 0 0 0-4-4z\"/><circle cx=\"17\" cy=\"6\" r=\"3\"/><path d=\"M17 10a4 4 0 0 1 4 4v6h-4\"/>","\ud83d\udce4":"<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"17 8 12 3 7 8\"/><line x1=\"12\" y1=\"3\" x2=\"12\" y2=\"15\"/>","\ud83d\udc76":"<circle cx=\"12\" cy=\"8\" r=\"5\"/><path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"/>","\ud83d\udc41":"<path d=\"M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z\"/><circle cx=\"12\" cy=\"12\" r=\"3\"/>","\ud83d\udd0e":"<circle cx=\"11\" cy=\"11\" r=\"8\"/><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"/>","\ud83d\udd0d":"<circle cx=\"11\" cy=\"11\" r=\"8\"/><line x1=\"21\" y1=\"21\" x2=\"16.65\" y2=\"16.65\"/>","\ud83d\udccc":"<line x1=\"12\" y1=\"17\" x2=\"12\" y2=\"22\"/><path d=\"M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V7a1 1 0 0 1 1-1 2 2 0 0 0 0-4H8a2 2 0 0 0 0 4 1 1 0 0 1 1 1v3.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z\"/>","\ud83d\udcdc":"<path d=\"M8 21h12a2 2 0 0 0 2-2v-2H10v2a2 2 0 1 1-4 0V5a2 2 0 1 0-4 0v3h4\"/><path d=\"M19 17V5a2 2 0 0 0-2-2H4\"/>","\ud83d\udcd6":"<path d=\"M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z\"/><path d=\"M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z\"/>","\u2757":"<circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"/><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"/>","\ud83d\udea8":"<circle cx=\"12\" cy=\"12\" r=\"10\"/><line x1=\"12\" y1=\"8\" x2=\"12\" y2=\"12\"/><line x1=\"12\" y1=\"16\" x2=\"12.01\" y2=\"16\"/>","\ud83e\uddd1":"<circle cx=\"12\" cy=\"8\" r=\"5\"/><path d=\"M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2\"/>","\ud83e\uddf9":"<path d=\"m19 4-5.5 5.5\"/><path d=\"M13 7 8 12l-6 6 3 3 6-6 5-5\"/><path d=\"M8 12 3 7l4-4 5 5\"/>","\ud83e\ude79":"<rect x=\"3\" y=\"9\" width=\"18\" height=\"6\" rx=\"3\" transform=\"rotate(45 12 12)\"/>","\ud83d\udecc":"<path d=\"M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6\"/><path d=\"M3 18h18\"/><circle cx=\"8\" cy=\"8\" r=\"2\"/>","\ud83d\udee1":"<path d=\"M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z\"/>","\ud83d\udcf1":"<rect x=\"5\" y=\"2\" width=\"14\" height=\"20\" rx=\"2\" ry=\"2\"/><line x1=\"12\" y1=\"18\" x2=\"12.01\" y2=\"18\"/>","\ud83d\udcc6":"<rect x=\"3\" y=\"4\" width=\"18\" height=\"18\" rx=\"2\" ry=\"2\"/><line x1=\"16\" y1=\"2\" x2=\"16\" y2=\"6\"/><line x1=\"8\" y1=\"2\" x2=\"8\" y2=\"6\"/><line x1=\"3\" y1=\"10\" x2=\"21\" y2=\"10\"/>","\ud83c\udf89":"<path d=\"M5.8 11.3 2 22l10.7-3.79\"/><path d=\"M4 3h.01\"/><path d=\"M22 8h.01\"/><path d=\"M15 2h.01\"/><path d=\"M22 20h.01\"/><path d=\"m22 2-2.24.75a2.9 2.9 0 0 0-1.96 3.12v0c.1.86-.57 1.63-1.45 1.63h-.38c-.86 0-1.6.6-1.76 1.44L14 10\"/>"};
+  var emojiKeys = Object.keys(EMOJI_ICON_MAP).sort(function(a,b){return b.length-a.length;});
+  var emojiPattern = new RegExp('(' + emojiKeys.map(function(e){
+    return e.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\uFE0F?';
+  }).join('|') + ')', 'g');
+
+  function svgFor(emoji){
+    var body = EMOJI_ICON_MAP[emoji];
+    if(!body) return null;
+    return '<svg class="ico-em" width="0.95em" height="0.95em" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block;vertical-align:-0.14em;flex-shrink:0">'+body+'</svg>';
+  }
+
+  var SKIP_TAGS={SCRIPT:1,STYLE:1,TEXTAREA:1,OPTION:1,SELECT:1,NOSCRIPT:1};
+
+  function processTextNode(node){
+    var text=node.nodeValue;
+    if(!text) return;
+    emojiPattern.lastIndex=0;
+    if(!emojiPattern.test(text)) return;
+    emojiPattern.lastIndex=0;
+    var frag=document.createDocumentFragment();
+    var lastIdx=0,m;
+    while((m=emojiPattern.exec(text))){
+      if(m.index>lastIdx) frag.appendChild(document.createTextNode(text.slice(lastIdx,m.index)));
+      var baseChar=m[0].replace(/\uFE0F$/,'');
+      var svgHtml=svgFor(baseChar);
+      if(svgHtml){
+        var span=document.createElement('span');
+        span.innerHTML=svgHtml;
+        frag.appendChild(span.firstChild);
+      }else{
+        frag.appendChild(document.createTextNode(m[0]));
+      }
+      lastIdx=m.index+m[0].length;
+    }
+    if(lastIdx<text.length) frag.appendChild(document.createTextNode(text.slice(lastIdx)));
+    if(node.parentNode) node.parentNode.replaceChild(frag,node);
+  }
+
+  function walkAndProcess(root){
+    if(!root) return;
+    if(root.nodeType===3){
+      var p=root.parentNode;
+      if(p && !SKIP_TAGS[p.tagName]) processTextNode(root);
+      return;
+    }
+    if(root.nodeType!==1) return;
+    if(SKIP_TAGS[root.tagName]) return;
+    var children=Array.prototype.slice.call(root.childNodes);
+    children.forEach(walkAndProcess);
+  }
+
+  function iconizeAll(){ walkAndProcess(document.body); }
+
+  var pending=[], scheduled=false;
+  function scheduleProcess(node){
+    pending.push(node);
+    if(!scheduled){
+      scheduled=true;
+      requestAnimationFrame(function(){
+        var batch=pending; pending=[]; scheduled=false;
+        batch.forEach(walkAndProcess);
+      });
+    }
+  }
+
+  var _iconObserver=new MutationObserver(function(mutations){
+    mutations.forEach(function(m){
+      if(m.addedNodes) m.addedNodes.forEach(function(n){ scheduleProcess(n); });
+      if(m.type==='characterData' && m.target && m.target.nodeType===3){ scheduleProcess(m.target); }
+    });
+  });
+
+  function startIconizer(){
+    iconizeAll();
+    _iconObserver.observe(document.body, {childList:true, subtree:true, characterData:true});
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded', startIconizer);
+  }else{
+    startIconizer();
+  }
+})();
+</script>
+
 </body>
 </html>
