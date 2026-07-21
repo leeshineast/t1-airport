@@ -3350,15 +3350,15 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 
 <!-- 시설현황 상세보기 모달 (업로드한 엑셀 원본 컬럼 그대로 검색 가능) -->
 <div id="facDetailModal" class="modal-bg">
-  <div class="modal" style="max-width:96vw;width:640px;max-height:88vh">
+  <div class="modal" style="max-width:96vw;width:min(94vw,900px);max-height:90vh">
     <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))">
       <h3 id="facDetailTitle">🏢 시설 상세</h3>
       <button class="m-x" onclick="hideM('facDetailModal')">×</button>
     </div>
-    <div style="padding:13px 15px;overflow:auto;max-height:calc(88vh - 60px)">
+    <div style="padding:13px 15px;overflow:auto;max-height:calc(90vh - 60px)">
       <input id="facDetailSearch" type="text" placeholder="검색..." oninput="renderFacDetailTable()" style="width:100%;padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;margin-bottom:10px;box-sizing:border-box">
       <div id="facDetailCount" style="font-size:11px;color:var(--g4);margin-bottom:8px"></div>
-      <div id="facDetailTableWrap" style="overflow-x:auto"></div>
+      <div id="facDetailTableWrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch"></div>
     </div>
   </div>
 </div>
@@ -8145,12 +8145,46 @@ function openFacDetail(type){
   renderFacDetailTable();
   showM('facDetailModal');
 }
+// F/B 층 표기를 한글로 변환 (1F→1층, B1F→지하1층). 매칭 안 되면 원본 그대로.
+function facFmtFloor(v){
+  var s=String(v!=null?v:'').trim();
+  var m=s.match(/^B(\d+)F$/i);
+  if(m) return '지하'+m[1]+'층';
+  m=s.match(/^(\d+)F$/i);
+  if(m) return m[1]+'층';
+  return v;
+}
+// 층 정렬키: 지하2층(-2) < 지하1층(-1) < 1층(1) < 2층(2)... / 매칭 안되면 null(가나다 정렬 그룹)
+function facFloorSortKey(v){
+  var s=String(v!=null?v:'').trim();
+  var m=s.match(/^B(\d+)F$/i);
+  if(m) return -parseInt(m[1]);
+  m=s.match(/^(\d+)F$/i);
+  if(m) return parseInt(m[1]);
+  return null;
+}
 function renderFacDetailTable(){
   var d=facilityData[_facDetailType];
   var wrap=document.getElementById('facDetailTableWrap');
   var countEl=document.getElementById('facDetailCount');
   if(!d||!d.raw||!wrap) return;
-  var headers=d.raw.headers, rows=d.raw.rows;
+  var HIDE_COLS=['응답일시','참여자']; // 상세보기에서 제외할 컬럼
+  var visibleIdx=[];
+  d.raw.headers.forEach(function(hd,i){ if(HIDE_COLS.indexOf(hd)===-1) visibleIdx.push(i); });
+  var headers=visibleIdx.map(function(i){ return d.raw.headers[i]; });
+  var rows=d.raw.rows.map(function(r){ return visibleIdx.map(function(i){ return r[i]; }); });
+  // 층 컬럼 찾아서 정렬: 지하2층→...→1층→2층... 순, 층 정보 없는 행은 가나다순으로 뒤에
+  var floorColIdx=headers.findIndex(function(hd){ return hd.indexOf('층')!==-1; });
+  if(floorColIdx>=0){
+    rows=rows.slice().sort(function(a,b){
+      var ka=facFloorSortKey(a[floorColIdx]), kb=facFloorSortKey(b[floorColIdx]);
+      if(ka!==null&&kb!==null) return ka-kb;
+      if(ka!==null&&kb===null) return -1; // 층 있는 것 먼저
+      if(ka===null&&kb!==null) return 1;
+      // 둘 다 층 정보 없음 → 가나다(해당 컬럼 텍스트) 정렬
+      return String(a[floorColIdx]||'').localeCompare(String(b[floorColIdx]||''),'ko');
+    });
+  }
   var q=(document.getElementById('facDetailSearch').value||'').trim().toLowerCase();
   var filtered=rows;
   if(q){
@@ -8165,7 +8199,7 @@ function renderFacDetailTable(){
   h+='</tr></thead><tbody>';
   filtered.forEach(function(r,i){
     h+='<tr style="background:'+(i%2===0?'white':'var(--g1)')+';">';
-    r.forEach(function(c){ h+='<td style="padding:5px 8px;border-bottom:1px solid var(--g2);white-space:nowrap;color:var(--g7)">'+(c!=null?c:'')+'</td>'; });
+    r.forEach(function(c){ h+='<td style="padding:5px 8px;border-bottom:1px solid var(--g2);white-space:nowrap;color:var(--g7)">'+facFmtFloor(c!=null?c:'')+'</td>'; });
     h+='</tr>';
   });
   h+='</tbody></table>';
