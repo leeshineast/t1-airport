@@ -1769,19 +1769,23 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       </div>
       <div class="f-ta" id="hFWrap" style="display:none;padding:0;border:none;background:none">
         <div style="display:flex;flex-direction:column;gap:7px">
+          <div>
+            <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">① 신고자 <span style="font-weight:400;color:var(--g3)">(선택)</span></label>
+            <input id="hFReporter" type="text" class="ri" placeholder="예) 승객, 관리자, 홍길동 등" style="margin-bottom:0" autocomplete="off">
+          </div>
           <div style="position:relative">
-            <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">① 장소</label>
+            <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">② 장소</label>
             <input id="hFLoc" type="text" class="ri" placeholder="예) 3층 남자화장실 2번 칸" style="margin-bottom:0" autocomplete="off" oninput="checkHoDupWarn();updateFacLocSuggest()" onfocus="updateFacLocSuggest()" onblur="setTimeout(function(){var s=document.getElementById('hFLocSuggest');if(s)s.style.display='none';},150)">
             <div id="hFLocSuggest" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:20;background:white;border:1px solid var(--g2);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.1);margin-top:2px;max-height:160px;overflow-y:auto"></div>
           </div>
           <div id="hFLocTop10" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px"></div>
           <div>
-            <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">② 고장 내용</label>
+            <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">③ 고장 내용</label>
             <input id="hFDesc" type="text" class="ri" placeholder="예) 변기 막힘" style="margin-bottom:0" oninput="checkHoDupWarn()">
           </div>
           <div id="hFDupWarn" style="display:none;background:var(--warn-bg,#FFF7E0);border:1px solid var(--warn,#E8A93B);border-radius:8px;padding:8px 10px;font-size:11px;color:#8A6100;line-height:1.5"></div>
           <div>
-            <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">③ 신고 구분</label>
+            <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">④ 신고 구분</label>
             <div class="rg" id="hFTypeG" style="flex-wrap:wrap;gap:6px">
               <div class="rp on" onclick="selFType(this)">기계</div>
               <div class="rp" onclick="selFType(this)">건축</div>
@@ -1793,7 +1797,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
             <input id="hFEtc" type="text" class="ri" placeholder="기타 내용 직접 입력" style="display:none;margin-top:5px;margin-bottom:0">
           </div>
           <div>
-            <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">④ 접수자</label>
+            <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">⑤ 접수자</label>
             <input id="hFRcv" type="text" class="ri" placeholder="예) 홍길동" style="margin-bottom:0">
             <div id="hFRcvRecent" style="display:flex;gap:6px;overflow-x:auto;margin-top:6px;padding-bottom:2px"></div>
           </div>
@@ -4666,7 +4670,9 @@ function subHO(){
     var fEtcEl=document.getElementById('hFEtc');
     if(fType==='기타'&&fEtcEl&&fEtcEl.value.trim()) fType='기타: '+fEtcEl.value.trim();
     var fRcv=document.getElementById('hFRcv');
+    var fReporter=document.getElementById('hFReporter');
     var parts=[];
+    if(fReporter&&fReporter.value.trim()) parts.push('[신고자] '+fReporter.value.trim());
     if(fLoc&&fLoc.value.trim()) parts.push('[장소] '+fLoc.value.trim());
     if(fDesc&&fDesc.value.trim()) parts.push('[내용] '+fDesc.value.trim());
     if(fType) parts.push('[신고] '+fType);
@@ -4687,7 +4693,7 @@ function subHO(){
   document.getElementById('hoW').style.display='none';
   ['hD','hE'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';e.classList.remove('show');}});
   var fWrapEl=document.getElementById('hFWrap');if(fWrapEl)fWrapEl.style.display='none';
-  ['hFLoc','hFDesc','hFEtc','hFRcv'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});
+  ['hFLoc','hFDesc','hFEtc','hFRcv','hFReporter'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});
   var fDupWarnEl=document.getElementById('hFDupWarn');if(fDupWarnEl)fDupWarnEl.style.display='none';
   var fSuggestEl=document.getElementById('hFLocSuggest');if(fSuggestEl)fSuggestEl.style.display='none';
   var hFTypeG=document.getElementById('hFTypeG');if(hFTypeG){hFTypeG.querySelectorAll('.rp').forEach(p=>p.classList.remove('on'));var fp=hFTypeG.querySelector('.rp');if(fp)fp.classList.add('on');}
@@ -9240,13 +9246,14 @@ async function deleteHo(btn){
 
 // 저장된 시설물 문자열 '[장소] .. / [내용] .. / [신고] .. / [접수자] ..' 을 구조화된 필드로 역파싱
 function parseFacilityText(str){
-  var out={loc:'',desc:'',type:'',etcVal:'',rcv:''};
+  var out={loc:'',desc:'',type:'',etcVal:'',rcv:'',reporter:''};
   if(!str) return out;
   String(str).split(' / ').forEach(function(p){
     var m=p.match(/^\[(.+?)\]\s*([\s\S]*)$/);
     if(!m) return;
     var label=m[1].trim(), val=m[2].trim();
-    if(label==='장소') out.loc=val;
+    if(label==='신고자') out.reporter=val;
+    else if(label==='장소') out.loc=val;
     else if(label==='내용') out.desc=val;
     else if(label==='신고'){
       if(val.indexOf('기타:')===0){ out.type='기타'; out.etcVal=val.slice(3).trim(); }
@@ -9289,6 +9296,7 @@ function editHo(btn){
     if(fWrap) fWrap.style.display=hasFacility?'block':'none';
     if(hasFacility){ loadFacLocTop10(); loadFacRcvRecent(); }
     var fp=parseFacilityText(r.facility);
+    var hFReporter=document.getElementById('hFReporter'); if(hFReporter) hFReporter.value=fp.reporter||'';
     var hFLoc=document.getElementById('hFLoc'); if(hFLoc) hFLoc.value=fp.loc;
     var hFDesc=document.getElementById('hFDesc'); if(hFDesc) hFDesc.value=fp.desc;
     var hFTypeG=document.getElementById('hFTypeG');
@@ -10772,7 +10780,7 @@ function renderWasteList(){
     var sh='';
 
     // ① 당일 + 전일 합산 (데이터 없어도 0으로 항상 표시)
-    var yesterday=new Date(Date.now()+9*3600000-86400000).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
+    var yesterday=new Date(Date.now()-86400000).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
     var todayDi=dayMap[today]||{inc:0,rec:0};
     var ydayDi=dayMap[yesterday]||{inc:0,rec:0};
     sh+='<div style="margin-bottom:12px">';
@@ -13571,12 +13579,13 @@ function msRow(label, val){
 // 인수인계 시설물고장 텍스트 파싱: "[장소] X / [내용] Y / [신고] Z" 형식
 function parseHoFacility(text){
   if(!text||text==='없음') return null;
+  var mReporter=text.match(/\[신고자\]\s*([^\/]+?)(?=\s*\/\s*\[|$)/);
   var mLoc=text.match(/\[장소\]\s*([^\/]+?)(?=\s*\/\s*\[|$)/);
   var mDesc=text.match(/\[내용\]\s*([^\/]+?)(?=\s*\/\s*\[|$)/);
   var mType=text.match(/\[신고\]\s*([^\/]+?)(?=\s*\/\s*\[|$)/);
   var type=mType?mType[1].trim():null;
   if(type&&type.indexOf('기타')===0) type='기타';
-  return {loc:mLoc?mLoc[1].trim():null, desc:mDesc?mDesc[1].trim():null, type:type};
+  return {reporter:mReporter?mReporter[1].trim():null, loc:mLoc?mLoc[1].trim():null, desc:mDesc?mDesc[1].trim():null, type:type};
 }
 function msTitle(t){
   return '<div style="font-size:11px;font-weight:800;color:var(--g6);margin-bottom:8px">'+t+'</div>';
