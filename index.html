@@ -544,7 +544,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     </div>
     <div style="height:10px"></div>
     <div style="font-size:11px;font-weight:700;color:var(--g4);margin-bottom:6px">직급 *</div>
-    <div class="role-row"><div class="r-btn" onclick="pickR(this)">팀장</div><div class="r-btn" onclick="pickR(this)">조장</div><div class="r-btn" onclick="pickR(this)">조장대행</div><div class="r-btn" onclick="pickR(this)">기타</div><div class="r-btn" onclick="pickR(this)">게스트</div></div>
+    <div class="role-row"><div class="r-btn" onclick="pickR(this)">팀장</div><div class="r-btn" onclick="pickR(this)">조장</div><div class="r-btn" onclick="pickR(this)">조장대행</div><div class="r-btn" onclick="pickR(this)">기타</div><div class="r-btn" onclick="pickR(this)">차량운행</div><div class="r-btn" onclick="pickR(this)">게스트</div></div>
     <div class="err" id="rErr"></div>
     <button class="btn-prim" onclick="subReg()">가입 신청 제출</button>
     <p style="text-align:center;font-size:11px;color:var(--g3);margin-top:11px">승인 후 로그인 가능합니다</p>
@@ -612,6 +612,12 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <span class="menu-icon">📥</span>
       <div class="menu-title">전체 다운로드</div>
       <div class="menu-desc">인력·인수인계·습득물 등 전체 엑셀 다운로드</div>
+      <span class="menu-arrow">보기 →</span>
+    </button>
+    <button class="menu-btn" id="workVehMenuBtn" style="display:none" onclick="go('workveh')">
+      <span class="menu-icon">🚛</span>
+      <div class="menu-title">공사업무용차량 운행일지</div>
+      <div class="menu-desc">88러7396·88러7397·809나1745 운행 기록</div>
       <span class="menu-arrow">보기 →</span>
     </button>
     <button class="menu-btn" onclick="go('mp')">
@@ -2852,6 +2858,90 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 
 
 <!-- ══ 관리자 ══ -->
+<div id="sWorkVeh" class="scr">
+  <div class="app-hd">
+    <div class="logo-w"><div class="logo-img"><img src="data:image/png;base64,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AAIACgAAAIoAgoCKAIKAigAAACACoAAB4CoCieAB4HgAAKCCoCgAAAAAIoAAAAAAAAAAAAAAKAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAACCgCKAAAB4AgKCAoIoAigAACKAAAICggoACSAAKCoIoAAAIoAAAAAAAAAAAAAAAAAAAAAAAACgAAAAAAAAAAAAAAAAAAAAAAAAAgAAAAAAAAAAACKAAAAAIKAAAAAAAAAAAAAAAAAAAAAigAAAAAAAAAAKACAAAAAAAAAAAAAAAAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAACgAgAAAAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAACAAAAAAoAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAACgAgAAAAAAAAAAAAAAAAAAAAAKAAAAAAAAAAAAAAACAAoAAAAAAAAAAAAAAAAAAAAAAAAAIAAACgAAAAAAAgAKAAACAAAAAAAAAAAAAAoAIAAAAAAAAAAAAAAAAAAACgAAAAAgAAAKAAAAAAACAAoAAAAAAAIABL//Z" alt="T1"></div><div class="logo-t"><h2>공사업무용차량 운행일지</h2><p id="wvVehLabel">T1 환경미화사업부</p></div></div>
+    <button class="back-hd" onclick="go('main')" id="wvBackBtn">← 메인</button>
+    <button id="wvLogoutBtn" onclick="doLogout()" style="display:none;padding:6px 12px;background:var(--danger-bg);color:var(--danger);border:1.5px solid var(--danger);border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">로그아웃</button>
+  </div>
+  <div style="display:flex;background:white;border-bottom:1.5px solid var(--g2)">
+    <div id="wvT0" style="flex:1;padding:11px;text-align:center;font-size:12px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-1.5px" onclick="wvTab(0)">작성</div>
+    <div id="wvT1" style="flex:1;padding:11px;text-align:center;font-size:12px;font-weight:700;color:var(--g5);cursor:pointer" onclick="wvTab(1)">운행 이력</div>
+    <div id="wvT2" style="flex:1;padding:11px;text-align:center;font-size:12px;font-weight:700;color:var(--g5);cursor:pointer" onclick="wvTab(2)">다운로드</div>
+  </div>
+  <div id="wvP0">
+    <div class="pg-hd"><div><h1>운행 기록 작성</h1></div></div>
+    <div class="card"><div class="cb">
+      <div class="fg"><label class="f-lbl">🚛 차량 선택 *</label><div class="rg" id="wvVehGrp" style="flex-wrap:wrap;gap:6px">
+        <div class="rp" onclick="pickWvVehicle(this)" data-val="88러 7396">88러 7396</div>
+        <div class="rp" onclick="pickWvVehicle(this)" data-val="88러 7397">88러 7397</div>
+        <div class="rp" onclick="pickWvVehicle(this)" data-val="809나 1745">809나 1745</div>
+      </div></div>
+      <div class="fg"><label class="f-lbl">📅 사용일자 *</label><input type="date" id="wvDate" class="ri" style="margin-bottom:0;width:100%;max-width:100%;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>
+      <div class="fg"><label class="f-lbl">🏢 소속 *</label><input type="text" id="wvDept" class="ri" placeholder="예: 오전1팀" style="margin-bottom:0"></div>
+      <div class="fg"><label class="f-lbl">👤 성명 *</label><input type="text" id="wvName" class="ri" placeholder="홍길동" style="margin-bottom:0"></div>
+      <div class="fg"><label class="f-lbl">🚗 주행 전 계기판 (km) *</label><input type="number" id="wvBefore" class="ri" placeholder="예: 12382" style="margin-bottom:0" oninput="calcDistWv();updateKmHint('wvBefore','wvBeforeHint')"><div id="wvBeforeHint" style="display:none;font-size:11px;color:var(--g4);margin-top:3px;padding-left:4px"></div><div id="wvAutoHint" style="display:none;margin-top:6px;font-size:11px;color:var(--teal2);font-weight:600;background:var(--teal-bg);border-radius:var(--r2);padding:7px 10px">⚡ 자동입력됨</div></div>
+      <div class="fg"><label class="f-lbl">🚗 주행 후 계기판 (km) *</label><input type="number" id="wvAfter" class="ri" placeholder="예: 12443" style="margin-bottom:0" oninput="calcDistWv();updateKmHint('wvAfter','wvAfterHint')"><div id="wvAfterHint" style="display:none;font-size:11px;color:var(--g4);margin-top:3px;padding-left:4px"></div></div>
+      <div id="wvDistWrap" style="display:none;background:var(--teal-bg);border-radius:var(--r2);padding:11px 13px;margin-bottom:13px;align-items:center;justify-content:space-between"><span style="font-size:12px;font-weight:600;color:var(--teal2)">주행거리 (자동계산)</span><div style="display:flex;align-items:baseline;gap:3px"><span style="font-size:22px;font-weight:900;color:var(--teal2)" id="wvDist">0</span><span style="font-size:12px;color:var(--teal2);font-weight:600">km</span></div></div>
+      <div class="fg"><label class="f-lbl">🕐 출발 시간 *</label><div style="display:flex;gap:6px;align-items:center"><select id="wvStartH" class="ri" style="flex:1;margin-bottom:0;text-align:center;width:auto" onchange="syncTimeSel('wvStart')"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select><span style="font-weight:700;color:var(--g4)">:</span><select id="wvStartM" class="ri" style="flex:1;margin-bottom:0;text-align:center;width:auto" onchange="syncTimeSel('wvStart')"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option></select><input type="hidden" id="wvStart"></div></div>
+      <div class="fg"><label class="f-lbl">🕐 도착 시간 *</label><div style="display:flex;gap:6px;align-items:center"><select id="wvEndH" class="ri" style="flex:1;margin-bottom:0;text-align:center;width:auto" onchange="syncTimeSel('wvEnd')"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select><span style="font-weight:700;color:var(--g4)">:</span><select id="wvEndM" class="ri" style="flex:1;margin-bottom:0;text-align:center;width:auto" onchange="syncTimeSel('wvEnd')"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option></select><input type="hidden" id="wvEnd"></div></div>
+      <div class="fg"><label class="f-lbl">📍 목적지(경유지 포함) *</label><input type="text" id="wvDest" class="ri" placeholder="예: 신도시, T2" style="margin-bottom:0"></div>
+      <div class="fg"><label class="f-lbl">📋 목적 *</label><input type="text" id="wvPurpose" class="ri" placeholder="예: 직원격려 식사, 업무" style="margin-bottom:0"></div>
+      <div class="fg"><label class="f-lbl">🧑‍🤝‍🧑 선탑자</label><input type="text" id="wvCoRider" class="ri" placeholder="예: 홍길동 (없으면 비워두세요)" style="margin-bottom:0"></div>
+      <div class="fg"><label class="f-lbl">⛽ 주유</label><input type="text" id="wvFuel" class="ri" placeholder="예: 8만원 (안했으면 비워두세요)" style="margin-bottom:0"></div>
+      <div class="fg" style="margin-bottom:0"><label class="f-lbl">📝 기타 (주차장소 등)</label><input type="text" id="wvEtc" class="ri" placeholder="예: H11구역" style="margin-bottom:0"></div>
+    </div></div>
+    <div style="padding:0 13px 16px"><button class="btn-prim" onclick="subWorkVeh()">운행 기록 저장</button></div>
+    <div style="height:20px"></div>
+  </div>
+  <div id="wvP1" style="display:none">
+    <div class="pg-hd"><div><h1>운행 이력</h1></div><div style="font-size:12px;color:var(--teal);font-weight:700;cursor:pointer" onclick="wvTab(2)">📥 다운로드</div></div>
+    <div class="stat-row" style="grid-template-columns:1fr 1fr 1fr">
+      <div class="stat-box"><div class="s-lbl">총 운행횟수</div><div class="s-val c-teal" id="wvStatCount">0</div><div class="s-unit">회</div></div>
+      <div class="stat-box"><div class="s-lbl">총 주행거리</div><div class="s-val c-navy" id="wvStatDist">0</div><div class="s-unit">km</div></div>
+      <div class="stat-box"><div class="s-lbl" id="wvStatMonthLbl">이번달</div><div class="s-val c-warn" id="wvStatMonth">0</div><div class="s-unit">km</div></div>
+    </div>
+    <div style="padding:0 13px 10px;display:flex;gap:7px">
+      <input type="month" id="wvFilterMonth" onchange="renderWorkVehList(workVehData)" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
+      <select id="wvFilterVeh" onchange="renderWorkVehList(workVehData)" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
+        <option value="">전체 차량</option>
+        <option value="88러 7396">88러 7396</option>
+        <option value="88러 7397">88러 7397</option>
+        <option value="809나 1745">809나 1745</option>
+      </select>
+      
+      <button onclick="document.getElementById('wvFilterMonth').value='';renderWorkVehList(workVehData)" style="padding:8px 12px;background:var(--g1);border:none;border-radius:var(--r2);font-size:12px;font-weight:700;color:var(--g5);cursor:pointer">전체</button>
+    </div>
+    <div id="wvList"><div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">아직 운행 기록이 없습니다</div></div>
+    <div style="height:20px"></div>
+  </div>
+  <div id="wvP2" style="display:none">
+    <div class="pg-hd"><div><h1>다운로드</h1></div>
+      
+    </div>
+    <div class="card"><div class="cb">
+      <p style="font-size:12px;color:var(--g5);line-height:1.7;margin-bottom:14px">운행기록부를 엑셀(xlsx) 형식으로 다운로드합니다.</p>
+      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:7px;align-items:center;margin-bottom:13px">
+        <input type="month" id="wvDlFrom" style="padding:9px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;outline:none">
+        <span style="color:var(--g4);font-size:12px">~</span>
+        <input type="month" id="wvDlTo" style="padding:9px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;outline:none">
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap">
+        <div class="rp" onclick="setWvRange(this,'month')" style="font-size:11px;padding:5px 10px">이번달</div>
+        <div class="rp" onclick="setWvRange(this,'last')" style="font-size:11px;padding:5px 10px">지난달</div>
+        <div class="rp" onclick="setWvRange(this,'all')" style="font-size:11px;padding:5px 10px">전체</div>
+      </div>
+      <button class="btn-prim" onclick="dlWorkVeh()">📥 운행기록부 다운로드 (xlsx)</button>
+      <div style="margin-top:10px;font-size:11px;color:var(--g4);text-align:center" id="wvDlInfo"></div>
+    </div></div>
+    <div style="height:20px"></div>
+  </div>
+</div>
+
+
+<!-- ══ 관리자 ══ -->
+
+
 <div id="sVoc" class="scr" style="display:none">
   <div class="pg-hd">
     <button class="back-btn" onclick="go('main')">←</button>
@@ -3254,6 +3344,38 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   </div>
 </div></div>
 
+<div id="workVehEditModal" class="modal-bg"><div class="modal" style="max-width:380px">
+  <div style="background:linear-gradient(135deg,var(--navy),#1a2f4a);padding:15px 17px;display:flex;align-items:center;justify-content:space-between">
+    <div style="display:flex;align-items:center;gap:8px">
+      <span style="font-size:18px">✏️</span>
+      <div style="color:white;font-size:14px;font-weight:800">공사업무용차량 운행기록 수정</div>
+    </div>
+    <button onclick="closeWvEdit()" style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:26px;height:26px;color:white;font-size:15px;cursor:pointer">×</button>
+  </div>
+  <div style="padding:17px;max-height:70vh;overflow-y:auto">
+    <div class="fg"><label class="f-lbl">🚛 차량 선택 *</label><div class="rg" id="wveVehGrp" style="flex-wrap:wrap;gap:6px">
+      <div class="rp" onclick="pickWvVehicle(this,true)" data-val="88러 7396">88러 7396</div>
+      <div class="rp" onclick="pickWvVehicle(this,true)" data-val="88러 7397">88러 7397</div>
+      <div class="rp" onclick="pickWvVehicle(this,true)" data-val="809나 1745">809나 1745</div>
+    </div></div>
+    <div class="fg"><label class="f-lbl">📅 사용일자 *</label><input type="date" id="wveDate" class="ri" style="margin-bottom:0;width:100%;max-width:100%;box-sizing:border-box;-webkit-appearance:none;appearance:none"></div>
+    <div class="fg"><label class="f-lbl">🏢 소속 *</label><input type="text" id="wveDept" class="ri" placeholder="예: 오전1팀" style="margin-bottom:0"></div>
+    <div class="fg"><label class="f-lbl">👤 성명 *</label><input type="text" id="wveName" class="ri" placeholder="홍길동" style="margin-bottom:0"></div>
+    <div class="fg"><label class="f-lbl">🚗 주행 전 계기판 (km) *</label><input type="number" id="wveBefore" class="ri" style="margin-bottom:0"></div>
+    <div class="fg"><label class="f-lbl">🚗 주행 후 계기판 (km) *</label><input type="number" id="wveAfter" class="ri" style="margin-bottom:0"></div>
+    <div class="fg"><label class="f-lbl">🕐 출발 시간 *</label><div style="display:flex;gap:6px;align-items:center"><select id="wveStartH" class="ri" style="flex:1;margin-bottom:0;text-align:center;width:auto" onchange="syncTimeSel('wveStart')"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select><span style="font-weight:700;color:var(--g4)">:</span><select id="wveStartM" class="ri" style="flex:1;margin-bottom:0;text-align:center;width:auto" onchange="syncTimeSel('wveStart')"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option></select><input type="hidden" id="wveStart"></div></div>
+    <div class="fg"><label class="f-lbl">🕐 도착 시간 *</label><div style="display:flex;gap:6px;align-items:center"><select id="wveEndH" class="ri" style="flex:1;margin-bottom:0;text-align:center;width:auto" onchange="syncTimeSel('wveEnd')"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select><span style="font-weight:700;color:var(--g4)">:</span><select id="wveEndM" class="ri" style="flex:1;margin-bottom:0;text-align:center;width:auto" onchange="syncTimeSel('wveEnd')"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option></select><input type="hidden" id="wveEnd"></div></div>
+    <div class="fg"><label class="f-lbl">📍 목적지(경유지 포함) *</label><input type="text" id="wveDest" class="ri" placeholder="예: 신도시, T2" style="margin-bottom:0"></div>
+    <div class="fg"><label class="f-lbl">📋 목적 *</label><input type="text" id="wvePurpose" class="ri" placeholder="예: 직원격려 식사, 업무" style="margin-bottom:0"></div>
+    <div class="fg"><label class="f-lbl">🧑‍🤝‍🧑 선탑자</label><input type="text" id="wveCoRider" class="ri" style="margin-bottom:0"></div>
+    <div class="fg"><label class="f-lbl">⛽ 주유</label><input type="text" id="wveFuel" class="ri" style="margin-bottom:0"></div>
+    <div class="fg" style="margin-bottom:14px"><label class="f-lbl">📝 기타</label><input type="text" id="wveEtc" class="ri" placeholder="예: 주유 8만원, H11구역" style="margin-bottom:0"></div>
+    <button class="btn-prim" style="width:100%" onclick="saveWvEdit()">수정 완료</button>
+  </div>
+</div></div>
+
+
+
 <div id="missingLeaderModal" class="modal-bg"><div class="modal" style="max-width:340px">
   <div style="background:linear-gradient(135deg,var(--danger),#b03030);padding:15px 17px;display:flex;align-items:center;justify-content:space-between">
     <div style="display:flex;align-items:center;gap:8px">
@@ -3503,7 +3625,7 @@ function showM(id){document.getElementById(id).classList.add('on');}
 function hideM(id){document.getElementById(id).classList.remove('on');}
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sSafety','sManual','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sSafety','sManual','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh'];
 function goStatsDash(){
   go('statsdash');
   loadMonthlyStats();
@@ -3877,11 +3999,12 @@ function goHomeMain(){
 }
 function go(name){
   if(me&&me.role==='vehicle_guest'&&name!=='veh'&&name!=='login'){ return; }
+  if(me&&me.role==='work_vehicle'&&name!=='workveh'&&name!=='login'){ return; }
   if(name==='admin'&&(!me||me.role!=='admin')){ toast('⚠️ 관리자만 접근할 수 있습니다'); return; }
   if(name==='execdash'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='downloadcenter'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(name==='groupchat'&&me&&me.role==='guest'){ toast('⚠️ 게스트 계정은 이용할 수 없는 기능입니다'); return; }
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',safety:'sSafety',manual:'sManual',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',safety:'sSafety',manual:'sManual',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -3919,6 +4042,11 @@ function go(name){
     // 소속/성명 자동입력
     var _vn=document.getElementById('vhName'); if(_vn&&me&&!_vn.value) _vn.value=me.name||'';
     var _vd=document.getElementById('vhDept'); if(_vd&&me&&!_vd.value) _vd.value=me.team||'';
+  }
+  if(name==='workveh'){
+    loadWorkVehData();
+    var _wvn=document.getElementById('wvName'); if(_wvn&&me&&!_wvn.value) _wvn.value=me.name||'';
+    var _wvd=document.getElementById('wvDept'); if(_wvd&&me&&!_wvd.value) _wvd.value=me.team||'';
   }
   if(name==='facility'){
     loadFacilityFromDB();
@@ -4012,6 +4140,8 @@ function applyRoleUI(){
   if(eddl) eddl.style.display=isAdmin?'inline-block':'none';
   var dcb=document.getElementById('downloadCenterMenuBtn');
   if(dcb) dcb.style.display=isMgr?'flex':'none';
+  var wvb=document.getElementById('workVehMenuBtn');
+  if(wvb) wvb.style.display=isExecView?'flex':'none';
   // 산업재해 등록 버튼 (admin만)
   var ib=document.getElementById('mainIndBtn');
   if(ib) ib.style.display=isMgr?'block':'none';
@@ -4048,6 +4178,24 @@ function applyRoleUI(){
     var backBtn=document.getElementById('vehBackBtn');if(backBtn)backBtn.style.display='none';
     var logoutBtn=document.getElementById('vehLogoutBtn');if(logoutBtn)logoutBtn.style.display='block';
     setTimeout(function(){ go('veh'); },100);
+  }
+  // 공사업무용차량 전용 인원(1팀/6팀 운전조): 이 화면만 접근 가능
+  if(me.role==='work_vehicle'){
+    document.querySelectorAll('.menu-btn').forEach(function(el){
+      var oc=el.getAttribute('onclick')||'';
+      el.style.display=oc.indexOf("'workveh'")!==-1?'':'none';
+    });
+    ['sMain'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(!el) return;
+      el.querySelectorAll('.stat-box').forEach(function(b){ b.style.display='none'; });
+      el.querySelectorAll('.sec-lbl').forEach(function(s){ s.style.display='none'; });
+      el.querySelectorAll('.card').forEach(function(c){ c.style.display='none'; });
+    });
+    var bell2=document.getElementById('bellBtn');if(bell2)bell2.style.display='none';
+    var backBtn2=document.getElementById('wvBackBtn');if(backBtn2)backBtn2.style.display='none';
+    var logoutBtn2=document.getElementById('wvLogoutBtn');if(logoutBtn2)logoutBtn2.style.display='block';
+    setTimeout(function(){ go('workveh'); },100);
   }
 }
 
@@ -4242,8 +4390,8 @@ function pickT(el){
   if(!joWrap||!joGrp) return;
   if(team==='T1운영'){joWrap.style.display='none';return;}
   var joMap={
-    '1팀':['A조','B조','C조'],'2팀':['A조','B조'],'3팀':['A조','B조'],'4팀':['A조','B조'],
-    '6팀':['A조','B조','C조'],'7팀':['A조','B조'],'8팀':['A조','B조'],'9팀':['A조','B조'],
+    '1팀':['A조','B조','C조','운전'],'2팀':['A조','B조'],'3팀':['A조','B조'],'4팀':['A조','B조'],
+    '6팀':['A조','B조','C조','운전'],'7팀':['A조','B조'],'8팀':['A조','B조'],'9팀':['A조','B조'],
     '5팀':['A조','B조'],'10팀':['A조','B조']
   };
   var jos=joMap[team]||[];
@@ -6463,6 +6611,293 @@ function loadVehData(){
   if(vehData.length)autoFillBefore();
 }
 
+// ═══ 공사업무용차량 운행일지 (기존 차량운행기록부와 동일 구조 + 차량선택/선탑자/주유) ═══
+var workVehData=[];
+var _wvSelectedVehicle='';
+function wvTab(n){
+  tabSwitch('wv',n,3);
+  if(n===0) autoFillBeforeWv();
+}
+function pickWvVehicle(el, isEdit){
+  var grp=isEdit?'#wveVehGrp':'#wvVehGrp';
+  document.querySelectorAll(grp+' .rp').forEach(function(b){b.classList.remove('on');});
+  el.classList.add('on');
+  if(!isEdit){
+    _wvSelectedVehicle=el.dataset.val;
+    autoFillBeforeWv();
+  }
+}
+function getWvSelectedVehicle(isEdit){
+  var grp=isEdit?'#wveVehGrp':'#wvVehGrp';
+  var sel=document.querySelector(grp+' .rp.on');
+  return sel?sel.dataset.val:'';
+}
+function calcDistWv(){
+  var b=parseInt(document.getElementById('wvBefore').value)||0;
+  var a=parseInt(document.getElementById('wvAfter').value)||0;
+  var dist=a-b;
+  var wrap=document.getElementById('wvDistWrap');var el=document.getElementById('wvDist');
+  if(dist>0){if(wrap)wrap.style.display='flex';if(el)el.textContent=dist;}
+  else{if(wrap)wrap.style.display='none';}
+}
+function autoFillBeforeWv(){
+  if(!_wvSelectedVehicle||!workVehData||!workVehData.length) return;
+  var last=workVehData.filter(function(r){return r.vehicle===_wvSelectedVehicle;})[0];
+  if(!last) return;
+  var el=document.getElementById('wvBefore');
+  if(el&&last.after){
+    el.value=last.after;el.style.borderColor='var(--teal)';el.style.background='var(--teal-bg)';
+    calcDistWv();
+    var hint=document.getElementById('wvAutoHint');
+    if(hint){hint.textContent='이전 운행('+last.date+' '+last.name+')의 주행 후 계기판 '+(last.after||0).toLocaleString()+'km 자동입력';hint.style.display='block';}
+  }
+}
+function subWorkVeh(){
+  if(!canWrite()) return;
+  var vehicle=getWvSelectedVehicle(false);
+  var date=document.getElementById('wvDate').value;
+  var name=document.getElementById('wvName').value.trim();
+  var before=parseInt(document.getElementById('wvBefore').value)||0;
+  var after=parseInt(document.getElementById('wvAfter').value)||0;
+  var start=document.getElementById('wvStart').value;
+  var end=document.getElementById('wvEnd').value;
+  var dest=document.getElementById('wvDest').value.trim();
+  var purpose=document.getElementById('wvPurpose').value.trim();
+  var coRider=document.getElementById('wvCoRider').value.trim();
+  var fuel=document.getElementById('wvFuel').value.trim();
+  var etc=document.getElementById('wvEtc').value.trim();
+  if(!vehicle){toast('차량을 선택해주세요');return;}
+  if(!date){toast('사용일자를 입력해주세요');return;}
+  var dept2=document.getElementById('wvDept')?document.getElementById('wvDept').value.trim():'';
+  if(!name){toast('성명을 입력해주세요');return;}
+  if(!before){toast('주행 전 계기판을 입력해주세요');return;}
+  if(!after){toast('주행 후 계기판을 입력해주세요');return;}
+  if(after<=before){toast('주행 후 계기판이 주행 전보다 커야 합니다');return;}
+  if(!start){toast('출발 시간을 입력해주세요');return;}
+  if(!end){toast('도착 시간을 입력해주세요');return;}
+  if(!dest){toast('목적지를 입력해주세요');return;}
+  if(!purpose){toast('목적을 입력해주세요');return;}
+  var dist=after-before;
+  var dept=(dept2||(me?me.team:'T1운영'));
+  (async function(){
+    var res = await sb.from('work_vehicle_log').insert({
+      date: date,
+      vehicle: vehicle,
+      driver: name,
+      team: dept||'T1운영',
+      start_km: before,
+      end_km: after,
+      start_time: start||null,
+      end_time: end||null,
+      dest: dest,
+      purpose: purpose,
+      etc: etc||null,
+      co_rider: coRider||null,
+      fuel: fuel||null
+    });
+    if(res.error){ console.error('공사업무용차량 저장 오류:', res.error); toast('저장 오류: '+res.error.message); }
+    else { await loadWorkVehicleFromDB(); }
+  })();
+  toast('운행 기록이 저장되었습니다');
+  var _vn2=document.getElementById('wvName'); if(_vn2&&me) _vn2.value=me.name||'';
+  var _vd2=document.getElementById('wvDept'); if(_vd2&&me) _vd2.value=me.team||'';
+  ['wvDate','wvBefore','wvAfter','wvStart','wvEnd','wvDest','wvPurpose','wvCoRider','wvFuel','wvEtc'].forEach(function(id){
+    var e=document.getElementById(id);if(e){e.value='';e.style.borderColor='';e.style.background='';}
+  });
+  setTimeSel('wvStart',''); setTimeSel('wvEnd','');
+  var hw=document.getElementById('wvDistWrap');if(hw)hw.style.display='none';
+  var hh=document.getElementById('wvAutoHint');if(hh)hh.style.display='none';
+  wvTab(1);renderWorkVehList(workVehData);
+}
+function renderWorkVehList(data){
+  var list=document.getElementById('wvList');if(!list)return;
+  var mfEl=document.getElementById('wvFilterMonth');
+  var mf=mfEl?mfEl.value:'';
+  var vfEl=document.getElementById('wvFilterVeh');
+  var vf=vfEl?vfEl.value:'';
+  var filtered=(data||[]).filter(function(r){
+    if(mf && !(r.date&&r.date.indexOf(mf)===0)) return false;
+    if(vf && r.vehicle!==vf) return false;
+    return true;
+  });
+  if(!filtered||!filtered.length){
+    list.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">'+(mf||vf?'해당 조건에 운행 기록이 없습니다':'아직 운행 기록이 없습니다')+'</div>';
+    updateWvStats(filtered);
+    return;
+  }
+  var h='';
+  filtered.forEach(function(r){
+    var extraH='';
+    if(r.co_rider) extraH+='<div style="margin-top:4px;font-size:11px;color:var(--navy)">🧑‍🤝‍🧑 선탑자: '+r.co_rider+'</div>';
+    if(r.fuel) extraH+='<div style="margin-top:4px;font-size:11px;color:var(--teal2)">⛽ 주유: '+r.fuel+'</div>';
+    var etcH=r.etc?'<div style="margin-top:5px;font-size:11px;color:var(--warn);font-weight:600">📝 '+r.etc+'</div>':'';
+    h+='<div style="background:white;border-radius:var(--r);margin:0 13px 10px;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--g2);overflow:hidden">';
+    h+='<div style="background:var(--navy-bg);padding:10px 13px;display:flex;align-items:center;justify-content:space-between">';
+    h+='<div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:800;color:var(--navy)">'+r.date+'</span>';
+    h+='<span style="background:var(--navy);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">'+r.name+'</span>';
+    h+='<span style="background:var(--teal2);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">🚛 '+(r.vehicle||'')+'</span></div>';
+    h+='<span style="font-size:13px;font-weight:900;color:var(--teal2)">'+(r.dist||0).toLocaleString()+'km</span></div>';
+    h+='<div style="padding:10px 13px">';
+    h+='<div style="display:flex;gap:5px;align-items:center;margin-bottom:6px">';
+    h+='<span style="font-size:11px;color:var(--g4)">📍</span><span style="font-size:13px;font-weight:600;color:var(--g6)">'+r.dest+'</span>';
+    h+='<span style="font-size:11px;color:var(--g3)"> — </span><span style="font-size:12px;color:var(--g5)">'+r.purpose+'</span></div>';
+    h+='<div style="display:flex;gap:12px;font-size:11px;color:var(--g4)"><span>'+r.start+' ~ '+r.end+'</span><span>계기 '+(r.before||0).toLocaleString()+'→'+(r.after||0).toLocaleString()+'km</span></div>';
+    h+=extraH+etcH;
+    h+='<div style="margin-top:8px;text-align:right;display:flex;gap:6px;justify-content:flex-end"><button onclick="openWvEdit('+r.id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button><button onclick="deleteWv('+r.id+')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제</button></div>';
+    h+='</div></div>';
+  });
+  list.innerHTML=h;updateWvStats(filtered);
+}
+function openWvEdit(id){
+  if(!canWrite()) return;
+  var r=(workVehData||[]).find(function(x){return x.id===id;});
+  if(!r){toast('기록을 찾을 수 없습니다');return;}
+  document.querySelectorAll('#wveVehGrp .rp').forEach(function(b){
+    b.classList.toggle('on', b.dataset.val===r.vehicle);
+  });
+  document.getElementById('wveDate').value=r.date||'';
+  document.getElementById('wveDept').value=r.dept||'';
+  document.getElementById('wveName').value=r.name||'';
+  document.getElementById('wveBefore').value=r.before||'';
+  document.getElementById('wveAfter').value=r.after||'';
+  setTimeSel('wveStart',r.start||'');
+  setTimeSel('wveEnd',r.end||'');
+  document.getElementById('wveDest').value=r.dest||'';
+  document.getElementById('wvePurpose').value=r.purpose||'';
+  document.getElementById('wveCoRider').value=r.co_rider||'';
+  document.getElementById('wveFuel').value=r.fuel||'';
+  document.getElementById('wveEtc').value=r.etc||'';
+  document.getElementById('workVehEditModal').dataset.editId=id;
+  showM('workVehEditModal');
+}
+function closeWvEdit(){ hideM('workVehEditModal'); }
+async function deleteWv(id){
+  if(!canWrite()) return;
+  if(!confirm('이 운행 기록을 삭제하시겠습니까?')) return;
+  try{
+    var res=await sb.from('work_vehicle_log').delete().eq('id',id);
+    if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    workVehData=(workVehData||[]).filter(function(r){ return r.id!==id; });
+    renderWorkVehList(workVehData);
+    toast('✅ 삭제되었습니다');
+  }catch(e){ toast('삭제 오류: '+e.message); }
+}
+async function saveWvEdit(){
+  if(!canWrite()) return;
+  var id=document.getElementById('workVehEditModal').dataset.editId;
+  if(!id){toast('수정 대상을 찾을 수 없습니다');return;}
+  var vehicle=getWvSelectedVehicle(true);
+  var date=document.getElementById('wveDate').value;
+  var dept=document.getElementById('wveDept').value.trim();
+  var name=document.getElementById('wveName').value.trim();
+  var before=parseInt(document.getElementById('wveBefore').value)||0;
+  var after=parseInt(document.getElementById('wveAfter').value)||0;
+  var start=document.getElementById('wveStart').value;
+  var end=document.getElementById('wveEnd').value;
+  var dest=document.getElementById('wveDest').value.trim();
+  var purpose=document.getElementById('wvePurpose').value.trim();
+  var coRider=document.getElementById('wveCoRider').value.trim();
+  var fuel=document.getElementById('wveFuel').value.trim();
+  var etc=document.getElementById('wveEtc').value.trim();
+  if(!vehicle){toast('차량을 선택해주세요');return;}
+  if(!date){toast('사용일자를 입력해주세요');return;}
+  if(!name){toast('성명을 입력해주세요');return;}
+  if(!before){toast('주행 전 계기판을 입력해주세요');return;}
+  if(!after){toast('주행 후 계기판을 입력해주세요');return;}
+  if(after<=before){toast('주행 후 계기판이 주행 전보다 커야 합니다');return;}
+  if(!start){toast('출발 시간을 입력해주세요');return;}
+  if(!end){toast('도착 시간을 입력해주세요');return;}
+  if(!dest){toast('목적지를 입력해주세요');return;}
+  if(!purpose){toast('목적을 입력해주세요');return;}
+  try{
+    var res=await sb.from('work_vehicle_log').update({
+      date:date, vehicle:vehicle, driver:name, team:dept||'T1운영',
+      start_km:before, end_km:after, start_time:start||null, end_time:end||null,
+      dest:dest, purpose:purpose, co_rider:coRider||null, fuel:fuel||null, etc:etc||null
+    }).eq('id',id);
+    if(res.error){ toast('수정 오류: '+res.error.message); return; }
+    toast('운행 기록이 수정되었습니다');
+    closeWvEdit();
+    await loadWorkVehicleFromDB();
+  }catch(e){ toast('수정 오류: '+String(e.message||e)); }
+}
+function updateWvStats(data){
+  var cnt=document.getElementById('wvStatCount');var dist=document.getElementById('wvStatDist');var month=document.getElementById('wvStatMonth');
+  var monthLbl=document.getElementById('wvStatMonthLbl');
+  if(cnt)cnt.textContent=data.length.toLocaleString();
+  var totalDist=data.reduce(function(s,r){return s+(r.dist||0);},0);
+  if(dist)dist.textContent=totalDist.toLocaleString();
+  var mfEl=document.getElementById('wvFilterMonth');
+  var mf=mfEl?mfEl.value:'';
+  var now=new Date();var tm=mf||(now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0'));
+  var mD=data.filter(function(r){return r.date&&r.date.startsWith(tm);}).reduce(function(s,r){return s+(r.dist||0);},0);
+  if(month)month.textContent=mD.toLocaleString();
+  if(monthLbl) monthLbl.textContent=mf?(mf+' 합계'):'이번달';
+}
+function setWvRange(el,range){
+  document.querySelectorAll('#wvP2 .rp').forEach(function(p){p.classList.remove('on');});el.classList.add('on');
+  var now=new Date();
+  var fmt=function(d){return d.getFullYear()+'-'+(d.getMonth()+1).toString().padStart(2,'0');};
+  var from=document.getElementById('wvDlFrom');var to=document.getElementById('wvDlTo');
+  if(range==='month'){if(from)from.value=fmt(now);if(to)to.value=fmt(now);}
+  else if(range==='last'){var l=new Date(now.getFullYear(),now.getMonth()-1,1);if(from)from.value=fmt(l);if(to)to.value=fmt(l);}
+  else{if(workVehData.length){var dates=workVehData.map(function(r){return r.date;}).sort();var fd=new Date(dates[0]);var ld=new Date(dates[dates.length-1]);if(from)from.value=fmt(fd);if(to)to.value=fmt(ld);}}
+}
+function dlWorkVeh(){
+  if(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader')){toast('⚠️ 팀장 이상만 다운로드할 수 있습니다');return;}
+  var from=document.getElementById('wvDlFrom').value;
+  var to=document.getElementById('wvDlTo').value;
+  var filtered=workVehData.slice();
+  if(from)filtered=filtered.filter(function(r){return r.date.slice(0,7)>=from;});
+  if(to)filtered=filtered.filter(function(r){return r.date.slice(0,7)<=to;});
+  if(!filtered.length){toast('해당 기간에 운행 기록이 없습니다');return;}
+  var header=['사용일자','차량번호','소속','성명','주행 전 계기판(km)','주행 후 계기판(km)','주행거리','출발 시간','도착 시간','목적지','목적','선탑자','주유','기타'];
+  var rows=[header];
+  filtered.forEach(function(r){
+    rows.push([r.date, r.vehicle||'', r.dept||'T1운영', r.name, r.before||0, r.after||0, r.dist||0, r.start||'', r.end||'', r.dest||'', r.purpose||'', r.co_rider||'', r.fuel||'', r.etc||'']);
+  });
+  var range=(typeof dlDateRangeStr==='function')?dlDateRangeStr(filtered.map(function(r){return r.date;})):'';
+  var wrap=(typeof dlWithTitle==='function')?dlWithTitle(rows,'T1환경미화사업부 공사업무용차량 운행일지',range,14):{rows:rows,merges:[]};
+  var ws=XLSX.utils.aoa_to_sheet(wrap.rows);
+  ws['!merges']=wrap.merges;
+  ws['!cols']=[{wch:11},{wch:12},{wch:9},{wch:9},{wch:14},{wch:14},{wch:9},{wch:9},{wch:9},{wch:12},{wch:14},{wch:10},{wch:10},{wch:12}];
+  var wb={SheetNames:['공사업무용차량'],Sheets:{'공사업무용차량':ws}};
+  XLSX.writeFile(wb,'공사업무용차량_운행일지_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
+  var info=document.getElementById('wvDlInfo');if(info)info.textContent='완료: '+filtered.length+'건';
+  toast('공사업무용차량 운행일지 다운로드 완료 ('+filtered.length+'건)');
+}
+async function loadWorkVehicleFromDB(){
+  try{
+    var res=await sb.from('work_vehicle_log').select('*').order('created_at',{ascending:false});
+    if(res.error){ console.error('공사업무용차량 로드 오류:', res.error); return; }
+    workVehData=(res.data||[]).map(function(r){
+      return {
+        id:r.id, date:r.date, vehicle:r.vehicle, dept:r.team, name:r.driver,
+        before:Number(r.start_km)||0, after:Number(r.end_km)||0, dist:(Number(r.end_km)||0)-(Number(r.start_km)||0),
+        start:r.start_time, end:r.end_time, dest:r.dest, purpose:r.purpose,
+        co_rider:r.co_rider, fuel:r.fuel, etc:r.etc
+      };
+    });
+    renderWorkVehList(workVehData);
+  }catch(e){ console.error('공사업무용차량 로드 예외:', e); }
+}
+function loadWorkVehData(){
+  setTimeout(function(){
+    var deptF=document.getElementById('wvDept'); if(deptF&&me&&me.team) deptF.value=me.team;
+    var nameF=document.getElementById('wvName'); if(nameF&&me&&me.name) nameF.value=me.name;
+  },100);
+  loadWorkVehicleFromDB();
+  var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+  var vd=document.getElementById('wvDate');if(vd)vd.value=today;
+  var now=new Date();var tm=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0');
+  var vf=document.getElementById('wvDlFrom');var vt=document.getElementById('wvDlTo');
+  if(vf)vf.value=tm;if(vt)vt.value=tm;
+  // 다운로드 탭은 팀장 이상만
+  var isDlAllowed=me&&(me.role==='admin'||me.role==='manager'||me.role==='leader');
+  var t2=document.getElementById('wvT2');
+  if(t2) t2.style.display=isDlAllowed?'':'none';
+}
+
 
 
 // ─ 조장 명단 편집 ─
@@ -8556,11 +8991,11 @@ async function subReg(){
   if(!team){err.textContent='⚠️ 소속 팀을 선택해주세요';err.style.display='block';return;}
   if(!roleVal){err.textContent='⚠️ 직급을 선택해주세요';err.style.display='block';return;}
   var regJoMap={
-    '1팀':['A조','B조','C조'],'2팀':['A조','B조'],'3팀':['A조','B조'],'4팀':['A조','B조'],
-    '6팀':['A조','B조','C조'],'7팀':['A조','B조'],'8팀':['A조','B조'],'9팀':['A조','B조'],
+    '1팀':['A조','B조','C조','운전'],'2팀':['A조','B조'],'3팀':['A조','B조'],'4팀':['A조','B조'],
+    '6팀':['A조','B조','C조','운전'],'7팀':['A조','B조'],'8팀':['A조','B조'],'9팀':['A조','B조'],
     '5팀':['A조','B조'],'10팀':['A조','B조']
   };
-  var needsJo=(roleVal==='조장'||roleVal==='조장대행');
+  var needsJo=(roleVal==='조장'||roleVal==='조장대행'||roleVal==='차량운행');
   if(needsJo&&regJoMap[team]&&!jo){err.textContent='⚠️ 조를 선택해주세요';err.style.display='block';return;}
 
   // Supabase 연결 확인
@@ -8570,7 +9005,7 @@ async function subReg(){
     return;
   }
 
-  var roleMap={'팀장':'manager','조장':'leader','조장대행':'acting_leader','기타':'staff','게스트':'guest'};
+  var roleMap={'팀장':'manager','조장':'leader','조장대행':'acting_leader','기타':'staff','게스트':'guest','차량운행':'work_vehicle'};
   var isT1 = (team==='T1운영');
   var finalRole = isT1 ? 'admin' : (roleMap[roleVal]||'staff');
   var finalStatus = 'pending'; // T1운영 포함 모든 가입은 관리자 승인 필요
