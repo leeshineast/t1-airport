@@ -1870,7 +1870,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         </select>
         <button onclick="loadLostFromDB()" style="padding:8px 13px;background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--g5);cursor:pointer">🔄</button>
         <button onclick="downloadLostExcel()" style="padding:8px 13px;background:var(--teal-bg);border:1.5px solid var(--teal);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--teal2);cursor:pointer">📥 엑셀</button>
-        <button id="lostResetBtn" onclick="showM('lostResetModal')" style="display:none;padding:8px 13px;background:var(--danger-bg);border:1.5px solid var(--danger);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--danger);cursor:pointer">🗑️ 초기화</button>
+
       </div>
     </div>
     <!-- 통계 -->
@@ -2001,21 +2001,6 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 </div></div></div>
 
 <!-- 습득물 초기화 모달 -->
-<div id="lostResetModal" class="modal-bg"><div class="modal"><div style="padding:22px 20px;text-align:center">
-  <div style="font-size:32px;margin-bottom:10px">⚠️</div>
-  <div style="font-size:15px;font-weight:800;color:var(--danger);margin-bottom:8px">습득물 초기화</div>
-  <div style="font-size:13px;color:var(--g5);line-height:1.7;margin-bottom:18px">선택한 기간의 습득물 데이터를<br>모두 삭제합니다. 복구 불가합니다.</div>
-  <select id="lostResetRange" class="ri" style="margin-bottom:14px">
-    <option value="all">전체 초기화</option>
-    <option value="month">이번 달만</option>
-    <option value="year">올해만</option>
-  </select>
-  <div style="display:flex;gap:8px">
-    <button onclick="hideM('lostResetModal')" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">취소</button>
-    <button onclick="confirmLostReset()" style="flex:1;padding:11px;background:var(--danger);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">삭제</button>
-  </div>
-</div></div></div>
-
 <!-- 습득물 처리완료 모달 -->
 <div id="lostCompleteModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--teal),var(--teal2))"><h3>✅ 처리 완료</h3><button class="m-x" onclick="hideM('lostCompleteModal')">×</button></div><div style="padding:15px 17px">
   <input type="hidden" id="lostCompleteId">
@@ -2999,7 +2984,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
         <option value="">전체 작성자</option>
       </select>
       <button onclick="loadVocFromDB()" style="padding:8px 13px;background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--g5);cursor:pointer">🔄 새로고침</button>
-      <button id="vocResetBtn" onclick="showM('vocResetModal')" style="display:none;padding:8px 13px;background:var(--danger-bg);border:1.5px solid var(--danger);border-radius:var(--r2);font-size:12px;font-weight:600;color:var(--danger);cursor:pointer">🗑️ 초기화</button>
+
     </div>
     <!-- 통계 요약 -->
     <div id="vocStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 13px 12px"></div>
@@ -3431,7 +3416,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 <div id="vocEditModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>✏️ 민원 수정</h3><button class="m-x" onclick="hideM('vocEditModal')">×</button></div><div style="padding:15px 17px;max-height:75vh;overflow-y:auto"><input type="hidden" id="vocEditId"><div class="fg"><label class="f-lbl">민원 일자</label><input type="date" id="vocEditDate" class="ri" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">① 접수경로</label><div style="display:flex;gap:6px;flex-wrap:wrap" id="vocEditChannelWrap"><div class="rp" data-v="ARS" onclick="pickVocEditChannel(this)">ARS</div><div class="rp" data-v="일반전화" onclick="pickVocEditChannel(this)">일반전화</div><div class="rp" data-v="현장" onclick="pickVocEditChannel(this)">현장</div><div class="rp" data-v="공사" onclick="pickVocEditChannel(this)">공사</div><div class="rp" data-v="사업부장" onclick="pickVocEditChannel(this)">사업부장</div><div class="rp" data-v="기타" onclick="pickVocEditChannel(this)">기타</div></div></div><div class="fg"><label class="f-lbl">② 민원내용 유형</label><div style="display:flex;gap:6px;flex-wrap:wrap" id="vocEditCategoryWrap"><div class="rp" data-v="청소요청" onclick="pickVocEditCategory(this)">청소요청</div><div class="rp" data-v="시설물고장" onclick="pickVocEditCategory(this)">시설물고장</div><div class="rp" data-v="안내" onclick="pickVocEditCategory(this)">안내</div><div class="rp" data-v="서비스응대" onclick="pickVocEditCategory(this)">서비스응대</div><div class="rp" data-v="유실물확인" onclick="pickVocEditCategory(this)">유실물확인</div><div class="rp" data-v="청소불만" onclick="pickVocEditCategory(this)">청소불만</div><div class="rp" data-v="기타" onclick="pickVocEditCategory(this)">기타</div></div><input type="text" id="vocEditCategoryEtc" class="ri" placeholder="기타 내용 직접 입력" style="display:none;margin-top:8px;margin-bottom:0;font-size:13px"></div><div class="fg"><label class="f-lbl">③ 위치</label><div style="display:flex;gap:6px" id="vocEditZoneWrap"><div class="rp" data-v="L/S" onclick="pickVocEditZone(this)" style="flex:1;text-align:center">L/S</div><div class="rp" data-v="A/S" onclick="pickVocEditZone(this)" style="flex:1;text-align:center">A/S</div></div><div style="display:flex;gap:6px;margin-top:8px" id="vocEditSideWrap"><div class="rp" data-v="동편" onclick="pickVocEditSide(this)" style="flex:1;text-align:center">동편</div><div class="rp" data-v="서편" onclick="pickVocEditSide(this)" style="flex:1;text-align:center">서편</div></div><select id="vocEditFloor" class="ri" style="margin-top:8px;margin-bottom:0;font-size:13px"><option value="">층 선택</option><option value="B2F">B2F</option><option value="B1F">B1F</option><option value="1F">1F</option><option value="2F">2F</option><option value="3F">3F</option><option value="4F">4F</option></select></div><div class="fg"><label class="f-lbl">④ 상세내용</label><textarea id="vocEditContent" class="ri" rows="4" placeholder="상세내용" style="resize:vertical;font-size:13px;margin-bottom:0"></textarea></div><div class="fg"><label class="f-lbl">비고</label><textarea id="vocEditNote" class="ri" rows="2" placeholder="처리결과, 담당자 등" style="resize:vertical;font-size:13px;margin-bottom:0"></textarea></div><div style="display:flex;gap:8px;margin-top:4px"><button onclick="hideM('vocEditModal')" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">취소</button><button onclick="confirmVocEdit()" style="flex:1;padding:11px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">수정 저장</button></div></div></div></div>
 
 <!-- ARS 민원 초기화 확인 모달 -->
-<div id="vocResetModal" class="modal-bg"><div class="modal"><div style="padding:22px 20px;text-align:center"><div style="font-size:32px;margin-bottom:10px">⚠️</div><div style="font-size:15px;font-weight:800;color:var(--danger);margin-bottom:8px">민원 초기화</div><div style="font-size:13px;color:var(--g5);line-height:1.7;margin-bottom:18px">선택한 기간의 민원 데이터를<br>모두 삭제합니다. 복구 불가합니다.</div><select id="vocResetRange" class="ri" style="margin-bottom:14px"><option value="all">전체 초기화</option><option value="month">이번 달만</option><option value="year">올해만</option></select><div style="display:flex;gap:8px"><button onclick="hideM('vocResetModal')" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">취소</button><button onclick="confirmVocReset()" style="flex:1;padding:11px;background:var(--danger);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">삭제</button></div></div></div></div>
+
 
 <!-- 전년대비 입력 모달 -->
 <div id="indCmpModal" class="modal-bg">
@@ -4181,10 +4166,6 @@ function applyRoleUI(){
   // 조장편집 버튼
   var lb=document.getElementById('leaderEditBtn');if(lb)lb.style.display=isAdmin?'block':'none';
   var eb=document.getElementById('mainIndCmpEditBtn');if(eb)eb.style.display=isAdmin?'block':'none';
-  // ARS 초기화 버튼 (admin만)
-  var vrb=document.getElementById('vocResetBtn');if(vrb)vrb.style.display=isAdmin?'block':'none';
-  // 습득물 초기화 버튼 (admin만)
-  var lrb=document.getElementById('lostResetBtn');if(lrb)lrb.style.display=isAdmin?'block':'none';
   // 전체채팅 메뉴 (게스트는 아예 접근 불가 - 메뉴 자체를 숨김)
   var gcb=document.getElementById('groupChatMenuBtn');if(gcb)gcb.style.display=(me.role==='guest')?'none':'';
   var gcTab=document.getElementById('gcTabItem');if(gcTab)gcTab.style.display=(me.role==='guest')?'none':'flex';
@@ -10476,28 +10457,6 @@ async function confirmVocEdit(){
   }catch(e){ toast('⚠️ 수정 실패: '+e.message); }
 }
 
-async function confirmVocReset(){
-  var range=document.getElementById('vocResetRange').value;
-  var now=new Date(Date.now()+9*3600000);
-  try{
-    if(range==='all'){
-      await sb.from('voc_data').delete().neq('id',0);
-    } else if(range==='month'){
-      var ym=now.toISOString().slice(0,7);
-      // 이번 달 데이터 삭제: voc_date가 해당 월인 것
-      var ids=(vocData||[]).filter(function(r){return r.voc_date&&r.voc_date.slice(0,7)===ym;}).map(function(r){return r.id;});
-      for(var i=0;i<ids.length;i++) await sb.from('voc_data').delete().eq('id',ids[i]);
-    } else if(range==='year'){
-      var yr=String(now.getFullYear());
-      var ids2=(vocData||[]).filter(function(r){return r.voc_date&&r.voc_date.slice(0,4)===yr;}).map(function(r){return r.id;});
-      for(var i=0;i<ids2.length;i++) await sb.from('voc_data').delete().eq('id',ids2[i]);
-    }
-    hideM('vocResetModal');
-    toast('🗑️ 초기화 완료');
-    loadVocFromDB();
-  }catch(e){ toast('⚠️ 초기화 실패: '+e.message); }
-}
-
 // ══ 습득물 관리 ══
 var lostData=[];
 var lostSelectedStatus='접수';
@@ -10812,25 +10771,6 @@ async function confirmLostEdit(){
     toast('✅ 수정되었습니다');
     loadLostFromDB();
   }catch(e){ toast('⚠️ 수정 실패: '+e.message); }
-}
-
-async function confirmLostReset(){
-  var range=document.getElementById('lostResetRange').value;
-  var now=new Date(Date.now()+9*3600000);
-  try{
-    if(range==='all'){
-      await sb.from('lost_found').delete().neq('id',0);
-    } else {
-      var filterStr=range==='month'?now.toISOString().slice(0,7):String(now.getFullYear());
-      var ids=(lostData||[]).filter(function(r){
-        return toKSTDate(r.found_date||r.created_at).slice(0,filterStr.length)===filterStr;
-      }).map(function(r){return r.id;});
-      for(var i=0;i<ids.length;i++) await sb.from('lost_found').delete().eq('id',ids[i]);
-    }
-    hideM('lostResetModal');
-    toast('🗑️ 초기화 완료');
-    loadLostFromDB();
-  }catch(e){ toast('⚠️ 초기화 실패: '+e.message); }
 }
 
 function downloadLostExcel(){
