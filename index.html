@@ -11722,9 +11722,13 @@ async function saveMpToDB(shift, teamCode, values, writer, proxyWriter){
 
 async function loadMpFromDB(){
   try{
-    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
-    var res=await sb.from('mp_data').select('*').eq('date',today);
-    var nsRes=await sb.from('night_special_data').select('*').eq('date',today);
+    var nowKst=new Date(Date.now()+9*3600000);
+    var today=nowKst.toISOString().slice(0,10); // KST
+    var isNightWindow=nowKst.getUTCHours()<6; // 00:00~05:59 → 아직 어젯밤 야간조 근무 중
+    var nightDate=isNightWindow?new Date(nowKst.getTime()-86400000).toISOString().slice(0,10):today;
+    var dMin=isNightWindow?nightDate:today, dMax=today;
+    var res=await sb.from('mp_data').select('*').gte('date',dMin).lte('date',dMax);
+    var nsRes=await sb.from('night_special_data').select('*').eq('date',nightDate);
     // 데이터 없어도 반드시 초기화 (이전 날짜 데이터 메모리 잔존 방지)
     mpDataByLeader={오전:{},오후:{},야간:{}};
     mpMeta={오전:{},오후:{},야간:{}};
@@ -11734,6 +11738,9 @@ async function loadMpFromDB(){
         if(!row.shift||!row.team_code||!row.values) return;
               // 특수 레코드 제외 (_로 시작하는 team_code)
         if(row.team_code&&row.team_code.indexOf('_')===0) return;
+        // 오전/오후는 오늘 날짜만, 야간은 오늘 새벽(0~6시)이면 어젯밤 날짜 기준
+        var expectedDate=(row.shift==='야간')?nightDate:today;
+        if(row.date!==expectedDate) return;
         if(!mpDataByLeader[row.shift]) mpDataByLeader[row.shift]={};
         var vals=row.values;
         if(typeof vals==='string') try{ vals=JSON.parse(vals); }catch(e){}
@@ -13327,14 +13334,21 @@ var MGR_STRUCTURE = {
 };
 
 async function loadMgrAttendance(){
-  var today = new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+  var nowKst2 = new Date(Date.now()+9*3600000);
+  var today = nowKst2.toISOString().slice(0,10);
+  var isNightWindow2 = nowKst2.getUTCHours()<6;
+  var nightDate2 = isNightWindow2?new Date(nowKst2.getTime()-86400000).toISOString().slice(0,10):today;
+  var NIGHT_MGR_TEAMS=['5팀','10팀'];
   var dateEl = document.getElementById('mgrAttDate');
   if(dateEl) dateEl.textContent = today;
   try{
-    var res = await sb.from('mgr_attendance').select('*').eq('date', today);
+    var dMin2=isNightWindow2?nightDate2:today, dMax2=today;
+    var res = await sb.from('mgr_attendance').select('*').gte('date',dMin2).lte('date',dMax2);
     if(res.error) throw res.error;
     mgrAttData = {};
     (res.data||[]).forEach(function(r){
+      var expectedDate=(NIGHT_MGR_TEAMS.indexOf(r.team)!==-1)?nightDate2:today;
+      if(r.date!==expectedDate) return;
       mgrAttData[r.team+'_'+r.name] = r;
     });
   }catch(e){ console.error(e); }
