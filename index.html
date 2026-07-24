@@ -13030,11 +13030,15 @@ function renderEbookPage(prefix){
     var wrap=document.getElementById(prefix+'EbookCanvasWrap');
     var availWidth=(wrap?wrap.clientWidth:360)-20;
     var vp0=page.getViewport({scale:1});
-    var scale=Math.max(0.3, availWidth/vp0.width);
-    var viewport=page.getViewport({scale:scale});
-    canvas.width=viewport.width; canvas.height=viewport.height;
+    var cssScale=Math.max(0.3, availWidth/vp0.width);
+    var dpr=window.devicePixelRatio||1;
+    var renderScale=cssScale*dpr; // 실제 캔버스 해상도는 화면 배율만큼 더 높게 그려서 선명하게
+    var cssViewport=page.getViewport({scale:cssScale});
+    var renderViewport=page.getViewport({scale:renderScale});
+    canvas.width=renderViewport.width; canvas.height=renderViewport.height;
+    canvas.style.width=cssViewport.width+'px'; canvas.style.height=cssViewport.height+'px';
     var ctx=canvas.getContext('2d');
-    page.render({canvasContext:ctx, viewport:viewport});
+    page.render({canvasContext:ctx, viewport:renderViewport});
     var ind=document.getElementById(prefix+'EbookPageInd');
     if(ind) ind.textContent=st.curPage+' / '+st.totalPages;
     try{ localStorage.setItem(_ebookProgressKey(st.url), st.curPage); }catch(e){}
