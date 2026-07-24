@@ -2198,10 +2198,19 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <div id="regP1" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
     <div id="regViewerTitle" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:12px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
       <span id="regViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
-      <button id="regViewToggleBtn" onclick="toggleViewerMode('reg')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔄 다른 방식</button>
+      <button onclick="window.open(window._regPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
       <button onclick="regTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
-    <iframe id="regPdfFrame" src="" style="width:100%;flex:1;border:none;min-height:0"></iframe>
+    <div id="regEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
+      <div id="regEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:10px" ontouchstart="ebookTouchStart(event,'reg')" ontouchend="ebookTouchEnd(event,'reg')">
+        <canvas id="regEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:10px;background:white;border-top:1px solid var(--g2);flex-shrink:0">
+        <button onclick="ebookNav('reg',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:14px;font-weight:800;cursor:pointer">◀</button>
+        <span id="regEbookPageInd" style="font-size:12px;font-weight:700;color:var(--g6);min-width:60px;text-align:center">- / -</span>
+        <button onclick="ebookNav('reg',1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:14px;font-weight:800;cursor:pointer">▶</button>
+      </div>
+    </div>
   </div>
 
   <!-- 탭2: 업로드 (관리자만) -->
@@ -2271,10 +2280,19 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <div id="isoP1" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
     <div id="isoViewerTitle" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:12px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
       <span id="isoViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
-      <button id="isoViewToggleBtn" onclick="toggleViewerMode('iso')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔄 다른 방식</button>
+      <button onclick="window.open(window._isoPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
       <button onclick="isoTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
-    <iframe id="isoPdfFrame" src="" style="width:100%;flex:1;border:none;min-height:0"></iframe>
+    <div id="isoEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
+      <div id="isoEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:10px" ontouchstart="ebookTouchStart(event,'iso')" ontouchend="ebookTouchEnd(event,'iso')">
+        <canvas id="isoEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:10px;background:white;border-top:1px solid var(--g2);flex-shrink:0">
+        <button onclick="ebookNav('iso',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:14px;font-weight:800;cursor:pointer">◀</button>
+        <span id="isoEbookPageInd" style="font-size:12px;font-weight:700;color:var(--g6);min-width:60px;text-align:center">- / -</span>
+        <button onclick="ebookNav('iso',1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:14px;font-weight:800;cursor:pointer">▶</button>
+      </div>
+    </div>
   </div>
 
   <!-- 탭2: 업로드 (관리자만) -->
@@ -2331,10 +2349,19 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <div id="safetyP1" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
     <div id="safetyViewerTitle" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:12px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
       <span id="safetyViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
-      <button id="safetyViewToggleBtn" onclick="toggleViewerMode('safety')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔄 다른 방식</button>
+      <button onclick="window.open(window._safetyPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
       <button onclick="safetyTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
-    <iframe id="safetyPdfFrame" src="" style="width:100%;flex:1;border:none;min-height:0"></iframe>
+    <div id="safetyEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
+      <div id="safetyEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:10px" ontouchstart="ebookTouchStart(event,'safety')" ontouchend="ebookTouchEnd(event,'safety')">
+        <canvas id="safetyEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:10px;background:white;border-top:1px solid var(--g2);flex-shrink:0">
+        <button onclick="ebookNav('safety',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:14px;font-weight:800;cursor:pointer">◀</button>
+        <span id="safetyEbookPageInd" style="font-size:12px;font-weight:700;color:var(--g6);min-width:60px;text-align:center">- / -</span>
+        <button onclick="ebookNav('safety',1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:14px;font-weight:800;cursor:pointer">▶</button>
+      </div>
+    </div>
   </div>
 
   <!-- 탭2: 업로드 (관리자만) -->
@@ -2391,10 +2418,19 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
   <div id="manualP1" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
     <div id="manualViewerTitle" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:12px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
       <span id="manualViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
-      <button id="manualViewToggleBtn" onclick="toggleViewerMode('manual')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔄 다른 방식</button>
+      <button onclick="window.open(window._manualPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
       <button onclick="manualTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
-    <iframe id="manualPdfFrame" src="" style="width:100%;flex:1;border:none;min-height:0"></iframe>
+    <div id="manualEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
+      <div id="manualEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:10px" ontouchstart="ebookTouchStart(event,'manual')" ontouchend="ebookTouchEnd(event,'manual')">
+        <canvas id="manualEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:10px;background:white;border-top:1px solid var(--g2);flex-shrink:0">
+        <button onclick="ebookNav('manual',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:14px;font-weight:800;cursor:pointer">◀</button>
+        <span id="manualEbookPageInd" style="font-size:12px;font-weight:700;color:var(--g6);min-width:60px;text-align:center">- / -</span>
+        <button onclick="ebookNav('manual',1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:14px;font-weight:800;cursor:pointer">▶</button>
+      </div>
+    </div>
   </div>
 
   <!-- 탭2: 업로드 (관리자만) -->
@@ -8396,10 +8432,16 @@ function getMyLeaderTeam(){
 var facilityData = {}; // {화장실:{total,ls,as,floors,detail}, ...}
 var facilityFiles = []; // 업로드된 파일 목록
 // 엑셀 내 여러 시트 중 실제 사용할 시트를 고른다.
-// "정리" 글자가 들어간 시트가 있으면 그 중 가장 마지막 것(정리2차 등 최신 정리본) 사용,
-// 없으면 데이터(행 수)가 가장 많은 시트를 사용 (빈 Sheet1 등 잘못 선택 방지)
-function pickBestSheet(wb){
+// 1순위) 파일명에서 감지된 시설유형(화장실/흡연실 등)과 이름이 정확히 같은 시트가 있으면 그걸 사용 (가장 확실한 최종본)
+// 2순위) "정리" 글자가 들어간 시트가 있으면 그 중 가장 마지막 것(정리2차 등 최신 정리본) 사용,
+// 3순위) 없으면 데이터(행 수)가 가장 많은 시트를 사용 (빈 Sheet1 등 잘못 선택 방지)
+function pickBestSheet(wb, filename){
   var names=wb.SheetNames;
+  var facType=filename?detectFacType(filename):null;
+  if(facType){
+    var exact=names.find(function(n){ return n.trim()===facType; });
+    if(exact) return wb.Sheets[exact];
+  }
   var cleanedNames=names.filter(function(n){ return n.indexOf('정리')!==-1; });
   if(cleanedNames.length){
     return wb.Sheets[cleanedNames[cleanedNames.length-1]];
@@ -8462,7 +8504,7 @@ function processFacFiles(){
       reader.onload=function(e){
         try{
           var wb=XLSX.read(e.target.result,{type:'array'});
-          var ws=pickBestSheet(wb);
+          var ws=pickBestSheet(wb, file.name);
           var rows=XLSX.utils.sheet_to_json(ws,{defval:''});
           parseExcelData(file.name, rows);
         }catch(err){
@@ -8767,17 +8809,28 @@ function renderFacDetailTable(){
   d.raw.headers.forEach(function(hd,i){ if(HIDE_COLS.indexOf(hd)===-1) visibleIdx.push(i); });
   var headers=visibleIdx.map(function(i){ return d.raw.headers[i]; });
   var rows=d.raw.rows.map(function(r){ return visibleIdx.map(function(i){ return r[i]; }); });
-  // 층 컬럼 찾아서 정렬: 지하2층→...→1층→2층... 순, 층 정보 없는 행은 가나다순으로 뒤에
-  var floorColIdx=headers.findIndex(function(hd){ return hd.indexOf('층')!==-1; });
-  if(floorColIdx>=0){
-    rows=rows.slice().sort(function(a,b){
-      var ka=facFloorSortKey(a[floorColIdx]), kb=facFloorSortKey(b[floorColIdx]);
-      if(ka!==null&&kb!==null) return ka-kb;
-      if(ka!==null&&kb===null) return -1; // 층 있는 것 먼저
-      if(ka===null&&kb!==null) return 1;
-      // 둘 다 층 정보 없음 → 가나다(해당 컬럼 텍스트) 정렬
-      return String(a[floorColIdx]||'').localeCompare(String(b[floorColIdx]||''),'ko');
-    });
+  // 화장실만 층별 정렬(지하2층→...→1층→2층...), 그 외 시설유형은 연번(구분) 컬럼 순 정렬
+  if(_facDetailType==='화장실'){
+    var floorColIdx=headers.findIndex(function(hd){ return hd.indexOf('층')!==-1; });
+    if(floorColIdx>=0){
+      rows=rows.slice().sort(function(a,b){
+        var ka=facFloorSortKey(a[floorColIdx]), kb=facFloorSortKey(b[floorColIdx]);
+        if(ka!==null&&kb!==null) return ka-kb;
+        if(ka!==null&&kb===null) return -1; // 층 있는 것 먼저
+        if(ka===null&&kb!==null) return 1;
+        // 둘 다 층 정보 없음 → 가나다(해당 컬럼 텍스트) 정렬
+        return String(a[floorColIdx]||'').localeCompare(String(b[floorColIdx]||''),'ko');
+      });
+    }
+  }else{
+    var noColIdx=headers.findIndex(function(hd){ return hd.indexOf('연번')!==-1||hd.indexOf('구분')!==-1||hd.indexOf('순번')!==-1||hd.indexOf('번호')!==-1; });
+    if(noColIdx>=0){
+      rows=rows.slice().sort(function(a,b){
+        var na=parseFloat(a[noColIdx]), nb=parseFloat(b[noColIdx]);
+        if(!isNaN(na)&&!isNaN(nb)) return na-nb;
+        return String(a[noColIdx]||'').localeCompare(String(b[noColIdx]||''),'ko');
+      });
+    }
   }
   var q=(document.getElementById('facDetailSearch').value||'').trim().toLowerCase();
   var filtered=rows;
@@ -11983,16 +12036,12 @@ async function loadIsoList(){
 }
 
 function viewIso(path, name){
-  var frame=document.getElementById('isoPdfFrame');
-  if(!frame) return;
   var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/iso9001/'+encodeURIComponent(path);
   window._isoPdfUrl=pdfUrl;
-  var viewerUrl='https://docs.google.com/viewer?url='+encodeURIComponent(pdfUrl)+'&embedded=true';
   var t=document.getElementById('isoViewerTitleText');
   if(t) t.textContent='📘 '+name;
-  frame.src=viewerUrl;
-  var btn=document.getElementById('isoViewToggleBtn'); if(btn) btn.textContent='🔄 다른 방식';
   isoTab(1);
+  openEbookViewer('iso', pdfUrl, name);
 }
 
 function handleIsoUpload(files){
@@ -12169,16 +12218,12 @@ async function loadSafetyList(){
 }
 
 function viewSafety(path, name){
-  var frame=document.getElementById('safetyPdfFrame');
-  if(!frame) return;
   var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/safety-procedures/'+encodeURIComponent(path);
   window._safetyPdfUrl=pdfUrl;
-  var viewerUrl='https://docs.google.com/viewer?url='+encodeURIComponent(pdfUrl)+'&embedded=true';
   var t=document.getElementById('safetyViewerTitleText');
   if(t) t.textContent='⛑️ '+name;
-  frame.src=viewerUrl;
-  var btn=document.getElementById('safetyViewToggleBtn'); if(btn) btn.textContent='🔄 다른 방식';
   safetyTab(1);
+  openEbookViewer('safety', pdfUrl, name);
 }
 
 function handleSafetyUpload(files){
@@ -12347,16 +12392,12 @@ async function loadManualList(){
 }
 
 function viewManual(path, name){
-  var frame=document.getElementById('manualPdfFrame');
-  if(!frame) return;
   var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/operation-manuals/'+encodeURIComponent(path);
   window._manualPdfUrl=pdfUrl;
-  var viewerUrl='https://docs.google.com/viewer?url='+encodeURIComponent(pdfUrl)+'&embedded=true';
   var t=document.getElementById('manualViewerTitleText');
   if(t) t.textContent='📗 '+name;
-  frame.src=viewerUrl;
-  var btn=document.getElementById('manualViewToggleBtn'); if(btn) btn.textContent='🔄 다른 방식';
   manualTab(1);
+  openEbookViewer('manual', pdfUrl, name);
 }
 
 function handleManualUpload(files){
@@ -12939,32 +12980,82 @@ async function loadRegList(){
 }
 
 function viewReg(path, name){
-  var frame=document.getElementById('regPdfFrame');
-  if(!frame) return;
   var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/regulations/'+encodeURIComponent(path);
   window._regPdfUrl=pdfUrl;
-  // Google Docs 뷰어 - 모바일 검색/핀치줌 지원
-  var viewerUrl='https://docs.google.com/viewer?url='+encodeURIComponent(pdfUrl)+'&embedded=true';
   var t=document.getElementById('regViewerTitleText');
   if(t) t.textContent='📄 '+name;
-  frame.src=viewerUrl;
-  var btn=document.getElementById('regViewToggleBtn'); if(btn) btn.textContent='🔄 다른 방식';
   regTab(1);
+  openEbookViewer('reg', pdfUrl, name);
 }
 
-// 화면이 흐리거나 잘릴 때, 구글뷰어 ↔ PDF 직접보기 전환 (사규/ISO9001/안전작업절차서 공용)
-function toggleViewerMode(prefix){
-  var frame=document.getElementById(prefix+'PdfFrame');
-  var btn=document.getElementById(prefix+'ViewToggleBtn');
-  var url=window['_'+prefix+'PdfUrl'];
-  if(!frame||!url) return;
-  if(frame.src.indexOf('docs.google.com')>-1){
-    frame.src=url; // PDF 원본 직접 보기
-    if(btn) btn.textContent='🔄 기본 보기로';
-  }else{
-    frame.src='https://docs.google.com/viewer?url='+encodeURIComponent(url)+'&embedded=true';
-    if(btn) btn.textContent='🔄 다른 방식';
-  }
+// ══ 이북(e-book) PDF 뷰어 — 사규/ISO9001/안전작업절차서/운영매뉴얼 공용 ══
+// 스와이프/버튼으로 한 페이지씩 넘겨보는 방식 (pdf.js로 페이지를 캔버스에 렌더링)
+var _ebookState={};
+function loadPdfJs(callback){
+  if(window.pdfjsLib){ callback(); return; }
+  var s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  s.onload=function(){
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    callback();
+  };
+  s.onerror=function(){ toast('⚠️ 뷰어 라이브러리 로드 실패. 인터넷 연결을 확인해주세요.'); };
+  document.head.appendChild(s);
+}
+function _ebookProgressKey(url){
+  try{ return 'ebookpage_'+btoa(unescape(encodeURIComponent(url))).slice(0,60); }catch(e){ return 'ebookpage_'+url.length; }
+}
+function openEbookViewer(prefix, url, name){
+  var wrap=document.getElementById(prefix+'EbookCanvasWrap');
+  if(wrap) wrap.innerHTML='<canvas id="'+prefix+'EbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas><div style="color:white;font-size:12px;padding:20px">📖 불러오는 중...</div>';
+  loadPdfJs(function(){
+    window.pdfjsLib.getDocument(url).promise.then(function(pdf){
+      var savedPage=1;
+      try{ var sp=localStorage.getItem(_ebookProgressKey(url)); if(sp) savedPage=Math.min(parseInt(sp),pdf.numPages); }catch(e){}
+      _ebookState[prefix]={pdfDoc:pdf, curPage:savedPage||1, totalPages:pdf.numPages, url:url, name:name};
+      if(wrap) wrap.innerHTML='<canvas id="'+prefix+'EbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>';
+      renderEbookPage(prefix);
+    }).catch(function(e){
+      toast('⚠️ 문서를 불러올 수 없습니다. "원본으로" 버튼을 이용해주세요.');
+      if(wrap) wrap.innerHTML='<div style="color:white;font-size:12px;padding:20px;text-align:center">불러오기 실패<br>"원본으로" 버튼으로 확인해주세요</div>';
+    });
+  });
+}
+function renderEbookPage(prefix){
+  var st=_ebookState[prefix];
+  if(!st) return;
+  st.pdfDoc.getPage(st.curPage).then(function(page){
+    var canvas=document.getElementById(prefix+'EbookCanvas');
+    if(!canvas) return;
+    var wrap=document.getElementById(prefix+'EbookCanvasWrap');
+    var availWidth=(wrap?wrap.clientWidth:360)-20;
+    var vp0=page.getViewport({scale:1});
+    var scale=Math.max(0.3, availWidth/vp0.width);
+    var viewport=page.getViewport({scale:scale});
+    canvas.width=viewport.width; canvas.height=viewport.height;
+    var ctx=canvas.getContext('2d');
+    page.render({canvasContext:ctx, viewport:viewport});
+    var ind=document.getElementById(prefix+'EbookPageInd');
+    if(ind) ind.textContent=st.curPage+' / '+st.totalPages;
+    try{ localStorage.setItem(_ebookProgressKey(st.url), st.curPage); }catch(e){}
+    if(wrap) wrap.scrollTop=0;
+  });
+}
+function ebookNav(prefix, dir){
+  var st=_ebookState[prefix];
+  if(!st) return;
+  var np=st.curPage+dir;
+  if(np<1||np>st.totalPages) return;
+  st.curPage=np;
+  renderEbookPage(prefix);
+}
+var _ebookTouchX=0;
+function ebookTouchStart(e, prefix){ _ebookTouchX=e.changedTouches[0].clientX; }
+function ebookTouchEnd(e, prefix){
+  var dx=e.changedTouches[0].clientX-_ebookTouchX;
+  if(Math.abs(dx)<50) return; // 짧은 터치는 무시
+  if(dx<0) ebookNav(prefix,1);  // 왼쪽으로 스와이프 → 다음 페이지
+  else ebookNav(prefix,-1);     // 오른쪽으로 스와이프 → 이전 페이지
 }
 
 function handleRegUpload(files){
