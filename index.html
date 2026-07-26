@@ -3252,7 +3252,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
     <div style="height:20px"></div>
   </div>
   <div id="adP5" style="display:none">
-    <div class="pg-hd"><div><h1>비밀번호 재설정 요청</h1></div></div>
+    <div class="pg-hd"><div><h1>비밀번호 재설정 요청</h1></div><button onclick="confirmDeleteAllPwReq()" style="padding:7px 13px;background:var(--danger-bg);color:var(--danger);border:1.5px solid var(--danger);border-radius:20px;font-size:11px;font-weight:700;cursor:pointer">🗑 전체삭제</button></div>
     <div class="card"><div class="cb" style="padding:0" id="pwReqList">
       <div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">불러오는 중...</div>
     </div></div>
@@ -9292,6 +9292,16 @@ async function loadPwReqBadge(){
   }catch(e){}
 }
 
+async function confirmDeleteAllPwReq(){
+  if(!me||me.role!=='admin'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+  if(!confirm('비밀번호 재설정 요청을 전체(대기중 포함) 삭제하시겠습니까?\n복구할 수 없습니다.')) return;
+  try{
+    var res=await sb.from('pw_reset_requests').delete().gte('created_at','1970-01-01');
+    if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    toast('🗑️ 전체 삭제되었습니다');
+    loadPwResetRequests();
+  }catch(e){ toast('삭제 오류: '+String(e.message||e)); }
+}
 async function loadPwResetRequests(){
   var el=document.getElementById('pwReqList');
   if(!el) return;
