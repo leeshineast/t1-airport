@@ -24,7 +24,7 @@
   --r:14px;--r2:10px;
   --font:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;
 }
-body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px;line-height:1.5;min-height:100vh;zoom:1.16;overflow-x:hidden}
+body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px;line-height:1.5;min-height:100vh;overflow-x:hidden}
 html{overflow-x:hidden}
 @media (min-width:768px){
   body{background:#DCE1E6}
@@ -14843,9 +14843,24 @@ function toggleT1Sound(){
 }
 
 if('serviceWorker' in navigator){
+  var _swReloaded=false;
+  // 새 서비스워커가 활성화되면(=새 버전 배포됨) 자동으로 한 번 새로고침
+  navigator.serviceWorker.addEventListener('controllerchange', function(){
+    if(_swReloaded) return;
+    _swReloaded=true;
+    location.reload();
+  });
   window.addEventListener('load', function(){
     navigator.serviceWorker.register('sw.js').then(function(reg){
       console.log('SW 등록 완료:', reg.scope);
+      // 등록 직후 곧바로 새 버전 있는지 확인
+      reg.update().catch(function(){});
+      // 앱을 다시 열거나(백그라운드→포그라운드) 화면이 다시 보일 때마다 최신 버전 확인
+      document.addEventListener('visibilitychange', function(){
+        if(document.visibilityState==='visible') reg.update().catch(function(){});
+      });
+      // 5분마다도 한 번씩 백그라운드로 확인 (앱을 오래 켜두는 경우 대비)
+      setInterval(function(){ reg.update().catch(function(){}); }, 5*60*1000);
     }).catch(function(err){
       console.log('SW 등록 실패:', err);
     });
