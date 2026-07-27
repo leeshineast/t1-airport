@@ -190,6 +190,8 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 .rp{padding:8px 14px;border:1.5px solid var(--g2);border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;color:var(--g4);background:var(--g0)}
 .rp.on{border-color:var(--teal);background:var(--teal-bg);color:var(--teal2)}
 .rp.on-d{border-color:var(--danger);background:var(--danger-bg);color:var(--danger)}
+.chip-quick{flex-shrink:0;padding:5px 11px;border:1.5px solid var(--g2);border-radius:16px;font-size:11px;font-weight:600;cursor:pointer;color:var(--g5);background:var(--g0);white-space:nowrap}
+.chip-quick.on{border-color:var(--teal);background:var(--teal-bg);color:var(--teal2);font-weight:700}
 .f-ta{width:100%;padding:10px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;font-family:var(--font);color:var(--g6);background:var(--g0);outline:none;resize:none;margin-top:8px;display:none}
 .f-ta:focus{border-color:var(--teal)}
 .f-ta.show{display:block}
@@ -1787,7 +1789,22 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           <div id="hFLocTop10" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px"></div>
           <div>
             <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">③ 고장 내용</label>
-            <input id="hFDesc" type="text" class="ri" placeholder="예) 변기 막힘" style="margin-bottom:0" oninput="checkHoDupWarn()">
+            <div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:6px">
+              <div class="chip-quick" onclick="insertQuickTag('hFDesc',this)">막힘</div>
+              <div class="chip-quick" onclick="insertQuickTag('hFDesc',this)">푸쉬버튼 고장</div>
+              <div class="chip-quick" onclick="insertQuickTag('hFDesc',this)">토수불량</div>
+              <div class="chip-quick" onclick="insertQuickTag('hFDesc',this)">배수불량</div>
+              <div class="chip-quick" onclick="insertQuickTag('hFDesc',this)">누수</div>
+              <div class="chip-quick" onclick="insertQuickTag('hFDesc',this)">커버파손</div>
+              <div class="chip-quick" onclick="insertQuickTag('hFDesc',this)">센서고장</div>
+              <div class="chip-quick" onclick="insertQuickTag('hFDesc',this)">문/잠금장치 고장</div>
+              <div class="chip-quick" onclick="insertQuickTag('hFDesc',this)">급수불량</div>
+              <div class="chip-quick" onclick="insertQuickTag('hFDesc',this)">전등고장</div>
+              <div class="chip-quick" onclick="insertQuickTag('hFDesc',this)">디스펜서 고장</div>
+              <div class="chip-quick" onclick="insertQuickTag('hFDesc',this)">자동문 고장</div>
+              <div class="chip-quick" onclick="insertQuickTag('hFDesc',this)">기타</div>
+            </div>
+            <input id="hFDesc" type="text" class="ri" placeholder="예) 변기 막힘 (위에서 선택 후 세부내용 추가 작성 가능)" style="margin-bottom:0" oninput="checkHoDupWarn()">
           </div>
           <div id="hFDupWarn" style="display:none;background:var(--warn-bg,#FFF7E0);border:1px solid var(--warn,#E8A93B);border-radius:8px;padding:8px 10px;font-size:11px;color:#8A6100;line-height:1.5"></div>
           <div>
@@ -3093,6 +3110,21 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
       <!-- ④ 상세내용 -->
       <div style="margin-bottom:12px">
         <label class="f-lbl">④ 상세내용 <span style="color:var(--danger)">*</span></label>
+        <div style="display:flex;gap:5px;overflow-x:auto;padding:2px 0 6px">
+          <div class="chip-quick" onclick="insertQuickTag('vocContent',this)">음료</div>
+          <div class="chip-quick" onclick="insertQuickTag('vocContent',this)">토사물</div>
+          <div class="chip-quick" onclick="insertQuickTag('vocContent',this)">용변/오물</div>
+          <div class="chip-quick" onclick="insertQuickTag('vocContent',this)">유리깨짐</div>
+          <div class="chip-quick" onclick="insertQuickTag('vocContent',this)">물기</div>
+          <div class="chip-quick" onclick="insertQuickTag('vocContent',this)">먼지</div>
+          <div class="chip-quick" onclick="insertQuickTag('vocContent',this)">막힘</div>
+          <div class="chip-quick" onclick="insertQuickTag('vocContent',this)">파손</div>
+          <div class="chip-quick" onclick="insertQuickTag('vocContent',this)">누수</div>
+          <div class="chip-quick" onclick="insertQuickTag('vocContent',this)">악취</div>
+          <div class="chip-quick" onclick="insertQuickTag('vocContent',this)">유실물 문의</div>
+          <div class="chip-quick" onclick="insertQuickTag('vocContent',this)">직원 응대</div>
+          <div class="chip-quick" onclick="insertQuickTag('vocContent',this)">기타</div>
+        </div>
         <textarea id="vocContent" class="ri" rows="4" placeholder="상세 내용을 입력하세요&#10;예) 3F 화장실 청결 상태 불량 민원, 고객 직접 전화 접수" style="resize:vertical;font-size:13px;line-height:1.6" oninput="updateVocCatSuggest()"></textarea>
         <div id="vocCatSuggest" style="display:none;align-items:center;gap:6px;flex-wrap:wrap;margin-top:7px"></div>
       </div>
@@ -4775,6 +4807,23 @@ function updateFacLocSuggest(){
   box.style.display='block';
 }
 var _hoDupWarnTimer=null;
+// 빠른선택 칩 클릭 시 텍스트 필드에 태그 삽입/제거 (인수인계 고장내용, 민원 상세내용 등 공용)
+function insertQuickTag(fieldId, chipEl){
+  var el=document.getElementById(fieldId);
+  if(!el) return;
+  var tag=chipEl.textContent.trim();
+  var cur=el.value.trim();
+  if(chipEl.classList.contains('on')){
+    var parts=cur.split(/,\s*/).filter(function(p){ return p.trim()!==tag; });
+    el.value=parts.join(', ');
+    chipEl.classList.remove('on');
+  }else{
+    el.value=cur?(cur+', '+tag):tag;
+    chipEl.classList.add('on');
+  }
+  el.focus();
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+}
 function checkHoDupWarn(){
   clearTimeout(_hoDupWarnTimer);
   _hoDupWarnTimer=setTimeout(function(){
@@ -4892,6 +4941,7 @@ function subHO(){
   ['hD','hE'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';e.classList.remove('show');}});
   var fWrapEl=document.getElementById('hFWrap');if(fWrapEl)fWrapEl.style.display='none';
   ['hFLoc','hFDesc','hFEtc','hFRcv','hFReporter'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});
+  document.querySelectorAll('.chip-quick.on').forEach(function(c){c.classList.remove('on');});
   var fDupWarnEl=document.getElementById('hFDupWarn');if(fDupWarnEl)fDupWarnEl.style.display='none';
   var fSuggestEl=document.getElementById('hFLocSuggest');if(fSuggestEl)fSuggestEl.style.display='none';
   var hFTypeG=document.getElementById('hFTypeG');if(hFTypeG){hFTypeG.querySelectorAll('.rp').forEach(p=>p.classList.remove('on'));var fp=hFTypeG.querySelector('.rp');if(fp)fp.classList.add('on');}
@@ -10326,6 +10376,7 @@ function initVocForm(){
   ['vocContent','vocNote'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
+  document.querySelectorAll('.chip-quick.on').forEach(function(c){c.classList.remove('on');});
   var catSuggestEl=document.getElementById('vocCatSuggest'); if(catSuggestEl) catSuggestEl.style.display='none';
 }
 
