@@ -70,6 +70,12 @@ textarea:focus{border-color:var(--sky)}
 .save-btn:disabled{background:var(--g2);color:var(--g3);cursor:not-allowed}
 .info-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .chip{font-size:10.5px;background:var(--g1);border-radius:99px;padding:3px 10px;color:var(--g4);font-weight:600}
+.gate-chip{padding:8px 4px;border:1.5px solid var(--g2);border-radius:var(--r2);background:#fff;font-size:12px;font-weight:700;color:var(--g4);cursor:pointer;text-align:center}
+.gate-chip.on{background:var(--sky2);border-color:var(--sky2);color:#fff}
+.target-tab{padding:6px 12px;border:1.5px solid var(--g2);border-radius:99px;background:#fff;font-size:11.5px;font-weight:700;color:var(--g4);cursor:pointer;white-space:nowrap}
+.target-tab.on{border-color:var(--sky2);color:var(--sky2);background:var(--sky1,#eef6ff)}
+.target-tab.done{background:var(--okBg);border-color:var(--ok);color:#047857}
+.target-tab.done.on{background:var(--ok);color:#fff}
 .chip.ok{background:var(--okBg);color:#047857}
 /* 현황 */
 .stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
@@ -224,7 +230,7 @@ textarea:focus{border-color:var(--sky)}
 
     <!-- 대상 선택: 화장실 -->
     <div class="card" id="tgtToilet" style="display:none">
-      <div class="f-label">화장실 선택</div>
+      <div class="f-label">화장실 선택 <span style="font-weight:400;color:var(--g3)">(여러 개 선택 가능 — 층 전체 순회 점검 시)</span></div>
       <div class="f-row">
         <select id="tFloor" onchange="fillToiletList()"></select>
         <select id="tZone" onchange="fillToiletList()">
@@ -233,12 +239,7 @@ textarea:focus{border-color:var(--sky)}
           <option value="Landside">Landside (L/S)</option>
         </select>
       </div>
-      <div class="f-row one">
-        <select id="tNum" onchange="fillToiletGenders()"></select>
-      </div>
-      <div class="f-label" style="margin-top:8px">남/여 선택 <span style="font-weight:400;color:var(--g3)">(중복 가능 — 함께 점검 시 둘 다 체크)</span></div>
-      <div class="shift-seg" style="grid-template-columns:1fr 1fr" id="tGenBox"></div>
-      <div class="info-chips" id="tChips"></div>
+      <div id="tRoomGrid" style="display:flex;flex-direction:column;gap:6px;margin-top:8px"></div>
     </div>
 
     <!-- 대상 선택: 휴게시설 -->
@@ -294,9 +295,9 @@ textarea:focus{border-color:var(--sky)}
 
     <!-- 대상 선택: PBB (게이트 관리 일지) -->
     <div class="card" id="tgtPbb" style="display:none">
-      <div class="f-label">게이트 선택</div>
-      <div class="f-row">
-        <select id="pSel"></select>
+      <div class="f-label">게이트 선택 <span style="font-weight:400;color:var(--g3)">(여러 개 선택 가능 — 한 번에 순회 점검 시)</span></div>
+      <div id="pGateGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px"></div>
+      <div class="f-row" style="margin-top:10px">
         <div>
           <div class="f-label" style="margin-top:0">PBB 개수</div>
           <select id="pCnt">
@@ -312,6 +313,12 @@ textarea:focus{border-color:var(--sky)}
         </div>
       </div>
       <div style="font-size:10.5px;color:var(--g3);margin-top:6px">시작·종료 시간은 위 "점검 시작/종료"에 선택하세요</div>
+    </div>
+
+    <!-- 다중선택 대상 탭 (선택한 게이트/화장실을 오가며 각각 체크리스트 작성) -->
+    <div class="card" id="targetTabsCard" style="display:none">
+      <div class="f-label" style="margin-bottom:8px">작성 중인 대상 <span style="font-weight:400;color:var(--g3)">(눌러서 전환, 각각 별도로 저장됨)</span></div>
+      <div id="targetTabs" style="display:flex;flex-wrap:wrap;gap:6px"></div>
     </div>
 
     <!-- 체크리스트 -->
@@ -477,7 +484,38 @@ var TOILETS = [], EQUIPS = [], RESTS = [];
 var curMod = null;       // toilet | rest | equip | pbb
 var curShift = '오전';
 var editRec = null;      // 수정 중인 기록 {table, id}
-var chkStates = {};      // {항목명: 'O'|'T'|'X'|'D'}
+var chkStates = {};      // {항목명: 'O'|'T'|'X'|'D'} — 단일 대상 모듈(공용구역/장비/휴게시설)용
+var multiTargets = [];        // [{id,label}] — 게이트/화장실처럼 여러 개를 한 번에 선택하는 모듈용
+var chkStatesByTarget = {};   // {targetId: {항목명:state}}
+var curEditTargetId = null;   // 지금 체크리스트를 작성 중인 대상 id
+function isMultiMod(){ return curMod==='pbb'||curMod==='toilet'; }
+function activeChkStates(){
+  if(isMultiMod()){
+    if(!curEditTargetId) return {};
+    if(!chkStatesByTarget[curEditTargetId]) chkStatesByTarget[curEditTargetId]={};
+    return chkStatesByTarget[curEditTargetId];
+  }
+  return chkStates;
+}
+function renderTargetTabs(){
+  var card=document.getElementById('targetTabsCard');
+  var box=document.getElementById('targetTabs');
+  if(!card||!box) return;
+  if(!isMultiMod() || multiTargets.length===0){ card.style.display='none'; box.innerHTML=''; return; }
+  card.style.display='block';
+  box.innerHTML='';
+  var items=currentItems();
+  multiTargets.forEach(function(t){
+    var st=chkStatesByTarget[t.id]||{};
+    var doneCount=items.filter(function(it){return st[it];}).length;
+    var complete=items.length>0 && doneCount===items.length;
+    var b=document.createElement('div');
+    b.className='target-tab'+(t.id===curEditTargetId?' on':'')+(complete?' done':'');
+    b.textContent=t.label+(complete?' ✓':' ('+doneCount+'/'+items.length+')');
+    b.onclick=function(){ curEditTargetId=t.id; renderTargetTabs(); renderChecklist(); };
+    box.appendChild(b);
+  });
+}
 var dashRecs = [];
 var dashFilterV = 'all';
 
@@ -640,7 +678,6 @@ function fillToiletFloors(){
   var floors=['1F','2F','3F','4F','B1F','B2F'];
   for(var i=0;i<floors.length;i++){var o=document.createElement('option');o.value=floors[i];o.textContent=floors[i];sel.appendChild(o);}
 }
-var tGenSel={}; // {toiletId: true} 선택된 남/여
 function toiletTeamOk(t){
   var team=document.getElementById('selTeam').value;
   if(team==='관리팀')return true;
@@ -652,7 +689,8 @@ function toiletTeamOk(t){
 function fillToiletList(){
   var fl=document.getElementById('tFloor').value;
   var zn=document.getElementById('tZone').value;
-  var sel=document.getElementById('tNum'); sel.innerHTML='';
+  var grid=document.getElementById('tRoomGrid'); grid.innerHTML='';
+  multiTargets=[]; chkStatesByTarget={}; curEditTargetId=null;
   var list=TOILETS.filter(function(t){return t.floor===fl&&(!zn||t.zone===zn)&&toiletTeamOk(t);});
   // 번호 단위로 묶기 (같은 번호의 남/여 페어)
   var nums=[], seen={};
@@ -660,63 +698,49 @@ function fillToiletList(){
     var key=t.zone+'|'+t.number;
     if(!seen[key]){ seen[key]=true; nums.push({key:key, zone:t.zone, number:t.number}); }
   });
-  if(!nums.length){var o=document.createElement('option');o.value='';o.textContent='해당 조건 화장실 없음';sel.appendChild(o);}
+  if(!nums.length){
+    grid.innerHTML='<div style="font-size:12px;color:var(--g3);padding:8px 0">해당 조건 화장실 없음</div>';
+    renderTargetTabs(); renderChecklist();
+    return;
+  }
   nums.forEach(function(n){
     var pair=list.filter(function(t){return t.zone===n.zone&&t.number===n.number;});
     var genders=pair.map(function(t){return (t.gender||'').indexOf('남')>=0?'남':'여';});
-    var o=document.createElement('option'); o.value=n.key;
-    o.textContent=n.number+' ('+(n.zone==='Airside'?'A/S':'L/S')+' · '+genders.join('/')+')';
-    sel.appendChild(o);
+    var row=document.createElement('div');
+    row.className='gate-chip';
+    row.style.textAlign='left';
+    row.style.display='flex';
+    row.style.justifyContent='space-between';
+    row.innerHTML='<span>'+n.number+'</span><span style="font-weight:400;font-size:11px">'+(n.zone==='Airside'?'A/S':'L/S')+' · '+genders.join('/')+'</span>';
+    row.onclick=function(){ toggleRoomSel(n.key,row); };
+    grid.appendChild(row);
   });
-  fillToiletGenders();
+  renderTargetTabs();
+  renderChecklist();
 }
-function toiletPair(){
+function toggleRoomSel(roomKey,el){
+  var idx=multiTargets.findIndex(function(t){return t.id===roomKey;});
+  var parts=roomKey.split('|');
   var fl=document.getElementById('tFloor').value;
-  var key=document.getElementById('tNum').value;
-  if(!key)return [];
-  var parts=key.split('|');
-  return TOILETS.filter(function(t){return t.floor===fl&&t.zone===parts[0]&&t.number===parts[1]&&toiletTeamOk(t);});
-}
-function fillToiletGenders(){
-  var pair=toiletPair();
-  var box=document.getElementById('tGenBox'); box.innerHTML='';
-  tGenSel={};
-  pair.forEach(function(t){
-    tGenSel[t.id]=true; // 기본: 전체 선택 (페어 동시 점검)
-    var b=document.createElement('button');
-    b.className='seg-btn on';
-    b.textContent=((t.gender||'').indexOf('남')>=0?'남자':'여자')+(t.category&&t.category!=='일반'?' ('+t.category+')':'');
-    b.onclick=function(){
-      tGenSel[t.id]=!tGenSel[t.id];
-      b.classList.toggle('on',tGenSel[t.id]);
-      onToiletSel();
-    };
-    box.appendChild(b);
-  });
-  onToiletSel();
-}
-function selectedToilets(){
-  return toiletPair().filter(function(t){return tGenSel[t.id];});
-}
-function onToiletSel(){
-  var sels=selectedToilets();
-  var c=document.getElementById('tChips'); c.innerHTML='';
-  if(!sels.length)return;
-  var t0=sels[0];
-  var chips=[t0.floor, t0.zone==='Airside'?'Airside':'Landside'];
-  var anyUrinal=false, anyFam=false, tc=0;
-  sels.forEach(function(t){ if(t.urinal_cnt)anyUrinal=true; if(t.family_room==='있음')anyFam=true; tc+=(t.toilet_cnt||0); });
-  if(anyFam)chips.push('가족실 있음');
-  if(tc)chips.push('양변기 '+tc);
-  if(anyUrinal)chips.push('소변기 있음');
-  if(sels.length>1)chips.push('남/여 동시 점검');
-  for(var i=0;i<chips.length;i++){var s=document.createElement('span');s.className='chip'+(chips[i]==='남/여 동시 점검'?' ok':'');s.textContent=chips[i];c.appendChild(s);}
-  // 선택된 화장실 전부 소변기가 없으면 N/A 자동
-  if(curMod==='toilet'){
-    if(sels.length && !anyUrinal){ chkStates['소변기 청결']='D'; }
-    else if(chkStates['소변기 청결']==='D' && anyUrinal){ delete chkStates['소변기 청결']; }
-    renderChecklist();
+  var pair=TOILETS.filter(function(t){return t.floor===fl&&t.zone===parts[0]&&t.number===parts[1]&&toiletTeamOk(t);});
+  if(!pair.length) return;
+  var label=fl+' '+(parts[0]==='Airside'?'A/S':'L/S')+' '+parts[1];
+  if(idx>=0){
+    multiTargets.splice(idx,1);
+    el.classList.remove('on');
+    delete chkStatesByTarget[roomKey];
+    if(curEditTargetId===roomKey) curEditTargetId=multiTargets.length?multiTargets[0].id:null;
+  }else{
+    multiTargets.push({id:roomKey, label:label, pair:pair});
+    el.classList.add('on');
+    chkStatesByTarget[roomKey]={};
+    // 소변기 없는 방(여자화장실만 있는 등)은 소변기 청결 자동 N/A
+    var anyUrinal=pair.some(function(t){return t.urinal_cnt;});
+    if(!anyUrinal) chkStatesByTarget[roomKey]['소변기 청결']='D';
+    curEditTargetId=roomKey;
   }
+  renderTargetTabs();
+  renderChecklist();
 }
 function toiletLabel(t){
   return t.floor+' '+(t.zone==='Airside'?'A/S':'L/S')+' '+t.number+' '+(t.gender||'').replace(' 화장실','');
@@ -804,11 +828,37 @@ function onEquipSel(){
 
 // ─ PBB ─
 function fillPbbList(){
-  var sel=document.getElementById('pSel'); sel.innerHTML='';
+  var grid=document.getElementById('pGateGrid'); grid.innerHTML='';
+  multiTargets=[]; chkStatesByTarget={}; curEditTargetId=null;
   for(var g=1;g<=50;g++){
     if(g===4||g===44)continue; // 존재하지 않는 게이트
-    var o=document.createElement('option'); o.value=String(g); o.textContent='GATE '+g; sel.appendChild(o);
+    (function(gn){
+      var b=document.createElement('div');
+      b.className='gate-chip';
+      b.textContent='GATE '+gn;
+      b.onclick=function(){ toggleGateSel(gn,b); };
+      grid.appendChild(b);
+    })(g);
   }
+  renderTargetTabs();
+  renderChecklist();
+}
+function toggleGateSel(gn,el){
+  var id='GATE_'+gn;
+  var idx=multiTargets.findIndex(function(t){return t.id===id;});
+  if(idx>=0){
+    multiTargets.splice(idx,1);
+    el.classList.remove('on');
+    delete chkStatesByTarget[id];
+    if(curEditTargetId===id) curEditTargetId=multiTargets.length?multiTargets[0].id:null;
+  }else{
+    multiTargets.push({id:id, label:'GATE '+gn, num:gn});
+    el.classList.add('on');
+    chkStatesByTarget[id]={};
+    curEditTargetId=id;
+  }
+  renderTargetTabs();
+  renderChecklist();
 }
 
 // ─ 공용구역 ─
@@ -835,7 +885,15 @@ function renderChecklist(){
   var states=MOD_META[curMod]?MOD_META[curMod].states:3;
   var naItems=(MOD_META[curMod]&&MOD_META[curMod].naItems)||[];
   var box=document.getElementById('chkList'); box.innerHTML='';
-  document.getElementById('chkTitle').textContent='점검항목'+(curMod==='equip'?' — 선택 장비 전용':'')+' ('+items.length+'개)';
+  if(isMultiMod() && !curEditTargetId){
+    document.getElementById('chkTitle').textContent='점검항목';
+    box.innerHTML='<div style="font-size:12px;color:var(--g3);padding:10px 0">위에서 대상을 먼저 선택해주세요</div>';
+    document.getElementById('noteReq').style.display='none';
+    return;
+  }
+  var cs=activeChkStates();
+  var titlePrefix=isMultiMod()?(multiTargets.find(function(t){return t.id===curEditTargetId;})||{}).label+' — ':'';
+  document.getElementById('chkTitle').textContent=titlePrefix+'점검항목'+(curMod==='equip'?' — 선택 장비 전용':'')+' ('+items.length+'개)';
   for(var i=0;i<items.length;i++){
     var row=document.createElement('div'); row.className='chk-row';
     var nm=document.createElement('div'); nm.className='chk-name'; nm.textContent=(i+1)+'. '+items[i];
@@ -847,8 +905,8 @@ function renderChecklist(){
       (function(item,code,cls,label){
         var b=document.createElement('button'); b.className='st-btn'; b.textContent=label;
         if(label==='N/A')b.style.fontSize='10px';
-        if(chkStates[item]===code)b.classList.add(cls);
-        b.onclick=function(){ chkStates[item]=code; renderChecklist(); updateNoteReq(); };
+        if(cs[item]===code)b.classList.add(cls);
+        b.onclick=function(){ activeChkStates()[item]=code; renderChecklist(); updateNoteReq(); renderTargetTabs(); };
         bt.appendChild(b);
       })(items[i],defs[j][0],defs[j][2],defs[j][1]);
     }
@@ -857,7 +915,8 @@ function renderChecklist(){
   updateNoteReq();
 }
 function updateNoteReq(){
-  var hasX=Object.keys(chkStates).some(function(k){return chkStates[k]==='X';});
+  var cs=activeChkStates();
+  var hasX=Object.keys(cs).some(function(k){return cs[k]==='X';});
   document.getElementById('noteReq').style.display=hasX?'block':'none';
 }
 
@@ -867,10 +926,6 @@ function targetInfo(){
     var i=document.getElementById('rSel').value;
     if(i==='')return null;
     return {target_id:String(i), target_label:restLabel(Number(i))};
-  }
-  if(curMod==='pbb'){
-    var g=document.getElementById('pSel').value;
-    return {target_id:g, target_label:'GATE '+g};
   }
   if(curMod==='common'){
     var f=document.getElementById('cFloor').value;
@@ -882,6 +937,80 @@ function targetInfo(){
 }
 function saveInsp(){
   if(!canInput()){ toast('입력 권한이 없습니다'); return; }
+  var team=document.getElementById('selTeam').value;
+  var jo=document.getElementById('inpJo').value.trim();
+  var btn=document.getElementById('btnSave');
+
+  if(isMultiMod()){
+    if(!multiTargets.length){ toast(curMod==='pbb'?'게이트를 하나 이상 선택해주세요':'화장실을 하나 이상 선택해주세요'); return; }
+    var itemsM=currentItems();
+    for(var ti=0; ti<multiTargets.length; ti++){
+      var t0=multiTargets[ti];
+      var cs0=chkStatesByTarget[t0.id]||{};
+      var missing0=itemsM.filter(function(it){return !cs0[it];});
+      if(missing0.length){
+        curEditTargetId=t0.id; renderTargetTabs(); renderChecklist();
+        toast(t0.label+' — 미체크: '+missing0[0]+(missing0.length>1?' 외 '+(missing0.length-1)+'건':''));
+        return;
+      }
+    }
+    var noteXGlobal=document.getElementById('noteX').value.trim();
+    var anyX=multiTargets.some(function(t){ var cs=chkStatesByTarget[t.id]||{}; return itemsM.some(function(it){return cs[it]==='X';}); });
+    if(anyX && !noteXGlobal){ toast('불량(X)이 있는 대상이 있습니다 — 특이사항을 입력해주세요'); return; }
+    var noteCommon=document.getElementById('noteN').value.trim();
+
+    var total = curMod==='pbb' ? multiTargets.length : multiTargets.reduce(function(s,t){return s+(t.pair?t.pair.length:1);},0);
+    btn.disabled=true;
+    var doneCnt=0, failed=false;
+    var finishAll=function(){
+      btn.disabled=false;
+      if(!failed){
+        toast('✓ '+multiTargets.length+'개 대상 저장 완료');
+        editRec=null; multiTargets=[]; chkStatesByTarget={}; curEditTargetId=null;
+        document.getElementById('noteX').value=''; document.getElementById('noteN').value='';
+        if(curMod==='pbb') fillPbbList(); else fillToiletList();
+      }else{
+        toast('일부 저장 실패 — 다시 시도해주세요');
+      }
+    };
+    multiTargets.forEach(function(t){
+      var cs=chkStatesByTarget[t.id]||{};
+      var hasXHere=itemsM.some(function(it){return cs[it]==='X';});
+      var noteHere=(hasXHere?('[불량] '+noteXGlobal+' '):'')+noteCommon;
+      if(curMod==='pbb'){
+        var res={}; for(var k in cs) res[k]=cs[k];
+        var pc=document.getElementById('pCnt').value; if(pc) res['PBB개수']=pc;
+        var pw=document.getElementById('pWorker').value.trim(); if(pw) res['작업자']=pw;
+        var rec={
+          insp_type:'pbb', target_id:t.id, target_label:t.label,
+          insp_date:todayStr(), shift:curShift, team:team, jo:jo,
+          inspector:me.name, results:res, note:noteHere.trim(),
+          work_time:inspTime(), updated_at:new Date().toISOString()
+        };
+        upsert('inspection_data',
+          '/inspection_data?insp_type=eq.pbb&target_id=eq.'+encodeURIComponent(t.id)+'&insp_date=eq.'+todayStr()+'&shift=eq.'+encodeURIComponent(curShift)+'&select=id',
+          rec, function(ok){ if(!ok)failed=true; doneCnt++; if(doneCnt===total) finishAll(); });
+      }else{
+        var pair=t.pair||[];
+        pair.forEach(function(pt){
+          var res2={}; for(var k2 in cs) res2[k2]=cs[k2];
+          if(!pt.urinal_cnt) res2['소변기 청결']='D';
+          var rec2={
+            insp_type:'toilet', target_id:String(pt.id), target_label:t.label,
+            insp_date:todayStr(), shift:curShift, team:team, jo:jo,
+            inspector:me.name, results:res2, note:noteHere.trim(), work_time:inspTime(),
+            updated_at:new Date().toISOString()
+          };
+          upsert('inspection_data',
+            '/inspection_data?insp_type=eq.toilet&target_id=eq.'+pt.id+'&insp_date=eq.'+todayStr()+'&shift=eq.'+encodeURIComponent(curShift)+'&select=id',
+            rec2, function(ok){ if(!ok)failed=true; doneCnt++; if(doneCnt===total) finishAll(); });
+        });
+      }
+    });
+    return;
+  }
+
+  // ── 단일 대상 모듈(공용구역 / 장비 / 휴게시설) ──
   var items=currentItems();
   var missing=items.filter(function(it){return !chkStates[it];});
   if(missing.length){ toast('미체크 항목: '+missing[0]+(missing.length>1?' 외 '+(missing.length-1)+'건':'')); return; }
@@ -890,9 +1019,7 @@ function saveInsp(){
   if(hasX&&!noteX){ toast('불량(X) 특이사항을 입력해 주세요'); return; }
   var results={}; for(var i=0;i<items.length;i++)results[items[i]]=chkStates[items[i]];
   var note=(hasX?('[불량] '+noteX+' '):'')+document.getElementById('noteN').value.trim();
-  var team=document.getElementById('selTeam').value;
-  var jo=document.getElementById('inpJo').value.trim();
-  var btn=document.getElementById('btnSave'); btn.disabled=true;
+  btn.disabled=true;
 
   var done=function(ok,errMsg){
     btn.disabled=false;
@@ -918,45 +1045,8 @@ function saveInsp(){
     return;
   }
 
-  if(curMod==='toilet'){
-    var sels=selectedToilets();
-    if(!sels.length){ done(false,'남/여를 하나 이상 선택하세요'); return; }
-    var t0=sels[0];
-    var label = sels.length>1
-      ? t0.floor+' '+(t0.zone==='Airside'?'A/S':'L/S')+' '+t0.number+' (남/여)'
-      : toiletLabel(t0);
-    var doneCnt=0, failed=false;
-    sels.forEach(function(t){
-      var res={}; for(var k in results)res[k]=results[k];
-      if(!t.urinal_cnt)res['소변기 청결']='D'; // 소변기 없는 쪽은 자동 N/A
-      var rec3={
-        insp_type:'toilet', target_id:String(t.id), target_label:label,
-        insp_date:todayStr(), shift:curShift, team:team, jo:jo,
-        inspector:me.name, results:res, note:note.trim(), work_time:inspTime(),
-        updated_at:new Date().toISOString()
-      };
-      upsert('inspection_data',
-        '/inspection_data?insp_type=eq.toilet&target_id=eq.'+t.id+'&insp_date=eq.'+todayStr()+'&shift=eq.'+encodeURIComponent(curShift)+'&select=id',
-        rec3, function(ok){
-          if(!ok)failed=true;
-          doneCnt++;
-          if(doneCnt===sels.length){
-            if(!failed && sels.length>1){ btn.disabled=false; toast('✓ 남/여 '+sels.length+'건 저장 완료'); chkStates={}; renderChecklist(); document.getElementById('noteX').value='';document.getElementById('noteN').value=''; onToiletSel(); }
-            else done(!failed);
-          }
-        });
-    });
-    return;
-  }
-
   var tgt=targetInfo();
   if(!tgt){ done(false,'대상을 선택하세요'); return; }
-  if(curMod==='pbb'){
-    var pc=document.getElementById('pCnt').value;
-    if(pc)results['PBB개수']=pc;
-    var pw=document.getElementById('pWorker').value.trim();
-    if(pw)results['작업자']=pw;
-  }
   var rec2={
     insp_type:curMod, target_id:tgt.target_id, target_label:tgt.target_label,
     insp_date:todayStr(), shift:curShift, team:team, jo:jo,
@@ -1206,33 +1296,36 @@ function openModForEdit(d){
   if(r.team)document.getElementById('selTeam').value=r.team;
   document.getElementById('inpJo').value=r.jo||'';
   chkStates={};
-  if(r.results){ for(var k in r.results)chkStates[k]=r.results[k]; }
+  multiTargets=[]; chkStatesByTarget={}; curEditTargetId=null;
   if(mod==='toilet'){
     fillToiletFloors();
     var t=TOILETS.find(function(x){return String(x.id)===String(r.target_id);});
-    if(t){ document.getElementById('tFloor').value=t.floor; document.getElementById('tZone').value=t.zone; }
-    fillToiletList();
     if(t){
-      document.getElementById('tNum').value=t.zone+'|'+t.number;
-      fillToiletGenders();
-      // 이 기록의 화장실만 선택 상태로
-      var pair=toiletPair();
-      var box=document.getElementById('tGenBox');
-      pair.forEach(function(pt,idx){
-        tGenSel[pt.id]=(String(pt.id)===String(r.target_id));
-        if(box.children[idx])box.children[idx].classList.toggle('on',tGenSel[pt.id]);
+      document.getElementById('tFloor').value=t.floor;
+      document.getElementById('tZone').value=t.zone;
+      fillToiletList(); // 여기서 multiTargets/chkStatesByTarget 초기화됨
+      var roomKey=t.zone+'|'+t.number;
+      var chipEl=Array.from(document.getElementById('tRoomGrid').children).find(function(el,idx){
+        // fillToiletList가 만든 순서와 동일하게 접근 — 텍스트로 매칭
+        return el.textContent.indexOf(t.number)===0;
       });
+      toggleRoomSel(roomKey, chipEl||document.createElement('div'));
+      if(r.results){ for(var kt in r.results) chkStatesByTarget[roomKey][kt]=r.results[kt]; }
+    }else{
+      fillToiletList();
     }
-    if(r.results){ for(var kt in r.results)chkStates[kt]=r.results[kt]; }
-    onToiletSel();
   }
   if(mod==='rest'){ fillRestList(); document.getElementById('rSel').value=r.target_id; }
   if(mod==='pbb'){
-    fillPbbList(); document.getElementById('pSel').value=r.target_id;
+    fillPbbList(); // multiTargets 초기화
+    var gn=parseInt(r.target_id, 10) || parseInt(String(r.target_id).replace(/[^0-9]/g,''), 10);
+    var chipEl2=Array.from(document.getElementById('pGateGrid').children).find(function(el){ return el.textContent==='GATE '+gn; });
+    if(chipEl2){ toggleGateSel(gn, chipEl2); }
     document.getElementById('pCnt').value=(r.results&&r.results['PBB개수'])||'';
     document.getElementById('pWorker').value=(r.results&&r.results['작업자'])||r.inspector||'';
-    if(chkStates['PBB개수']!==undefined)delete chkStates['PBB개수'];
-    if(chkStates['작업자']!==undefined)delete chkStates['작업자'];
+    if(curEditTargetId && r.results){
+      for(var kp in r.results){ if(kp!=='PBB개수'&&kp!=='작업자') chkStatesByTarget[curEditTargetId][kp]=r.results[kp]; }
+    }
   }
   if(mod==='common'){
     fillCommonSels();
@@ -1264,6 +1357,7 @@ function openModForEdit(d){
     document.getElementById('noteX').value='';
     document.getElementById('noteN').value=note;
   }
+  renderTargetTabs();
   renderChecklist();
   document.getElementById('btnSave').textContent='수정 저장';
   showScr('scrInput');
