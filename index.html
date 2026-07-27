@@ -24,7 +24,8 @@
   --r:14px;--r2:10px;
   --font:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;
 }
-body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px;line-height:1.5;min-height:100vh;zoom:1.16}
+body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px;line-height:1.5;min-height:100vh;zoom:1.16;overflow-x:hidden}
+html{overflow-x:hidden}
 @media (min-width:768px){
   body{background:#DCE1E6}
   .scr{max-width:720px;margin:0 auto;min-height:100vh;background:var(--g1);box-shadow:0 0 40px rgba(0,0,0,.12);position:relative}
@@ -95,7 +96,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
 }
 
 /* ─ 화면 ─ */
-.scr{display:none;padding-bottom:60px}
+.scr{display:none;padding-bottom:60px;overflow-x:hidden}
 .scr.on{display:block}
 
 /* ─ 로그인 ─ */
@@ -1786,7 +1787,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
             <input id="hFLoc" type="text" class="ri" placeholder="예) 3층 남자화장실 2번 칸" style="margin-bottom:0" autocomplete="off" oninput="checkHoDupWarn();updateFacLocSuggest()" onfocus="updateFacLocSuggest()" onblur="setTimeout(function(){var s=document.getElementById('hFLocSuggest');if(s)s.style.display='none';},150)">
             <div id="hFLocSuggest" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:20;background:white;border:1px solid var(--g2);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.1);margin-top:2px;max-height:160px;overflow-y:auto"></div>
           </div>
-          <div id="hFLocTop10" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px"></div>
+          <div id="hFLocTop10" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;min-width:0;width:100%;box-sizing:border-box"></div>
           <div>
             <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">③ 고장 내용</label>
             <div style="display:flex;gap:5px;overflow-x:auto;padding-bottom:6px;min-width:0;width:100%;box-sizing:border-box">
@@ -1822,7 +1823,7 @@ body{font-family:var(--font);background:var(--g1);color:var(--g6);font-size:14px
           <div>
             <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">⑤ 접수자</label>
             <input id="hFRcv" type="text" class="ri" placeholder="예) 홍길동" style="margin-bottom:0">
-            <div id="hFRcvRecent" style="display:flex;gap:6px;overflow-x:auto;margin-top:6px;padding-bottom:2px"></div>
+            <div id="hFRcvRecent" style="display:flex;gap:6px;overflow-x:auto;margin-top:6px;padding-bottom:2px;min-width:0;width:100%;box-sizing:border-box"></div>
           </div>
         </div>
       </div>
