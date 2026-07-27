@@ -299,8 +299,8 @@ textarea:focus{border-color:var(--sky)}
       <div id="pGateGrid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px"></div>
       <div class="f-row" style="margin-top:10px">
         <div>
-          <div class="f-label" style="margin-top:0">PBB 개수</div>
-          <select id="pCnt">
+          <div class="f-label" style="margin-top:0" id="pCntLabel">PBB 개수</div>
+          <select id="pCnt" onchange="onPbbCntChange()">
             <option value="">선택</option>
             <option>1</option><option>2</option><option>3</option>
           </select>
@@ -308,11 +308,12 @@ textarea:focus{border-color:var(--sky)}
       </div>
       <div class="f-row one" style="margin-top:8px">
         <div>
-          <div class="f-label">작업자 <span style="font-weight:400;color:var(--g3)">(일지에 표기될 이름 — 여러 명은 쉼표로)</span></div>
+          <div class="f-label">작업자 <span style="font-weight:400;color:var(--g3)">(일지에 표기될 이름 — 여러 명은 쉼표로, 전체 게이트 공통)</span></div>
           <input type="text" id="pWorker" placeholder="예: 김이동, 정관식">
         </div>
       </div>
       <div style="font-size:10.5px;color:var(--g3);margin-top:6px">시작·종료 시간은 위 "점검 시작/종료"에 선택하세요</div>
+      <div style="font-size:10.5px;color:var(--sky2);margin-top:2px" id="pCntHint"></div>
     </div>
 
     <!-- 다중선택 대상 탭 (선택한 게이트/화장실을 오가며 각각 체크리스트 작성) -->
@@ -486,6 +487,7 @@ var curShift = '오전';
 var editRec = null;      // 수정 중인 기록 {table, id}
 var chkStates = {};      // {항목명: 'O'|'T'|'X'|'D'} — 단일 대상 모듈(공용구역/장비/휴게시설)용
 var multiTargets = [];        // [{id,label}] — 게이트/화장실처럼 여러 개를 한 번에 선택하는 모듈용
+var pbbCountByTarget = {};    // {gateId: 'PBB개수'} — 게이트마다 PBB 수량이 다르므로 개별 관리
 var chkStatesByTarget = {};   // {targetId: {항목명:state}}
 var curEditTargetId = null;   // 지금 체크리스트를 작성 중인 대상 id
 function isMultiMod(){ return curMod==='pbb'||curMod==='toilet'; }
@@ -512,9 +514,31 @@ function renderTargetTabs(){
     var b=document.createElement('div');
     b.className='target-tab'+(t.id===curEditTargetId?' on':'')+(complete?' done':'');
     b.textContent=t.label+(complete?' ✓':' ('+doneCount+'/'+items.length+')');
-    b.onclick=function(){ curEditTargetId=t.id; renderTargetTabs(); renderChecklist(); };
+    b.onclick=function(){ curEditTargetId=t.id; renderTargetTabs(); renderChecklist(); refreshPbbCntUI(); };
     box.appendChild(b);
   });
+  refreshPbbCntUI();
+}
+function refreshPbbCntUI(){
+  if(curMod!=='pbb') return;
+  var lbl=document.getElementById('pCntLabel');
+  var sel=document.getElementById('pCnt');
+  var hint=document.getElementById('pCntHint');
+  if(!lbl||!sel) return;
+  var t=multiTargets.find(function(x){return x.id===curEditTargetId;});
+  if(t){
+    lbl.textContent='PBB 개수 — '+t.label;
+    sel.value=pbbCountByTarget[t.id]||'';
+    if(hint) hint.textContent=multiTargets.length>1?'※ 게이트마다 따로 저장됩니다':'';
+  }else{
+    lbl.textContent='PBB 개수';
+    sel.value='';
+    if(hint) hint.textContent='';
+  }
+}
+function onPbbCntChange(){
+  if(!curEditTargetId) return;
+  pbbCountByTarget[curEditTargetId]=document.getElementById('pCnt').value;
 }
 var dashRecs = [];
 var dashFilterV = 'all';
@@ -829,7 +853,7 @@ function onEquipSel(){
 // ─ PBB ─
 function fillPbbList(){
   var grid=document.getElementById('pGateGrid'); grid.innerHTML='';
-  multiTargets=[]; chkStatesByTarget={}; curEditTargetId=null;
+  multiTargets=[]; chkStatesByTarget={}; curEditTargetId=null; pbbCountByTarget={};
   for(var g=1;g<=50;g++){
     if(g===4||g===44)continue; // 존재하지 않는 게이트
     (function(gn){
@@ -850,6 +874,7 @@ function toggleGateSel(gn,el){
     multiTargets.splice(idx,1);
     el.classList.remove('on');
     delete chkStatesByTarget[id];
+    delete pbbCountByTarget[id];
     if(curEditTargetId===id) curEditTargetId=multiTargets.length?multiTargets[0].id:null;
   }else{
     multiTargets.push({id:id, label:'GATE '+gn, num:gn});
@@ -979,7 +1004,7 @@ function saveInsp(){
       var noteHere=(hasXHere?('[불량] '+noteXGlobal+' '):'')+noteCommon;
       if(curMod==='pbb'){
         var res={}; for(var k in cs) res[k]=cs[k];
-        var pc=document.getElementById('pCnt').value; if(pc) res['PBB개수']=pc;
+        var pc=pbbCountByTarget[t.id]; if(pc) res['PBB개수']=pc;
         var pw=document.getElementById('pWorker').value.trim(); if(pw) res['작업자']=pw;
         var rec={
           insp_type:'pbb', target_id:t.id, target_label:t.label,
@@ -1321,7 +1346,7 @@ function openModForEdit(d){
     var gn=parseInt(r.target_id, 10) || parseInt(String(r.target_id).replace(/[^0-9]/g,''), 10);
     var chipEl2=Array.from(document.getElementById('pGateGrid').children).find(function(el){ return el.textContent==='GATE '+gn; });
     if(chipEl2){ toggleGateSel(gn, chipEl2); }
-    document.getElementById('pCnt').value=(r.results&&r.results['PBB개수'])||'';
+    if(curEditTargetId){ pbbCountByTarget[curEditTargetId]=(r.results&&r.results['PBB개수'])||''; refreshPbbCntUI(); }
     document.getElementById('pWorker').value=(r.results&&r.results['작업자'])||r.inspector||'';
     if(curEditTargetId && r.results){
       for(var kp in r.results){ if(kp!=='PBB개수'&&kp!=='작업자') chkStatesByTarget[curEditTargetId][kp]=r.results[kp]; }
