@@ -1787,7 +1787,7 @@ html{overflow-x:hidden}
             <input id="hFLoc" type="text" class="ri" placeholder="예) 3층 남자화장실 2번 칸" style="margin-bottom:0" autocomplete="off" oninput="checkHoDupWarn();updateFacLocSuggest()" onfocus="updateFacLocSuggest()" onblur="setTimeout(function(){var s=document.getElementById('hFLocSuggest');if(s)s.style.display='none';},150)">
             <div id="hFLocSuggest" style="display:none;position:absolute;left:0;right:0;top:100%;z-index:20;background:white;border:1px solid var(--g2);border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.1);margin-top:2px;max-height:160px;overflow-y:auto"></div>
           </div>
-          <div id="hFLocTop10" style="display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;min-width:0;width:100%;box-sizing:border-box"></div>
+          <div id="hFLocTop10" style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:2px;width:100%;box-sizing:border-box"></div>
           <div>
             <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">③ 고장 내용</label>
             <div style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:6px;width:100%;box-sizing:border-box">
@@ -1823,7 +1823,7 @@ html{overflow-x:hidden}
           <div>
             <label style="font-size:10px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">⑤ 접수자</label>
             <input id="hFRcv" type="text" class="ri" placeholder="예) 홍길동" style="margin-bottom:0">
-            <div id="hFRcvRecent" style="display:flex;gap:6px;overflow-x:auto;margin-top:6px;padding-bottom:2px;min-width:0;width:100%;box-sizing:border-box"></div>
+            <div id="hFRcvRecent" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;padding-bottom:2px;width:100%;box-sizing:border-box"></div>
           </div>
         </div>
       </div>
