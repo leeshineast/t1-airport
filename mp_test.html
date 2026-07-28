@@ -317,7 +317,7 @@ async function loadTodayMine(){
     var res=await sbFetch('/mp_test_data?date=eq.'+activeDate+'&team_code=eq.'+encodeURIComponent(activeTeamCode)+'&select=*');
     if(!res.ok||!res.data) return;
     res.data.forEach(function(row){
-      setInputValues(row.category, row.values);
+      setInputValues(row.category, row.vals);
     });
   }catch(e){}
 }
@@ -327,19 +327,27 @@ async function saveMpTest(){
   if(!activeTeamCode||!zone){ toast('담당구역이 없어 저장할 수 없습니다'); return; }
   var isProxy = activeTeamCode!==myTeamCode;
   var jobs=CATS.map(function(cat){
-    var vals=getInputValues(cat.key);
-    var payload={date:activeDate, shift:'오전', team_code:activeTeamCode, category:cat.key, values:vals, writer:me.name};
+    var v=getInputValues(cat.key);
+    var payload={date:activeDate, shift:'오전', team_code:activeTeamCode, category:cat.key, vals:v, writer:me.name};
     if(isProxy) payload.proxy_writer=me.name;
     return sbFetch('/mp_test_data?on_conflict=date,shift,team_code,category',{
       method:'POST',
       headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},
       body:JSON.stringify(payload)
-    });
+    }).then(function(res){ res._cat=cat.key; return res; });
   });
   var results=await Promise.all(jobs);
   var allOk=results.every(function(r){return r.ok;});
   if(allOk){ toast('✅ '+activeDate+' '+activeTeamCode+' 저장 완료'+(isProxy?' (대리입력)':'')); renderStatTable(); renderDoneStatus(); }
-  else toast('⚠️ 저장 중 일부 오류 (콘솔 확인)');
+  else{
+    var failed=results.filter(function(r){return !r.ok;});
+    var detail=failed.map(function(r){
+      var msg=(r.data&&(r.data.message||r.data.hint||r.data.details))||('status '+r.status);
+      return r._cat+': '+msg;
+    }).join(' / ');
+    console.error('저장 실패 상세:', failed);
+    toast('⚠️ 저장 실패 — '+detail);
+  }
 }
 
 function switchTab(tab){
@@ -368,7 +376,7 @@ async function renderStatTable(){
   rows.forEach(function(r){
     var zc=zoneCodeOf(r.team_code);
     if(!zc||!byZone[zc]) return;
-    var vals=r.values||[];
+    var vals=r.vals||[];
     for(var i=0;i<8;i++) byZone[zc][r.category][i]+=(vals[i]||0);
   });
 
@@ -459,7 +467,7 @@ async function renderHist(){
     var zoneLabel=(building?(building==='LS'?'L/S':'A/S')+' ':'')+(zone||'-');
     h+='<div style="border:1px solid var(--g2);border-radius:8px;padding:9px 11px;margin-bottom:8px">';
     h+='<div style="font-size:11.5px;font-weight:800;color:var(--navy)">'+r.team_code+' · '+zoneLabel+' · '+(r.category==='toilet'?'화장실':'공용구역')+'</div>';
-    h+='<div style="font-size:11px;color:var(--g5);margin-top:4px">'+FLOOR_COLS.map(function(c,i){return c+' '+((r.values||[])[i]||0);}).join(' / ')+'</div>';
+    h+='<div style="font-size:11px;color:var(--g5);margin-top:4px">'+FLOOR_COLS.map(function(c,i){return c+' '+((r.vals||[])[i]||0);}).join(' / ')+'</div>';
     h+='<div style="font-size:10px;color:var(--g3);margin-top:4px">작성자: '+(r.writer||'-')+(r.proxy_writer?(' (대리입력: '+r.proxy_writer+')'):'')+'</div>';
     h+='</div>';
   });
