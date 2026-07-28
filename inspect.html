@@ -67,6 +67,10 @@ textarea:focus{border-color:var(--sky)}
 .note-req{border:1.5px solid var(--danger);border-radius:var(--r2);background:var(--dangerBg);padding:10px 11px;margin-top:10px}
 .note-req .f-label{color:#b91c1c}
 .save-btn{width:100%;padding:14px;background:var(--sky2);color:#fff;border:none;border-radius:var(--r2);font-size:15px;font-weight:800;cursor:pointer;margin-top:4px}
+.reset-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:20px}
+.reset-overlay.on{display:flex}
+.reset-box{background:#fff;border-radius:16px;padding:20px;max-width:340px;width:100%}
+.reset-box input{width:100%;padding:11px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;margin-top:8px;box-sizing:border-box}
 .save-btn:disabled{background:var(--g2);color:var(--g3);cursor:not-allowed}
 .info-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .chip{font-size:10.5px;background:var(--g1);border-radius:99px;padding:3px 10px;color:var(--g4);font-weight:600}
@@ -189,9 +193,44 @@ textarea:focus{border-color:var(--sky)}
       <span style="font-size:18px">🖨️</span> 출력 / 다운로드
       <span class="arrow">월간 양식 엑셀·A4 인쇄 →</span>
     </button>
+    <button class="dash-btn" id="resetMenuBtn" style="display:none;border-color:var(--danger);color:var(--danger)" onclick="openReset()">
+      <span style="font-size:18px">🗑️</span> 데이터 초기화 <span style="font-weight:400;color:var(--g3);font-size:11px">(테스트 기간 전용)</span>
+      <span class="arrow" style="color:var(--danger)">관리 →</span>
+    </button>
     <div class="db-banner">
       <span class="dot" id="dbDot"></span>
       <span id="dbMsg">데이터 로드 중…</span>
+    </div>
+  </div>
+
+  <!-- 데이터 초기화 (관리자 전용, 테스트기간용) -->
+  <div class="screen" id="scrReset">
+    <button class="sub-back" onclick="showScr('scrMain')">← 모듈 선택</button>
+    <div class="sec-title">🗑️ 데이터 초기화</div>
+    <div style="background:var(--dangerBg);border:1px solid var(--danger);border-radius:var(--r2);padding:10px 12px;font-size:12px;color:#b91c1c;margin-bottom:12px;line-height:1.6">
+      ⚠️ 테스트 기간 중 연습용으로 쌓인 점검 기록을 지우는 기능입니다.<br>
+      한 번 삭제하면 <b>복구할 수 없습니다.</b> 시범운영 시작 전에만 사용하세요.
+    </div>
+    <div class="card" style="padding:13px">
+      <div class="f-label" style="margin-top:0">개별 초기화</div>
+      <div id="resetIndivList" style="display:flex;flex-direction:column;gap:8px;margin-top:8px"></div>
+      <div style="height:14px"></div>
+      <div class="f-label">전체 초기화</div>
+      <div style="font-size:11.5px;color:var(--g3);margin:4px 0 8px">5개 모듈(화장실·휴게시설·장비·게이트·공용구역) 전체 기록을 한 번에 삭제합니다.</div>
+      <button class="save-btn" style="background:var(--danger)" onclick="confirmReset('all','전체')">전체 초기화</button>
+    </div>
+  </div>
+
+  <!-- 초기화 확인 오버레이 -->
+  <div class="reset-overlay" id="resetOverlay">
+    <div class="reset-box">
+      <div style="font-size:15px;font-weight:800;color:var(--danger);margin-bottom:6px">⚠️ <span id="resetTargetLabel"></span> 데이터를 삭제할까요?</div>
+      <div style="font-size:12.5px;color:var(--g4);line-height:1.6">이 작업은 되돌릴 수 없습니다.<br>확인을 위해 아래에 <b>초기화</b>를 입력해주세요.</div>
+      <input type="text" id="resetConfirmInput" placeholder="초기화" oninput="document.getElementById('resetExecBtn').disabled = (this.value.trim()!=='초기화')">
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button style="flex:1;padding:11px;border:1.5px solid var(--g2);border-radius:var(--r2);background:#fff;font-weight:700;color:var(--g5)" onclick="closeResetOverlay()">취소</button>
+        <button id="resetExecBtn" disabled style="flex:1;padding:11px;border:none;border-radius:var(--r2);background:var(--danger);color:#fff;font-weight:800" onclick="execReset()">삭제</button>
+      </div>
     </div>
   </div>
 
@@ -575,6 +614,58 @@ function canInput(){
   return r==='admin'||r==='manager'||r==='leader'||r==='deputy'||r==='acting'||r==='teamlead';
 }
 function isAdmin(){ return me && (me.role==='admin'||me.role==='manager'); }
+
+// ═══ 데이터 초기화 (테스트 기간 전용, 관리자만) ═══
+var RESET_MODULES=[
+  {type:'toilet', label:'화장실 점검', icon:'🚻'},
+  {type:'rest', label:'휴게시설 점검', icon:'🛋️'},
+  {type:'equip', label:'장비점검', icon:'🔧'},
+  {type:'pbb', label:'게이트 관리 일지', icon:'✈️'},
+  {type:'common', label:'공용구역 점검', icon:'🧹'}
+];
+var _resetTarget=null;
+function openReset(){
+  if(!isAdmin()){ toast('관리자만 사용할 수 있습니다'); return; }
+  var box=document.getElementById('resetIndivList'); box.innerHTML='';
+  RESET_MODULES.forEach(function(m){
+    var row=document.createElement('button');
+    row.style.cssText='display:flex;align-items:center;justify-content:space-between;padding:12px;border:1.5px solid var(--g2);border-radius:var(--r2);background:#fff;cursor:pointer;text-align:left';
+    row.innerHTML='<span style="font-weight:700;font-size:13px;color:var(--g6)">'+m.icon+' '+m.label+'</span><span style="color:var(--danger);font-weight:700;font-size:12px">초기화 →</span>';
+    row.onclick=function(){ confirmReset(m.type, m.label); };
+    box.appendChild(row);
+  });
+  showScr('scrReset');
+}
+function confirmReset(type,label){
+  _resetTarget=type;
+  document.getElementById('resetTargetLabel').textContent=label;
+  document.getElementById('resetConfirmInput').value='';
+  document.getElementById('resetExecBtn').disabled=true;
+  document.getElementById('resetOverlay').classList.add('on');
+}
+function closeResetOverlay(){
+  document.getElementById('resetOverlay').classList.remove('on');
+  _resetTarget=null;
+}
+function execReset(){
+  if(!isAdmin()||!_resetTarget) return;
+  var btn=document.getElementById('resetExecBtn'); btn.disabled=true; btn.textContent='삭제 중…';
+  var targets = _resetTarget==='all' ? RESET_MODULES.map(function(m){return m.type;}) : [_resetTarget];
+  var calls = targets.map(function(t){
+    if(t==='equip') return sbFetch('/equip_inspection_data?id=gt.0',{method:'DELETE'});
+    return sbFetch('/inspection_data?insp_type=eq.'+encodeURIComponent(t),{method:'DELETE'});
+  });
+  Promise.all(calls).then(function(results){
+    var allOk=results.every(function(r){return r.ok;});
+    btn.disabled=false; btn.textContent='삭제';
+    closeResetOverlay();
+    if(allOk){ toast('✓ 초기화 완료'); }
+    else toast('일부 삭제 실패 — 다시 시도해주세요');
+  }).catch(function(e){
+    btn.disabled=false; btn.textContent='삭제';
+    toast('삭제 오류: '+e.message);
+  });
+}
 function navBack(){
   var main=document.getElementById('scrMain');
   if(main.classList.contains('on')) location.href='index.html';
@@ -1865,6 +1956,7 @@ function doPrint(){
   document.getElementById('uName').textContent=me.name||'-';
   document.getElementById('uTeam').textContent=me.team||'';
   document.getElementById('uRole').textContent=roleLabel(me.role);
+  var rmb=document.getElementById('resetMenuBtn'); if(rmb) rmb.style.display=isAdmin()?'flex':'none';
   fillTeams();
   setShift(autoShift());
   loadMasters();
