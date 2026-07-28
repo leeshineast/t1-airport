@@ -13005,11 +13005,12 @@ function renderGroupChat(){
   wrap.innerHTML=html;
   if(isFirstRender || wasNearBottom || newCount !== gcLastCount){
     // .scr 전체 페이지 스크롤 구조: 스크롤 컨테이너는 html/body이므로
-    // 마지막 메시지 요소로 scrollIntoView 사용
+    // 페이지를 완전히 맨 끝까지 내려야 함 (고정 입력창에 마지막 메시지가 가려지지 않도록
+    // scrollIntoView 대신 document 전체 스크롤 최대치로 이동)
     requestAnimationFrame(function(){
       requestAnimationFrame(function(){
-        var last=wrap.lastElementChild;
-        if(last) last.scrollIntoView({block:'end'});
+        var maxScroll=Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+        window.scrollTo(0, maxScroll);
       });
     });
   }
