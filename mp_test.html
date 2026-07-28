@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>인력현황 개편 테스트</title>
+<style>
+:root{
+  --navy:#1B3A6B; --teal:#00A99D; --teal2:#007A72;
+  --g0:#fff; --g1:#F4F6F8; --g2:#E5E9EE; --g3:#B9C1CC; --g4:#8A94A3; --g5:#5B6572; --g6:#3A4250; --g7:#1F2530;
+  --danger:#D9403F; --danger-bg:#FCEAEA; --warn:#E8A93B; --warn-bg:#FFF7E0;
+  --r:14px; --r2:10px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Malgun Gothic',sans-serif;background:var(--g1);color:var(--g6);font-size:14px;line-height:1.5;overflow-x:hidden}
+.hd{background:linear-gradient(135deg,var(--navy),var(--teal2));color:#fff;padding:14px 16px;position:sticky;top:0;z-index:20}
+.hd h1{margin:0;font-size:17px;font-weight:800}
+.hd p{margin:3px 0 0;font-size:11px;color:rgba(255,255,255,.75)}
+.hd .who{position:absolute;top:14px;right:16px;font-size:11px;text-align:right;color:rgba(255,255,255,.85)}
+.warn-banner{background:var(--warn-bg);border:1px solid var(--warn);color:#8A6100;font-size:12px;padding:9px 13px;line-height:1.6}
+.card{background:#fff;border-radius:var(--r);margin:12px 13px;box-shadow:0 2px 8px rgba(0,0,0,.06);border:1px solid var(--g2);overflow:hidden}
+.card-hd{padding:12px 14px;font-size:13px;font-weight:800;color:var(--g7);border-bottom:1px solid var(--g2);display:flex;justify-content:space-between;align-items:center}
+.card-bd{padding:13px 14px}
+.zone-badge{display:inline-block;background:var(--teal);color:#fff;border-radius:20px;padding:3px 10px;font-size:11px;font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th,td{padding:7px 3px;text-align:center;border:1px solid var(--g2)}
+th{background:var(--navy);color:#fff;font-weight:700;font-size:10px}
+td input{width:100%;border:none;text-align:center;font-size:13px;padding:5px 0;background:transparent;font-weight:700;color:var(--g7)}
+td input:disabled{background:var(--g1);color:var(--g3)}
+.cat-lbl{background:var(--g1);font-weight:800;font-size:10.5px;color:var(--g6)}
+.btn{width:100%;padding:13px;border:none;border-radius:var(--r2);font-size:14px;font-weight:800;cursor:pointer}
+.btn-prim{background:linear-gradient(135deg,var(--teal),var(--teal2));color:#fff}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-ghost{background:var(--g1);color:var(--g5);border:1.5px dashed var(--g3)}
+.tabs{display:flex;background:#fff;border-bottom:1.5px solid var(--g2)}
+.tab{flex:1;padding:11px;text-align:center;font-size:12px;font-weight:700;color:var(--g5);cursor:pointer}
+.tab.on{color:var(--teal);border-bottom:2.5px solid var(--teal);margin-bottom:-1.5px}
+.stat-table th,.stat-table td{padding:6px 2px;font-size:10.5px}
+.stat-sub{background:var(--g1);font-weight:800}
+.stat-tot{background:var(--navy);color:#fff;font-weight:800}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:rgba(30,34,40,.92);color:#fff;padding:11px 18px;border-radius:24px;font-size:13px;z-index:999;display:none;max-width:88vw;text-align:center}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;align-items:center;justify-content:center;padding:20px}
+.overlay.on{display:flex}
+.overlay-box{background:#fff;border-radius:16px;padding:20px;max-width:340px;width:100%}
+.overlay-box input{width:100%;padding:11px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;margin-top:8px;box-sizing:border-box}
+</style>
+</head>
+<body>
+
+<div class="hd">
+  <h1>🧪 인력현황 개편 테스트</h1>
+  <p>화장실·공용구역 분리 + 물품운반 (실제 데이터와 완전 분리된 테스트 전용)</p>
+  <div class="who" id="whoBox">-</div>
+</div>
+
+<div class="warn-banner">⚠️ 이 페이지는 <b>테스트 전용</b>입니다. 여기서 입력한 데이터는 실제 인력현황(mp_data)과 <b>완전히 별도 테이블</b>에 저장되며, 실제 운영 데이터에는 전혀 영향을 주지 않습니다.</div>
+
+<div class="tabs">
+  <div class="tab on" id="tabInput" onclick="switchTab('input')">입력</div>
+  <div class="tab" id="tabStat" onclick="switchTab('stat')">전체현황</div>
+  <div class="tab" id="tabHist" onclick="switchTab('hist')">이력조회</div>
+</div>
+
+<!-- 입력 화면 -->
+<div id="viewInput">
+  <div class="card" id="proxyCard" style="display:none">
+    <div class="card-hd">🔁 대리입력 (관리자/팀장 전용)</div>
+    <div class="card-bd">
+      <div style="font-size:11.5px;color:var(--g4);margin-bottom:8px">본인 담당구역이 아닌 다른 팀·조 데이터를 대신 입력할 수 있습니다.</div>
+      <select id="proxyTeamSel" onchange="onProxyTeamChange()" style="width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px"></select>
+    </div>
+  </div>
+  <div class="card">
+    <div class="card-hd">
+      <span>📅 입력일자</span>
+      <span class="zone-badge" id="myZoneBadge">-</span>
+    </div>
+    <div class="card-bd">
+      <input type="date" id="inputDate" onchange="onInputDateChange()" style="width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;margin-bottom:10px">
+      <div style="font-size:12px;color:var(--g5);margin-bottom:10px" id="myTeamInfo">팀 정보를 불러오는 중...</div>
+      <div style="overflow-x:auto">
+        <table id="inputTable">
+          <thead>
+            <tr>
+              <th style="width:15%">구분</th>
+              <th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th><th>물품운반</th>
+            </tr>
+          </thead>
+          <tbody id="inputTbody"></tbody>
+        </table>
+      </div>
+      <div style="margin-top:12px"><button class="btn btn-prim" onclick="saveMpTest()" id="saveBtnLabel">저장</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- 전체현황 -->
+<div id="viewStat" style="display:none">
+  <div class="card">
+    <div class="card-hd">✅ 조장 입력완료 현황 <span id="doneCountLbl" style="font-size:11px;color:var(--g4);font-weight:400"></span></div>
+    <div class="card-bd" id="doneStatusBox" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+  </div>
+  <div class="card">
+    <div class="card-hd">
+      <span>📊 전체현황</span>
+      <span id="statDateLbl" style="font-size:11px;color:var(--g4);font-weight:400"></span>
+    </div>
+    <div class="card-bd" style="overflow-x:auto">
+      <table class="stat-table" id="statTable"></table>
+      <div style="font-size:10px;color:var(--g3);margin-top:6px">※ 3F 값에는 물품운반(2팀A조 전용) 수치가 합산되어 있습니다</div>
+    </div>
+  </div>
+  <div class="card" id="adminResetCard" style="display:none">
+    <div class="card-hd">🗑️ 테스트 데이터 초기화</div>
+    <div class="card-bd">
+      <div style="font-size:11.5px;color:var(--g4);margin-bottom:10px">테스트 중 쌓인 입력값을 전부 지웁니다. 실제 인력현황(mp_data)에는 영향 없습니다.</div>
+      <button class="btn btn-danger" onclick="openResetOverlay()">전체 삭제</button>
+    </div>
+  </div>
+</div>
+
+<!-- 이력조회 -->
+<div id="viewHist" style="display:none">
+  <div class="card">
+    <div class="card-hd">🗓️ 날짜별 이력조회</div>
+    <div class="card-bd">
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <input type="date" id="histDate" onchange="renderHist()" style="flex:1;padding:9px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px">
+        <select id="histTeamFilter" onchange="renderHist()" style="flex:1;padding:9px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px"><option value="">전체 팀</option></select>
+      </div>
+      <div id="histList"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="resetOverlay">
+  <div class="overlay-box">
+    <div style="font-size:15px;font-weight:800;color:var(--danger);margin-bottom:6px">⚠️ 테스트 데이터 전체 삭제</div>
+    <div style="font-size:12.5px;color:var(--g4);line-height:1.6">복구할 수 없습니다.<br>확인을 위해 아래에 <b>초기화</b>를 입력해주세요.</div>
+    <input type="text" id="resetConfirmInput" placeholder="초기화" oninput="document.getElementById('resetExecBtn').disabled=(this.value.trim()!=='초기화')">
+    <div style="display:flex;gap:8px;margin-top:14px">
+      <button style="flex:1;padding:11px;border:1.5px solid var(--g2);border-radius:var(--r2);background:#fff;font-weight:700;color:var(--g5)" onclick="closeResetOverlay()">취소</button>
+      <button id="resetExecBtn" disabled style="flex:1;padding:11px;border:none;border-radius:var(--r2);background:var(--danger);color:#fff;font-weight:800" onclick="execResetAll()">삭제</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toastBox"></div>
+
+<script>
+const SUPABASE_URL='https://smfjrnhiodyjobclnwvd.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtZmpybmhpb2R5am9iY2xud3ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODA1NDQsImV4cCI6MjA5NjU1NjU0NH0.TkrYpOXNQ0ICak6xWHbD6sOCzLqNOqAfr7FsnFY2Gns';
+
+function toast(msg){
+  var t=document.getElementById('toastBox');
+  t.textContent=msg; t.style.display='block';
+  clearTimeout(window._toastT);
+  window._toastT=setTimeout(function(){ t.style.display='none'; },2200);
+}
+
+async function sbFetch(path,opt){
+  opt=opt||{};
+  var headers=Object.assign({
+    'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'
+  }, opt.headers||{});
+  if(opt.method==='POST'||opt.method==='PATCH') headers['Prefer']='return=minimal';
+  var res=await fetch(SUPABASE_URL+'/rest/v1'+path, Object.assign({},opt,{headers:headers}));
+  var data=null;
+  try{ data=await res.json(); }catch(e){}
+  return {ok:res.ok, status:res.status, data:data};
+}
+
+function loadSession(){
+  try{ var s=localStorage.getItem('t1_me'); if(!s)return null; var u=JSON.parse(s); return (u&&u.name)?u:null; }catch(e){ return null; }
+}
+var me=null;
+function isAdmin(){ return me && (me.role==='admin'||me.role==='manager'); }
+
+function getTeamZone(teamCode){
+  if(!teamCode) return null;
+  var m=String(teamCode).match(/^(\d+)팀([A-Z])$/);
+  if(!m) return null;
+  var num=m[1], letter=m[2];
+  if(letter==='A') return '동편';
+  if(letter==='B') return '서편';
+  if(letter==='C' && (num==='1'||num==='6')) return '집하장';
+  return null;
+}
+function getTeamBuilding(teamCode){
+  var m=String(teamCode).match(/^(\d+)팀/);
+  if(!m) return null;
+  var num=parseInt(m[1]);
+  if([1,2,6,7].indexOf(num)>=0) return 'LS';
+  if([3,4,8,9].indexOf(num)>=0) return 'AS';
+  return null;
+}
+function todayStr(){ return new Date(Date.now()+9*3600000).toISOString().slice(0,10); }
+
+var myTeamCode='', myZone='', myBuilding='';
+var activeTeamCode='', activeDate='';
+const FLOOR_COLS=['B2F','B1F','1F','2F','3F','4F','집하장','물품운반'];
+const CATS=[{key:'toilet',label:'화장실'},{key:'common',label:'공용구역'}];
+const ZONES=[
+  {code:'LS-동편', building:'LS', side:'동편', label:'L/S 동편'},
+  {code:'LS-서편', building:'LS', side:'서편', label:'L/S 서편'},
+  {code:'AS-동편', building:'AS', side:'동편', label:'A/S 동편'},
+  {code:'AS-서편', building:'AS', side:'서편', label:'A/S 서편'}
+];
+// 오전/오후 담당구역이 있는 전체 팀+조 목록 (야간 5,10팀 제외 — 요청사항대로 야간은 변경 없음)
+const ALL_TEAM_CODES=['1팀A','1팀B','1팀C','2팀A','2팀B','3팀A','3팀B','4팀A','4팀B','6팀A','6팀B','6팀C','7팀A','7팀B','8팀A','8팀B','9팀A','9팀B'];
+
+function init(){
+  me=loadSession();
+  if(!me){
+    toast('로그인이 필요합니다. index.html에서 먼저 로그인해주세요');
+    setTimeout(function(){location.href='index.html';},1200);
+    return;
+  }
+  document.getElementById('whoBox').textContent=me.name+' ('+(me.team||'')+')';
+  var raw=(me.team||'').trim();
+  myTeamCode=raw.replace(/\s+/g,'').replace(/조$/,'');
+  myZone=getTeamZone(myTeamCode);
+  myBuilding=getTeamBuilding(myTeamCode);
+  activeTeamCode=myTeamCode;
+  activeDate=todayStr();
+
+  if(isAdmin()){ document.getElementById('adminResetCard').style.display='block'; }
+  if(isProxyAllowed()){
+    document.getElementById('proxyCard').style.display='block';
+    var psel=document.getElementById('proxyTeamSel');
+    psel.innerHTML='<option value="">-- 본인 담당구역(기본) --</option>'+ALL_TEAM_CODES.map(function(t){return '<option value="'+t+'">'+t+'</option>';}).join('');
+  }
+  var histSel=document.getElementById('histTeamFilter');
+  histSel.innerHTML='<option value="">전체 팀</option>'+ALL_TEAM_CODES.map(function(t){return '<option value="'+t+'">'+t+'</option>';}).join('');
+
+  document.getElementById('inputDate').value=activeDate;
+  document.getElementById('histDate').value=activeDate;
+
+  buildInputTable();
+  loadTodayMine();
+  renderStatTable();
+  renderDoneStatus();
+}
+// 대리입력은 관리자/팀장/조장대행만 (조장은 본인 구역만)
+function isProxyAllowed(){
+  return me && (me.role==='admin'||me.role==='manager'||me.role==='acting_leader');
+}
+function onProxyTeamChange(){
+  var sel=document.getElementById('proxyTeamSel').value;
+  activeTeamCode = sel || myTeamCode;
+  buildInputTable();
+  loadTodayMine();
+}
+function onInputDateChange(){
+  activeDate=document.getElementById('inputDate').value||todayStr();
+  loadTodayMine();
+}
+
+function isMulpumAllowed(){
+  return activeTeamCode==='2팀A';
+}
+
+function buildInputTable(){
+  var badge=document.getElementById('myZoneBadge');
+  var info=document.getElementById('myTeamInfo');
+  var zone=getTeamZone(activeTeamCode);
+  var building=getTeamBuilding(activeTeamCode);
+  if(!zone){
+    badge.textContent='담당구역 없음';
+    info.textContent=activeTeamCode+'는 오전/오후 담당구역이 없어 입력할 수 없습니다.';
+    document.getElementById('inputTbody').innerHTML='';
+    document.getElementById('saveBtnLabel').disabled=true;
+    return;
+  }
+  document.getElementById('saveBtnLabel').disabled=false;
+  var buildingLabel=building==='LS'?'L/S':'A/S';
+  var zoneLabel = zone==='집하장' ? '집하장' : (buildingLabel+' '+zone);
+  badge.textContent=zoneLabel+' 담당';
+  var proxyNote = (activeTeamCode!==myTeamCode) ? ' · 🔁 대리입력 중 ('+me.name+'님이 '+activeTeamCode+' 대신 입력)' : '';
+  info.textContent=activeTeamCode+' → 담당구역: '+zoneLabel+' (화장실/공용구역 두 줄 입력)'+(isMulpumAllowed()?' · 물품운반 입력 가능':'')+proxyNote;
+
+  var tbody=document.getElementById('inputTbody');
+  var h='';
+  CATS.forEach(function(cat){
+    h+='<tr><td class="cat-lbl">'+cat.label+'</td>';
+    FLOOR_COLS.forEach(function(col,ci){
+      var isMulpum = (col==='물품운반');
+      var disabled = isMulpum && !isMulpumAllowed();
+      var inputId='cell_'+cat.key+'_'+ci;
+      h+='<td><input type="number" min="0" inputmode="numeric" id="'+inputId+'" value="0" '+(disabled?'disabled':'')+'></td>';
+    });
+    h+='</tr>';
+  });
+  tbody.innerHTML=h;
+}
+
+function getInputValues(catKey){
+  var vals=[];
+  FLOOR_COLS.forEach(function(col,ci){
+    var el=document.getElementById('cell_'+catKey+'_'+ci);
+    vals.push(el?(parseInt(el.value)||0):0);
+  });
+  return vals;
+}
+function setInputValues(catKey, vals){
+  FLOOR_COLS.forEach(function(col,ci){
+    var el=document.getElementById('cell_'+catKey+'_'+ci);
+    if(el) el.value=(vals&&vals[ci]!=null)?vals[ci]:0;
+  });
+}
+
+async function loadTodayMine(){
+  if(!activeTeamCode) return;
+  // 값 초기화 먼저 (날짜/팀 전환 시 이전 값 잔존 방지)
+  CATS.forEach(function(cat){ setInputValues(cat.key,[0,0,0,0,0,0,0,0]); });
+  try{
+    var res=await sbFetch('/mp_test_data?date=eq.'+activeDate+'&team_code=eq.'+encodeURIComponent(activeTeamCode)+'&select=*');
+    if(!res.ok||!res.data) return;
+    res.data.forEach(function(row){
+      setInputValues(row.category, row.values);
+    });
+  }catch(e){}
+}
+
+async function saveMpTest(){
+  var zone=getTeamZone(activeTeamCode);
+  if(!activeTeamCode||!zone){ toast('담당구역이 없어 저장할 수 없습니다'); return; }
+  var isProxy = activeTeamCode!==myTeamCode;
+  var jobs=CATS.map(function(cat){
+    var vals=getInputValues(cat.key);
+    var payload={date:activeDate, shift:'오전', team_code:activeTeamCode, category:cat.key, values:vals, writer:me.name};
+    if(isProxy) payload.proxy_writer=me.name;
+    return sbFetch('/mp_test_data?on_conflict=date,shift,team_code,category',{
+      method:'POST',
+      headers:{'Prefer':'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify(payload)
+    });
+  });
+  var results=await Promise.all(jobs);
+  var allOk=results.every(function(r){return r.ok;});
+  if(allOk){ toast('✅ '+activeDate+' '+activeTeamCode+' 저장 완료'+(isProxy?' (대리입력)':'')); renderStatTable(); renderDoneStatus(); }
+  else toast('⚠️ 저장 중 일부 오류 (콘솔 확인)');
+}
+
+function switchTab(tab){
+  document.getElementById('tabInput').classList.toggle('on', tab==='input');
+  document.getElementById('tabStat').classList.toggle('on', tab==='stat');
+  document.getElementById('tabHist').classList.toggle('on', tab==='hist');
+  document.getElementById('viewInput').style.display = tab==='input'?'block':'none';
+  document.getElementById('viewStat').style.display = tab==='stat'?'block':'none';
+  document.getElementById('viewHist').style.display = tab==='hist'?'block':'none';
+  if(tab==='stat'){ renderStatTable(); renderDoneStatus(); }
+  if(tab==='hist') renderHist();
+}
+
+async function renderStatTable(){
+  var date=todayStr();
+  document.getElementById('statDateLbl').textContent=date;
+  var res=await sbFetch('/mp_test_data?date=eq.'+date+'&select=*');
+  var rows=(res.ok&&res.data)?res.data:[];
+  function zoneCodeOf(teamCode){
+    var b=getTeamBuilding(teamCode), z=getTeamZone(teamCode);
+    if(!b||!z||z==='집하장') return null; // 집하장은 표 병합구조상 이 요약표에서 생략(테스트 범위)
+    return b+'-'+z;
+  }
+  var byZone={};
+  ZONES.forEach(function(z){ byZone[z.code]={toilet:[0,0,0,0,0,0,0,0], common:[0,0,0,0,0,0,0,0]}; });
+  rows.forEach(function(r){
+    var zc=zoneCodeOf(r.team_code);
+    if(!zc||!byZone[zc]) return;
+    var vals=r.values||[];
+    for(var i=0;i<8;i++) byZone[zc][r.category][i]+=(vals[i]||0);
+  });
+
+  // 표시용 컬럼: 물품운반(idx7)을 3F(idx4)에 합산하고 화면엔 7개 컬럼만 노출
+  var DISP_COLS=['B2F','B1F','1F','2F','3F','4F','집하장'];
+  function dispVals(vals8){
+    var v=vals8.slice(0,7);
+    v[4]=v[4]+(vals8[7]||0); // 3F += 물품운반
+    return v;
+  }
+
+  var h='<thead><tr><th style="width:13%">구역</th><th style="width:9%">구분</th>';
+  DISP_COLS.forEach(function(c){ h+='<th>'+c+'</th>'; });
+  h+='<th>소계</th></tr></thead><tbody>';
+
+  var lsColTot=[0,0,0,0,0,0,0], asColTot=[0,0,0,0,0,0,0];
+  var grandTot=0, lsTot=0, asTot=0;
+
+  ZONES.forEach(function(z){
+    var zd=byZone[z.code];
+    CATS.forEach(function(cat,ci){
+      var vals=dispVals(zd[cat.key]);
+      var rowTot=vals.reduce(function(a,b){return a+b;},0);
+      h+='<tr>';
+      if(ci===0) h+='<td rowspan="2" style="font-weight:800">'+z.label+'</td>';
+      h+='<td>'+cat.label+'</td>';
+      vals.forEach(function(v){ h+='<td>'+v+'</td>'; });
+      h+='<td style="font-weight:800">'+rowTot+'</td>';
+      h+='</tr>';
+      if(z.building==='LS'){ vals.forEach(function(v,i){lsColTot[i]+=v;}); lsTot+=rowTot; }
+      else { vals.forEach(function(v,i){asColTot[i]+=v;}); asTot+=rowTot; }
+      grandTot+=rowTot;
+    });
+  });
+
+  h+='<tr class="stat-sub"><td colspan="2">L/S 소계</td>';
+  lsColTot.forEach(function(v){ h+='<td>'+v+'</td>'; });
+  h+='<td>'+lsTot+'</td></tr>';
+
+  h+='<tr class="stat-sub"><td colspan="2">A/S 소계</td>';
+  asColTot.forEach(function(v){ h+='<td>'+v+'</td>'; });
+  h+='<td>'+asTot+'</td></tr>';
+
+  var allColTot=lsColTot.map(function(v,i){ return v+asColTot[i]; });
+  h+='<tr class="stat-tot"><td colspan="2">전체 총계</td>';
+  allColTot.forEach(function(v){ h+='<td>'+v+'</td>'; });
+  h+='<td>'+grandTot+'</td></tr>';
+
+  h+='</tbody>';
+  document.getElementById('statTable').innerHTML=h;
+}
+
+// ─ 조장 입력완료 현황 (오늘, 화장실+공용구역 둘 다 있어야 완료) ─
+async function renderDoneStatus(){
+  var date=todayStr();
+  var res=await sbFetch('/mp_test_data?date=eq.'+date+'&select=team_code,category');
+  var rows=(res.ok&&res.data)?res.data:[];
+  var submitted={};
+  rows.forEach(function(r){
+    if(!submitted[r.team_code]) submitted[r.team_code]={};
+    submitted[r.team_code][r.category]=true;
+  });
+  var doneCount=0;
+  var box=document.getElementById('doneStatusBox');
+  var h='';
+  ALL_TEAM_CODES.forEach(function(t){
+    var s=submitted[t]||{};
+    var done=s.toilet&&s.common;
+    if(done) doneCount++;
+    h+='<span style="padding:5px 10px;border-radius:16px;font-size:11px;font-weight:700;background:'+(done?'#E6F7F1':'var(--g1)')+';color:'+(done?'#0F9D6F':'var(--g4)')+'">'+(done?'✅':'⬜')+' '+t+'</span>';
+  });
+  box.innerHTML=h;
+  document.getElementById('doneCountLbl').textContent=doneCount+' / '+ALL_TEAM_CODES.length+' 완료 ('+date+')';
+}
+
+// ─ 날짜별 이력조회 ─
+async function renderHist(){
+  var date=document.getElementById('histDate').value||todayStr();
+  var teamF=document.getElementById('histTeamFilter').value;
+  var url='/mp_test_data?date=eq.'+date+(teamF?('&team_code=eq.'+encodeURIComponent(teamF)):'')+'&select=*&order=team_code.asc,category.asc';
+  var res=await sbFetch(url);
+  var rows=(res.ok&&res.data)?res.data:[];
+  var list=document.getElementById('histList');
+  if(!rows.length){ list.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">해당 조건에 데이터가 없습니다</div>'; return; }
+  var h='';
+  rows.forEach(function(r){
+    var zone=getTeamZone(r.team_code), building=getTeamBuilding(r.team_code);
+    var zoneLabel=(building?(building==='LS'?'L/S':'A/S')+' ':'')+(zone||'-');
+    h+='<div style="border:1px solid var(--g2);border-radius:8px;padding:9px 11px;margin-bottom:8px">';
+    h+='<div style="font-size:11.5px;font-weight:800;color:var(--navy)">'+r.team_code+' · '+zoneLabel+' · '+(r.category==='toilet'?'화장실':'공용구역')+'</div>';
+    h+='<div style="font-size:11px;color:var(--g5);margin-top:4px">'+FLOOR_COLS.map(function(c,i){return c+' '+((r.values||[])[i]||0);}).join(' / ')+'</div>';
+    h+='<div style="font-size:10px;color:var(--g3);margin-top:4px">작성자: '+(r.writer||'-')+(r.proxy_writer?(' (대리입력: '+r.proxy_writer+')'):'')+'</div>';
+    h+='</div>';
+  });
+  list.innerHTML=h;
+}
+
+function openResetOverlay(){
+  document.getElementById('resetConfirmInput').value='';
+  document.getElementById('resetExecBtn').disabled=true;
+  document.getElementById('resetOverlay').classList.add('on');
+}
+function closeResetOverlay(){
+  document.getElementById('resetOverlay').classList.remove('on');
+}
+async function execResetAll(){
+  if(!isAdmin()) return;
+  var btn=document.getElementById('resetExecBtn'); btn.disabled=true; btn.textContent='삭제 중…';
+  try{
+    var res=await sbFetch('/mp_test_data?id=gt.0',{method:'DELETE'});
+    btn.disabled=false; btn.textContent='삭제';
+    closeResetOverlay();
+    if(res.ok){ toast('✅ 테스트 데이터 전체 삭제 완료'); renderStatTable(); }
+    else toast('⚠️ 삭제 실패');
+  }catch(e){
+    btn.disabled=false; btn.textContent='삭제';
+    toast('삭제 오류: '+e.message);
+  }
+}
+
+init();
+</script>
+</body>
+</html>
