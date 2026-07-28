@@ -2879,7 +2879,7 @@ html{overflow-x:hidden}
 <div id="sJointWork" class="scr">
   <div class="app-hd">
     <button class="back-hd" onclick="go('main')">← 메인</button>
-    <h2>🤝 공동작업</h2><p>T1 환경미화사업부 오전·오후 겹침시간 공동작업</p>
+    <div style="text-align:right"><h2>🤝 공동작업</h2><p style="font-size:11px">겹침시간 공동작업 기록</p></div>
   </div>
   <div style="display:flex;background:white;border-bottom:1.5px solid var(--g2)">
     <div id="jwT0" style="flex:1;padding:11px;text-align:center;font-size:12px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-1.5px" onclick="jwTab(0)">작성</div>
@@ -2888,8 +2888,8 @@ html{overflow-x:hidden}
   </div>
 
   <!-- 작성 -->
-  <div id="jwP0">
-    <div class="fg"><label class="f-lbl">📅 일자 *</label><input type="date" id="jwDate" class="ri" style="margin-bottom:0" onchange="jwUpdateWeekday()"></div>
+  <div id="jwP0" style="padding:0 13px">
+    <div class="fg" style="margin-top:13px"><label class="f-lbl">📅 일자 *</label><input type="date" id="jwDate" class="ri" style="margin-bottom:0" onchange="jwUpdateWeekday()"></div>
     <div id="jwDateWeekday" style="font-size:11px;color:var(--g4);margin:4px 0 10px 2px"></div>
 
     <div class="fg"><label class="f-lbl">팀 선택 *</label>
