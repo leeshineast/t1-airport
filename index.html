@@ -1597,6 +1597,13 @@ html{overflow-x:hidden}
         <div style="display:flex;align-items:baseline;gap:3px"><span id="msV_waste" style="font-size:30px;font-weight:900;color:var(--success);line-height:1">-</span><span style="font-size:12px;color:var(--g4)">톤</span></div>
         <div id="msD_waste" style="font-size:10px;font-weight:700;margin-top:5px;color:var(--g4)">&nbsp;</div>
       </div>
+      <!-- 공동작업 -->
+      <div class="ms-card" onclick="msToggle('jw')" id="msCard_jw" style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative;overflow:hidden">
+        <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--teal2))"></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:8px"><span style="display:flex;align-items:center;gap:6px"><span style="width:24px;height:24px;border-radius:8px;background:var(--teal-bg);display:flex;align-items:center;justify-content:center;font-size:14px">🤝</span><span style="font-size:12px;font-weight:700;color:var(--g5)">공동작업</span></span><div class="ms-donut" id="msDonut_jw"></div></div>
+        <div style="display:flex;align-items:baseline;gap:3px"><span id="msV_jw" style="font-size:30px;font-weight:900;color:var(--teal2);line-height:1">-</span><span style="font-size:12px;color:var(--g4)">건</span></div>
+        <div id="msD_jw" style="font-size:10px;font-weight:700;margin-top:5px;color:var(--g4)">&nbsp;</div>
+      </div>
     </div>
     <div id="msDetail" style="display:none;background:white;border-radius:var(--r);margin:0 13px 9px;padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)"></div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:0 15px 6px">
@@ -2892,44 +2899,50 @@ html{overflow-x:hidden}
     <div class="fg" style="margin-top:13px"><label class="f-lbl">📅 일자 *</label><input type="date" id="jwDate" class="ri" style="margin-bottom:0" onchange="jwUpdateWeekday()"></div>
     <div id="jwDateWeekday" style="font-size:11px;color:var(--g4);margin:4px 0 10px 2px"></div>
 
-    <div class="fg"><label class="f-lbl">팀 선택 *</label>
+    <div class="fg"><label class="f-lbl">팀·조 선택 * <span style="font-weight:400;color:var(--g3)">(여러 팀 함께 선택 가능)</span></label>
       <div class="rg" id="jwTeamG" style="flex-wrap:wrap;gap:6px">
-        <div class="rp" onclick="jwPickTeam(this,'1팀')">1팀</div>
-        <div class="rp" onclick="jwPickTeam(this,'2팀')">2팀</div>
-        <div class="rp" onclick="jwPickTeam(this,'3팀')">3팀</div>
-        <div class="rp" onclick="jwPickTeam(this,'4팀')">4팀</div>
-        <div class="rp" onclick="jwPickTeam(this,'6팀')">6팀</div>
-        <div class="rp" onclick="jwPickTeam(this,'7팀')">7팀</div>
-        <div class="rp" onclick="jwPickTeam(this,'8팀')">8팀</div>
-        <div class="rp" onclick="jwPickTeam(this,'9팀')">9팀</div>
+        <div class="rp" onclick="jwToggleTeam(this,'1팀A')">1팀A</div>
+        <div class="rp" onclick="jwToggleTeam(this,'1팀B')">1팀B</div>
+        <div class="rp" onclick="jwToggleTeam(this,'1팀C')">1팀C</div>
+        <div class="rp" onclick="jwToggleTeam(this,'2팀A')">2팀A</div>
+        <div class="rp" onclick="jwToggleTeam(this,'2팀B')">2팀B</div>
+        <div class="rp" onclick="jwToggleTeam(this,'3팀A')">3팀A</div>
+        <div class="rp" onclick="jwToggleTeam(this,'3팀B')">3팀B</div>
+        <div class="rp" onclick="jwToggleTeam(this,'4팀A')">4팀A</div>
+        <div class="rp" onclick="jwToggleTeam(this,'4팀B')">4팀B</div>
+        <div class="rp" onclick="jwToggleTeam(this,'6팀A')">6팀A</div>
+        <div class="rp" onclick="jwToggleTeam(this,'6팀B')">6팀B</div>
+        <div class="rp" onclick="jwToggleTeam(this,'6팀C')">6팀C</div>
+        <div class="rp" onclick="jwToggleTeam(this,'7팀A')">7팀A</div>
+        <div class="rp" onclick="jwToggleTeam(this,'7팀B')">7팀B</div>
+        <div class="rp" onclick="jwToggleTeam(this,'8팀A')">8팀A</div>
+        <div class="rp" onclick="jwToggleTeam(this,'8팀B')">8팀B</div>
+        <div class="rp" onclick="jwToggleTeam(this,'9팀A')">9팀A</div>
+        <div class="rp" onclick="jwToggleTeam(this,'9팀B')">9팀B</div>
       </div>
     </div>
-    <div class="fg" id="jwJoWrap" style="display:none"><label class="f-lbl">조 선택 *</label>
-      <div class="rg" id="jwJoG" style="flex-wrap:wrap;gap:6px"></div>
-    </div>
 
-    <div class="fg"><label class="f-lbl">층별 장소 선택 *</label>
+    <div class="fg"><label class="f-lbl">층별 장소 선택 * <span style="font-weight:400;color:var(--g3)">(여러 층 함께 선택 가능)</span></label>
       <div class="rg" id="jwFloorG" style="flex-wrap:wrap;gap:6px">
-        <div class="rp" onclick="selRP(this)">B2F</div>
-        <div class="rp" onclick="selRP(this)">B1F</div>
-        <div class="rp" onclick="selRP(this)">1F</div>
-        <div class="rp" onclick="selRP(this)">2F</div>
-        <div class="rp" onclick="selRP(this)">3F</div>
-        <div class="rp" onclick="selRP(this)">4F</div>
+        <div class="rp" onclick="jwToggleFloor(this)">B2F</div>
+        <div class="rp" onclick="jwToggleFloor(this)">B1F</div>
+        <div class="rp" onclick="jwToggleFloor(this)">1F</div>
+        <div class="rp" onclick="jwToggleFloor(this)">2F</div>
+        <div class="rp" onclick="jwToggleFloor(this)">3F</div>
+        <div class="rp" onclick="jwToggleFloor(this)">4F</div>
       </div>
     </div>
 
-    <div class="fg">
-      <label class="f-lbl">세부위치 *</label>
-      <div id="jwLocTop10" style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:6px;width:100%;box-sizing:border-box"></div>
-      <input id="jwLoc" type="text" class="ri" placeholder="예) 3층 남자화장실 앞 복도" style="margin-bottom:0">
+    <div class="fg"><label class="f-lbl">👥 투입 인원 * <span style="font-weight:400;color:var(--g3)">(공동작업에 참여한 총 인원수)</span></label>
+      <input id="jwHeadcount" type="number" min="1" inputmode="numeric" class="ri" placeholder="예) 4" style="margin-bottom:0">
     </div>
 
     <div class="fg">
-      <label class="f-lbl">작업내용 <span style="font-weight:400;color:var(--g3)">(최대 5개까지 작성 가능)</span></label>
+      <label class="f-lbl">세부위치·작업내용 <span style="font-weight:400;color:var(--g3)">(장소 하나당 작업내용 하나씩 짝지어 작성)</span></label>
+      <div id="jwLocTop10" style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:6px;width:100%;box-sizing:border-box"></div>
       <div id="jwWorkTop10" style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:6px;width:100%;box-sizing:border-box"></div>
-      <div id="jwWorkItems" style="display:flex;flex-direction:column;gap:6px"></div>
-      <button type="button" onclick="jwAddWorkItem()" id="jwAddBtn" style="margin-top:7px;padding:8px 14px;background:var(--g1);border:1.5px dashed var(--g3);border-radius:var(--r2);font-size:12px;font-weight:700;color:var(--g5);cursor:pointer">+ 작업내용 추가</button>
+      <div id="jwWorkItems" style="display:flex;flex-direction:column;gap:8px"></div>
+      <button type="button" onclick="jwAddWorkItem()" id="jwAddBtn" style="margin-top:7px;padding:8px 14px;background:var(--g1);border:1.5px dashed var(--g3);border-radius:var(--r2);font-size:12px;font-weight:700;color:var(--g5);cursor:pointer">+ 장소·작업내용 추가</button>
     </div>
 
     <div class="fg" style="margin-bottom:0"><label class="f-lbl">비고</label><textarea id="jwNote" class="ri" rows="3" placeholder="특이사항 등 자유롭게 작성" style="resize:vertical"></textarea></div>
@@ -3983,9 +3996,10 @@ async function loadExecDashboard(){
       msFetchAll(function(){ return sb.from('lost_found').select('id,status').gte('found_date',tsFrom).lte('found_date',tsTo); }),
       msFetchAll(function(){ return sb.from('safety_accidents').select('id,accident_type').gte('occurred_at',tsFrom).lte('occurred_at',tsTo); }),
       msFetchAll(function(){ return sb.from('night_special_data').select('date,team_code,carpet,pbb,wax,stone,wood,restroom,es,toilet_daily,common_area,collection').gte('date',dFrom).lte('date',dTo); }),
-      msFetchAll(function(){ return sb.from('mgr_attendance').select('date,checked,status').gte('date',dFrom).lte('date',dTo); })
+      msFetchAll(function(){ return sb.from('mgr_attendance').select('date,checked,status').gte('date',dFrom).lte('date',dTo); }),
+      msFetchAll(function(){ return sb.from('joint_work_data').select('id,teams,headcount').gte('work_date',dFrom).lte('work_date',dTo); })
     ]);
-    var mpRows=(q[0]&&q[0].data)||[], hoRows=(q[1]&&q[1].data)||[], vocRows=(q[2]&&q[2].data)||[], lostRows=(q[3]&&q[3].data)||[], accRows=(q[4]&&q[4].data)||[], nsRows=(q[5]&&q[5].data)||[], mgrRows=(q[6]&&q[6].data)||[];
+    var mpRows=(q[0]&&q[0].data)||[], hoRows=(q[1]&&q[1].data)||[], vocRows=(q[2]&&q[2].data)||[], lostRows=(q[3]&&q[3].data)||[], accRows=(q[4]&&q[4].data)||[], nsRows=(q[5]&&q[5].data)||[], mgrRows=(q[6]&&q[6].data)||[], jwRows=(q[7]&&q[7].data)||[];
 
     // 인력 집계 (층별 7 + 교대별) — 기간 내 일수로 나눠 일평균 산출
     var floorSum=[0,0,0,0,0,0,0];
@@ -4040,6 +4054,8 @@ async function loadExecDashboard(){
     var accTotal=accRows.length;
     var issueTotal=vocTotal+lostTotal+accTotal;
     var staffLabel=isAvg?(periodLabel+' 일평균 근무인원'):(periodLabel+' 근무인원');
+    var jwTotal=jwRows.length;
+    var jwHeadSum=jwRows.reduce(function(s,r){return s+(r.headcount||0);},0);
 
     // ── KPI 카드
     var kpiHtml='';
@@ -4051,6 +4067,8 @@ async function loadExecDashboard(){
     kpiHtml+=edKpiCard('⚠️',periodLabel+' 안전사고', accTotal, '건', accTotal===0?'ok':'danger');
     kpiHtml+=edKpiCard('❗','현재 미확인 인계', hoTotal-hoConfirmed, '건', (hoTotal-hoConfirmed)===0?'ok':'warn');
     kpiHtml+=edKpiCard('📌',periodLabel+' 특이사항 합계', issueTotal, '건', issueTotal===0?'ok':'neutral');
+    kpiHtml+=edKpiCard('🤝',periodLabel+' 공동작업 건수', jwTotal, '건','neutral');
+    kpiHtml+=edKpiCard('👥',periodLabel+' 공동작업 투입인원', jwHeadSum, '명','neutral');
     var kg=document.getElementById('edKpiGrid'); if(kg) kg.innerHTML=kpiHtml;
 
     // ── 완료율 도넛 (CSS conic-gradient — CDN 의존성 없음, 이미 검증된 컴포넌트)
@@ -7282,9 +7300,9 @@ async function loadWorkVehicleFromDB(){
 }
 // ═══ 공동작업 (오전·오후 겹침시간 공동작업 기록) ═══
 var jointWorkData=[];
-var jwJoMap={'1팀':['A조','B조','C조'],'6팀':['A조','B조','C조'],'2팀':['A조','B조'],'3팀':['A조','B조'],'4팀':['A조','B조'],'7팀':['A조','B조'],'8팀':['A조','B조'],'9팀':['A조','B조']};
-var jwSelectedTeam='';
 var jwEditId=null;
+var jwSelectedTeams=[]; // ['1팀A','2팀B', ...]
+var jwSelectedFloors=[]; // ['3F','4F', ...]
 
 function selRP(el){
   var grp=el.parentElement;
@@ -7296,46 +7314,52 @@ function jwTab(n){
   if(n===1) renderJointWorkList();
   if(n===2) jwRenderStats();
 }
-function jwPickTeam(el,team){
-  Array.from(document.getElementById('jwTeamG').children).forEach(function(c){c.classList.remove('on');});
-  el.classList.add('on');
-  jwSelectedTeam=team;
-  var wrap=document.getElementById('jwJoWrap');
-  var g=document.getElementById('jwJoG'); g.innerHTML='';
-  (jwJoMap[team]||[]).forEach(function(jo){
-    var b=document.createElement('div'); b.className='rp'; b.textContent=jo;
-    b.onclick=function(){ selRP(b); };
-    g.appendChild(b);
-  });
-  wrap.style.display='block';
+function jwToggleTeam(el,code){
+  var idx=jwSelectedTeams.indexOf(code);
+  if(idx>=0){ jwSelectedTeams.splice(idx,1); el.classList.remove('on'); }
+  else{ jwSelectedTeams.push(code); el.classList.add('on'); }
 }
-function jwGetSelectedJo(){
-  var sel=document.querySelector('#jwJoG .rp.on');
-  return sel?sel.textContent:'';
+function jwToggleFloor(el){
+  var f=el.textContent.trim();
+  var idx=jwSelectedFloors.indexOf(f);
+  if(idx>=0){ jwSelectedFloors.splice(idx,1); el.classList.remove('on'); }
+  else{ jwSelectedFloors.push(f); el.classList.add('on'); }
 }
-function jwGetSelectedFloor(){
-  var sel=document.querySelector('#jwFloorG .rp.on');
-  return sel?sel.textContent:'';
-}
-function jwAddWorkItem(){
+function jwAddWorkItem(loc,work){
   var wrap=document.getElementById('jwWorkItems');
-  if(wrap.children.length>=5){ toast('작업내용은 최대 5개까지 작성 가능합니다'); return; }
+  if(wrap.children.length>=8){ toast('장소·작업내용은 최대 8개까지 작성 가능합니다'); return; }
   var idx=wrap.children.length+1;
   var row=document.createElement('div');
-  row.style.cssText='display:flex;gap:6px;align-items:center';
-  row.innerHTML='<input type="text" class="ri jw-work-input" placeholder="작업내용 '+idx+'" style="margin-bottom:0;flex:1"><button type="button" onclick="this.parentElement.remove();jwRenumberWork()" style="flex-shrink:0;width:34px;height:34px;border:none;background:var(--danger-bg);color:var(--danger);border-radius:8px;font-weight:800;cursor:pointer">×</button>';
+  row.style.cssText='display:flex;gap:6px;align-items:flex-start;background:var(--g1);border-radius:8px;padding:8px';
+  row.innerHTML=
+    '<div style="flex:1;display:flex;flex-direction:column;gap:5px">'
+    +'<input type="text" class="ri jw-loc-input" placeholder="세부위치 '+idx+' (예: 3층 남자화장실 앞)" style="margin-bottom:0">'
+    +'<input type="text" class="ri jw-work-input" placeholder="작업내용 '+idx+'" style="margin-bottom:0">'
+    +'</div>'
+    +'<button type="button" onclick="this.parentElement.remove();jwRenumberWork()" style="flex-shrink:0;width:34px;height:34px;border:none;background:var(--danger-bg);color:var(--danger);border-radius:8px;font-weight:800;cursor:pointer;margin-top:2px">×</button>';
   wrap.appendChild(row);
-  if(wrap.children.length>=5){ var btn=document.getElementById('jwAddBtn'); if(btn) btn.style.display='none'; }
+  if(loc!==undefined) row.querySelector('.jw-loc-input').value=loc||'';
+  if(work!==undefined) row.querySelector('.jw-work-input').value=work||'';
+  if(wrap.children.length>=8){ var btn=document.getElementById('jwAddBtn'); if(btn) btn.style.display='none'; }
 }
 function jwRenumberWork(){
   var wrap=document.getElementById('jwWorkItems');
   Array.from(wrap.children).forEach(function(row,i){
-    var inp=row.querySelector('input'); if(inp) inp.placeholder='작업내용 '+(i+1);
+    var locInp=row.querySelector('.jw-loc-input'), workInp=row.querySelector('.jw-work-input');
+    if(locInp) locInp.placeholder='세부위치 '+(i+1)+' (예: 3층 남자화장실 앞)';
+    if(workInp) workInp.placeholder='작업내용 '+(i+1);
   });
   var btn=document.getElementById('jwAddBtn'); if(btn) btn.style.display='';
 }
-function jwGetWorkItems(){
-  return Array.from(document.querySelectorAll('.jw-work-input')).map(function(i){return i.value.trim();}).filter(Boolean);
+function jwGetItems(){
+  var wrap=document.getElementById('jwWorkItems');
+  var items=[];
+  Array.from(wrap.children).forEach(function(row){
+    var loc=row.querySelector('.jw-loc-input').value.trim();
+    var work=row.querySelector('.jw-work-input').value.trim();
+    if(loc||work) items.push({location:loc, work:work});
+  });
+  return items;
 }
 function jwUpdateWeekday(){
   var d=document.getElementById('jwDate').value;
@@ -7346,12 +7370,14 @@ function jwUpdateWeekday(){
 }
 async function loadJwSuggestions(){
   try{
-    var res=await sb.from('joint_work_data').select('location,work_items').order('created_at',{ascending:false}).limit(60);
+    var res=await sb.from('joint_work_data').select('items').order('created_at',{ascending:false}).limit(60);
     if(res.error||!res.data) return;
     var locCount={}, workCount={};
     res.data.forEach(function(r){
-      if(r.location) locCount[r.location]=(locCount[r.location]||0)+1;
-      (r.work_items||[]).forEach(function(w){ if(w) workCount[w]=(workCount[w]||0)+1; });
+      (r.items||[]).forEach(function(it){
+        if(it.location) locCount[it.location]=(locCount[it.location]||0)+1;
+        if(it.work) workCount[it.work]=(workCount[it.work]||0)+1;
+      });
     });
     var topLocs=Object.keys(locCount).sort(function(a,b){return locCount[b]-locCount[a];}).slice(0,8);
     var topWorks=Object.keys(workCount).sort(function(a,b){return workCount[b]-workCount[a];}).slice(0,8);
@@ -7359,8 +7385,8 @@ async function loadJwSuggestions(){
     if(locWrap){
       locWrap.innerHTML='';
       topLocs.forEach(function(l){
-        var c=document.createElement('div'); c.className='chip-quick'; c.textContent=l;
-        c.onclick=function(){ document.getElementById('jwLoc').value=l; };
+        var c=document.createElement('div'); c.className='chip-quick'; c.textContent='📍'+l;
+        c.onclick=function(){ jwFillLastEmpty('.jw-loc-input', l); };
         locWrap.appendChild(c);
       });
     }
@@ -7368,30 +7394,33 @@ async function loadJwSuggestions(){
     if(workWrap){
       workWrap.innerHTML='';
       topWorks.forEach(function(w){
-        var c=document.createElement('div'); c.className='chip-quick'; c.textContent=w;
-        c.onclick=function(){
-          var inputs=document.querySelectorAll('.jw-work-input');
-          var empty=Array.from(inputs).find(function(i){return !i.value.trim();});
-          if(empty){ empty.value=w; }
-          else if(inputs.length<5){ jwAddWorkItem(); var newInputs=document.querySelectorAll('.jw-work-input'); newInputs[newInputs.length-1].value=w; }
-          else toast('작업내용은 최대 5개까지입니다');
-        };
+        var c=document.createElement('div'); c.className='chip-quick'; c.textContent='🔧'+w;
+        c.onclick=function(){ jwFillLastEmpty('.jw-work-input', w); };
         workWrap.appendChild(c);
       });
     }
   }catch(e){}
 }
+function jwFillLastEmpty(selector, val){
+  var inputs=document.querySelectorAll(selector);
+  var empty=Array.from(inputs).find(function(i){return !i.value.trim();});
+  if(empty){ empty.value=val; return; }
+  if(inputs.length===0 || document.getElementById('jwWorkItems').children.length<8){
+    jwAddWorkItem();
+    var newInputs=document.querySelectorAll(selector);
+    newInputs[newInputs.length-1].value=val;
+  }else toast('장소·작업내용은 최대 8개까지입니다');
+}
 function jwResetForm(){
   jwEditId=null;
-  document.getElementById('jwLoc').value='';
+  document.getElementById('jwHeadcount').value='';
   document.getElementById('jwNote').value='';
   document.getElementById('jwWorkItems').innerHTML='';
   var btn=document.getElementById('jwAddBtn'); if(btn) btn.style.display='';
   jwAddWorkItem();
   Array.from(document.getElementById('jwTeamG').children).forEach(function(c){c.classList.remove('on');});
-  document.getElementById('jwJoWrap').style.display='none';
-  jwSelectedTeam='';
   Array.from(document.getElementById('jwFloorG').children).forEach(function(c){c.classList.remove('on');});
+  jwSelectedTeams=[]; jwSelectedFloors=[];
   var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   document.getElementById('jwDate').value=today;
   jwUpdateWeekday();
@@ -7400,20 +7429,19 @@ function jwResetForm(){
 async function subJointWork(){
   if(!canWrite()) return;
   var date=document.getElementById('jwDate').value;
-  var jo=jwGetSelectedJo();
-  var floor=jwGetSelectedFloor();
-  var loc=document.getElementById('jwLoc').value.trim();
-  var items=jwGetWorkItems();
+  var headcount=parseInt(document.getElementById('jwHeadcount').value)||0;
+  var items=jwGetItems();
   var note=document.getElementById('jwNote').value.trim();
   if(!date){ toast('일자를 입력해주세요'); return; }
-  if(!jwSelectedTeam){ toast('팀을 선택해주세요'); return; }
-  if(!jo){ toast('조를 선택해주세요'); return; }
-  if(!floor){ toast('층별 장소를 선택해주세요'); return; }
-  if(!loc){ toast('세부위치를 입력해주세요'); return; }
-  if(!items.length){ toast('작업내용을 1개 이상 입력해주세요'); return; }
+  if(!jwSelectedTeams.length){ toast('팀·조를 1개 이상 선택해주세요'); return; }
+  if(!jwSelectedFloors.length){ toast('층별 장소를 1개 이상 선택해주세요'); return; }
+  if(!headcount||headcount<1){ toast('투입 인원을 입력해주세요'); return; }
+  if(!items.length){ toast('세부위치·작업내용을 1개 이상 입력해주세요'); return; }
+  var incomplete=items.some(function(it){ return !it.location||!it.work; });
+  if(incomplete){ toast('세부위치와 작업내용을 짝을 맞춰 모두 입력해주세요'); return; }
   var payload={
-    work_date:date, team:jwSelectedTeam, jo:jo, floor:floor, location:loc,
-    work_items:items, note:note||null, writer:me?me.name:''
+    work_date:date, teams:jwSelectedTeams, floors:jwSelectedFloors, headcount:headcount,
+    items:items, note:note||null, writer:me?me.name:''
   };
   try{
     var res;
@@ -7440,7 +7468,7 @@ function renderJointWorkList(){
   var tfEl=document.getElementById('jwFilterTeam'); var tf=tfEl?tfEl.value:'';
   var filtered=(jointWorkData||[]).filter(function(r){
     if(mf && !(r.work_date&&r.work_date.indexOf(mf)===0)) return false;
-    if(tf && r.team!==tf) return false;
+    if(tf && (!r.teams||r.teams.indexOf(tf)===-1)) return false;
     return true;
   });
   if(!filtered.length){
@@ -7451,15 +7479,15 @@ function renderJointWorkList(){
   filtered.forEach(function(r){
     var wd=['일','월','화','수','목','금','토'][new Date(r.work_date+'T00:00:00').getDay()];
     h+='<div style="background:white;border-radius:var(--r);margin:0 13px 10px;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--g2);overflow:hidden">';
-    h+='<div style="background:var(--navy-bg);padding:10px 13px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
+    h+='<div style="background:var(--navy-bg);padding:10px 13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
     h+='<span style="font-size:12px;font-weight:800;color:var(--navy)">'+r.work_date+'('+wd+')</span>';
-    h+='<span style="background:var(--navy);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">'+r.team+' '+r.jo+'</span>';
-    h+='<span style="background:var(--teal2);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">'+r.floor+'</span>';
+    (r.teams||[]).forEach(function(t){ h+='<span style="background:var(--navy);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">'+t+'</span>'; });
+    (r.floors||[]).forEach(function(f){ h+='<span style="background:var(--teal2);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">'+f+'</span>'; });
+    h+='<span style="background:var(--warn);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">👥 '+(r.headcount||0)+'명</span>';
     h+='</div>';
     h+='<div style="padding:10px 13px">';
-    h+='<div style="font-size:12px;color:var(--g6);font-weight:700;margin-bottom:6px">📍 '+r.location+'</div>';
-    (r.work_items||[]).forEach(function(w,i){
-      h+='<div style="font-size:12px;color:var(--g5);margin-bottom:3px">'+(i+1)+'. '+w+'</div>';
+    (r.items||[]).forEach(function(it,i){
+      h+='<div style="font-size:12px;color:var(--g6);margin-bottom:4px"><b>'+(i+1)+'.</b> 📍'+it.location+' — '+it.work+'</div>';
     });
     if(r.note) h+='<div style="margin-top:6px;font-size:11px;color:var(--warn);background:var(--warn-bg,#FFF7E0);border-radius:6px;padding:6px 8px">📝 '+r.note+'</div>';
     h+='<div style="margin-top:8px;font-size:10px;color:var(--g3)">작성자: '+(r.writer||'')+'</div>';
@@ -7475,21 +7503,20 @@ function openJwEdit(id){
   jwEditId=id;
   document.getElementById('jwDate').value=r.work_date;
   jwUpdateWeekday();
-  var teamBtn=Array.from(document.getElementById('jwTeamG').children).find(function(c){return c.textContent===r.team;});
-  if(teamBtn) jwPickTeam(teamBtn, r.team);
-  setTimeout(function(){
-    var joBtn=Array.from(document.getElementById('jwJoG').children).find(function(c){return c.textContent===r.jo;});
-    if(joBtn) selRP(joBtn);
-  },0);
-  var floorBtn=Array.from(document.getElementById('jwFloorG').children).find(function(c){return c.textContent===r.floor;});
-  if(floorBtn) selRP(floorBtn);
-  document.getElementById('jwLoc').value=r.location||'';
+  jwSelectedTeams=(r.teams||[]).slice();
+  Array.from(document.getElementById('jwTeamG').children).forEach(function(c){
+    c.classList.toggle('on', jwSelectedTeams.indexOf(c.textContent.trim())!==-1);
+  });
+  jwSelectedFloors=(r.floors||[]).slice();
+  Array.from(document.getElementById('jwFloorG').children).forEach(function(c){
+    c.classList.toggle('on', jwSelectedFloors.indexOf(c.textContent.trim())!==-1);
+  });
+  document.getElementById('jwHeadcount').value=r.headcount||'';
   document.getElementById('jwNote').value=r.note||'';
   document.getElementById('jwWorkItems').innerHTML='';
-  (r.work_items&&r.work_items.length?r.work_items:['']).forEach(function(w){
-    jwAddWorkItem();
-    var inputs=document.querySelectorAll('.jw-work-input');
-    inputs[inputs.length-1].value=w;
+  var btn=document.getElementById('jwAddBtn'); if(btn) btn.style.display='';
+  (r.items&&r.items.length?r.items:[{location:'',work:''}]).forEach(function(it){
+    jwAddWorkItem(it.location, it.work);
   });
   var saveBtn=document.querySelector('#jwP0 .btn-prim'); if(saveBtn) saveBtn.textContent='수정 저장';
   jwTab(0);
@@ -7580,31 +7607,53 @@ function jwRenderStats(){
     }else{
       filtered.forEach(function(r){
         h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
-        h+='<div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:4px">'+r.team+' '+r.jo+' · '+r.floor+' · '+r.location+'</div>';
-        (r.work_items||[]).forEach(function(w,i){ h+='<div style="font-size:11px;color:var(--g5)">'+(i+1)+'. '+w+'</div>'; });
+        h+='<div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:4px">'+(r.teams||[]).join(', ')+' · '+(r.floors||[]).join(', ')+' · 👥'+(r.headcount||0)+'명</div>';
+        (r.items||[]).forEach(function(it,i){ h+='<div style="font-size:11px;color:var(--g5)">'+(i+1)+'. 📍'+it.location+' — '+it.work+'</div>'; });
         h+='</div>';
       });
     }
   }else{
-    // 월간/연간: 팀별 건수, 층별 건수 집계
-    var byTeam={}, byFloor={};
+    // 월간/연간: 총 건수·총 인원, 팀별 투입인원 합산, 장소별/작업별 빈도
+    var byTeamHead={}, byLoc={}, byWork={};
+    var totalHead=0;
     filtered.forEach(function(r){
-      byTeam[r.team]=(byTeam[r.team]||0)+1;
-      byFloor[r.floor]=(byFloor[r.floor]||0)+1;
+      totalHead+=(r.headcount||0);
+      (r.teams||[]).forEach(function(t){ byTeamHead[t]=(byTeamHead[t]||0)+(r.headcount||0); });
+      (r.items||[]).forEach(function(it){
+        if(it.location) byLoc[it.location]=(byLoc[it.location]||0)+1;
+        if(it.work) byWork[it.work]=(byWork[it.work]||0)+1;
+      });
     });
     h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
-    h+='<div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:8px">총 '+filtered.length+'건</div>';
-    h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">팀별 건수</div>';
-    h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px">';
-    Object.keys(byTeam).sort().forEach(function(t){
-      h+='<div style="background:var(--g1);border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:var(--g5);font-weight:700">'+t+'</div><div style="font-size:16px;font-weight:900;color:var(--teal2)">'+byTeam[t]+'<span style="font-size:10px;font-weight:600;color:var(--g4)">건</span></div></div>';
-    });
+    h+='<div style="display:flex;gap:8px;margin-bottom:10px">';
+    h+='<div style="flex:1;background:var(--g1);border-radius:8px;padding:9px 11px"><div style="font-size:10px;color:var(--g5);font-weight:700">총 건수</div><div style="font-size:18px;font-weight:900;color:var(--teal2)">'+filtered.length+'<span style="font-size:10px;font-weight:600;color:var(--g4)">건</span></div></div>';
+    h+='<div style="flex:1;background:var(--g1);border-radius:8px;padding:9px 11px"><div style="font-size:10px;color:var(--g5);font-weight:700">총 투입인원</div><div style="font-size:18px;font-weight:900;color:var(--teal2)">'+totalHead+'<span style="font-size:10px;font-weight:600;color:var(--g4)">명</span></div></div>';
     h+='</div>';
-    h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">층별 건수</div>';
-    h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
-    Object.keys(byFloor).sort().forEach(function(f){
-      h+='<div style="background:var(--g1);border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:var(--g5);font-weight:700">'+f+'</div><div style="font-size:16px;font-weight:900;color:var(--teal2)">'+byFloor[f]+'<span style="font-size:10px;font-weight:600;color:var(--g4)">건</span></div></div>';
+
+    h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">팀별 투입인원 합산</div>';
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
+    Object.keys(byTeamHead).sort().forEach(function(t){
+      h+='<div style="background:var(--g1);border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:var(--g5);font-weight:700">'+t+'</div><div style="font-size:16px;font-weight:900;color:var(--teal2)">'+byTeamHead[t]+'<span style="font-size:10px;font-weight:600;color:var(--g4)">명</span></div></div>';
     });
+    if(!Object.keys(byTeamHead).length) h+='<div style="grid-column:1/-1;font-size:11px;color:var(--g3)">데이터 없음</div>';
+    h+='</div>';
+
+    var topLocs=Object.keys(byLoc).sort(function(a,b){return byLoc[b]-byLoc[a];}).slice(0,8);
+    var topWorks=Object.keys(byWork).sort(function(a,b){return byWork[b]-byWork[a];}).slice(0,8);
+    h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">자주 나온 장소</div>';
+    h+='<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px">';
+    topLocs.forEach(function(l){
+      h+='<div style="display:flex;justify-content:space-between;background:var(--g1);border-radius:6px;padding:6px 10px;font-size:11.5px"><span style="color:var(--g6)">📍'+l+'</span><span style="font-weight:800;color:var(--teal2)">'+byLoc[l]+'건</span></div>';
+    });
+    if(!topLocs.length) h+='<div style="font-size:11px;color:var(--g3)">데이터 없음</div>';
+    h+='</div>';
+
+    h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">자주 나온 작업내용</div>';
+    h+='<div style="display:flex;flex-direction:column;gap:5px">';
+    topWorks.forEach(function(w){
+      h+='<div style="display:flex;justify-content:space-between;background:var(--g1);border-radius:6px;padding:6px 10px;font-size:11.5px"><span style="color:var(--g6)">🔧'+w+'</span><span style="font-weight:800;color:var(--teal2)">'+byWork[w]+'건</span></div>';
+    });
+    if(!topWorks.length) h+='<div style="font-size:11px;color:var(--g3)">데이터 없음</div>';
     h+='</div></div>';
   }
   body.innerHTML=h;
@@ -14427,7 +14476,8 @@ async function loadMonthlyStats(){
       msFetchAll(function(){ return sb.from('safety_accidents').select('id,occurred_at,team,accident_type,location').gte('occurred_at',tsFrom).lte('occurred_at',tsTo); }),
       msFetchAll(function(){ return sb.from('mgr_attendance').select('date,checked,status').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('voc_data').select('id,voc_date,status,completed_at,content,channel,category,category_etc,loc_zone,loc_side,loc_floor,created_at').gte('voc_date',dFrom).lte('voc_date',dTo); }),
-      msFetchAll(function(){ return sb.from('waste_data').select('waste_date,team_code,incineration_living,incineration_synthetic,incineration_food,incineration_wood,recycle_paper,recycle_plastic,recycle_can,recycle_glass,recycle_etc,misc_etc').gte('waste_date',dFrom).lte('waste_date',dTo); })
+      msFetchAll(function(){ return sb.from('waste_data').select('waste_date,team_code,incineration_living,incineration_synthetic,incineration_food,incineration_wood,recycle_paper,recycle_plastic,recycle_can,recycle_glass,recycle_etc,misc_etc').gte('waste_date',dFrom).lte('waste_date',dTo); }),
+      msFetchAll(function(){ return sb.from('joint_work_data').select('id,work_date,teams,floors,headcount,items').gte('work_date',dFrom).lte('work_date',dTo); })
     ]);
     var anyErr=q.some(function(r){ return r&&r.error; });
     var banner=document.getElementById('msErrBanner');
@@ -14591,7 +14641,8 @@ function msCalc(q, key){
           lost:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byLoc:{},byItem:{},byHour:[0,0,0,0],hourUnknown:0,itemEtc:[],locEtc:[],byRoute:{},routeEtc:[],byHandover:{},handoverEtc:[],byShift:{오전:0,오후:0,야간:0}},
           acc:{total:0,byType:{},byTeam:{},byLoc:{},byHour:[0,0,0,0],locEtc:[],byShift:{오전:0,오후:0,야간:0}},
           voc:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byType:{},byLoc:{},byChannel:{},byShift:{오전:0,오후:0,야간:0}},
-          waste:{inc:0,rec:0,misc:0,byItem:{},byTeam:{}} };
+          waste:{inc:0,rec:0,misc:0,byItem:{},byTeam:{}},
+          jw:{total:0,headSum:0,byTeam:{},byLoc:{},byWork:{}} };
   MS_NS_COLS.forEach(function(c){ s.mp.nsSum[c]=0; });
   // ── 인력현황 (mp_data: 오전/오후, night_special_data: 야간)
   ((q[0]&&q[0].data)||[]).forEach(function(r){
@@ -14766,6 +14817,17 @@ function msCalc(q, key){
       if(tc) s.waste.byTeam[tc]['기타']=(s.waste.byTeam[tc]['기타']||0)+mv;
     }
   });
+  // ── 공동작업
+  ((q[8]&&q[8].data)||[]).forEach(function(r){
+    if(!r.work_date||r.work_date.indexOf(key)!==0) return;
+    s.jw.total++;
+    s.jw.headSum+=(r.headcount||0);
+    (r.teams||[]).forEach(function(t){ s.jw.byTeam[t]=(s.jw.byTeam[t]||0)+(r.headcount||0); });
+    (r.items||[]).forEach(function(it){
+      if(it.location) s.jw.byLoc[it.location]=(s.jw.byLoc[it.location]||0)+1;
+      if(it.work) s.jw.byWork[it.work]=(s.jw.byWork[it.work]||0)+1;
+    });
+  });
   return s;
 }
 
@@ -14843,6 +14905,11 @@ function msRenderCards(){
   }
   var wAll2=c.waste.inc+c.waste.rec+c.waste.misc;
   msSetDonut('msDonut_waste', wAll2?Math.round(c.waste.rec/wAll2*100):0, 'var(--success)');
+
+  // 공동작업 (건수 · 총 투입인원)
+  el=document.getElementById('msV_jw'); if(el) el.textContent=c.jw.total;
+  el=document.getElementById('msD_jw'); if(el) el.innerHTML='<span style="color:var(--teal2)">투입인원 '+c.jw.headSum+'명</span>';
+  msSetDonut('msDonut_jw', p.jw.total?Math.round(c.jw.total/p.jw.total*100):(c.jw.total?100:0), 'var(--teal2)');
 }
 
 function msBar(label, val, max, color, unit){
@@ -15155,6 +15222,16 @@ function msRenderDetail(key){
     var weItems=['생활쓰레기','폐합성수지','음식물','폐목재','폐지','플라스틱','캔','유리','재활용 기타','기타'];
     var weH=msWestEastBars(c.waste.byTeam, weItems);
     if(weH){ h+=msSub('서편 · 동편 비교 (1팀 C조 vs 6팀 C조)'); h+=weH; }
+  }else if(key==='jw'){
+    h=msTitle('🤝 공동작업 · '+pl);
+    h+=msRow('총 건수', c.jw.total+'건 <span style="font-size:10px;font-weight:600;color:var(--g4)">('+pw+' '+p.jw.total+'건)</span>');
+    h+=msRow('총 투입인원', c.jw.headSum+'명 <span style="font-size:10px;font-weight:600;color:var(--g4)">('+pw+' '+p.jw.headSum+'명)</span>');
+    h+=msSub('팀별 투입인원');
+    h+=msTopBars(c.jw.byTeam, 10, 'linear-gradient(90deg,var(--navy),#3E6BB5)', '명');
+    h+=msSub('자주 나온 장소');
+    h+=msTopBars(c.jw.byLoc, 8, 'linear-gradient(90deg,var(--teal),var(--teal2))', '건');
+    h+=msSub('자주 나온 작업내용');
+    h+=msTopBars(c.jw.byWork, 8, 'linear-gradient(90deg,#6B21A8,#9D5BD2)', '건');
   }
   det.innerHTML=h;
 }
