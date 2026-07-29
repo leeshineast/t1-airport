@@ -12515,6 +12515,8 @@ function closeMissingLeaderModal(){
   var m=document.getElementById('missingLeaderModal'); if(m) m.style.display='none';
 }
 async function checkAndShowMissingLeaderPopup(){
+  // 출근 시간대(자동출근과 동일한 시간대)에만 노출 — 그 외 시간엔 굳이 안 띄움
+  if(!isAnyCheckinWindowNow()) return;
   try{
     // 당일 미입력
     var todayMissing=[];
@@ -14286,6 +14288,10 @@ function isWithinCheckinWindow(shift){
   var n=new Date(Date.now()+9*3600000);
   var nowMin=n.getUTCHours()*60+n.getUTCMinutes();
   return nowMin>=w[0] && nowMin<=w[1];
+}
+// 4개 근무조(오전/오후/야간/운영팀) 출근 시간대 중 하나라도 지금 해당하면 true
+function isAnyCheckinWindowNow(){
+  return Object.keys(CHECKIN_WINDOWS).some(function(shift){ return isWithinCheckinWindow(shift); });
 }
 async function tryAutoCheckin(){
   if(_autoCheckinTried) return; // 세션당 1회만 시도
