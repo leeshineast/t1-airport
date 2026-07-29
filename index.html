@@ -1877,7 +1877,8 @@ html{overflow-x:hidden}
           <div>
             <label style="font-size:12px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">⑤ 접수자</label>
             <input id="hFRcv" type="text" class="ri" placeholder="예) 홍길동" style="margin-bottom:0">
-            <div id="hFRcvRecent" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px;padding-bottom:2px;width:100%;box-sizing:border-box"></div>
+            <div id="hFRcvRecentLbl" style="font-size:10px;color:var(--g4);margin-top:6px"></div>
+            <div id="hFRcvRecent" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:3px;padding-bottom:2px;width:100%;box-sizing:border-box"></div>
           </div>
         </div>
       </div>
@@ -4481,7 +4482,7 @@ function finishLogin(){
   // 메모리 초기화 먼저 (어제 데이터 화면 노출 방지)
   mpDataByLeader={오전:{},오후:{},야간:{}};
   mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-  go('main'); setTimeout(function(){ initAppData(); }, 100);
+  go('main'); setTimeout(function(){ initAppData(); tryAutoCheckin(); }, 100);
   updateStaff();
   updateFloorChart();
   updateMpSummary();
@@ -4931,7 +4932,7 @@ function pickFacLoc(loc){
   if(s) s.style.display='none';
 }
 // 최근 사용한 접수자 추출 (최신순, 중복 제거, 최대 5명)
-function getRecentReceivers(){
+function getRecentReceivers(type){
   if(typeof hoAll==='undefined'||!hoAll) return [];
   var rows=hoAll.slice().sort(function(a,b){
     var ta=new Date(a.ho_date||a.created_at||0).getTime();
@@ -4941,21 +4942,34 @@ function getRecentReceivers(){
   var names=[];
   rows.forEach(function(r){
     if(!r.facility||r.facility==='없음') return;
+    if(type){
+      var tm=r.facility.match(/\[신고\]\s*([^\/]+?)(?=\s*\/\s*\[|$)/);
+      var rowType=tm?tm[1].trim():'';
+      if(rowType.indexOf(type)!==0) return; // 기타:직접입력 등도 매칭되게 접두 비교
+    }
     var m=r.facility.match(/\[접수자\]\s*([^\/]+?)(?=\s*\/\s*\[|$)/);
     var name=m?m[1].trim():'';
     if(name && names.indexOf(name)<0) names.push(name);
   });
   return names.slice(0,5);
 }
-// 접수자 최근 5명 칩 렌더링
+// 접수자 최근 5명 칩 렌더링 (신고구분 5개 전부 동시에, 각 구분별 최근 5명)
+var FAC_TYPES=['기계','건축','전기','토목','세스코'];
 function loadFacRcvRecent(){
   var wrap=document.getElementById('hFRcvRecent');
   if(!wrap) return;
-  var names=getRecentReceivers();
-  if(!names.length){ wrap.innerHTML=''; return; }
-  wrap.innerHTML=names.map(function(n){
-    return '<span class="fac-chip" onclick="pickFacRcv(\''+n.replace(/'/g,"\\'")+'\')">'+n+'</span>';
-  }).join('');
+  var lbl=document.getElementById('hFRcvRecentLbl');
+  if(lbl) lbl.textContent='최근 접수자 (구분별)';
+  var h='';
+  FAC_TYPES.forEach(function(type){
+    var names=getRecentReceivers(type);
+    if(!names.length) return;
+    h+='<div style="width:100%;font-size:10px;font-weight:700;color:var(--g5);margin:6px 0 3px">'+type+'</div>';
+    h+=names.map(function(n){
+      return '<span class="fac-chip" onclick="pickFacRcv(\''+n.replace(/'/g,"\\'")+'\')">'+n+'</span>';
+    }).join('');
+  });
+  wrap.innerHTML=h;
 }
 function pickFacRcv(name){
   var el=document.getElementById('hFRcv');
@@ -5044,6 +5058,7 @@ function selFType(el,etcId){
   el.classList.add('on');
   var etcEl=document.getElementById('hFEtc');
   if(etcEl) etcEl.style.display=etcId?'block':'none';
+  loadFacRcvRecent(el.textContent.trim());
 }
 function togF(el,id,show){
   const g=el.parentElement;
@@ -12483,6 +12498,7 @@ async function refreshMpDataLight(){
       mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
       go('main');
       setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); }, 500);
+      setTimeout(function(){ tryAutoCheckin(); }, 2000);
       return;
     }
   }catch(e){}
@@ -14212,6 +14228,91 @@ function updateDashMgrAtt(){
 }
 
 var mgrAttPickTarget = null;
+
+// ═══ GPS 자동 출근 (인천공항 제1여객터미널 반경 내에서 앱 접속 시 자동 출근처리) ═══
+var T1_LAT=37.4602, T1_LNG=126.4407, AUTO_CHECKIN_RADIUS_M=2000; // 터미널 건물+계류장 감안 넉넉한 반경
+var _autoCheckinTried=false;
+function haversineM(lat1,lng1,lat2,lng2){
+  var R=6371000;
+  var dLat=(lat2-lat1)*Math.PI/180, dLng=(lng2-lng1)*Math.PI/180;
+  var a=Math.sin(dLat/2)*Math.sin(dLat/2)+Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLng/2)*Math.sin(dLng/2);
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+// 로그인한 사람의 관리자 출근부 상 슬롯(팀+역할라벨) 계산. 대상 아니면 null
+// 운영팀(T1운영) 계정별 직책 매핑 — mgr_attendance엔 이 직책명으로 저장됨
+var OPS_TEAM_ROLE_MAP={'유준영':'사업부장','양민석':'총괄1팀장','조준희':'총괄2팀장','이동환':'행정1','한지원':'행정2'};
+function myMgrAttSlot(){
+  if(!me||!me.team) return null;
+  var raw=me.team.trim();
+  if(raw.indexOf('T1운영')===0 || raw==='운영'){
+    if(me.role!=='admin') return null; // 운영팀 5명 전원 admin 계정만 해당
+    var opsLabel=OPS_TEAM_ROLE_MAP[me.name];
+    if(!opsLabel) return null;
+    return {team:'운영', name:opsLabel};
+  }
+  var m=raw.match(/^(\d+)팀/);
+  if(!m) return null;
+  var teamNum=m[1]+'팀';
+  if(me.role==='manager') return {team:teamNum, name:'팀장'};
+  if(me.role==='leader'){
+    var jm=raw.match(/([A-Z])조/);
+    if(!jm) return null;
+    return {team:teamNum, name:jm[1]+'조장'};
+  }
+  return null; // staff/guest/acting_leader 등은 자동출근 대상 아님
+}
+// 팀번호로 근무조(오전/오후/야간) 판별
+function myShiftForCheckin(){
+  var raw=(me&&me.team||'').trim();
+  if(raw.indexOf('T1운영')===0 || raw.indexOf('운영')===0) return '운영팀';
+  var m=raw.match(/^(\d+)팀/);
+  if(!m) return null;
+  var num=parseInt(m[1]);
+  if([1,2,3,4].indexOf(num)>=0) return '오전';
+  if([6,7,8,9].indexOf(num)>=0) return '오후';
+  if([5,10].indexOf(num)>=0) return '야간';
+  return null;
+}
+// 근무조별 자동출근 허용 시간대 (분 단위, KST)
+var CHECKIN_WINDOWS={
+  '오전':[6*60, 8*60],
+  '오후':[11*60, 13*60],
+  '야간':[20*60, 22*60+30],
+  '운영팀':[6*60, 9*60+30]
+};
+function isWithinCheckinWindow(shift){
+  var w=CHECKIN_WINDOWS[shift];
+  if(!w) return false;
+  var n=new Date(Date.now()+9*3600000);
+  var nowMin=n.getUTCHours()*60+n.getUTCMinutes();
+  return nowMin>=w[0] && nowMin<=w[1];
+}
+async function tryAutoCheckin(){
+  if(_autoCheckinTried) return; // 세션당 1회만 시도
+  _autoCheckinTried=true;
+  if(!navigator.geolocation) return;
+  var slot=myMgrAttSlot();
+  if(!slot) return; // 팀장/조장 아니면 대상 아님
+  var shift=myShiftForCheckin();
+  if(!shift || !isWithinCheckinWindow(shift)) return; // 출근 허용 시간대가 아니면 시도 자체를 안 함
+  try{
+    // 오늘 이미 출근 등 상태가 있으면 자동출근 불필요
+    if(typeof loadMgrAttendance==='function' && (!mgrAttData||!Object.keys(mgrAttData).length)){
+      await loadMgrAttendance();
+    }
+    var key=slot.team+'_'+slot.name;
+    if(mgrAttData && mgrAttData[key] && mgrAttData[key].checked) return; // 이미 처리됨(출근/출장/교육 등)
+  }catch(e){}
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var dist=haversineM(pos.coords.latitude,pos.coords.longitude,T1_LAT,T1_LNG);
+    if(dist<=AUTO_CHECKIN_RADIUS_M){
+      mgrAttPickTarget=slot;
+      setMgrAtt('출근').then(function(){
+        toast('📍 제1여객터미널 도착 확인 — 자동 출근 처리되었습니다');
+      });
+    }
+  }, function(err){ /* 권한거부·오류 시 조용히 무시, 수동 출근으로 대체 가능 */ }, {enableHighAccuracy:true, timeout:10000, maximumAge:60000});
+}
 function openMgrAttPicker(team, name){
   mgrAttPickTarget = {team:team, name:name};
   var t = document.getElementById('mgrAttPickTitle');
