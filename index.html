@@ -559,7 +559,7 @@ html{overflow-x:hidden}
   <div class="mh-tab-item on" onclick="goHomeMain()"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg></span><span class="mh-tab-lb">홈</span></div>
   <div class="mh-tab-item" onclick="go('mp')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="mh-tab-lb">인력현황</span></div>
   <div class="mh-tab-item" onclick="go('ho')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span><span class="mh-tab-lb">인수인계</span></div>
-  <div class="mh-tab-item" id="gcTabItem" onclick="goStatsDash()"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15v3"/><path d="M11 11v7"/><path d="M15 8v10"/><path d="M19 5v13"/></svg></span><span class="mh-tab-lb">통계</span></div>
+  <div class="mh-tab-item" id="jwTabItem" onclick="go('jointwork')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="mh-tab-lb">공동작업</span></div>
 </div>
 <!-- ══ 미확인 인계 알림 배너 ══ -->
 <div id="hoAlertBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;max-width:480px;margin:0 auto;background:linear-gradient(135deg,#1E3A5F,#0F5132);color:white;padding:13px 16px;box-shadow:0 4px 16px rgba(0,0,0,.3);cursor:pointer" onclick="hoAlertGo()">
@@ -840,6 +840,17 @@ html{overflow-x:hidden}
         <div style="font-size:10px;color:var(--warn);font-weight:700">금일</div>
       </div>
       <div style="font-size:12px;color:var(--g4)">누적 <span id="dCompT" style="font-weight:700;color:var(--g5)">0</span>건</div>
+    </div>
+  </div>
+  <!-- 공동작업 한 줄 -->
+  <div class="stat-row">
+    <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('jointwork')">
+      <div class="s-lbl">🤝 금일 공동작업</div>
+      <div style="display:flex;align-items:baseline;gap:3px">
+        <div class="s-val" id="dJW" style="font-size:23px;color:var(--teal2)">0</div>
+        <div style="font-size:10px;color:var(--teal2);font-weight:700">건</div>
+      </div>
+      <div style="font-size:12px;color:var(--g4);margin-top:3px;line-height:1.4" id="dJWDetail">등록된 공동작업이 없습니다</div>
     </div>
   </div>
   <!-- 습득물/폐기물 한 줄 -->
@@ -4405,7 +4416,7 @@ function applyRoleUI(){
   var eb=document.getElementById('mainIndCmpEditBtn');if(eb)eb.style.display=isAdmin?'block':'none';
   // 전체채팅 메뉴 (게스트는 아예 접근 불가 - 메뉴 자체를 숨김)
   var gcb=document.getElementById('groupChatMenuBtn');if(gcb)gcb.style.display=(me.role==='guest')?'none':'';
-  var gcTab=document.getElementById('gcTabItem');if(gcTab)gcTab.style.display=(me.role==='guest')?'none':'flex';
+  var gcTab=document.getElementById('jwTabItem');if(gcTab)gcTab.style.display=(me.role==='guest')?'none':'flex';
   // 차량 게스트: 차량운행기록만 접근 가능
   if(me.role==='vehicle_guest'){
     // 메뉴 버튼 전체 숨김 후 차량만 표시
@@ -7472,6 +7483,7 @@ async function subJointWork(){
     toast(jwEditId?'✅ 수정되었습니다':'✅ 저장되었습니다');
     jwResetForm();
     await loadJointWorkFromDB();
+    loadJointWorkTodayFromDB();
     jwTab(1);
   }catch(e){ toast('저장 오류: '+String(e.message||e)); }
 }
@@ -7482,6 +7494,32 @@ async function loadJointWorkFromDB(){
     jointWorkData=res.data||[];
     renderJointWorkList();
   }catch(e){}
+}
+// 홈 화면 - 금일 공동작업 요약 카드
+async function loadJointWorkTodayFromDB(){
+  try{
+    var today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
+    var res=await sb.from('joint_work_data').select('teams,headcount,items').eq('work_date',today);
+    if(res.error) return;
+    renderJointWorkTodayCard(res.data||[]);
+  }catch(e){}
+}
+function renderJointWorkTodayCard(rows){
+  var cntEl=document.getElementById('dJW'), detailEl=document.getElementById('dJWDetail');
+  if(!cntEl||!detailEl) return;
+  rows=rows||[];
+  cntEl.textContent=rows.length;
+  if(!rows.length){ detailEl.textContent='등록된 공동작업이 없습니다'; return; }
+  var works=[];
+  rows.forEach(function(r){
+    (r.items||[]).forEach(function(it){
+      var t=[it.location, it.work].filter(Boolean).join(' ');
+      if(t) works.push(t);
+    });
+  });
+  var preview=works.slice(0,3).join(', ');
+  var more=works.length>3?(' 외 '+(works.length-3)+'건'):'';
+  detailEl.textContent=(preview||'내용 미입력')+more;
 }
 function renderJointWorkList(){
   var list=document.getElementById('jwList'); if(!list) return;
@@ -7551,6 +7589,7 @@ async function deleteJw(id){
     if(res.error){ toast('삭제 실패: '+res.error.message); return; }
     jointWorkData=jointWorkData.filter(function(r){return r.id!==id;});
     renderJointWorkList();
+    loadJointWorkTodayFromDB();
     toast('✅ 삭제되었습니다');
   }catch(e){ toast('삭제 오류: '+String(e.message||e)); }
 }
@@ -12584,7 +12623,8 @@ async function initAppData(){
     loadIndPrev(),
     loadVocFromDB(),
     loadLostFromDB(),
-    loadWasteFromDB()
+    loadWasteFromDB(),
+    loadJointWorkTodayFromDB()
   ]);
   // 일별 이력 로드
   loadMpHistory();
