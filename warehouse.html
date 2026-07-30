@@ -158,7 +158,8 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
 <!-- ═══ 메인 메뉴(홈) ═══ -->
 <div class="screen on" id="scrHome">
   <div class="card" style="padding:16px 13px">
-    <button class="dash-btn" style="margin-top:0" onclick="go('scrMain')">📋<span>일일 관리대장</span><span class="arrow">창고 선택 →</span></button>
+    <button class="dash-btn" style="margin-top:0" onclick="enterMainAs('ledger')">📋<span>일일 관리대장</span><span class="arrow">창고 선택 →</span></button>
+    <button class="dash-btn" onclick="enterMainAs('receive')">📥<span>입고 처리</span><span class="arrow">창고 선택 →</span></button>
     <button class="dash-btn" onclick="go('scrStats')">📊<span>실시간·기간별 통계</span><span class="arrow">보기 →</span></button>
     <button class="dash-btn" id="itemMasterBtn" style="display:none" onclick="go('scrItemMaster')">🗂️<span>품목마스터 관리</span><span class="arrow">관리 →</span></button>
   </div>
@@ -173,6 +174,7 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
 <!-- ═══ 창고 목록 ═══ -->
 <div class="screen" id="scrMain">
   <button class="sub-back" onclick="go('scrHome')">← 메뉴</button>
+  <div id="mainModeHint" style="display:none;background:#f0fdf4;border:1px solid var(--sky);color:var(--sky3);font-size:12px;font-weight:700;border-radius:var(--r2);padding:9px 12px;margin-bottom:10px">📥 입고 처리할 창고를 선택하세요</div>
   <div class="wh-search">
     <input type="text" id="whSearch" placeholder="창고 위치·실번호·품목으로 검색" oninput="renderWarehouses()">
   </div>
@@ -338,6 +340,8 @@ var ledgerMap={};      // item_id -> {id, prev_qty, in_qty, out_qty, out_by, rem
 var addItemPicked={};  // item_id -> true
 var pinnedItems={};    // item_id -> true (검색으로 수동 선택해 항상 보이게 고정한 품목)
 var itemSearchPicked={}; // 검색 체크리스트에서 임시 선택 중인 item_id
+var whSelectMode='ledger'; // 'ledger' | 'receive' — 창고목록에서 창고 선택시 어느 모드로 들어갈지
+var forceShowAll=false;    // true면 재고0인 품목도 기본으로 전체 표시(입고 처리 모드)
 var curPeriod='week';
 
 function sbFetch(path, opt){
@@ -457,18 +461,25 @@ function renderWarehouses(){
       '<div class="wh-loc">'+esc(w.location_desc)+'</div>'+
       '<div class="wh-meta">'+types.map(function(t){return '<span class="wh-chip">'+esc(t)+'</span>';}).join('')+'</div>'+
       '<div class="wh-teams">👤 '+esc(w.teams)+'</div>';
-    d.onclick=function(){ openWarehouse(w); };
+    d.onclick=function(){ openWarehouse(w, whSelectMode==='receive'); };
     box.appendChild(d);
   });
 }
+function enterMainAs(mode){
+  whSelectMode=mode;
+  var hint=document.getElementById('mainModeHint');
+  hint.style.display = (mode==='receive') ? 'block' : 'none';
+  go('scrMain');
+}
 
 // ═══ 창고 진입 → 관리대장 ═══
-function openWarehouse(w){
+function openWarehouse(w, receiveMode){
   curWarehouse=w;
+  forceShowAll=!!receiveMode;
   pinnedItems={}; itemSearchPicked={};
   document.getElementById('itemFilter').value='';
   document.getElementById('itemSearchCandsWrap').style.display='none';
-  document.getElementById('ledgerWhTitle').textContent=(w.room_no?w.room_no+' · ':'')+w.location_desc;
+  document.getElementById('ledgerWhTitle').textContent=(w.room_no?w.room_no+' · ':'')+w.location_desc+(receiveMode?' · 📥 입고 처리':'');
   document.getElementById('ledgerDate').value=curDate;
   setShift(autoShift());
   go('scrLedger');
@@ -556,8 +567,9 @@ function renderLedgerItems(){
   var q=(document.getElementById('itemFilter').value||'').trim().toLowerCase();
   if(q) return; // 검색 중에는 체크리스트(renderItemSearchCands)가 대신 표시됨
   box.innerHTML='';
-  // 표시 대상: 재고(또는 금일 입출고 활동)가 있는 품목 + 검색으로 선택해 고정한 품목
+  // 표시 대상: 입고 처리 모드는 전체 품목, 그 외에는 재고(또는 금일 입출고 활동)가 있는 품목 + 검색으로 고정한 품목
   var shown=whItems.filter(function(it){
+    if(forceShowAll) return true;
     var L=ledgerMap[it.item_id];
     return L.prev_qty>0 || L.in_qty>0 || L.out_qty>0 || pinnedItems[it.item_id];
   });
