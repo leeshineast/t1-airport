@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#38bdf8">
+<meta name="theme-color" content="#4ade80">
 <title>T1OS 현장점검</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
 :root{
-  --sky:#38bdf8; --sky2:#0ea5e9; --sky3:#0284c7;
+  --sky:#86efac; --sky2:#4ade80; --sky3:#16a34a;
   --g0:#f8fafc; --g1:#f1f5f9; --g2:#e2e8f0; --g3:#94a3b8; --g4:#475569; --g5:#1e293b;
   --danger:#ef4444; --dangerBg:#fee2e2; --ok:#10b981; --okBg:#d1fae5; --warn:#f59e0b; --warnBg:#fef3c7;
   --r1:8px; --r2:12px; --r3:16px;
@@ -21,7 +21,7 @@ select,input[type=text]{width:100%;padding:11px 12px;border:1.5px solid var(--g2
 select:focus,input[type=text]:focus{border-color:var(--sky)}
 textarea{width:100%;padding:11px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;font-family:inherit;background:#fff;color:var(--g5);outline:none;resize:vertical;min-height:64px}
 textarea:focus{border-color:var(--sky)}
-.hdr{background:linear-gradient(135deg,#7dd3fc 0%,#38bdf8 45%,#0ea5e9 100%);padding:14px 16px 16px;padding-top:calc(14px + env(safe-area-inset-top, 10px));color:#fff;border-radius:0 0 20px 20px;box-shadow:0 4px 14px rgba(14,165,233,.22);position:sticky;top:0;z-index:10}
+.hdr{background:linear-gradient(135deg,#bbf7d0 0%,#86efac 45%,#4ade80 100%);padding:14px 16px 16px;padding-top:calc(14px + env(safe-area-inset-top, 10px));color:#fff;border-radius:0 0 20px 20px;box-shadow:0 4px 14px rgba(74,222,128,.25);position:sticky;top:0;z-index:10}
 .back-btn{width:40px;height:40px;font-size:19px}
 .hdr-top{display:flex;align-items:center;gap:10px}
 .back-btn{background:rgba(255,255,255,.22);border:none;color:#fff;width:34px;height:34px;border-radius:10px;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -77,7 +77,7 @@ textarea:focus{border-color:var(--sky)}
 .gate-chip{padding:8px 4px;border:1.5px solid var(--g2);border-radius:var(--r2);background:#fff;font-size:12px;font-weight:700;color:var(--g4);cursor:pointer;text-align:center}
 .gate-chip.on{background:var(--sky2);border-color:var(--sky2);color:#fff}
 .target-tab{padding:6px 12px;border:1.5px solid var(--g2);border-radius:99px;background:#fff;font-size:11.5px;font-weight:700;color:var(--g4);cursor:pointer;white-space:nowrap}
-.target-tab.on{border-color:var(--sky2);color:var(--sky2);background:var(--sky1,#eef6ff)}
+.target-tab.on{border-color:var(--sky2);color:var(--sky2);background:var(--sky1,#f0fdf4)}
 .target-tab.done{background:var(--okBg);border-color:var(--ok);color:#047857}
 .target-tab.done.on{background:var(--ok);color:#fff}
 .chip.ok{background:var(--okBg);color:#047857}
@@ -406,7 +406,7 @@ textarea:focus{border-color:var(--sky)}
         <div class="stat-v" id="dEquip">-<small></small></div>
         <div class="stat-sub" id="dEquipSub"></div>
       </div>
-      <div class="stat-card" style="--ac:#0284c7;--acbg:#e0f2fe">
+      <div class="stat-card" style="--ac:#16a34a;--acbg:#dcfce7">
         <div class="stat-hd"><span class="icon-chip">✈️</span><span class="stat-lb">PBB</span></div>
         <div class="stat-v" id="dPbb">-<small></small></div>
         <div class="stat-sub" id="dPbbSub"></div>
