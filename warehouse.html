@@ -466,11 +466,11 @@ function loadHomeSummary(){
   var box=document.getElementById('homeStockList');
   if(!box) return;
   box.innerHTML='<div class="empty">불러오는 중…</div>';
-  sbFetch('/warehouse_item?select=current_qty,warehouse_id,item_id,item_master(item_name,spec,unit)')
+  sbFetch('/warehouse_item?select=current_qty,warehouse_id,item_id,item_master(item_name,spec,unit)&limit=10000')
     .then(function(r){return r.json();})
     .then(function(wis){
       wis=Array.isArray(wis)?wis:[];
-      return sbFetch('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc&limit=6000')
+      return sbFetch('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc&limit=15000')
         .then(function(r){return r.json();})
         .then(function(ledgers){
           ledgers=Array.isArray(ledgers)?ledgers:[];
@@ -1001,8 +1001,8 @@ function loadWarehouseStats(){
   var grid=document.getElementById('whStatGrid');
   grid.innerHTML='<div class="empty">불러오는 중…</div>';
   Promise.all([
-    sbFetch('/warehouse_item?select=warehouse_id,item_id,current_qty,item_master(item_name)').then(function(r){return r.json();}),
-    sbFetch('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc&limit=8000').then(function(r){return r.json();})
+    sbFetch('/warehouse_item?select=warehouse_id,item_id,current_qty,item_master(item_name)&limit=10000').then(function(r){return r.json();}),
+    sbFetch('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc&limit=15000').then(function(r){return r.json();})
   ]).then(function(res){
     var wis=Array.isArray(res[0])?res[0]:[];
     var ledgers=Array.isArray(res[1])?res[1]:[];
@@ -1049,13 +1049,13 @@ function renderWarehouseStats(){
 function loadLowStock(){
   var box=document.getElementById('lowStockList');
   box.innerHTML='<div class="empty">불러오는 중…</div>';
-  sbFetch('/warehouse_item?select=id,min_qty,current_qty,warehouse_id,item_id,item_master(item_name,spec,unit),warehouse_master(location_desc,room_no)&min_qty=gt.0')
+  sbFetch('/warehouse_item?select=id,min_qty,current_qty,warehouse_id,item_id,item_master(item_name,spec,unit),warehouse_master(location_desc,room_no)&min_qty=gt.0&limit=10000')
     .then(function(r){return r.json();})
     .then(function(wis){
       wis=Array.isArray(wis)?wis:[];
       var whIds=Array.from(new Set(wis.map(function(w){return w.warehouse_id;})));
       if(!whIds.length){ box.innerHTML=''; document.getElementById('lowStockEmpty').style.display='block'; return; }
-      return sbFetch('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc&limit=4000').then(function(r){return r.json();}).then(function(ledgers){
+      return sbFetch('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc&limit=15000').then(function(r){return r.json();}).then(function(ledgers){
         ledgers=Array.isArray(ledgers)?ledgers:[];
         var latest={};
         ledgers.forEach(function(l){ var key=l.warehouse_id+'_'+l.item_id; if(!(key in latest)) latest[key]=l.remain_qty; });
@@ -1098,8 +1098,8 @@ function loadPeriodStats(){
   var r=computeRange(gsMode, anchor);
   Promise.all([
     sbFetch('/warehouse_ledger?select=item_id,in_qty,out_qty,item_master(item_name,spec,unit)&ledger_date=gte.'+r.from+'&ledger_date=lte.'+r.to+'&limit=8000').then(function(rr){return rr.json();}),
-    sbFetch('/warehouse_item?select=warehouse_id,item_id,current_qty').then(function(rr){return rr.json();}),
-    sbFetch('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc&limit=8000').then(function(rr){return rr.json();})
+    sbFetch('/warehouse_item?select=warehouse_id,item_id,current_qty&limit=10000').then(function(rr){return rr.json();}),
+    sbFetch('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc&limit=15000').then(function(rr){return rr.json();})
   ]).then(function(res){
     var rows=Array.isArray(res[0])?res[0]:[];
     var wis=Array.isArray(res[1])?res[1]:[];
