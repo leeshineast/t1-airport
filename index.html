@@ -14394,20 +14394,21 @@ var HEAT_LEVELS=[
   {min:35, label:'폭염경보', icon:'🌡️', color:'#fff', bg:'linear-gradient(135deg,#EA580C,#9A3412)', guide:'오후 2시~5시 무더위 시간대 옥외작업·야외활동을 자제·중지하고, 매시간 휴식을 부여하세요.'},
   {min:33, label:'폭염주의보', icon:'🌡️', color:'#3A2A00', bg:'linear-gradient(135deg,#FBBF24,#F59E0B)', guide:'낮 12시~오후 5시 가장 더운 시간대 야외활동을 자제하고, 규칙적으로 휴식을 제공하세요.'}
 ];
-// 한파: 체감온도 기준(고용노동부 한랭질환 예방 가이드)
+// 한파: 기상청 특보기준 — 10~4월, 아침 최저기온 -12/-15℃ 이하가 2일 이상 지속 예상될 때(또는 전날 대비 급강하+3℃ 이하)
+// ※ 이 앱은 예보가 아닌 실시간 스냅샷 기준 간이 판단입니다. "2일 지속" 등 예보 조건은 정식 기상특보를 참고하세요.
 var COLD_LEVELS=[
   {max:-15, label:'한파경보', icon:'🥶', color:'#fff', bg:'linear-gradient(135deg,#1E3A8A,#1E293B)', guide:'옥외작업을 자제하고, 방한장비(방한복·장갑) 착용 및 실내 휴식공간을 확보하세요.'},
   {max:-12, label:'한파주의보', icon:'🥶', color:'#fff', bg:'linear-gradient(135deg,#3B82F6,#1E3A8A)', guide:'옥외작업 시 체감온도에 유의하고, 규칙적으로 실내에서 몸을 녹이는 시간을 가지세요.'}
 ];
-// 강풍(태풍성 강풍 포함): 평균풍속(m/s) 기준(기상청 강풍특보)
+// 강풍(태풍성 강풍 포함): 기상청 특보기준 — 평균풍속 14/21m/s 이상 '또는' 순간풍속(돌풍) 20/26m/s 이상
 var WIND_LEVELS=[
-  {min:21, label:'강풍경보(태풍성 가능)', icon:'🌀', color:'#fff', bg:'linear-gradient(135deg,#6D28D9,#4C1D95)', guide:'모든 옥외작업·고소작업을 즉시 중지하고, 실외 이동을 자제하세요.'},
-  {min:14, label:'강풍주의보', icon:'💨', color:'#fff', bg:'linear-gradient(135deg,#7C3AED,#5B21B6)', guide:'고소작업·비계작업 등 옥외 고위험 작업을 자제하세요.'}
+  {min:21, gustMin:26, label:'강풍경보(태풍성 가능)', icon:'🌀', color:'#fff', bg:'linear-gradient(135deg,#6D28D9,#4C1D95)', guide:'모든 옥외작업·고소작업을 즉시 중지하고, 실외 이동을 자제하세요.'},
+  {min:14, gustMin:20, label:'강풍주의보', icon:'💨', color:'#fff', bg:'linear-gradient(135deg,#7C3AED,#5B21B6)', guide:'고소작업·비계작업 등 옥외 고위험 작업을 자제하세요.'}
 ];
-// 호우: 3시간 누적 강수량(mm) 기준(기상청 호우특보)
+// 호우: 기상청 특보기준 — 3시간 60/90mm 이상 '또는' 12시간 110/180mm 이상
 var RAIN_LEVELS=[
-  {min:90, label:'호우경보', icon:'⛈️', color:'#fff', bg:'linear-gradient(135deg,#0E7490,#164E63)', guide:'모든 옥외작업을 중지하고, 침수·감전 위험구역 접근을 금지하세요.'},
-  {min:60, label:'호우주의보', icon:'🌧️', color:'#fff', bg:'linear-gradient(135deg,#0891B2,#155E75)', guide:'배수로·저지대 작업을 자제하고, 우천 시 감전·미끄럼 사고에 유의하세요.'}
+  {min3h:90, min12h:180, label:'호우경보', icon:'⛈️', color:'#fff', bg:'linear-gradient(135deg,#0E7490,#164E63)', guide:'모든 옥외작업을 중지하고, 침수·감전 위험구역 접근을 금지하세요.'},
+  {min3h:60, min12h:110, label:'호우주의보', icon:'🌧️', color:'#fff', bg:'linear-gradient(135deg,#0891B2,#155E75)', guide:'배수로·저지대 작업을 자제하고, 우천 시 감전·미끄럼 사고에 유의하세요.'}
 ];
 var _heatCheckedAt=0;
 async function checkHeatAlert(){
@@ -14417,39 +14418,46 @@ async function checkHeatAlert(){
   try{
     var url='https://api.open-meteo.com/v1/forecast?latitude='+T1_LAT+'&longitude='+T1_LNG
       +'&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,wind_gusts_10m'
-      +'&hourly=precipitation&timezone=Asia%2FSeoul&forecast_days=1';
+      +'&wind_speed_unit=ms'
+      +'&hourly=precipitation&timezone=Asia%2FSeoul&forecast_days=1&past_days=1';
     var res=await fetch(url);
     if(!res.ok) return;
     var data=await res.json();
     var cur=data&&data.current;
     if(!cur) return;
-    // 최근 3시간 누적 강수량 계산 (hourly.time에서 현재시각 이하 마지막 3개 합산)
-    var rain3h=cur.precipitation||0;
+    // 최근 3시간·12시간 누적 강수량 계산 (hourly.precipitation에서 현재시각까지 역산 합산)
+    var rain3h=cur.precipitation||0, rain12h=cur.precipitation||0;
     try{
       var hp=data.hourly&&data.hourly.precipitation;
       var ht=data.hourly&&data.hourly.time;
       if(hp&&ht){
         var nowIdx=ht.indexOf(cur.time);
         if(nowIdx<0) nowIdx=ht.length-1;
-        var start=Math.max(0,nowIdx-2);
-        rain3h=hp.slice(start,nowIdx+1).reduce(function(s,v){return s+(v||0);},0);
+        rain3h=hp.slice(Math.max(0,nowIdx-2),nowIdx+1).reduce(function(s,v){return s+(v||0);},0);
+        rain12h=hp.slice(Math.max(0,nowIdx-11),nowIdx+1).reduce(function(s,v){return s+(v||0);},0);
       }
     }catch(e){}
     renderWeatherAlerts({
       feels:cur.apparent_temperature, temp:cur.temperature_2m, hum:cur.relative_humidity_2m,
-      wind:cur.wind_speed_10m, gust:cur.wind_gusts_10m, rain3h:rain3h
+      wind:cur.wind_speed_10m, gust:cur.wind_gusts_10m, rain3h:rain3h, rain12h:rain12h
     });
   }catch(e){ /* 네트워크 오류 시 조용히 무시 */ }
 }
 function weatherBannerHtml(level, title, detailLine){
-  return '<div style="border-radius:var(--r2);padding:12px 14px;background:'+level.bg+'">'
+  return '<div onclick="confirmOpenKma()" style="border-radius:var(--r2);padding:12px 14px;background:'+level.bg+';cursor:pointer">'
     +'<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">'
     +'<span style="font-size:16px">'+level.icon+'</span>'
     +'<span style="font-size:14px;font-weight:800;color:'+level.color+'">'+level.label+' — '+title+'</span>'
     +'</div>'
     +'<div style="font-size:12px;color:'+level.color+';opacity:.92;line-height:1.5">'+level.guide+'</div>'
     +'<div style="font-size:10.5px;color:'+level.color+';opacity:.75;margin-top:4px">'+detailLine+'</div>'
+    +'<div style="font-size:10px;color:'+level.color+';opacity:.7;margin-top:6px;text-decoration:underline">눌러서 기상청 특보 확인하기 →</div>'
     +'</div>';
+}
+function confirmOpenKma(){
+  if(confirm('기상청 날씨누리(특보 종합) 페이지로 이동할까요?\n외부 사이트가 새 창으로 열립니다.')){
+    window.open('https://www.weather.go.kr/w/special-report/overall.do', '_blank');
+  }
 }
 function renderWeatherAlerts(w){
   var wrap=document.getElementById('weatherAlertWrap');
@@ -14457,12 +14465,16 @@ function renderWeatherAlerts(w){
   var html='';
   var heat=HEAT_LEVELS.find(function(l){ return w.feels>=l.min; });
   if(heat) html+=weatherBannerHtml(heat, '체감온도 '+Math.round(w.feels)+'℃', '기온 '+Math.round(w.temp)+'℃ · 습도 '+Math.round(w.hum)+'%');
-  var cold=COLD_LEVELS.find(function(l){ return w.feels<=l.max; });
-  if(cold) html+=weatherBannerHtml(cold, '체감온도 '+Math.round(w.feels)+'℃', '기온 '+Math.round(w.temp)+'℃ · 습도 '+Math.round(w.hum)+'%');
-  var wind=WIND_LEVELS.find(function(l){ return w.wind>=l.min; });
+  // 한파: 기상청 기준은 '아침 최저기온'이나, 실시간 판단이라 현재기온으로 근사
+  var cold=COLD_LEVELS.find(function(l){ return w.temp<=l.max; });
+  if(cold) html+=weatherBannerHtml(cold, '기온 '+Math.round(w.temp)+'℃', '체감온도 '+Math.round(w.feels)+'℃ · 습도 '+Math.round(w.hum)+'%');
+  // 강풍: 평균풍속 또는 순간풍속(돌풍) 둘 중 하나라도 기준 이상이면 해당 단계
+  var wind=WIND_LEVELS.find(function(l){ return w.wind>=l.min || (w.gust!=null && w.gust>=l.gustMin); });
   if(wind) html+=weatherBannerHtml(wind, '풍속 '+Math.round(w.wind)+'m/s', '순간최대풍속 '+Math.round(w.gust||w.wind)+'m/s');
-  var rain=RAIN_LEVELS.find(function(l){ return w.rain3h>=l.min; });
-  if(rain) html+=weatherBannerHtml(rain, '3시간 누적 '+Math.round(w.rain3h)+'mm', '최근 3시간 누적 강수량 기준');
+  // 호우: 3시간 또는 12시간 누적 강수량 둘 중 하나라도 기준 이상이면 해당 단계
+  var rain=RAIN_LEVELS.find(function(l){ return w.rain3h>=l.min3h || w.rain12h>=l.min12h; });
+  if(rain) html+=weatherBannerHtml(rain, '3시간 '+Math.round(w.rain3h)+'mm · 12시간 '+Math.round(w.rain12h)+'mm', '기상청 호우특보 기준(3시간·12시간 누적 중 큰 쪽)');
+  if(html) html+='<div style="font-size:9.5px;color:var(--g3);text-align:center;padding:2px 4px">※ 실시간 관측값 기준 간이 판단이며, 공식 기상특보는 기상청 발표를 따르세요</div>';
   wrap.innerHTML=html;
 }
 
