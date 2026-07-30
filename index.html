@@ -2131,6 +2131,12 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
           <tr><td class="rpt-lbl">조치내용</td><td colspan="3"><textarea class="rpt-edit" id="rptAction" rows="2"></textarea></td></tr>
           <tr><td class="rpt-lbl" colspan="4" style="text-align:center">상황 사진 별첨</td></tr>
           <tr><td colspan="4" style="height:160px"></td></tr>
+          <tr id="rptNoteRow" style="display:none">
+            <td class="rpt-lbl" colspan="4" style="text-align:center">업무 진행 사항 및 특이사항</td>
+          </tr>
+          <tr id="rptNoteRow2" style="display:none">
+            <td colspan="4"><textarea class="rpt-edit" id="rptNote" rows="3"></textarea></td>
+          </tr>
         </table>
       </div>
       <div class="no-print" style="display:flex;gap:8px;margin-top:14px">
@@ -15202,11 +15208,11 @@ function openReport(type, id){
     var dt2=r.ho_date||r.created_at;
     var rcvMatch=(r.facility||'').match(/\[접수자\]\s*([^\/]+?)(?=\s*\/\s*\[|$)/);
     f={
-      reporter:r.author||'(해당팀장)', datetime:fmtKDT(dt2), location:(fp&&fp.loc)||'',
+      reporter:(fp&&fp.reporter)||r.author||'(해당팀장)', datetime:fmtKDT(dt2), location:(fp&&fp.loc)||'',
       time:dt2?new Date(dt2).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'}):'',
       content:(fp&&fp.desc)||'', finderLbl:'작성자', finder:r.author||'', idLbl:'팀', id2:r.team||'',
       channel:(fp&&fp.type)||'', actor:rcvMatch?rcvMatch[1].trim():(r.confirmed_by||''), action:r.confirmed?'확인완료':'대기 중',
-      title:'상황발생보고서', bigTitle:'상 황 발 생 보 고 서'
+      title:'상황발생보고서', bigTitle:'상 황 발 생 보 고 서', note:r.notice||''
     };
   }else if(type==='voc'){
     r=(vocData||[]).find(function(x){return x.id===id;});
@@ -15249,6 +15255,13 @@ function openReport(type, id){
   document.getElementById('rptChannel').textContent=f.channel;
   document.getElementById('rptActor').textContent=f.actor;
   document.getElementById('rptAction').value=f.action;
+  var noteRow1=document.getElementById('rptNoteRow'), noteRow2=document.getElementById('rptNoteRow2');
+  if(f.note!==undefined){
+    noteRow1.style.display=''; noteRow2.style.display='';
+    document.getElementById('rptNote').value=f.note;
+  }else{
+    noteRow1.style.display='none'; noteRow2.style.display='none';
+  }
   showM('reportModal');
 }
 function printReport(){
@@ -15261,6 +15274,8 @@ function downloadReportExcel(){
   var location=document.getElementById('rptLocation2').value;
   var content=document.getElementById('rptContent').value;
   var action=document.getElementById('rptAction').value;
+  var hasNote=(f.note!==undefined);
+  var note=hasNote?document.getElementById('rptNote').value:'';
   try{
     var rows=[
       [f.bigTitle,'','',''],
@@ -15278,8 +15293,12 @@ function downloadReportExcel(){
       ['','조치내용',action,''],
       ['상황 사진 별첨','','','']
     ];
+    if(hasNote){
+      rows.push(['업무 진행 사항 및 특이사항','','','']);
+      rows.push([note,'','','']);
+    }
     var ws=XLSX.utils.aoa_to_sheet(rows);
-    ws['!merges']=[
+    var merges=[
       {s:{r:0,c:0},e:{r:0,c:3}},
       {s:{r:4,c:0},e:{r:9,c:0}},
       {s:{r:4,c:2},e:{r:4,c:3}},{s:{r:5,c:2},e:{r:5,c:3}},{s:{r:6,c:2},e:{r:6,c:3}},
@@ -15288,8 +15307,15 @@ function downloadReportExcel(){
       {s:{r:11,c:2},e:{r:11,c:3}},{s:{r:12,c:2},e:{r:12,c:3}},
       {s:{r:13,c:0},e:{r:13,c:3}}
     ];
+    if(hasNote){
+      merges.push({s:{r:14,c:0},e:{r:14,c:3}});
+      merges.push({s:{r:15,c:0},e:{r:15,c:3}});
+    }
+    ws['!merges']=merges;
     ws['!cols']=[{wch:14},{wch:14},{wch:26},{wch:14}];
-    ws['!rows']=[{hpt:26},{},{},{},{},{},{},{},{},{},{},{},{},{hpt:120}];
+    var rowHeights=[{hpt:26},{},{},{},{},{},{},{},{},{},{},{},{},{hpt:120}];
+    if(hasNote){ rowHeights.push({}); rowHeights.push({hpt:80}); }
+    ws['!rows']=rowHeights;
     // 스타일 적용 (xlsx-js-style)
     var borderThin={style:'thin',color:{rgb:'333333'}};
     var allBorder={top:borderThin,bottom:borderThin,left:borderThin,right:borderThin};
@@ -15297,7 +15323,6 @@ function downloadReportExcel(){
     var valueStyle={alignment:{vertical:'center',wrapText:true},border:allBorder};
     var titleStyle={font:{bold:true,sz:18},alignment:{horizontal:'center',vertical:'center'}};
     var sectionStyle={font:{bold:true},fill:{fgColor:{rgb:'FAFAFA'}},border:allBorder};
-    var labelCells=['A1','A3','C3','A4','C4','A5','B5','B6','B7','B8','B9','B10','B12','A11','B13','A14'];
     var range=XLSX.utils.decode_range(ws['!ref']);
     for(var R=range.s.r;R<=range.e.r;++R){
       for(var C=range.s.c;C<=range.e.c;++C){
@@ -15307,6 +15332,8 @@ function downloadReportExcel(){
         if(R===1) continue;
         if(R===10){ ws[addr].s=sectionStyle; continue; }
         if(R===13){ ws[addr].s=(C===0)?Object.assign({},labelStyle,{fontSize:11}):valueStyle; continue; }
+        if(hasNote&&R===14){ ws[addr].s=Object.assign({},labelStyle,{fontSize:11}); continue; }
+        if(hasNote&&R===15){ ws[addr].s=valueStyle; continue; }
         var isLabelCol=(R>=4&&R<=9)?(C===1):(C===0||C===2);
         ws[addr].s=isLabelCol?labelStyle:valueStyle;
       }
