@@ -159,10 +159,9 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
     <button class="dash-btn" id="itemMasterBtn" style="display:none" onclick="go('scrItemMaster')">🗂️<span>품목마스터 관리</span><span class="arrow">관리 →</span></button>
   </div>
   <div class="sec-title" style="margin-top:14px">📦 사업부 전체 재고현황</div>
-  <div class="stat-grid" id="homeStatGrid">
+  <div class="stat-grid" id="homeStatGrid" style="grid-template-columns:repeat(3,1fr)">
     <div class="stat-card" style="--ac:var(--sky2);--acbg:#eef6ff"><div class="stat-lb">창고</div><div class="stat-v" id="homeWhCount">0<small>개</small></div></div>
-    <div class="stat-card" style="--ac:#8b5cf6;--acbg:#f3e8ff"><div class="stat-lb">등록 품목</div><div class="stat-v" id="homeItemCount">0<small>개</small></div></div>
-    <div class="stat-card" style="--ac:var(--ok);--acbg:var(--okBg)"><div class="stat-lb">전체 재고 수량</div><div class="stat-v" id="homeStockSum">0<small>개</small></div></div>
+    <div class="stat-card" style="--ac:var(--ok);--acbg:var(--okBg)"><div class="stat-lb">재고 보유 품목</div><div class="stat-v" id="homeStockSum">0<small>개</small></div></div>
     <div class="stat-card" style="--ac:var(--danger);--acbg:var(--dangerBg)"><div class="stat-lb">부족 품목</div><div class="stat-v" id="homeLowCount">0<small>건</small></div></div>
   </div>
   <div class="db-banner"><span class="dot" id="dbDot"></span><span id="dbMsg">DB 연결 확인 중…</span></div>
@@ -202,10 +201,12 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
       </div>
     </div>
     <div class="info-grid">
-      <div><div class="f-label">오전 팀</div><input type="text" id="teamAm" placeholder="예: 환경4팀"></div>
-      <div><div class="f-label">오전 조장</div><input type="text" id="leaderAm" placeholder="조장 이름" list="leaderList"></div>
-      <div><div class="f-label">오후 팀</div><input type="text" id="teamPm" placeholder="예: 환경9팀"></div>
-      <div><div class="f-label">오후 담당자</div><input type="text" id="leaderPm" placeholder="담당자 이름" list="leaderList"></div>
+      <div><div class="f-label">오전 팀</div><input type="text" id="teamAm" placeholder="없으면 공란"></div>
+      <div><div class="f-label">오전 작성자</div><input type="text" id="leaderAm" placeholder="없으면 공란" list="leaderList"></div>
+      <div><div class="f-label">오후 팀</div><input type="text" id="teamPm" placeholder="없으면 공란"></div>
+      <div><div class="f-label">오후 작성자</div><input type="text" id="leaderPm" placeholder="없으면 공란" list="leaderList"></div>
+      <div><div class="f-label">야간 팀</div><input type="text" id="teamNight" placeholder="없으면 공란"></div>
+      <div><div class="f-label">야간 작성자</div><input type="text" id="leaderNight" placeholder="없으면 공란" list="leaderList"></div>
     </div>
     <datalist id="leaderList"></datalist>
   </div>
@@ -385,11 +386,10 @@ function loadMasters(){
   }).catch(function(){ dot.classList.remove('ok'); msg.textContent='DB 연결 실패 — 네트워크를 확인하세요'; });
 }
 function loadHomeSummary(){
-  var whEl=document.getElementById('homeWhCount'), itEl=document.getElementById('homeItemCount'),
+  var whEl=document.getElementById('homeWhCount'),
       sumEl=document.getElementById('homeStockSum'), lowEl=document.getElementById('homeLowCount');
   if(!whEl) return;
   whEl.textContent=WAREHOUSES.length;
-  itEl.textContent=ITEMS.length;
   sbFetch('/warehouse_item?select=current_qty,min_qty,warehouse_id,item_id')
     .then(function(r){return r.json();})
     .then(function(wis){
@@ -400,14 +400,14 @@ function loadHomeSummary(){
           ledgers=Array.isArray(ledgers)?ledgers:[];
           var latest={};
           ledgers.forEach(function(l){ var k=l.warehouse_id+'_'+l.item_id; if(!(k in latest)) latest[k]=l.remain_qty; });
-          var sum=0, low=0;
+          var haveStock=0, low=0;
           wis.forEach(function(w){
             var k=w.warehouse_id+'_'+w.item_id;
             var stock = k in latest ? latest[k] : (w.current_qty||0);
-            sum+=stock;
+            if(stock>0) haveStock++;
             if(w.min_qty>0 && stock<w.min_qty) low++;
           });
-          sumEl.textContent=sum.toLocaleString();
+          sumEl.textContent=haveStock.toLocaleString();
           lowEl.textContent=low;
         });
     }).catch(function(){});
@@ -458,6 +458,7 @@ function onDateChange(){
 function loadDailyHeader(){
   document.getElementById('teamAm').value=''; document.getElementById('leaderAm').value='';
   document.getElementById('teamPm').value=''; document.getElementById('leaderPm').value='';
+  document.getElementById('teamNight').value=''; document.getElementById('leaderNight').value='';
   sbFetch('/warehouse_daily?warehouse_id=eq.'+curWarehouse.id+'&ledger_date=eq.'+curDate+'&select=*&limit=1')
     .then(function(r){return r.json();}).then(function(rows){
       if(Array.isArray(rows)&&rows[0]){
@@ -466,9 +467,12 @@ function loadDailyHeader(){
         document.getElementById('leaderAm').value=h.leader_am||'';
         document.getElementById('teamPm').value=h.team_pm||'';
         document.getElementById('leaderPm').value=h.leader_pm||'';
+        document.getElementById('teamNight').value=h.team_night||'';
+        document.getElementById('leaderNight').value=h.leader_night||'';
       } else if(me){
         if(curShift==='오전'){ document.getElementById('teamAm').value=me.team||''; document.getElementById('leaderAm').value=me.name||''; }
         else if(curShift==='오후'){ document.getElementById('teamPm').value=me.team||''; document.getElementById('leaderPm').value=me.name||''; }
+        else if(curShift==='야간'){ document.getElementById('teamNight').value=me.team||''; document.getElementById('leaderNight').value=me.name||''; }
       }
     }).catch(function(){});
 }
@@ -522,8 +526,26 @@ function renderLedgerItems(){
   var box=document.getElementById('ledgerItems');
   var q=(document.getElementById('itemFilter').value||'').trim().toLowerCase();
   box.innerHTML='';
-  var shown=whItems.filter(function(it){ return !q || (it.item_name+' '+it.spec).toLowerCase().indexOf(q)>=0; });
-  document.getElementById('ledgerEmpty').style.display = whItems.length? 'none':'block';
+  var shown;
+  if(!q){
+    // 기본: 현재 재고(또는 금일 입출고 활동)가 있는 품목만 표시
+    shown=whItems.filter(function(it){
+      var L=ledgerMap[it.item_id];
+      return L.prev_qty>0 || L.in_qty>0 || L.out_qty>0;
+    });
+  }else{
+    // 검색 시: 전체 품목 대상 (가나다순은 whItems 정렬로 이미 보장)
+    shown=whItems.filter(function(it){ return (it.item_name+' '+it.spec).toLowerCase().indexOf(q)>=0; });
+  }
+  if(!whItems.length){
+    document.getElementById('ledgerEmpty').style.display='block';
+    document.getElementById('ledgerEmpty').textContent="이 창고에 배정된 품목이 없습니다. '+ 품목추가'로 등록하세요.";
+  }else if(!shown.length){
+    document.getElementById('ledgerEmpty').style.display='block';
+    document.getElementById('ledgerEmpty').textContent = q ? '검색 결과가 없습니다.' : '현재 재고가 있는 품목이 없습니다. 검색으로 전체 품목을 찾아 입고 처리하세요.';
+  }else{
+    document.getElementById('ledgerEmpty').style.display='none';
+  }
   var inputOk=canInput();
   shown.forEach(function(it){
     var L=ledgerMap[it.item_id];
@@ -534,18 +556,13 @@ function renderLedgerItems(){
     d.innerHTML=
       '<div class="item-top">'+
         '<div><div class="item-name">'+esc(it.item_name)+(low?' 🔴':'')+'</div><div class="item-spec">'+esc(it.spec)+(it.unit?' · '+esc(it.unit):'')+(it.min_qty>0?'<span class="badge-min">최소 '+it.min_qty+'</span>':'')+'</div></div>'+
-        '<div class="item-remain"><small>잔여</small><span id="rem_'+it.item_id+'">'+remainDisplay(L.remain_qty)+'</span></div>'+
+        '<div class="item-remain"><small>현재고</small><span id="rem_'+it.item_id+'">'+remainDisplay(L.remain_qty)+'</span></div>'+
       '</div>'+
       '<div class="item-nums">'+
         '<div><label>전일재고</label><input type="number" value="'+L.prev_qty+'" readonly style="background:var(--g1);color:var(--g4)"></div>'+
-        '<div><label>입고</label><input type="number" id="in_'+it.item_id+'" value="'+L.in_qty+'" '+(inputOk?'':'readonly')+' oninput="onQtyChange(\''+it.item_id+'\')"></div>'+
-        '<div><label>출고</label><input type="number" id="out_'+it.item_id+'" value="'+L.out_qty+'" '+(inputOk?'':'readonly')+' oninput="onQtyChange(\''+it.item_id+'\')"></div>'+
-      '</div>'+
-      '<div class="item-extra">'+
-        '<div><label>출고자</label><input type="text" id="outby_'+it.item_id+'" value="'+esc(L.out_by)+'" list="leaderList" placeholder="이름 (직접입력 가능)" '+(inputOk?'':'readonly')+'></div>'+
-        '<div><label>작성자</label><input type="text" id="wrby_'+it.item_id+'" value="'+esc(L.written_by||(me?me.name:''))+'" list="leaderList" placeholder="이름 (직접입력 가능)" '+(inputOk?'':'readonly')+'></div>'+
-      '</div>'+
-      '<div class="item-note"><label>특이사항</label><input type="text" id="note_'+it.item_id+'" value="'+esc(L.note)+'" placeholder="특이사항 (선택)" '+(inputOk?'':'readonly')+'></div>';
+        '<div><label>입고</label><input type="number" id="in_'+it.item_id+'" value="'+(L.in_qty||'')+'" placeholder="0" '+(inputOk?'':'readonly')+' onfocus="this.select()" oninput="onQtyChange(\''+it.item_id+'\')"></div>'+
+        '<div><label>출고</label><input type="number" id="out_'+it.item_id+'" value="'+(L.out_qty||'')+'" placeholder="0" '+(inputOk?'':'readonly')+' onfocus="this.select()" oninput="onQtyChange(\''+it.item_id+'\')"></div>'+
+      '</div>';
     box.appendChild(d);
   });
 }
@@ -563,13 +580,17 @@ function onQtyChange(itemId){
   }
 }
 
+function currentWriter(){
+  return document.getElementById('leaderAm').value || document.getElementById('leaderPm').value || document.getElementById('leaderNight').value || (me?me.name:'');
+}
 function saveLedger(){
   if(!canInput()){ toast('입력 권한이 없습니다'); return; }
   var btn=document.getElementById('ledgerSaveBtn'); btn.disabled=true; btn.textContent='저장 중…';
   var headerRec={
     ledger_date:curDate, warehouse_id:curWarehouse.id,
     team_am:document.getElementById('teamAm').value||null, leader_am:document.getElementById('leaderAm').value||null,
-    team_pm:document.getElementById('teamPm').value||null, leader_pm:document.getElementById('leaderPm').value||null
+    team_pm:document.getElementById('teamPm').value||null, leader_pm:document.getElementById('leaderPm').value||null,
+    team_night:document.getElementById('teamNight').value||null, leader_night:document.getElementById('leaderNight').value||null
   };
   var headerSave=sbFetch('/warehouse_daily?warehouse_id=eq.'+curWarehouse.id+'&ledger_date=eq.'+curDate+'&select=id')
     .then(function(r){return r.json();})
@@ -577,17 +598,20 @@ function saveLedger(){
       if(Array.isArray(rows)&&rows.length) return sbFetch('/warehouse_daily?id=eq.'+rows[0].id,{method:'PATCH',body:headerRec,headers:{'Prefer':'return=minimal'}});
       return sbFetch('/warehouse_daily',{method:'POST',body:headerRec,headers:{'Prefer':'return=minimal'}});
     });
-  var itemSaves=whItems.map(function(it){
+  var writer=currentWriter();
+  var teamVal=document.getElementById('teamAm').value||document.getElementById('teamPm').value||document.getElementById('teamNight').value||null;
+  var itemSaves=whItems.filter(function(it){
+    var inEl=document.getElementById('in_'+it.item_id), outEl=document.getElementById('out_'+it.item_id);
+    // 화면에 표시되지 않은(검색 밖) 품목은 건드리지 않음
+    return inEl && outEl;
+  }).map(function(it){
     var inQ=parseInt((document.getElementById('in_'+it.item_id)||{}).value||'0',10)||0;
     var outQ=parseInt((document.getElementById('out_'+it.item_id)||{}).value||'0',10)||0;
-    var outBy=(document.getElementById('outby_'+it.item_id)||{}).value||'';
-    var wrBy=(document.getElementById('wrby_'+it.item_id)||{}).value||'';
-    var note=(document.getElementById('note_'+it.item_id)||{}).value||'';
     var L=ledgerMap[it.item_id];
     var remain=L.prev_qty+inQ-outQ;
-    var rec={ledger_date:curDate, shift:curShift, warehouse_id:curWarehouse.id, team:document.getElementById('teamAm').value||document.getElementById('teamPm').value||null,
-      leader_name:document.getElementById('leaderAm').value||document.getElementById('leaderPm').value||null,
-      item_id:it.item_id, prev_qty:L.prev_qty, in_qty:inQ, out_qty:outQ, out_by:outBy, remain_qty:remain, note:note, written_by:wrBy, updated_at:new Date().toISOString()};
+    var rec={ledger_date:curDate, shift:curShift, warehouse_id:curWarehouse.id, team:teamVal,
+      leader_name:writer,
+      item_id:it.item_id, prev_qty:L.prev_qty, in_qty:inQ, out_qty:outQ, out_by:writer, remain_qty:remain, note:L.note||null, written_by:writer, updated_at:new Date().toISOString()};
     if(L.id) return sbFetch('/warehouse_ledger?id=eq.'+L.id,{method:'PATCH',body:rec,headers:{'Prefer':'return=minimal'}});
     return sbFetch('/warehouse_ledger',{method:'POST',body:rec,headers:{'Prefer':'return=minimal'}});
   });
@@ -667,34 +691,38 @@ function buildLedgerDoc(){
   var w=curWarehouse||{};
   var teamAm=document.getElementById('teamAm').value||'', leaderAm=document.getElementById('leaderAm').value||'';
   var teamPm=document.getElementById('teamPm').value||'', leaderPm=document.getElementById('leaderPm').value||'';
+  var teamNight=document.getElementById('teamNight').value||'', leaderNight=document.getElementById('leaderNight').value||'';
+  var amText=(teamAm||leaderAm)?(teamAm+' '+leaderAm).trim():'-';
+  var pmText=(teamPm||leaderPm)?(teamPm+' '+leaderPm).trim():'-';
+  var ngText=(teamNight||leaderNight)?(teamNight+' '+leaderNight).trim():'-';
+  var writer=currentWriter();
   var rows=[];
-  rows.push([{v:'환경미화 자재 입·출고 관리대장(서브창고)',cls:'tt',cs:10}]);
+  rows.push([{v:'환경미화 자재 입·출고 관리대장(서브창고)',cls:'tt',cs:8}]);
   rows.push([
-    {v:'오전 팀',cls:'hd'},{v:'오전 팀장',cls:'hd'},{v:'오후 팀',cls:'hd'},{v:'오후 담당자',cls:'hd'},
-    {v:'위치',cls:'hd'},{v:'실번호',cls:'hd'},{v:'일자',cls:'hd',cs:4}
+    {v:'오전',cls:'hd'},{v:'오후',cls:'hd'},{v:'야간',cls:'hd'},
+    {v:'위치',cls:'hd'},{v:'실번호',cls:'hd'},{v:'일자',cls:'hd',cs:3}
   ]);
   rows.push([
-    {v:teamAm},{v:leaderAm},{v:teamPm},{v:leaderPm},{v:w.location_desc||'',cls:'lf'},{v:w.room_no||''},{v:curDate,cs:4}
+    {v:amText},{v:pmText},{v:ngText},{v:w.location_desc||'',cls:'lf'},{v:w.room_no||''},{v:curDate,cs:3}
   ]);
   rows.push([
     {v:'품목명',cls:'hd'},{v:'규격',cls:'hd'},{v:'전일재고',cls:'hd'},{v:'입고수량',cls:'hd'},
-    {v:'출고수량',cls:'hd'},{v:'출고자',cls:'hd'},{v:'잔여수량',cls:'hd'},{v:'특이사항',cls:'hd'},{v:'작성자',cls:'hd'},{v:'',cls:'hd'}
+    {v:'출고수량',cls:'hd'},{v:'현재고',cls:'hd'},{v:'작성자',cls:'hd'},{v:'',cls:'hd'}
   ]);
-  whItems.forEach(function(it){
-    var L=ledgerMap[it.item_id]||{prev_qty:0,in_qty:0,out_qty:0,out_by:'',remain_qty:0,note:'',written_by:''};
-    var inQ=parseInt((document.getElementById('in_'+it.item_id)||{}).value||L.in_qty||0,10)||0;
-    var outQ=parseInt((document.getElementById('out_'+it.item_id)||{}).value||L.out_qty||0,10)||0;
-    var outBy=(document.getElementById('outby_'+it.item_id)||{}).value||L.out_by||'';
-    var wrBy=(document.getElementById('wrby_'+it.item_id)||{}).value||L.written_by||'';
-    var note=(document.getElementById('note_'+it.item_id)||{}).value||L.note||'';
+  var listed = whItems.filter(function(it){ return document.getElementById('in_'+it.item_id); });
+  (listed.length?listed:whItems).forEach(function(it){
+    var L=ledgerMap[it.item_id]||{prev_qty:0,in_qty:0,out_qty:0,remain_qty:0};
+    var inEl=document.getElementById('in_'+it.item_id), outEl=document.getElementById('out_'+it.item_id);
+    var inQ=parseInt((inEl&&inEl.value)||L.in_qty||0,10)||0;
+    var outQ=parseInt((outEl&&outEl.value)||L.out_qty||0,10)||0;
     var remain=L.prev_qty+inQ-outQ;
     var low=it.min_qty>0 && remain<it.min_qty;
     rows.push([
-      {v:it.item_name,cls:'lf'},{v:it.spec,cls:'lf'},{v:L.prev_qty},{v:inQ||''},{v:outQ||''},{v:outBy},
-      {v:remain,cls:low?'bx':''},{v:note,cls:'lf'},{v:wrBy},{v:'',cls:'lf'}
+      {v:it.item_name,cls:'lf'},{v:it.spec,cls:'lf'},{v:L.prev_qty},{v:inQ||''},{v:outQ||''},
+      {v:remain,cls:low?'bx':''},{v:writer,cls:'lf'},{v:'',cls:'lf'}
     ]);
   });
-  return {title:'창고재고관리대장_'+(w.room_no||'')+'_'+curDate, cols:[10,14,7,7,7,8,7,14,8,4], rows:rows};
+  return {title:'창고재고관리대장_'+(w.room_no||'')+'_'+curDate, cols:[14,7,7,7,8,7,8,4], rows:rows};
 }
 function docToHTML(doc){
   var h='<table>';
@@ -879,7 +907,6 @@ function reloadItemsAndRender(){
   sbFetch('/item_master?select=*&active=eq.true&order=item_name').then(function(r){return r.json();}).then(function(d){
     ITEMS=Array.isArray(d)?d:[];
     renderItemMaster();
-    var hi=document.getElementById('homeItemCount'); if(hi) hi.textContent=ITEMS.length;
   });
 }
 function renderItemMaster(){
