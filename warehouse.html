@@ -651,7 +651,7 @@ function renderLedgerItems(){
     document.getElementById('ledgerEmpty').textContent="이 창고에 배정된 품목이 없습니다. '+ 신규품목'으로 등록하세요.";
   }else if(!shown.length){
     document.getElementById('ledgerEmpty').style.display='block';
-    document.getElementById('ledgerEmpty').textContent='현재 재고가 있는 품목이 없습니다. 검색으로 품목을 찾아 입고 처리하세요.';
+    document.getElementById('ledgerEmpty').innerHTML='이 창고는 아직 등록된 재고가 없습니다.<br><button class="mini-btn" style="margin-top:9px" onclick="forceShowAll=true;renderLedgerItems();">📥 전체 품목 보고 입고 입력하기</button>';
   }else{
     document.getElementById('ledgerEmpty').style.display='none';
   }
@@ -755,8 +755,11 @@ function saveLedger(){
   var teamVal=document.getElementById('teamAm').value||document.getElementById('teamPm').value||document.getElementById('teamNight').value||null;
   var itemSaves=whItems.filter(function(it){
     var inEl=document.getElementById('in_'+it.item_id), outEl=document.getElementById('out_'+it.item_id);
-    // 화면에 표시되지 않은(검색 밖) 품목은 건드리지 않음
-    return inEl && outEl;
+    if(!inEl || !outEl) return false; // 화면에 표시되지 않은(검색 밖) 품목은 건드리지 않음
+    var inQ=parseInt(inEl.value||'0',10)||0, outQ=parseInt(outEl.value||'0',10)||0;
+    var L=ledgerMap[it.item_id];
+    // 입고/출고가 전혀 없고 기존 기록도 없는 품목은 불필요한 0/0 이력을 만들지 않도록 건너뜀
+    return inQ>0 || outQ>0 || !!L.id;
   }).map(function(it){
     var inQ=parseInt((document.getElementById('in_'+it.item_id)||{}).value||'0',10)||0;
     var outQ=parseInt((document.getElementById('out_'+it.item_id)||{}).value||'0',10)||0;
@@ -1044,9 +1047,9 @@ function loadPeriodStats(){
       if(!agg[key]) agg[key]={name:(x.item_master||{}).item_name||'-', unit:(x.item_master||{}).unit||'', inSum:0, outSum:0};
       agg[key].inSum+=x.in_qty||0; agg[key].outSum+=x.out_qty||0;
     });
-    var list=Object.values(agg).sort(function(a,b){return (b.inSum+b.outSum)-(a.inSum+a.outSum);});
+    var list=Object.values(agg).filter(function(x){ return x.inSum!==0 || x.outSum!==0; }).sort(function(a,b){return (b.inSum+b.outSum)-(a.inSum+a.outSum);});
     tbody.innerHTML='';
-    if(!list.length){ tbody.innerHTML='<tr><td colspan="4" class="empty">기간 내 기록이 없습니다</td></tr>'; return; }
+    if(!list.length){ tbody.innerHTML='<tr><td colspan="4" class="empty">기간 내 입출고 기록이 없습니다</td></tr>'; return; }
     list.slice(0,100).forEach(function(x){
       var tr=document.createElement('tr');
       tr.innerHTML='<td class="lf">'+esc(x.name)+'</td><td>'+x.inSum+'</td><td>'+x.outSum+'</td><td>'+(x.inSum-x.outSum)+'</td>';
