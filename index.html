@@ -2092,6 +2092,49 @@ html{overflow-x:hidden}
 
 <!-- 습득물 초기화 모달 -->
 <!-- 습득물 처리완료 모달 -->
+<!-- 상황발생보고서 (습득물/인수인계/민원 공용) -->
+<style>
+@media print{
+  body *{visibility:hidden}
+  #reportPrintArea, #reportPrintArea *{visibility:visible}
+  #reportPrintArea{position:absolute;top:0;left:0;width:100%;margin:0;padding:20px}
+  #reportModal{position:static !important;background:none !important}
+  .no-print{display:none !important}
+}
+.rpt-table{width:100%;border-collapse:collapse;font-size:13px}
+.rpt-table td{border:1px solid #333;padding:8px 10px;vertical-align:middle}
+.rpt-lbl{background:#F2F2F2;font-weight:700;text-align:center;white-space:nowrap}
+</style>
+<div id="reportModal" class="modal-bg">
+  <div class="modal" style="max-width:520px;max-height:92vh;overflow-y:auto">
+    <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📄 상황발생보고서</h3><button class="m-x" onclick="hideM('reportModal')">×</button></div>
+    <div style="padding:15px 17px">
+      <div id="reportPrintArea" style="background:white;padding:16px;border:1px solid #ccc">
+        <div style="text-align:center;font-size:19px;font-weight:800;letter-spacing:6px;margin-bottom:14px">상 황 발 생 보 고 서</div>
+        <table class="rpt-table">
+          <tr><td class="rpt-lbl" style="width:20%">사업부명</td><td style="width:30%" id="rptDept">T1환경미화사업부</td><td class="rpt-lbl" style="width:20%">보고자</td><td style="width:30%" id="rptReporter"></td></tr>
+          <tr><td class="rpt-lbl">발생일시</td><td id="rptDatetime"></td><td class="rpt-lbl">발생장소</td><td id="rptLocation"></td></tr>
+          <tr><td class="rpt-lbl" rowspan="6" style="text-align:center">상황내용</td><td class="rpt-lbl">발생시간</td><td colspan="2" id="rptTime"></td></tr>
+          <tr><td class="rpt-lbl">발생장소</td><td colspan="2" id="rptLocation2"></td></tr>
+          <tr><td class="rpt-lbl">상황내용</td><td colspan="2" id="rptContent"></td></tr>
+          <tr><td class="rpt-lbl" id="rptFinderLbl">발견자</td><td colspan="2" id="rptFinder"></td></tr>
+          <tr><td class="rpt-lbl" id="rptIdLbl">사번</td><td colspan="2" id="rptId"></td></tr>
+          <tr><td class="rpt-lbl">상황접수</td><td colspan="2" id="rptChannel"></td></tr>
+          <tr><td colspan="4" style="font-weight:800;background:#fafafa">□ 조치사항</td></tr>
+          <tr><td class="rpt-lbl">조치자</td><td colspan="3" id="rptActor"></td></tr>
+          <tr><td class="rpt-lbl">조치내용</td><td colspan="3" id="rptAction"></td></tr>
+          <tr><td class="rpt-lbl" colspan="4" style="text-align:center">사진대지 (출력 후 사진 부착)</td></tr>
+          <tr><td colspan="4" style="height:160px"></td></tr>
+        </table>
+      </div>
+      <div class="no-print" style="display:flex;gap:8px;margin-top:14px">
+        <button onclick="printReport()" style="flex:1;padding:12px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🖨️ 인쇄</button>
+        <button onclick="downloadReportExcel()" style="flex:1;padding:12px;background:var(--teal2);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">📥 엑셀 다운로드</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="lostCompleteModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--teal),var(--teal2))"><h3>✅ 처리 완료</h3><button class="m-x" onclick="hideM('lostCompleteModal')">×</button></div><div style="padding:15px 17px">
   <input type="hidden" id="lostCompleteId">
   <div class="fg"><label class="f-lbl">완료 일시</label><input type="datetime-local" id="lostCompleteDate" class="ri" style="margin-bottom:0"></div>
@@ -2570,6 +2613,7 @@ html{overflow-x:hidden}
     <div style="padding:13px 13px 8px;display:flex;gap:7px">
       <input type="month" id="accFilterMonth" onchange="renderAccList(accidentAll)" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;background:white">
       <button onclick="document.getElementById('accFilterMonth').value='';renderAccList(accidentAll)" style="padding:8px 12px;background:var(--g1);border:none;border-radius:var(--r2);font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">전체</button>
+      <button onclick="downloadAccidentExcel()" style="padding:8px 12px;background:var(--teal-bg);border:none;border-radius:var(--r2);font-size:14px;font-weight:700;color:var(--teal2);cursor:pointer;white-space:nowrap">📥 다운로드</button>
     </div>
     <div id="accAllList">
       <div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div>
@@ -10408,6 +10452,7 @@ function renderHoList(data){
       +'<div class="w-row"><div class="w-av" style="background:'+(avC[sNm]||'var(--navy)')+'">'+initial+'</div>'
       +'<span class="w-nm">'+author+(r.team?' · '+r.team:'')+'</span></div>'
       +'<div class="ho-body">'+fields+'</div>'
+      +'<div style="margin-top:6px"><button data-id="'+r.id+'" onclick="openReport(\'ho\',parseInt(this.dataset.id))" style="padding:5px 10px;background:var(--g1);color:var(--g6);border:1px solid var(--g3);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">📄 상황보고서</button></div>'
       +confBtn
       // 관리자 수정/삭제 버튼
       +((me&&(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'))?('<div style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--g1)"><button data-id="'+r.id+'" onclick="editHo(this)" style="flex:1;padding:5px;background:var(--teal-bg);color:var(--teal2);border:1px solid var(--teal);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">✏️ 수정</button>'+(me&&me.role==='admin'?'<button data-id="'+r.id+'" onclick="deleteHo(this)" style="flex:1;padding:5px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">🗑️ 삭제</button>':'')+'</div>'):'')
@@ -11398,6 +11443,7 @@ function renderLostList(){
     if(r.note) h+='<div style="font-size:13px;color:var(--g5);background:var(--g1);border-radius:6px;padding:6px 9px;margin-bottom:8px">📎 '+r.note+'</div>';
     // 작성자
     h+='<div style="font-size:12px;color:var(--g4);margin-bottom:8px">✍️ '+r.writer+'</div>';
+    h+='<div style="margin-bottom:8px"><button data-id="'+r.id+'" onclick="openReport(\'lost\',parseInt(this.dataset.id))" style="padding:6px 11px;background:var(--g1);color:var(--g6);border:1.5px solid var(--g3);border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer">📄 상황보고서</button></div>';
     // 버튼
     if(isAdmin){
       h+='<div style="display:flex;gap:6px">';
@@ -11486,6 +11532,52 @@ async function confirmLostEdit(){
     toast('✅ 수정되었습니다');
     loadLostFromDB();
   }catch(e){ toast('⚠️ 수정 실패: '+e.message); }
+}
+
+function downloadAccidentExcel(){
+  if(!canDownload()) return;
+  if(!accidentAll||!accidentAll.length){ toast('다운로드할 데이터가 없습니다'); return; }
+  var mfEl=document.getElementById('accFilterMonth');
+  var mf=mfEl?mfEl.value:'';
+  var filtered=accidentAll.filter(function(r){
+    if(mf&&toKSTDate(r.occurred_at||r.created_at).slice(0,7)!==mf) return false;
+    return true;
+  });
+  if(!filtered.length){ toast('해당 월의 다운로드할 데이터가 없습니다'); return; }
+  var rows=[['발생일시','구분','팀','장소','관련직원','내용','피해내용','조치사항','산업재해여부','결정통지일자','작성자','확인여부','확인자','결과','결과처리자']];
+  filtered.slice().sort(function(a,b){
+    return new Date(b.occurred_at||b.created_at||0)-new Date(a.occurred_at||a.created_at||0);
+  }).forEach(function(r){
+    rows.push([
+      r.occurred_at?toKSTDateTime(r.occurred_at):'',
+      r.is_industrial?'산업재해':'안전사고',
+      r.team||'',
+      r.location||'',
+      r.related_staff||'',
+      r.description||'',
+      r.damage||'',
+      r.action||'',
+      r.is_industrial?'예':'아니오',
+      r.decision_date||'',
+      r.writer||'',
+      r.confirmed?'확인':'대기',
+      r.confirmed_by||'',
+      r.result||'',
+      r.result_by||''
+    ]);
+  });
+  try{
+    var range=(typeof dlDateRangeStr==='function')?dlDateRangeStr(filtered.map(function(r){return r.occurred_at||r.created_at;})):'';
+    var wrap=(typeof dlWithTitle==='function')?dlWithTitle(rows,'T1환경미화사업부 안전사고 현황',range,15):{rows:rows,merges:[]};
+    var ws=XLSX.utils.aoa_to_sheet(wrap.rows);
+    ws['!merges']=wrap.merges;
+    ws['!cols']=[{wch:16},{wch:9},{wch:8},{wch:18},{wch:12},{wch:24},{wch:18},{wch:20},{wch:10},{wch:12},{wch:10},{wch:9},{wch:10},{wch:16},{wch:12}];
+    var wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'안전사고');
+    var fname='T1_안전사고현황'+(mf?'_'+mf:'')+'.xlsx';
+    XLSX.writeFile(wb,fname);
+    toast('📥 다운로드 완료');
+  }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
 
 function downloadLostExcel(){
@@ -12309,6 +12401,7 @@ function renderVocList(){
       var _cdtStr=_cdt.toLocaleString('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false});
       h+='<div style="font-size:13px;color:var(--teal2);font-weight:700;margin-bottom:8px">✅ 완료일시: '+_cdtStr+'</div>';
     }
+    h+='<div style="margin-bottom:8px"><button data-id="'+r.id+'" onclick="openReport(\'voc\',parseInt(this.dataset.id))" style="padding:5px 10px;background:var(--g1);color:var(--g6);border:1px solid var(--g3);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">📄 상황보고서</button></div>';
     // 상태 변경 버튼 (팀장 이상)
     if(isAdmin){
       h+='<div style="display:flex;gap:6px;flex-wrap:wrap">';
@@ -15078,6 +15171,109 @@ function msRow(label, val){
   return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--g1);font-size:13px"><span style="color:var(--g5)">'+label+'</span><span style="font-weight:800;color:var(--g6)">'+val+'</span></div>';
 }
 // 인수인계 시설물고장 텍스트 파싱: "[장소] X / [내용] Y / [신고] Z" 형식
+// ═══ 상황발생보고서 (습득물/인수인계/민원 공용) ═══
+var _rptData=null;
+function fmtKDT(ts){ return ts?toKSTDateTime(ts):''; }
+function fmtKD(ts){ return ts?toKSTDate(ts):''; }
+function openReport(type, id){
+  var r=null, f={};
+  if(type==='lost'){
+    r=(lostData||[]).find(function(x){return x.id===id;});
+    if(!r){ toast('기록을 찾을 수 없습니다'); return; }
+    var dt=r.found_date||r.created_at;
+    f={
+      reporter:'(해당팀장)', datetime:fmtKDT(dt), location:r.location||'',
+      time:dt?new Date(dt).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'}):'',
+      content:r.item||'', finderLbl:'발견자', finder:r.finder_name||'', idLbl:'사번', id2:r.finder_id||'',
+      channel:r.receipt_route||'T1습득물 오픈채널', actor:r.writer||'', action:(r.status||'')+(r.complete_memo?(' · '+r.complete_memo):''),
+      title:'습득물 상황발생보고서'
+    };
+  }else if(type==='ho'){
+    r=(hoAll||[]).find(function(x){return x.id===id;});
+    if(!r){ toast('기록을 찾을 수 없습니다'); return; }
+    var fp=parseHoFacility(r.facility||'');
+    var dt2=r.ho_date||r.created_at;
+    var rcvMatch=(r.facility||'').match(/\[접수자\]\s*([^\/]+?)(?=\s*\/\s*\[|$)/);
+    f={
+      reporter:r.author||'(해당팀장)', datetime:fmtKDT(dt2), location:(fp&&fp.loc)||'',
+      time:dt2?new Date(dt2).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'}):'',
+      content:(fp&&fp.desc)||'', finderLbl:'작성자', finder:r.author||'', idLbl:'팀', id2:r.team||'',
+      channel:(fp&&fp.type)||'', actor:rcvMatch?rcvMatch[1].trim():(r.confirmed_by||''), action:r.confirmed?'확인완료':'대기 중',
+      title:'인수인계 상황발생보고서'
+    };
+  }else if(type==='voc'){
+    r=(vocData||[]).find(function(x){return x.id===id;});
+    if(!r){ toast('기록을 찾을 수 없습니다'); return; }
+    var dt3=r.voc_date||r.created_at;
+    var locStr=[r.loc_floor,r.loc_zone,r.loc_side].filter(Boolean).join(' ');
+    f={
+      reporter:r.writer||'(해당팀장)', datetime:fmtKDT(dt3), location:locStr,
+      time:dt3?new Date(dt3).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'}):'',
+      content:r.content||'', finderLbl:'접수자', finder:r.writer||'', idLbl:'구분', id2:(r.category==='기타'?r.category_etc:r.category)||'',
+      channel:r.channel||'', actor:r.writer||'', action:(r.status||'')+(r.note?(' · '+r.note):''),
+      title:'민원 상황발생보고서'
+    };
+  }else return;
+
+  _rptData={type:type, id:id, f:f};
+  document.getElementById('rptReporter').textContent=f.reporter;
+  document.getElementById('rptDatetime').textContent=f.datetime;
+  document.getElementById('rptLocation').textContent=f.location;
+  document.getElementById('rptLocation2').textContent=f.location;
+  document.getElementById('rptTime').textContent=f.time;
+  document.getElementById('rptContent').textContent=f.content;
+  document.getElementById('rptFinderLbl').textContent=f.finderLbl;
+  document.getElementById('rptFinder').textContent=f.finder;
+  document.getElementById('rptIdLbl').textContent=f.idLbl;
+  document.getElementById('rptId').textContent=f.id2;
+  document.getElementById('rptChannel').textContent=f.channel;
+  document.getElementById('rptActor').textContent=f.actor;
+  document.getElementById('rptAction').textContent=f.action;
+  showM('reportModal');
+}
+function printReport(){
+  window.print();
+}
+function downloadReportExcel(){
+  if(!_rptData){ toast('보고서 데이터가 없습니다'); return; }
+  var f=_rptData.f;
+  try{
+    var rows=[
+      ['상 황 발 생 보 고 서','','',''],
+      ['','','',''],
+      ['사업부명','T1환경미화사업부','보고자',f.reporter],
+      ['발생일시',f.datetime,'발생장소',f.location],
+      ['상황내용','발생시간',f.time,''],
+      ['','발생장소',f.location,''],
+      ['','상황내용',f.content,''],
+      ['',f.finderLbl,f.finder,''],
+      ['',f.idLbl,f.id2,''],
+      ['','상황접수',f.channel,''],
+      ['□ 조치사항','','',''],
+      ['','조치자',f.actor,''],
+      ['','조치내용',f.action,''],
+      ['사진대지(출력 후 부착)','','','']
+    ];
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!merges']=[
+      {s:{r:0,c:0},e:{r:0,c:3}},
+      {s:{r:4,c:0},e:{r:9,c:0}},
+      {s:{r:4,c:2},e:{r:4,c:3}},{s:{r:5,c:2},e:{r:5,c:3}},{s:{r:6,c:2},e:{r:6,c:3}},
+      {s:{r:7,c:2},e:{r:7,c:3}},{s:{r:8,c:2},e:{r:8,c:3}},{s:{r:9,c:2},e:{r:9,c:3}},
+      {s:{r:10,c:0},e:{r:10,c:3}},
+      {s:{r:11,c:2},e:{r:11,c:3}},{s:{r:12,c:2},e:{r:12,c:3}},
+      {s:{r:13,c:0},e:{r:13,c:3}}
+    ];
+    ws['!cols']=[{wch:14},{wch:14},{wch:26},{wch:14}];
+    ws['!rows']=[{},{},{},{},{},{},{},{},{},{},{},{},{},{hpt:120}];
+    var wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'상황보고서');
+    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+    XLSX.writeFile(wb, f.title.replace(/\s/g,'')+'_'+today+'.xlsx');
+    toast('📥 다운로드 완료');
+  }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
+}
+
 function parseHoFacility(text){
   if(!text||text==='없음') return null;
   var mReporter=text.match(/\[신고자\]\s*([^\/]+?)(?=\s*\/\s*\[|$)/);
