@@ -2132,7 +2132,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
           <tr><td class="rpt-lbl" colspan="4" style="text-align:center">상황 사진 별첨</td></tr>
           <tr><td colspan="4" style="height:160px"></td></tr>
           <tr id="rptNoteRow" style="display:none">
-            <td class="rpt-lbl" colspan="4" style="text-align:center">업무 진행 사항 및 특이사항</td>
+            <td class="rpt-lbl" colspan="4" style="text-align:center" id="rptNoteLbl">업무 진행 사항 및 특이사항</td>
           </tr>
           <tr id="rptNoteRow2" style="display:none">
             <td colspan="4"><textarea class="rpt-edit" id="rptNote" rows="3"></textarea></td>
@@ -15195,11 +15195,11 @@ function openReport(type, id){
     if(!r){ toast('기록을 찾을 수 없습니다'); return; }
     var dt=r.found_date||r.created_at;
     f={
-      reporter:'(해당팀장)', datetime:fmtKDT(dt), location:r.location||'',
+      reporter:r.writer||'(해당팀장)', datetime:fmtKDT(dt), location:r.location||'',
       time:dt?new Date(dt).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'}):'',
       content:r.item||'', finderLbl:'발견자', finder:r.finder_name||'', idLbl:'사번', id2:r.finder_id||'',
       channel:r.receipt_route||'T1습득물 오픈채널', actor:r.writer||'', action:(r.status||'')+(r.complete_memo?(' · '+r.complete_memo):''),
-      title:'유실물 발생 보고서', bigTitle:'유 실 물 발 생 보 고 서'
+      title:'유실물 발생 보고서', bigTitle:'유 실 물 발 생 보 고 서', note:r.note||'', noteLbl:'비고'
     };
   }else if(type==='ho'){
     r=(hoAll||[]).find(function(x){return x.id===id;});
@@ -15212,7 +15212,7 @@ function openReport(type, id){
       time:dt2?new Date(dt2).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'}):'',
       content:(fp&&fp.desc)||'', finderLbl:'작성자', finder:r.author||'', idLbl:'팀', id2:r.team||'',
       channel:(fp&&fp.type)||'', actor:rcvMatch?rcvMatch[1].trim():(r.confirmed_by||''), action:r.confirmed?'확인완료':'대기 중',
-      title:'상황발생보고서', bigTitle:'상 황 발 생 보 고 서', note:r.notice||''
+      title:'상황발생보고서', bigTitle:'상 황 발 생 보 고 서', note:r.notice||'', noteLbl:'업무 진행 사항 및 특이사항'
     };
   }else if(type==='voc'){
     r=(vocData||[]).find(function(x){return x.id===id;});
@@ -15224,7 +15224,7 @@ function openReport(type, id){
       time:dt3?new Date(dt3).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'}):'',
       content:r.content||'', finderLbl:'접수자', finder:r.writer||'', idLbl:'구분', id2:(r.category==='기타'?r.category_etc:r.category)||'',
       channel:r.channel||'', actor:r.writer||'', action:(r.status||'')+(r.note?(' · '+r.note):''),
-      title:'상황발생보고서', bigTitle:'상 황 발 생 보 고 서'
+      title:'상황발생보고서', bigTitle:'상 황 발 생 보 고 서', note:r.note||'', noteLbl:'비고'
     };
   }else if(type==='accident'){
     r=(accidentAll||[]).find(function(x){return x.id===id;});
@@ -15258,6 +15258,7 @@ function openReport(type, id){
   var noteRow1=document.getElementById('rptNoteRow'), noteRow2=document.getElementById('rptNoteRow2');
   if(f.note!==undefined){
     noteRow1.style.display=''; noteRow2.style.display='';
+    document.getElementById('rptNoteLbl').textContent=f.noteLbl||'업무 진행 사항 및 특이사항';
     document.getElementById('rptNote').value=f.note;
   }else{
     noteRow1.style.display='none'; noteRow2.style.display='none';
@@ -15276,6 +15277,7 @@ function downloadReportExcel(){
   var action=document.getElementById('rptAction').value;
   var hasNote=(f.note!==undefined);
   var note=hasNote?document.getElementById('rptNote').value:'';
+  var noteLbl=f.noteLbl||'업무 진행 사항 및 특이사항';
   try{
     var rows=[
       [f.bigTitle,'','',''],
@@ -15294,7 +15296,7 @@ function downloadReportExcel(){
       ['상황 사진 별첨','','','']
     ];
     if(hasNote){
-      rows.push(['업무 진행 사항 및 특이사항','','','']);
+      rows.push([noteLbl,'','','']);
       rows.push([note,'','','']);
     }
     var ws=XLSX.utils.aoa_to_sheet(rows);
