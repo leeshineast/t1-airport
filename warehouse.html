@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#38bdf8">
+<meta name="theme-color" content="#4ade80">
 <title>T1OS 창고 재고관리</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
 <style>
 :root{
-  --sky:#38bdf8; --sky2:#0ea5e9; --sky3:#0284c7;
+  --sky:#86efac; --sky2:#4ade80; --sky3:#16a34a;
   --g0:#f8fafc; --g1:#f1f5f9; --g2:#e2e8f0; --g3:#94a3b8; --g4:#475569; --g5:#1e293b;
   --danger:#ef4444; --dangerBg:#fee2e2; --ok:#10b981; --okBg:#d1fae5; --warn:#f59e0b; --warnBg:#fef3c7;
   --r1:8px; --r2:12px; --r3:16px;
@@ -19,7 +19,7 @@ button{font-family:inherit}
 select,input[type=text],input[type=number],input[type=date]{width:100%;padding:10px 11px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13.5px;font-family:inherit;background:#fff;color:var(--g5);outline:none}
 select:focus,input:focus{border-color:var(--sky)}
 textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;font-family:inherit;background:#fff;outline:none;resize:vertical;min-height:40px}
-.hdr{background:linear-gradient(135deg,#7dd3fc 0%,#38bdf8 45%,#0ea5e9 100%);padding:14px 16px 16px;padding-top:calc(14px + env(safe-area-inset-top, 10px));color:#fff;border-radius:0 0 20px 20px;box-shadow:0 4px 14px rgba(14,165,233,.22);position:sticky;top:0;z-index:10}
+.hdr{background:linear-gradient(135deg,#bbf7d0 0%,#86efac 45%,#4ade80 100%);padding:14px 16px 16px;padding-top:calc(14px + env(safe-area-inset-top, 10px));color:#fff;border-radius:0 0 20px 20px;box-shadow:0 4px 14px rgba(74,222,128,.25);position:sticky;top:0;z-index:10}
 .hdr-top{display:flex;align-items:center;gap:10px}
 .back-btn{background:rgba(255,255,255,.22);border:none;color:#fff;width:34px;height:34px;border-radius:10px;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .hdr-title{font-size:16px;font-weight:800;letter-spacing:-.3px}
@@ -120,6 +120,10 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
 .stat-lb{font-size:12px;color:var(--g4);font-weight:700}
 .stat-v{font-size:23px;font-weight:800;margin-top:6px;color:var(--ac,var(--g5))}
 .low-row{background:var(--dangerBg);border-radius:var(--r2);padding:10px 12px;margin-bottom:7px}
+.stock-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--g1);font-size:13px}
+.stock-row:last-child{border-bottom:none}
+.stock-row .nm{color:var(--g5);font-weight:600}
+.stock-row .qty{color:var(--sky3);font-weight:800}
 .low-t{font-size:12.5px;font-weight:700;color:#b91c1c}
 .low-s{font-size:11px;color:#dc2626;margin-top:2px}
 .period-seg{display:flex;gap:6px;margin-bottom:10px}
@@ -158,11 +162,10 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
     <button class="dash-btn" onclick="go('scrStats')">📊<span>실시간·기간별 통계</span><span class="arrow">보기 →</span></button>
     <button class="dash-btn" id="itemMasterBtn" style="display:none" onclick="go('scrItemMaster')">🗂️<span>품목마스터 관리</span><span class="arrow">관리 →</span></button>
   </div>
-  <div class="sec-title" style="margin-top:14px">📦 사업부 전체 재고현황</div>
-  <div class="stat-grid" id="homeStatGrid" style="grid-template-columns:repeat(3,1fr)">
-    <div class="stat-card" style="--ac:var(--sky2);--acbg:#eef6ff"><div class="stat-lb">창고</div><div class="stat-v" id="homeWhCount">0<small>개</small></div></div>
-    <div class="stat-card" style="--ac:var(--ok);--acbg:var(--okBg)"><div class="stat-lb">재고 보유 품목</div><div class="stat-v" id="homeStockSum">0<small>개</small></div></div>
-    <div class="stat-card" style="--ac:var(--danger);--acbg:var(--dangerBg)"><div class="stat-lb">부족 품목</div><div class="stat-v" id="homeLowCount">0<small>건</small></div></div>
+  <div class="sec-title" style="margin-top:14px">📦 사업부 전체 재고현황 (재고 보유 품목)</div>
+  <input type="text" id="homeStockSearch" placeholder="품목 검색" oninput="renderHomeStockList()" style="margin-bottom:8px">
+  <div class="card" style="padding:0 13px" id="homeStockCard">
+    <div id="homeStockList"></div>
   </div>
   <div class="db-banner"><span class="dot" id="dbDot"></span><span id="dbMsg">DB 연결 확인 중…</span></div>
 </div>
@@ -212,8 +215,12 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
   </div>
 
   <div class="search-bar">
-    <input type="text" id="itemFilter" placeholder="품목 검색" oninput="renderLedgerItems()">
-    <button class="mini-btn" onclick="openAddItemModal()">+ 품목추가</button>
+    <input type="text" id="itemFilter" placeholder="품목 검색 (예: 리스킨)" oninput="onItemSearchInput()">
+    <button class="mini-btn" onclick="openAddItemModal()">+ 신규품목</button>
+  </div>
+  <div id="itemSearchCandsWrap" style="display:none;margin-bottom:10px">
+    <div id="itemSearchCands"></div>
+    <button class="save-btn" style="margin-top:8px" onclick="confirmItemSearchPick()">선택한 품목 입력하기 <span id="itemSearchPickCount">(0)</span></button>
   </div>
 
   <div id="ledgerItems"></div>
@@ -329,6 +336,8 @@ var curShift='오전';
 var whItems=[];       // [{id(warehouse_item), item_id, min_qty, item_name, spec, unit}]
 var ledgerMap={};      // item_id -> {id, prev_qty, in_qty, out_qty, out_by, remain_qty, note, written_by}
 var addItemPicked={};  // item_id -> true
+var pinnedItems={};    // item_id -> true (검색으로 수동 선택해 항상 보이게 고정한 품목)
+var itemSearchPicked={}; // 검색 체크리스트에서 임시 선택 중인 item_id
 var curPeriod='week';
 
 function sbFetch(path, opt){
@@ -385,12 +394,12 @@ function loadMasters(){
     loadHomeSummary();
   }).catch(function(){ dot.classList.remove('ok'); msg.textContent='DB 연결 실패 — 네트워크를 확인하세요'; });
 }
+var homeStockData=[];
 function loadHomeSummary(){
-  var whEl=document.getElementById('homeWhCount'),
-      sumEl=document.getElementById('homeStockSum'), lowEl=document.getElementById('homeLowCount');
-  if(!whEl) return;
-  whEl.textContent=WAREHOUSES.length;
-  sbFetch('/warehouse_item?select=current_qty,min_qty,warehouse_id,item_id')
+  var box=document.getElementById('homeStockList');
+  if(!box) return;
+  box.innerHTML='<div class="empty">불러오는 중…</div>';
+  sbFetch('/warehouse_item?select=current_qty,warehouse_id,item_id,item_master(item_name,spec,unit)')
     .then(function(r){return r.json();})
     .then(function(wis){
       wis=Array.isArray(wis)?wis:[];
@@ -400,17 +409,31 @@ function loadHomeSummary(){
           ledgers=Array.isArray(ledgers)?ledgers:[];
           var latest={};
           ledgers.forEach(function(l){ var k=l.warehouse_id+'_'+l.item_id; if(!(k in latest)) latest[k]=l.remain_qty; });
-          var haveStock=0, low=0;
+          var byItem={};
           wis.forEach(function(w){
             var k=w.warehouse_id+'_'+w.item_id;
             var stock = k in latest ? latest[k] : (w.current_qty||0);
-            if(stock>0) haveStock++;
-            if(w.min_qty>0 && stock<w.min_qty) low++;
+            if(stock<=0) return;
+            var im=w.item_master||{};
+            if(!byItem[w.item_id]) byItem[w.item_id]={name:im.item_name||'-', spec:im.spec||'', unit:im.unit||'', qty:0};
+            byItem[w.item_id].qty+=stock;
           });
-          sumEl.textContent=haveStock.toLocaleString();
-          lowEl.textContent=low;
+          homeStockData=Object.values(byItem).sort(function(a,b){ return a.name.localeCompare(b.name,'ko'); });
+          renderHomeStockList();
         });
-    }).catch(function(){});
+    }).catch(function(){ box.innerHTML='<div class="empty">조회 실패</div>'; });
+}
+function renderHomeStockList(){
+  var box=document.getElementById('homeStockList');
+  var q=(document.getElementById('homeStockSearch').value||'').trim().toLowerCase();
+  var list=homeStockData.filter(function(d){ return !q || d.name.toLowerCase().indexOf(q)>=0; });
+  box.innerHTML='';
+  if(!list.length){ box.innerHTML='<div class="empty">재고가 있는 품목이 없습니다</div>'; return; }
+  list.forEach(function(d){
+    var row=document.createElement('div'); row.className='stock-row';
+    row.innerHTML='<span class="nm">'+esc(d.name)+(d.spec?' <span style="color:var(--g3);font-weight:400;font-size:11px">'+esc(d.spec)+'</span>':'')+'</span><span class="qty">'+d.qty.toLocaleString()+(d.unit?esc(d.unit):'개')+'</span>';
+    box.appendChild(row);
+  });
 }
 
 // ═══ 창고 목록 ═══
@@ -442,6 +465,9 @@ function renderWarehouses(){
 // ═══ 창고 진입 → 관리대장 ═══
 function openWarehouse(w){
   curWarehouse=w;
+  pinnedItems={}; itemSearchPicked={};
+  document.getElementById('itemFilter').value='';
+  document.getElementById('itemSearchCandsWrap').style.display='none';
   document.getElementById('ledgerWhTitle').textContent=(w.room_no?w.room_no+' · ':'')+w.location_desc;
   document.getElementById('ledgerDate').value=curDate;
   setShift(autoShift());
@@ -451,6 +477,9 @@ function openWarehouse(w){
 }
 function onDateChange(){
   curDate=document.getElementById('ledgerDate').value||todayStr();
+  pinnedItems={}; itemSearchPicked={};
+  document.getElementById('itemFilter').value='';
+  document.getElementById('itemSearchCandsWrap').style.display='none';
   loadDailyHeader();
   loadWarehouseItemsAndLedger();
 }
@@ -525,24 +554,19 @@ function remainDisplay(v){
 function renderLedgerItems(){
   var box=document.getElementById('ledgerItems');
   var q=(document.getElementById('itemFilter').value||'').trim().toLowerCase();
+  if(q) return; // 검색 중에는 체크리스트(renderItemSearchCands)가 대신 표시됨
   box.innerHTML='';
-  var shown;
-  if(!q){
-    // 기본: 현재 재고(또는 금일 입출고 활동)가 있는 품목만 표시
-    shown=whItems.filter(function(it){
-      var L=ledgerMap[it.item_id];
-      return L.prev_qty>0 || L.in_qty>0 || L.out_qty>0;
-    });
-  }else{
-    // 검색 시: 전체 품목 대상 (가나다순은 whItems 정렬로 이미 보장)
-    shown=whItems.filter(function(it){ return (it.item_name+' '+it.spec).toLowerCase().indexOf(q)>=0; });
-  }
+  // 표시 대상: 재고(또는 금일 입출고 활동)가 있는 품목 + 검색으로 선택해 고정한 품목
+  var shown=whItems.filter(function(it){
+    var L=ledgerMap[it.item_id];
+    return L.prev_qty>0 || L.in_qty>0 || L.out_qty>0 || pinnedItems[it.item_id];
+  });
   if(!whItems.length){
     document.getElementById('ledgerEmpty').style.display='block';
-    document.getElementById('ledgerEmpty').textContent="이 창고에 배정된 품목이 없습니다. '+ 품목추가'로 등록하세요.";
+    document.getElementById('ledgerEmpty').textContent="이 창고에 배정된 품목이 없습니다. '+ 신규품목'으로 등록하세요.";
   }else if(!shown.length){
     document.getElementById('ledgerEmpty').style.display='block';
-    document.getElementById('ledgerEmpty').textContent = q ? '검색 결과가 없습니다.' : '현재 재고가 있는 품목이 없습니다. 검색으로 전체 품목을 찾아 입고 처리하세요.';
+    document.getElementById('ledgerEmpty').textContent='현재 재고가 있는 품목이 없습니다. 검색으로 품목을 찾아 입고 처리하세요.';
   }else{
     document.getElementById('ledgerEmpty').style.display='none';
   }
@@ -566,6 +590,50 @@ function renderLedgerItems(){
     box.appendChild(d);
   });
 }
+// ═══ 품목 검색 → 체크박스 다중선택 ═══
+function onItemSearchInput(){
+  var q=(document.getElementById('itemFilter').value||'').trim().toLowerCase();
+  var wrap=document.getElementById('itemSearchCandsWrap');
+  if(!q){
+    wrap.style.display='none';
+    itemSearchPicked={};
+    document.getElementById('ledgerItems').style.display='';
+    renderLedgerItems();
+    return;
+  }
+  document.getElementById('ledgerItems').style.display='none';
+  document.getElementById('ledgerEmpty').style.display='none';
+  wrap.style.display='block';
+  renderItemSearchCands(q);
+}
+function renderItemSearchCands(q){
+  var box=document.getElementById('itemSearchCands');
+  var matches=whItems.filter(function(it){ return (it.item_name+' '+it.spec).toLowerCase().indexOf(q)>=0; }).slice(0,100);
+  box.innerHTML='';
+  if(!matches.length){ box.innerHTML='<div class="empty">검색 결과가 없습니다</div>'; }
+  matches.forEach(function(it){
+    var picked=!!itemSearchPicked[it.item_id];
+    var row=document.createElement('div');
+    row.className='cand-row'+(picked?' picked':'');
+    row.innerHTML='<div><div class="cand-name">'+esc(it.item_name)+'</div><div class="cand-spec">'+esc(it.spec)+(it.unit?' · '+esc(it.unit):'')+'</div></div><div class="cand-check">'+(picked?'✓':'')+'</div>';
+    row.onclick=function(){ itemSearchPicked[it.item_id]=!itemSearchPicked[it.item_id]; renderItemSearchCands(q); };
+    box.appendChild(row);
+  });
+  var n=Object.keys(itemSearchPicked).filter(function(k){return itemSearchPicked[k];}).length;
+  document.getElementById('itemSearchPickCount').textContent='('+n+')';
+}
+function confirmItemSearchPick(){
+  var ids=Object.keys(itemSearchPicked).filter(function(k){return itemSearchPicked[k];});
+  if(!ids.length){ toast('품목을 먼저 선택하세요'); return; }
+  ids.forEach(function(id){ pinnedItems[id]=true; });
+  itemSearchPicked={};
+  document.getElementById('itemFilter').value='';
+  document.getElementById('itemSearchCandsWrap').style.display='none';
+  document.getElementById('ledgerItems').style.display='';
+  renderLedgerItems();
+  toast('✓ '+ids.length+'개 품목 추가됨');
+}
+
 function onQtyChange(itemId){
   var inEl=document.getElementById('in_'+itemId), outEl=document.getElementById('out_'+itemId);
   var L=ledgerMap[itemId];
