@@ -66,6 +66,8 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
 .wh-teams.mine{color:#c026d3}
 .wh-edit-btn{position:absolute;top:5px;right:5px;background:var(--g1);border:none;border-radius:6px;width:18px;height:18px;font-size:9.5px;color:var(--g4);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
 .wh-group-lbl{font-size:11px;font-weight:800;color:var(--g3);margin:14px 2px 7px;grid-column:1/-1}
+.wh-stat-summary{font-size:9.5px;color:var(--sky3);font-weight:700;margin-top:4px}
+.wh-stat-summary.none{color:var(--g3);font-weight:600}
 /* 관리대장 */
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .info-grid .full{grid-column:1/-1}
@@ -253,12 +255,7 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
   <button class="sub-back" onclick="go('scrHome')">← 메뉴</button>
   <div class="sec-title">🏢 창고별 현황</div>
   <input type="text" id="whStatSearch" placeholder="창고 위치·실번호 검색" oninput="renderWarehouseStats()" style="margin-bottom:8px">
-  <div class="card" style="overflow-x:auto;padding:0 13px">
-    <table class="stat-table" id="whStatTable">
-      <thead><tr><th style="text-align:left">창고</th><th>배정품목</th><th>부족품목</th><th>재고합계</th></tr></thead>
-      <tbody id="whStatTbody"><tr><td colspan="4" class="empty">불러오는 중…</td></tr></tbody>
-    </table>
-  </div>
+  <div class="wh-grid" id="whStatGrid"><div class="empty">불러오는 중…</div></div>
 
   <div class="sec-title" style="margin-top:16px">🔴 실시간 부족 품목</div>
   <div id="lowStockList"></div>
@@ -266,14 +263,45 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
 
   <div class="sec-title" style="margin-top:16px">📊 기간별 입출고 통계</div>
   <div class="period-seg">
-    <button class="seg-btn on" data-p="week" onclick="setPeriod('week')">주간</button>
-    <button class="seg-btn" data-p="month" onclick="setPeriod('month')">월간</button>
-    <button class="seg-btn" data-p="year" onclick="setPeriod('year')">연간</button>
+    <button class="seg-btn on" data-p="day" onclick="gsSetMode('day')">일간</button>
+    <button class="seg-btn" data-p="week" onclick="gsSetMode('week')">주간</button>
+    <button class="seg-btn" data-p="month" onclick="gsSetMode('month')">월간</button>
+    <button class="seg-btn" data-p="year" onclick="gsSetMode('year')">연간</button>
+  </div>
+  <div style="margin-bottom:10px">
+    <input type="date" id="gsPickDay" onchange="loadPeriodStats()" style="display:none">
+    <input type="date" id="gsPickWeek" onchange="loadPeriodStats()" style="display:none">
+    <input type="month" id="gsPickMonth" onchange="loadPeriodStats()" style="display:none">
+    <input type="number" id="gsPickYear" onchange="loadPeriodStats()" style="display:none" placeholder="연도">
   </div>
   <div class="card" style="overflow-x:auto">
     <table class="stat-table" id="statTable">
-      <thead><tr><th style="text-align:left">품목</th><th>입고</th><th>출고</th><th>순증감</th></tr></thead>
+      <thead><tr><th style="text-align:left">품목</th><th style="text-align:left">규격</th><th>단위</th><th>입고</th><th>출고</th><th>현재고</th><th id="gsDiffHead">차이</th></tr></thead>
       <tbody id="statTbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ═══ 창고별 재고현황 상세 ═══ -->
+<div class="screen" id="scrWhDetail">
+  <button class="sub-back" onclick="go('scrStats')">← 창고별 현황</button>
+  <div class="sec-title" id="wdTitle">창고 재고현황</div>
+  <div class="period-seg">
+    <button class="seg-btn on" data-p="day" onclick="wdSetMode('day')">일간</button>
+    <button class="seg-btn" data-p="week" onclick="wdSetMode('week')">주간</button>
+    <button class="seg-btn" data-p="month" onclick="wdSetMode('month')">월간</button>
+    <button class="seg-btn" data-p="year" onclick="wdSetMode('year')">연간</button>
+  </div>
+  <div style="margin-bottom:10px">
+    <input type="date" id="wdPickDay" onchange="loadWhDetailStats()" style="display:none">
+    <input type="date" id="wdPickWeek" onchange="loadWhDetailStats()" style="display:none">
+    <input type="month" id="wdPickMonth" onchange="loadWhDetailStats()" style="display:none">
+    <input type="number" id="wdPickYear" onchange="loadWhDetailStats()" style="display:none" placeholder="연도">
+  </div>
+  <div class="card" style="overflow-x:auto">
+    <table class="stat-table" id="wdTable">
+      <thead><tr><th style="text-align:left">품목</th><th style="text-align:left">규격</th><th>단위</th><th>입고</th><th>출고</th><th>현재고</th></tr></thead>
+      <tbody id="wdTbody"></tbody>
     </table>
   </div>
 </div>
@@ -356,7 +384,28 @@ var pinnedItems={};    // item_id -> true (검색으로 수동 선택해 항상 
 var itemSearchPicked={}; // 검색 체크리스트에서 임시 선택 중인 item_id
 var whSelectMode='ledger'; // 'ledger' | 'receive' — 창고목록에서 창고 선택시 어느 모드로 들어갈지
 var forceShowAll=false;    // true면 재고0인 품목도 기본으로 전체 표시(입고 처리 모드)
-var curPeriod='week';
+function currentYYYYMM(){ var n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0'); }
+var gsMode='day', gsAnchor={day:todayStr(), week:todayStr(), month:currentYYYYMM(), year:String(new Date().getFullYear())};
+var wdMode='day', wdAnchor={day:todayStr(), week:todayStr(), month:currentYYYYMM(), year:String(new Date().getFullYear())};
+var curWhDetail=null;
+function computeRange(mode, anchor){
+  function f(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+  if(mode==='day') return {from:anchor, to:anchor};
+  if(mode==='week'){
+    var d=new Date(anchor+'T00:00:00'); var day=d.getDay();
+    var diffToMon=(day===0?-6:1-day);
+    var mon=new Date(d); mon.setDate(d.getDate()+diffToMon);
+    var sun=new Date(mon); sun.setDate(mon.getDate()+6);
+    return {from:f(mon), to:f(sun)};
+  }
+  if(mode==='month'){
+    var parts=anchor.split('-'); var y=parseInt(parts[0],10), m=parseInt(parts[1],10);
+    return {from:f(new Date(y,m-1,1)), to:f(new Date(y,m,0))};
+  }
+  var y2=parseInt(anchor,10)||new Date().getFullYear();
+  return {from:y2+'-01-01', to:y2+'-12-31'};
+}
+var DIFF_LABELS={day:'전일',week:'전주',month:'전월',year:'전년'};
 
 function sbFetch(path, opt){
   opt=opt||{};
@@ -381,9 +430,9 @@ function go(id){
   var s=document.querySelectorAll('.screen');
   for(var i=0;i<s.length;i++)s[i].classList.remove('on');
   document.getElementById(id).classList.add('on');
-  var titles={scrHome:'📦 창고 재고관리', scrMain:'📋 창고 선택', scrLedger:'📋 일일 관리대장', scrPrint:'🖨️ 인쇄/다운로드', scrStats:'📊 통계', scrItemMaster:'🗂️ 품목마스터'};
+  var titles={scrHome:'📦 창고 재고관리', scrMain:'📋 창고 선택', scrLedger:'📋 일일 관리대장', scrPrint:'🖨️ 인쇄/다운로드', scrStats:'📊 통계', scrItemMaster:'🗂️ 품목마스터', scrWhDetail:'📋 창고 재고현황'};
   document.getElementById('hdrTitle').textContent=titles[id]||'📦 창고 재고관리';
-  if(id==='scrStats'){ loadWarehouseStats(); loadLowStock(); loadPeriodStats(); }
+  if(id==='scrStats'){ loadWarehouseStats(); loadLowStock(); gsSetMode(gsMode); }
   if(id==='scrPrint'){ renderPrintPreview(); }
   if(id==='scrHome'){ loadHomeSummary(); }
   window.scrollTo(0,0);
@@ -391,7 +440,7 @@ function go(id){
 function autoShift(){ var h=new Date().getHours(); return (h>=6&&h<14)?'오전':(h>=14&&h<22)?'오후':'야간'; }
 function setShift(s){ curShift=s; var b=document.querySelectorAll('#shiftSeg .seg-btn'); for(var i=0;i<b.length;i++)b[i].classList.toggle('on',b[i].getAttribute('data-s')===s); }
 function setZone(z){ curZone=z; var b=document.querySelectorAll('#zoneSeg .seg-btn'); for(var i=0;i<b.length;i++)b[i].classList.toggle('on',b[i].getAttribute('data-z')===z); renderWarehouses(); }
-function setPeriod(p){ curPeriod=p; var b=document.querySelectorAll('.period-seg .seg-btn'); for(var i=0;i<b.length;i++)b[i].classList.toggle('on',b[i].getAttribute('data-p')===p); loadPeriodStats(); }
+
 
 // ═══ 마스터 로드 ═══
 function loadMasters(){
@@ -946,13 +995,13 @@ function prExcel(){
 }
 
 // ═══ 통계 ═══
-// ═══ 창고별 현황 ═══
+// ═══ 창고별 현황 (카드형: 대표품목 외 N종) ═══
 var whStatData=[];
 function loadWarehouseStats(){
-  var tbody=document.getElementById('whStatTbody');
-  tbody.innerHTML='<tr><td colspan="4" class="empty">불러오는 중…</td></tr>';
+  var grid=document.getElementById('whStatGrid');
+  grid.innerHTML='<div class="empty">불러오는 중…</div>';
   Promise.all([
-    sbFetch('/warehouse_item?select=warehouse_id,item_id,min_qty,current_qty').then(function(r){return r.json();}),
+    sbFetch('/warehouse_item?select=warehouse_id,item_id,current_qty,item_master(item_name)').then(function(r){return r.json();}),
     sbFetch('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc&limit=8000').then(function(r){return r.json();})
   ]).then(function(res){
     var wis=Array.isArray(res[0])?res[0]:[];
@@ -961,39 +1010,40 @@ function loadWarehouseStats(){
     ledgers.forEach(function(l){ var k=l.warehouse_id+'_'+l.item_id; if(!(k in latest)) latest[k]=l.remain_qty; });
     var byWh={};
     wis.forEach(function(w){
-      if(!byWh[w.warehouse_id]) byWh[w.warehouse_id]={itemCount:0, lowCount:0, stockSum:0};
       var k=w.warehouse_id+'_'+w.item_id;
       var stock = k in latest ? latest[k] : (w.current_qty||0);
-      byWh[w.warehouse_id].itemCount++;
-      byWh[w.warehouse_id].stockSum+=stock;
-      if(w.min_qty>0 && stock<w.min_qty) byWh[w.warehouse_id].lowCount++;
+      if(stock<=0) return;
+      if(!byWh[w.warehouse_id]) byWh[w.warehouse_id]=[];
+      byWh[w.warehouse_id].push({name:(w.item_master||{}).item_name||'-', qty:stock});
     });
     whStatData=WAREHOUSES.map(function(w){
-      var s=byWh[w.id]||{itemCount:0,lowCount:0,stockSum:0};
-      return {wh:w, itemCount:s.itemCount, lowCount:s.lowCount, stockSum:s.stockSum};
-    }).sort(function(a,b){ return b.lowCount-a.lowCount || (b.stockSum-a.stockSum); });
+      var items=(byWh[w.id]||[]).sort(function(a,b){return b.qty-a.qty;});
+      return {wh:w, items:items, count:items.length};
+    }).sort(function(a,b){ return b.count-a.count; });
     renderWarehouseStats();
-  }).catch(function(){ tbody.innerHTML='<tr><td colspan="4" class="empty">조회 실패</td></tr>'; });
+  }).catch(function(){ grid.innerHTML='<div class="empty">조회 실패</div>'; });
 }
 function renderWarehouseStats(){
-  var tbody=document.getElementById('whStatTbody');
+  var grid=document.getElementById('whStatGrid');
   var q=(document.getElementById('whStatSearch').value||'').trim().toLowerCase();
   var list=whStatData.filter(function(d){
     if(!q) return true;
     var hay=(d.wh.location_desc+' '+d.wh.room_no).toLowerCase();
     return hay.indexOf(q)>=0;
   });
-  tbody.innerHTML='';
-  if(!list.length){ tbody.innerHTML='<tr><td colspan="4" class="empty">데이터가 없습니다</td></tr>'; return; }
+  grid.innerHTML='';
+  if(!list.length){ grid.innerHTML='<div class="empty">데이터가 없습니다</div>'; return; }
   list.forEach(function(d){
-    var tr=document.createElement('tr');
-    tr.style.cursor='pointer';
-    tr.innerHTML='<td class="lf">'+esc(d.wh.room_no||d.wh.location_desc)+'<br><span style="color:var(--g3);font-size:10px">'+esc(d.wh.location_desc)+'</span></td>'+
-      '<td>'+d.itemCount+'</td>'+
-      '<td'+(d.lowCount>0?' style="color:var(--danger);font-weight:800"':'')+'>'+d.lowCount+'</td>'+
-      '<td>'+d.stockSum.toLocaleString()+'</td>';
-    tr.onclick=function(){ openWarehouse(d.wh); };
-    tbody.appendChild(tr);
+    var d2=document.createElement('div');
+    d2.className='wh-card';
+    var summary = d.count===0 ? '<span class="wh-stat-summary none">등록된 재고 없음</span>'
+      : '<span class="wh-stat-summary">'+esc(d.items[0].name)+(d.count>1?' 외 '+(d.count-1)+'종':'')+'</span>';
+    d2.innerHTML=
+      '<div class="wh-top"><span class="wh-zone'+(d.wh.zone==='Airside'?' as':'')+'">'+esc(d.wh.zone)+'</span><span class="wh-room">'+esc(d.wh.room_no||'-')+'</span></div>'+
+      '<div class="wh-loc">'+esc(d.wh.location_desc)+'</div>'+
+      summary;
+    d2.onclick=function(){ openWhDetail(d.wh); };
+    grid.appendChild(d2);
   });
 }
 function loadLowStock(){
@@ -1026,36 +1076,124 @@ function loadLowStock(){
       });
     }).catch(function(){ box.innerHTML=''; toast('실시간 현황 조회 실패'); });
 }
-function periodRange(p){
-  var to=new Date(); var from=new Date();
-  if(p==='week') from.setDate(to.getDate()-7);
-  else if(p==='month') from.setMonth(to.getMonth()-1);
-  else from.setFullYear(to.getFullYear()-1);
-  function f(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-  return {from:f(from), to:f(to)};
+function gsSetMode(mode){
+  gsMode=mode;
+  var seg=document.querySelectorAll('#scrStats .period-seg .seg-btn');
+  for(var i=0;i<seg.length;i++) seg[i].classList.toggle('on', seg[i].getAttribute('data-p')===mode);
+  ['gsPickDay','gsPickWeek','gsPickMonth','gsPickYear'].forEach(function(id){ document.getElementById(id).style.display='none'; });
+  var idMap={day:'gsPickDay',week:'gsPickWeek',month:'gsPickMonth',year:'gsPickYear'};
+  var el=document.getElementById(idMap[mode]); el.value=gsAnchor[mode]; el.style.display='block';
+  document.getElementById('gsDiffHead').textContent='차이('+DIFF_LABELS[mode]+' 대비)';
+  loadPeriodStats();
+}
+function gsCurrentAnchor(){
+  var idMap={day:'gsPickDay',week:'gsPickWeek',month:'gsPickMonth',year:'gsPickYear'};
+  var v=document.getElementById(idMap[gsMode]).value;
+  return v || gsAnchor[gsMode];
 }
 function loadPeriodStats(){
   var tbody=document.getElementById('statTbody');
-  tbody.innerHTML='<tr><td colspan="4" class="empty">불러오는 중…</td></tr>';
-  var r=periodRange(curPeriod);
-  var q='/warehouse_ledger?select=item_id,in_qty,out_qty,item_master(item_name,unit)&ledger_date=gte.'+r.from+'&ledger_date=lte.'+r.to+'&limit=5000';
-  sbFetch(q).then(function(rr){return rr.json();}).then(function(rows){
-    rows=Array.isArray(rows)?rows:[];
+  tbody.innerHTML='<tr><td colspan="7" class="empty">불러오는 중…</td></tr>';
+  var anchor=gsCurrentAnchor(); gsAnchor[gsMode]=anchor;
+  var r=computeRange(gsMode, anchor);
+  Promise.all([
+    sbFetch('/warehouse_ledger?select=item_id,in_qty,out_qty,item_master(item_name,spec,unit)&ledger_date=gte.'+r.from+'&ledger_date=lte.'+r.to+'&limit=8000').then(function(rr){return rr.json();}),
+    sbFetch('/warehouse_item?select=warehouse_id,item_id,current_qty').then(function(rr){return rr.json();}),
+    sbFetch('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc&limit=8000').then(function(rr){return rr.json();})
+  ]).then(function(res){
+    var rows=Array.isArray(res[0])?res[0]:[];
+    var wis=Array.isArray(res[1])?res[1]:[];
+    var ledgersAll=Array.isArray(res[2])?res[2]:[];
+    // 창고별 최신 잔여수량(현재고) 맵
+    var latestByWhItem={};
+    ledgersAll.forEach(function(l){ var k=l.warehouse_id+'_'+l.item_id; if(!(k in latestByWhItem)) latestByWhItem[k]=l.remain_qty; });
+    // 품목별 전체 창고 현재고 합계
+    var stockByItem={};
+    wis.forEach(function(w){
+      var k=w.warehouse_id+'_'+w.item_id;
+      var stock = k in latestByWhItem ? latestByWhItem[k] : (w.current_qty||0);
+      stockByItem[w.item_id]=(stockByItem[w.item_id]||0)+stock;
+    });
     var agg={};
     rows.forEach(function(x){
       var key=x.item_id;
-      if(!agg[key]) agg[key]={name:(x.item_master||{}).item_name||'-', unit:(x.item_master||{}).unit||'', inSum:0, outSum:0};
+      if(!agg[key]) agg[key]={name:(x.item_master||{}).item_name||'-', spec:(x.item_master||{}).spec||'', unit:(x.item_master||{}).unit||'', inSum:0, outSum:0};
       agg[key].inSum+=x.in_qty||0; agg[key].outSum+=x.out_qty||0;
     });
-    var list=Object.values(agg).filter(function(x){ return x.inSum!==0 || x.outSum!==0; }).sort(function(a,b){return (b.inSum+b.outSum)-(a.inSum+a.outSum);});
+    var list=Object.keys(agg).map(function(id){ var a=agg[id]; a.stock=stockByItem[id]||0; return a; })
+      .filter(function(x){ return x.inSum!==0 || x.outSum!==0; });
     tbody.innerHTML='';
-    if(!list.length){ tbody.innerHTML='<tr><td colspan="4" class="empty">기간 내 입출고 기록이 없습니다</td></tr>'; return; }
-    list.slice(0,100).forEach(function(x){
+    if(!list.length){ tbody.innerHTML='<tr><td colspan="7" class="empty">기간 내 입출고 기록이 없습니다</td></tr>'; return; }
+    list.sort(function(a,b){return (b.inSum+b.outSum)-(a.inSum+a.outSum);});
+    list.slice(0,150).forEach(function(x){
+      var diff=x.inSum-x.outSum;
       var tr=document.createElement('tr');
-      tr.innerHTML='<td class="lf">'+esc(x.name)+'</td><td>'+x.inSum+'</td><td>'+x.outSum+'</td><td>'+(x.inSum-x.outSum)+'</td>';
+      tr.innerHTML='<td class="lf">'+esc(x.name)+'</td><td class="lf">'+esc(x.spec)+'</td><td>'+esc(x.unit)+'</td><td>'+x.inSum+'</td><td>'+x.outSum+'</td><td style="font-weight:800;color:var(--sky3)">'+x.stock+'</td>'+
+        '<td'+(diff<0?' style="color:var(--danger);font-weight:800"':' style="color:var(--sky3);font-weight:800"')+'>'+(diff>0?'+':'')+diff+'</td>';
       tbody.appendChild(tr);
     });
-  }).catch(function(){ tbody.innerHTML='<tr><td colspan="4" class="empty">조회 실패</td></tr>'; });
+  }).catch(function(){ tbody.innerHTML='<tr><td colspan="7" class="empty">조회 실패</td></tr>'; });
+}
+
+
+// ═══ 창고 재고현황 상세 (일/주/월/연) ═══
+function openWhDetail(w){
+  curWhDetail=w;
+  document.getElementById('wdTitle').textContent=(w.room_no?w.room_no+' · ':'')+w.location_desc;
+  go('scrWhDetail');
+  wdSetMode('day');
+}
+function wdSetMode(mode){
+  wdMode=mode;
+  var seg=document.querySelectorAll('#scrWhDetail .period-seg .seg-btn');
+  for(var i=0;i<seg.length;i++) seg[i].classList.toggle('on', seg[i].getAttribute('data-p')===mode);
+  ['wdPickDay','wdPickWeek','wdPickMonth','wdPickYear'].forEach(function(id){ document.getElementById(id).style.display='none'; });
+  var idMap={day:'wdPickDay',week:'wdPickWeek',month:'wdPickMonth',year:'wdPickYear'};
+  var el=document.getElementById(idMap[mode]); el.value=wdAnchor[mode]; el.style.display='block';
+  loadWhDetailStats();
+}
+function wdCurrentAnchor(){
+  var idMap={day:'wdPickDay',week:'wdPickWeek',month:'wdPickMonth',year:'wdPickYear'};
+  var v=document.getElementById(idMap[wdMode]).value;
+  return v || wdAnchor[wdMode];
+}
+function loadWhDetailStats(){
+  if(!curWhDetail) return;
+  var tbody=document.getElementById('wdTbody');
+  tbody.innerHTML='<tr><td colspan="6" class="empty">불러오는 중…</td></tr>';
+  var anchor=wdCurrentAnchor(); wdAnchor[wdMode]=anchor;
+  var r=computeRange(wdMode, anchor);
+  Promise.all([
+    sbFetch('/warehouse_item?warehouse_id=eq.'+curWhDetail.id+'&select=item_id,current_qty,item_master(item_name,spec,unit)').then(function(rr){return rr.json();}),
+    sbFetch('/warehouse_ledger?warehouse_id=eq.'+curWhDetail.id+'&select=item_id,in_qty,out_qty,remain_qty,ledger_date&order=ledger_date.desc&limit=4000').then(function(rr){return rr.json();})
+  ]).then(function(res){
+    var wis=Array.isArray(res[0])?res[0]:[];
+    var ledgers=Array.isArray(res[1])?res[1]:[];
+    var latestStock={};
+    ledgers.forEach(function(l){ if(!(l.item_id in latestStock)) latestStock[l.item_id]=l.remain_qty; });
+    var periodSum={};
+    ledgers.forEach(function(l){
+      if(l.ledger_date<r.from || l.ledger_date>r.to) return;
+      if(!periodSum[l.item_id]) periodSum[l.item_id]={inSum:0,outSum:0};
+      periodSum[l.item_id].inSum+=l.in_qty||0; periodSum[l.item_id].outSum+=l.out_qty||0;
+    });
+    var list=[];
+    wis.forEach(function(w){
+      var stock = w.item_id in latestStock ? latestStock[w.item_id] : (w.current_qty||0);
+      if(stock<=0) return;
+      var im=w.item_master||{};
+      var ps=periodSum[w.item_id]||{inSum:0,outSum:0};
+      list.push({name:im.item_name||'-', spec:im.spec||'', unit:im.unit||'', inSum:ps.inSum, outSum:ps.outSum, stock:stock});
+    });
+    list.sort(function(a,b){ return a.name.localeCompare(b.name,'ko'); });
+    tbody.innerHTML='';
+    if(!list.length){ tbody.innerHTML='<tr><td colspan="6" class="empty">재고가 있는 품목이 없습니다</td></tr>'; return; }
+    list.forEach(function(x){
+      var tr=document.createElement('tr');
+      tr.innerHTML='<td class="lf">'+esc(x.name)+'</td><td class="lf">'+esc(x.spec)+'</td><td>'+esc(x.unit)+'</td><td>'+x.inSum+'</td><td>'+x.outSum+'</td><td style="font-weight:800;color:var(--sky3)">'+x.stock+'</td>';
+      tbody.appendChild(tr);
+    });
+  }).catch(function(){ tbody.innerHTML='<tr><td colspan="6" class="empty">조회 실패</td></tr>'; });
 }
 
 // ═══ 품목마스터 관리(admin) ═══
