@@ -413,6 +413,22 @@ function sbFetch(path, opt){
   if(opt.headers){for(var k in opt.headers)headers[k]=opt.headers[k];}
   return fetch(SUPABASE_URL+'/rest/v1'+path,{method:opt.method||'GET',headers:headers,body:opt.body?JSON.stringify(opt.body):undefined});
 }
+// Supabase 프로젝트의 서버측 최대 반환 행수(보통 1000) 제한을 우회하기 위해
+// offset을 늘려가며 전체 데이터를 끝까지 페이지네이션으로 가져온다.
+function sbFetchAll(basePath, pageSize){
+  pageSize = pageSize || 1000;
+  var sep = basePath.indexOf('?')>=0 ? '&' : '?';
+  function fetchPage(offset, acc){
+    var url = basePath + sep + 'limit=' + pageSize + '&offset=' + offset;
+    return sbFetch(url).then(function(r){ return r.json(); }).then(function(page){
+      page = Array.isArray(page) ? page : [];
+      acc = acc.concat(page);
+      if(page.length < pageSize) return acc; // 마지막 페이지
+      return fetchPage(offset + pageSize, acc);
+    });
+  }
+  return fetchPage(0, []);
+}
 function loadSession(){ try{var s=localStorage.getItem('t1_me'); if(!s)return null; var u=JSON.parse(s); return (u&&u.name)?u:null;}catch(e){return null;} }
 function roleLabel(r){ if(r==='admin')return '관리자'; if(r==='manager')return '매니저'; if(r==='leader')return '조장'; if(r==='deputy'||r==='acting')return '조장대행'; if(r==='teamlead')return '팀장'; return '직원'; }
 function canInput(){ if(!me)return false; var r=me.role; return r==='admin'||r==='manager'||r==='leader'||r==='deputy'||r==='acting'||r==='teamlead'; }
@@ -466,12 +482,10 @@ function loadHomeSummary(){
   var box=document.getElementById('homeStockList');
   if(!box) return;
   box.innerHTML='<div class="empty">불러오는 중…</div>';
-  sbFetch('/warehouse_item?select=current_qty,warehouse_id,item_id,item_master(item_name,spec,unit)&limit=10000')
-    .then(function(r){return r.json();})
+  sbFetchAll('/warehouse_item?select=current_qty,warehouse_id,item_id,item_master(item_name,spec,unit)')
     .then(function(wis){
       wis=Array.isArray(wis)?wis:[];
-      return sbFetch('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc&limit=15000')
-        .then(function(r){return r.json();})
+      return sbFetchAll('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc')
         .then(function(ledgers){
           ledgers=Array.isArray(ledgers)?ledgers:[];
           var latest={};
@@ -649,9 +663,8 @@ function loadWarehouseItemsAndLedger(){
         return {wid:r.id, item_id:r.item_id, min_qty:r.min_qty||0, current_qty:r.current_qty||0, item_name:im.item_name||'(삭제된 품목)', spec:im.spec||'', unit:im.unit||''};
       });
       whItems.sort(function(a,b){ return a.item_name.localeCompare(b.item_name,'ko'); });
-      return sbFetch('/warehouse_ledger?warehouse_id=eq.'+curWarehouse.id+'&ledger_date=lte.'+curDate+'&order=ledger_date.asc&select=*');
+      return sbFetchAll('/warehouse_ledger?warehouse_id=eq.'+curWarehouse.id+'&ledger_date=lte.'+curDate+'&order=ledger_date.asc&select=*');
     })
-    .then(function(r){return r.json();})
     .then(function(rows){
       rows=Array.isArray(rows)?rows:[];
       var prevRemain={}, todayRow={};
@@ -1001,8 +1014,8 @@ function loadWarehouseStats(){
   var grid=document.getElementById('whStatGrid');
   grid.innerHTML='<div class="empty">불러오는 중…</div>';
   Promise.all([
-    sbFetch('/warehouse_item?select=warehouse_id,item_id,current_qty,item_master(item_name)&limit=10000').then(function(r){return r.json();}),
-    sbFetch('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc&limit=15000').then(function(r){return r.json();})
+    sbFetchAll('/warehouse_item?select=warehouse_id,item_id,current_qty,item_master(item_name)'),
+    sbFetchAll('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc')
   ]).then(function(res){
     var wis=Array.isArray(res[0])?res[0]:[];
     var ledgers=Array.isArray(res[1])?res[1]:[];
@@ -1049,13 +1062,12 @@ function renderWarehouseStats(){
 function loadLowStock(){
   var box=document.getElementById('lowStockList');
   box.innerHTML='<div class="empty">불러오는 중…</div>';
-  sbFetch('/warehouse_item?select=id,min_qty,current_qty,warehouse_id,item_id,item_master(item_name,spec,unit),warehouse_master(location_desc,room_no)&min_qty=gt.0&limit=10000')
-    .then(function(r){return r.json();})
+  sbFetchAll('/warehouse_item?select=id,min_qty,current_qty,warehouse_id,item_id,item_master(item_name,spec,unit),warehouse_master(location_desc,room_no)&min_qty=gt.0')
     .then(function(wis){
       wis=Array.isArray(wis)?wis:[];
       var whIds=Array.from(new Set(wis.map(function(w){return w.warehouse_id;})));
       if(!whIds.length){ box.innerHTML=''; document.getElementById('lowStockEmpty').style.display='block'; return; }
-      return sbFetch('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc&limit=15000').then(function(r){return r.json();}).then(function(ledgers){
+      return sbFetchAll('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc').then(function(ledgers){
         ledgers=Array.isArray(ledgers)?ledgers:[];
         var latest={};
         ledgers.forEach(function(l){ var key=l.warehouse_id+'_'+l.item_id; if(!(key in latest)) latest[key]=l.remain_qty; });
@@ -1097,9 +1109,9 @@ function loadPeriodStats(){
   var anchor=gsCurrentAnchor(); gsAnchor[gsMode]=anchor;
   var r=computeRange(gsMode, anchor);
   Promise.all([
-    sbFetch('/warehouse_ledger?select=item_id,in_qty,out_qty,item_master(item_name,spec,unit)&ledger_date=gte.'+r.from+'&ledger_date=lte.'+r.to+'&limit=8000').then(function(rr){return rr.json();}),
-    sbFetch('/warehouse_item?select=warehouse_id,item_id,current_qty&limit=10000').then(function(rr){return rr.json();}),
-    sbFetch('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc&limit=15000').then(function(rr){return rr.json();})
+    sbFetchAll('/warehouse_ledger?select=item_id,in_qty,out_qty,item_master(item_name,spec,unit)&ledger_date=gte.'+r.from+'&ledger_date=lte.'+r.to),
+    sbFetchAll('/warehouse_item?select=warehouse_id,item_id,current_qty'),
+    sbFetchAll('/warehouse_ledger?select=warehouse_id,item_id,remain_qty,ledger_date&order=ledger_date.desc')
   ]).then(function(res){
     var rows=Array.isArray(res[0])?res[0]:[];
     var wis=Array.isArray(res[1])?res[1]:[];
@@ -1164,8 +1176,8 @@ function loadWhDetailStats(){
   var anchor=wdCurrentAnchor(); wdAnchor[wdMode]=anchor;
   var r=computeRange(wdMode, anchor);
   Promise.all([
-    sbFetch('/warehouse_item?warehouse_id=eq.'+curWhDetail.id+'&select=item_id,current_qty,item_master(item_name,spec,unit)').then(function(rr){return rr.json();}),
-    sbFetch('/warehouse_ledger?warehouse_id=eq.'+curWhDetail.id+'&select=item_id,in_qty,out_qty,remain_qty,ledger_date&order=ledger_date.desc&limit=4000').then(function(rr){return rr.json();})
+    sbFetchAll('/warehouse_item?warehouse_id=eq.'+curWhDetail.id+'&select=item_id,current_qty,item_master(item_name,spec,unit)'),
+    sbFetchAll('/warehouse_ledger?warehouse_id=eq.'+curWhDetail.id+'&select=item_id,in_qty,out_qty,remain_qty,ledger_date&order=ledger_date.desc')
   ]).then(function(res){
     var wis=Array.isArray(res[0])?res[0]:[];
     var ledgers=Array.isArray(res[1])?res[1]:[];
