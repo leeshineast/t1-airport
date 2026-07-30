@@ -473,7 +473,7 @@ html{overflow-x:hidden}
       };
     })();
   </script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
 </head>
 <body>
 
@@ -1841,7 +1841,7 @@ html{overflow-x:hidden}
     <div class="card" style="margin-bottom:10px"><div class="cb">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
         <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">2</div>
-        <span style="font-size:15px;font-weight:800;color:var(--g7)">🔧 시설물 고장</span>
+        <span style="font-size:15px;font-weight:800;color:var(--g7)">🔧 EVENT</span>
       </div>
       <div class="rg" style="margin-bottom:8px">
         <div class="rp on" onclick="togF(this,'hFWrap',false)">없음</div>
@@ -1860,7 +1860,7 @@ html{overflow-x:hidden}
           </div>
           <div id="hFLocTop10" style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:2px;width:100%;box-sizing:border-box"></div>
           <div>
-            <label style="font-size:12px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">③ 고장 내용</label>
+            <label style="font-size:12px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px">③ EVENT 내용</label>
             <div style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:6px;width:100%;box-sizing:border-box">
               <div class="chip-quick" onclick="insertQuickTag('hFDesc',this)">막힘</div>
               <div class="chip-quick" onclick="insertQuickTag('hFDesc',this)">푸쉬버튼 고장</div>
@@ -1887,6 +1887,8 @@ html{overflow-x:hidden}
               <div class="rp" onclick="selFType(this)">토목</div>
               <div class="rp" onclick="selFType(this)">전기</div>
               <div class="rp" onclick="selFType(this)">세스코</div>
+              <div class="rp" onclick="selFType(this)">안내데스크</div>
+              <div class="rp" onclick="selFType(this)">대테러상황실</div>
               <div class="rp" onclick="selFType(this,'hFEtc')">기타</div>
             </div>
             <input id="hFEtc" type="text" class="ri" placeholder="기타 내용 직접 입력" style="display:none;margin-top:5px;margin-bottom:0">
@@ -2092,7 +2094,7 @@ html{overflow-x:hidden}
 
 <!-- 습득물 초기화 모달 -->
 <!-- 습득물 처리완료 모달 -->
-<!-- 상황발생보고서 (습득물/인수인계/민원 공용) -->
+<!-- 상황발생보고서 (습득물/인수인계/민원/안전사고 공용) -->
 <style>
 @media print{
   body *{visibility:hidden}
@@ -2100,30 +2102,34 @@ html{overflow-x:hidden}
   #reportPrintArea{position:absolute;top:0;left:0;width:100%;margin:0;padding:20px}
   #reportModal{position:static !important;background:none !important}
   .no-print{display:none !important}
+  .rpt-edit{border:none !important;background:transparent !important;-webkit-print-color-adjust:exact}
 }
 .rpt-table{width:100%;border-collapse:collapse;font-size:13px}
 .rpt-table td{border:1px solid #333;padding:8px 10px;vertical-align:middle}
 .rpt-lbl{background:#F2F2F2;font-weight:700;text-align:center;white-space:nowrap}
+.rpt-edit{width:100%;border:1px solid var(--teal);border-radius:4px;padding:5px 7px;font-size:13px;font-family:inherit;box-sizing:border-box;background:#F5FFFE}
+textarea.rpt-edit{resize:vertical;min-height:36px}
 </style>
 <div id="reportModal" class="modal-bg">
   <div class="modal" style="max-width:520px;max-height:92vh;overflow-y:auto">
-    <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📄 상황발생보고서</h3><button class="m-x" onclick="hideM('reportModal')">×</button></div>
+    <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3 id="reportModalTitle">📄 상황발생보고서</h3><button class="m-x" onclick="hideM('reportModal')">×</button></div>
     <div style="padding:15px 17px">
+      <div style="font-size:11px;color:var(--teal2);background:var(--teal-bg);border-radius:8px;padding:7px 10px;margin-bottom:10px">✏️ 발생장소·상황내용·조치내용은 눌러서 직접 수정할 수 있습니다 (인쇄·다운로드에 반영됨)</div>
       <div id="reportPrintArea" style="background:white;padding:16px;border:1px solid #ccc">
-        <div style="text-align:center;font-size:19px;font-weight:800;letter-spacing:6px;margin-bottom:14px">상 황 발 생 보 고 서</div>
+        <div id="reportBigTitle" style="text-align:center;font-size:19px;font-weight:800;letter-spacing:6px;margin-bottom:14px">상 황 발 생 보 고 서</div>
         <table class="rpt-table">
           <tr><td class="rpt-lbl" style="width:20%">사업부명</td><td style="width:30%" id="rptDept">T1환경미화사업부</td><td class="rpt-lbl" style="width:20%">보고자</td><td style="width:30%" id="rptReporter"></td></tr>
           <tr><td class="rpt-lbl">발생일시</td><td id="rptDatetime"></td><td class="rpt-lbl">발생장소</td><td id="rptLocation"></td></tr>
           <tr><td class="rpt-lbl" rowspan="6" style="text-align:center">상황내용</td><td class="rpt-lbl">발생시간</td><td colspan="2" id="rptTime"></td></tr>
-          <tr><td class="rpt-lbl">발생장소</td><td colspan="2" id="rptLocation2"></td></tr>
-          <tr><td class="rpt-lbl">상황내용</td><td colspan="2" id="rptContent"></td></tr>
+          <tr><td class="rpt-lbl">발생장소</td><td colspan="2"><input type="text" class="rpt-edit" id="rptLocation2" oninput="document.getElementById('rptLocation').textContent=this.value"></td></tr>
+          <tr><td class="rpt-lbl">상황내용</td><td colspan="2"><textarea class="rpt-edit" id="rptContent" rows="2"></textarea></td></tr>
           <tr><td class="rpt-lbl" id="rptFinderLbl">발견자</td><td colspan="2" id="rptFinder"></td></tr>
           <tr><td class="rpt-lbl" id="rptIdLbl">사번</td><td colspan="2" id="rptId"></td></tr>
           <tr><td class="rpt-lbl">상황접수</td><td colspan="2" id="rptChannel"></td></tr>
           <tr><td colspan="4" style="font-weight:800;background:#fafafa">□ 조치사항</td></tr>
           <tr><td class="rpt-lbl">조치자</td><td colspan="3" id="rptActor"></td></tr>
-          <tr><td class="rpt-lbl">조치내용</td><td colspan="3" id="rptAction"></td></tr>
-          <tr><td class="rpt-lbl" colspan="4" style="text-align:center">사진대지 (출력 후 사진 부착)</td></tr>
+          <tr><td class="rpt-lbl">조치내용</td><td colspan="3"><textarea class="rpt-edit" id="rptAction" rows="2"></textarea></td></tr>
+          <tr><td class="rpt-lbl" colspan="4" style="text-align:center">상황 사진 별첨</td></tr>
           <tr><td colspan="4" style="height:160px"></td></tr>
         </table>
       </div>
@@ -5015,7 +5021,7 @@ function getRecentReceivers(type){
   return names.slice(0,5);
 }
 // 접수자 최근 5명 칩 렌더링 (신고구분 5개 전부 동시에, 각 구분별 최근 5명)
-var FAC_TYPES=['기계','건축','전기','토목','세스코'];
+var FAC_TYPES=['기계','건축','전기','토목','세스코','안내데스크','대테러상황실'];
 function loadFacRcvRecent(){
   var wrap=document.getElementById('hFRcvRecent');
   if(!wrap) return;
@@ -5203,7 +5209,7 @@ function subHO(){
   const now=new Date(_hoDateISO);
   const ts=(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
   let fields='';
-  if(fT!=='없음')fields+=`<div class="ho-f"><div class="ho-lbl">🔧 시설물 고장</div><div class="ho-val">${fT}</div></div>`;
+  if(fT!=='없음')fields+=`<div class="ho-f"><div class="ho-lbl">🔧 EVENT</div><div class="ho-val">${fT}</div></div>`;
   if(dT!=='없음')fields+=`<div class="ho-f"><div class="ho-lbl">⚠️ 위험구역</div><div class="ho-val">${dT}</div></div>`;
   if(eT!=='이상없음')fields+=`<div class="ho-f"><div class="ho-lbl">🚛 장비·차량</div><div class="ho-val">${eT}</div></div>`;
   if(_hEtcVal) fields='<div class="ho-f"><div class="ho-lbl">📝 업무내용</div><div class="ho-val">'+_hEtcVal+'</div></div>'+fields;
@@ -5965,7 +5971,7 @@ async function loadHoList(){
     const toNm = row['인수팀']||'';
     const isDone = row['확인여부']==='완료';
     let fields = '';
-    if(row['시설물']&&row['시설물']!=='없음') fields+=`<div class="ho-f"><div class="ho-lbl">🔧 시설물 고장</div><div class="ho-val">${row['시설물']}</div></div>`;
+    if(row['시설물']&&row['시설물']!=='없음') fields+=`<div class="ho-f"><div class="ho-lbl">🔧 EVENT</div><div class="ho-val">${row['시설물']}</div></div>`;
     if(row['민원']&&row['민원']!=='없음') fields+=`<div class="ho-f"><div class="ho-lbl">📢 민원</div><div class="ho-val">${row['민원']}</div></div>`;
     if(row['공지']&&row['공지']) fields+=`<div class="ho-f"><div class="ho-lbl">📋 공지사항</div><div class="ho-val">${row['공지']}</div></div>`;
     if(row['안전사고']&&row['안전사고']!=='없음') fields+=`<div class="ho-f"><div class="ho-lbl">🚨 안전사고</div><div class="ho-val">${row['안전사고']}</div></div>`;
@@ -9157,7 +9163,7 @@ function facTab(n){ tabSwitch('fac',n,2); if(n===1) loadFacManage(); }
 function loadSheetJS(callback){
   if(typeof XLSX !== 'undefined'){ callback(); return; }
   var s=document.createElement('script');
-  s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+  s.src='https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js';
   s.onload=function(){ callback(); };
   s.onerror=function(){ toast('⚠️ 라이브러리 로드 실패. 인터넷 연결을 확인해주세요.'); };
   document.head.appendChild(s);
@@ -10442,7 +10448,7 @@ function renderHoList(data){
     var author=r.author||'작성자';
     var initial=author[0]||'?';
     var fields='';
-    if(r.facility) fields+='<div class="ho-f"><div class="ho-lbl">🔧 시설물 고장</div><div class="ho-val">'+r.facility+'</div></div>';
+    if(r.facility) fields+='<div class="ho-f"><div class="ho-lbl">🔧 EVENT</div><div class="ho-val">'+r.facility+'</div></div>';
     if(r.notice) fields+='<div class="ho-f"><div class="ho-lbl">📋 공지</div><div class="ho-val">'+r.notice+'</div></div>';
     if(!fields) fields='<p style="font-size:13px;color:var(--g4);font-style:italic">이상 없음</p>';
     var confBtn=renderHoConfBlock(r, 'all_');
@@ -13432,6 +13438,7 @@ function renderAccList(data){
         +'<div class="w-row"><div class="w-av" style="background:var(--danger)">'+initial+'</div>'
         +'<span class="w-nm">'+writer+' 작성</span></div>'
         +'<div class="ho-body">'+fields+'</div>'
+        +'<div style="margin-top:6px"><button data-id="'+r.id+'" onclick="openReport(\'accident\',parseInt(this.dataset.id))" style="padding:5px 10px;background:var(--g1);color:var(--g6);border:1px solid var(--g3);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">📄 상황보고서</button></div>'
         +confBtn
         +'</div>';
     });
@@ -15171,7 +15178,7 @@ function msRow(label, val){
   return '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--g1);font-size:13px"><span style="color:var(--g5)">'+label+'</span><span style="font-weight:800;color:var(--g6)">'+val+'</span></div>';
 }
 // 인수인계 시설물고장 텍스트 파싱: "[장소] X / [내용] Y / [신고] Z" 형식
-// ═══ 상황발생보고서 (습득물/인수인계/민원 공용) ═══
+// ═══ 상황발생보고서 (습득물/인수인계/민원/안전사고 공용) ═══
 var _rptData=null;
 function fmtKDT(ts){ return ts?toKSTDateTime(ts):''; }
 function fmtKD(ts){ return ts?toKSTDate(ts):''; }
@@ -15186,7 +15193,7 @@ function openReport(type, id){
       time:dt?new Date(dt).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'}):'',
       content:r.item||'', finderLbl:'발견자', finder:r.finder_name||'', idLbl:'사번', id2:r.finder_id||'',
       channel:r.receipt_route||'T1습득물 오픈채널', actor:r.writer||'', action:(r.status||'')+(r.complete_memo?(' · '+r.complete_memo):''),
-      title:'습득물 상황발생보고서'
+      title:'유실물 발생 보고서', bigTitle:'유 실 물 발 생 보 고 서'
     };
   }else if(type==='ho'){
     r=(hoAll||[]).find(function(x){return x.id===id;});
@@ -15199,7 +15206,7 @@ function openReport(type, id){
       time:dt2?new Date(dt2).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'}):'',
       content:(fp&&fp.desc)||'', finderLbl:'작성자', finder:r.author||'', idLbl:'팀', id2:r.team||'',
       channel:(fp&&fp.type)||'', actor:rcvMatch?rcvMatch[1].trim():(r.confirmed_by||''), action:r.confirmed?'확인완료':'대기 중',
-      title:'인수인계 상황발생보고서'
+      title:'상황발생보고서', bigTitle:'상 황 발 생 보 고 서'
     };
   }else if(type==='voc'){
     r=(vocData||[]).find(function(x){return x.id===id;});
@@ -15211,24 +15218,37 @@ function openReport(type, id){
       time:dt3?new Date(dt3).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'}):'',
       content:r.content||'', finderLbl:'접수자', finder:r.writer||'', idLbl:'구분', id2:(r.category==='기타'?r.category_etc:r.category)||'',
       channel:r.channel||'', actor:r.writer||'', action:(r.status||'')+(r.note?(' · '+r.note):''),
-      title:'민원 상황발생보고서'
+      title:'상황발생보고서', bigTitle:'상 황 발 생 보 고 서'
+    };
+  }else if(type==='accident'){
+    r=(accidentAll||[]).find(function(x){return x.id===id;});
+    if(!r){ toast('기록을 찾을 수 없습니다'); return; }
+    var dt4=r.occurred_at||r.created_at;
+    f={
+      reporter:r.writer||'(해당팀장)', datetime:fmtKDT(dt4), location:r.location||'',
+      time:dt4?new Date(dt4).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'}):'',
+      content:(r.description||'')+(r.damage?(' · 피해: '+r.damage):''), finderLbl:'관련직원', finder:r.related_staff||'', idLbl:'팀', id2:r.team||'',
+      channel:r.is_industrial?'산업재해':'안전사고', actor:r.writer||'', action:r.action||(r.result||''),
+      title:(r.is_industrial?'산업재해':'안전사고')+' 발생 보고서', bigTitle:(r.is_industrial?'산 업 재 해':'안 전 사 고')+' 발 생 보 고 서'
     };
   }else return;
 
   _rptData={type:type, id:id, f:f};
+  document.getElementById('reportModalTitle').textContent='📄 '+f.title;
+  document.getElementById('reportBigTitle').textContent=f.bigTitle;
   document.getElementById('rptReporter').textContent=f.reporter;
   document.getElementById('rptDatetime').textContent=f.datetime;
   document.getElementById('rptLocation').textContent=f.location;
-  document.getElementById('rptLocation2').textContent=f.location;
+  document.getElementById('rptLocation2').value=f.location;
   document.getElementById('rptTime').textContent=f.time;
-  document.getElementById('rptContent').textContent=f.content;
+  document.getElementById('rptContent').value=f.content;
   document.getElementById('rptFinderLbl').textContent=f.finderLbl;
   document.getElementById('rptFinder').textContent=f.finder;
   document.getElementById('rptIdLbl').textContent=f.idLbl;
   document.getElementById('rptId').textContent=f.id2;
   document.getElementById('rptChannel').textContent=f.channel;
   document.getElementById('rptActor').textContent=f.actor;
-  document.getElementById('rptAction').textContent=f.action;
+  document.getElementById('rptAction').value=f.action;
   showM('reportModal');
 }
 function printReport(){
@@ -15237,22 +15257,26 @@ function printReport(){
 function downloadReportExcel(){
   if(!_rptData){ toast('보고서 데이터가 없습니다'); return; }
   var f=_rptData.f;
+  // 편집된 최신 값 반영
+  var location=document.getElementById('rptLocation2').value;
+  var content=document.getElementById('rptContent').value;
+  var action=document.getElementById('rptAction').value;
   try{
     var rows=[
-      ['상 황 발 생 보 고 서','','',''],
+      [f.bigTitle,'','',''],
       ['','','',''],
       ['사업부명','T1환경미화사업부','보고자',f.reporter],
-      ['발생일시',f.datetime,'발생장소',f.location],
+      ['발생일시',f.datetime,'발생장소',location],
       ['상황내용','발생시간',f.time,''],
-      ['','발생장소',f.location,''],
-      ['','상황내용',f.content,''],
+      ['','발생장소',location,''],
+      ['','상황내용',content,''],
       ['',f.finderLbl,f.finder,''],
       ['',f.idLbl,f.id2,''],
       ['','상황접수',f.channel,''],
       ['□ 조치사항','','',''],
       ['','조치자',f.actor,''],
-      ['','조치내용',f.action,''],
-      ['사진대지(출력 후 부착)','','','']
+      ['','조치내용',action,''],
+      ['상황 사진 별첨','','','']
     ];
     var ws=XLSX.utils.aoa_to_sheet(rows);
     ws['!merges']=[
@@ -15265,9 +15289,30 @@ function downloadReportExcel(){
       {s:{r:13,c:0},e:{r:13,c:3}}
     ];
     ws['!cols']=[{wch:14},{wch:14},{wch:26},{wch:14}];
-    ws['!rows']=[{},{},{},{},{},{},{},{},{},{},{},{},{},{hpt:120}];
+    ws['!rows']=[{hpt:26},{},{},{},{},{},{},{},{},{},{},{},{},{hpt:120}];
+    // 스타일 적용 (xlsx-js-style)
+    var borderThin={style:'thin',color:{rgb:'333333'}};
+    var allBorder={top:borderThin,bottom:borderThin,left:borderThin,right:borderThin};
+    var labelStyle={font:{bold:true},alignment:{horizontal:'center',vertical:'center',wrapText:true},fill:{fgColor:{rgb:'F2F2F2'}},border:allBorder};
+    var valueStyle={alignment:{vertical:'center',wrapText:true},border:allBorder};
+    var titleStyle={font:{bold:true,sz:18},alignment:{horizontal:'center',vertical:'center'}};
+    var sectionStyle={font:{bold:true},fill:{fgColor:{rgb:'FAFAFA'}},border:allBorder};
+    var labelCells=['A1','A3','C3','A4','C4','A5','B5','B6','B7','B8','B9','B10','B12','A11','B13','A14'];
+    var range=XLSX.utils.decode_range(ws['!ref']);
+    for(var R=range.s.r;R<=range.e.r;++R){
+      for(var C=range.s.c;C<=range.e.c;++C){
+        var addr=XLSX.utils.encode_cell({r:R,c:C});
+        if(!ws[addr]) ws[addr]={t:'s',v:''};
+        if(R===0){ ws[addr].s=titleStyle; continue; }
+        if(R===1) continue;
+        if(R===10){ ws[addr].s=sectionStyle; continue; }
+        if(R===13){ ws[addr].s=(C===0)?Object.assign({},labelStyle,{fontSize:11}):valueStyle; continue; }
+        var isLabelCol=(R>=4&&R<=9)?(C===1):(C===0||C===2);
+        ws[addr].s=isLabelCol?labelStyle:valueStyle;
+      }
+    }
     var wb=XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb,ws,'상황보고서');
+    XLSX.utils.book_append_sheet(wb,ws,'보고서');
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
     XLSX.writeFile(wb, f.title.replace(/\s/g,'')+'_'+today+'.xlsx');
     toast('📥 다운로드 완료');
