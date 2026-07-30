@@ -3228,7 +3228,27 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <button class="btn-prim" onclick="dlWorkVeh()">📥 운행기록부 다운로드 (xlsx)</button>
       <div style="margin-top:10px;font-size:13px;color:var(--g4);text-align:center" id="wvDlInfo"></div>
     </div></div>
+    <div class="card" id="wvResetCard" style="display:none;border-color:rgba(217,64,64,.3)"><div class="cb">
+      <p style="font-size:14px;font-weight:800;color:var(--danger);margin-bottom:8px">🗑️ 전체 삭제 (관리자 전용)</p>
+      <p style="font-size:13px;color:var(--g5);line-height:1.6;margin-bottom:12px">공사업무용차량 운행일지 전체 기록을 삭제합니다. 삭제 후 복구할 수 없습니다.</p>
+      <button style="width:100%;padding:12px;background:var(--danger);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer" onclick="openWvResetConfirm()">전체 삭제</button>
+    </div></div>
     <div style="height:20px"></div>
+  </div>
+</div>
+
+<!-- 공사차량 전체삭제 확인 오버레이 -->
+<div id="wvResetOverlay" class="modal-bg">
+  <div class="modal" style="max-width:340px">
+    <div style="padding:20px">
+      <div style="font-size:15px;font-weight:800;color:var(--danger);margin-bottom:6px">⚠️ 운행일지 전체 삭제</div>
+      <div style="font-size:12.5px;color:var(--g5);line-height:1.6">복구할 수 없습니다.<br>확인을 위해 아래에 <b>초기화</b>를 입력해주세요.</div>
+      <input type="text" id="wvResetConfirmInput" placeholder="초기화" oninput="document.getElementById('wvResetExecBtn').disabled=(this.value.trim()!=='초기화')" style="width:100%;padding:11px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;margin-top:8px;box-sizing:border-box">
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <button style="flex:1;padding:11px;border:1.5px solid var(--g2);border-radius:var(--r2);background:#fff;font-weight:700;color:var(--g5)" onclick="hideM('wvResetOverlay')">취소</button>
+        <button id="wvResetExecBtn" disabled style="flex:1;padding:11px;border:none;border-radius:var(--r2);background:var(--danger);color:#fff;font-weight:800" onclick="execWvReset()">삭제</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -3782,6 +3802,42 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div style="display:flex;gap:7px">
         <button onclick="closePermEdit()" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">취소</button>
         <button onclick="savePermEdit()" style="flex:2;padding:11px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 팀/조 이동 모달 (인사발령 — 관리자 이동환 전용) -->
+<div id="teamMoveModal" class="modal-bg">
+  <div class="modal">
+    <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))">
+      <h3>🔄 팀·조 이동</h3>
+      <button class="m-x" onclick="closeTeamMove()">×</button>
+    </div>
+    <div style="padding:16px 17px">
+      <div style="font-size:15px;font-weight:700;color:var(--g7);margin-bottom:4px" id="tmUserName">사용자</div>
+      <div style="font-size:12px;color:var(--g4);margin-bottom:13px">현재: <span id="tmCurrentTeam">-</span></div>
+      <div style="font-size:12px;color:var(--g4);font-weight:700;margin-bottom:6px">이동할 팀 선택</div>
+      <div id="tmTeamGrp" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:13px">
+        <div class="t-btn" onclick="pickMoveTeam(this)">1팀</div>
+        <div class="t-btn" onclick="pickMoveTeam(this)">2팀</div>
+        <div class="t-btn" onclick="pickMoveTeam(this)">3팀</div>
+        <div class="t-btn" onclick="pickMoveTeam(this)">4팀</div>
+        <div class="t-btn" onclick="pickMoveTeam(this)">5팀</div>
+        <div class="t-btn" onclick="pickMoveTeam(this)">6팀</div>
+        <div class="t-btn" onclick="pickMoveTeam(this)">7팀</div>
+        <div class="t-btn" onclick="pickMoveTeam(this)">8팀</div>
+        <div class="t-btn" onclick="pickMoveTeam(this)">9팀</div>
+        <div class="t-btn" onclick="pickMoveTeam(this)">10팀</div>
+        <div class="t-btn" onclick="pickMoveTeam(this)">T1운영</div>
+      </div>
+      <div id="tmJoWrap" style="display:none;margin-bottom:16px">
+        <div style="font-size:12px;color:var(--g4);font-weight:700;margin-bottom:6px">조 선택</div>
+        <div id="tmJoGrp" style="display:flex;flex-wrap:wrap;gap:7px"></div>
+      </div>
+      <div style="display:flex;gap:7px">
+        <button onclick="closeTeamMove()" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">취소</button>
+        <button onclick="saveTeamMove()" style="flex:2;padding:11px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">이동 저장</button>
       </div>
     </div>
   </div>
@@ -7801,6 +7857,31 @@ function loadWorkVehData(){
   var isDlAllowed=me&&(me.role==='admin'||me.role==='manager'||me.role==='leader');
   var t2=document.getElementById('wvT2');
   if(t2) t2.style.display=isDlAllowed?'':'none';
+  // 전체삭제 카드는 admin 전용
+  var resetCard=document.getElementById('wvResetCard');
+  if(resetCard) resetCard.style.display=(me&&me.role==='admin')?'block':'none';
+}
+function openWvResetConfirm(){
+  if(!(me&&me.role==='admin')){ toast('관리자만 사용할 수 있습니다'); return; }
+  document.getElementById('wvResetConfirmInput').value='';
+  document.getElementById('wvResetExecBtn').disabled=true;
+  showM('wvResetOverlay');
+}
+async function execWvReset(){
+  if(!(me&&me.role==='admin')) return;
+  var btn=document.getElementById('wvResetExecBtn'); btn.disabled=true; btn.textContent='삭제 중…';
+  try{
+    var res=await sb.from('work_vehicle_log').delete().neq('id',0);
+    btn.disabled=false; btn.textContent='삭제';
+    hideM('wvResetOverlay');
+    if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    toast('✅ 운행일지 전체 삭제 완료');
+    workVehData=[];
+    renderWorkVehList([]);
+  }catch(e){
+    btn.disabled=false; btn.textContent='삭제';
+    toast('삭제 오류: '+String(e.message||e));
+  }
 }
 
 
@@ -10105,6 +10186,7 @@ async function rejectUser(id, name){
 async function loadUserList(){
   var el=document.getElementById('userList');
   if(!el) return;
+  var canMoveTeam=(me&&me.role==='admin'&&me.name==='이동환');
   try{
     var res=await sb.from('users').select('id,name,email,role,team,permissions,status,created_at').eq('status','active').order('created_at');
     if(res.error) return;
@@ -10120,12 +10202,70 @@ async function loadUserList(){
         var labels={read:'읽기',write:'쓰기',edit:'수정',download:'다운로드'};
         return '<span style="font-size:12px;padding:2px 8px;border-radius:20px;font-weight:600;background:'+(p[k]?'var(--success-bg)':'var(--g1)')+';color:'+(p[k]?'var(--success)':'var(--g3)')+'">'+labels[k]+'</span>';
       }).join('');
-      row.innerHTML='<div style="display:flex;flex-direction:column;width:100%;gap:5px"><div style="display:flex;align-items:center;justify-content:space-between"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' · '+u.role+'</div></div></div><div style="display:flex;gap:6px;align-items:center"><span class="chip chip-ok">활성</span><button class="perm-btn" data-name="'+u.name+'" data-id="'+u.id+'" style="padding:4px 9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔐 권한</button><button class="withdraw-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:5px 9px;background:var(--danger-bg);color:var(--danger);border:1.5px solid rgba(217,64,64,.2);border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">탈퇴</button></div></div><div id="perm-'+u.id+'" style="display:flex;flex-wrap:wrap;gap:4px">'+permChips+'</div></div>';
+      var moveBtn=canMoveTeam?('<button class="move-btn" data-id="'+u.id+'" data-name="'+u.name+'" data-team="'+u.team+'" style="padding:4px 9px;background:var(--warn-bg,#FFF7E0);color:var(--warn);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔄 이동</button>'):'';
+      row.innerHTML='<div style="display:flex;flex-direction:column;width:100%;gap:5px"><div style="display:flex;align-items:center;justify-content:space-between"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' · '+u.role+'</div></div></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="chip chip-ok">활성</span>'+moveBtn+'<button class="perm-btn" data-name="'+u.name+'" data-id="'+u.id+'" style="padding:4px 9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔐 권한</button><button class="withdraw-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:5px 9px;background:var(--danger-bg);color:var(--danger);border:1.5px solid rgba(217,64,64,.2);border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">탈퇴</button></div></div><div id="perm-'+u.id+'" style="display:flex;flex-wrap:wrap;gap:4px">'+permChips+'</div></div>';
       row.querySelector('.perm-btn').onclick=function(){openPermEdit(this,this.dataset.name,this.dataset.id);};
       row.querySelector('.withdraw-btn').onclick=function(){withdrawUserDB(this.dataset.id,this.dataset.name);};
+      if(canMoveTeam){ row.querySelector('.move-btn').onclick=function(){openTeamMove(this.dataset.id,this.dataset.name,this.dataset.team);}; }
       el.appendChild(row);
     });
   }catch(e){console.error(e);}
+}
+
+// ─ 팀·조 이동 (인사발령, 관리자 이동환 전용) ─
+var tmTarget=null, tmSelectedTeam='';
+var TM_JO_MAP={
+  '1팀':['A조','B조','C조','운전'],'2팀':['A조','B조'],'3팀':['A조','B조'],'4팀':['A조','B조'],
+  '6팀':['A조','B조','C조','운전'],'7팀':['A조','B조'],'8팀':['A조','B조'],'9팀':['A조','B조'],
+  '5팀':['A조','B조'],'10팀':['A조','B조']
+};
+function openTeamMove(id, name, currentTeam){
+  if(!(me&&me.role==='admin'&&me.name==='이동환')){ toast('권한이 없습니다'); return; }
+  tmTarget={id:id, name:name};
+  tmSelectedTeam='';
+  document.getElementById('tmUserName').textContent=name;
+  document.getElementById('tmCurrentTeam').textContent=currentTeam||'-';
+  document.querySelectorAll('#tmTeamGrp .t-btn').forEach(function(b){b.classList.remove('on');});
+  document.getElementById('tmJoWrap').style.display='none';
+  document.getElementById('tmJoGrp').innerHTML='';
+  showM('teamMoveModal');
+}
+function closeTeamMove(){ hideM('teamMoveModal'); tmTarget=null; }
+function pickMoveTeam(el){
+  document.querySelectorAll('#tmTeamGrp .t-btn').forEach(function(b){b.classList.remove('on');});
+  el.classList.add('on');
+  tmSelectedTeam=el.textContent.trim();
+  var joWrap=document.getElementById('tmJoWrap');
+  var joGrp=document.getElementById('tmJoGrp');
+  if(tmSelectedTeam==='T1운영'){ joWrap.style.display='none'; return; }
+  var jos=TM_JO_MAP[tmSelectedTeam]||[];
+  joGrp.innerHTML=jos.map(function(j){ return '<div class="t-btn" onclick="pickMoveJo(this)" style="flex:none;padding:8px 16px">'+j+'</div>'; }).join('');
+  joWrap.style.display=jos.length?'block':'none';
+}
+function pickMoveJo(el){
+  document.querySelectorAll('#tmJoGrp .t-btn').forEach(function(b){b.classList.remove('on');});
+  el.classList.add('on');
+}
+async function saveTeamMove(){
+  if(!(me&&me.role==='admin'&&me.name==='이동환')){ toast('권한이 없습니다'); return; }
+  if(!tmTarget){ toast('대상자 정보가 없습니다'); return; }
+  if(!tmSelectedTeam){ toast('이동할 팀을 선택해주세요'); return; }
+  var newTeam=tmSelectedTeam;
+  if(tmSelectedTeam!=='T1운영'){
+    var joEl=document.querySelector('#tmJoGrp .t-btn.on');
+    var jos=TM_JO_MAP[tmSelectedTeam]||[];
+    if(jos.length){
+      if(!joEl){ toast('조를 선택해주세요'); return; }
+      newTeam=tmSelectedTeam+' '+joEl.textContent.trim();
+    }
+  }
+  try{
+    var res=await sb.from('users').update({team:newTeam}).eq('id',tmTarget.id);
+    if(res.error){ toast('오류: '+res.error.message); return; }
+    toast('✅ '+tmTarget.name+'님 → '+newTeam+' 이동 완료');
+    closeTeamMove();
+    loadUserList();
+  }catch(e){ toast('오류: '+String(e.message||e)); }
 }
 
 async function withdrawUserDB(id, name){
