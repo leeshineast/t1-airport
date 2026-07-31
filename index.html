@@ -2120,7 +2120,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div style="font-size:11px;color:var(--teal2);background:var(--teal-bg);border-radius:8px;padding:7px 10px;margin-bottom:10px">✏️ 발생장소·상황내용·조치내용은 눌러서 직접 수정할 수 있습니다 (인쇄·다운로드에 반영됨)</div>
       <div id="reportPrintArea" style="background:white;padding:16px;border:1px solid #ccc">
         <div id="reportBigTitle" style="text-align:center;font-size:19px;font-weight:800;letter-spacing:6px;margin-bottom:14px">상 황 발 생 보 고 서</div>
-        <table class="rpt-table">
+        <table class="rpt-table" id="rptGenericTable">
           <tr><td class="rpt-lbl" style="width:20%">사업부명</td><td style="width:30%" id="rptDept">T1환경미화사업부</td><td class="rpt-lbl" style="width:20%">보고자</td><td style="width:30%" id="rptReporter"></td></tr>
           <tr><td class="rpt-lbl">발생일시</td><td id="rptDatetime"></td><td class="rpt-lbl">발생장소</td><td id="rptLocation"></td></tr>
           <tr><td class="rpt-lbl" rowspan="6" style="text-align:center">상황내용</td><td class="rpt-lbl">발생시간</td><td colspan="2" id="rptTime"></td></tr>
@@ -2141,8 +2141,39 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
             <td colspan="4"><textarea class="rpt-edit" id="rptNote" rows="3"></textarea></td>
           </tr>
         </table>
+
+        <!-- 안전사고 전용 템플릿 -->
+        <table class="rpt-table" id="rptAccTable" style="display:none">
+          <tr><td class="rpt-lbl" style="width:20%">구 분</td><td style="width:55%" class="rpt-lbl">내 용</td><td style="width:25%" class="rpt-lbl">비 고</td></tr>
+          <tr><td class="rpt-lbl">사업부</td><td id="accDept"></td><td></td></tr>
+          <tr><td class="rpt-lbl">재해자</td><td><input type="text" class="rpt-edit" id="accVictim" placeholder="예: 환경미화직 홍길동(여, 57세)"></td><td></td></tr>
+          <tr><td class="rpt-lbl">업무</td><td><input type="text" class="rpt-edit" id="accDuty" placeholder="예: 환경미화(화장실, 공용구역)"></td><td style="font-size:11px;line-height:1.6" id="accLeaders"></td></tr>
+          <tr><td class="rpt-lbl">사고내용</td><td colspan="2" style="padding:0">
+            <table style="width:100%;border-collapse:collapse">
+              <tr><td style="border:none;padding:6px 8px;font-size:12.5px;width:76px">1. 일시</td><td style="border:none;padding:6px 8px"><input type="text" class="rpt-edit" id="accDatetime"></td></tr>
+              <tr><td style="border:none;padding:6px 8px;font-size:12.5px">2. 장소</td><td style="border:none;padding:6px 8px"><input type="text" class="rpt-edit" id="accLocation"></td></tr>
+              <tr><td style="border:none;padding:6px 8px;font-size:12.5px;vertical-align:top">3. 내용</td><td style="border:none;padding:6px 8px"><textarea class="rpt-edit" id="accContent" rows="3"></textarea></td></tr>
+              <tr><td style="border:none;padding:6px 8px;font-size:12.5px">4. 상해유형</td><td style="border:none;padding:6px 8px"><input type="text" class="rpt-edit" id="accType"></td></tr>
+              <tr><td style="border:none;padding:6px 8px;font-size:12.5px">5. 상해종류</td><td style="border:none;padding:6px 8px"><input type="text" class="rpt-edit" id="accInjury"></td></tr>
+              <tr><td style="border:none;padding:6px 8px;font-size:12.5px">6. 예상휴업일수</td><td style="border:none;padding:6px 8px"><input type="text" class="rpt-edit" id="accLeaveDays"></td></tr>
+            </table>
+          </td></tr>
+          <tr><td class="rpt-lbl">조치사항</td><td colspan="2">
+            <textarea class="rpt-edit" id="accAction" rows="5" placeholder="시간순으로 조치 내역 작성"></textarea>
+            <div style="margin-top:8px;font-size:12.5px;display:flex;align-items:center;gap:10px">
+              <span>※ 구급차 이송 여부</span>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="accAmb" id="accAmbYes" onchange="void(0)"> 예</label>
+              <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="accAmb" id="accAmbNo" onchange="void(0)"> 아니오</label>
+            </div>
+          </td></tr>
+          <tr><td class="rpt-lbl">재발방지대책</td><td><textarea class="rpt-edit" id="accPrevention" rows="3"></textarea></td><td><input type="text" class="rpt-edit" id="accPreventionPeriod" placeholder="예: 2026.06.28~30"></td></tr>
+          <tr><td class="rpt-lbl">기타사항</td><td colspan="2"><textarea class="rpt-edit" id="accEtc" rows="2"></textarea></td></tr>
+        </table>
       </div>
       <div class="no-print" style="display:flex;gap:8px;margin-top:14px">
+        <button id="rptSaveBtn" onclick="saveAccidentReport()" style="display:none;flex:1;padding:12px;background:var(--success,#0F9D6F);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">💾 저장</button>
+      </div>
+      <div class="no-print" style="display:flex;gap:8px;margin-top:8px">
         <button onclick="printReport()" style="flex:1;padding:12px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🖨️ 인쇄</button>
         <button onclick="downloadReportExcel()" style="flex:1;padding:12px;background:var(--teal2);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">📥 엑셀 다운로드</button>
       </div>
@@ -3809,33 +3840,45 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
 <!-- 팀/조 이동 모달 (인사발령 — 관리자 이동환 전용) -->
 <div id="teamMoveModal" class="modal-bg">
-  <div class="modal">
+  <div class="modal" style="max-height:92vh;overflow-y:auto">
     <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))">
-      <h3>🔄 팀·조 이동</h3>
+      <h3>🔄 팀·조·직급 이동</h3>
       <button class="m-x" onclick="closeTeamMove()">×</button>
     </div>
     <div style="padding:16px 17px">
       <div style="font-size:15px;font-weight:700;color:var(--g7);margin-bottom:4px" id="tmUserName">사용자</div>
       <div style="font-size:12px;color:var(--g4);margin-bottom:13px">현재: <span id="tmCurrentTeam">-</span></div>
-      <div style="font-size:12px;color:var(--g4);font-weight:700;margin-bottom:6px">이동할 팀 선택</div>
-      <div id="tmTeamGrp" style="display:flex;flex-wrap:wrap;gap:7px;margin-bottom:13px">
-        <div class="t-btn" onclick="pickMoveTeam(this)">1팀</div>
-        <div class="t-btn" onclick="pickMoveTeam(this)">2팀</div>
-        <div class="t-btn" onclick="pickMoveTeam(this)">3팀</div>
-        <div class="t-btn" onclick="pickMoveTeam(this)">4팀</div>
-        <div class="t-btn" onclick="pickMoveTeam(this)">5팀</div>
-        <div class="t-btn" onclick="pickMoveTeam(this)">6팀</div>
-        <div class="t-btn" onclick="pickMoveTeam(this)">7팀</div>
-        <div class="t-btn" onclick="pickMoveTeam(this)">8팀</div>
-        <div class="t-btn" onclick="pickMoveTeam(this)">9팀</div>
-        <div class="t-btn" onclick="pickMoveTeam(this)">10팀</div>
-        <div class="t-btn" onclick="pickMoveTeam(this)">T1운영</div>
+
+      <div style="font-size:13px;font-weight:700;color:var(--g4);margin-bottom:6px">소속 팀 *</div>
+      <div style="font-size:12px;font-weight:700;color:var(--teal2);margin-bottom:4px">🌅 오전팀</div>
+      <div class="t-grid" id="tmTeamGrp0"><div class="t-btn" onclick="pickMoveTeam(this)">1팀</div><div class="t-btn" onclick="pickMoveTeam(this)">2팀</div><div class="t-btn" onclick="pickMoveTeam(this)">3팀</div><div class="t-btn" onclick="pickMoveTeam(this)">4팀</div></div>
+      <div style="font-size:12px;font-weight:700;color:var(--teal2);margin:7px 0 4px">☀️ 오후팀</div>
+      <div class="t-grid"><div class="t-btn" onclick="pickMoveTeam(this)">6팀</div><div class="t-btn" onclick="pickMoveTeam(this)">7팀</div><div class="t-btn" onclick="pickMoveTeam(this)">8팀</div><div class="t-btn" onclick="pickMoveTeam(this)">9팀</div></div>
+      <div style="font-size:12px;font-weight:700;color:var(--teal2);margin:7px 0 4px">🌙 야간팀</div>
+      <div class="t-grid"><div class="t-btn" onclick="pickMoveTeam(this)">5팀</div><div class="t-btn" onclick="pickMoveTeam(this)">10팀</div></div>
+      <div style="font-size:12px;font-weight:700;color:var(--teal2);margin:7px 0 4px">🏢 운영팀</div>
+      <div class="t-grid" style="margin-bottom:10px"><div class="t-btn" onclick="pickMoveTeam(this)">T1운영</div></div>
+      <div style="font-size:12px;font-weight:700;color:var(--teal2);margin:7px 0 4px">👁️ 외부(조회전용)</div>
+      <div class="t-grid" style="margin-bottom:10px"><div class="t-btn" onclick="pickMoveTeam(this)">IAOS</div></div>
+
+      <div id="tmJoWrap" style="display:none;margin-bottom:4px">
+        <div style="font-size:12px;font-weight:700;color:var(--teal2);margin-bottom:5px">조 선택</div>
+        <div id="tmJoGrp" style="display:flex;flex-wrap:wrap;gap:6px"></div>
       </div>
-      <div id="tmJoWrap" style="display:none;margin-bottom:16px">
-        <div style="font-size:12px;color:var(--g4);font-weight:700;margin-bottom:6px">조 선택</div>
-        <div id="tmJoGrp" style="display:flex;flex-wrap:wrap;gap:7px"></div>
+      <div style="height:10px"></div>
+
+      <div style="font-size:13px;font-weight:700;color:var(--g4);margin-bottom:6px">직급 *</div>
+      <div class="role-row" id="tmRoleGrp">
+        <div class="r-btn" onclick="pickMoveRole(this)">팀장</div>
+        <div class="r-btn" onclick="pickMoveRole(this)">조장</div>
+        <div class="r-btn" onclick="pickMoveRole(this)">조장대행</div>
+        <div class="r-btn" onclick="pickMoveRole(this)">기타</div>
+        <div class="r-btn" onclick="pickMoveRole(this)">차량운행</div>
+        <div class="r-btn" onclick="pickMoveRole(this)">게스트</div>
       </div>
-      <div style="display:flex;gap:7px">
+      <div class="err" id="tmErr"></div>
+
+      <div style="display:flex;gap:7px;margin-top:12px">
         <button onclick="closeTeamMove()" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">취소</button>
         <button onclick="saveTeamMove()" style="flex:2;padding:11px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">이동 저장</button>
       </div>
@@ -10213,34 +10256,53 @@ async function loadUserList(){
 }
 
 // ─ 팀·조 이동 (인사발령, 관리자 이동환 전용) ─
-var tmTarget=null, tmSelectedTeam='';
+var tmTarget=null, tmSelectedTeam='', tmSelectedRole='';
 var TM_JO_MAP={
   '1팀':['A조','B조','C조','운전'],'2팀':['A조','B조'],'3팀':['A조','B조'],'4팀':['A조','B조'],
   '6팀':['A조','B조','C조','운전'],'7팀':['A조','B조'],'8팀':['A조','B조'],'9팀':['A조','B조'],
   '5팀':['A조','B조'],'10팀':['A조','B조']
 };
+var TM_ROLE_MAP={'팀장':'manager','조장':'leader','조장대행':'acting_leader','기타':'staff','게스트':'guest','차량운행':'work_vehicle'};
 function openTeamMove(id, name, currentTeam){
   if(!(me&&me.role==='admin'&&me.name==='이동환')){ toast('권한이 없습니다'); return; }
   tmTarget={id:id, name:name};
-  tmSelectedTeam='';
+  tmSelectedTeam=''; tmSelectedRole='';
   document.getElementById('tmUserName').textContent=name;
   document.getElementById('tmCurrentTeam').textContent=currentTeam||'-';
-  document.querySelectorAll('#tmTeamGrp .t-btn').forEach(function(b){b.classList.remove('on');});
+  document.querySelectorAll('#teamMoveModal .t-btn').forEach(function(b){b.classList.remove('on');});
+  document.querySelectorAll('#teamMoveModal .r-btn').forEach(function(b){b.classList.remove('on');});
   document.getElementById('tmJoWrap').style.display='none';
   document.getElementById('tmJoGrp').innerHTML='';
+  document.getElementById('tmErr').style.display='none';
   showM('teamMoveModal');
 }
 function closeTeamMove(){ hideM('teamMoveModal'); tmTarget=null; }
 function pickMoveTeam(el){
-  document.querySelectorAll('#tmTeamGrp .t-btn').forEach(function(b){b.classList.remove('on');});
+  document.querySelectorAll('#teamMoveModal .t-btn').forEach(function(b){b.classList.remove('on');});
   el.classList.add('on');
   tmSelectedTeam=el.textContent.trim();
+  tmRefreshJoVisibility();
+}
+function pickMoveRole(el){
+  document.querySelectorAll('#teamMoveModal .r-btn').forEach(function(b){b.classList.remove('on');});
+  el.classList.add('on');
+  tmSelectedRole=el.textContent.trim();
+  tmRefreshJoVisibility();
+}
+function tmRefreshJoVisibility(){
   var joWrap=document.getElementById('tmJoWrap');
   var joGrp=document.getElementById('tmJoGrp');
-  if(tmSelectedTeam==='T1운영'){ joWrap.style.display='none'; return; }
+  if(!tmSelectedTeam || tmSelectedTeam==='T1운영' || tmSelectedTeam==='IAOS'){ joWrap.style.display='none'; joGrp.innerHTML=''; return; }
+  var needsJo=(tmSelectedRole==='조장'||tmSelectedRole==='조장대행'||tmSelectedRole==='차량운행');
   var jos=TM_JO_MAP[tmSelectedTeam]||[];
-  joGrp.innerHTML=jos.map(function(j){ return '<div class="t-btn" onclick="pickMoveJo(this)" style="flex:none;padding:8px 16px">'+j+'</div>'; }).join('');
-  joWrap.style.display=jos.length?'block':'none';
+  if(!needsJo || !jos.length){ joWrap.style.display='none'; joGrp.innerHTML=''; return; }
+  // 기존 선택 유지 시도
+  var prevOn=joGrp.querySelector('.t-btn.on');
+  var prevVal=prevOn?prevOn.textContent.trim():null;
+  joGrp.innerHTML=jos.map(function(j){ return '<div class="t-btn" onclick="pickMoveJo(this)" style="flex:none;padding:8px 16px'+(j===prevVal?' on':'')+'">'+j+'</div>'; }).join('');
+  // on 클래스가 style에 섞여 들어간 것 보정
+  Array.from(joGrp.children).forEach(function(b){ if(b.textContent.trim()===prevVal) b.classList.add('on'); });
+  joWrap.style.display='block';
 }
 function pickMoveJo(el){
   document.querySelectorAll('#tmJoGrp .t-btn').forEach(function(b){b.classList.remove('on');});
@@ -10249,20 +10311,23 @@ function pickMoveJo(el){
 async function saveTeamMove(){
   if(!(me&&me.role==='admin'&&me.name==='이동환')){ toast('권한이 없습니다'); return; }
   if(!tmTarget){ toast('대상자 정보가 없습니다'); return; }
-  if(!tmSelectedTeam){ toast('이동할 팀을 선택해주세요'); return; }
-  var newTeam=tmSelectedTeam;
-  if(tmSelectedTeam!=='T1운영'){
-    var joEl=document.querySelector('#tmJoGrp .t-btn.on');
-    var jos=TM_JO_MAP[tmSelectedTeam]||[];
-    if(jos.length){
-      if(!joEl){ toast('조를 선택해주세요'); return; }
-      newTeam=tmSelectedTeam+' '+joEl.textContent.trim();
-    }
-  }
+  var err=document.getElementById('tmErr');
+  err.style.display='none';
+  if(!tmSelectedTeam){ err.textContent='⚠️ 소속 팀을 선택해주세요'; err.style.display='block'; return; }
+  if(!tmSelectedRole){ err.textContent='⚠️ 직급을 선택해주세요'; err.style.display='block'; return; }
+  var needsJo=(tmSelectedRole==='조장'||tmSelectedRole==='조장대행'||tmSelectedRole==='차량운행');
+  var jos=TM_JO_MAP[tmSelectedTeam]||[];
+  var joEl=document.querySelector('#tmJoGrp .t-btn.on');
+  var jo=joEl?joEl.textContent.trim():'';
+  if(needsJo && jos.length && !jo){ err.textContent='⚠️ 조를 선택해주세요'; err.style.display='block'; return; }
+  var fullTeam=(tmSelectedTeam!=='T1운영' && tmSelectedTeam!=='IAOS' && jo) ? tmSelectedTeam+' '+jo : tmSelectedTeam;
+  var isT1=(tmSelectedTeam==='T1운영');
+  var isIAOS=(tmSelectedTeam==='IAOS');
+  var finalRole = isT1 ? 'admin' : (isIAOS ? 'guest' : (TM_ROLE_MAP[tmSelectedRole]||'staff'));
   try{
-    var res=await sb.from('users').update({team:newTeam}).eq('id',tmTarget.id);
+    var res=await sb.from('users').update({team:fullTeam, role:finalRole}).eq('id',tmTarget.id);
     if(res.error){ toast('오류: '+res.error.message); return; }
-    toast('✅ '+tmTarget.name+'님 → '+newTeam+' 이동 완료');
+    toast('✅ '+tmTarget.name+'님 → '+fullTeam+' · '+tmSelectedRole+' 이동 완료');
     closeTeamMove();
     loadUserList();
   }catch(e){ toast('오류: '+String(e.message||e)); }
@@ -11687,6 +11752,64 @@ async function confirmLostEdit(){
     toast('✅ 수정되었습니다');
     loadLostFromDB();
   }catch(e){ toast('⚠️ 수정 실패: '+e.message); }
+}
+
+function downloadAccidentReportExcel(){
+  if(!_rptData||_rptData.type!=='accident') return;
+  var ambYes=document.getElementById('accAmbYes').checked;
+  var ambNo=document.getElementById('accAmbNo').checked;
+  var ambText=ambYes?'☑ 예   □ 아니오':(ambNo?'□ 예   ☑ 아니오':'□ 예   □ 아니오');
+  var v={
+    dept:document.getElementById('accDept').textContent,
+    victim:document.getElementById('accVictim').value,
+    duty:document.getElementById('accDuty').value,
+    leaders:document.getElementById('accLeaders').innerText.replace(/\n+/g,' / '),
+    datetime:document.getElementById('accDatetime').value,
+    location:document.getElementById('accLocation').value,
+    content:document.getElementById('accContent').value,
+    type:document.getElementById('accType').value,
+    injury:document.getElementById('accInjury').value,
+    leaveDays:document.getElementById('accLeaveDays').value,
+    action:document.getElementById('accAction').value,
+    prevention:document.getElementById('accPrevention').value,
+    preventionPeriod:document.getElementById('accPreventionPeriod').value,
+    etc:document.getElementById('accEtc').value
+  };
+  try{
+    var contentBlock='1. 일시: '+v.datetime+'\n2. 장소: '+v.location+'\n3. 내용: '+v.content+'\n4. 상해유형: '+v.type+'\n5. 상해종류: '+v.injury+'\n6. 예상휴업일수: '+v.leaveDays;
+    var actionBlock=v.action+'\n\n※ 구급차 이송 여부: '+ambText;
+    var rows=[
+      ['구 분','내 용','비 고'],
+      ['사업부', v.dept, ''],
+      ['재해자', v.victim, ''],
+      ['업무', v.duty, v.leaders],
+      ['사고내용', contentBlock, ''],
+      ['조치사항', actionBlock, ''],
+      ['재발방지대책', v.prevention, v.preventionPeriod],
+      ['기타사항', v.etc, '']
+    ];
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:14},{wch:50},{wch:20}];
+    ws['!rows']=[{},{},{},{},{hpt:100},{hpt:90},{hpt:50},{hpt:40}];
+    var borderThin={style:'thin',color:{rgb:'333333'}};
+    var allBorder={top:borderThin,bottom:borderThin,left:borderThin,right:borderThin};
+    var labelStyle={font:{bold:true},alignment:{horizontal:'center',vertical:'center',wrapText:true},fill:{fgColor:{rgb:'F2F2F2'}},border:allBorder};
+    var valueStyle={alignment:{vertical:'top',wrapText:true},border:allBorder};
+    var range=XLSX.utils.decode_range(ws['!ref']);
+    for(var R=range.s.r;R<=range.e.r;++R){
+      for(var C=range.s.c;C<=range.e.c;++C){
+        var addr=XLSX.utils.encode_cell({r:R,c:C});
+        if(!ws[addr]) ws[addr]={t:'s',v:''};
+        if(R===0){ ws[addr].s=labelStyle; continue; }
+        ws[addr].s=(C===0)?labelStyle:valueStyle;
+      }
+    }
+    var wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'안전사고보고서');
+    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+    XLSX.writeFile(wb,'안전사고발생보고서_'+today+'.xlsx');
+    toast('📥 다운로드 완료');
+  }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
 
 function downloadAccidentExcel(){
@@ -13587,7 +13710,7 @@ function renderAccList(data){
         +'<div class="w-row"><div class="w-av" style="background:var(--danger)">'+initial+'</div>'
         +'<span class="w-nm">'+writer+' 작성</span></div>'
         +'<div class="ho-body">'+fields+'</div>'
-        +'<div style="margin-top:6px"><button data-id="'+r.id+'" onclick="openReport(\'accident\',parseInt(this.dataset.id))" style="padding:5px 10px;background:var(--g1);color:var(--g6);border:1px solid var(--g3);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">📄 상황보고서</button></div>'
+        +'<div style="margin-top:6px"><button data-id="'+r.id+'" onclick="openReport(\'accident\',parseInt(this.dataset.id))" style="padding:5px 10px;background:var(--g1);color:var(--g6);border:1px solid var(--g3);border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">📄 안전사고발생보고서</button></div>'
         +confBtn
         +'</div>';
     });
@@ -15424,6 +15547,10 @@ var _rptData=null;
 function fmtKDT(ts){ return ts?toKSTDateTime(ts):''; }
 function fmtKD(ts){ return ts?toKSTDate(ts):''; }
 function openReport(type, id){
+  if(type==='accident'){ openAccidentReport(id); return; }
+  document.getElementById('rptGenericTable').style.display='table';
+  document.getElementById('rptAccTable').style.display='none';
+  document.getElementById('rptSaveBtn').style.display='none';
   var r=null, f={};
   if(type==='lost'){
     r=(lostData||[]).find(function(x){return x.id===id;});
@@ -15461,17 +15588,6 @@ function openReport(type, id){
       channel:r.channel||'', actor:r.writer||'', action:(r.status||'')+(r.note?(' · '+r.note):''),
       title:'상황발생보고서', bigTitle:'상 황 발 생 보 고 서', note:r.note||'', noteLbl:'비고'
     };
-  }else if(type==='accident'){
-    r=(accidentAll||[]).find(function(x){return x.id===id;});
-    if(!r){ toast('기록을 찾을 수 없습니다'); return; }
-    var dt4=r.occurred_at||r.created_at;
-    f={
-      reporter:r.writer||'(해당팀장)', datetime:fmtKDT(dt4), location:r.location||'',
-      time:dt4?new Date(dt4).toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit',hour12:false,timeZone:'Asia/Seoul'}):'',
-      content:(r.description||'')+(r.damage?(' · 피해: '+r.damage):''), finderLbl:'관련직원', finder:r.related_staff||'', idLbl:'팀', id2:r.team||'',
-      channel:r.is_industrial?'산업재해':'안전사고', actor:r.writer||'', action:r.action||(r.result||''),
-      title:(r.is_industrial?'산업재해':'안전사고')+' 발생 보고서', bigTitle:(r.is_industrial?'산 업 재 해':'안 전 사 고')+' 발 생 보 고 서'
-    };
   }else return;
 
   _rptData={type:type, id:id, f:f};
@@ -15500,11 +15616,86 @@ function openReport(type, id){
   }
   showM('reportModal');
 }
+
+// ─ 안전사고발생보고서 (첨부 양식 전용) ─
+async function openAccidentReport(id){
+  var r=(accidentAll||[]).find(function(x){return x.id===id;});
+  if(!r){ toast('기록을 찾을 수 없습니다'); return; }
+  _rptData={type:'accident', id:id, record:r};
+  document.getElementById('reportModalTitle').textContent='📄 안전사고발생보고서';
+  document.getElementById('reportBigTitle').textContent='안 전 사 고 발 생 보 고 서';
+  document.getElementById('rptGenericTable').style.display='none';
+  document.getElementById('rptAccTable').style.display='table';
+  document.getElementById('rptSaveBtn').style.display='block';
+
+  var teamLabel=r.team||'';
+  var teamParts=teamLabel.split(/\s+/).filter(Boolean); // ["7팀","A조"] 형태 가정
+  var deptStr='T1환경미화사업부'+(teamParts.length?(' ('+teamParts.map(function(t){return '환경'+t;}).join('/')+')'):'');
+  document.getElementById('accDept').textContent=deptStr;
+  document.getElementById('accVictim').value=r.related_staff||'';
+  document.getElementById('accDuty').value=r.job_duty||'';
+  document.getElementById('accDatetime').value=r.occurred_at?toKSTDateTime(r.occurred_at):'';
+  document.getElementById('accLocation').value=r.location||'';
+  document.getElementById('accContent').value=r.description||'';
+  document.getElementById('accType').value=r.accident_type||'';
+  document.getElementById('accInjury').value=r.injury_type||'';
+  document.getElementById('accLeaveDays').value=(r.expected_leave_days!=null&&r.expected_leave_days!=='')?(r.expected_leave_days+'일'):'';
+  document.getElementById('accAction').value=r.action||'';
+  document.getElementById('accAmbYes').checked=(r.ambulance_used===true);
+  document.getElementById('accAmbNo').checked=(r.ambulance_used===false);
+  document.getElementById('accPrevention').value=r.prevention_plan||'';
+  document.getElementById('accPreventionPeriod').value=r.prevention_period||'';
+  document.getElementById('accEtc').value=r.etc_note||'';
+  document.getElementById('accLeaders').innerHTML='조회 중…';
+  showM('reportModal');
+
+  // 팀장/조장 자동조회 (users 테이블에서 같은 팀번호 매니저/리더)
+  try{
+    var teamNum=(teamLabel.match(/^(\d+)팀/)||[])[1];
+    if(!teamNum){ document.getElementById('accLeaders').innerHTML='-'; return; }
+    var res=await sb.from('users').select('name,role,team').eq('status','active');
+    var list=(res.data||[]).filter(function(u){ return u.team && u.team.indexOf(teamNum+'팀')===0 && (u.role==='manager'||u.role==='leader'); });
+    var mgr=list.find(function(u){return u.role==='manager';});
+    var ldrs=list.filter(function(u){return u.role==='leader';});
+    var html='';
+    if(mgr) html+='팀장: '+mgr.name+'<br>';
+    ldrs.forEach(function(l){ var joLbl=l.team.replace(teamNum+'팀','').trim(); html+='조장'+(joLbl?('('+joLbl+')'):'')+': '+l.name+'<br>'; });
+    document.getElementById('accLeaders').innerHTML=html||'-';
+  }catch(e){ document.getElementById('accLeaders').innerHTML='-'; }
+}
+async function saveAccidentReport(){
+  if(!_rptData||_rptData.type!=='accident'){ return; }
+  var ambYes=document.getElementById('accAmbYes').checked;
+  var ambNo=document.getElementById('accAmbNo').checked;
+  var payload={
+    related_staff:document.getElementById('accVictim').value.trim(),
+    job_duty:document.getElementById('accDuty').value.trim(),
+    location:document.getElementById('accLocation').value.trim(),
+    description:document.getElementById('accContent').value.trim(),
+    accident_type:document.getElementById('accType').value.trim(),
+    injury_type:document.getElementById('accInjury').value.trim(),
+    expected_leave_days:parseInt(document.getElementById('accLeaveDays').value)||null,
+    action:document.getElementById('accAction').value.trim(),
+    ambulance_used: ambYes?true:(ambNo?false:null),
+    prevention_plan:document.getElementById('accPrevention').value.trim(),
+    prevention_period:document.getElementById('accPreventionPeriod').value.trim(),
+    etc_note:document.getElementById('accEtc').value.trim()
+  };
+  try{
+    var res=await sb.from('safety_accidents').update(payload).eq('id',_rptData.id);
+    if(res.error){ toast('저장 실패: '+res.error.message); return; }
+    toast('✅ 저장되었습니다');
+    // 로컬 캐시도 갱신
+    var idx=(accidentAll||[]).findIndex(function(x){return x.id===_rptData.id;});
+    if(idx>=0) Object.assign(accidentAll[idx], payload);
+  }catch(e){ toast('저장 오류: '+String(e.message||e)); }
+}
 function printReport(){
   window.print();
 }
 function downloadReportExcel(){
   if(!_rptData){ toast('보고서 데이터가 없습니다'); return; }
+  if(_rptData.type==='accident'){ downloadAccidentReportExcel(); return; }
   var f=_rptData.f;
   // 편집된 최신 값 반영
   var location=document.getElementById('rptLocation2').value;
