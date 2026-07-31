@@ -15646,7 +15646,7 @@ async function openAccidentReport(id){
   document.getElementById('accAction').value=r.action||'';
   document.getElementById('accAmbYes').checked=(r.ambulance_used===true);
   document.getElementById('accAmbNo').checked=(r.ambulance_used===false);
-  document.getElementById('accPrevention').value=r.prevention_plan||'';
+  document.getElementById('accPrevention').value=r.prevention_plan||r.result||'';
   document.getElementById('accPreventionPeriod').value=r.prevention_period||'';
   document.getElementById('accEtc').value=r.etc_note||'';
   document.getElementById('accLeaders').innerHTML='조회 중…';
@@ -15681,6 +15681,7 @@ async function saveAccidentReport(){
     action:document.getElementById('accAction').value.trim(),
     ambulance_used: ambYes?true:(ambNo?false:null),
     prevention_plan:document.getElementById('accPrevention').value.trim(),
+    result:document.getElementById('accPrevention').value.trim(),
     prevention_period:document.getElementById('accPreventionPeriod').value.trim(),
     etc_note:document.getElementById('accEtc').value.trim()
   };
