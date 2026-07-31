@@ -2100,11 +2100,15 @@ html{overflow-x:hidden}
 <!-- 상황발생보고서 (습득물/인수인계/민원/안전사고 공용) -->
 <style>
 @media print{
+  @page{ size:A4; margin:14mm; }
+  html, body{ height:0 !important; overflow:hidden !important; margin:0 !important; padding:0 !important; }
   body *{visibility:hidden}
-  #reportPrintArea, #reportPrintArea *{visibility:visible}
-  #reportPrintArea{position:absolute;top:0;left:0;width:100%;margin:0;padding:20px}
-  #reportModal{position:static !important;background:none !important}
-  .no-print{display:none !important}
+  #reportModal{ visibility:visible; position:fixed !important; inset:0; height:auto !important; overflow:visible !important; background:#fff !important; }
+  #reportModal *{visibility:visible}
+  #reportModal .m-hd, #reportModal .no-print{ display:none !important; }
+  #reportModal .modal{ position:static !important; max-width:none !important; max-height:none !important; overflow:visible !important; box-shadow:none !important; border-radius:0 !important; }
+  #reportModal > div > div:first-child ~ div{ padding:0 !important; }
+  #reportPrintArea{ position:static !important; width:100% !important; margin:0 !important; padding:0 !important; border:none !important; box-shadow:none !important; }
   .rpt-edit{border:none !important;background:transparent !important;-webkit-print-color-adjust:exact}
 }
 .rpt-table{width:100%;border-collapse:collapse;font-size:13px}
