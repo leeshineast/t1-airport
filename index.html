@@ -926,23 +926,30 @@ html{overflow-x:hidden}
     <div id="flP_all">
       <div class="card"><div class="tbl-w"><table class="mp-tbl" id="dHome">
         <colgroup>
-  <col style="width:10%"><!-- 구역 -->
-  <col style="width:9%"><!-- 구분 -->
-  <col style="width:9.9%"><!-- B2F -->
-  <col style="width:9.9%"><!-- B1F -->
-  <col style="width:9.9%"><!-- 1F -->
-  <col style="width:9.9%"><!-- 2F -->
-  <col style="width:9.9%"><!-- 3F -->
-  <col style="width:9.9%"><!-- 4F -->
-  <col style="width:9.9%"><!-- 집하장 -->
-  <col style="width:11.6%"><!-- 소계 -->
+  <col style="width:11.1%"><!-- 구역 -->
+  <col style="width:11.1%"><!-- B2F -->
+  <col style="width:11.1%"><!-- B1F -->
+  <col style="width:11.1%"><!-- 1F -->
+  <col style="width:11.1%"><!-- 2F -->
+  <col style="width:11.1%"><!-- 3F -->
+  <col style="width:11.1%"><!-- 4F -->
+  <col style="width:11.1%"><!-- 집하장 -->
+  <col style="width:11.2%"><!-- 소계 -->
 </colgroup>
         <thead><tr>
-          <th colspan="2" style="text-align:left;padding-left:4px">구역</th>
+          <th style="text-align:left;padding-left:4px">구역</th>
           <th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th>
           <th style="background:var(--teal2)">소계</th>
         </tr></thead>
-        <tbody id="dHomeBody"></tbody>
+        <tbody>
+          <tr><td class="lbl">L/S 동편</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
+          <tr><td class="lbl">L/S 서편</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
+          <tr class="sub"><td class="lbl">L/S 소계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+          <tr><td class="lbl">A/S 동편</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
+          <tr><td class="lbl">A/S 서편</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
+          <tr class="sub"><td class="lbl">A/S 소계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+          <tr class="tot"><td class="lbl">전체 총계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+        </tbody>
       </table></div></div>
       <div class="card ns-summary-card" style="display:none;margin-top:0">
         <div class="cb">
@@ -1381,19 +1388,22 @@ html{overflow-x:hidden}
       <div class="tbl-w">
         <table class="mp-tbl">
           <colgroup>
-  <col style="width:11%"><!-- 구역 -->
-  <col style="width:10%"><!-- 구분 -->
-  <col style="width:9.85%"><!-- B2F -->
-  <col style="width:9.85%"><!-- B1F -->
-  <col style="width:9.85%"><!-- 1F -->
-  <col style="width:9.85%"><!-- 2F -->
-  <col style="width:9.85%"><!-- 3F -->
-  <col style="width:9.85%"><!-- 4F -->
-  <col style="width:9.85%"><!-- 집하장 -->
-  <col style="width:9.85%"><!-- 물품운반 -->
+  <col style="width:12.5%"><!-- 구역 -->
+  <col style="width:12.5%"><!-- B2F -->
+  <col style="width:12.5%"><!-- B1F -->
+  <col style="width:12.5%"><!-- 1F -->
+  <col style="width:12.5%"><!-- 2F -->
+  <col style="width:12.5%"><!-- 3F -->
+  <col style="width:12.5%"><!-- 4F -->
+  <col style="width:12.5%"><!-- 집하장 -->
 </colgroup>
-          <thead><tr><th colspan="2" style="text-align:left;padding-left:4px">구역</th><th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th><th>물품<br>운반</th></tr></thead>
-          <tbody id="mpBody"></tbody>
+          <thead><tr><th style="text-align:left;padding-left:4px">구역</th><th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th></tr></thead>
+          <tbody id="mpBody">
+            <tr><td class="lbl">L/S 동편</td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td></tr>
+            <tr><td class="lbl">L/S 서편</td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td></tr>
+            <tr><td class="lbl">A/S 동편</td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td></tr>
+            <tr><td class="lbl">A/S 서편</td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td></tr>
+          </tbody>
         </table>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:13px">
@@ -1434,19 +1444,26 @@ html{overflow-x:hidden}
     </div>
     <div class="card"><div class="tbl-w"><table class="mp-tbl" id="mpFullTable">
       <colgroup>
-  <col style="width:10%"><!-- 구역 -->
-  <col style="width:9%"><!-- 구분 -->
-  <col style="width:9.9%"><!-- B2F -->
-  <col style="width:9.9%"><!-- B1F -->
-  <col style="width:9.9%"><!-- 1F -->
-  <col style="width:9.9%"><!-- 2F -->
-  <col style="width:9.9%"><!-- 3F -->
-  <col style="width:9.9%"><!-- 4F -->
-  <col style="width:9.9%"><!-- 집하장 -->
-  <col style="width:11.6%"><!-- 소계 -->
+  <col style="width:11.1%"><!-- 구역 -->
+  <col style="width:11.1%"><!-- B2F -->
+  <col style="width:11.1%"><!-- B1F -->
+  <col style="width:11.1%"><!-- 1F -->
+  <col style="width:11.1%"><!-- 2F -->
+  <col style="width:11.1%"><!-- 3F -->
+  <col style="width:11.1%"><!-- 4F -->
+  <col style="width:11.1%"><!-- 집하장 -->
+  <col style="width:11.2%"><!-- 소계 -->
 </colgroup>
-      <thead><tr><th colspan="2" style="text-align:left;padding-left:4px">구역</th><th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th><th style="background:var(--teal2)">소계</th></tr></thead>
-      <tbody id="mpFullTableBody"></tbody>
+      <thead><tr><th style="text-align:left;padding-left:4px">구역</th><th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th><th style="background:var(--teal2)">소계</th></tr></thead>
+      <tbody>
+        <tr><td class="lbl">L/S 동편</td><td style="color:var(--g5)">0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
+        <tr><td class="lbl">L/S 서편</td><td style="color:var(--g5)">0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
+        <tr class="sub"><td class="lbl">L/S 소계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+        <tr><td class="lbl">A/S 동편</td><td style="color:var(--g5)">0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
+        <tr><td class="lbl">A/S 서편</td><td style="color:var(--g5)">0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
+        <tr class="sub"><td class="lbl">A/S 소계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+        <tr class="tot"><td class="lbl">전체 총계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
+      </tbody>
     </table></div></div>
     <div class="card ns-summary-card" style="display:none">
       <div class="cb">
@@ -1653,8 +1670,6 @@ html{overflow-x:hidden}
     <div id="edShiftRow" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px"></div>
     <div style="margin-bottom:8px;background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px">
       <div id="edHeatmap" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px"></div>
-      <div id="edCatSummary" style="display:flex;gap:6px;margin-top:8px;padding-top:8px;border-top:1px solid var(--g1)"></div>
-      <div id="edNightSummary" style="display:none;margin-top:8px;padding-top:8px;border-top:1px solid var(--g1)"></div>
     </div>
     </div>
   </div>
@@ -4154,7 +4169,7 @@ async function loadExecDashboard(){
     var tsTo=new Date(dTo+'T23:59:59+09:00').toISOString();
 
     var q=await Promise.all([
-      msFetchAll(function(){ return sb.from('mp_data').select('date,shift,team_code,values,category').gte('date',dFrom).lte('date',dTo); }),
+      msFetchAll(function(){ return sb.from('mp_data').select('date,shift,team_code,values').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('handover').select('id,confirmed,facility').gte('created_at',tsFrom).lte('created_at',tsTo); }),
       msFetchAll(function(){ return sb.from('voc_data').select('id,status,category,category_etc').gte('voc_date',dFrom).lte('voc_date',dTo); }),
       msFetchAll(function(){ return sb.from('lost_found').select('id,status').gte('found_date',tsFrom).lte('found_date',tsTo); }),
@@ -4167,7 +4182,6 @@ async function loadExecDashboard(){
 
     // 인력 집계 (층별 7 + 교대별) — 기간 내 일수로 나눠 일평균 산출
     var floorSum=[0,0,0,0,0,0,0];
-    var floorToilet=[0,0,0,0,0,0,0], floorCommon=[0,0,0,0,0,0,0], floorLegacy=[0,0,0,0,0,0,0];
     var shiftSum={'오전':0,'오후':0,'야간':0,'관리자':0};
     var daysSet={};
     mpRows.forEach(function(r){
@@ -4176,36 +4190,21 @@ async function loadExecDashboard(){
       if(typeof vals==='string'){ try{ vals=JSON.parse(vals); }catch(e){ return; } }
       if(!Array.isArray(vals)) return;
       var sum=0;
-      var isToilet=(r.category==='toilet');
-      var isCommon=(r.category==='common');
-      var isLegacy=!r.category;
       for(var ri=0;ri<4;ri++){
         if(!vals[ri]||!Array.isArray(vals[ri])) continue;
-        for(var ci=0;ci<7;ci++){
-          var v=Number(vals[ri][ci])||0; sum+=v; floorSum[ci]+=v;
-          if(isToilet) floorToilet[ci]+=v;
-          else if(isCommon) floorCommon[ci]+=v;
-          else if(isLegacy) floorLegacy[ci]+=v; // 변경 시점 이전 데이터: 구분 불가 — 화장실/공용구역에 억지로 넣지 않고 별도 표시
-        }
-        var mulpumV=Number(vals[ri][7])||0; // 물품운반(신형 데이터에만 존재)
-        if(mulpumV){ sum+=mulpumV; floorSum[4]+=mulpumV; if(isToilet) floorToilet[4]+=mulpumV; }
+        for(var ci=0;ci<7;ci++){ var v=Number(vals[ri][ci])||0; sum+=v; floorSum[ci]+=v; }
       }
       if(sum>0) daysSet[r.date]=1;
       var sh=(r.shift==='오전'||r.shift==='오후'||r.shift==='야간')?r.shift:null;
       if(sh) shiftSum[sh]+=sum;
     });
-    // 야간(night_special_data) 세부 그룹: 화장실(일상+특별) / 카페트(카페트+PBB) / 왁스+ES / 기타(석재+우드+공용구역+수거)
+    // 야간(night_special_data)은 층별 그리드가 아니라 10개 작업항목 방식이므로, 인원 합계(오전/오후/야간 카드)에만 반영
     var NS_COLS=['carpet','pbb','wax','stone','wood','restroom','es','toilet_daily','common_area','collection'];
-    var nsGroups={화장실:0,카페트:0,왁스ES:0,기타:0};
     nsRows.forEach(function(r){
       var sum=0;
       NS_COLS.forEach(function(c){ sum+=Number(r[c])||0; });
       if(sum>0) daysSet[r.date]=1;
       shiftSum['야간']+=sum;
-      nsGroups['화장실']+=(Number(r.restroom)||0)+(Number(r.toilet_daily)||0);
-      nsGroups['카페트']+=(Number(r.carpet)||0)+(Number(r.pbb)||0);
-      nsGroups['왁스ES']+=(Number(r.wax)||0)+(Number(r.es)||0);
-      nsGroups['기타']+=(Number(r.stone)||0)+(Number(r.wood)||0)+(Number(r.common_area)||0)+(Number(r.collection)||0);
     });
     // 관리자 출근 현황(mgr_attendance) — 체크된 인원 수를 근무인원에 합산
     mgrRows.forEach(function(r){
@@ -4286,41 +4285,6 @@ async function loadExecDashboard(){
         +'<div style="font-size:14px;font-weight:900;color:'+txtCol+'">'+v+'</div></div>';
     });
     var hm=document.getElementById('edHeatmap'); if(hm) hm.innerHTML=heatHtml;
-
-    // ── 화장실/공용구역 요약 (일평균 여부는 isAvg에 따라 층별과 동일하게)
-    var toiletSum=floorToilet.reduce(function(a,b){return a+b;},0);
-    var commonSum=floorCommon.reduce(function(a,b){return a+b;},0);
-    var legacySum=floorLegacy.reduce(function(a,b){return a+b;},0);
-    var toiletShow=isAvg?Math.round(toiletSum/dayCount):toiletSum;
-    var commonShow=isAvg?Math.round(commonSum/dayCount):commonSum;
-    var legacyShow=isAvg?Math.round(legacySum/dayCount):legacySum;
-    var catHtml='<div style="font-size:10px;color:var(--g4);font-weight:700;margin-bottom:5px;width:100%">🚻 화장실 · 🧹 공용구역</div>'
-      +'<div style="flex:1;background:var(--navy-bg);border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:var(--navy);font-weight:700">🚻 화장실</div><div style="font-size:17px;font-weight:900;color:var(--navy)">'+toiletShow+'<span style="font-size:10px">명</span></div></div>'
-      +'<div style="flex:1;background:var(--teal-bg);border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:var(--teal2);font-weight:700">🧹 공용구역</div><div style="font-size:17px;font-weight:900;color:var(--teal2)">'+commonShow+'<span style="font-size:10px">명</span></div></div>';
-    if(legacySum>0){
-      catHtml+='<div style="flex:1;background:var(--g1);border-radius:8px;padding:8px;text-align:center"><div style="font-size:10px;color:var(--g4);font-weight:700">📋 구분 이전</div><div style="font-size:17px;font-weight:900;color:var(--g5)">'+legacyShow+'<span style="font-size:10px">명</span></div></div>';
-    }
-    var catEl=document.getElementById('edCatSummary'); if(catEl){ catEl.style.flexWrap='wrap'; catEl.innerHTML=catHtml; }
-
-    // ── 야간 세부 (화장실/카페트·PBB/왁스·ES/기타)
-    var nsHasData=Object.values(nsGroups).some(function(v){return v>0;});
-    var nsEl=document.getElementById('edNightSummary');
-    if(nsEl){
-      if(nsHasData){
-        nsEl.style.display='block';
-        var nsShow={};
-        Object.keys(nsGroups).forEach(function(k){ nsShow[k]=isAvg?Math.round(nsGroups[k]/dayCount):nsGroups[k]; });
-        nsEl.innerHTML='<div style="font-size:10px;color:var(--g4);font-weight:700;margin-bottom:5px">🌙 야간특별작업</div>'
-          +'<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px">'
-          +'<div style="background:#F3EEF8;border-radius:8px;padding:6px 3px;text-align:center"><div style="font-size:9px;color:#6B21A8;font-weight:700">화장실</div><div style="font-size:14px;font-weight:900;color:#6B21A8">'+nsShow['화장실']+'</div></div>'
-          +'<div style="background:#F3EEF8;border-radius:8px;padding:6px 3px;text-align:center"><div style="font-size:9px;color:#6B21A8;font-weight:700">카페트·PBB</div><div style="font-size:14px;font-weight:900;color:#6B21A8">'+nsShow['카페트']+'</div></div>'
-          +'<div style="background:#F3EEF8;border-radius:8px;padding:6px 3px;text-align:center"><div style="font-size:9px;color:#6B21A8;font-weight:700">왁스·ES</div><div style="font-size:14px;font-weight:900;color:#6B21A8">'+nsShow['왁스ES']+'</div></div>'
-          +'<div style="background:#F3EEF8;border-radius:8px;padding:6px 3px;text-align:center"><div style="font-size:9px;color:#6B21A8;font-weight:700">기타</div><div style="font-size:14px;font-weight:900;color:#6B21A8">'+nsShow['기타']+'</div></div>'
-          +'</div>';
-      }else{
-        nsEl.style.display='none';
-      }
-    }
 
     // ── 현황 분석 4패널
     function edMiniBar(label, val, max, color){
@@ -4482,7 +4446,6 @@ function go(name){
   window.scrollTo(0,0);
   // 화면 진입 시 자동 새로고침
   if(name==='mp'){
-    buildMpTable();
     // 로그인한 사람 근무조/팀 자동 선택
     setTimeout(autoSelectMyShiftTeam, 100);
     updateMpSummary();
@@ -4894,40 +4857,8 @@ function pickShift(el){
   updateMyTeamGrp();
   updateNightSpecialVisibility();
 }
-var MP_ZONE_LABELS=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
-var MP_CATS=[{key:'toilet',label:'화장실'},{key:'common',label:'공용구역'}];
-function isMulpumTeam(teamCode){ return teamCode==='2팀A'; }
-// 인력현황 입력표를 4구역 x (화장실/공용구역) = 8행 + 물품운반 컬럼으로 생성
-function buildMpTable(){
-  var body=document.getElementById('mpBody');
-  if(!body || body.dataset.built==='1') { calcMp(); return; }
-  var h='';
-  MP_ZONE_LABELS.forEach(function(zoneLabel,zi){
-    MP_CATS.forEach(function(cat,ci){
-      h+='<tr data-zone="'+zi+'" data-cat="'+cat.key+'">';
-      if(ci===0) h+='<td class="lbl" rowspan="2" style="vertical-align:middle">'+zoneLabel+'</td>';
-      h+='<td style="font-size:10.5px;color:var(--g5);font-weight:700;text-align:center;background:var(--g1)">'+cat.label+'</td>';
-      for(var f=0; f<6; f++){
-        h+='<td><input class="mp-inp" type="number" min="0" placeholder="0" data-floor="'+f+'" oninput="calcMp()" onfocus="this.select()"></td>';
-      }
-      if(ci===0){
-        h+='<td rowspan="2" style="vertical-align:middle"><input class="mp-inp" type="number" min="0" placeholder="0" data-floor="jh" oninput="calcMp()" onfocus="this.select()"></td>';
-      }
-      // 물품운반 (2팀A만, 카테고리 무관하게 화장실 행에만 입력칸 하나)
-      if(ci===0){
-        h+='<td><input class="mp-inp mp-mulpum" type="number" min="0" placeholder="0" data-floor="mulpum" oninput="calcMp()" onfocus="this.select()" disabled style="background:var(--g1)"></td>';
-      }else{
-        h+='<td style="background:var(--g1)"></td>';
-      }
-      h+='</tr>';
-    });
-  });
-  body.innerHTML=h;
-  body.dataset.built='1';
-  calcMp();
-}
 function calcMp(){
-  let s=0;document.querySelectorAll('#mpBody .mp-inp').forEach(i=>{ if(!i.disabled) s+=parseInt(i.value)||0; });
+  let s=0;document.querySelectorAll('#mpBody .mp-inp').forEach(i=>s+=parseInt(i.value)||0);
   const el=document.getElementById('mpTot');el.textContent=s;el.style.color=s>0?'var(--teal)':'var(--g3)';
 }
 // 조별 담당구역: A조=동편, B조=서편, (1팀/6팀의)C조=집하장
@@ -4952,47 +4883,33 @@ function getTeamBuilding(teamCode){
 }
 // 입력표에서 선택된 조의 담당구역(동편/서편/집하장) 외 칸은 아예 입력 불가 처리 (대리입력 시 동/서편 혼동 방지)
 function highlightMpZone(teamCode){
-  buildMpTable();
   var hint=document.getElementById('mpZoneHint');
   var rows=document.querySelectorAll('#mpBody tr');
   var zone=getTeamZone(teamCode);
   var building=getTeamBuilding(teamCode);
-  var mulpumOk=isMulpumTeam(teamCode);
   if(!zone||!rows.length){
     rows.forEach(function(row){
       row.style.opacity=''; row.style.background='';
       row.querySelectorAll('.mp-inp').forEach(function(inp){
-        if(inp.classList.contains('mp-mulpum')){ inp.disabled=true; return; }
         inp.disabled=false; inp.style.background=''; inp.style.opacity='';
       });
     });
     if(hint) hint.style.display='none';
-    calcMp();
     return;
   }
-  // zi: 0=L/S동편,1=L/S서편,2=A/S동편,3=A/S서편
-  var matchZones;
-  if(zone==='집하장'){ matchZones=[0,1,2,3]; }
-  else if(zone==='동편'){ matchZones = building==='AS' ? [2] : building==='LS' ? [0] : [0,2]; }
-  else { matchZones = building==='AS' ? [3] : building==='LS' ? [1] : [1,3]; }
-  rows.forEach(function(row){
-    var zi=parseInt(row.dataset.zone);
-    var rowMatch = matchZones.indexOf(zi)!==-1;
+  // L/S 동편(0), L/S 서편(1), A/S 동편(2), A/S 서편(3) / 열: 0~5=층, 6=집하장
+  var matchRows;
+  if(zone==='집하장'){ matchRows=[0,1,2,3]; }
+  else if(zone==='동편'){ matchRows = building==='AS' ? [2] : building==='LS' ? [0] : [0,2]; }
+  else { matchRows = building==='AS' ? [3] : building==='LS' ? [1] : [1,3]; }
+  rows.forEach(function(row,ri){
+    var rowMatch = matchRows.indexOf(ri)!==-1;
     row.style.opacity = rowMatch?'1':'0.35';
     row.style.background = rowMatch?'#FFF9E6':'';
-    row.querySelectorAll('.mp-inp').forEach(function(inp){
-      if(inp.classList.contains('mp-mulpum')){
-        var allowed=mulpumOk;
-        if(!allowed && (parseInt(inp.value)||0)>0) inp.value=0;
-        inp.disabled=!allowed;
-        inp.style.background=allowed?'#EFFAF7':'var(--g1)';
-        inp.style.opacity=allowed?'1':'0.4';
-        return;
-      }
-      var floorAttr=inp.dataset.floor;
+    row.querySelectorAll('.mp-inp').forEach(function(inp,ci){
       var allowed;
-      if(zone==='집하장'){ allowed = rowMatch && floorAttr==='jh'; }
-      else { allowed = rowMatch && floorAttr!=='jh'; }
+      if(zone==='집하장'){ allowed = rowMatch && ci===6; }
+      else { allowed = rowMatch && ci!==6; }
       if(!allowed && (parseInt(inp.value)||0)>0) inp.value=0; // 비허용 칸 기존값 초기화
       inp.disabled=!allowed;
       inp.style.background=allowed?'':'var(--g1)';
@@ -5004,7 +4921,7 @@ function highlightMpZone(teamCode){
     if(zone==='집하장'){
       hint.textContent='📍 '+teamCode+' 담당구역: 집하장 — 맨 오른쪽 "집하장" 칸에만 입력 가능합니다';
     }else{
-      hint.textContent='📍 '+teamCode+' 담당구역: '+zone+' — 강조된 줄(노란 배경)에만 입력 가능합니다'+(mulpumOk?' · 물품운반 입력 가능':'');
+      hint.textContent='📍 '+teamCode+' 담당구역: '+zone+' — 강조된 줄(노란 배경)에만 입력 가능합니다';
     }
     hint.style.display='block';
   }
@@ -5014,16 +4931,9 @@ function checkZoneMismatch(teamCode, newVals){
   var zone=getTeamZone(teamCode);
   if(!zone) return '';
   var building=getTeamBuilding(teamCode);
-  // newVals = {toilet:[4x7], common:[4x7], mulpum:N} — 화장실+공용구역 합산해서 검사
-  var combined=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-  ['toilet','common'].forEach(function(cat){
-    (newVals[cat]||[]).forEach(function(row,ri){
-      (row||[]).forEach(function(v,ci){ combined[ri][ci]+=v||0; });
-    });
-  });
   var sum=function(rows,cols){
     var s=0;
-    rows.forEach(function(ri){ cols.forEach(function(ci){ s+=combined[ri][ci]||0; }); });
+    rows.forEach(function(ri){ cols.forEach(function(ci){ s+=newVals[ri][ci]||0; }); });
     return s;
   };
   var floorCols=[0,1,2,3,4,5], yardCol=[6];
@@ -5061,18 +4971,10 @@ function subMp(){
   if(selBtn) myTeam=selBtn.dataset.team||myTeam;
   if(!myTeam){toast('⚠️ 내 팀(조)을 먼저 선택해주세요');return;}
 
-  var newVals={
-    toilet:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],
-    common:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],
-    mulpum:0
-  };
-  document.querySelectorAll('#mpBody tr').forEach(function(row){
-    var zi=parseInt(row.dataset.zone), cat=row.dataset.cat;
-    row.querySelectorAll('.mp-inp').forEach(function(inp){
-      if(inp.classList.contains('mp-mulpum')){ newVals.mulpum=parseInt(inp.value)||0; return; }
-      var floorAttr=inp.dataset.floor;
-      var ci = floorAttr==='jh' ? 6 : parseInt(floorAttr);
-      newVals[cat][zi][ci]=parseInt(inp.value)||0;
+  var newVals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  document.querySelectorAll('#mpBody tr').forEach(function(row,ri){
+    row.querySelectorAll('.mp-inp').forEach(function(inp,ci){
+      newVals[ri][ci]=parseInt(inp.value)||0;
     });
   });
 
@@ -5084,15 +4986,7 @@ function subMp(){
   document.getElementById('mpMShift').textContent=shKey+'팀';
   document.getElementById('mpMCnt').textContent=t;
   const rows=document.querySelectorAll('#mpBody tr');let det='';
-  var seenZone={};
-  rows.forEach(function(row){
-    var zi=row.dataset.zone, cat=row.dataset.cat;
-    var lb=(function(){var _e=row.querySelector('.lbl');return _e?_e.textContent:MP_ZONE_LABELS[zi];})();
-    var sm=0; row.querySelectorAll('.mp-inp').forEach(function(i){ if(!i.disabled) sm+=parseInt(i.value)||0; });
-    var catLabel=(MP_CATS.find(function(c){return c.key===cat;})||{}).label||cat;
-    if(sm>0)det+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--g1)"><span style="color:var(--g5)">'+lb+' · '+catLabel+'</span><span style="font-weight:700;color:var(--teal)">'+sm+'명</span></div>';
-  });
-  if(newVals.mulpum>0) det+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--g1)"><span style="color:var(--g5)">물품운반</span><span style="font-weight:700;color:var(--teal)">'+newVals.mulpum+'명</span></div>';
+  rows.forEach(row=>{const lb=(function(){var _e=row.querySelector('.lbl');return _e?_e.textContent:undefined;})();let sm=0;row.querySelectorAll('.mp-inp').forEach(i=>sm+=parseInt(i.value)||0);if(lb&&sm>0)det+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--g1)"><span style="color:var(--g5)">'+lb+'</span><span style="font-weight:700;color:var(--teal)">'+sm+'명</span></div>';});
   document.getElementById('mpMDet').innerHTML=det||'<div style="color:var(--g4)">입력된 구역 없음</div>';
 
   // 담당구역 불일치 경고
@@ -5700,75 +5594,67 @@ async function dlCSV(type){
     if(type==='mp'||type==='all'){
       var r=await sb.from('mp_data').select('*').order('date',{ascending:true});
       if(r.data&&r.data.length){
-        // 날짜별로 그룹화 (category별로 누적 — 덮어쓰기 방지)
+        // 날짜별로 그룹화
         var mpByDate={};
         r.data.forEach(function(d){
           if(!mpByDate[d.date]) mpByDate[d.date]={};
           if(!mpByDate[d.date][d.shift]) mpByDate[d.date][d.shift]={};
-          if(!mpByDate[d.date][d.shift][d.team_code]) mpByDate[d.date][d.shift][d.team_code]={toilet:null,common:null,legacy:null};
-          var slot=mpByDate[d.date][d.shift][d.team_code];
-          if(d.category==='toilet') slot.toilet=d.values;
-          else if(d.category==='common') slot.common=d.values;
-          else slot.legacy=d.values;
+          mpByDate[d.date][d.shift][d.team_code]=d.values;
         });
 
-        var rows2=[['구역','구분','B2F','B1F','1F','2F','3F','4F','집하장','소계']];
+        var cols=['B2F','B1F','1F','2F','3F','4F','집하장'];
+        var rows2=[['구역','B2F','B1F','1F','2F','3F','4F','집하장','소계']];
         var zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
-        var cats=[{key:'toilet',label:'화장실'},{key:'common',label:'공용구역'}];
 
         Object.keys(mpByDate).sort().forEach(function(date){
           var dayData=mpByDate[date];
-          rows2.push([date+' 인력현황','','','','','','','','','']);
-          // 화장실/공용구역/물품운반 세부 합산 + 총계(legacy 포함) 동시 계산
-          var detailTotals={toilet:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],common:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]]};
-          var grandTotals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+          // 날짜 헤더
+          rows2.push([date+' 인력현황','','','','','','','','']);
+          // 합산
+          var totals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
           Object.keys(dayData).forEach(function(shift){
             Object.keys(dayData[shift]).forEach(function(team){
-              var slot=dayData[shift][team];
-              if(slot.legacy){
-                for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) grandTotals[ri][ci]+=(slot.legacy[ri]&&slot.legacy[ri][ci])||0;
-                return;
-              }
-              ['toilet','common'].forEach(function(cat){
-                var vals=slot[cat]; if(!vals) return;
-                for(var ri2=0;ri2<4;ri2++){
-                  for(var ci2=0;ci2<7;ci2++){
-                    var v=(vals[ri2]&&vals[ri2][ci2])||0;
-                    detailTotals[cat][ri2][ci2]+=v;
-                    grandTotals[ri2][ci2]+=v;
-                  }
-                  // 8번째 요소(물품운반)는 3F(ci=4)에 합산 표시
-                  if(vals[ri2]&&vals[ri2][7]){ grandTotals[ri2][4]+=Number(vals[ri2][7])||0; if(cat==='toilet') detailTotals.toilet[ri2][4]+=Number(vals[ri2][7])||0; }
-                }
-              });
+              var vals=dayData[shift][team];
+              if(!vals) return;
+              for(var ri=0;ri<4;ri++)
+                for(var ci=0;ci<7;ci++)
+                  totals[ri][ci]+=(vals[ri]&&vals[ri][ci])||0;
             });
           });
-          // 구역별 화장실/공용구역 세부 행
-          zones.forEach(function(zoneLabel,zi){
-            cats.forEach(function(cat){
-              var row=[zi===0||true?zoneLabel:'', cat.label];
-              var sum=0;
-              for(var ci=0;ci<7;ci++){ var v=detailTotals[cat.key][zi][ci]||0; row.push(v); sum+=v; }
-              row.push(sum);
-              rows2.push(row);
-            });
-          });
-          // 소계/총계는 화장실+공용구역 합산(grandTotals) 기준
-          var lsSub=['L/S 소계','']; var lsSum=0;
-          for(var ci3=0;ci3<7;ci3++){ var lv=(grandTotals[0][ci3]||0)+(grandTotals[1][ci3]||0); lsSub.push(lv); lsSum+=lv; }
-          lsSub.push(lsSum); rows2.push(lsSub);
-          var asSub=['A/S 소계','']; var asSum=0;
-          for(var ci4=0;ci4<7;ci4++){ var av=(grandTotals[2][ci4]||0)+(grandTotals[3][ci4]||0); asSub.push(av); asSum+=av; }
-          asSub.push(asSum); rows2.push(asSub);
-          var totalRow=['전체 총계','']; var totalSum=0;
-          for(var ci5=0;ci5<7;ci5++){ var tv=lsSub[ci5+2]+asSub[ci5+2]; totalRow.push(tv); totalSum+=tv; }
-          totalRow.push(totalSum); rows2.push(totalRow);
-          rows2.push(['','','','','','','','','','']); // 빈줄
+          // L/S 동편
+          var ls1Row=['L/S 동편'];var ls1Sum=0;
+          for(var ci=0;ci<7;ci++){ls1Row.push(totals[0][ci]||0);ls1Sum+=totals[0][ci]||0;}
+          ls1Row.push(ls1Sum);rows2.push(ls1Row);
+          // L/S 서편
+          var ls2Row=['L/S 서편'];var ls2Sum=0;
+          for(var ci=0;ci<7;ci++){ls2Row.push(totals[1][ci]||0);ls2Sum+=totals[1][ci]||0;}
+          ls2Row.push(ls2Sum);rows2.push(ls2Row);
+          // L/S 소계
+          var lsSub=['L/S 소계'];var lsSum=0;
+          for(var ci=0;ci<7;ci++){var lv=(totals[0][ci]||0)+(totals[1][ci]||0);lsSub.push(lv);lsSum+=lv;}
+          lsSub.push(lsSum);rows2.push(lsSub);
+          // A/S 동편
+          var as1Row=['A/S 동편'];var as1Sum=0;
+          for(var ci=0;ci<7;ci++){as1Row.push(totals[2][ci]||0);as1Sum+=totals[2][ci]||0;}
+          as1Row.push(as1Sum);rows2.push(as1Row);
+          // A/S 서편
+          var as2Row=['A/S 서편'];var as2Sum=0;
+          for(var ci=0;ci<7;ci++){as2Row.push(totals[3][ci]||0);as2Sum+=totals[3][ci]||0;}
+          as2Row.push(as2Sum);rows2.push(as2Row);
+          // A/S 소계
+          var asSub=['A/S 소계'];var asSum=0;
+          for(var ci=0;ci<7;ci++){var av=(totals[2][ci]||0)+(totals[3][ci]||0);asSub.push(av);asSum+=av;}
+          asSub.push(asSum);rows2.push(asSub);
+          // 전체 총계
+          var totalRow=['전체 총계'];var totalSum=0;
+          for(var ci=0;ci<7;ci++){var tv=lsSub[ci+1]+asSub[ci+1];totalRow.push(tv);totalSum+=tv;}
+          totalRow.push(totalSum);rows2.push(totalRow);
+          rows2.push(['','','','','','','','','']); // 빈줄
         });
 
         var ws1=XLSX.utils.aoa_to_sheet(rows2);
         // 열 너비 설정
-        ws1['!cols']=[{wch:11},{wch:9},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8}];
+        ws1['!cols']=[{wch:12},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8}];
         wb.SheetNames.push('인력현황');wb.Sheets['인력현황']=ws1;
       }
 
@@ -6105,7 +5991,7 @@ async function loadPrevStaff(){
         var vals=row.values;
         if(!vals||!Array.isArray(vals)) return;
         for(var ri=0;ri<4;ri++)
-          for(var ci=0;ci<8;ci++) // 7=물품운반(신형 데이터에만 존재, 예전 형식은 undefined→0)
+          for(var ci=0;ci<7;ci++)
             total+=(vals[ri]&&vals[ri][ci])||0;
       });
     }
@@ -6523,7 +6409,6 @@ function canDownload(){
   return true;
 }
 var mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-var mpDataDetail={toilet:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],common:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],mulpum:0}; // 화장실/공용구역 세부(변경시점 이후 데이터만)
 var mpDataByShift={'오전':null,'오후':null,'야간':null};
 // 조장별 개별 저장: {오전:{1팀A:[[4][7]]}, ...}
 var mpDataByLeader={오전:{},오후:{},야간:{}};
@@ -6637,11 +6522,11 @@ function confirmMp(){
   // ★ subMp에서 미리 캡처한 값 사용 (DOM 재참조 금지)
   var shKey=_mpPending.shKey||'';
   var myTeam=_mpPending.myTeam||'';
-  var newVals=_mpPending.newVals||{toilet:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],common:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],mulpum:0};
+  var newVals=_mpPending.newVals||[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
 
   if(!shKey){toast('⚠️ 근무조를 선택해주세요');return;}
 
-  // ★ 조장별 개별 저장 ({toilet:[4x7], common:[4x7], mulpum:N} 구조)
+  // ★ 조장별 개별 저장
   if(!mpDataByLeader[shKey]) mpDataByLeader[shKey]={};
   var saveKey=myTeam||('_'+shKey);
   mpDataByLeader[shKey][saveKey]=newVals;
@@ -6670,13 +6555,9 @@ function confirmMp(){
   // 팀코드를 "6팀 A조" 형태로 보기 좋게 변환
   var teamLabel=myTeam?myTeam.replace(/^(\d+팀)([A-Z])$/,'$1 $2조'):shKey;
 
-  // DB 저장 후 화면 갱신 + 명확한 완료 표시 (화장실/공용구역 각각 별도 레코드, 물품운반은 화장실 레코드 8번째 값에 포함)
-  var toiletFlat=newVals.toilet.map(function(row,zi){ return row.concat([zi===0?(newVals.mulpum||0):0]); });
-  var commonFlat=newVals.common.map(function(row){ return row.concat([0]); });
-  Promise.all([
-    saveMpToDB(shKey, saveKey, toiletFlat, writer, proxyWriter, 'toilet'),
-    saveMpToDB(shKey, saveKey, commonFlat, writer, proxyWriter, 'common')
-  ]).then(function(){
+  // DB 저장 후 화면 갱신 + 명확한 완료 표시
+  saveMpToDB(shKey, saveKey, newVals, writer, proxyWriter)
+    .then(function(){
       // ★ 이미 로컬에 반영된 상태라 전체 재조회(loadMpFromDB) 불필요 - 속도 개선
       updateStaff();
       var msg='✅ '+teamLabel+' 입력완료'+(isProxy?' (대리입력)':'')+' · 금일 누계 '+total+'명';
@@ -6698,55 +6579,17 @@ function confirmMp(){
 
 function recalcMpData(){
   mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-  // 화장실/공용구역 세부 집계 (변경시점 이후 데이터만 유효값을 가짐 — 통계 화면 등에서 사용)
-  mpDataDetail={
-    toilet:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],
-    common:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],
-    mulpum:0
-  };
   ['오전','오후','야간'].forEach(function(shift){
     var leaderData=mpDataByLeader[shift]||{};
     Object.keys(leaderData).forEach(function(team){
       if(team.indexOf('_')===0) return;
-      var entry=leaderData[team];
-      if(!entry) return;
-      // 예전 형식(단일 배열) 그대로 넘어온 경우(다른 코드 경로) 호환 처리
-      if(Array.isArray(entry)){
-        for(var ri=0;ri<4;ri++){
-          if(!entry[ri]||!Array.isArray(entry[ri])) continue;
-          for(var ci=0;ci<7;ci++){ if(entry[ri][ci]!==undefined) mpData[ri][ci]+=Number(entry[ri][ci])||0; }
+      var vals=leaderData[team];
+      if(!vals||!Array.isArray(vals)) return;
+      for(var ri=0;ri<4;ri++){
+        if(!vals[ri]||!Array.isArray(vals[ri])) continue;
+        for(var ci=0;ci<7;ci++){
+          if(vals[ri][ci]!==undefined) mpData[ri][ci]+=Number(vals[ri][ci])||0;
         }
-        return;
-      }
-      if(entry.legacy){
-        // 변경시점 이전 데이터: 구역당 숫자 하나. 세부구분은 없지만 총계 정확성을 위해 화장실 칸에 편입해 표시
-        for(var ri2=0;ri2<4;ri2++){
-          if(!entry.legacy[ri2]) continue;
-          for(var ci2=0;ci2<7;ci2++){
-            var lv=Number(entry.legacy[ri2][ci2])||0;
-            mpData[ri2][ci2]+=lv;
-            mpDataDetail.toilet[ri2][ci2]+=lv;
-          }
-        }
-        return;
-      }
-      // 새 형식: 화장실+공용구역 합산 (+물품운반은 L/S 3F(ri=0,ci=4)에 합산)
-      ['toilet','common'].forEach(function(cat){
-        var arr=entry[cat];
-        if(!arr) return;
-        for(var ri3=0;ri3<4;ri3++){
-          if(!arr[ri3]) continue;
-          for(var ci3=0;ci3<7;ci3++){
-            var v=Number(arr[ri3][ci3])||0;
-            mpData[ri3][ci3]+=v;
-            mpDataDetail[cat][ri3][ci3]+=v;
-          }
-        }
-      });
-      if(entry.mulpum){
-        mpData[0][4]+=Number(entry.mulpum)||0; // L/S 동편 3F에 합산 표시
-        mpDataDetail.toilet[0][4]+=Number(entry.mulpum)||0; // 화장실 세부표시에도 반영 (물품운반은 화장실 칸에서 입력되므로)
-        mpDataDetail.mulpum+=Number(entry.mulpum)||0;
       }
     });
   });
@@ -6797,43 +6640,38 @@ async function loadFullStatusForDate(dateStr){
   try{
     var mpRes=await sb.from('mp_data').select('*').eq('date',dateStr);
     var nsRes=await sb.from('night_special_data').select('*').eq('date',dateStr);
-    // 1) 화장실/공용구역 세부 합산 (recalcMpData와 동일 로직, 전역 상태는 건드리지 않음)
-    var localDetail={toilet:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],common:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]]};
+    // 1) 층별(오전/오후) 합산 - recalcMpData와 동일 로직, 전역 mpData는 건드리지 않음
+    var localMp=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
     if(mpRes.data){
-      // team_code별로 category 묶어서 legacy/신형 구분
-      var byTeam={};
       mpRes.data.forEach(function(row){
         if(!row.team_code||row.team_code.indexOf('_')===0) return;
         if(!row.values) return;
         var vals=row.values;
         if(typeof vals==='string'){ try{ vals=JSON.parse(vals); }catch(e){ return; } }
         if(!Array.isArray(vals)) return;
-        if(!byTeam[row.team_code]) byTeam[row.team_code]={};
-        byTeam[row.team_code][row.category||'legacy']=vals;
-      });
-      Object.keys(byTeam).forEach(function(team){
-        var slot=byTeam[team];
-        if(slot.legacy){
-          // 예전 형식: 화장실 칸에 그대로 표시 (세부구분 없음)
-          for(var ri=0;ri<4;ri++){
-            if(!slot.legacy[ri]) continue;
-            for(var ci=0;ci<7;ci++){ localDetail.toilet[ri][ci]+=Number(slot.legacy[ri][ci])||0; }
-          }
-          return;
+        for(var ri=0;ri<4;ri++){
+          if(!vals[ri]||!Array.isArray(vals[ri])) continue;
+          for(var ci=0;ci<7;ci++){ if(vals[ri][ci]!==undefined) localMp[ri][ci]+=Number(vals[ri][ci])||0; }
         }
-        ['toilet','common'].forEach(function(cat){
-          var vals2=slot[cat]; if(!vals2) return;
-          for(var ri2=0;ri2<4;ri2++){
-            if(!vals2[ri2]) continue;
-            for(var ci2=0;ci2<7;ci2++){ localDetail[cat][ri2][ci2]+=Number(vals2[ri2][ci2])||0; }
-            if(cat==='toilet' && vals2[ri2][7]) localDetail.toilet[ri2][4]+=Number(vals2[ri2][7])||0; // 물품운반→3F
-          }
-        });
       });
     }
-    var rowsHtml=buildMpFullRowsHtml(localDetail);
-    var mpTbl=document.getElementById('mpFullTableBody');
-    if(mpTbl) mpTbl.innerHTML=rowsHtml;
+    var totals=[0,0,0,0];
+    for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) totals[ri]+=localMp[ri][ci];
+    var grandTotal=totals.reduce(function(a,b){return a+b;},0);
+    var lsSub=[0,0,0,0,0,0,0],asSub=[0,0,0,0,0,0,0],colTot=[0,0,0,0,0,0,0];
+    for(ci=0;ci<7;ci++){
+      lsSub[ci]=localMp[0][ci]+localMp[1][ci];
+      asSub[ci]=localMp[2][ci]+localMp[3][ci];
+      colTot[ci]=lsSub[ci]+asSub[ci];
+    }
+    var lsTotal=lsSub.reduce(function(a,b){return a+b;},0);
+    var asTotal=asSub.reduce(function(a,b){return a+b;},0);
+    var allRows=[[ZONES[0]].concat(localMp[0]).concat([totals[0]]),[ZONES[1]].concat(localMp[1]).concat([totals[1]]),['L/S 소계'].concat(lsSub).concat([lsTotal]),[ZONES[2]].concat(localMp[2]).concat([totals[2]]),[ZONES[3]].concat(localMp[3]).concat([totals[3]]),['A/S 소계'].concat(asSub).concat([asTotal]),['전체 총계'].concat(colTot).concat([grandTotal])];
+    var mpTbl=document.querySelector('#mpFullTable tbody');
+    if(mpTbl){
+      var trs=mpTbl.querySelectorAll('tr');
+      allRows.forEach(function(rowData,ri2){if(!trs[ri2])return;var tds=trs[ri2].querySelectorAll('td');rowData.forEach(function(val,ci2){if(tds[ci2])tds[ci2].textContent=val;});});
+    }
     // 2) 야간특별작업 합산
     var sums={carpet:0,wax:0,stone:0,wood:0,restroom:0,pbb:0,es:0,toilet_daily:0,common_area:0,collection:0};
     var any=false;
@@ -6869,73 +6707,6 @@ function resetFullStatusToday(){
   renderNightSpecialSummary();
 }
 
-function buildMpFullRowsHtml(detail){
-  detail=detail||mpDataDetail;
-  var t=detail.toilet, c=detail.common;
-  var zones=[{lbl:'L/S 동편',ri:0},{lbl:'L/S 서편',ri:1},{lbl:'A/S 동편',ri:2},{lbl:'A/S 서편',ri:3}];
-  function rowSum(arr){ return arr.reduce(function(a,b){return a+(b||0);},0); }
-  function tr(zoneLbl, catLbl, vals, isSub, isTot, rowspan){
-    var sum=rowSum(vals);
-    var cls=isTot?'tot':(isSub?'sub':'');
-    var h='<tr'+(cls?(' class="'+cls+'"'):'')+'>';
-    if(zoneLbl!==null){
-      h+='<td'+(rowspan?(' rowspan="'+rowspan+'"'):'')+' style="vertical-align:middle" class="lbl">'+zoneLbl+'</td>';
-    }
-    if(catLbl!==null){
-      h+='<td style="font-size:10.5px;color:var(--g5);font-weight:700;text-align:center">'+catLbl+'</td>';
-    }else{
-      h+='<td colspan="'+(zoneLbl!==null?1:2)+'"></td>';
-    }
-    vals.forEach(function(v){ h+='<td>'+v+'</td>'; });
-    h+='<td style="font-weight:800;color:var(--teal2)">'+sum+'</td></tr>';
-    return h;
-  }
-  var h='';
-  zones.forEach(function(z){
-    h+=tr(z.lbl,'화장실',t[z.ri],false,false,2);
-    h+=tr(null,'공용구역',c[z.ri],false,false);
-    if(z.ri===1){
-      var lsSub=t[0].map(function(v,i){return v+c[0][i]+t[1][i]+c[1][i];});
-      h+=tr('L/S 소계',null,lsSub,true,false);
-    }
-    if(z.ri===3){
-      var asSub=t[2].map(function(v,i){return v+c[2][i]+t[3][i]+c[3][i];});
-      h+=tr('A/S 소계',null,asSub,true,false);
-    }
-  });
-  var grand=t[0].map(function(v,i){ return t[0][i]+c[0][i]+t[1][i]+c[1][i]+t[2][i]+c[2][i]+t[3][i]+c[3][i]; });
-  h+=tr('전체 총계',null,grand,false,true);
-  return h;
-}
-function buildMpTotalRowsHtml(mpArr){
-  var totals=[0,0,0,0];
-  for(var ri=0;ri<4;ri++){ for(var ci=0;ci<7;ci++) totals[ri]+=(mpArr[ri]&&mpArr[ri][ci])||0; }
-  var grandTotal=totals.reduce(function(a,b){return a+b;},0);
-  var lsSub=[0,0,0,0,0,0,0],asSub=[0,0,0,0,0,0,0],colTot=[0,0,0,0,0,0,0];
-  for(var ci2=0;ci2<7;ci2++){
-    lsSub[ci2]=mpArr[0][ci2]+mpArr[1][ci2];
-    asSub[ci2]=mpArr[2][ci2]+mpArr[3][ci2];
-    colTot[ci2]=lsSub[ci2]+asSub[ci2];
-  }
-  var lsTotal=lsSub.reduce(function(a,b){return a+b;},0);
-  var asTotal=asSub.reduce(function(a,b){return a+b;},0);
-  var zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
-  function tr(lbl,vals,sum,cls){
-    var h='<tr'+(cls?(' class="'+cls+'"'):'')+'><td class="lbl">'+lbl+'</td>';
-    vals.forEach(function(v){ h+='<td>'+v+'</td>'; });
-    h+='<td style="font-weight:800;color:var(--teal2)">'+sum+'</td></tr>';
-    return h;
-  }
-  var h='';
-  h+=tr(zones[0],mpArr[0],totals[0]);
-  h+=tr(zones[1],mpArr[1],totals[1]);
-  h+=tr('L/S 소계',lsSub,lsTotal,'sub');
-  h+=tr(zones[2],mpArr[2],totals[2]);
-  h+=tr(zones[3],mpArr[3],totals[3]);
-  h+=tr('A/S 소계',asSub,asTotal,'sub');
-  h+=tr('전체 총계',colTot,grandTotal,'tot');
-  return h;
-}
 function updateFloorChart(){
   var totals=[0,0,0,0];
   for(var ri=0;ri<4;ri++){
@@ -6950,43 +6721,36 @@ function updateFloorChart(){
   }
   var lsTotal=lsSub.reduce(function(a,b){return a+b;},0);
   var asTotal=asSub.reduce(function(a,b){return a+b;},0);
-  // 홈화면 "전체" 탭 = 합계만 (예전 그대로)
-  var totalRowsHtml=buildMpTotalRowsHtml(mpData);
+  // flP_all 테이블
   var allTbl=document.querySelector('#flP_all table tbody');
-  if(allTbl) allTbl.innerHTML=totalRowsHtml;
-  // 인력현황탭 > 전체현황 = 화장실/공용구역 분리 표시
-  var rowsHtml=buildMpFullRowsHtml();
-  var mpTbl=document.getElementById('mpFullTableBody');
-  if(mpTbl) mpTbl.innerHTML=rowsHtml;
-  // 층별 패널 (B2F~4F): 구역카드 4개를 화장실/공용구역 2줄로 표시 (집하장·물품운반은 공용구역에 합산)
+  if(allTbl){
+    var newRows=[[ZONES[0]].concat(mpData[0]).concat([totals[0]]),[ZONES[1]].concat(mpData[1]).concat([totals[1]]),['L/S 소계'].concat(lsSub).concat([lsTotal]),[ZONES[2]].concat(mpData[2]).concat([totals[2]]),[ZONES[3]].concat(mpData[3]).concat([totals[3]]),['A/S 소계'].concat(asSub).concat([asTotal]),['전체 총계'].concat(colTot).concat([grandTotal])];
+    var trs=allTbl.querySelectorAll('tr');
+    newRows.forEach(function(rowData,ri){if(!trs[ri])return;var tds=trs[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
+  }
+  // 공통 테이블 갱신 함수
+    var allRows=[[ZONES[0]].concat(mpData[0]).concat([totals[0]]),[ZONES[1]].concat(mpData[1]).concat([totals[1]]),['L/S 소계'].concat(lsSub).concat([lsTotal]),[ZONES[2]].concat(mpData[2]).concat([totals[2]]),[ZONES[3]].concat(mpData[3]).concat([totals[3]]),['A/S 소계'].concat(asSub).concat([asTotal]),['전체 총계'].concat(colTot).concat([grandTotal])];
+  // 메인 테이블 (#dHome = #flP_all 안)
+  var mainTbl=document.querySelector('#dHome tbody');
+  if(mainTbl){
+    var trs2=mainTbl.querySelectorAll('tr');
+    allRows.forEach(function(rowData,ri){if(!trs2[ri])return;var tds=trs2[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
+  }
+  // 인력현황 탭 > 전체현황 테이블 (#mpFullTable)
+  var mpTbl=document.querySelector('#mpFullTable tbody');
+  if(mpTbl){
+    var trs3=mpTbl.querySelectorAll('tr');
+    allRows.forEach(function(rowData,ri){if(!trs3[ri])return;var tds=trs3[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
+  }
+  // 층별 패널
   var fps=[{id:'B2F',ci:0},{id:'B1F',ci:[1,6],merged:true},{id:'1F',ci:2},{id:'2F',ci:3},{id:'3F',ci:4},{id:'4F',ci:5}];
   fps.forEach(function(fp){
     var panel=document.getElementById('flP_'+fp.id);if(!panel)return;
-    var t=mpDataDetail.toilet, c=mpDataDetail.common;
-    function toiletVal(zi){ return fp.merged ? (t[zi][fp.ci[0]]+t[zi][fp.ci[1]]) : t[zi][fp.ci]; }
-    function commonVal(zi){
-      var base = fp.merged ? (c[zi][fp.ci[0]]+c[zi][fp.ci[1]]) : c[zi][fp.ci];
-      return base; // 집하장은 ci=6이라 B1F merged에 이미 포함, 물품운반은 화장실 3F에 이미 포함되어 있으므로 별도 가산 없음
-    }
-    var vals=[0,1,2,3].map(function(zi){ return toiletVal(zi)+commonVal(zi); });
+    var vals=fp.merged?[mpData[0][fp.ci[0]]+mpData[0][fp.ci[1]],mpData[1][fp.ci[0]]+mpData[1][fp.ci[1]],mpData[2][fp.ci[0]]+mpData[2][fp.ci[1]],mpData[3][fp.ci[0]]+mpData[3][fp.ci[1]]]:[mpData[0][fp.ci],mpData[1][fp.ci],mpData[2][fp.ci],mpData[3][fp.ci]];
     var flTot=vals.reduce(function(a,b){return a+b;},0);
     var lsS=vals[0]+vals[1],asS=vals[2]+vals[3];
     var bigNum=panel.querySelector('span[style*="font-size:39px"]');if(bigNum)bigNum.textContent=flTot;
-    // 구역카드 4개 → 화장실/공용구역 2줄 표시로 재구성
-    var cardGrid=panel.querySelector('div[style*="grid-template-columns:1fr 1fr"]');
-    if(cardGrid){
-      var zoneLabels=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
-      var colorMain=['var(--navy)','var(--navy)','var(--teal2)','var(--teal2)'];
-      var gh='';
-      zoneLabels.forEach(function(lbl,zi){
-        gh+='<div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">';
-        gh+='<div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">'+lbl+'</div>';
-        gh+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px"><span style="font-size:11px;color:var(--g4)">화장실</span><span style="font-size:17px;font-weight:800;color:'+colorMain[zi]+'">'+toiletVal(zi)+'</span></div>';
-        gh+='<div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:11px;color:var(--g4)">공용구역</span><span style="font-size:17px;font-weight:800;color:'+colorMain[zi]+'">'+commonVal(zi)+'</span></div>';
-        gh+='</div>';
-      });
-      cardGrid.innerHTML=gh;
-    }
+    var cards=panel.querySelectorAll('div[style*="font-size:30px"]');vals.forEach(function(v,i){if(cards[i])cards[i].textContent=v;});
     // L/S 소계, A/S 소계 각각 정확히 찾기
     var subDivs=panel.querySelectorAll('div[style*="--navy-bg"] span[style*="20px"], div[style*="--teal-bg"] span[style*="20px"]');
     if(subDivs[0]) subDivs[0].textContent=lsS;
@@ -9132,8 +8896,8 @@ function openLeaderDataEdit(shift,team,name){
     return;
   }
   if(headRow){
-    headRow.innerHTML='<th style="color:white;font-size:13px;padding:8px 6px;text-align:left;min-width:60px">구역</th><th style="color:white;font-size:11px;padding:8px 3px;text-align:center;min-width:44px">구분</th>'+
-      ['B2F','B1F','1F','2F','3F','4F','집하장','물품운반'].map(function(f){ return '<th style="color:white;font-size:11px;padding:8px 3px;text-align:center">'+f+'</th>'; }).join('');
+    headRow.innerHTML='<th style="color:white;font-size:13px;padding:8px 6px;text-align:left;min-width:70px">구역</th>'+
+      ['B2F','B1F','1F','2F','3F','4F','집하장'].map(function(f){ return '<th style="color:white;font-size:12px;padding:8px 4px;text-align:center">'+f+'</th>'; }).join('');
   }
 
   var meta=(mpMeta[shift]&&mpMeta[shift][team])||null;
@@ -9141,47 +8905,25 @@ function openLeaderDataEdit(shift,team,name){
   if(title) title.textContent=name+' 입력값 수정 ('+shift+')'+proxyNote;
   var zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
   var floors=['B2F','B1F','1F','2F','3F','4F','집하장'];
-  var cats=[{key:'toilet',label:'화장실'},{key:'common',label:'공용구역'}];
-  // 현재 저장값 불러오기 (신형: {toilet,common,mulpum,legacy} / 구형: 배열 그대로)
-  var curEntry=(mpDataByLeader[shift]&&mpDataByLeader[shift][team])||null;
-  var cur={toilet:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],common:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],mulpum:0};
-  if(curEntry){
-    if(Array.isArray(curEntry)){
-      cur.toilet=curEntry; // 구형 데이터는 편의상 화장실 칸에 표시(합계는 그대로 유지됨)
-    }else if(curEntry.legacy){
-      cur.toilet=curEntry.legacy;
-    }else{
-      cur.toilet=curEntry.toilet||cur.toilet;
-      cur.common=curEntry.common||cur.common;
-      cur.mulpum=curEntry.mulpum||0;
-    }
-  }
+  // 현재 저장값 불러오기
+  var cur=(mpDataByLeader[shift]&&mpDataByLeader[shift][team])||
+          [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
   var rows='';
   zones.forEach(function(zone,ri){
-    cats.forEach(function(cat,ci){
-      rows+='<tr style="border-bottom:1px solid var(--g1)">';
-      if(ci===0) rows+='<td rowspan="2" style="font-size:13px;font-weight:600;color:var(--g6);padding:7px 6px;vertical-align:middle">'+zone+'</td>';
-      rows+='<td style="font-size:10.5px;color:var(--g4);font-weight:700;text-align:center">'+cat.label+'</td>';
-      floors.forEach(function(fl,fi){
-        var v=(cur[cat.key][ri]&&cur[cat.key][ri][fi])||0;
-        var filled=v>0;
-        rows+='<td style="padding:4px 2px;text-align:center;'+(filled?'background:var(--teal-bg);border-radius:6px':'')+'">';
-        rows+='<input type="number" id="ledit_'+cat.key+'_'+ri+'_'+fi+'" value="'+v+'" min="0" '+
-          'oninput="this.style.background=(Number(this.value)>0)?\'var(--teal-bg)\':\'#fff\';this.style.borderColor=(Number(this.value)>0)?\'var(--teal2)\':\'var(--g2)\';this.style.color=(Number(this.value)>0)?\'var(--teal2)\':\'var(--g6)\';this.style.fontWeight=(Number(this.value)>0)?\'800\':\'400\';" '+
-          'style="width:32px;padding:5px 2px;border:1.5px solid '+(filled?'var(--teal2)':'var(--g2)')+';border-radius:6px;font-size:13px;text-align:center;outline:none;background:'+(filled?'var(--teal-bg)':'#fff')+';color:'+(filled?'var(--teal2)':'var(--g6)')+';font-weight:'+(filled?'800':'400')+'" '+
-          'onfocus="this.select()">';
-        rows+='</td>';
-      });
-      // 물품운반 (2팀A 행에만 첫 카테고리 줄에 입력칸)
-      if(ci===0 && team==='2팀A'){
-        rows+='<td rowspan="2" style="padding:4px 2px;text-align:center;vertical-align:middle">';
-        rows+='<input type="number" id="ledit_mulpum" value="'+(cur.mulpum||0)+'" min="0" style="width:32px;padding:5px 2px;border:1.5px solid var(--teal2);border-radius:6px;font-size:13px;text-align:center;outline:none" onfocus="this.select()">';
-        rows+='</td>';
-      }else if(ci===0){
-        rows+='<td rowspan="2" style="text-align:center;color:var(--g3);font-size:11px">-</td>';
-      }
-      rows+='</tr>';
+    rows+='<tr style="border-bottom:1px solid var(--g1)">';
+    rows+='<td style="font-size:13px;font-weight:600;color:var(--g6);padding:7px 6px">'+zone+'</td>';
+
+    floors.forEach(function(fl,ci){
+      var v=cur[ri][ci]||0;
+      var filled=v>0;
+      rows+='<td style="padding:4px 3px;text-align:center;'+(filled?'background:var(--teal-bg);border-radius:6px':'')+'">';
+      rows+='<input type="number" id="ledit_'+ri+'_'+ci+'" value="'+v+'" min="0" '+
+        'oninput="this.style.background=(Number(this.value)>0)?\'var(--teal-bg)\':\'#fff\';this.style.borderColor=(Number(this.value)>0)?\'var(--teal2)\':\'var(--g2)\';this.style.color=(Number(this.value)>0)?\'var(--teal2)\':\'var(--g6)\';this.style.fontWeight=(Number(this.value)>0)?\'800\':\'400\';" '+
+        'style="width:36px;padding:5px 3px;border:1.5px solid '+(filled?'var(--teal2)':'var(--g2)')+';border-radius:6px;font-size:14px;text-align:center;outline:none;background:'+(filled?'var(--teal-bg)':'#fff')+';color:'+(filled?'var(--teal2)':'var(--g6)')+';font-weight:'+(filled?'800':'400')+'" '+
+        'onfocus="this.select()">';
+      rows+='</td>';
     });
+    rows+='</tr>';
   });
   body.innerHTML=rows;
   showM('leaderDataModal');
@@ -9256,21 +8998,13 @@ async function saveLeaderDataEdit(){
     }catch(e){ toast('저장 오류: '+String(e.message||e)); }
     return;
   }
-  var newVals={
-    toilet:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],
-    common:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],
-    mulpum:0
-  };
-  ['toilet','common'].forEach(function(cat){
-    for(var ri=0;ri<4;ri++){
-      for(var ci=0;ci<7;ci++){
-        var el=document.getElementById('ledit_'+cat+'_'+ri+'_'+ci);
-        newVals[cat][ri][ci]=el?parseInt(el.value)||0:0;
-      }
+  var newVals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  for(var ri=0;ri<4;ri++){
+    for(var ci=0;ci<7;ci++){
+      var el=document.getElementById('ledit_'+ri+'_'+ci);
+      newVals[ri][ci]=el?parseInt(el.value)||0:0;
     }
-  });
-  var mulpumEl=document.getElementById('ledit_mulpum');
-  if(mulpumEl) newVals.mulpum=parseInt(mulpumEl.value)||0;
+  }
   var mismatchMsg2=checkZoneMismatch(editTeam, newVals);
   if(mismatchMsg2 && !confirm(mismatchMsg2+'\n\n그래도 저장하시겠습니까?')) return;
   if(!mpDataByLeader[editShift]) mpDataByLeader[editShift]={};
@@ -9286,12 +9020,7 @@ async function saveLeaderDataEdit(){
   var isProxy2=isActingLeader2||(me&&(me.role==='leader'||me.role==='manager')&&officialName2&&me.name&&officialName2!==me.name);
   var writer2=isActingLeader2?(me.name+' (조장대행)'):(isProxy2?(officialName2||editTeam):(me?me.name:''));
   var proxyWriter2=isActingLeader2?(me?me.name:null):(isProxy2?(me?me.name:null):null);
-  var toiletFlat2=newVals.toilet.map(function(row,zi){ return row.concat([zi===0?(newVals.mulpum||0):0]); });
-  var commonFlat2=newVals.common.map(function(row){ return row.concat([0]); });
-  Promise.all([
-    saveMpToDB(editShift, editTeam, toiletFlat2, writer2, proxyWriter2, 'toilet'),
-    saveMpToDB(editShift, editTeam, commonFlat2, writer2, proxyWriter2, 'common')
-  ]).then(function(){ updateStaff(); });
+  saveMpToDB(editShift, editTeam, newVals, writer2, proxyWriter2).then(function(){ updateStaff(); });
   toast('✅ '+editTeam+' 입력값이 수정되었습니다');
 }
 
@@ -13067,14 +12796,14 @@ async function deleteFacFile(id, path){
   }catch(e){ toast('⚠️ 삭제 오류: '+e.message); }
 }
 
-// 인력현황 - DB 저장 (일별 누적) — category: 'toilet'|'common'|null(예전형식)
-async function saveMpToDB(shift, teamCode, values, writer, proxyWriter, category){
+// 인력현황 - DB 저장 (일별 누적)
+async function saveMpToDB(shift, teamCode, values, writer, proxyWriter){
   try{
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
-    var payload={date:today, shift:shift, team_code:teamCode, values:values, writer:writer||null, proxy_writer:proxyWriter||null, category:category||null};
+    var payload={date:today, shift:shift, team_code:teamCode, values:values, writer:writer||null, proxy_writer:proxyWriter||null};
     var res=await sb.from('mp_data').upsert(
       payload,
-      {onConflict:'date,shift,team_code,category'}
+      {onConflict:'date,shift,team_code'}
     );
     if(res&&res.error) toast('⚠️ 저장오류: '+res.error.message);
   }catch(e){ toast('⚠️ 저장예외: '+String(e.message||e)); }
@@ -13104,19 +12833,8 @@ async function loadMpFromDB(){
         if(!mpDataByLeader[row.shift]) mpDataByLeader[row.shift]={};
         var vals=row.values;
         if(typeof vals==='string') try{ vals=JSON.parse(vals); }catch(e){}
-        if(!Array.isArray(vals) || !Array.isArray(vals[0])) return;
-        var entry=mpDataByLeader[row.shift][row.team_code];
-        if(!entry){
-          entry={toilet:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],common:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],mulpum:0,legacy:null};
-          mpDataByLeader[row.shift][row.team_code]=entry;
-        }
-        if(row.category==='toilet'||row.category==='common'){
-          // 새 형식: vals[zi] = [B2F,B1F,1F,2F,3F,4F,집하장,물품운반(zi=0에만 의미)]
-          entry[row.category]=vals.map(function(r){return (r||[]).slice(0,7);});
-          if(row.category==='toilet' && vals[0] && vals[0][7]) entry.mulpum=Number(vals[0][7])||0;
-        }else{
-          // 예전 형식(category 없음): 구역당 숫자 하나 — legacy로 별도 보관 (합계 계산 시 그대로 사용)
-          entry.legacy=vals.map(function(r){return (r||[]).slice(0,7);});
+        if(Array.isArray(vals) && Array.isArray(vals[0])){
+          mpDataByLeader[row.shift][row.team_code]=vals; // ri=0~3: 층별, ri=4: 관리자
         }
         if(!mpMeta[row.shift]) mpMeta[row.shift]={};
         mpMeta[row.shift][row.team_code]={writer:row.writer||'', proxy_writer:row.proxy_writer||''};
@@ -13160,18 +12878,7 @@ async function refreshMpDataLight(){
         if(!mpDataByLeader[row.shift]) mpDataByLeader[row.shift]={};
         var vals=row.values;
         if(typeof vals==='string') try{ vals=JSON.parse(vals); }catch(e){}
-        if(!Array.isArray(vals) || !Array.isArray(vals[0])) return;
-        var entry=mpDataByLeader[row.shift][row.team_code];
-        if(!entry){
-          entry={toilet:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],common:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]],mulpum:0,legacy:null};
-          mpDataByLeader[row.shift][row.team_code]=entry;
-        }
-        if(row.category==='toilet'||row.category==='common'){
-          entry[row.category]=vals.map(function(r){return (r||[]).slice(0,7);});
-          if(row.category==='toilet' && vals[0] && vals[0][7]) entry.mulpum=Number(vals[0][7])||0;
-        }else{
-          entry.legacy=vals.map(function(r){return (r||[]).slice(0,7);});
-        }
+        if(Array.isArray(vals) && Array.isArray(vals[0])) mpDataByLeader[row.shift][row.team_code]=vals;
         if(!mpMeta[row.shift]) mpMeta[row.shift]={};
         mpMeta[row.shift][row.team_code]={writer:row.writer||'', proxy_writer:row.proxy_writer||''};
       });
@@ -14546,7 +14253,7 @@ async function loadMpHistory(){
       var d=row.date;
       if(!byDate[d]) byDate[d]={total:0,ls:0,as:0,night:0};
       for(var ri=0;ri<4;ri++){
-        for(var ci=0;ci<8;ci++){ // 0~6=층/집하장, 7=물품운반(새 형식에만 존재, 예전 형식은 undefined→0)
+        for(var ci=0;ci<7;ci++){
           var v=(row.values[ri]&&row.values[ri][ci])||0;
           byDate[d].total+=v;
           if(ri<2) byDate[d].ls+=v; else byDate[d].as+=v;
@@ -15382,7 +15089,7 @@ async function loadMonthlyStats(){
     var tsFrom=new Date(dFrom+'T00:00:00+09:00').toISOString();
     var tsTo=new Date(dTo+'T23:59:59+09:00').toISOString();
     var q=await Promise.all([
-      msFetchAll(function(){ return sb.from('mp_data').select('date,shift,team_code,values,proxy_writer,category').gte('date',dFrom).lte('date',dTo); }),
+      msFetchAll(function(){ return sb.from('mp_data').select('date,shift,team_code,values,proxy_writer').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('night_special_data').select('*').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('handover').select('id,created_at,ho_date,shift,team,confirmed,facility,danger,equipment,notice').gte('created_at',tsFrom).lte('created_at',tsTo); }),
       msFetchAll(function(){ return sb.from('lost_found').select('id,found_date,status,completed_at,location,item,receipt_route,handover_to,receiver_name').gte('found_date',tsFrom).lte('found_date',tsTo); }),
@@ -15548,7 +15255,7 @@ function msClassifyVocTop3ForForm(text){
 }
 
 function msCalc(q, key){
-  var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorToilet:[0,0,0,0,0,0,0],floorCommon:[0,0,0,0,0,0,0],toiletSum:0,commonSum:0,floorDays:{},nsSum:{},lsSum:0,asSum:0,hourly:new Array(24).fill(0),hourlyDays:new Array(24).fill(0),hourlyByShift:{오전:new Array(24).fill(0),오후:new Array(24).fill(0),야간:new Array(24).fill(0)}},
+  var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorDays:{},nsSum:{},lsSum:0,asSum:0,hourly:new Array(24).fill(0),hourlyDays:new Array(24).fill(0),hourlyByShift:{오전:new Array(24).fill(0),오후:new Array(24).fill(0),야간:new Array(24).fill(0)}},
           mgr:{days:{},trip:0,edu:0},
           ho:{total:0,confirmed:0,byTeam:{},byType:{시설물:0,기타:0},byFacLoc:{},byFacDesc:{},byFacType:{},byShift:{오전:0,오후:0,야간:0}},
           lost:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byLoc:{},byItem:{},byHour:[0,0,0,0],hourUnknown:0,itemEtc:[],locEtc:[],byRoute:{},routeEtc:[],byHandover:{},handoverEtc:[],byShift:{오전:0,오후:0,야간:0}},
@@ -15565,22 +15272,13 @@ function msCalc(q, key){
     if(typeof vals==='string'){ try{ vals=JSON.parse(vals); }catch(e){ return; } }
     if(!Array.isArray(vals)) return;
     var sum=0;
-    var isToilet2=(r.category==='toilet'), isCommon2=(r.category==='common');
     for(var ri=0;ri<4;ri++){
       if(!vals[ri]||!Array.isArray(vals[ri])) continue;
       for(var ci=0;ci<7;ci++){
         var v=Number(vals[ri][ci])||0;
         sum+=v;
         s.mp.floorSum[ci]+=v;
-        if(isToilet2||!r.category){ s.mp.floorToilet[ci]+=v; s.mp.toiletSum+=v; }
-        else if(isCommon2){ s.mp.floorCommon[ci]+=v; s.mp.commonSum+=v; }
         if(ri<2) s.mp.lsSum+=v; else s.mp.asSum+=v; // ri 0,1=L/S · 2,3=A/S
-      }
-      var mulpumV2=Number(vals[ri][7])||0; // 물품운반(신형 데이터에만 존재) → 3F에 합산
-      if(mulpumV2){
-        sum+=mulpumV2; s.mp.floorSum[4]+=mulpumV2;
-        if(isToilet2){ s.mp.floorToilet[4]+=mulpumV2; s.mp.toiletSum+=mulpumV2; }
-        if(ri<2) s.mp.lsSum+=mulpumV2; else s.mp.asSum+=mulpumV2;
       }
     }
     if(sum<=0) return;
@@ -16173,9 +15871,6 @@ function msRenderDetail(key){
   if(key==='mp'){
     h=msTitle('👥 인력현황 · '+pl);
     h+=msRow('전체 일평균', msMpAvg(c.mp)+'명 <span style="font-size:10px;font-weight:600;color:var(--g4)">('+pw+' '+msMpAvg(p.mp)+'명)</span>');
-    var mpFd=Object.keys(c.mp.floorDays).length;
-    h+=msRow('🚻 화장실 일평균', (mpFd?Math.round(c.mp.toiletSum/mpFd):0)+'명');
-    h+=msRow('🧹 공용구역 일평균', (mpFd?Math.round(c.mp.commonSum/mpFd):0)+'명');
     h+=msRow('오전 일평균', msShiftAvg(c.mp,'오전')+'명');
     h+=msRow('오후 일평균', msShiftAvg(c.mp,'오후')+'명');
     h+=msRow('야간 일평균', msShiftAvg(c.mp,'야간')+'명');
@@ -16185,20 +15880,14 @@ function msRenderDetail(key){
     h+=msSub('관리자 출근 현황');
     h+=msRow('일평균 출근 관리자', msMgrAvg(c.mgr)+'명 <span style="font-size:10px;font-weight:600;color:var(--g4)">('+pw+' '+msMgrAvg(p.mgr)+'명)</span>');
     h+=msRow('출장 / 교육', c.mgr.trip+'건 / '+c.mgr.edu+'건');
-    // 층별 일평균 (오전/오후 합산 기준, 화장실/공용구역 각각) - 데이터 없어도 항상 표시
+    // 층별 일평균 (오전/오후 합산 기준) - 데이터 없어도 항상 표시
     var fDays=Object.keys(c.mp.floorDays).length;
-    h+=msSub('층별 일평균 — 🚻 화장실');
-    var favgT=c.mp.floorToilet.map(function(v){ return fDays?Math.round(v/fDays):0; });
-    var fmxT=Math.max.apply(null, favgT.concat([1]));
-    var floorBarsHtmlT='';
-    for(var fiT=0;fiT<7;fiT++){ floorBarsHtmlT+=msBar(MS_FLOORS[fiT], favgT[fiT], fmxT, 'linear-gradient(90deg,var(--navy),#3E6BB5)', '명'); }
-    h+='<div class="ms-bargroup">'+floorBarsHtmlT+'</div>';
-    h+=msSub('층별 일평균 — 🧹 공용구역');
-    var favgC=c.mp.floorCommon.map(function(v){ return fDays?Math.round(v/fDays):0; });
-    var fmxC=Math.max.apply(null, favgC.concat([1]));
-    var floorBarsHtmlC='';
-    for(var fiC=0;fiC<7;fiC++){ floorBarsHtmlC+=msBar(MS_FLOORS[fiC], favgC[fiC], fmxC, 'linear-gradient(90deg,var(--teal),var(--teal2))', '명'); }
-    h+='<div class="ms-bargroup">'+floorBarsHtmlC+'</div>';
+    h+=msSub('층별 일평균 (오전·오후)');
+    var favg=c.mp.floorSum.map(function(v){ return fDays?Math.round(v/fDays):0; });
+    var fmx=Math.max.apply(null, favg.concat([1]));
+    var floorBarsHtml='';
+    for(var fi=0;fi<7;fi++){ floorBarsHtml+=msBar(MS_FLOORS[fi], favg[fi], fmx, 'linear-gradient(90deg,var(--teal),var(--teal2))', '명'); }
+    h+='<div class="ms-bargroup">'+floorBarsHtml+'</div>';
     // 시간대별 인원 일평균 (구간별 카드) - shiftDays 기준 정확한 평균
     h+=msSub('시간대별 인원 일평균');
     var amDays=Object.keys(c.mp.shiftDays['오전']||{}).length||1;
