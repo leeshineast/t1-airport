@@ -2125,21 +2125,20 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
           <tr><td class="rpt-lbl">발생일시</td><td id="rptDatetime"></td><td class="rpt-lbl">발생장소</td><td id="rptLocation"></td></tr>
           <tr><td class="rpt-lbl" rowspan="6" style="text-align:center">상황내용</td><td class="rpt-lbl">발생시간</td><td colspan="2" id="rptTime"></td></tr>
           <tr><td class="rpt-lbl">발생장소</td><td colspan="2"><input type="text" class="rpt-edit" id="rptLocation2" oninput="document.getElementById('rptLocation').textContent=this.value"></td></tr>
-          <tr><td class="rpt-lbl">상황내용</td><td colspan="2"><textarea class="rpt-edit" id="rptContent" rows="2"></textarea></td></tr>
+          <tr><td class="rpt-lbl">상황내용</td><td colspan="2"><textarea class="rpt-edit" id="rptContent" rows="5"></textarea></td></tr>
           <tr><td class="rpt-lbl" id="rptFinderLbl">발견자</td><td colspan="2" id="rptFinder"></td></tr>
           <tr><td class="rpt-lbl" id="rptIdLbl">사번</td><td colspan="2" id="rptId"></td></tr>
           <tr><td class="rpt-lbl">상황접수</td><td colspan="2" id="rptChannel"></td></tr>
           <tr><td colspan="4" style="font-weight:800;background:#fafafa">□ 조치사항</td></tr>
           <tr><td class="rpt-lbl">조치자</td><td colspan="3" id="rptActor"></td></tr>
           <tr><td class="rpt-lbl">조치내용</td><td colspan="3"><textarea class="rpt-edit" id="rptAction" rows="2"></textarea></td></tr>
-          <tr><td class="rpt-lbl" colspan="4" style="text-align:center">상황 사진 별첨</td></tr>
-          <tr><td colspan="4" style="height:160px"></td></tr>
           <tr id="rptNoteRow" style="display:none">
             <td class="rpt-lbl" colspan="4" style="text-align:center" id="rptNoteLbl">업무 진행 사항 및 특이사항</td>
           </tr>
           <tr id="rptNoteRow2" style="display:none">
             <td colspan="4"><textarea class="rpt-edit" id="rptNote" rows="3"></textarea></td>
           </tr>
+          <tr><td class="rpt-lbl" colspan="4" style="text-align:center">상황 사진 별첨</td></tr>
         </table>
 
         <!-- 안전사고 전용 템플릿 -->
