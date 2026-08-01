@@ -6752,7 +6752,7 @@ function updateFloorChart(){
     var bigNum=panel.querySelector('span[style*="font-size:39px"]');if(bigNum)bigNum.textContent=flTot;
     var cards=panel.querySelectorAll('div[style*="font-size:30px"]');vals.forEach(function(v,i){if(cards[i])cards[i].textContent=v;});
     // L/S 소계, A/S 소계 각각 정확히 찾기
-    var subDivs=panel.querySelectorAll('div[style*="--navy-bg"] span[style*="20px"], div[style*="--teal-bg"] span[style*="20px"]');
+    var subDivs=panel.querySelectorAll('div[style*="--navy-bg"] span[style*="23px"], div[style*="--teal-bg"] span[style*="23px"]');
     if(subDivs[0]) subDivs[0].textContent=lsS;
     if(subDivs[1]) subDivs[1].textContent=asS;
   });
