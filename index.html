@@ -846,14 +846,23 @@ html{overflow-x:hidden}
     </div>
   </div>
   <!-- 공동작업 한 줄 -->
-  <div class="stat-row">
-    <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('jointwork')">
-      <div class="s-lbl">🤝 금일 공동작업</div>
-      <div style="display:flex;align-items:baseline;gap:3px">
-        <div class="s-val" id="dJW" style="font-size:23px;color:var(--teal2)">0</div>
-        <div style="font-size:10px;color:var(--teal2);font-weight:700">건</div>
+  <div class="stat-row" style="grid-template-columns:1fr">
+    <div class="stat-box" style="cursor:pointer;display:flex;gap:14px" onclick="go('jointwork')">
+      <div style="flex:none;min-width:64px">
+        <div class="s-lbl">🤝 공동작업</div>
+        <div style="display:flex;align-items:baseline;gap:3px">
+          <div class="s-val" id="dJW" style="font-size:23px;color:var(--teal2)">0</div>
+          <div style="font-size:10px;color:var(--teal2);font-weight:700">건</div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:3px;margin-top:2px">
+          <div class="s-val" id="dJWPeople" style="font-size:23px;color:var(--teal2)">0</div>
+          <div style="font-size:10px;color:var(--teal2);font-weight:700">명</div>
+        </div>
       </div>
-      <div style="font-size:12px;color:var(--g4);margin-top:3px;line-height:1.4" id="dJWDetail">등록된 공동작업이 없습니다</div>
+      <div style="flex:1;border-left:1px solid var(--g1);padding-left:14px;display:flex;flex-direction:column;justify-content:center">
+        <div style="font-size:12px;color:var(--g4);margin-bottom:3px">작업내역</div>
+        <div style="font-size:12px;color:var(--g5);line-height:1.5" id="dJWDetail">등록된 공동작업이 없습니다</div>
+      </div>
     </div>
   </div>
   <!-- 습득물/폐기물 한 줄 -->
@@ -7774,10 +7783,16 @@ async function loadJointWorkTodayFromDB(){
 }
 function renderJointWorkTodayCard(rows){
   var cntEl=document.getElementById('dJW'), detailEl=document.getElementById('dJWDetail');
+  var peopleEl=document.getElementById('dJWPeople');
   if(!cntEl||!detailEl) return;
   rows=rows||[];
   cntEl.textContent=rows.length;
-  if(!rows.length){ detailEl.textContent='등록된 공동작업이 없습니다'; return; }
+  var totalPeople=rows.reduce(function(s,r){return s+(Number(r.headcount)||0);},0);
+  if(peopleEl) peopleEl.textContent=totalPeople;
+  if(!rows.length){
+    detailEl.textContent='등록된 공동작업이 없습니다';
+    return;
+  }
   var works=[];
   rows.forEach(function(r){
     (r.items||[]).forEach(function(it){
