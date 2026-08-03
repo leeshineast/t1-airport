@@ -3027,6 +3027,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div id="jwP0" style="padding:0 13px">
     <div class="fg" style="margin-top:13px"><label class="f-lbl">📅 일자 *</label><input type="date" id="jwDate" class="ri" style="margin-bottom:0" onchange="jwUpdateWeekday()"></div>
     <div id="jwDateWeekday" style="font-size:11px;color:var(--g4);margin:4px 0 10px 2px"></div>
+    <div id="jwShiftBadge" style="display:inline-block;font-size:12px;font-weight:700;color:var(--teal2);background:var(--teal-bg);padding:5px 11px;border-radius:20px;margin-bottom:12px"></div>
 
     <div class="fg"><label class="f-lbl">팀·조 선택 * <span style="font-weight:400;color:var(--g3)">(여러 팀 함께 선택 가능)</span></label>
       <div class="rg" id="jwTeamG" style="flex-wrap:wrap;gap:6px">
@@ -3051,27 +3052,35 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       </div>
     </div>
 
-    <div class="fg"><label class="f-lbl">층별 장소 선택 * <span style="font-weight:400;color:var(--g3)">(여러 층 함께 선택 가능)</span></label>
-      <div class="rg" id="jwFloorG" style="flex-wrap:wrap;gap:6px">
-        <div class="rp" onclick="jwToggleFloor(this)">B2F</div>
-        <div class="rp" onclick="jwToggleFloor(this)">B1F</div>
-        <div class="rp" onclick="jwToggleFloor(this)">1F</div>
-        <div class="rp" onclick="jwToggleFloor(this)">2F</div>
-        <div class="rp" onclick="jwToggleFloor(this)">3F</div>
-        <div class="rp" onclick="jwToggleFloor(this)">4F</div>
+    <div class="fg"><label class="f-lbl">🗂️ 작업 대분류 *</label>
+      <div class="rg" id="jwCatG" style="flex-wrap:wrap;gap:6px"></div>
+    </div>
+
+    <div class="fg" id="jwWorkNameWrap" style="display:none">
+      <label class="f-lbl">✅ 작업명 * <span style="font-weight:400;color:var(--g3)">(검색 가능)</span></label>
+      <input type="text" id="jwWorkSearch" class="ri" placeholder="작업명 검색..." style="margin-bottom:8px" oninput="jwFilterWorkNames()">
+      <div class="rg" id="jwWorkNameG" style="flex-wrap:wrap;gap:6px"></div>
+      <input type="text" id="jwWorkEtc" class="ri" placeholder="기타 전문작업 내용을 직접 입력" style="display:none;margin-top:8px;margin-bottom:0">
+    </div>
+
+    <div class="fg"><label class="f-lbl">🏢 층 선택 *</label>
+      <div class="rg" id="jwFloorG2" style="flex-wrap:wrap;gap:6px">
+        <div class="rp" onclick="pickJwFloor(this)">B2F</div>
+        <div class="rp" onclick="pickJwFloor(this)">B1F</div>
+        <div class="rp" onclick="pickJwFloor(this)">1F</div>
+        <div class="rp" onclick="pickJwFloor(this)">2F</div>
+        <div class="rp" onclick="pickJwFloor(this)">3F</div>
+        <div class="rp" onclick="pickJwFloor(this)">4F</div>
       </div>
+    </div>
+
+    <div class="fg"><label class="f-lbl">📍 세부위치 * <span style="font-weight:400;color:var(--g3)">(예: R1521 화장실, D~F 입국장)</span></label>
+      <div id="jwLocTop10b" style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:6px;width:100%;box-sizing:border-box"></div>
+      <input type="text" id="jwLocation" class="ri" placeholder="세부위치 입력" style="margin-bottom:0">
     </div>
 
     <div class="fg"><label class="f-lbl">👥 투입 인원 * <span style="font-weight:400;color:var(--g3)">(공동작업에 참여한 총 인원수)</span></label>
       <input id="jwHeadcount" type="number" min="1" inputmode="numeric" class="ri" placeholder="예) 4" style="margin-bottom:0">
-    </div>
-
-    <div class="fg">
-      <label class="f-lbl">세부위치·작업내용 <span style="font-weight:400;color:var(--g3)">(장소 하나당 작업내용 하나씩 짝지어 작성)</span></label>
-      <div id="jwLocTop10" style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:6px;width:100%;box-sizing:border-box"></div>
-      <div id="jwWorkTop10" style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:6px;width:100%;box-sizing:border-box"></div>
-      <div id="jwWorkItems" style="display:flex;flex-direction:column;gap:8px"></div>
-      <button type="button" onclick="jwAddWorkItem()" id="jwAddBtn" style="margin-top:7px;padding:8px 14px;background:var(--g1);border:1.5px dashed var(--g3);border-radius:var(--r2);font-size:12px;font-weight:700;color:var(--g5);cursor:pointer">+ 장소·작업내용 추가</button>
     </div>
 
     <div class="fg" style="margin-bottom:0"><label class="f-lbl">비고</label><textarea id="jwNote" class="ri" rows="3" placeholder="특이사항 등 자유롭게 작성" style="resize:vertical"></textarea></div>
@@ -7589,7 +7598,73 @@ async function loadWorkVehicleFromDB(){
 var jointWorkData=[];
 var jwEditId=null;
 var jwSelectedTeams=[]; // ['1팀A','2팀B', ...]
-var jwSelectedFloors=[]; // ['3F','4F', ...]
+var jwSelectedFloor=''; // 단일 선택으로 변경
+var jwSelectedCategory='';
+var jwSelectedWorkName='';
+// 표준 작업 대분류/작업명 (통계 표준화를 위한 고정 목록)
+var JW_CATEGORIES={
+  '바닥관리':['바닥 오점 제거','바닥 먼지 제거','바닥 오점·먼지 제거','바닥 정밀 청소','우드바닥 정밀 청소','타일 정밀 청소','습식 청소','건식 청소'],
+  '화장실관리':['화장실 정밀 청소','스팀 세척'],
+  '샤워실관리':['샤워실 정밀 청소','스팀 세척'],
+  '승강설비관리':['에스컬레이터 청소','엘리베이터 청소','자동보도 청소'],
+  '시설물관리':['스테인리스 청소','스테인리스 보호대 청소','스테인리스 광택 작업','유리 청소','유리 오염 제거','난간 청소','보호대 먼지 제거'],
+  '분진관리':['분진 제거','거미줄 제거'],
+  '오염관리':['오염 제거','찌든때 제거'],
+  '특수작업':['바닥 왁스 작업','카펫 샴푸 작업','기타 전문작업']
+};
+var JW_CAT_ICONS={'바닥관리':'🧹','화장실관리':'🚻','샤워실관리':'🚿','승강설비관리':'🛗','시설물관리':'🏢','분진관리':'💨','오염관리':'🧽','특수작업':'⭐'};
+function jwBuildCategoryButtons(){
+  var wrap=document.getElementById('jwCatG');
+  if(!wrap||wrap.children.length) return;
+  Object.keys(JW_CATEGORIES).forEach(function(cat){
+    var b=document.createElement('div');
+    b.className='rp'; b.textContent=(JW_CAT_ICONS[cat]||'')+' '+cat;
+    b.onclick=function(){ pickJwCategory(b,cat); };
+    wrap.appendChild(b);
+  });
+}
+function pickJwCategory(el,cat){
+  Array.from(document.getElementById('jwCatG').children).forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+  jwSelectedCategory=cat;
+  jwSelectedWorkName='';
+  var searchEl=document.getElementById('jwWorkSearch'); if(searchEl) searchEl.value='';
+  var etcEl=document.getElementById('jwWorkEtc'); if(etcEl){ etcEl.style.display='none'; etcEl.value=''; }
+  document.getElementById('jwWorkNameWrap').style.display='block';
+  jwRenderWorkNames('');
+}
+function jwRenderWorkNames(filterText){
+  var wrap=document.getElementById('jwWorkNameG');
+  if(!wrap) return;
+  var list=JW_CATEGORIES[jwSelectedCategory]||[];
+  if(filterText) list=list.filter(function(w){ return w.indexOf(filterText)!==-1; });
+  wrap.innerHTML='';
+  list.forEach(function(w){
+    var b=document.createElement('div');
+    b.className='rp'; b.textContent=w;
+    if(w===jwSelectedWorkName) b.classList.add('on');
+    b.onclick=function(){ pickJwWorkName(b,w); };
+    wrap.appendChild(b);
+  });
+  if(!list.length){ wrap.innerHTML='<div style="font-size:12px;color:var(--g4);padding:6px">검색 결과가 없습니다</div>'; }
+}
+function jwFilterWorkNames(){
+  var v=document.getElementById('jwWorkSearch').value.trim();
+  jwRenderWorkNames(v);
+}
+function pickJwWorkName(el,w){
+  Array.from(document.getElementById('jwWorkNameG').children).forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+  jwSelectedWorkName=w;
+  var etcEl=document.getElementById('jwWorkEtc');
+  if(w==='기타 전문작업'){ if(etcEl){ etcEl.style.display='block'; etcEl.focus(); } }
+  else{ if(etcEl){ etcEl.style.display='none'; etcEl.value=''; } }
+}
+function pickJwFloor(el){
+  Array.from(document.getElementById('jwFloorG2').children).forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+  jwSelectedFloor=el.textContent.trim();
+}
 
 function selRP(el){
   var grp=el.parentElement;
@@ -7598,6 +7673,7 @@ function selRP(el){
 }
 function jwTab(n){
   tabSwitch('jw',n,4);
+  if(n===0) jwBuildCategoryButtons();
   if(n===1) renderJointWorkList();
   if(n===2) jwRenderStats();
   if(n===3){
@@ -7625,20 +7701,26 @@ function dlJointWork(){
   if(from)filtered=filtered.filter(function(r){return (r.work_date||'').slice(0,7)>=from;});
   if(to)filtered=filtered.filter(function(r){return (r.work_date||'').slice(0,7)<=to;});
   if(!filtered.length){toast('해당 기간에 공동작업 기록이 없습니다');return;}
-  var header=['일자','참여 팀·조','층별 장소','투입인원','세부 위치·작업내용','비고','작성자'];
+  var header=['일자','근무조','참여 팀·조','작업대분류','작업명','층','세부위치','투입인원','비고','작성자'];
   var rows=[header];
   filtered.slice().sort(function(a,b){return (a.work_date||'').localeCompare(b.work_date||'');}).forEach(function(r){
     var teams=(r.teams||[]).join(', ');
-    var floors=(r.floors||[]).join(', ');
-    var items=(r.items||[]).map(function(it){return (it.location||'')+' - '+(it.work||'');}).join(' / ');
-    rows.push([r.work_date||'', teams, floors, r.headcount||0, items, r.note||'', r.writer||'']);
+    if(r.category){
+      // 표준화 방식(신형)
+      rows.push([r.work_date||'', r.shift||'', teams, r.category||'', r.work_name||'', r.floors&&r.floors[0]||'', r.location||'', r.headcount||0, r.note||'', r.writer||'']);
+    }else{
+      // 예전(자유입력) 방식 — 세부위치·작업내용을 items에서 합쳐 표시
+      var floors=(r.floors||[]).join(', ');
+      var items=(r.items||[]).map(function(it){return (it.location||'')+' - '+(it.work||'');}).join(' / ');
+      rows.push([r.work_date||'', '', teams, '(구분전)', items, floors, '', r.headcount||0, r.note||'', r.writer||'']);
+    }
   });
   try{
     var range=(typeof dlDateRangeStr==='function')?dlDateRangeStr(filtered.map(function(r){return r.work_date;})):'';
-    var wrap=(typeof dlWithTitle==='function')?dlWithTitle(rows,'T1환경미화사업부 공동작업 기록',range,7):{rows:rows,merges:[]};
+    var wrap=(typeof dlWithTitle==='function')?dlWithTitle(rows,'T1환경미화사업부 공동작업 기록',range,10):{rows:rows,merges:[]};
     var ws=XLSX.utils.aoa_to_sheet(wrap.rows);
     ws['!merges']=wrap.merges;
-    ws['!cols']=[{wch:12},{wch:20},{wch:14},{wch:10},{wch:34},{wch:16},{wch:10}];
+    ws['!cols']=[{wch:12},{wch:8},{wch:20},{wch:12},{wch:16},{wch:8},{wch:22},{wch:10},{wch:16},{wch:10}];
     var wb=XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb,ws,'공동작업');
     XLSX.writeFile(wb,'T1_공동작업기록_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
@@ -7650,48 +7732,6 @@ function jwToggleTeam(el,code){
   if(idx>=0){ jwSelectedTeams.splice(idx,1); el.classList.remove('on'); }
   else{ jwSelectedTeams.push(code); el.classList.add('on'); }
 }
-function jwToggleFloor(el){
-  var f=el.textContent.trim();
-  var idx=jwSelectedFloors.indexOf(f);
-  if(idx>=0){ jwSelectedFloors.splice(idx,1); el.classList.remove('on'); }
-  else{ jwSelectedFloors.push(f); el.classList.add('on'); }
-}
-function jwAddWorkItem(loc,work){
-  var wrap=document.getElementById('jwWorkItems');
-  if(wrap.children.length>=8){ toast('장소·작업내용은 최대 8개까지 작성 가능합니다'); return; }
-  var idx=wrap.children.length+1;
-  var row=document.createElement('div');
-  row.style.cssText='display:flex;gap:6px;align-items:flex-start;background:var(--g1);border-radius:8px;padding:8px';
-  row.innerHTML=
-    '<div style="flex:1;display:flex;flex-direction:column;gap:5px">'
-    +'<input type="text" class="ri jw-loc-input" placeholder="세부위치 '+idx+' (예: 3층 남자화장실 앞)" style="margin-bottom:0">'
-    +'<input type="text" class="ri jw-work-input" placeholder="작업내용 '+idx+'" style="margin-bottom:0">'
-    +'</div>'
-    +'<button type="button" onclick="this.parentElement.remove();jwRenumberWork()" style="flex-shrink:0;width:34px;height:34px;border:none;background:var(--danger-bg);color:var(--danger);border-radius:8px;font-weight:800;cursor:pointer;margin-top:2px">×</button>';
-  wrap.appendChild(row);
-  if(loc!==undefined) row.querySelector('.jw-loc-input').value=loc||'';
-  if(work!==undefined) row.querySelector('.jw-work-input').value=work||'';
-  if(wrap.children.length>=8){ var btn=document.getElementById('jwAddBtn'); if(btn) btn.style.display='none'; }
-}
-function jwRenumberWork(){
-  var wrap=document.getElementById('jwWorkItems');
-  Array.from(wrap.children).forEach(function(row,i){
-    var locInp=row.querySelector('.jw-loc-input'), workInp=row.querySelector('.jw-work-input');
-    if(locInp) locInp.placeholder='세부위치 '+(i+1)+' (예: 3층 남자화장실 앞)';
-    if(workInp) workInp.placeholder='작업내용 '+(i+1);
-  });
-  var btn=document.getElementById('jwAddBtn'); if(btn) btn.style.display='';
-}
-function jwGetItems(){
-  var wrap=document.getElementById('jwWorkItems');
-  var items=[];
-  Array.from(wrap.children).forEach(function(row){
-    var loc=row.querySelector('.jw-loc-input').value.trim();
-    var work=row.querySelector('.jw-work-input').value.trim();
-    if(loc||work) items.push({location:loc, work:work});
-  });
-  return items;
-}
 function jwUpdateWeekday(){
   var d=document.getElementById('jwDate').value;
   var el=document.getElementById('jwDateWeekday');
@@ -7699,80 +7739,97 @@ function jwUpdateWeekday(){
   var wd=['일','월','화','수','목','금','토'][new Date(d+'T00:00:00').getDay()];
   el.textContent=d+' ('+wd+'요일)';
 }
+// 근무조 자동판별 (로그인 사용자 기준, 없으면 현재시간 기준)
+function jwAutoShift(){
+  var sh='';
+  try{
+    if(typeof myShiftForCheckin==='function'){
+      var s=myShiftForCheckin();
+      if(s==='오전'||s==='오후'||s==='야간') sh=s;
+    }
+  }catch(e){}
+  if(!sh){
+    var h=new Date(Date.now()+9*3600000).getUTCHours();
+    sh=(h>=6&&h<13)?'오전':(h>=13&&h<21)?'오후':'야간';
+  }
+  return sh;
+}
+function jwUpdateShiftBadge(){
+  var sh=jwAutoShift();
+  var el=document.getElementById('jwShiftBadge');
+  if(el) el.textContent='🕐 근무조: '+sh+' (자동)';
+  return sh;
+}
 async function loadJwSuggestions(){
   try{
-    var res=await sb.from('joint_work_data').select('items').order('created_at',{ascending:false}).limit(60);
+    var res=await sb.from('joint_work_data').select('location').not('location','is',null).order('created_at',{ascending:false}).limit(60);
     if(res.error||!res.data) return;
-    var locCount={}, workCount={};
+    var locCount={};
     res.data.forEach(function(r){
-      (r.items||[]).forEach(function(it){
-        if(it.location) locCount[it.location]=(locCount[it.location]||0)+1;
-        if(it.work) workCount[it.work]=(workCount[it.work]||0)+1;
-      });
+      if(r.location) locCount[r.location]=(locCount[r.location]||0)+1;
     });
     var topLocs=Object.keys(locCount).sort(function(a,b){return locCount[b]-locCount[a];}).slice(0,8);
-    var topWorks=Object.keys(workCount).sort(function(a,b){return workCount[b]-workCount[a];}).slice(0,8);
-    var locWrap=document.getElementById('jwLocTop10');
+    var locWrap=document.getElementById('jwLocTop10b');
     if(locWrap){
       locWrap.innerHTML='';
       topLocs.forEach(function(l){
         var c=document.createElement('div'); c.className='chip-quick'; c.textContent='📍'+l;
-        c.onclick=function(){ jwFillLastEmpty('.jw-loc-input', l); };
+        c.onclick=function(){ document.getElementById('jwLocation').value=l; };
         locWrap.appendChild(c);
       });
     }
-    var workWrap=document.getElementById('jwWorkTop10');
-    if(workWrap){
-      workWrap.innerHTML='';
-      topWorks.forEach(function(w){
-        var c=document.createElement('div'); c.className='chip-quick'; c.textContent='🔧'+w;
-        c.onclick=function(){ jwFillLastEmpty('.jw-work-input', w); };
-        workWrap.appendChild(c);
-      });
-    }
   }catch(e){}
-}
-function jwFillLastEmpty(selector, val){
-  var inputs=document.querySelectorAll(selector);
-  var empty=Array.from(inputs).find(function(i){return !i.value.trim();});
-  if(empty){ empty.value=val; return; }
-  if(inputs.length===0 || document.getElementById('jwWorkItems').children.length<8){
-    jwAddWorkItem();
-    var newInputs=document.querySelectorAll(selector);
-    newInputs[newInputs.length-1].value=val;
-  }else toast('장소·작업내용은 최대 8개까지입니다');
 }
 function jwResetForm(){
   jwEditId=null;
   document.getElementById('jwHeadcount').value='';
   document.getElementById('jwNote').value='';
-  document.getElementById('jwWorkItems').innerHTML='';
-  var btn=document.getElementById('jwAddBtn'); if(btn) btn.style.display='';
-  jwAddWorkItem();
+  document.getElementById('jwLocation').value='';
+  var etcEl=document.getElementById('jwWorkEtc'); if(etcEl){ etcEl.style.display='none'; etcEl.value=''; }
+  var searchEl=document.getElementById('jwWorkSearch'); if(searchEl) searchEl.value='';
+  document.getElementById('jwWorkNameWrap').style.display='none';
   Array.from(document.getElementById('jwTeamG').children).forEach(function(c){c.classList.remove('on');});
-  Array.from(document.getElementById('jwFloorG').children).forEach(function(c){c.classList.remove('on');});
-  jwSelectedTeams=[]; jwSelectedFloors=[];
+  Array.from(document.getElementById('jwCatG').children).forEach(function(c){c.classList.remove('on');});
+  Array.from(document.getElementById('jwFloorG2').children).forEach(function(c){c.classList.remove('on');});
+  jwSelectedTeams=[]; jwSelectedFloor=''; jwSelectedCategory=''; jwSelectedWorkName='';
+  // 로그인한 사용자의 팀·조 자동 선택 (요청 7-②③: 팀/조 자동)
+  try{
+    if(me&&me.team){
+      var myCode=me.team.trim().replace(/\s+/g,'').replace(/조$/,''); // "1팀 A조" → "1팀A"
+      var myBtn=Array.from(document.getElementById('jwTeamG').children).find(function(c){return c.textContent.trim()===myCode;});
+      if(myBtn){ jwToggleTeam(myBtn, myCode); }
+    }
+  }catch(e){}
   var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   document.getElementById('jwDate').value=today;
   jwUpdateWeekday();
+  jwUpdateShiftBadge();
   var saveBtn=document.querySelector('#jwP0 .btn-prim'); if(saveBtn) saveBtn.textContent='저장';
 }
 async function subJointWork(){
   if(!canWrite()) return;
   var date=document.getElementById('jwDate').value;
   var headcount=parseInt(document.getElementById('jwHeadcount').value)||0;
-  var items=jwGetItems();
+  var location=document.getElementById('jwLocation').value.trim();
   var note=document.getElementById('jwNote').value.trim();
+  var shift=jwUpdateShiftBadge();
+  var workName=jwSelectedWorkName;
+  if(workName==='기타 전문작업'){
+    var etcVal=document.getElementById('jwWorkEtc').value.trim();
+    if(!etcVal){ toast('기타 전문작업 내용을 입력해주세요'); return; }
+    workName=etcVal;
+  }
   if(!date){ toast('일자를 입력해주세요'); return; }
   if(!jwSelectedTeams.length){ toast('팀·조를 1개 이상 선택해주세요'); return; }
-  if(!jwSelectedFloors.length){ toast('층별 장소를 1개 이상 선택해주세요'); return; }
+  if(!jwSelectedCategory){ toast('작업 대분류를 선택해주세요'); return; }
+  if(!workName){ toast('작업명을 선택해주세요'); return; }
+  if(!jwSelectedFloor){ toast('층을 선택해주세요'); return; }
+  if(!location){ toast('세부위치를 입력해주세요'); return; }
   if(!headcount||headcount<1){ toast('투입 인원을 입력해주세요'); return; }
-  if(!items.length){ toast('세부위치·작업내용을 1개 이상 입력해주세요'); return; }
-  var incomplete=items.some(function(it){ return !it.location||!it.work; });
-  if(incomplete){ toast('세부위치와 작업내용을 짝을 맞춰 모두 입력해주세요'); return; }
   var payload={
-    work_date:date, teams:jwSelectedTeams, floors:jwSelectedFloors, headcount:headcount,
-    items:items, note:note||null, writer:me?me.name:''
+    work_date:date, teams:jwSelectedTeams, floors:[jwSelectedFloor], headcount:headcount,
+    category:jwSelectedCategory, work_name:workName, shift:shift, location:location,
+    note:note||null, writer:me?me.name:''
   };
   try{
     var res;
@@ -7798,7 +7855,7 @@ async function loadJointWorkFromDB(){
 async function loadJointWorkTodayFromDB(){
   try{
     var today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
-    var res=await sb.from('joint_work_data').select('teams,headcount,items').eq('work_date',today);
+    var res=await sb.from('joint_work_data').select('teams,headcount,items,category,work_name,location').eq('work_date',today);
     if(res.error) return;
     renderJointWorkTodayCard(res.data||[]);
   }catch(e){}
@@ -7817,10 +7874,15 @@ function renderJointWorkTodayCard(rows){
   }
   var works=[];
   rows.forEach(function(r){
-    (r.items||[]).forEach(function(it){
-      var t=[it.location, it.work].filter(Boolean).join(' ');
-      if(t) works.push(t);
-    });
+    if(r.category){
+      var t2=[r.location, r.work_name].filter(Boolean).join(' ');
+      if(t2) works.push(t2);
+    }else{
+      (r.items||[]).forEach(function(it){
+        var t=[it.location, it.work].filter(Boolean).join(' ');
+        if(t) works.push(t);
+      });
+    }
   });
   var preview=works.slice(0,3).join(', ');
   var more=works.length>3?(' 외 '+(works.length-3)+'건'):'';
@@ -7850,9 +7912,15 @@ function renderJointWorkList(){
     h+='<span style="background:var(--warn);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">👥 '+(r.headcount||0)+'명</span>';
     h+='</div>';
     h+='<div style="padding:10px 13px">';
-    (r.items||[]).forEach(function(it,i){
-      h+='<div style="font-size:12px;color:var(--g6);margin-bottom:4px"><b>'+(i+1)+'.</b> 📍'+it.location+' — '+it.work+'</div>';
-    });
+    if(r.category){
+      h+='<div style="font-size:12px;color:var(--g6);margin-bottom:4px"><b>'+(JW_CAT_ICONS[r.category]||'')+' '+r.category+'</b> · '+r.work_name+'</div>';
+      h+='<div style="font-size:12px;color:var(--g6)">📍'+(r.location||'')+(r.shift?(' · 🕐'+r.shift):'')+'</div>';
+    }else{
+      h+='<div style="font-size:10px;color:var(--g4);background:var(--g1);display:inline-block;border-radius:10px;padding:2px 8px;margin-bottom:5px">구분 이전(자유입력)</div>';
+      (r.items||[]).forEach(function(it,i){
+        h+='<div style="font-size:12px;color:var(--g6);margin-bottom:4px"><b>'+(i+1)+'.</b> 📍'+it.location+' — '+it.work+'</div>';
+      });
+    }
     if(r.note) h+='<div style="margin-top:6px;font-size:11px;color:var(--warn);background:var(--warn-bg,#FFF7E0);border-radius:6px;padding:6px 8px">📝 '+r.note+'</div>';
     h+='<div style="margin-top:8px;font-size:10px;color:var(--g3)">작성자: '+(r.writer||'')+'</div>';
     h+='<div style="margin-top:8px;text-align:right;display:flex;gap:6px;justify-content:flex-end"><button onclick="openJwEdit('+r.id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button><button onclick="deleteJw('+r.id+')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제</button></div>';
@@ -7864,6 +7932,10 @@ function openJwEdit(id){
   if(!canWrite()) return;
   var r=jointWorkData.find(function(x){return x.id===id;});
   if(!r) return;
+  if(!r.category){
+    toast('⚠️ 구분 이전 방식으로 작성된 기록은 수정할 수 없습니다. 삭제 후 새로 등록해주세요.');
+    return;
+  }
   jwEditId=id;
   document.getElementById('jwDate').value=r.work_date;
   jwUpdateWeekday();
@@ -7871,17 +7943,37 @@ function openJwEdit(id){
   Array.from(document.getElementById('jwTeamG').children).forEach(function(c){
     c.classList.toggle('on', jwSelectedTeams.indexOf(c.textContent.trim())!==-1);
   });
-  jwSelectedFloors=(r.floors||[]).slice();
-  Array.from(document.getElementById('jwFloorG').children).forEach(function(c){
-    c.classList.toggle('on', jwSelectedFloors.indexOf(c.textContent.trim())!==-1);
+  jwBuildCategoryButtons();
+  jwSelectedCategory=r.category||'';
+  Array.from(document.getElementById('jwCatG').children).forEach(function(c){
+    c.classList.toggle('on', c.textContent.trim().indexOf(r.category)!==-1);
   });
+  document.getElementById('jwWorkNameWrap').style.display=jwSelectedCategory?'block':'none';
+  jwSelectedWorkName='';
+  jwRenderWorkNames('');
+  var stdNames=JW_CATEGORIES[jwSelectedCategory]||[];
+  var isStd=stdNames.indexOf(r.work_name)!==-1;
+  if(isStd){
+    jwSelectedWorkName=r.work_name;
+    Array.from(document.getElementById('jwWorkNameG').children).forEach(function(c){
+      c.classList.toggle('on', c.textContent.trim()===r.work_name);
+    });
+  }else{
+    // 기타 전문작업으로 저장된 자유텍스트
+    jwSelectedWorkName='기타 전문작업';
+    Array.from(document.getElementById('jwWorkNameG').children).forEach(function(c){
+      c.classList.toggle('on', c.textContent.trim()==='기타 전문작업');
+    });
+    var etcEl=document.getElementById('jwWorkEtc');
+    if(etcEl){ etcEl.style.display='block'; etcEl.value=r.work_name||''; }
+  }
+  jwSelectedFloor=(r.floors&&r.floors[0])||'';
+  Array.from(document.getElementById('jwFloorG2').children).forEach(function(c){
+    c.classList.toggle('on', c.textContent.trim()===jwSelectedFloor);
+  });
+  document.getElementById('jwLocation').value=r.location||'';
   document.getElementById('jwHeadcount').value=r.headcount||'';
   document.getElementById('jwNote').value=r.note||'';
-  document.getElementById('jwWorkItems').innerHTML='';
-  var btn=document.getElementById('jwAddBtn'); if(btn) btn.style.display='';
-  (r.items&&r.items.length?r.items:[{location:'',work:''}]).forEach(function(it){
-    jwAddWorkItem(it.location, it.work);
-  });
   var saveBtn=document.querySelector('#jwP0 .btn-prim'); if(saveBtn) saveBtn.textContent='수정 저장';
   jwTab(0);
   toast('수정 모드');
@@ -7965,6 +8057,8 @@ function jwRenderStats(){
     if(nextBtn) nextBtn.style.opacity=isThisYear?'0.3':'1';
   }
   var filtered=(jointWorkData||[]).filter(function(r){ return r.work_date && r.work_date.indexOf(prefix)===0; });
+  var stdFiltered=filtered.filter(function(r){ return !!r.category; }); // 통계는 표준화(신형) 데이터만 집계
+  var legacyCount=filtered.length-stdFiltered.length;
   var h='';
   if(jwStatMode==='day'){
     if(!filtered.length){
@@ -7973,58 +8067,117 @@ function jwRenderStats(){
       filtered.forEach(function(r){
         h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
         h+='<div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:4px">'+(r.teams||[]).join(', ')+' · '+(r.floors||[]).join(', ')+' · 👥'+(r.headcount||0)+'명</div>';
-        (r.items||[]).forEach(function(it,i){ h+='<div style="font-size:11px;color:var(--g5)">'+(i+1)+'. 📍'+it.location+' — '+it.work+'</div>'; });
+        if(r.category){
+          h+='<div style="font-size:11px;color:var(--g5)">'+(JW_CAT_ICONS[r.category]||'')+' '+r.category+' · '+r.work_name+' · 📍'+(r.location||'')+'</div>';
+        }else{
+          (r.items||[]).forEach(function(it,i){ h+='<div style="font-size:11px;color:var(--g5)">'+(i+1)+'. 📍'+it.location+' — '+it.work+'</div>'; });
+        }
         h+='</div>';
       });
     }
   }else{
-    // 월간/연간: 총 건수·총 인원, 팀별 투입인원 합산, 장소별/작업별 빈도
-    var byTeamHead={}, byLoc={}, byWork={};
+    // 월간/연간: 표준화(신형) 데이터 기준 집계
+    var byTeamCnt={}, byTeamHead={}, byLoc={}, byWork={}, byCat={}, byFloor={}, byMonth={};
     var totalHead=0;
-    filtered.forEach(function(r){
+    stdFiltered.forEach(function(r){
       totalHead+=(r.headcount||0);
-      (r.teams||[]).forEach(function(t){ byTeamHead[t]=(byTeamHead[t]||0)+(r.headcount||0); });
-      (r.items||[]).forEach(function(it){
-        if(it.location) byLoc[it.location]=(byLoc[it.location]||0)+1;
-        if(it.work) byWork[it.work]=(byWork[it.work]||0)+1;
+      (r.teams||[]).forEach(function(t){
+        byTeamCnt[t]=(byTeamCnt[t]||0)+1;
+        byTeamHead[t]=(byTeamHead[t]||0)+(r.headcount||0);
       });
+      if(r.location) byLoc[r.location]=(byLoc[r.location]||0)+1;
+      if(r.work_name) byWork[r.work_name]=(byWork[r.work_name]||0)+1;
+      if(r.category) byCat[r.category]=(byCat[r.category]||0)+1;
+      (r.floors||[]).forEach(function(f){ byFloor[f]=(byFloor[f]||0)+1; });
+      if(jwStatMode==='year'&&r.work_date){ var mm=r.work_date.slice(5,7); byMonth[mm]=(byMonth[mm]||0)+1; }
     });
+
     h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
-    h+='<div style="display:flex;gap:8px;margin-bottom:10px">';
-    h+='<div style="flex:1;background:var(--g1);border-radius:8px;padding:9px 11px"><div style="font-size:10px;color:var(--g5);font-weight:700">총 건수</div><div style="font-size:18px;font-weight:900;color:var(--teal2)">'+filtered.length+'<span style="font-size:10px;font-weight:600;color:var(--g4)">건</span></div></div>';
+    h+='<div style="display:flex;gap:8px;margin-bottom:4px">';
+    h+='<div style="flex:1;background:var(--g1);border-radius:8px;padding:9px 11px"><div style="font-size:10px;color:var(--g5);font-weight:700">총 건수</div><div style="font-size:18px;font-weight:900;color:var(--teal2)">'+stdFiltered.length+'<span style="font-size:10px;font-weight:600;color:var(--g4)">건</span></div></div>';
     h+='<div style="flex:1;background:var(--g1);border-radius:8px;padding:9px 11px"><div style="font-size:10px;color:var(--g5);font-weight:700">총 투입인원</div><div style="font-size:18px;font-weight:900;color:var(--teal2)">'+totalHead+'<span style="font-size:10px;font-weight:600;color:var(--g4)">명</span></div></div>';
     h+='</div>';
-
-    h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">팀별 투입인원 합산</div>';
-    h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px">';
-    Object.keys(byTeamHead).sort().forEach(function(t){
-      h+='<div style="background:var(--g1);border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:var(--g5);font-weight:700">'+t+'</div><div style="font-size:16px;font-weight:900;color:var(--teal2)">'+byTeamHead[t]+'<span style="font-size:10px;font-weight:600;color:var(--g4)">명</span></div></div>';
-    });
-    if(!Object.keys(byTeamHead).length) h+='<div style="grid-column:1/-1;font-size:11px;color:var(--g3)">데이터 없음</div>';
+    if(legacyCount>0) h+='<div style="font-size:10px;color:var(--g4)">※ 구분 이전(자유입력) 기록 '+legacyCount+'건은 통계에서 제외됨</div>';
     h+='</div>';
 
-    var topLocs=Object.keys(byLoc).sort(function(a,b){return byLoc[b]-byLoc[a];}).slice(0,8);
-    var topWorks=Object.keys(byWork).sort(function(a,b){return byWork[b]-byWork[a];}).slice(0,8);
-    h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">자주 나온 장소</div>';
-    h+='<div style="display:flex;flex-direction:column;gap:5px;margin-bottom:12px">';
-    topLocs.forEach(function(l){
-      h+='<div style="display:flex;justify-content:space-between;background:var(--g1);border-radius:6px;padding:6px 10px;font-size:11.5px"><span style="color:var(--g6)">📍'+l+'</span><span style="font-weight:800;color:var(--teal2)">'+byLoc[l]+'건</span></div>';
-    });
-    if(!topLocs.length) h+='<div style="font-size:11px;color:var(--g3)">데이터 없음</div>';
-    h+='</div>';
-
-    h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">자주 나온 작업내용</div>';
+    // 작업유형별(대분류) 실적
+    h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
+    h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">🗂️ 작업유형별 실적</div>';
+    var catKeys=Object.keys(byCat).sort(function(a,b){return byCat[b]-byCat[a];});
+    var catMax=Math.max.apply(null, catKeys.map(function(k){return byCat[k];}).concat([1]));
     h+='<div style="display:flex;flex-direction:column;gap:5px">';
-    topWorks.forEach(function(w){
-      h+='<div style="display:flex;justify-content:space-between;background:var(--g1);border-radius:6px;padding:6px 10px;font-size:11.5px"><span style="color:var(--g6)">🔧'+w+'</span><span style="font-weight:800;color:var(--teal2)">'+byWork[w]+'건</span></div>';
+    catKeys.forEach(function(c){
+      var pct=Math.round(byCat[c]/catMax*100);
+      h+='<div><div style="display:flex;justify-content:space-between;font-size:11px;color:var(--g6);margin-bottom:2px"><span>'+(JW_CAT_ICONS[c]||'')+' '+c+'</span><span style="font-weight:800;color:var(--teal2)">'+byCat[c]+'건</span></div><div style="background:var(--g1);border-radius:4px;height:6px"><div style="background:var(--teal);width:'+pct+'%;height:100%;border-radius:4px"></div></div></div>';
+    });
+    if(!catKeys.length) h+='<div style="font-size:11px;color:var(--g3)">데이터 없음</div>';
+    h+='</div></div>';
+
+    // 층별 작업건수
+    h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
+    h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">🏢 층별 작업건수</div>';
+    h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';
+    ['B2F','B1F','1F','2F','3F','4F'].forEach(function(f){
+      if(!byFloor[f]) return;
+      h+='<div style="background:var(--g1);border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:var(--g5);font-weight:700">'+f+'</div><div style="font-size:16px;font-weight:900;color:var(--teal2)">'+byFloor[f]+'<span style="font-size:10px;font-weight:600;color:var(--g4)">건</span></div></div>';
+    });
+    if(!Object.keys(byFloor).length) h+='<div style="grid-column:1/-1;font-size:11px;color:var(--g3)">데이터 없음</div>';
+    h+='</div></div>';
+
+    // 팀별 작업건수(+투입인원)
+    h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
+    h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">👥 팀별 작업건수</div>';
+    h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
+    Object.keys(byTeamCnt).sort().forEach(function(t){
+      h+='<div style="background:var(--g1);border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:var(--g5);font-weight:700">'+t+'</div><div style="font-size:16px;font-weight:900;color:var(--teal2)">'+byTeamCnt[t]+'<span style="font-size:10px;font-weight:600;color:var(--g4)">건</span></div><div style="font-size:9.5px;color:var(--g4)">누적 '+byTeamHead[t]+'명</div></div>';
+    });
+    if(!Object.keys(byTeamCnt).length) h+='<div style="grid-column:1/-1;font-size:11px;color:var(--g3)">데이터 없음</div>';
+    h+='</div></div>';
+
+    // 월별 추이 (연간 모드에서만)
+    if(jwStatMode==='year'){
+      h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
+      h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">📈 월별 추이</div>';
+      var monMax=Math.max.apply(null, Object.keys(byMonth).map(function(k){return byMonth[k];}).concat([1]));
+      h+='<div style="display:flex;align-items:flex-end;gap:4px;height:70px">';
+      for(var mi=1;mi<=12;mi++){
+        var mk=jwPad(mi); var mv=byMonth[mk]||0;
+        var barH=mv?Math.max(6,Math.round(mv/monMax*60)):2;
+        h+='<div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%">';
+        h+='<div style="font-size:9px;color:var(--teal2);font-weight:800">'+(mv||'')+'</div>';
+        h+='<div style="width:100%;background:'+(mv?'var(--teal)':'var(--g1)')+';height:'+barH+'px;border-radius:3px 3px 0 0"></div>';
+        h+='<div style="font-size:9px;color:var(--g4);margin-top:2px">'+mi+'월</div>';
+        h+='</div>';
+      }
+      h+='</div></div>';
+    }
+
+    // TOP10 작업 / TOP10 위치
+    var topWorks=Object.keys(byWork).sort(function(a,b){return byWork[b]-byWork[a];}).slice(0,10);
+    var topLocs=Object.keys(byLoc).sort(function(a,b){return byLoc[b]-byLoc[a];}).slice(0,10);
+    h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
+    h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">🏆 가장 많이 수행한 작업 TOP10</div>';
+    h+='<div style="display:flex;flex-direction:column;gap:5px">';
+    topWorks.forEach(function(w,i){
+      h+='<div style="display:flex;justify-content:space-between;background:var(--g1);border-radius:6px;padding:6px 10px;font-size:11.5px"><span style="color:var(--g6)">'+(i+1)+'. 🔧'+w+'</span><span style="font-weight:800;color:var(--teal2)">'+byWork[w]+'건</span></div>';
     });
     if(!topWorks.length) h+='<div style="font-size:11px;color:var(--g3)">데이터 없음</div>';
+    h+='</div></div>';
+
+    h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
+    h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">📍 가장 많이 작업한 위치 TOP10</div>';
+    h+='<div style="display:flex;flex-direction:column;gap:5px">';
+    topLocs.forEach(function(l,i){
+      h+='<div style="display:flex;justify-content:space-between;background:var(--g1);border-radius:6px;padding:6px 10px;font-size:11.5px"><span style="color:var(--g6)">'+(i+1)+'. 📍'+l+'</span><span style="font-weight:800;color:var(--teal2)">'+byLoc[l]+'건</span></div>';
+    });
+    if(!topLocs.length) h+='<div style="font-size:11px;color:var(--g3)">데이터 없음</div>';
     h+='</div></div>';
   }
   body.innerHTML=h;
 }
 function loadJointWorkScreen(){
   jwResetForm();
+  jwBuildCategoryButtons();
   loadJwSuggestions();
   loadJointWorkFromDB();
   var now=new Date(Date.now()+9*3600000);
