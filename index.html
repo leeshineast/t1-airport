@@ -96,7 +96,7 @@ html{overflow-x:hidden}
 }
 
 /* ─ 화면 ─ */
-.scr{display:none;padding-bottom:60px;overflow-x:hidden}
+.scr{display:none;padding-bottom:112px;overflow-x:hidden}
 .scr.on{display:block}
 
 /* ─ 로그인 ─ */
@@ -301,7 +301,7 @@ html{overflow-x:hidden}
 #toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(8px);background:rgba(30,37,48,.92);color:white;padding:9px 18px;border-radius:22px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .25s,transform .25s;white-space:nowrap;pointer-events:none}
 .mh-scroller{display:flex;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .mh-scroller::-webkit-scrollbar{display:none}
-.mh-panel{flex:0 0 100%;scroll-snap-align:start;min-width:100%;max-width:100%;padding-bottom:62px}
+.mh-panel{flex:0 0 100%;scroll-snap-align:start;min-width:100%;max-width:100%;padding-bottom:114px}
 .mh-dots{display:flex;justify-content:center;gap:5px;padding:6px 0 2px}
 .mh-dot{width:5px;height:5px;border-radius:50%;background:var(--g3);transition:all .2s}
 .mh-dot.on{background:var(--teal2);width:16px;border-radius:4px}
@@ -320,7 +320,9 @@ html{overflow-x:hidden}
 #mhPanelMenu .menu-btn:nth-child(8) .menu-icon,#mhPanelMenu .menu-btn:nth-child(11) .menu-icon{background:#6B7FBE}
 #mhPanelMenu .menu-btn:nth-child(9) .menu-icon,#mhPanelMenu .menu-btn:nth-child(10) .menu-icon{background:#F5A623}
 #mhPanelMenu .menu-btn:nth-child(13) .menu-icon{background:var(--g6)}
-.mh-tabbar{position:fixed;left:0;right:0;bottom:0;height:50px;padding-bottom:env(safe-area-inset-bottom);background:white;border-top:1px solid var(--g2);display:flex;z-index:60}
+.mh-tabbar{position:fixed;left:0;right:0;bottom:0;height:100px;padding-bottom:env(safe-area-inset-bottom);background:white;border-top:1px solid var(--g2);display:flex;flex-direction:column;z-index:60}
+.mh-tabbar-row{display:flex;flex:1}
+.mh-tabbar-row+.mh-tabbar-row{border-top:1px solid var(--g1)}
 .mh-tab-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .mh-tab-ic{display:flex;align-items:center;justify-content:center;width:21px;height:21px}
 .mh-tab-ic svg{width:20px;height:20px;stroke:var(--g4)}
@@ -556,10 +558,18 @@ html{overflow-x:hidden}
 
 <!-- ══ 앱 메인 ══ -->
 <div id="globalTabbar" class="mh-tabbar" style="display:none">
-  <div class="mh-tab-item on" onclick="goHomeMain()"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg></span><span class="mh-tab-lb">홈</span></div>
-  <div class="mh-tab-item" onclick="go('mp')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="mh-tab-lb">인력현황</span></div>
-  <div class="mh-tab-item" onclick="go('ho')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span><span class="mh-tab-lb">인수인계</span></div>
-  <div class="mh-tab-item" id="jwTabItem" onclick="go('jointwork')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="mh-tab-lb">공동작업</span></div>
+  <div class="mh-tabbar-row">
+    <div class="mh-tab-item on" onclick="goHomeMain()"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg></span><span class="mh-tab-lb">홈</span></div>
+    <div class="mh-tab-item" onclick="go('mp')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="mh-tab-lb">인력현황</span></div>
+    <div class="mh-tab-item" onclick="go('ho')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span><span class="mh-tab-lb">인수인계</span></div>
+    <div class="mh-tab-item" id="jwTabItem" onclick="go('jointwork')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="mh-tab-lb">공동작업</span></div>
+  </div>
+  <div class="mh-tabbar-row">
+    <div class="mh-tab-item" onclick="go('statsdash')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span><span class="mh-tab-lb">통계</span></div>
+    <div class="mh-tab-item" onclick="go('accident')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span class="mh-tab-lb">안전사고</span></div>
+    <div class="mh-tab-item" onclick="go('workveh')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="7" width="15" height="11" rx="1"/><path d="M16 10h3l3 3v4a1 1 0 0 1-1 1h-1"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg></span><span class="mh-tab-lb">차량운행</span></div>
+    <div class="mh-tab-item" onclick="go('execdash')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span><span class="mh-tab-lb">현황판</span></div>
+  </div>
 </div>
 <!-- ══ 미확인 인계 알림 배너 ══ -->
 <div id="hoAlertBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;max-width:480px;margin:0 auto;background:linear-gradient(135deg,#1E3A5F,#0F5132);color:white;padding:13px 16px;box-shadow:0 4px 16px rgba(0,0,0,.3);cursor:pointer" onclick="hoAlertGo()">
@@ -800,19 +810,17 @@ html{overflow-x:hidden}
   <!-- 폭염경보 배너 (체감온도 기준 실시간) -->
   <!-- 기상특보 배너 (폭염/한파/강풍(태풍성)/호우 — 동시 여러개 가능) -->
   <div id="weatherAlertWrap" style="display:flex;flex-direction:column;gap:8px;margin:10px 13px 0"></div>
-  <!-- 신호등 요약 스트립 (경영진용 한눈에 보기) -->
-  <div id="execSummaryStrip" style="margin:10px 13px 0;background:white;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);border-radius:var(--r2);padding:12px 14px;display:none">
-    <div style="font-size:12px;font-weight:700;color:var(--g4);margin-bottom:8px">📊 오늘의 T1 현황</div>
-    <div id="execSummaryBody" style="display:flex;flex-direction:column;gap:6px"></div>
-  </div>
   <!-- 인력현황 통합 카드 -->
   <div class="stat-row">
     <div class="stat-box" style="flex:1">
       <div class="s-lbl" style="font-weight:800;color:var(--g7);margin-bottom:8px">👥 인력현황</div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--g1)">
-        <span style="font-size:14px;color:var(--g5)">현재 근무</span>
-        <span style="font-size:21px;font-weight:900;color:var(--navy)" id="curStaff">—</span>
-        <span style="font-size:13px;color:var(--g4)" id="curUnit">미입력</span>
+      <div style="padding:5px 0;border-bottom:1px solid var(--g1)">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:14px;color:var(--g5)">현재 근무</span>
+          <span style="font-size:21px;font-weight:900;color:var(--navy)" id="curStaff">—</span>
+          <span style="font-size:13px;color:var(--g4)" id="curUnit">미입력</span>
+        </div>
+        <div style="text-align:right;font-size:11px;color:var(--g4);margin-top:1px" id="curBreakdown"></div>
       </div>
       <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0">
         <span style="font-size:14px;color:var(--g5)">전일 근무</span>
@@ -2725,7 +2733,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div id="gcMsgList" style="padding:13px;padding-bottom:90px;min-height:60vh;display:flex;flex-direction:column;gap:9px">
     <div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div>
   </div>
-  <div style="position:fixed;bottom:56px;left:0;right:0;max-width:480px;margin:0 auto;background:white;border-top:1.5px solid var(--g2);padding:9px 11px;display:flex;gap:7px;align-items:flex-end;z-index:50">
+  <div style="position:fixed;bottom:106px;left:0;right:0;max-width:480px;margin:0 auto;background:white;border-top:1.5px solid var(--g2);padding:9px 11px;display:flex;gap:7px;align-items:flex-end;z-index:50">
     <textarea id="gcInput" rows="1" placeholder="메시지를 입력하세요" style="flex:1;padding:9px 12px;border:1.5px solid var(--g2);border-radius:20px;font-size:15px;resize:none;font-family:inherit;max-height:90px;box-sizing:border-box" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendGroupChat();}"></textarea>
     <button onclick="sendGroupChat()" style="width:40px;height:40px;border-radius:50%;background:var(--teal);color:white;border:none;font-size:19px;cursor:pointer;flex-shrink:0">➤</button>
   </div>
@@ -6015,11 +6023,20 @@ function updateStaff(){
     return null; // 전일은 DB에서 별도 로드
   }
 
-  var todayTotal=calcDayTotal(today)+getNightSpecialTotal();
+  var mgrTodayCount=0;
+  try{
+    if(typeof mgrAttData==='object'&&mgrAttData){
+      mgrTodayCount=Object.keys(mgrAttData).filter(function(k){ return mgrAttData[k]&&mgrAttData[k].checked; }).length;
+    }
+  }catch(e){}
+  var fieldCount=calcDayTotal(today)+getNightSpecialTotal();
+  var todayTotal=fieldCount+mgrTodayCount;
   var vE=document.getElementById('curStaff');
   var uE=document.getElementById('curUnit');
   if(vE) vE.textContent=todayTotal>0?todayTotal:'—';
   if(uE) uE.textContent=todayTotal>0?'명 (금일)':'미입력';
+  var bE=document.getElementById('curBreakdown');
+  if(bE) bE.textContent=todayTotal>0?('관리 '+mgrTodayCount+'명 · 현장 '+fieldCount+'명'):'';
 }
 
 async function loadPrevStaff(){
@@ -6049,6 +6066,11 @@ async function loadPrevStaff(){
         total+=(row.carpet||0)+(row.pbb||0)+(row.wax||0)+(row.stone||0)+(row.wood||0)+(row.restroom||0)+(row.es||0)+(row.toilet_daily||0)+(row.common_area||0)+(row.collection||0);
       });
     }
+  }catch(e){}
+  // ★ 관리자 출근 현황(mgr_attendance)도 전일 근무인원에 포함
+  try{
+    var mgrRes=await sb.from('mgr_attendance').select('checked').eq('date',yesterday).eq('checked',true);
+    if(mgrRes.data) total+=mgrRes.data.length;
   }catch(e){}
   var pE=document.getElementById('prevStaff');
   var pU=document.getElementById('prevUnit');
@@ -12972,8 +12994,8 @@ async function loadMpFromDB(){
     recalcMpData();
     updateFloorChart();
     updateMpSummary();
+    await loadMgrAttendance();
     updateStaff();
-    loadMgrAttendance();
     updateMyTeamGrp();    // 입력 탭 완료 상태 반영
     renderLeaderStatus(); // 입력현황 탭 완료 상태 반영
     renderNightSpecialSummary();
