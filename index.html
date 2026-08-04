@@ -10863,7 +10863,10 @@ async function loadUserList(){
   var canMoveTeam=(me&&me.role==='admin'&&me.name==='이동환');
   try{
     var res=await sb.from('users').select('id,name,email,role,team,permissions,status,created_at,prev_role').eq('status','active').order('created_at');
-    if(res.error) return;
+    if(res.error){
+      el.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:13px">⚠️ 사용자 목록을 불러오지 못했습니다: '+res.error.message+'<br><button onclick="loadUserList()" style="margin-top:8px;padding:6px 14px;background:var(--g1);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔄 다시 시도</button></div>';
+      return;
+    }
     el.innerHTML='<div class="u-row"><div class="u-info"><div class="u-ico" style="background:var(--navy-bg);color:var(--navy)">최</div><div><div class="u-name">최고관리자</div><div class="u-sub">관리자 · 전체권한</div></div></div><span class="chip chip-ok">활성</span></div>';
     (res.data||[]).forEach(function(u){
       var row=document.createElement('div');
@@ -10887,7 +10890,10 @@ async function loadUserList(){
       if(canMoveTeam){ row.querySelector('.move-btn').onclick=function(){openTeamMove(this.dataset.id,this.dataset.name,this.dataset.team);}; }
       el.appendChild(row);
     });
-  }catch(e){console.error(e);}
+  }catch(e){
+    console.error(e);
+    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:13px">⚠️ 사용자 목록을 불러오지 못했습니다: '+String(e.message||e)+'<br><button onclick="loadUserList()" style="margin-top:8px;padding:6px 14px;background:var(--g1);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔄 다시 시도</button></div>';
+  }
 }
 
 // ─ 열람전용(member) 역할 전환/해제 (admin 전용, 원래 직급은 prev_role에 백업 후 해제시 복원) ─
