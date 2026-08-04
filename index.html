@@ -2417,7 +2417,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <option value="6팀">6팀</option><option value="7팀">7팀</option><option value="8팀">8팀</option><option value="9팀">9팀</option>
       </select>
     </div>
-    <div id="tlStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px"></div>
+    <div id="tlStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px"></div>
+    <div id="tlFloorStats" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
     <div id="tlList"></div>
   </div>
 
@@ -12883,6 +12884,28 @@ async function uploadEquipmentData(){
   }finally{ if(btn){btn.disabled=false;btn.textContent='🔧 장비현황 업로드';} }
 }
 
+// ══ 시설물 공통: 수정자 표기 / 날짜 표기 헬퍼 ══
+function facEditorTag(){
+  if(!me) return '';
+  var roleLabel=me.role==='admin'?'최고관리자':me.role==='manager'?'관리자':me.role==='leader'?'팀장':me.role==='acting_leader'?'조장대행':me.role==='guest'?'게스트':'조장';
+  return (me.team?me.team+' ':'')+me.name+' '+roleLabel;
+}
+function facUpdatedDateShort(iso){
+  if(!iso) return '';
+  var d=new Date(new Date(iso).getTime()+9*3600000);
+  return (d.getUTCMonth()+1)+'/'+d.getUTCDate();
+}
+function facGenderBadge(gender){
+  if(!gender) return '';
+  var isF=gender.indexOf('여')===0||gender==='여자'||gender==='공용'&&false;
+  if(gender.indexOf('여')!==-1){
+    return '<span style="display:inline-flex;align-items:center;gap:3px;background:#FCE7F3;color:#BE185D;border-radius:8px;padding:3px 9px;font-size:13px;font-weight:800">🚺 여</span>';
+  }
+  if(gender.indexOf('남')!==-1){
+    return '<span style="display:inline-flex;align-items:center;gap:3px;background:#E0F2FE;color:#0369A1;border-radius:8px;padding:3px 9px;font-size:13px;font-weight:800">🚹 남</span>';
+  }
+  return '<span style="display:inline-flex;align-items:center;gap:3px;background:var(--g1);color:var(--g5);border-radius:8px;padding:3px 9px;font-size:13px;font-weight:800">🚻 공용</span>';
+}
 // ══ 화장실 관리 ══
 var toiletData=[];
 var tlEditId=null;
@@ -12895,10 +12918,11 @@ function tlTab(n){
 function loadToiletScreen(){
   tlResetForm();
   loadToiletFromDB();
+  tlTab(1);
 }
 async function loadToiletFromDB(){
   try{
-    var res=await sb.from('toilet_master').select('*').order('zone').order('floor').order('number');
+    var res=await sb.from('toilet_master').select('*').order('updated_at',{ascending:false});
     if(res.error){ console.error(res.error); return; }
     toiletData=res.data||[];
     renderToiletList();
@@ -12947,7 +12971,7 @@ async function subToiletNew(){
     team:document.getElementById('tlTeam').value.trim()||null,
     night_team:document.getElementById('tlNightTeam').value.trim()||null,
     active:tlGetVal('tlActiveG')==='true',
-    updated_at:new Date().toISOString(), updated_by:me?me.name:''
+    updated_at:new Date().toISOString(), updated_by:facEditorTag()
   };
   try{
     var res=await sb.from('toilet_master').insert(payload);
@@ -12981,6 +13005,16 @@ function renderToiletList(){
     '<div style="background:var(--g1);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--g5);font-weight:700">전체</div><div style="font-size:18px;font-weight:900;color:var(--teal2)">'+filtered.length+'</div></div>'
     +'<div style="background:var(--g1);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--g5);font-weight:700">A/S</div><div style="font-size:18px;font-weight:900;color:var(--navy)">'+asCount+'</div></div>'
     +'<div style="background:var(--g1);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--g5);font-weight:700">L/S</div><div style="font-size:18px;font-weight:900;color:var(--navy)">'+lsCount+'</div></div>';
+  var floorEl=document.getElementById('tlFloorStats');
+  if(floorEl){
+    var floorOrder=['지하2층','지하1층','1층','2층','3층','4층'];
+    var floorCnt={};
+    filtered.forEach(function(r){ if(r.floor) floorCnt[r.floor]=(floorCnt[r.floor]||0)+1; });
+    var fh='';
+    floorOrder.forEach(function(fl){ if(floorCnt[fl]) fh+='<span style="background:var(--g1);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;color:var(--g6);white-space:nowrap">'+fl+' '+floorCnt[fl]+'</span>'; });
+    floorEl.innerHTML=fh;
+    floorEl.style.display=fh?'flex':'none';
+  }
   if(!filtered.length){
     listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">조건에 맞는 화장실이 없습니다</div>';
     return;
@@ -12988,15 +13022,15 @@ function renderToiletList(){
   var h='';
   filtered.forEach(function(r){
     var zoneLbl=r.zone==='Airside'?'A/S':'L/S';
-    var genderIcon=r.gender==='여자 화장실'?'🚺':'🚹';
     var closedBadge=r.active===false?'<span style="background:var(--danger-bg);color:var(--danger);border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700;margin-left:5px">폐쇄</span>':'';
     h+='<div onclick="openToiletDetail('+r.id+')" style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.04)">';
     h+='<div style="display:flex;justify-content:space-between;align-items:center">';
-    h+='<div style="font-size:14px;font-weight:800;color:var(--g7)">'+genderIcon+' '+(r.number||'')+closedBadge+'</div>';
+    h+='<div style="display:flex;align-items:center;gap:7px">'+facGenderBadge(r.gender)+'<span style="font-size:14px;font-weight:800;color:var(--g7)">'+(r.number||'')+'</span>'+closedBadge+'</div>';
     h+='<span style="font-size:11px;color:var(--g4)">'+zoneLbl+' · '+(r.floor||'')+'</span>';
     h+='</div>';
     h+='<div style="font-size:12px;color:var(--g5);margin-top:4px">'+(r.category||'-')+' · 양변기'+(r.toilet_cnt||0)+' 세면기'+(r.sink_cnt||0)+(r.urinal_cnt?(' 소변기'+r.urinal_cnt):'')+'</div>';
     h+='<div style="font-size:11px;color:var(--g4);margin-top:2px">주간 '+(r.team||'-')+' · 야간 '+(r.night_team||'-')+'</div>';
+    if(r.updated_by){ h+='<div style="font-size:11px;color:var(--teal2);margin-top:4px;font-weight:600">✎ '+r.updated_by+' · '+facUpdatedDateShort(r.updated_at)+' 수정</div>'; }
     h+='</div>';
   });
   listEl.innerHTML=h;
@@ -13047,7 +13081,7 @@ async function saveToiletDetail(){
     team:document.getElementById('tlDTeam').value.trim()||null,
     night_team:document.getElementById('tlDNightTeam').value.trim()||null,
     active:tlGetVal('tlDActiveG')==='true',
-    updated_at:new Date().toISOString(), updated_by:me?me.name:''
+    updated_at:new Date().toISOString(), updated_by:facEditorTag()
   };
   try{
     var res=await sb.from('toilet_master').update(payload).eq('id',tlEditId);
@@ -13197,7 +13231,7 @@ var FAC_CONFIGS={
       {key:'night_team', label:'야간관리팀', xh:'야간관리팀', type:'text'}
     ],
     listTitle:function(r){ return (r.number||''); },
-    listSub:function(r){ return (r.gender==='여자 샤워실'?'🚺':'🚹')+' '+(r.zone==='Airside'?'A/S':'L/S')+' · '+(r.floor||''); },
+    listSub:function(r){ return (r.zone==='Airside'?'A/S':'L/S')+' · '+(r.floor||''); },
     listDetail:function(r){ return (r.category||'-')+' · 샤워기'+(r.shower_cnt||0)+' 세면대'+(r.sink_cnt||0); }
   },
   smoking:{table:'smoking_room_master', icon:'🚬', title:'흡연실', screen:'sSmokingMgmt', pfx:'sm',
@@ -13276,6 +13310,7 @@ function loadFacScreen(type){
   facEditId[type]=null;
   facResetForm(type);
   facLoadFromDB(type);
+  facTab(type,1);
 }
 function facBuildScreenHtml(type){
   var cfg=FAC_CONFIGS[type];
@@ -13295,7 +13330,8 @@ function facBuildScreenHtml(type){
   h+='<div id="'+p+'P1" style="display:none;padding:13px">';
   h+='<input type="text" id="'+p+'Search" oninput="facRenderList(\''+type+'\')" placeholder="🔍 검색..." style="width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:15px;background:white;margin-bottom:8px">';
   h+='<select id="'+p+'FilterZone" onchange="facRenderList(\''+type+'\')" style="width:100%;padding:8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white;margin-bottom:10px"><option value="">전체 구역</option><option value="Airside">A/S</option><option value="Landside">L/S</option></select>';
-  h+='<div id="'+p+'Stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px"></div>';
+  h+='<div id="'+p+'Stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px"></div>';
+  h+='<div id="'+p+'FloorStats" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>';
   h+='<div id="'+p+'List"></div></div>';
   // 다운로드 탭
   h+='<div id="'+p+'P2" style="display:none;padding:13px">';
@@ -13381,7 +13417,7 @@ function facResetForm(type){
 async function facLoadFromDB(type){
   var cfg=FAC_CONFIGS[type];
   try{
-    var res=await sb.from(cfg.table).select('*').order('zone').order('id');
+    var res=await sb.from(cfg.table).select('*').order('updated_at',{ascending:false});
     if(res.error){ console.error(res.error); toast('⚠️ '+cfg.title+' 조회 오류: '+res.error.message); return; }
     facData[type]=res.data||[];
     facRenderList(type);
@@ -13410,7 +13446,7 @@ async function facSubmitNew(type){
     err.textContent='⚠️ 다음 항목은 필수입니다: '+r.missing.join(', '); err.style.display='block'; return;
   }
   err.style.display='none';
-  var payload=Object.assign({}, r.payload, {active:true, updated_at:new Date().toISOString(), updated_by:me?me.name:''});
+  var payload=Object.assign({}, r.payload, {active:true, updated_at:new Date().toISOString(), updated_by:facEditorTag()});
   try{
     var res=await sb.from(cfg.table).insert(payload);
     if(res.error){ toast('저장 오류: '+res.error.message); return; }
@@ -13442,20 +13478,37 @@ function facRenderList(type){
     '<div style="background:var(--g1);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--g5);font-weight:700">전체</div><div style="font-size:18px;font-weight:900;color:var(--teal2)">'+filtered.length+'</div></div>'
     +'<div style="background:var(--g1);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--g5);font-weight:700">A/S</div><div style="font-size:18px;font-weight:900;color:var(--navy)">'+asCount+'</div></div>'
     +'<div style="background:var(--g1);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--g5);font-weight:700">L/S</div><div style="font-size:18px;font-weight:900;color:var(--navy)">'+lsCount+'</div></div>';
+  var floorField=cfg.fields.find(function(f){return f.key==='floor';});
+  var floorEl=document.getElementById(p+'FloorStats');
+  if(floorEl){
+    if(floorField){
+      var floorOrder=floorField.options.map(function(o){return Array.isArray(o)?o[0]:o;});
+      var floorCnt={};
+      filtered.forEach(function(r){ if(r.floor) floorCnt[r.floor]=(floorCnt[r.floor]||0)+1; });
+      var fh='';
+      floorOrder.forEach(function(fl){ if(floorCnt[fl]) fh+='<span style="background:var(--g1);border-radius:20px;padding:4px 11px;font-size:12px;font-weight:700;color:var(--g6);white-space:nowrap">'+fl+' '+floorCnt[fl]+'</span>'; });
+      floorEl.innerHTML=fh;
+      floorEl.style.display=fh?'flex':'none';
+    } else {
+      floorEl.style.display='none';
+    }
+  }
   if(!filtered.length){
     listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">조건에 맞는 '+cfg.title+'이(가) 없습니다</div>';
     return;
   }
+  var hasGender=cfg.fields.some(function(f){return f.key==='gender';});
   var h='';
   filtered.forEach(function(r){
     var zoneLbl=r.zone==='Airside'?'A/S':'L/S';
     var closedBadge=r.active===false?'<span style="background:var(--danger-bg);color:var(--danger);border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700;margin-left:5px">폐쇄</span>':'';
     h+='<div onclick="facOpenDetail(\''+type+'\','+r.id+')" style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.04)">';
     h+='<div style="display:flex;justify-content:space-between;align-items:center">';
-    h+='<div style="font-size:14px;font-weight:800;color:var(--g7)">'+cfg.icon+' '+(cfg.listTitle(r)||'(위치 미상)')+closedBadge+'</div>';
+    h+='<div style="display:flex;align-items:center;gap:7px">'+(hasGender?facGenderBadge(r.gender):'')+'<span style="font-size:14px;font-weight:800;color:var(--g7)">'+cfg.icon+' '+(cfg.listTitle(r)||'(위치 미상)')+'</span>'+closedBadge+'</div>';
     h+='</div>';
     h+='<div style="font-size:12px;color:var(--g5);margin-top:4px">'+cfg.listSub(r)+'</div>';
     h+='<div style="font-size:11px;color:var(--g4);margin-top:2px">'+cfg.listDetail(r)+'</div>';
+    if(r.updated_by){ h+='<div style="font-size:11px;color:var(--teal2);margin-top:4px;font-weight:600">✎ '+r.updated_by+' · '+facUpdatedDateShort(r.updated_at)+' 수정</div>'; }
     h+='</div>';
   });
   listEl.innerHTML=h;
@@ -13490,7 +13543,7 @@ async function facSaveDetail(type){
   if(!id) return;
   var r=facValidateAndBuildPayload(type,'D');
   if(r.missing.length){ toast('⚠️ 다음 항목은 필수입니다: '+r.missing.join(', ')); return; }
-  var payload=Object.assign({}, r.payload, {updated_at:new Date().toISOString(), updated_by:me?me.name:''});
+  var payload=Object.assign({}, r.payload, {updated_at:new Date().toISOString(), updated_by:facEditorTag()});
   try{
     var res=await sb.from(cfg.table).update(payload).eq('id',id);
     if(res.error){ toast('수정 오류: '+res.error.message); return; }
