@@ -1292,10 +1292,12 @@ html{overflow-x:hidden}
     </div>
     <div class="mh-panel" id="mhPanelNotice">
   <!-- 공지사항 목록 -->
+  <div id="homeNoticeBlock">
   <div class="sec-lbl">📢 공지사항</div>
   <div class="card" style="margin-bottom:13px"><div style="border-radius:var(--r2);overflow:hidden" id="noticeListWrap">
     <div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">공지사항을 불러오는 중...</div>
   </div></div>
+  </div>
 
   <!-- 산업재해 현황 -->
   <div class="sec-lbl">산업재해 현황</div>
@@ -4880,6 +4882,7 @@ function applyRoleUI(){
       var oc=el.getAttribute('onclick')||'';
       el.style.display=(oc.indexOf('goHomeMain')!==-1)?'':'none';
     });
+    var homeNoticeBlock=document.getElementById('homeNoticeBlock');if(homeNoticeBlock)homeNoticeBlock.style.display='none';
   }
   // 공사업무용차량 전용 인원(1팀/6팀 운전조): 이 화면만 접근 가능
   if(me.role==='work_vehicle'){
