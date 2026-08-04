@@ -732,6 +732,12 @@ html{overflow-x:hidden}
         <div class="menu-desc">장비 목록 엑셀 업로드 및 현황 조회</div>
         <span class="menu-arrow">조회하기 →</span>
       </button>
+      <button class="menu-btn" onclick="go('toilet')">
+        <span class="menu-icon">🚻</span>
+        <div class="menu-title">화장실 관리</div>
+        <div class="menu-desc">화장실 현황 조회·작성·수정·다운로드</div>
+        <span class="menu-arrow">관리하기 →</span>
+      </button>
     </div>
   </div>
 
@@ -2284,6 +2290,174 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div style="font-size:14px;font-weight:700;color:var(--g6);margin-bottom:8px">미리보기 (상위 5행)</div>
       <div id="eqPreviewTable" style="overflow-x:auto;margin-bottom:12px"></div>
       <button onclick="uploadEquipmentData()" class="btn-prim" style="width:100%">🔧 장비현황 업로드</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 화장실 관리 ══ -->
+<div id="sToiletMgmt" class="scr" style="display:none">
+  <div class="pg-hd">
+    <div><h1>🚻 화장실 관리</h1><small>화장실 현황 조회·작성·수정·다운로드</small></div>
+    <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 메인</button>
+  </div>
+
+  <div style="display:flex;border-bottom:2px solid var(--g2)">
+    <div id="tlT0" onclick="tlTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:15px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">작성</div>
+    <div id="tlT1" onclick="tlTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">현황</div>
+    <div id="tlT2" onclick="tlTab(2)" style="flex:1;text-align:center;padding:10px 0;font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">다운로드</div>
+  </div>
+
+  <!-- 작성 탭 -->
+  <div id="tlP0" style="padding:13px">
+    <div class="fg"><label class="f-lbl">구역 *</label>
+      <div class="rg" id="tlZoneG">
+        <div class="rp" onclick="selRP(this)" data-v="Airside">A/S (에어사이드)</div>
+        <div class="rp" onclick="selRP(this)" data-v="Landside">L/S (랜드사이드)</div>
+      </div>
+    </div>
+    <div class="fg"><label class="f-lbl">성별 구분 *</label>
+      <div class="rg" id="tlGenderG">
+        <div class="rp" onclick="selRP(this)" data-v="남자 화장실">남자 화장실</div>
+        <div class="rp" onclick="selRP(this)" data-v="여자 화장실">여자 화장실</div>
+      </div>
+    </div>
+    <div class="fg"><label class="f-lbl">일반/상주 구분 *</label>
+      <div class="rg" id="tlCategoryG">
+        <div class="rp" onclick="selRP(this)" data-v="일반">일반</div>
+        <div class="rp" onclick="selRP(this)" data-v="상주">상주</div>
+      </div>
+      <input type="text" id="tlCategoryEtc" class="ri" placeholder="그 외 구분이면 직접 입력 (예: 귀빈실, 난민실 등)" style="margin-top:6px;margin-bottom:0">
+    </div>
+    <div class="fg"><label class="f-lbl">층 *</label>
+      <div class="rg" id="tlFloorG" style="flex-wrap:wrap">
+        <div class="rp" onclick="selRP(this)" data-v="지하2층">지하2층</div>
+        <div class="rp" onclick="selRP(this)" data-v="지하1층">지하1층</div>
+        <div class="rp" onclick="selRP(this)" data-v="1층">1층</div>
+        <div class="rp" onclick="selRP(this)" data-v="2층">2층</div>
+        <div class="rp" onclick="selRP(this)" data-v="3층">3층</div>
+        <div class="rp" onclick="selRP(this)" data-v="4층">4층</div>
+      </div>
+    </div>
+    <div class="fg"><label class="f-lbl">화장실 번호(위치) *</label><input type="text" id="tlNumber" class="ri" placeholder="예: R1521" style="margin-bottom:0"></div>
+    <div class="fg"><label class="f-lbl">가족실 유무</label>
+      <div class="rg" id="tlFamilyG"><div class="rp" onclick="selRP(this)" data-v="있음">있음</div><div class="rp on" onclick="selRP(this)" data-v="없음">없음</div></div>
+    </div>
+    <div class="fg"><label class="f-lbl">탕비실 유무</label>
+      <div class="rg" id="tlKitchenG"><div class="rp" onclick="selRP(this)" data-v="있음">있음</div><div class="rp on" onclick="selRP(this)" data-v="없음">없음</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fg"><label class="f-lbl">개수대 수량</label><input type="number" id="tlSinkStation" class="ri" min="0" placeholder="0" style="margin-bottom:0"></div>
+      <div class="fg"><label class="f-lbl">양변기 수량</label><input type="number" id="tlToiletCnt" class="ri" min="0" placeholder="0" style="margin-bottom:0"></div>
+      <div class="fg"><label class="f-lbl">세면기 수량</label><input type="number" id="tlSinkCnt" class="ri" min="0" placeholder="0" style="margin-bottom:0"></div>
+      <div class="fg"><label class="f-lbl">소변기 수량</label><input type="number" id="tlUrinalCnt" class="ri" min="0" placeholder="0" style="margin-bottom:0"></div>
+    </div>
+    <div class="fg"><label class="f-lbl">위생휴지통</label><input type="text" id="tlTissueBin" class="ri" placeholder="개수 또는 '폐쇄' 등" style="margin-bottom:0"></div>
+    <div class="fg"><label class="f-lbl">소모품 보관창고</label><input type="text" id="tlSupplyStorage" class="ri" placeholder="비고 사항 (없으면 비워두세요)" style="margin-bottom:0"></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div class="fg"><label class="f-lbl">주간관리팀</label><input type="text" id="tlTeam" class="ri" placeholder="예: 1팀, 6팀" style="margin-bottom:0"></div>
+      <div class="fg"><label class="f-lbl">야간관리팀</label><input type="text" id="tlNightTeam" class="ri" placeholder="예: 10팀" style="margin-bottom:0"></div>
+    </div>
+    <div class="fg"><label class="f-lbl">사용 여부</label>
+      <div class="rg" id="tlActiveG"><div class="rp on" onclick="selRP(this)" data-v="true">사용중</div><div class="rp" onclick="selRP(this)" data-v="false">폐쇄</div></div>
+    </div>
+    <div id="tlFormErr" style="color:var(--danger);font-size:13px;margin-bottom:8px;display:none"></div>
+    <button class="btn-prim" onclick="subToiletNew()">➕ 화장실 추가 등록</button>
+  </div>
+
+  <!-- 현황(조회) 탭 -->
+  <div id="tlP1" style="display:none;padding:13px">
+    <input type="text" id="tlSearch" oninput="renderToiletList()" placeholder="🔍 번호·위치 검색..." style="width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:15px;background:white;margin-bottom:8px">
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px">
+      <select id="tlFilterZone" onchange="renderToiletList()" style="flex:1;min-width:90px;padding:8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white">
+        <option value="">전체 구역</option><option value="Airside">A/S</option><option value="Landside">L/S</option>
+      </select>
+      <select id="tlFilterFloor" onchange="renderToiletList()" style="flex:1;min-width:90px;padding:8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white">
+        <option value="">전체 층</option><option value="지하2층">지하2층</option><option value="지하1층">지하1층</option><option value="1층">1층</option><option value="2층">2층</option><option value="3층">3층</option><option value="4층">4층</option>
+      </select>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
+      <select id="tlFilterCategory" onchange="renderToiletList()" style="flex:1;min-width:90px;padding:8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white">
+        <option value="">전체 일반/상주</option><option value="일반">일반</option><option value="상주">상주</option>
+      </select>
+      <select id="tlFilterTeam" onchange="renderToiletList()" style="flex:1;min-width:90px;padding:8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white">
+        <option value="">전체 팀</option>
+        <option value="1팀">1팀</option><option value="2팀">2팀</option><option value="3팀">3팀</option><option value="4팀">4팀</option>
+        <option value="6팀">6팀</option><option value="7팀">7팀</option><option value="8팀">8팀</option><option value="9팀">9팀</option>
+      </select>
+    </div>
+    <div id="tlStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px"></div>
+    <div id="tlList"></div>
+  </div>
+
+  <!-- 다운로드 탭 -->
+  <div id="tlP2" style="display:none;padding:13px">
+    <div class="card" style="margin-bottom:12px"><div class="cb">
+      <div style="font-size:14px;font-weight:700;color:var(--g6);margin-bottom:8px">📥 엑셀 다운로드</div>
+      <div style="font-size:13px;color:var(--g4);margin-bottom:12px">현재 등록된 화장실 전체 현황을 엑셀로 받습니다.</div>
+      <button class="btn-prim" onclick="dlToiletExcel()">📥 화장실 현황 다운로드 (xlsx)</button>
+    </div></div>
+    <div class="card"><div class="cb">
+      <div style="font-size:14px;font-weight:700;color:var(--g6);margin-bottom:8px">📋 엑셀 업로드 (일괄 반영)</div>
+      <div style="font-size:13px;color:var(--g4);line-height:1.7;margin-bottom:12px">
+        • 첫 번째 행이 <b>헤더(컬럼명)</b>이어야 합니다<br>
+        • .xlsx / .xls 파일 지원<br>
+        • <b style="color:var(--danger)">업로드 시 기존 화장실 데이터를 전부 삭제하고 새로 교체합니다</b>
+      </div>
+      <input type="file" id="tlFileInput" accept=".xlsx,.xls" onchange="previewToiletFile(this)" style="width:100%;padding:10px;border:2px dashed var(--g2);border-radius:var(--r2);font-size:14px;background:var(--g1)">
+    </div></div>
+    <div id="tlPreview" style="display:none;margin-top:12px">
+      <div style="font-size:14px;font-weight:700;color:var(--g6);margin-bottom:8px">미리보기 (상위 5행) · 총 <span id="tlPreviewCount">0</span>건</div>
+      <div id="tlPreviewTable" style="overflow-x:auto;margin-bottom:12px;font-size:12px"></div>
+      <button onclick="uploadToiletData()" class="btn-prim" style="width:100%;background:var(--danger)">⚠️ 기존 데이터 교체하고 업로드</button>
+    </div>
+  </div>
+</div>
+
+<!-- 상세/수정 모달 -->
+<div id="toiletDetailModal" class="modal-bg">
+  <div class="modal" style="max-height:92vh;overflow-y:auto">
+    <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))">
+      <h3 id="tlDetailTitle">🚻 화장실 상세</h3>
+      <button class="m-x" onclick="hideM('toiletDetailModal')">×</button>
+    </div>
+    <div style="padding:16px 17px">
+      <div class="fg"><label class="f-lbl">구역 *</label>
+        <div class="rg" id="tlDZoneG"><div class="rp" onclick="selRP(this)" data-v="Airside">A/S</div><div class="rp" onclick="selRP(this)" data-v="Landside">L/S</div></div>
+      </div>
+      <div class="fg"><label class="f-lbl">성별 구분 *</label>
+        <div class="rg" id="tlDGenderG"><div class="rp" onclick="selRP(this)" data-v="남자 화장실">남자</div><div class="rp" onclick="selRP(this)" data-v="여자 화장실">여자</div></div>
+      </div>
+      <div class="fg"><label class="f-lbl">일반/상주 구분</label>
+        <div class="rg" id="tlDCategoryG"><div class="rp" onclick="selRP(this)" data-v="일반">일반</div><div class="rp" onclick="selRP(this)" data-v="상주">상주</div></div>
+        <input type="text" id="tlDCategoryEtc" class="ri" placeholder="그 외 구분 직접입력" style="margin-top:6px;margin-bottom:0">
+      </div>
+      <div class="fg"><label class="f-lbl">층 *</label>
+        <div class="rg" id="tlDFloorG" style="flex-wrap:wrap">
+          <div class="rp" onclick="selRP(this)" data-v="지하2층">지하2층</div><div class="rp" onclick="selRP(this)" data-v="지하1층">지하1층</div>
+          <div class="rp" onclick="selRP(this)" data-v="1층">1층</div><div class="rp" onclick="selRP(this)" data-v="2층">2층</div>
+          <div class="rp" onclick="selRP(this)" data-v="3층">3층</div><div class="rp" onclick="selRP(this)" data-v="4층">4층</div>
+        </div>
+      </div>
+      <div class="fg"><label class="f-lbl">화장실 번호(위치) *</label><input type="text" id="tlDNumber" class="ri" style="margin-bottom:0"></div>
+      <div class="fg"><label class="f-lbl">가족실 유무</label><div class="rg" id="tlDFamilyG"><div class="rp" onclick="selRP(this)" data-v="있음">있음</div><div class="rp" onclick="selRP(this)" data-v="없음">없음</div></div></div>
+      <div class="fg"><label class="f-lbl">탕비실 유무</label><div class="rg" id="tlDKitchenG"><div class="rp" onclick="selRP(this)" data-v="있음">있음</div><div class="rp" onclick="selRP(this)" data-v="없음">없음</div></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg"><label class="f-lbl">개수대</label><input type="number" id="tlDSinkStation" class="ri" min="0" style="margin-bottom:0"></div>
+        <div class="fg"><label class="f-lbl">양변기</label><input type="number" id="tlDToiletCnt" class="ri" min="0" style="margin-bottom:0"></div>
+        <div class="fg"><label class="f-lbl">세면기</label><input type="number" id="tlDSinkCnt" class="ri" min="0" style="margin-bottom:0"></div>
+        <div class="fg"><label class="f-lbl">소변기</label><input type="number" id="tlDUrinalCnt" class="ri" min="0" style="margin-bottom:0"></div>
+      </div>
+      <div class="fg"><label class="f-lbl">위생휴지통</label><input type="text" id="tlDTissueBin" class="ri" style="margin-bottom:0"></div>
+      <div class="fg"><label class="f-lbl">소모품 보관창고</label><input type="text" id="tlDSupplyStorage" class="ri" style="margin-bottom:0"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="fg"><label class="f-lbl">주간관리팀</label><input type="text" id="tlDTeam" class="ri" style="margin-bottom:0"></div>
+        <div class="fg"><label class="f-lbl">야간관리팀</label><input type="text" id="tlDNightTeam" class="ri" style="margin-bottom:0"></div>
+      </div>
+      <div class="fg"><label class="f-lbl">사용 여부</label><div class="rg" id="tlDActiveG"><div class="rp" onclick="selRP(this)" data-v="true">사용중</div><div class="rp" onclick="selRP(this)" data-v="false">폐쇄</div></div></div>
+      <div style="display:flex;gap:7px;margin-top:14px">
+        <button id="tlDeleteBtn" onclick="deleteToiletConfirm()" style="display:none;padding:11px 16px;background:var(--danger-bg);color:var(--danger);border:1px solid rgba(217,64,64,.25);border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🗑 삭제</button>
+        <button onclick="saveToiletDetail()" style="flex:1;padding:11px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">💾 수정 저장</button>
+      </div>
     </div>
   </div>
 </div>
@@ -4106,7 +4280,7 @@ function showM(id){document.getElementById(id).classList.add('on');}
 function hideM(id){document.getElementById(id).classList.remove('on');}
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sSafety','sManual','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sSafety','sManual','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt'];
 function goStatsDash(){
   go('statsdash');
   loadMonthlyStats();
@@ -4488,9 +4662,10 @@ function go(name){
   if(me&&me.role==='work_vehicle'&&name!=='workveh'&&name!=='login'){ return; }
   if(name==='admin'&&(!me||me.role!=='admin')){ toast('⚠️ 관리자만 접근할 수 있습니다'); return; }
   if(name==='execdash'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
+  if(name==='toilet'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='downloadcenter'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(name==='groupchat'&&me&&me.role==='guest'){ toast('⚠️ 게스트 계정은 이용할 수 없는 기능입니다'); return; }
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',safety:'sSafety',manual:'sManual',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',safety:'sSafety',manual:'sManual',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -4536,6 +4711,9 @@ function go(name){
   }
   if(name==='jointwork'){
     loadJointWorkScreen();
+  }
+  if(name==='toilet'){
+    loadToiletScreen();
   }
   if(name==='facility'){
     loadFacilityFromDB();
@@ -12545,6 +12723,303 @@ async function uploadEquipmentData(){
     eqTab(0);
   }catch(e){ toast('⚠️ 업로드 실패: '+e.message);
   }finally{ if(btn){btn.disabled=false;btn.textContent='🔧 장비현황 업로드';} }
+}
+
+// ══ 화장실 관리 ══
+var toiletData=[];
+var tlEditId=null;
+
+function tlTab(n){
+  tabSwitch('tl',n,3);
+  if(n===0) tlResetForm();
+  if(n===1) renderToiletList();
+}
+function loadToiletScreen(){
+  tlResetForm();
+  loadToiletFromDB();
+}
+async function loadToiletFromDB(){
+  try{
+    var res=await sb.from('toilet_master').select('*').order('zone').order('floor').order('number');
+    if(res.error){ console.error(res.error); return; }
+    toiletData=res.data||[];
+    renderToiletList();
+  }catch(e){}
+}
+function tlGetVal(groupId){
+  var on=document.querySelector('#'+groupId+' .rp.on');
+  return on?on.dataset.v:'';
+}
+function tlSetVal(groupId, val){
+  document.querySelectorAll('#'+groupId+' .rp').forEach(function(c){
+    c.classList.toggle('on', c.dataset.v===val);
+  });
+}
+function tlResetForm(){
+  tlEditId=null;
+  ['tlZoneG','tlGenderG','tlCategoryG','tlFloorG'].forEach(function(g){
+    document.querySelectorAll('#'+g+' .rp').forEach(function(c){c.classList.remove('on');});
+  });
+  tlSetVal('tlFamilyG','없음'); tlSetVal('tlKitchenG','없음'); tlSetVal('tlActiveG','true');
+  ['tlNumber','tlCategoryEtc','tlSinkStation','tlToiletCnt','tlSinkCnt','tlUrinalCnt','tlTissueBin','tlSupplyStorage','tlTeam','tlNightTeam'].forEach(function(id){
+    var el=document.getElementById(id); if(el) el.value='';
+  });
+  var err=document.getElementById('tlFormErr'); if(err) err.style.display='none';
+}
+async function subToiletNew(){
+  if(!canWrite()) return;
+  var zone=tlGetVal('tlZoneG'), gender=tlGetVal('tlGenderG');
+  var category=tlGetVal('tlCategoryG')||document.getElementById('tlCategoryEtc').value.trim();
+  var floor=tlGetVal('tlFloorG');
+  var number=document.getElementById('tlNumber').value.trim();
+  var err=document.getElementById('tlFormErr');
+  if(!zone||!gender||!floor||!number){
+    err.textContent='⚠️ 구역·성별·층·화장실 번호는 필수입니다'; err.style.display='block'; return;
+  }
+  err.style.display='none';
+  var payload={
+    zone:zone, gender:gender, category:category||null, floor:floor, number:number,
+    family_room:tlGetVal('tlFamilyG')||'없음', kitchenette:tlGetVal('tlKitchenG')||'없음',
+    sink_station:parseInt(document.getElementById('tlSinkStation').value)||null,
+    toilet_cnt:parseInt(document.getElementById('tlToiletCnt').value)||null,
+    sink_cnt:parseInt(document.getElementById('tlSinkCnt').value)||null,
+    urinal_cnt:parseInt(document.getElementById('tlUrinalCnt').value)||null,
+    tissue_bin:document.getElementById('tlTissueBin').value.trim()||null,
+    supply_storage:document.getElementById('tlSupplyStorage').value.trim()||null,
+    team:document.getElementById('tlTeam').value.trim()||null,
+    night_team:document.getElementById('tlNightTeam').value.trim()||null,
+    active:tlGetVal('tlActiveG')==='true',
+    updated_at:new Date().toISOString(), updated_by:me?me.name:''
+  };
+  try{
+    var res=await sb.from('toilet_master').insert(payload);
+    if(res.error){ toast('저장 오류: '+res.error.message); return; }
+    toast('✅ 화장실이 등록되었습니다');
+    tlResetForm();
+    await loadToiletFromDB();
+    tlTab(1);
+  }catch(e){ toast('저장 오류: '+String(e.message||e)); }
+}
+function renderToiletList(){
+  var listEl=document.getElementById('tlList'); if(!listEl) return;
+  var q=(document.getElementById('tlSearch').value||'').trim().toLowerCase();
+  var fZone=document.getElementById('tlFilterZone').value;
+  var fFloor=document.getElementById('tlFilterFloor').value;
+  var fCategory=document.getElementById('tlFilterCategory').value;
+  var fTeam=document.getElementById('tlFilterTeam').value;
+  var filtered=toiletData.filter(function(r){
+    if(fZone && r.zone!==fZone) return false;
+    if(fFloor && r.floor!==fFloor) return false;
+    if(fCategory && r.category!==fCategory) return false;
+    if(fTeam && !((r.team||'').indexOf(fTeam)!==-1 || (r.night_team||'').indexOf(fTeam)!==-1)) return false;
+    if(q && (r.number||'').toLowerCase().indexOf(q)===-1 && (r.category||'').toLowerCase().indexOf(q)===-1) return false;
+    return true;
+  });
+  // 통계
+  var statsEl=document.getElementById('tlStats');
+  var asCount=filtered.filter(function(r){return r.zone==='Airside';}).length;
+  var lsCount=filtered.filter(function(r){return r.zone==='Landside';}).length;
+  statsEl.innerHTML=
+    '<div style="background:var(--g1);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--g5);font-weight:700">전체</div><div style="font-size:18px;font-weight:900;color:var(--teal2)">'+filtered.length+'</div></div>'
+    +'<div style="background:var(--g1);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--g5);font-weight:700">A/S</div><div style="font-size:18px;font-weight:900;color:var(--navy)">'+asCount+'</div></div>'
+    +'<div style="background:var(--g1);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--g5);font-weight:700">L/S</div><div style="font-size:18px;font-weight:900;color:var(--navy)">'+lsCount+'</div></div>';
+  if(!filtered.length){
+    listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">조건에 맞는 화장실이 없습니다</div>';
+    return;
+  }
+  var h='';
+  filtered.forEach(function(r){
+    var zoneLbl=r.zone==='Airside'?'A/S':'L/S';
+    var genderIcon=r.gender==='여자 화장실'?'🚺':'🚹';
+    var closedBadge=r.active===false?'<span style="background:var(--danger-bg);color:var(--danger);border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700;margin-left:5px">폐쇄</span>':'';
+    h+='<div onclick="openToiletDetail('+r.id+')" style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.04)">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center">';
+    h+='<div style="font-size:14px;font-weight:800;color:var(--g7)">'+genderIcon+' '+(r.number||'')+closedBadge+'</div>';
+    h+='<span style="font-size:11px;color:var(--g4)">'+zoneLbl+' · '+(r.floor||'')+'</span>';
+    h+='</div>';
+    h+='<div style="font-size:12px;color:var(--g5);margin-top:4px">'+(r.category||'-')+' · 양변기'+(r.toilet_cnt||0)+' 세면기'+(r.sink_cnt||0)+(r.urinal_cnt?(' 소변기'+r.urinal_cnt):'')+'</div>';
+    h+='<div style="font-size:11px;color:var(--g4);margin-top:2px">주간 '+(r.team||'-')+' · 야간 '+(r.night_team||'-')+'</div>';
+    h+='</div>';
+  });
+  listEl.innerHTML=h;
+}
+function openToiletDetail(id){
+  var r=toiletData.find(function(x){return x.id===id;});
+  if(!r) return;
+  tlEditId=id;
+  document.getElementById('tlDetailTitle').textContent='🚻 '+(r.number||'')+' 상세';
+  tlSetVal('tlDZoneG', r.zone||'');
+  tlSetVal('tlDGenderG', r.gender||'');
+  var stdCat=(r.category==='일반'||r.category==='상주')?r.category:'';
+  tlSetVal('tlDCategoryG', stdCat);
+  document.getElementById('tlDCategoryEtc').value=stdCat?'':(r.category||'');
+  tlSetVal('tlDFloorG', r.floor||'');
+  document.getElementById('tlDNumber').value=r.number||'';
+  tlSetVal('tlDFamilyG', r.family_room||'없음');
+  tlSetVal('tlDKitchenG', r.kitchenette||'없음');
+  document.getElementById('tlDSinkStation').value=r.sink_station!=null?r.sink_station:'';
+  document.getElementById('tlDToiletCnt').value=r.toilet_cnt!=null?r.toilet_cnt:'';
+  document.getElementById('tlDSinkCnt').value=r.sink_cnt!=null?r.sink_cnt:'';
+  document.getElementById('tlDUrinalCnt').value=r.urinal_cnt!=null?r.urinal_cnt:'';
+  document.getElementById('tlDTissueBin').value=r.tissue_bin||'';
+  document.getElementById('tlDSupplyStorage').value=r.supply_storage||'';
+  document.getElementById('tlDTeam').value=r.team||'';
+  document.getElementById('tlDNightTeam').value=r.night_team||'';
+  tlSetVal('tlDActiveG', r.active===false?'false':'true');
+  var delBtn=document.getElementById('tlDeleteBtn');
+  if(delBtn) delBtn.style.display=(me&&me.role==='admin')?'block':'none';
+  showM('toiletDetailModal');
+}
+async function saveToiletDetail(){
+  if(!canWrite()) return;
+  if(!tlEditId) return;
+  var zone=tlGetVal('tlDZoneG'), gender=tlGetVal('tlDGenderG'), floor=tlGetVal('tlDFloorG');
+  var number=document.getElementById('tlDNumber').value.trim();
+  var category=tlGetVal('tlDCategoryG')||document.getElementById('tlDCategoryEtc').value.trim();
+  if(!zone||!gender||!floor||!number){ toast('⚠️ 구역·성별·층·화장실 번호는 필수입니다'); return; }
+  var payload={
+    zone:zone, gender:gender, category:category||null, floor:floor, number:number,
+    family_room:tlGetVal('tlDFamilyG')||'없음', kitchenette:tlGetVal('tlDKitchenG')||'없음',
+    sink_station:parseInt(document.getElementById('tlDSinkStation').value)||null,
+    toilet_cnt:parseInt(document.getElementById('tlDToiletCnt').value)||null,
+    sink_cnt:parseInt(document.getElementById('tlDSinkCnt').value)||null,
+    urinal_cnt:parseInt(document.getElementById('tlDUrinalCnt').value)||null,
+    tissue_bin:document.getElementById('tlDTissueBin').value.trim()||null,
+    supply_storage:document.getElementById('tlDSupplyStorage').value.trim()||null,
+    team:document.getElementById('tlDTeam').value.trim()||null,
+    night_team:document.getElementById('tlDNightTeam').value.trim()||null,
+    active:tlGetVal('tlDActiveG')==='true',
+    updated_at:new Date().toISOString(), updated_by:me?me.name:''
+  };
+  try{
+    var res=await sb.from('toilet_master').update(payload).eq('id',tlEditId);
+    if(res.error){ toast('수정 오류: '+res.error.message); return; }
+    toast('✅ 수정되었습니다');
+    hideM('toiletDetailModal');
+    await loadToiletFromDB();
+  }catch(e){ toast('수정 오류: '+String(e.message||e)); }
+}
+async function deleteToiletConfirm(){
+  if(!me||me.role!=='admin'){ toast('⚠️ 삭제는 관리자만 가능합니다'); return; }
+  if(!tlEditId) return;
+  if(!confirm('이 화장실 정보를 삭제하시겠습니까?\n삭제 후에는 되돌릴 수 없습니다.')) return;
+  try{
+    var res=await sb.from('toilet_master').delete().eq('id',tlEditId);
+    if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    toast('🗑 삭제되었습니다');
+    hideM('toiletDetailModal');
+    await loadToiletFromDB();
+  }catch(e){ toast('삭제 오류: '+String(e.message||e)); }
+}
+function dlToiletExcel(){
+  if(!canDownload()) return;
+  if(!toiletData.length){ toast('다운로드할 데이터가 없습니다'); return; }
+  var header=['구역','성별','일반/상주','층','번호','가족실','탕비실','개수대','양변기','위생휴지통','세면기','소변기','소모품보관창고','주간관리팀','야간관리팀','사용여부'];
+  var rows=[header];
+  toiletData.forEach(function(r){
+    rows.push([
+      r.zone==='Airside'?'Airside':'Landside', r.gender||'', r.category||'', r.floor||'', r.number||'',
+      r.family_room||'', r.kitchenette||'', r.sink_station!=null?r.sink_station:'', r.toilet_cnt!=null?r.toilet_cnt:'',
+      r.tissue_bin||'', r.sink_cnt!=null?r.sink_cnt:'', r.urinal_cnt!=null?r.urinal_cnt:'',
+      r.supply_storage||'', r.team||'', r.night_team||'', r.active===false?'폐쇄':'사용중'
+    ]);
+  });
+  try{
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:9},{wch:10},{wch:10},{wch:8},{wch:16},{wch:8},{wch:8},{wch:7},{wch:7},{wch:10},{wch:7},{wch:7},{wch:14},{wch:12},{wch:12},{wch:8}];
+    var wb=XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb,ws,'화장실현황');
+    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+    XLSX.writeFile(wb,'T1_화장실현황_'+today+'.xlsx');
+    toast('📥 다운로드 완료 ('+toiletData.length+'건)');
+  }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
+}
+function previewToiletFile(input){
+  var file=input.files[0];
+  if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:'binary'});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var json=XLSX.utils.sheet_to_json(ws,{header:1,defval:null});
+      if(!json||json.length<2){ toast('데이터가 없습니다'); return; }
+      var headers=(json[0]||[]).map(function(h){return String(h||'').trim();});
+      var rows=json.slice(1).filter(function(r){ return r.some(function(c){return c!==null&&c!=='';}); });
+      // 컬럼 위치 자동 탐지(엑셀 원본 헤더명 기준)
+      var idx=function(name){ return headers.indexOf(name); };
+      var col={
+        resp: idx('응답일시'), zone: idx('랜드/에어 구분'), gender: idx('남자/여자 구분'),
+        category: idx('일반/상주 구분'), floor: idx('화장실 층 구분'), number: idx('화장실 Number'),
+        family: idx('가족실 유무'), kitchen: idx('탕비실 유무'), sinkStation: idx('개수대'),
+        storage: idx('소모품 보관창고'), toiletCnt: idx('양변기 수량'), tissue: idx('위생휴지통'),
+        sinkCnt: idx('세면기 수량'), urinalCnt: idx('소변기 수량'), team: idx('주간관리팀'), nightTeam: idx('야간관리팀')
+      };
+      if(col.zone<0||col.gender<0||col.floor<0||col.number<0){
+        toast('⚠️ 필수 컬럼(랜드/에어 구분, 남자/여자 구분, 화장실 층 구분, 화장실 Number)을 찾을 수 없습니다. 원본 양식과 동일한 헤더를 사용해주세요.');
+        return;
+      }
+      var norm=function(v){ if(v===null||v===undefined||v===0||v==='0'||v==='-') return '없음'; return String(v).trim(); };
+      var parsed=rows.map(function(r){
+        return {
+          zone: r[col.zone]!=null?String(r[col.zone]).trim():null,
+          gender: r[col.gender]!=null?String(r[col.gender]).trim():null,
+          category: r[col.category]!=null?String(r[col.category]).trim():null,
+          floor: r[col.floor]!=null?String(r[col.floor]).trim():null,
+          number: r[col.number]!=null?String(r[col.number]).trim():null,
+          family_room: norm(r[col.family]),
+          kitchenette: norm(r[col.kitchen]),
+          sink_station: (col.sinkStation>=0 && typeof r[col.sinkStation]==='number')?r[col.sinkStation]:null,
+          supply_storage: (col.storage>=0 && r[col.storage])?String(r[col.storage]).trim():null,
+          toilet_cnt: (col.toiletCnt>=0 && typeof r[col.toiletCnt]==='number')?r[col.toiletCnt]:null,
+          tissue_bin: (col.tissue>=0 && r[col.tissue]!=null)?String(r[col.tissue]).trim():null,
+          sink_cnt: (col.sinkCnt>=0 && typeof r[col.sinkCnt]==='number')?r[col.sinkCnt]:null,
+          urinal_cnt: (col.urinalCnt>=0 && typeof r[col.urinalCnt]==='number')?r[col.urinalCnt]:null,
+          team: (col.team>=0 && r[col.team])?String(r[col.team]).trim():null,
+          night_team: (col.nightTeam>=0 && r[col.nightTeam])?String(r[col.nightTeam]).trim():null,
+          active:true
+        };
+      }).filter(function(p){ return p.zone&&p.gender&&p.floor&&p.number; });
+      if(!parsed.length){ toast('⚠️ 유효한 데이터 행이 없습니다'); return; }
+      var prev=document.getElementById('tlPreview');
+      var prevTbl=document.getElementById('tlPreviewTable');
+      document.getElementById('tlPreviewCount').textContent=parsed.length;
+      prev.style.display='block';
+      var h='<table style="width:100%;border-collapse:collapse;min-width:500px"><thead><tr>';
+      ['구역','성별','층','번호','양변기','세면기'].forEach(function(hd){ h+='<th style="padding:5px 7px;background:var(--navy);color:white;white-space:nowrap">'+hd+'</th>'; });
+      h+='</tr></thead><tbody>';
+      parsed.slice(0,5).forEach(function(p,i){
+        h+='<tr style="background:'+(i%2===0?'white':'var(--g1)')+'"><td style="padding:5px 7px;border-bottom:1px solid var(--g2)">'+p.zone+'</td><td style="padding:5px 7px;border-bottom:1px solid var(--g2)">'+p.gender+'</td><td style="padding:5px 7px;border-bottom:1px solid var(--g2)">'+p.floor+'</td><td style="padding:5px 7px;border-bottom:1px solid var(--g2)">'+p.number+'</td><td style="padding:5px 7px;border-bottom:1px solid var(--g2)">'+(p.toilet_cnt||'-')+'</td><td style="padding:5px 7px;border-bottom:1px solid var(--g2)">'+(p.sink_cnt||'-')+'</td></tr>';
+      });
+      h+='</tbody></table>';
+      prevTbl.innerHTML=h;
+      window._tlPendingData=parsed;
+      toast('✅ '+parsed.length+'건 확인 완료. 아래 버튼으로 업로드하세요');
+    }catch(ex){ toast('⚠️ 파일 읽기 오류: '+ex.message); }
+  };
+  reader.readAsBinaryString(file);
+}
+async function uploadToiletData(){
+  if(!canWrite()) return;
+  if(!window._tlPendingData||!window._tlPendingData.length){ toast('파일을 먼저 선택해주세요'); return; }
+  if(!confirm('기존 화장실 데이터 '+toiletData.length+'건을 전부 삭제하고,\n새 파일의 '+window._tlPendingData.length+'건으로 교체합니다.\n계속할까요?')) return;
+  var btn=document.querySelector('#tlP2 button[onclick="uploadToiletData()"]');
+  if(btn){btn.disabled=true;btn.textContent='업로드 중...';}
+  try{
+    await sb.from('toilet_master').delete().neq('id',0);
+    var payload=window._tlPendingData.map(function(p){
+      return Object.assign({}, p, {updated_at:new Date().toISOString(), updated_by:me?me.name:''});
+    });
+    var res=await sb.from('toilet_master').insert(payload);
+    if(res.error) throw res.error;
+    toast('✅ '+payload.length+'건 업로드 완료!');
+    window._tlPendingData=null;
+    document.getElementById('tlFileInput').value='';
+    document.getElementById('tlPreview').style.display='none';
+    await loadToiletFromDB();
+    tlTab(1);
+  }catch(e){ toast('⚠️ 업로드 실패: '+e.message);
+  }finally{ if(btn){btn.disabled=false;btn.textContent='⚠️ 기존 데이터 교체하고 업로드';} }
 }
 
 // ══ 폐기물 처리현황 ══
