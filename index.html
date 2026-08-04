@@ -13334,8 +13334,8 @@ function facResetForm(type){
 async function facLoadFromDB(type){
   var cfg=FAC_CONFIGS[type];
   try{
-    var res=await sb.from(cfg.table).select('*').order('zone').order('location',{ascending:true,nullsFirst:false}).order('number',{ascending:true,nullsFirst:false});
-    if(res.error){ console.error(res.error); return; }
+    var res=await sb.from(cfg.table).select('*').order('zone').order('id');
+    if(res.error){ console.error(res.error); toast('⚠️ '+cfg.title+' 조회 오류: '+res.error.message); return; }
     facData[type]=res.data||[];
     facRenderList(type);
   }catch(e){}
