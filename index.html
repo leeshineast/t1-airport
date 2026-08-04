@@ -549,7 +549,7 @@ html{overflow-x:hidden}
     </div>
     <div style="height:10px"></div>
     <div style="font-size:13px;font-weight:700;color:var(--g4);margin-bottom:6px">직급 *</div>
-    <div class="role-row"><div class="r-btn" onclick="pickR(this)">팀장</div><div class="r-btn" onclick="pickR(this)">조장</div><div class="r-btn" onclick="pickR(this)">조장대행</div><div class="r-btn" onclick="pickR(this)">기타</div><div class="r-btn" onclick="pickR(this)">차량운행</div><div class="r-btn" onclick="pickR(this)">게스트</div></div>
+    <div class="role-row" style="flex-wrap:wrap"><div class="r-btn" onclick="pickR(this)">팀장</div><div class="r-btn" onclick="pickR(this)">조장</div><div class="r-btn" onclick="pickR(this)">조장대행</div><div class="r-btn" onclick="pickR(this)">기타</div><div class="r-btn" onclick="pickR(this)">차량운행</div><div class="r-btn" onclick="pickR(this)">게스트</div><div class="r-btn" onclick="pickR(this)">열람전용</div></div>
     <div class="err" id="rErr"></div>
     <button class="btn-prim" onclick="subReg()">가입 신청 제출</button>
     <p style="text-align:center;font-size:13px;color:var(--g3);margin-top:11px">승인 후 로그인 가능합니다</p>
@@ -4680,6 +4680,7 @@ function goHomeMain(){
 function go(name){
   if(me&&me.role==='vehicle_guest'&&name!=='veh'&&name!=='login'){ return; }
   if(me&&me.role==='work_vehicle'&&name!=='workveh'&&name!=='login'){ return; }
+  if(me&&me.role==='member'&&['main','notice','chat','iso9001','safety','manual','groupchat','login'].indexOf(name)===-1){ return; }
   if(name==='admin'&&(!me||me.role!=='admin')){ toast('⚠️ 관리자만 접근할 수 있습니다'); return; }
   if(name==='execdash'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='toilet'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
@@ -4867,6 +4868,18 @@ function applyRoleUI(){
     var backBtn=document.getElementById('vehBackBtn');if(backBtn)backBtn.style.display='none';
     var logoutBtn=document.getElementById('vehLogoutBtn');if(logoutBtn)logoutBtn.style.display='block';
     setTimeout(function(){ go('veh'); },100);
+  }
+  // 열람전용 팀원 계정: 홈화면 + 열람·자료 메뉴만, 하단탭도 홈만
+  if(me.role==='member'){
+    document.querySelectorAll('.menu-btn').forEach(function(el){
+      var oc=el.getAttribute('onclick')||'';
+      var isRefMenu=(oc.indexOf("'notice'")!==-1||oc.indexOf("'chat'")!==-1||oc.indexOf("'iso9001'")!==-1||oc.indexOf("'safety'")!==-1||oc.indexOf("'manual'")!==-1||oc.indexOf("'groupchat'")!==-1);
+      el.style.display=isRefMenu?'':'none';
+    });
+    document.querySelectorAll('#globalTabbar .mh-tab-item').forEach(function(el){
+      var oc=el.getAttribute('onclick')||'';
+      el.style.display=(oc.indexOf('goHomeMain')!==-1)?'':'none';
+    });
   }
   // 공사업무용차량 전용 인원(1팀/6팀 운전조): 이 화면만 접근 가능
   if(me.role==='work_vehicle'){
@@ -10669,7 +10682,7 @@ async function subReg(){
     return;
   }
 
-  var roleMap={'팀장':'manager','조장':'leader','조장대행':'acting_leader','기타':'staff','게스트':'guest','차량운행':'work_vehicle'};
+  var roleMap={'팀장':'manager','조장':'leader','조장대행':'acting_leader','기타':'staff','게스트':'guest','차량운행':'work_vehicle','열람전용':'member'};
   var isT1 = (team==='T1운영');
   var finalRole = isT1 ? 'admin' : (roleMap[roleVal]||'staff');
   var finalStatus = 'pending'; // T1운영 포함 모든 가입은 관리자 승인 필요
@@ -10849,7 +10862,7 @@ async function loadUserList(){
   if(!el) return;
   var canMoveTeam=(me&&me.role==='admin'&&me.name==='이동환');
   try{
-    var res=await sb.from('users').select('id,name,email,role,team,permissions,status,created_at').eq('status','active').order('created_at');
+    var res=await sb.from('users').select('id,name,email,role,team,permissions,status,created_at,prev_role').eq('status','active').order('created_at');
     if(res.error) return;
     el.innerHTML='<div class="u-row"><div class="u-info"><div class="u-ico" style="background:var(--navy-bg);color:var(--navy)">최</div><div><div class="u-name">최고관리자</div><div class="u-sub">관리자 · 전체권한</div></div></div><span class="chip chip-ok">활성</span></div>';
     (res.data||[]).forEach(function(u){
@@ -10864,7 +10877,11 @@ async function loadUserList(){
         return '<span style="font-size:12px;padding:2px 8px;border-radius:20px;font-weight:600;background:'+(p[k]?'var(--success-bg)':'var(--g1)')+';color:'+(p[k]?'var(--success)':'var(--g3)')+'">'+labels[k]+'</span>';
       }).join('');
       var moveBtn=canMoveTeam?('<button class="move-btn" data-id="'+u.id+'" data-name="'+u.name+'" data-team="'+u.team+'" style="padding:4px 9px;background:var(--warn-bg,#FFF7E0);color:var(--warn);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔄 이동</button>'):'';
-      row.innerHTML='<div style="display:flex;flex-direction:column;width:100%;gap:5px"><div style="display:flex;align-items:center;justify-content:space-between"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' · '+u.role+'</div></div></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="chip chip-ok">활성</span>'+moveBtn+'<button class="perm-btn" data-name="'+u.name+'" data-id="'+u.id+'" style="padding:4px 9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔐 권한</button><button class="withdraw-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:5px 9px;background:var(--danger-bg);color:var(--danger);border:1.5px solid rgba(217,64,64,.2);border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">탈퇴</button></div></div><div id="perm-'+u.id+'" style="display:flex;flex-wrap:wrap;gap:4px">'+permChips+'</div></div>';
+      var isMemberRole=(u.role==='member');
+      var memberBtn=(me&&me.role==='admin')?('<button class="member-btn" data-id="'+u.id+'" data-name="'+u.name+'" data-cur="'+(isMemberRole?'1':'0')+'" data-role="'+u.role+'" data-prevrole="'+(u.prev_role||'')+'" style="padding:4px 9px;background:'+(isMemberRole?'var(--success-bg)':'var(--g1)')+';color:'+(isMemberRole?'var(--success)':'var(--g5)')+';border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">'+(isMemberRole?'📖 열람전용 해제':'📖 열람전용 전환')+'</button>'):'';
+      row.innerHTML='<div style="display:flex;flex-direction:column;width:100%;gap:5px"><div style="display:flex;align-items:center;justify-content:space-between"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' · '+u.role+'</div></div></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="chip chip-ok">활성</span>'+moveBtn+memberBtn+'<button class="perm-btn" data-name="'+u.name+'" data-id="'+u.id+'" style="padding:4px 9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔐 권한</button><button class="withdraw-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:5px 9px;background:var(--danger-bg);color:var(--danger);border:1.5px solid rgba(217,64,64,.2);border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">탈퇴</button></div></div><div id="perm-'+u.id+'" style="display:flex;flex-wrap:wrap;gap:4px">'+permChips+'</div></div>';
+      var memberBtnEl=row.querySelector('.member-btn');
+      if(memberBtnEl) memberBtnEl.onclick=function(){ toggleMemberRole(this); };
       row.querySelector('.perm-btn').onclick=function(){openPermEdit(this,this.dataset.name,this.dataset.id);};
       row.querySelector('.withdraw-btn').onclick=function(){withdrawUserDB(this.dataset.id,this.dataset.name);};
       if(canMoveTeam){ row.querySelector('.move-btn').onclick=function(){openTeamMove(this.dataset.id,this.dataset.name,this.dataset.team);}; }
@@ -10873,7 +10890,28 @@ async function loadUserList(){
   }catch(e){console.error(e);}
 }
 
-// ─ 팀·조 이동 (인사발령, 관리자 이동환 전용) ─
+// ─ 열람전용(member) 역할 전환/해제 (admin 전용, 원래 직급은 prev_role에 백업 후 해제시 복원) ─
+async function toggleMemberRole(el){
+  if(!me||me.role!=='admin'){ toast('권한이 없습니다'); return; }
+  var id=el.dataset.id, name=el.dataset.name, isCur=el.dataset.cur==='1', curRole=el.dataset.role, prevRole=el.dataset.prevrole;
+  try{
+    var payload;
+    if(isCur){
+      // 해제: 백업해둔 원래 역할로 복원
+      var restoreRole=prevRole||'staff';
+      if(!confirm(name+'님을 열람전용에서 해제하고, 원래 직급("'+restoreRole+'")으로 되돌릴까요?')) return;
+      payload={role:restoreRole, prev_role:null};
+    }else{
+      // 전환: 현재 역할을 prev_role에 백업 후 member로 변경
+      if(!confirm(name+'님을 열람전용 계정으로 전환할까요?\n(홈화면과 열람·자료 메뉴만 보이게 됩니다. 원래 직급은 자동 저장되어 나중에 복원할 수 있습니다)')) return;
+      payload={role:'member', prev_role:curRole};
+    }
+    var res=await sb.from('users').update(payload).eq('id',id);
+    if(res.error){ toast('오류: '+res.error.message); return; }
+    toast('✅ '+name+'님 '+(isCur?'열람전용 해제 완료':'열람전용 전환 완료'));
+    loadUserList();
+  }catch(e){ toast('오류: '+String(e.message||e)); }
+}
 var tmTarget=null, tmSelectedTeam='', tmSelectedRole='';
 var TM_JO_MAP={
   '1팀':['A조','B조','C조','운전'],'2팀':['A조','B조'],'3팀':['A조','B조'],'4팀':['A조','B조'],
