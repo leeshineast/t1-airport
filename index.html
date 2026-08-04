@@ -3226,36 +3226,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       </div>
     </div>
 
-    <div class="fg"><label class="f-lbl">🗂️ 작업 대분류 *</label>
-      <div class="rg" id="jwCatG" style="flex-wrap:wrap;gap:6px"></div>
-    </div>
-
-    <div class="fg" id="jwWorkNameWrap" style="display:none">
-      <label class="f-lbl">✅ 작업명 * <span style="font-weight:400;color:var(--g3)">(검색 가능)</span></label>
-      <input type="text" id="jwWorkSearch" class="ri" placeholder="작업명 검색..." style="margin-bottom:8px" oninput="jwFilterWorkNames()">
-      <div class="rg" id="jwWorkNameG" style="flex-wrap:wrap;gap:6px"></div>
-      <input type="text" id="jwWorkEtc" class="ri" placeholder="기타 전문작업 내용을 직접 입력" style="display:none;margin-top:8px;margin-bottom:0">
-    </div>
-
-    <div class="fg"><label class="f-lbl">🏢 층 선택 *</label>
-      <div class="rg" id="jwFloorG2" style="flex-wrap:wrap;gap:6px">
-        <div class="rp" onclick="pickJwFloor(this)">B2F</div>
-        <div class="rp" onclick="pickJwFloor(this)">B1F</div>
-        <div class="rp" onclick="pickJwFloor(this)">1F</div>
-        <div class="rp" onclick="pickJwFloor(this)">2F</div>
-        <div class="rp" onclick="pickJwFloor(this)">3F</div>
-        <div class="rp" onclick="pickJwFloor(this)">4F</div>
-      </div>
-    </div>
-
-    <div class="fg"><label class="f-lbl">📍 세부위치 * <span style="font-weight:400;color:var(--g3)">(예: R1521 화장실, D~F 입국장)</span></label>
-      <div id="jwLocTop10b" style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:6px;width:100%;box-sizing:border-box"></div>
-      <input type="text" id="jwLocation" class="ri" placeholder="세부위치 입력" style="margin-bottom:0">
-    </div>
-
-    <div class="fg"><label class="f-lbl">👥 투입 인원 * <span style="font-weight:400;color:var(--g3)">(공동작업에 참여한 총 인원수)</span></label>
-      <input id="jwHeadcount" type="number" min="1" inputmode="numeric" class="ri" placeholder="예) 4" style="margin-bottom:0">
-    </div>
+    <div id="jwItemsWrap"></div>
+    <button type="button" onclick="jwAddItemBlock()" style="width:100%;padding:11px;background:var(--g1);border:1.5px dashed var(--g3);border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer;margin-bottom:14px">+ 작업 항목 추가</button>
 
     <div class="fg" style="margin-bottom:0"><label class="f-lbl">비고</label><textarea id="jwNote" class="ri" rows="3" placeholder="특이사항 등 자유롭게 작성" style="resize:vertical"></textarea></div>
 
@@ -7805,9 +7777,8 @@ async function loadWorkVehicleFromDB(){
 var jointWorkData=[];
 var jwEditId=null;
 var jwSelectedTeams=[]; // ['1팀A','2팀B', ...]
-var jwSelectedFloor=''; // 단일 선택으로 변경
-var jwSelectedCategory='';
-var jwSelectedWorkName='';
+var jwItemSeq=0; // 작업 항목 블록 고유번호 발급용
+var jwItemState={}; // {blockId: {category, workNames:[], floor}}
 // 표준 작업 대분류/작업명 (통계 표준화를 위한 고정 목록)
 var JW_CATEGORIES={
   '바닥관리':['바닥 오점 제거','바닥 먼지 제거','바닥 오점·먼지 제거','바닥 정밀 청소','우드바닥 정밀 청소','타일 정밀 청소','습식 청소','건식 청소'],
@@ -7820,57 +7791,144 @@ var JW_CATEGORIES={
   '특수작업':['바닥 왁스 작업','카펫 샴푸 작업','기타 전문작업']
 };
 var JW_CAT_ICONS={'바닥관리':'🧹','화장실관리':'🚻','샤워실관리':'🚿','승강설비관리':'🛗','시설물관리':'🏢','분진관리':'💨','오염관리':'🧽','특수작업':'⭐'};
-function jwBuildCategoryButtons(){
-  var wrap=document.getElementById('jwCatG');
-  if(!wrap||wrap.children.length) return;
+
+// ── 작업 항목 블록 (여러 개 추가 가능, 각 블록: 대분류→작업명(다중선택)→층→세부위치→투입인원) ──
+function jwAddItemBlock(prefill){
+  jwItemSeq++;
+  var bid='jwi'+jwItemSeq;
+  jwItemState[bid]={category:'', workNames:[], floor:''};
+  var wrap=document.getElementById('jwItemsWrap');
+  var div=document.createElement('div');
+  div.id=bid;
+  div.className='jw-item-block';
+  div.style.cssText='background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r2);padding:13px;margin-bottom:12px';
+  var idx=wrap.children.length+1;
+  var h='';
+  h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--navy)">작업 항목 '+idx+'</div>';
+  h+='<button type="button" onclick="jwRemoveItemBlock(\''+bid+'\')" class="jw-remove-btn" style="'+(idx===1?'display:none;':'')+'background:none;border:none;color:var(--danger);font-size:13px;font-weight:700;cursor:pointer">× 삭제</button>';
+  h+='</div>';
+  h+='<div class="fg"><label class="f-lbl">🗂️ 작업 대분류 *</label><div class="rg" id="'+bid+'_catG" style="flex-wrap:wrap;gap:6px"></div></div>';
+  h+='<div class="fg" id="'+bid+'_workWrap" style="display:none">';
+  h+='<label class="f-lbl">✅ 작업명 * <span style="font-weight:400;color:var(--g3)">(여러 개 선택 가능)</span></label>';
+  h+='<input type="text" id="'+bid+'_workSearch" class="ri" placeholder="작업명 검색..." style="margin-bottom:8px" oninput="jwFilterWorkNames(\''+bid+'\')">';
+  h+='<div class="rg" id="'+bid+'_workG" style="flex-wrap:wrap;gap:6px"></div>';
+  h+='<input type="text" id="'+bid+'_workEtc" class="ri" placeholder="기타 전문작업 내용을 직접 입력" style="display:none;margin-top:8px;margin-bottom:0">';
+  h+='</div>';
+  h+='<div class="fg"><label class="f-lbl">🏢 층 선택 *</label><div class="rg" id="'+bid+'_floorG" style="flex-wrap:wrap;gap:6px">';
+  ['B2F','B1F','1F','2F','3F','4F'].forEach(function(f){ h+='<div class="rp" onclick="pickJwFloorInBlock(\''+bid+'\',this)">'+f+'</div>'; });
+  h+='</div></div>';
+  h+='<div class="fg"><label class="f-lbl">📍 세부위치 * <span style="font-weight:400;color:var(--g3)">(예: R1521 화장실)</span></label>';
+  h+='<div id="'+bid+'_locTop" style="display:flex;flex-wrap:wrap;gap:6px;padding-bottom:6px;width:100%;box-sizing:border-box"></div>';
+  h+='<input type="text" id="'+bid+'_loc" class="ri" placeholder="세부위치 입력" style="margin-bottom:0"></div>';
+  h+='<div class="fg" style="margin-bottom:0"><label class="f-lbl">👥 투입 인원 *</label><input type="number" id="'+bid+'_head" min="1" inputmode="numeric" class="ri" placeholder="예) 4" style="margin-bottom:0"></div>';
+  div.innerHTML=h;
+  wrap.appendChild(div);
+  jwBuildCategoryButtonsInBlock(bid);
+  jwFillLocSuggestions(bid);
+  if(prefill){
+    if(prefill.category) jwPickCategoryInBlock(bid, prefill.category, true);
+    if(prefill.workNames&&prefill.workNames.length) prefill.workNames.forEach(function(w){ jwToggleWorkNameInBlockByName(bid, w); });
+    if(prefill.floor){
+      var fBtn=Array.from(document.getElementById(bid+'_floorG').children).find(function(c){return c.textContent.trim()===prefill.floor;});
+      if(fBtn) pickJwFloorInBlock(bid, fBtn);
+    }
+    if(prefill.location) document.getElementById(bid+'_loc').value=prefill.location;
+    if(prefill.headcount) document.getElementById(bid+'_head').value=prefill.headcount;
+  }
+  jwRenumberItemBlocks();
+}
+function jwRemoveItemBlock(bid){
+  var el=document.getElementById(bid);
+  if(el) el.remove();
+  delete jwItemState[bid];
+  jwRenumberItemBlocks();
+}
+function jwRenumberItemBlocks(){
+  var wrap=document.getElementById('jwItemsWrap');
+  var blocks=Array.from(wrap.children);
+  blocks.forEach(function(b,i){
+    var title=b.querySelector('div > div'); // 첫 라벨
+    var labelEl=b.querySelector('div[style*="justify-content:space-between"] > div');
+    if(labelEl) labelEl.textContent='작업 항목 '+(i+1);
+    var rmBtn=b.querySelector('.jw-remove-btn');
+    if(rmBtn) rmBtn.style.display=(blocks.length<=1)?'none':'inline-block';
+  });
+}
+function jwBuildCategoryButtonsInBlock(bid){
+  var wrap=document.getElementById(bid+'_catG');
+  if(!wrap) return;
+  wrap.innerHTML='';
   Object.keys(JW_CATEGORIES).forEach(function(cat){
     var b=document.createElement('div');
     b.className='rp'; b.textContent=(JW_CAT_ICONS[cat]||'')+' '+cat;
-    b.onclick=function(){ pickJwCategory(b,cat); };
+    b.onclick=function(){ jwPickCategoryInBlock(bid,cat); };
     wrap.appendChild(b);
   });
 }
-function pickJwCategory(el,cat){
-  Array.from(document.getElementById('jwCatG').children).forEach(function(c){c.classList.remove('on');});
-  el.classList.add('on');
-  jwSelectedCategory=cat;
-  jwSelectedWorkName='';
-  var searchEl=document.getElementById('jwWorkSearch'); if(searchEl) searchEl.value='';
-  var etcEl=document.getElementById('jwWorkEtc'); if(etcEl){ etcEl.style.display='none'; etcEl.value=''; }
-  document.getElementById('jwWorkNameWrap').style.display='block';
-  jwRenderWorkNames('');
+function jwPickCategoryInBlock(bid,cat){
+  Array.from(document.getElementById(bid+'_catG').children).forEach(function(c){
+    c.classList.toggle('on', c.textContent.trim().indexOf(cat)!==-1);
+  });
+  jwItemState[bid].category=cat;
+  jwItemState[bid].workNames=[];
+  var searchEl=document.getElementById(bid+'_workSearch'); if(searchEl) searchEl.value='';
+  var etcEl=document.getElementById(bid+'_workEtc'); if(etcEl){ etcEl.style.display='none'; etcEl.value=''; }
+  document.getElementById(bid+'_workWrap').style.display='block';
+  jwRenderWorkNamesInBlock(bid,'');
 }
-function jwRenderWorkNames(filterText){
-  var wrap=document.getElementById('jwWorkNameG');
+function jwRenderWorkNamesInBlock(bid,filterText){
+  var wrap=document.getElementById(bid+'_workG');
   if(!wrap) return;
-  var list=JW_CATEGORIES[jwSelectedCategory]||[];
+  var state=jwItemState[bid];
+  var list=JW_CATEGORIES[state.category]||[];
   if(filterText) list=list.filter(function(w){ return w.indexOf(filterText)!==-1; });
   wrap.innerHTML='';
   list.forEach(function(w){
     var b=document.createElement('div');
     b.className='rp'; b.textContent=w;
-    if(w===jwSelectedWorkName) b.classList.add('on');
-    b.onclick=function(){ pickJwWorkName(b,w); };
+    if(state.workNames.indexOf(w)!==-1) b.classList.add('on');
+    b.onclick=function(){ jwToggleWorkNameInBlock(bid,w,b); };
     wrap.appendChild(b);
   });
   if(!list.length){ wrap.innerHTML='<div style="font-size:12px;color:var(--g4);padding:6px">검색 결과가 없습니다</div>'; }
 }
-function jwFilterWorkNames(){
-  var v=document.getElementById('jwWorkSearch').value.trim();
-  jwRenderWorkNames(v);
+function jwFilterWorkNames(bid){
+  var v=document.getElementById(bid+'_workSearch').value.trim();
+  jwRenderWorkNamesInBlock(bid,v);
 }
-function pickJwWorkName(el,w){
-  Array.from(document.getElementById('jwWorkNameG').children).forEach(function(c){c.classList.remove('on');});
-  el.classList.add('on');
-  jwSelectedWorkName=w;
-  var etcEl=document.getElementById('jwWorkEtc');
-  if(w==='기타 전문작업'){ if(etcEl){ etcEl.style.display='block'; etcEl.focus(); } }
-  else{ if(etcEl){ etcEl.style.display='none'; etcEl.value=''; } }
+function jwToggleWorkNameInBlock(bid,w,el){
+  var state=jwItemState[bid];
+  var idx=state.workNames.indexOf(w);
+  if(idx>=0){ state.workNames.splice(idx,1); el.classList.remove('on'); }
+  else{ state.workNames.push(w); el.classList.add('on'); }
+  var etcEl=document.getElementById(bid+'_workEtc');
+  var hasEtc=state.workNames.indexOf('기타 전문작업')!==-1;
+  if(etcEl){
+    etcEl.style.display=hasEtc?'block':'none';
+    if(hasEtc) etcEl.focus(); else etcEl.value='';
+  }
 }
-function pickJwFloor(el){
-  Array.from(document.getElementById('jwFloorG2').children).forEach(function(c){c.classList.remove('on');});
+function jwToggleWorkNameInBlockByName(bid,w){
+  var wrap=document.getElementById(bid+'_workG');
+  var btn=Array.from(wrap.children).find(function(c){return c.textContent.trim()===w;});
+  if(btn) jwToggleWorkNameInBlock(bid,w,btn);
+}
+function pickJwFloorInBlock(bid,el){
+  Array.from(document.getElementById(bid+'_floorG').children).forEach(function(c){c.classList.remove('on');});
   el.classList.add('on');
-  jwSelectedFloor=el.textContent.trim();
+  jwItemState[bid].floor=el.textContent.trim();
+}
+function jwFillLocSuggestions(bid){
+  if(!window._jwTopLocs||!window._jwTopLocs.length) return;
+  var wrap=document.getElementById(bid+'_locTop');
+  if(!wrap) return;
+  wrap.innerHTML='';
+  window._jwTopLocs.forEach(function(l){
+    var c=document.createElement('div'); c.className='chip-quick'; c.textContent='📍'+l;
+    c.onclick=function(){ document.getElementById(bid+'_loc').value=l; };
+    wrap.appendChild(c);
+  });
 }
 
 function selRP(el){
@@ -7880,7 +7938,6 @@ function selRP(el){
 }
 function jwTab(n){
   tabSwitch('jw',n,4);
-  if(n===0) jwBuildCategoryButtons();
   if(n===1) renderJointWorkList();
   if(n===2) jwRenderStats();
   if(n===3){
@@ -7975,30 +8032,18 @@ async function loadJwSuggestions(){
     res.data.forEach(function(r){
       if(r.location) locCount[r.location]=(locCount[r.location]||0)+1;
     });
-    var topLocs=Object.keys(locCount).sort(function(a,b){return locCount[b]-locCount[a];}).slice(0,8);
-    var locWrap=document.getElementById('jwLocTop10b');
-    if(locWrap){
-      locWrap.innerHTML='';
-      topLocs.forEach(function(l){
-        var c=document.createElement('div'); c.className='chip-quick'; c.textContent='📍'+l;
-        c.onclick=function(){ document.getElementById('jwLocation').value=l; };
-        locWrap.appendChild(c);
-      });
-    }
+    window._jwTopLocs=Object.keys(locCount).sort(function(a,b){return locCount[b]-locCount[a];}).slice(0,8);
+    // 이미 화면에 있는 블록들에도 반영
+    Object.keys(jwItemState||{}).forEach(function(bid){ jwFillLocSuggestions(bid); });
   }catch(e){}
 }
 function jwResetForm(){
   jwEditId=null;
-  document.getElementById('jwHeadcount').value='';
   document.getElementById('jwNote').value='';
-  document.getElementById('jwLocation').value='';
-  var etcEl=document.getElementById('jwWorkEtc'); if(etcEl){ etcEl.style.display='none'; etcEl.value=''; }
-  var searchEl=document.getElementById('jwWorkSearch'); if(searchEl) searchEl.value='';
-  document.getElementById('jwWorkNameWrap').style.display='none';
+  document.getElementById('jwItemsWrap').innerHTML='';
+  jwItemState={};
   Array.from(document.getElementById('jwTeamG').children).forEach(function(c){c.classList.remove('on');});
-  Array.from(document.getElementById('jwCatG').children).forEach(function(c){c.classList.remove('on');});
-  Array.from(document.getElementById('jwFloorG2').children).forEach(function(c){c.classList.remove('on');});
-  jwSelectedTeams=[]; jwSelectedFloor=''; jwSelectedCategory=''; jwSelectedWorkName='';
+  jwSelectedTeams=[];
   // 로그인한 사용자의 팀·조 자동 선택 (요청 7-②③: 팀/조 자동)
   try{
     if(me&&me.team){
@@ -8012,38 +8057,65 @@ function jwResetForm(){
   jwUpdateWeekday();
   jwUpdateShiftBadge();
   var saveBtn=document.querySelector('#jwP0 .btn-prim'); if(saveBtn) saveBtn.textContent='저장';
+  jwAddItemBlock(); // 항목 1개는 기본 표시
 }
 async function subJointWork(){
   if(!canWrite()) return;
   var date=document.getElementById('jwDate').value;
-  var headcount=parseInt(document.getElementById('jwHeadcount').value)||0;
-  var location=document.getElementById('jwLocation').value.trim();
   var note=document.getElementById('jwNote').value.trim();
   var shift=jwUpdateShiftBadge();
-  var workName=jwSelectedWorkName;
-  if(workName==='기타 전문작업'){
-    var etcVal=document.getElementById('jwWorkEtc').value.trim();
-    if(!etcVal){ toast('기타 전문작업 내용을 입력해주세요'); return; }
-    workName=etcVal;
-  }
   if(!date){ toast('일자를 입력해주세요'); return; }
   if(!jwSelectedTeams.length){ toast('팀·조를 1개 이상 선택해주세요'); return; }
-  if(!jwSelectedCategory){ toast('작업 대분류를 선택해주세요'); return; }
-  if(!workName){ toast('작업명을 선택해주세요'); return; }
-  if(!jwSelectedFloor){ toast('층을 선택해주세요'); return; }
-  if(!location){ toast('세부위치를 입력해주세요'); return; }
-  if(!headcount||headcount<1){ toast('투입 인원을 입력해주세요'); return; }
-  var payload={
-    work_date:date, teams:jwSelectedTeams, floors:[jwSelectedFloor], headcount:headcount,
-    category:jwSelectedCategory, work_name:workName, shift:shift, location:location,
-    note:note||null, writer:me?me.name:''
-  };
+
+  var blockIds=Object.keys(jwItemState);
+  if(!blockIds.length){ toast('작업 항목을 1개 이상 입력해주세요'); return; }
+
+  // 각 블록 검증 + payload용 원자료 수집
+  var items=[];
+  for(var i=0;i<blockIds.length;i++){
+    var bid=blockIds[i];
+    var st=jwItemState[bid];
+    var idxLabel=(i+1);
+    var loc=document.getElementById(bid+'_loc').value.trim();
+    var head=parseInt(document.getElementById(bid+'_head').value)||0;
+    if(!st.category){ toast('작업 항목 '+idxLabel+': 작업 대분류를 선택해주세요'); return; }
+    if(!st.workNames.length){ toast('작업 항목 '+idxLabel+': 작업명을 1개 이상 선택해주세요'); return; }
+    if(!st.floor){ toast('작업 항목 '+idxLabel+': 층을 선택해주세요'); return; }
+    if(!loc){ toast('작업 항목 '+idxLabel+': 세부위치를 입력해주세요'); return; }
+    if(!head||head<1){ toast('작업 항목 '+idxLabel+': 투입 인원을 입력해주세요'); return; }
+    var workNamesFinal=st.workNames.map(function(w){
+      if(w==='기타 전문작업'){
+        var etcVal=document.getElementById(bid+'_workEtc').value.trim();
+        return etcVal||null;
+      }
+      return w;
+    });
+    if(workNamesFinal.indexOf(null)!==-1){ toast('작업 항목 '+idxLabel+': 기타 전문작업 내용을 입력해주세요'); return; }
+    items.push({category:st.category, workNames:workNamesFinal, floor:st.floor, location:loc, headcount:head});
+  }
+
+  // 항목당 선택된 작업명 개수만큼 row 생성 (통계 정확성을 위해 1행=1작업)
+  var rows=[];
+  items.forEach(function(it){
+    it.workNames.forEach(function(wn){
+      rows.push({
+        work_date:date, teams:jwSelectedTeams, floors:[it.floor], headcount:it.headcount,
+        category:it.category, work_name:wn, shift:shift, location:it.location,
+        note:note||null, writer:me?me.name:''
+      });
+    });
+  });
+
   try{
     var res;
-    if(jwEditId){ res=await sb.from('joint_work_data').update(payload).eq('id',jwEditId); }
-    else{ res=await sb.from('joint_work_data').insert(payload); }
+    if(jwEditId){
+      // 수정 모드: 항목 1개만 지원(단일 row update)
+      res=await sb.from('joint_work_data').update(rows[0]).eq('id',jwEditId);
+    }else{
+      res=await sb.from('joint_work_data').insert(rows);
+    }
     if(res.error){ toast('저장 오류: '+res.error.message); return; }
-    toast(jwEditId?'✅ 수정되었습니다':'✅ 저장되었습니다');
+    toast(jwEditId?'✅ 수정되었습니다':'✅ '+rows.length+'건 저장되었습니다');
     jwResetForm();
     await loadJointWorkFromDB();
     loadJointWorkTodayFromDB();
@@ -8150,40 +8222,26 @@ function openJwEdit(id){
   Array.from(document.getElementById('jwTeamG').children).forEach(function(c){
     c.classList.toggle('on', jwSelectedTeams.indexOf(c.textContent.trim())!==-1);
   });
-  jwBuildCategoryButtons();
-  jwSelectedCategory=r.category||'';
-  Array.from(document.getElementById('jwCatG').children).forEach(function(c){
-    c.classList.toggle('on', c.textContent.trim().indexOf(r.category)!==-1);
-  });
-  document.getElementById('jwWorkNameWrap').style.display=jwSelectedCategory?'block':'none';
-  jwSelectedWorkName='';
-  jwRenderWorkNames('');
-  var stdNames=JW_CATEGORIES[jwSelectedCategory]||[];
+  document.getElementById('jwItemsWrap').innerHTML='';
+  jwItemState={};
+  var stdNames=JW_CATEGORIES[r.category]||[];
   var isStd=stdNames.indexOf(r.work_name)!==-1;
-  if(isStd){
-    jwSelectedWorkName=r.work_name;
-    Array.from(document.getElementById('jwWorkNameG').children).forEach(function(c){
-      c.classList.toggle('on', c.textContent.trim()===r.work_name);
-    });
-  }else{
-    // 기타 전문작업으로 저장된 자유텍스트
-    jwSelectedWorkName='기타 전문작업';
-    Array.from(document.getElementById('jwWorkNameG').children).forEach(function(c){
-      c.classList.toggle('on', c.textContent.trim()==='기타 전문작업');
-    });
-    var etcEl=document.getElementById('jwWorkEtc');
-    if(etcEl){ etcEl.style.display='block'; etcEl.value=r.work_name||''; }
-  }
-  jwSelectedFloor=(r.floors&&r.floors[0])||'';
-  Array.from(document.getElementById('jwFloorG2').children).forEach(function(c){
-    c.classList.toggle('on', c.textContent.trim()===jwSelectedFloor);
+  jwAddItemBlock({
+    category:r.category,
+    workNames:isStd?[r.work_name]:['기타 전문작업'],
+    floor:(r.floors&&r.floors[0])||'',
+    location:r.location||'',
+    headcount:r.headcount||''
   });
-  document.getElementById('jwLocation').value=r.location||'';
-  document.getElementById('jwHeadcount').value=r.headcount||'';
+  if(!isStd){
+    var bid=Object.keys(jwItemState)[0];
+    var etcEl=document.getElementById(bid+'_workEtc');
+    if(etcEl) etcEl.value=r.work_name||'';
+  }
   document.getElementById('jwNote').value=r.note||'';
   var saveBtn=document.querySelector('#jwP0 .btn-prim'); if(saveBtn) saveBtn.textContent='수정 저장';
   jwTab(0);
-  toast('수정 모드');
+  toast('수정 모드 (항목 1개만 수정 가능합니다)');
 }
 async function deleteJw(id){
   if(!canWrite()) return;
@@ -8384,7 +8442,6 @@ function jwRenderStats(){
 }
 function loadJointWorkScreen(){
   jwResetForm();
-  jwBuildCategoryButtons();
   loadJwSuggestions();
   loadJointWorkFromDB();
   var now=new Date(Date.now()+9*3600000);
