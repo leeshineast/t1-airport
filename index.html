@@ -4873,7 +4873,7 @@ function applyRoleUI(){
   if(me.role==='member'){
     document.querySelectorAll('.menu-btn').forEach(function(el){
       var oc=el.getAttribute('onclick')||'';
-      var isRefMenu=(oc.indexOf("'notice'")!==-1||oc.indexOf("'chat'")!==-1||oc.indexOf("'iso9001'")!==-1||oc.indexOf("'safety'")!==-1||oc.indexOf("'manual'")!==-1||oc.indexOf("'groupchat'")!==-1);
+      var isRefMenu=(oc.indexOf("'chat'")!==-1||oc.indexOf("'iso9001'")!==-1||oc.indexOf("'safety'")!==-1||oc.indexOf("'manual'")!==-1||oc.indexOf("'groupchat'")!==-1);
       el.style.display=isRefMenu?'':'none';
     });
     document.querySelectorAll('#globalTabbar .mh-tab-item').forEach(function(el){
@@ -4971,7 +4971,7 @@ function finishLogin(){
   var ldl2=document.getElementById('leaderDateLbl2');if(ldl2)ldl2.textContent=now2.toLocaleDateString('ko-KR');
   var vn=document.getElementById('vhName');if(vn)vn.value=me?me.name:'';
   var vd=document.getElementById('vhDept');if(vd)vd.value=me?(me.team||''):'';
-  setTimeout(function(){try{showNotice();}catch(e){}},1500);
+  if(!(me&&me.role==='member')){setTimeout(function(){try{showNotice();}catch(e){}},1500);}
   toast('어서오세요, '+(me?me.name:'')+'님!');
   if(!IS_LOCAL){loadHoList();}
   // Supabase에서 데이터 로드
