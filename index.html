@@ -7430,26 +7430,55 @@ function renderWorkVehList(data){
     updateWvStats(filtered);
     return;
   }
+  // 날짜별 그룹화 → 각 날짜 안에서 차량별 그룹화(타임테이블) → 시간순 정렬
+  var byDate={};
+  filtered.forEach(function(r){ (byDate[r.date]=byDate[r.date]||[]).push(r); });
+  var dates=Object.keys(byDate).sort(function(a,b){ return b.localeCompare(a); }); // 최신 날짜 먼저
+  var wd=['일','월','화','수','목','금','토'];
   var h='';
-  filtered.forEach(function(r){
-    var extraH='';
-    if(r.co_rider) extraH+='<div style="margin-top:4px;font-size:13px;color:var(--navy)">🧑‍🤝‍🧑 선탑자: '+r.co_rider+'</div>';
-    if(r.fuel) extraH+='<div style="margin-top:4px;font-size:13px;color:var(--teal2)">⛽ 주유: '+r.fuel+'</div>';
-    var etcH=r.etc?'<div style="margin-top:5px;font-size:13px;color:var(--warn);font-weight:600">📝 '+r.etc+'</div>':'';
-    h+='<div style="background:white;border-radius:var(--r);margin:0 13px 10px;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--g2);overflow:hidden">';
-    h+='<div style="background:var(--navy-bg);padding:10px 13px;display:flex;align-items:center;justify-content:space-between">';
-    h+='<div style="display:flex;align-items:center;gap:8px"><span style="font-size:14px;font-weight:800;color:var(--navy)">'+r.date+'</span>';
-    h+='<span style="background:var(--navy);color:white;border-radius:20px;padding:2px 9px;font-size:12px;font-weight:700">'+r.name+'</span>';
-    h+='<span style="background:var(--teal2);color:white;border-radius:20px;padding:2px 9px;font-size:12px;font-weight:700">🚛 '+(r.vehicle||'')+'</span></div>';
-    h+='<span style="font-size:15px;font-weight:900;color:var(--teal2)">'+(r.dist||0).toLocaleString()+'km</span></div>';
-    h+='<div style="padding:10px 13px">';
-    h+='<div style="display:flex;gap:5px;align-items:center;margin-bottom:6px">';
-    h+='<span style="font-size:13px;color:var(--g4)">📍</span><span style="font-size:15px;font-weight:600;color:var(--g6)">'+r.dest+'</span>';
-    h+='<span style="font-size:13px;color:var(--g3)"> — </span><span style="font-size:14px;color:var(--g5)">'+r.purpose+'</span></div>';
-    h+='<div style="display:flex;gap:12px;font-size:13px;color:var(--g4)"><span>'+r.start+' ~ '+r.end+'</span><span>계기 '+(r.before||0).toLocaleString()+'→'+(r.after||0).toLocaleString()+'km</span></div>';
-    h+=extraH+etcH;
-    h+='<div style="margin-top:8px;text-align:right;display:flex;gap:6px;justify-content:flex-end"><button onclick="openWvEdit('+r.id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:13px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button><button onclick="deleteWv('+r.id+')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:13px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제</button></div>';
-    h+='</div></div>';
+  dates.forEach(function(d){
+    var dayRows=byDate[d];
+    var dayLabel=d+'('+wd[new Date(d+'T00:00:00').getDay()]+')';
+    var dayDist=dayRows.reduce(function(s,r){return s+(r.dist||0);},0);
+    h+='<div style="margin:0 13px 6px;padding-top:4px"><span style="font-size:14px;font-weight:900;color:var(--g7)">📅 '+dayLabel+'</span><span style="font-size:12px;color:var(--g4);margin-left:8px">총 '+dayRows.length+'회 · '+dayDist.toLocaleString()+'km</span></div>';
+    // 차량별 그룹화(타임테이블)
+    var byVeh={};
+    dayRows.forEach(function(r){ (byVeh[r.vehicle||'미지정']=byVeh[r.vehicle||'미지정']||[]).push(r); });
+    var vehKeys=Object.keys(byVeh).sort();
+    vehKeys.forEach(function(veh){
+      var trips=byVeh[veh].slice().sort(function(a,b){ return (a.start||'').localeCompare(b.start||''); });
+      var vehDist=trips.reduce(function(s,r){return s+(r.dist||0);},0);
+      h+='<div style="background:white;border-radius:var(--r);margin:0 13px 10px;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--g2);overflow:hidden">';
+      h+='<div style="background:var(--navy-bg);padding:9px 13px;display:flex;align-items:center;justify-content:space-between">';
+      h+='<span style="background:var(--teal2);color:white;border-radius:20px;padding:2px 10px;font-size:12.5px;font-weight:700">🚛 '+veh+'</span>';
+      h+='<span style="font-size:12px;color:var(--navy);font-weight:700">'+trips.length+'회 · '+vehDist.toLocaleString()+'km</span>';
+      h+='</div>';
+      h+='<div style="padding:4px 13px 6px">';
+      trips.forEach(function(r,i){
+        var extraH='';
+        if(r.co_rider) extraH+='<div style="margin-top:3px;font-size:12px;color:var(--navy)">🧑‍🤝‍🧑 선탑자: '+r.co_rider+'</div>';
+        if(r.fuel) extraH+='<div style="margin-top:3px;font-size:12px;color:var(--teal2)">⛽ 주유: '+r.fuel+'</div>';
+        var etcH=r.etc?'<div style="margin-top:3px;font-size:12px;color:var(--warn);font-weight:600">📝 '+r.etc+'</div>':'';
+        h+='<div style="display:flex;gap:10px;padding:9px 0;'+(i<trips.length-1?'border-bottom:1px dashed var(--g1)':'')+'">';
+        // 타임라인 축
+        h+='<div style="flex:none;width:52px;text-align:center;padding-top:2px">';
+        h+='<div style="font-size:12px;font-weight:800;color:var(--navy)">'+(r.start||'')+'</div>';
+        h+='<div style="width:1.5px;height:14px;background:var(--g2);margin:2px auto"></div>';
+        h+='<div style="font-size:12px;font-weight:800;color:var(--g5)">'+(r.end||'')+'</div>';
+        h+='</div>';
+        // 상세 내용
+        h+='<div style="flex:1;min-width:0">';
+        h+='<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px">';
+        h+='<div style="font-size:14px;font-weight:700;color:var(--g6)">📍'+(r.dest||'')+' <span style="font-weight:400;color:var(--g4);font-size:12.5px">— '+(r.purpose||'')+'</span></div>';
+        h+='<span style="flex:none;font-size:13px;font-weight:900;color:var(--teal2)">'+(r.dist||0).toLocaleString()+'km</span>';
+        h+='</div>';
+        h+='<div style="font-size:11.5px;color:var(--g4);margin-top:2px">'+r.name+' · 계기 '+(r.before||0).toLocaleString()+'→'+(r.after||0).toLocaleString()+'km</div>';
+        h+=extraH+etcH;
+        h+='<div style="margin-top:6px;text-align:right;display:flex;gap:6px;justify-content:flex-end"><button onclick="openWvEdit('+r.id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button><button onclick="deleteWv('+r.id+')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제</button></div>';
+        h+='</div></div>';
+      });
+      h+='</div></div>';
+    });
   });
   list.innerHTML=h;updateWvStats(filtered);
 }
