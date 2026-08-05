@@ -11772,28 +11772,28 @@ function downloadHoExcel(){
       hoRows.push([
         (r.ho_date||r.created_at)?toKSTDate(r.ho_date||r.created_at):'',
         r.shift||'',r.to_shift||'',r.author||'',r.team||'',
-        (fp&&fp.loc)||'', (fp&&fp.desc)||'', (fp&&fp.type)||'', receiver,
+        (fp&&fp.loc)||'', (fp&&fp.desc)||'', (fp&&fp.type)||'', (fp&&fp.reporter)||'', receiver,
         r.notice||'',
         r.confirmed?'확인':'대기',r.confirmed_by||''
       ]);
     });
     var hoRange=(typeof dlDateRangeStr==='function')?dlDateRangeStr(hoExport.map(function(r){return r.ho_date||r.created_at;})):'';
-    var hoHead1=['날짜','인계조','인수조','작성자','팀','시설물','','','','업무내용','확인여부','확인자'];
-    var hoHead2=['','','','','','장소','내용','신고','접수자','','',''];
+    var hoHead1=['날짜','인계조','인수조','작성자','팀','시설물','','','','','업무내용','확인여부','확인자'];
+    var hoHead2=['','','','','','장소','내용','신고유형','신고자','접수자','','',''];
     var hoOut=[['T1환경미화사업부 인수인계 현황'],[hoRange],hoHead1,hoHead2].concat(hoRows);
     var ws=XLSX.utils.aoa_to_sheet(hoOut);
     ws['!merges']=[
-      {s:{r:0,c:0},e:{r:0,c:11}}, {s:{r:1,c:0},e:{r:1,c:11}},
+      {s:{r:0,c:0},e:{r:0,c:12}}, {s:{r:1,c:0},e:{r:1,c:12}},
       {s:{r:2,c:0},e:{r:3,c:0}}, {s:{r:2,c:1},e:{r:3,c:1}}, {s:{r:2,c:2},e:{r:3,c:2}},
       {s:{r:2,c:3},e:{r:3,c:3}}, {s:{r:2,c:4},e:{r:3,c:4}},
-      {s:{r:2,c:5},e:{r:2,c:8}},
-      {s:{r:2,c:9},e:{r:3,c:9}}, {s:{r:2,c:10},e:{r:3,c:10}}, {s:{r:2,c:11},e:{r:3,c:11}}
+      {s:{r:2,c:5},e:{r:2,c:9}},
+      {s:{r:2,c:10},e:{r:3,c:10}}, {s:{r:2,c:11},e:{r:3,c:11}}, {s:{r:2,c:12},e:{r:3,c:12}}
     ];
-    ws['!cols']=[{wch:11},{wch:9},{wch:9},{wch:9},{wch:9},{wch:18},{wch:20},{wch:8},{wch:9},{wch:16},{wch:8},{wch:9}];
-    XLSX.utils.book_append_sheet(wb,'인수인계',ws);
+    ws['!cols']=[{wch:11},{wch:9},{wch:9},{wch:9},{wch:9},{wch:18},{wch:20},{wch:8},{wch:9},{wch:9},{wch:16},{wch:8},{wch:9}];
+    XLSX.utils.book_append_sheet(wb,ws,'인수인계');
 
     var now=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-    XLSX.writeFile(wb,'인수인계_'+now+'.xlsx');
+    XLSX.writeFile(wb,'T1_인수인계_'+now+'.xlsx');
     toast('✅ 인수인계 엑셀 다운로드 완료');
   }catch(e){ toast('다운로드 오류: '+e.message); }
 }
@@ -12916,12 +12916,15 @@ function downloadAccidentExcel(){
   }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
 
-function downloadLostExcel(){
+async function downloadLostExcel(){
   if(!canDownload()) return;
   if(!lostData||!lostData.length){ toast('다운로드할 데이터가 없습니다'); return; }
   var filterMonth=document.getElementById('lostFilterMonth');
   var mf=filterMonth?filterMonth.value:'';
-  var rows=[['접수일시','발견자사번','발견자이름','발견위치','접수경로','물품내용','상태','처리내용','기타']];
+  var luRes=await sb.from('users').select('name,team');
+  var writerTeamMap={};
+  (luRes.data||[]).forEach(function(u){ if(u.name&&!writerTeamMap[u.name]) writerTeamMap[u.name]=u.team||''; });
+  var rows=[['접수일시','작성자','팀·조','발견자사번','발견자이름','발견위치','접수경로','물품내용','상태','처리내용','기타']];
   var filtered=lostData.filter(function(r){
     if(mf&&toKSTDate(r.found_date||r.created_at).slice(0,7)!==mf) return false;
     return true;
@@ -12929,23 +12932,24 @@ function downloadLostExcel(){
   filtered.forEach(function(r){
     rows.push([
       toKSTDateTime(r.created_at),
+      r.writer||'', (r.writer&&writerTeamMap[r.writer])||'',
       r.finder_id||'',
       r.finder_name||'',
       r.location||'',
       r.receipt_route||'',
       r.item||'',
       r.status||'',
-      r.complete_memo||'',
+      r.status_detail||r.note||'',
       r.note||''
     ]);
   });
   try{
     var wb=XLSX.utils.book_new();
     var range=(typeof dlDateRangeStr==='function')?dlDateRangeStr(filtered.map(function(r){return r.created_at;})):'';
-    var wrap=(typeof dlWithTitle==='function')?dlWithTitle(rows,'T1환경미화사업부 습득물 처리현황',range,9):{rows:rows,merges:[]};
+    var wrap=(typeof dlWithTitle==='function')?dlWithTitle(rows,'T1환경미화사업부 습득물 처리현황',range,11):{rows:rows,merges:[]};
     var ws=XLSX.utils.aoa_to_sheet(wrap.rows);
     ws['!merges']=wrap.merges;
-    ws['!cols']=[{wch:18},{wch:10},{wch:12},{wch:20},{wch:16},{wch:24},{wch:10},{wch:20},{wch:16}];
+    ws['!cols']=[{wch:18},{wch:10},{wch:10},{wch:10},{wch:12},{wch:20},{wch:16},{wch:24},{wch:10},{wch:20},{wch:16}];
     XLSX.utils.book_append_sheet(wb,ws,'습득물');
     var fname='T1_습득물관리'+(mf?'_'+mf:'')+'.xlsx';
     XLSX.writeFile(wb,fname);
