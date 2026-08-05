@@ -5079,13 +5079,18 @@ async function doLogin(){
     var rows=res.data;
     if(!rows||!rows.length){toast('아이디 또는 비밀번호를 확인해주세요');return;}
     var u=rows[0];
-    me={name:u.name,role:u.role,team:u.team,initial:u.name[0],email:u.email,permissions:u.permissions,id:u.id};
+    me={name:u.name,role:u.role,team:u.team,initial:u.name[0],email:u.email,permissions:u.permissions,id:u.id,font_scale:100};
+    try{
+      var fsRes=await sb.from('users').select('font_scale').eq('id',u.id).single();
+      if(fsRes.data&&fsRes.data.font_scale) me.font_scale=fsRes.data.font_scale;
+    }catch(e){}
     finishLogin();
   }catch(e){toast('오류: '+e.message);}
 }
 
 function finishLogin(){
   applyRoleUI();
+  applyFontScale();
   var gt=document.getElementById('globalTabbar'); if(gt) gt.style.display='flex';
   // 세션 저장 (새로고침 시 자동 로그인)
   try{ localStorage.setItem('t1_me', JSON.stringify(me)); }catch(e){}
@@ -5142,6 +5147,10 @@ function showInfo(){
     +'<div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--navy));display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:900;color:white">'+me.initial+'</div>'
     +'<div><div style="font-size:19px;font-weight:800;color:var(--g7)">'+me.name+'</div>'
     +'<div style="font-size:14px;color:var(--g4)">'+me.team+' · '+roleLabel+'</div></div></div>'
+    +'<div style="background:var(--g1);border-radius:var(--r2);padding:12px;margin-bottom:12px">'
+    +'<div style="font-size:13px;font-weight:800;color:var(--g6);margin-bottom:8px">🔤 글씨 크기</div>'
+    +'<div id="fontScaleBtns" style="display:flex;gap:6px"></div>'
+    +'</div>'
     +'<button onclick="closeMy();showM(&quot;pwChangeModal&quot;)" style="width:100%;padding:11px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer;margin-bottom:8px">🔒 비밀번호 변경</button>'
     +'<button onclick="closeMy();doLogout()" style="width:100%;padding:11px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">로그아웃</button>'
     +'</div>';
@@ -5152,7 +5161,35 @@ function showInfo(){
     document.body.appendChild(m);
   }
   document.getElementById('myInfoBody').innerHTML=html;
+  renderFontScaleBtns();
   showM('myInfoModal');
+}
+var FONT_SCALE_STEPS=[90,100,110,120,130];
+function renderFontScaleBtns(){
+  var wrap=document.getElementById('fontScaleBtns'); if(!wrap) return;
+  var cur=(me&&me.font_scale)?me.font_scale:100;
+  wrap.innerHTML='';
+  FONT_SCALE_STEPS.forEach(function(pct){
+    var b=document.createElement('button');
+    var on=(cur===pct);
+    b.textContent=(pct===100?'기본':pct+'%');
+    b.style.cssText='flex:1;padding:9px 0;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer;border:1.5px solid '+(on?'var(--teal)':'var(--g2)')+';background:'+(on?'var(--teal-bg)':'white')+';color:'+(on?'var(--teal2)':'var(--g5)');
+    b.onclick=function(){ setFontScale(pct); };
+    wrap.appendChild(b);
+  });
+}
+async function setFontScale(pct){
+  if(!me) return;
+  me.font_scale=pct;
+  applyFontScale();
+  renderFontScaleBtns();
+  try{ localStorage.setItem('t1_me', JSON.stringify(me)); }catch(e){}
+  try{ await sb.from('users').update({font_scale:pct}).eq('id',me.id); }catch(e){}
+  toast('✓ 글씨 크기가 '+(pct===100?'기본값':pct+'%')+'으로 저장되었습니다');
+}
+function applyFontScale(){
+  var scale=(me&&me.font_scale)?me.font_scale:100;
+  document.body.style.zoom=(scale/100);
 }
 function closeMy(){hideM('myInfoModal');}
 function goReg(){go('reg');}
@@ -14764,6 +14801,7 @@ async function refreshMpDataLight(){
     if(saved){
       me = JSON.parse(saved);
       applyRoleUI();
+      applyFontScale();
       var gt0=document.getElementById('globalTabbar'); if(gt0) gt0.style.display='flex';
       // 메모리 초기화 먼저 (어제 데이터 화면 노출 방지)
       mpDataByLeader={오전:{},오후:{},야간:{}};
