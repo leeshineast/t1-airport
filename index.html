@@ -3277,11 +3277,6 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       </div>
     </div>
 
-    <div class="fg" id="jwSchedWrap" style="display:none">
-      <label class="f-lbl">📋 우리 팀 사전등록 작업 <span style="font-weight:400;color:var(--g3)">(탭하면 자동으로 항목 추가)</span></label>
-      <div id="jwSchedList" style="display:flex;flex-direction:column;gap:6px"></div>
-    </div>
-
     <div id="jwItemsWrap"></div>
     <button type="button" onclick="jwAddItemBlock()" style="width:100%;padding:11px;background:var(--g1);border:1.5px dashed var(--g3);border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer;margin-bottom:14px">+ 작업 항목 추가</button>
 
@@ -3337,14 +3332,6 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       </div>
       <button class="btn-prim" onclick="dlJointWork()">📥 공동작업 기록 다운로드 (xlsx)</button>
       <div style="margin-top:10px;font-size:13px;color:var(--g4);text-align:center" id="jwDlInfo"></div>
-    </div></div>
-
-    <div class="card" id="jwSchedAdminCard" style="display:none;margin-top:13px"><div class="cb">
-      <h3 style="font-size:15px;margin-bottom:6px">📋 사전등록 작업 스케줄 관리</h3>
-      <p style="font-size:13px;color:var(--g5);line-height:1.7;margin-bottom:10px">팀별 순환 작업을 엑셀로 업로드하면, 작성자가 공동작업 입력 시 팀을 선택하고 바로 탭해서 항목을 자동 채울 수 있습니다.<br>양식: <b>팀 | 대분류 | 작업명 | 세부내역 | 층 | 세부위치</b><br>팀 값 예시: 1팀A, 1팀B, 2팀A ...</p>
-      <input type="file" id="jwSchedFileInput" accept=".xlsx,.xls" onchange="jwSchedUpload(this)" style="width:100%;padding:10px;border:2px dashed var(--g2);border-radius:var(--r2);font-size:14px;background:var(--g1);margin-bottom:10px">
-      <div id="jwSchedAdminList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
-      <button class="btn-prim" style="background:var(--danger)" onclick="jwSchedClearAll()">🗑️ 전체 스케줄 삭제</button>
     </div></div>
     <div style="height:20px"></div>
   </div>
@@ -7911,7 +7898,7 @@ var jointWorkData=[];
 var jwEditId=null;
 var jwSelectedTeams=[]; // ['1팀A','2팀B', ...]
 var jwItemSeq=0; // 작업 항목 블록 고유번호 발급용
-var jwItemState={}; // {blockId: {categories:[], workSel:[{cat,name}], floor}}
+var jwItemState={}; // {blockId: {category, workNames:[], floor}}
 // 표준 작업 대분류/작업명 (통계 표준화를 위한 고정 목록)
 var JW_CATEGORIES={
   '바닥관리':['바닥 오점 제거','바닥 먼지 제거','바닥 오점·먼지 제거','바닥 정밀 청소','우드바닥 정밀 청소','타일 정밀 청소','습식 청소','건식 청소'],
@@ -7929,12 +7916,11 @@ var JW_CAT_ICONS={'바닥관리':'🧹','화장실관리':'🚻','샤워실관�
 function jwAddItemBlock(prefill){
   jwItemSeq++;
   var bid='jwi'+jwItemSeq;
-  jwItemState[bid]={categories:[], workSel:[], floor:''};
+  jwItemState[bid]={category:'', workNames:[], floor:''};
   var wrap=document.getElementById('jwItemsWrap');
   var div=document.createElement('div');
   div.id=bid;
   div.className='jw-item-block';
-  if(prefill&&prefill.schedId) div.setAttribute('data-sched-id',String(prefill.schedId));
   div.style.cssText='background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r2);padding:13px;margin-bottom:12px';
   var idx=wrap.children.length+1;
   var h='';
@@ -7942,7 +7928,7 @@ function jwAddItemBlock(prefill){
   h+='<div style="font-size:13px;font-weight:800;color:var(--navy)">작업 항목 '+idx+'</div>';
   h+='<button type="button" onclick="jwRemoveItemBlock(\''+bid+'\')" class="jw-remove-btn" style="'+(idx===1?'display:none;':'')+'background:none;border:none;color:var(--danger);font-size:13px;font-weight:700;cursor:pointer">× 삭제</button>';
   h+='</div>';
-  h+='<div class="fg"><label class="f-lbl">🗂️ 작업 대분류 * <span style="font-weight:400;color:var(--g3)">(여러 개 선택 가능)</span></label><div class="rg" id="'+bid+'_catG" style="flex-wrap:wrap;gap:6px"></div></div>';
+  h+='<div class="fg"><label class="f-lbl">🗂️ 작업 대분류 *</label><div class="rg" id="'+bid+'_catG" style="flex-wrap:wrap;gap:6px"></div></div>';
   h+='<div class="fg" id="'+bid+'_workWrap" style="display:none">';
   h+='<label class="f-lbl">✅ 작업명 * <span style="font-weight:400;color:var(--g3)">(여러 개 선택 가능)</span></label>';
   h+='<input type="text" id="'+bid+'_workSearch" class="ri" placeholder="작업명 검색..." style="margin-bottom:8px" oninput="jwFilterWorkNames(\''+bid+'\')">';
@@ -7961,8 +7947,8 @@ function jwAddItemBlock(prefill){
   jwBuildCategoryButtonsInBlock(bid);
   jwFillLocSuggestions(bid);
   if(prefill){
-    if(prefill.category){ jwToggleCategoryInBlock(bid, prefill.category); }
-    if(prefill.workNames&&prefill.workNames.length) prefill.workNames.forEach(function(w){ jwToggleWorkNameInBlock(bid, prefill.category, w); });
+    if(prefill.category) jwPickCategoryInBlock(bid, prefill.category, true);
+    if(prefill.workNames&&prefill.workNames.length) prefill.workNames.forEach(function(w){ jwToggleWorkNameInBlockByName(bid, w); });
     if(prefill.floor){
       var fBtn=Array.from(document.getElementById(bid+'_floorG').children).find(function(c){return c.textContent.trim()===prefill.floor;});
       if(fBtn) pickJwFloorInBlock(bid, fBtn);
@@ -7974,14 +7960,7 @@ function jwAddItemBlock(prefill){
 }
 function jwRemoveItemBlock(bid){
   var el=document.getElementById(bid);
-  if(el){
-    var schedId=el.getAttribute('data-sched-id');
-    if(schedId){
-      var idx=jwSelectedSchedIds.indexOf(Number(schedId));
-      if(idx>=0){ jwSelectedSchedIds.splice(idx,1); jwRenderScheduleSuggestions(); }
-    }
-    el.remove();
-  }
+  if(el) el.remove();
   delete jwItemState[bid];
   jwRenumberItemBlocks();
 }
@@ -8000,103 +7979,60 @@ function jwBuildCategoryButtonsInBlock(bid){
   var wrap=document.getElementById(bid+'_catG');
   if(!wrap) return;
   wrap.innerHTML='';
-  var state=jwItemState[bid];
-  var extraCats=(state?state.categories:[]).filter(function(c){return !JW_CATEGORIES[c];});
-  Object.keys(JW_CATEGORIES).concat(extraCats).forEach(function(cat){
+  Object.keys(JW_CATEGORIES).forEach(function(cat){
     var b=document.createElement('div');
-    b.className='rp'; b.textContent=(JW_CAT_ICONS[cat]||'🆕')+' '+cat;
-    b.onclick=function(){ jwToggleCategoryInBlock(bid,cat); };
+    b.className='rp'; b.textContent=(JW_CAT_ICONS[cat]||'')+' '+cat;
+    b.onclick=function(){ jwPickCategoryInBlock(bid,cat); };
     wrap.appendChild(b);
   });
-  var addBtn=document.createElement('div');
-  addBtn.className='rp'; addBtn.style.cssText='border-style:dashed;color:var(--g5)';
-  addBtn.textContent='+ 직접 입력';
-  addBtn.onclick=function(){
-    var v=prompt('목록에 없는 작업 대분류를 입력해주세요');
-    if(v&&v.trim()) jwToggleCategoryInBlock(bid,v.trim());
-  };
-  wrap.appendChild(addBtn);
 }
-function jwToggleCategoryInBlock(bid,cat){
-  var state=jwItemState[bid];
-  var idx=state.categories.indexOf(cat);
-  var catWrap=document.getElementById(bid+'_catG');
-  var btn=Array.from(catWrap.children).find(function(c){return c.textContent.trim().indexOf(cat)!==-1;});
-  if(!btn && idx<0){
-    // 목록에 없는 사용자 정의 대분류(사전등록 스케줄 등) → 버튼 동적 생성
-    btn=document.createElement('div');
-    btn.className='rp'; btn.textContent=(JW_CAT_ICONS[cat]||'🆕')+' '+cat;
-    btn.onclick=function(){ jwToggleCategoryInBlock(bid,cat); };
-    var addBtnEl=Array.from(catWrap.children).find(function(c){return c.textContent.trim()==='+ 직접 입력';});
-    if(addBtnEl) catWrap.insertBefore(btn,addBtnEl); else catWrap.appendChild(btn);
-  }
-  if(idx>=0){
-    state.categories.splice(idx,1);
-    if(btn) btn.classList.remove('on');
-    // 선택 해제된 대분류에 속한 작업명 선택도 함께 제거
-    state.workSel=state.workSel.filter(function(s){return s.cat!==cat;});
-  }else{
-    state.categories.push(cat);
-    if(btn) btn.classList.add('on');
-  }
+function jwPickCategoryInBlock(bid,cat){
+  Array.from(document.getElementById(bid+'_catG').children).forEach(function(c){
+    c.classList.toggle('on', c.textContent.trim().indexOf(cat)!==-1);
+  });
+  jwItemState[bid].category=cat;
+  jwItemState[bid].workNames=[];
   var searchEl=document.getElementById(bid+'_workSearch'); if(searchEl) searchEl.value='';
-  document.getElementById(bid+'_workWrap').style.display=state.categories.length?'block':'none';
+  var etcEl=document.getElementById(bid+'_workEtc'); if(etcEl){ etcEl.style.display='none'; etcEl.value=''; }
+  document.getElementById(bid+'_workWrap').style.display='block';
   jwRenderWorkNamesInBlock(bid,'');
-  jwSyncEtcVisibility(bid);
 }
 function jwRenderWorkNamesInBlock(bid,filterText){
   var wrap=document.getElementById(bid+'_workG');
   if(!wrap) return;
   var state=jwItemState[bid];
+  var list=JW_CATEGORIES[state.category]||[];
+  if(filterText) list=list.filter(function(w){ return w.indexOf(filterText)!==-1; });
   wrap.innerHTML='';
-  var any=false;
-  state.categories.forEach(function(cat){
-    var list=(JW_CATEGORIES[cat]||[]).slice();
-    // 사전등록 스케줄 등으로 표준목록에 없는 작업명이 이미 선택되어 있으면 함께 표시
-    state.workSel.forEach(function(s){ if(s.cat===cat && list.indexOf(s.name)===-1) list.push(s.name); });
-    if(filterText) list=list.filter(function(w){ return w.indexOf(filterText)!==-1; });
-    list.forEach(function(w){
-      any=true;
-      var b=document.createElement('div');
-      b.className='rp'; b.textContent=(JW_CAT_ICONS[cat]||'')+' '+w;
-      if(state.workSel.some(function(s){return s.cat===cat&&s.name===w;})) b.classList.add('on');
-      b.onclick=function(){ jwToggleWorkNameInBlock(bid,cat,w,b); };
-      wrap.appendChild(b);
-    });
+  list.forEach(function(w){
+    var b=document.createElement('div');
+    b.className='rp'; b.textContent=w;
+    if(state.workNames.indexOf(w)!==-1) b.classList.add('on');
+    b.onclick=function(){ jwToggleWorkNameInBlock(bid,w,b); };
+    wrap.appendChild(b);
   });
-  if(!any){ wrap.innerHTML='<div style="font-size:12px;color:var(--g4);padding:6px">'+(state.categories.length?'검색 결과가 없습니다':'대분류를 먼저 선택해주세요')+'</div>'; }
-  if(state.categories.length){
-    var addBtn=document.createElement('div');
-    addBtn.className='rp'; addBtn.style.cssText='border-style:dashed;color:var(--g5)';
-    addBtn.textContent='+ 직접 입력';
-    addBtn.onclick=function(){
-      var targetCat=state.categories.length===1?state.categories[0]:prompt('어느 대분류에 추가할까요?\n('+state.categories.join(', ')+')', state.categories[0]);
-      if(!targetCat||state.categories.indexOf(targetCat)===-1){ if(targetCat) toast('선택된 대분류 중에서 입력해주세요'); return; }
-      var v=prompt('목록에 없는 작업명을 입력해주세요');
-      if(v&&v.trim()){ jwToggleWorkNameInBlock(bid,targetCat,v.trim()); jwRenderWorkNamesInBlock(bid,''); }
-    };
-    wrap.appendChild(addBtn);
-  }
+  if(!list.length){ wrap.innerHTML='<div style="font-size:12px;color:var(--g4);padding:6px">검색 결과가 없습니다</div>'; }
 }
 function jwFilterWorkNames(bid){
   var v=document.getElementById(bid+'_workSearch').value.trim();
   jwRenderWorkNamesInBlock(bid,v);
 }
-function jwToggleWorkNameInBlock(bid,cat,w,el){
+function jwToggleWorkNameInBlock(bid,w,el){
   var state=jwItemState[bid];
-  var idx=state.workSel.findIndex(function(s){return s.cat===cat&&s.name===w;});
-  if(idx>=0){ state.workSel.splice(idx,1); if(el) el.classList.remove('on'); }
-  else{ state.workSel.push({cat:cat,name:w}); if(el) el.classList.add('on'); }
-  jwSyncEtcVisibility(bid);
-}
-function jwSyncEtcVisibility(bid){
-  var state=jwItemState[bid];
+  var idx=state.workNames.indexOf(w);
+  if(idx>=0){ state.workNames.splice(idx,1); el.classList.remove('on'); }
+  else{ state.workNames.push(w); el.classList.add('on'); }
   var etcEl=document.getElementById(bid+'_workEtc');
-  var hasEtc=state.workSel.some(function(s){return s.name==='기타 전문작업';});
+  var hasEtc=state.workNames.indexOf('기타 전문작업')!==-1;
   if(etcEl){
     etcEl.style.display=hasEtc?'block':'none';
     if(hasEtc) etcEl.focus(); else etcEl.value='';
   }
+}
+function jwToggleWorkNameInBlockByName(bid,w){
+  var wrap=document.getElementById(bid+'_workG');
+  var btn=Array.from(wrap.children).find(function(c){return c.textContent.trim()===w;});
+  if(btn) jwToggleWorkNameInBlock(bid,w,btn);
 }
 function pickJwFloorInBlock(bid,el){
   Array.from(document.getElementById(bid+'_floorG').children).forEach(function(c){c.classList.remove('on');});
@@ -8130,11 +8066,6 @@ function jwTab(n){
     var vf=document.getElementById('jwDlFrom'), vt=document.getElementById('jwDlTo');
     if(vf&&!vf.value) vf.value=tm;
     if(vt&&!vt.value) vt.value=tm;
-    var schedCard=document.getElementById('jwSchedAdminCard');
-    if(schedCard){
-      schedCard.style.display=(me&&(me.role==='admin'||me.role==='manager'))?'block':'none';
-      if(schedCard.style.display==='block') jwRenderScheduleAdminList();
-    }
   }
 }
 function setJwRange(el,range){
@@ -8184,7 +8115,6 @@ function jwToggleTeam(el,code){
   var idx=jwSelectedTeams.indexOf(code);
   if(idx>=0){ jwSelectedTeams.splice(idx,1); el.classList.remove('on'); }
   else{ jwSelectedTeams.push(code); el.classList.add('on'); }
-  jwRenderScheduleSuggestions();
 }
 function jwUpdateWeekday(){
   var d=document.getElementById('jwDate').value;
@@ -8229,7 +8159,6 @@ async function loadJwSuggestions(){
 }
 function jwResetForm(){
   jwEditId=null;
-  jwSelectedSchedIds=[];
   document.getElementById('jwNote').value='';
   document.getElementById('jwItemsWrap').innerHTML='';
   jwItemState={};
@@ -8269,30 +8198,29 @@ async function subJointWork(){
     var idxLabel=(i+1);
     var loc=document.getElementById(bid+'_loc').value.trim();
     var head=parseInt(document.getElementById(bid+'_head').value)||0;
-    if(!st.categories.length){ toast('작업 항목 '+idxLabel+': 작업 대분류를 선택해주세요'); return; }
-    if(!st.workSel.length){ toast('작업 항목 '+idxLabel+': 작업명을 1개 이상 선택해주세요'); return; }
+    if(!st.category){ toast('작업 항목 '+idxLabel+': 작업 대분류를 선택해주세요'); return; }
+    if(!st.workNames.length){ toast('작업 항목 '+idxLabel+': 작업명을 1개 이상 선택해주세요'); return; }
     if(!st.floor){ toast('작업 항목 '+idxLabel+': 층을 선택해주세요'); return; }
     if(!loc){ toast('작업 항목 '+idxLabel+': 세부위치를 입력해주세요'); return; }
     if(!head||head<1){ toast('작업 항목 '+idxLabel+': 투입 인원을 입력해주세요'); return; }
-    var selFinal=st.workSel.map(function(s){
-      var nm=s.name;
-      if(nm==='기타 전문작업'){
+    var workNamesFinal=st.workNames.map(function(w){
+      if(w==='기타 전문작업'){
         var etcVal=document.getElementById(bid+'_workEtc').value.trim();
-        nm=etcVal||null;
+        return etcVal||null;
       }
-      return {cat:s.cat, name:nm};
+      return w;
     });
-    if(selFinal.some(function(s){return s.name===null;})){ toast('작업 항목 '+idxLabel+': 기타 전문작업 내용을 입력해주세요'); return; }
-    items.push({selections:selFinal, floor:st.floor, location:loc, headcount:head});
+    if(workNamesFinal.indexOf(null)!==-1){ toast('작업 항목 '+idxLabel+': 기타 전문작업 내용을 입력해주세요'); return; }
+    items.push({category:st.category, workNames:workNamesFinal, floor:st.floor, location:loc, headcount:head});
   }
 
-  // 항목당 선택된 (대분류,작업명) 조합 개수만큼 row 생성 (통계 정확성을 위해 1행=1작업)
+  // 항목당 선택된 작업명 개수만큼 row 생성 (통계 정확성을 위해 1행=1작업)
   var rows=[];
   items.forEach(function(it){
-    it.selections.forEach(function(sel){
+    it.workNames.forEach(function(wn){
       rows.push({
         work_date:date, teams:jwSelectedTeams, floors:[it.floor], headcount:it.headcount,
-        category:sel.cat, work_name:sel.name, shift:shift, location:it.location,
+        category:it.category, work_name:wn, shift:shift, location:it.location,
         note:note||null, writer:me?me.name:''
       });
     });
@@ -8301,7 +8229,6 @@ async function subJointWork(){
   try{
     var res;
     if(jwEditId){
-      if(rows.length!==1){ toast('⚠️ 수정 모드에서는 대분류·작업명을 1개씩만 선택해주세요 (여러 개는 새 항목으로 등록해주세요)'); return; }
       // 수정 모드: 항목 1개만 지원(단일 row update)
       res=await sb.from('joint_work_data').update(rows[0]).eq('id',jwEditId);
     }else{
@@ -8314,114 +8241,6 @@ async function subJointWork(){
     loadJointWorkTodayFromDB();
     jwTab(1);
   }catch(e){ toast('저장 오류: '+String(e.message||e)); }
-}
-function jwSchedUpload(inputEl){
-  var file=inputEl.files[0]; if(!file) return;
-  var reader=new FileReader();
-  reader.onload=async function(e){
-    try{
-      var wb=XLSX.read(e.target.result,{type:'binary'});
-      var ws=wb.Sheets[wb.SheetNames[0]];
-      var rows=XLSX.utils.sheet_to_json(ws,{defval:''});
-      if(!rows.length){ toast('엑셀에 데이터가 없습니다'); return; }
-      var payload=rows.map(function(r){
-        return {
-          team:String(r['팀']||'').trim(), category:String(r['대분류']||'').trim(),
-          work_name:String(r['작업명']||'').trim(), detail:String(r['세부내역']||'').trim(),
-          floor:String(r['층']||'').trim(), location:String(r['세부위치']||'').trim(),
-          updated_by:me?me.name:''
-        };
-      }).filter(function(r){return r.team&&r.category&&r.work_name;});
-      if(!payload.length){ toast('⚠️ 팀·대분류·작업명이 비어있는 행이 많습니다. 양식을 확인해주세요'); return; }
-      var res=await sb.from('joint_work_schedule').insert(payload);
-      if(res.error){ toast('업로드 오류: '+res.error.message); return; }
-      toast('✓ '+payload.length+'건 등록되었습니다');
-      inputEl.value='';
-      await loadJointWorkSchedule();
-      jwRenderScheduleAdminList();
-    }catch(err){ toast('엑셀 처리 오류: '+String(err.message||err)); }
-  };
-  reader.readAsBinaryString(file);
-}
-function jwRenderScheduleAdminList(){
-  var box=document.getElementById('jwSchedAdminList'); if(!box) return;
-  if(!jwScheduleData.length){ box.innerHTML='<div style="font-size:12px;color:var(--g4);padding:6px">등록된 스케줄이 없습니다</div>'; return; }
-  var byTeam={};
-  jwScheduleData.forEach(function(s){ (byTeam[s.team]=byTeam[s.team]||[]).push(s); });
-  var h='';
-  Object.keys(byTeam).sort().forEach(function(team){
-    h+='<div style="font-size:12px;font-weight:800;color:var(--navy);margin-top:6px">'+team+' ('+byTeam[team].length+'건)</div>';
-    byTeam[team].forEach(function(s){
-      h+='<div style="display:flex;justify-content:space-between;align-items:center;background:white;border:1px solid var(--g2);border-radius:8px;padding:7px 10px;font-size:12.5px">';
-      h+='<span>'+s.category+' · '+s.work_name+(s.location?' · '+s.location:'')+'</span>';
-      h+='<button onclick="jwSchedDelete('+s.id+')" style="background:none;border:none;color:var(--danger);font-size:12px;font-weight:700;cursor:pointer">삭제</button>';
-      h+='</div>';
-    });
-  });
-  box.innerHTML=h;
-}
-async function jwSchedDelete(id){
-  if(!confirm('이 스케줄 항목을 삭제할까요?')) return;
-  var res=await sb.from('joint_work_schedule').delete().eq('id',id);
-  if(res.error){ toast('삭제 실패: '+res.error.message); return; }
-  toast('✓ 삭제되었습니다');
-  await loadJointWorkSchedule();
-  jwRenderScheduleAdminList();
-}
-async function jwSchedClearAll(){
-  if(!jwScheduleData.length){ toast('삭제할 스케줄이 없습니다'); return; }
-  if(!confirm('등록된 스케줄 '+jwScheduleData.length+'건을 전부 삭제할까요? 되돌릴 수 없습니다.')) return;
-  var res=await sb.from('joint_work_schedule').delete().neq('id',0);
-  if(res.error){ toast('삭제 실패: '+res.error.message); return; }
-  toast('✓ 전체 삭제되었습니다');
-  await loadJointWorkSchedule();
-  jwRenderScheduleAdminList();
-}
-var jwScheduleData=[];
-async function loadJointWorkSchedule(){
-  try{
-    var res=await sb.from('joint_work_schedule').select('*').order('team');
-    if(res.error){ console.error(res.error); return; }
-    jwScheduleData=res.data||[];
-    jwRenderScheduleSuggestions();
-  }catch(e){}
-}
-var jwSelectedSchedIds=[];
-function jwRenderScheduleSuggestions(){
-  var wrap=document.getElementById('jwSchedWrap'); var listEl=document.getElementById('jwSchedList');
-  if(!wrap||!listEl) return;
-  if(!jwSelectedTeams.length||!jwScheduleData.length){ wrap.style.display='none'; return; }
-  var matched=jwScheduleData.filter(function(s){ return jwSelectedTeams.indexOf(s.team)!==-1; });
-  if(!matched.length){ wrap.style.display='none'; return; }
-  wrap.style.display='block';
-  listEl.innerHTML='';
-  matched.forEach(function(s){
-    var on=jwSelectedSchedIds.indexOf(s.id)!==-1;
-    var card=document.createElement('div');
-    card.style.cssText='background:'+(on?'var(--teal)':'var(--teal-bg)')+';border:1.5px solid var(--teal);border-radius:var(--r2);padding:10px 12px;cursor:pointer';
-    card.innerHTML='<div style="font-size:12px;font-weight:800;color:'+(on?'#fff':'var(--teal2)')+'">'+(on?'✓ ':'')+s.team+' · '+s.category+' · '+s.work_name+'</div>'
-      +'<div style="font-size:11.5px;color:'+(on?'rgba(255,255,255,.85)':'var(--g5)')+';margin-top:2px">'+(s.detail?s.detail+' · ':'')+(s.floor||'')+' '+(s.location||'')+'</div>';
-    card.onclick=function(){ jwApplySchedule(s); };
-    listEl.appendChild(card);
-  });
-}
-function jwApplySchedule(s){
-  var idx=jwSelectedSchedIds.indexOf(s.id);
-  if(idx>=0){
-    // 이미 선택된 항목 재탭 → 선택 해제 + 해당 블록 제거
-    jwSelectedSchedIds.splice(idx,1);
-    var blockEl=document.querySelector('.jw-item-block[data-sched-id="'+s.id+'"]');
-    if(blockEl){ jwRemoveItemBlock(blockEl.id); }
-  }else{
-    jwSelectedSchedIds.push(s.id);
-    jwAddItemBlock({
-      category:s.category, workNames:[s.work_name],
-      floor:s.floor||'', location:(s.location||'')+(s.detail?(' ('+s.detail+')'):''),
-      schedId:s.id
-    });
-    toast('✓ 항목이 추가되었습니다 · 투입인원을 입력해주세요');
-  }
-  jwRenderScheduleSuggestions();
 }
 async function loadJointWorkFromDB(){
   try{
@@ -8745,7 +8564,6 @@ function loadJointWorkScreen(){
   jwResetForm();
   loadJwSuggestions();
   loadJointWorkFromDB();
-  loadJointWorkSchedule();
   var now=new Date(Date.now()+9*3600000);
   var tm=now.getUTCFullYear()+'-'+jwPad(now.getUTCMonth()+1);
   var mf=document.getElementById('jwFilterMonth'); if(mf) mf.value=tm;
