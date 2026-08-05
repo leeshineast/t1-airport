@@ -123,6 +123,7 @@ textarea:focus{border-color:var(--sky)}
 .prn .lf{text-align:left;white-space:normal}
 .prn .bx{color:#c00;font-weight:700}
 .prn .ok{color:#047857;font-weight:700;text-align:left}
+.prn .loclg{font-size:11.5pt;font-weight:800}
 #printArea{display:none}
 @media print{
   body>*{display:none !important}
@@ -762,12 +763,8 @@ function loadMasters(){
       EQUIPS=Array.isArray(d)?d:[];
       document.getElementById('cntEquip').textContent=EQUIPS.length+'대';
     }),
-    sbFetch('/facility_data?select=data&facility_type=eq.%ED%9C%B4%EA%B2%8C%EC%8B%9C%EC%84%A4&order=upload_date.desc&limit=1').then(function(r){return r.json();}).then(function(d){
-      RESTS=[];
-      try{
-        var det=d[0]&&d[0].data&&d[0].data.restDetail;
-        if(Array.isArray(det))RESTS=det;
-      }catch(e){}
+    sbFetch('/rest_facility_master?select=*&active=eq.true&order=zone,location').then(function(r){return r.json();}).then(function(d){
+      RESTS=Array.isArray(d)?d:[];
       document.getElementById('cntRest').textContent=RESTS.length?RESTS.length+'개소':'목록 없음';
     }),
     sbFetch('/baby_room_master?select=*&active=eq.true&order=floor,location').then(function(r){return r.json();}).then(function(d){
@@ -872,7 +869,7 @@ function openMod(mod){
 // ─ 화장실 ─
 function fillToiletFloors(){
   var sel=document.getElementById('tFloor'); sel.innerHTML='';
-  var floors=['1F','2F','3F','4F','B1F','B2F'];
+  var floors=['1층','2층','3층','4층','지하1층','지하2층'];
   for(var i=0;i<floors.length;i++){var o=document.createElement('option');o.value=floors[i];o.textContent=floors[i];sel.appendChild(o);}
 }
 function toiletTeamOk(t){
@@ -946,23 +943,20 @@ function toiletLabel(t){
 // ─ 휴게시설 ─
 function fillRestList(){
   var sel=document.getElementById('rSel'); sel.innerHTML='';
-  if(!RESTS.length){var o=document.createElement('option');o.value='';o.textContent='휴게시설 목록 없음 (시설현황 업로드 필요)';sel.appendChild(o);return;}
+  if(!RESTS.length){var o=document.createElement('option');o.value='';o.textContent='휴게시설 목록 없음 (시설관리에서 먼저 등록해주세요)';sel.appendChild(o);return;}
   var team=document.getElementById('selTeam').value;
-  var idxList=[];
-  for(var i=0;i<RESTS.length;i++){
-    var tm=String(RESTS[i].team||'');
-    if(team==='관리팀'||!tm||tm.indexOf(team)>=0||tm.indexOf(team.replace('팀',''))===0)idxList.push(i);
-  }
-  if(!idxList.length){ for(var j=0;j<RESTS.length;j++)idxList.push(j); }
-  for(var k=0;k<idxList.length;k++){
-    var r=RESTS[idxList[k]];
-    var label=(r.loc||'')+' '+(r.num||'')+' '+(r.area?'· '+r.area:'')+(r.gender?' ('+r.gender+')':'');
-    var o=document.createElement('option'); o.value=idxList[k]; o.textContent=label.trim(); sel.appendChild(o);
-  }
+  var list=RESTS.filter(function(r){
+    var tm=String(r.use_team||'');
+    return team==='관리팀'||!tm||tm.indexOf(team)>=0||tm.indexOf(team.replace('팀',''))===0;
+  });
+  if(!list.length) list=RESTS;
+  list.forEach(function(r){
+    var o=document.createElement('option'); o.value=r.id; o.textContent=restLabel(r); sel.appendChild(o);
+  });
 }
-function restLabel(i){
-  var r=RESTS[i]; if(!r)return '휴게시설';
-  return ((r.loc||'')+' '+(r.num||'')+(r.gender?' ('+r.gender+')':'')).trim();
+function restLabel(r){
+  if(!r) return '휴게시설';
+  return ((r.zone==='Airside'?'A/S':'L/S')+' '+(r.location||'')+' '+(r.number||'')+(r.gender?' ('+r.gender+')':'')).trim();
 }
 
 // ─ 유아휴게실 ─
@@ -1161,7 +1155,8 @@ function targetInfo(){
   if(curMod==='rest'){
     var i=document.getElementById('rSel').value;
     if(i==='')return null;
-    return {target_id:String(i), target_label:restLabel(Number(i))};
+    var rr=RESTS.find(function(x){return String(x.id)===String(i);});
+    return {target_id:String(i), target_label:restLabel(rr)};
   }
   if(curMod==='baby'){
     var bid=document.getElementById('bbSel').value;
@@ -1804,7 +1799,7 @@ function fillPrTargets(){
   if(mod==='pbb'){ fillPrDays(); }
   function addGroup(label){ var g=document.createElement('optgroup'); g.label=label; sel.appendChild(g); return g; }
   if(mod==='toilet'){
-    var floors=['1F','2F','3F','4F','B1F','B2F'];
+    var floors=['1층','2층','3층','4층','지하1층','지하2층'];
     floors.forEach(function(fl){
       var list=TOILETS.filter(function(t){return t.floor===fl;});
       if(!list.length)return;
@@ -1816,9 +1811,9 @@ function fillPrTargets(){
       });
     });
   }else if(mod==='rest'){
-    RESTS.forEach(function(r,i){
-      var o=document.createElement('option'); o.value=String(i);
-      o.textContent=((r.loc||'')+' '+(r.num||'')+(r.gender?' ('+r.gender+')':'')).trim();
+    RESTS.forEach(function(r){
+      var o=document.createElement('option'); o.value=String(r.id);
+      o.textContent=restLabel(r);
       sel.appendChild(o);
     });
     if(!RESTS.length){var o0=document.createElement('option');o0.value='';o0.textContent='목록 없음';sel.appendChild(o0);}
@@ -1971,8 +1966,8 @@ function buildBabyDoc(records, locLabel, mi, appr){
   var rows=[];
   rows.push([{v:'유아휴게실 점검 체크리스트 ('+mi.label+')',cs:W,cls:'tt'}]);
   rows.push([
-    {v:'위치',cls:'hd'},{v:locLabel,cs:W-3,cls:'lf'},
-    {v:appr?'확인':'범례',cls:'hd'},{v:appr?sigCellText(appr):'○양호 X보통 △불량',cls:appr?'ok':'lf'}
+    {v:'위치',cls:'hd'},{v:locLabel,cs:W-4,cls:'lf loclg'},
+    {v:appr?'확인':'범례',cls:'hd'},{v:appr?sigCellText(appr):'○양호 X보통 △불량',cs:2,cls:appr?'ok':'lf'}
   ]);
   var hd=[{v:'일자',cls:'hd'},{v:'시간',cls:'hd'}];
   items.forEach(function(it){hd.push({v:it,cls:'hd'});});
@@ -1995,7 +1990,7 @@ function buildBabyDoc(records, locLabel, mi, appr){
     row.push({v:r.inspector||''});
     rows.push(row);
   });
-  var cols=[6,9]; items.forEach(function(){cols.push(11);}); cols.push(11);
+  var cols=[6,16]; items.forEach(function(){cols.push(8);}); cols.push(11);
   return {rows:rows, cols:cols, orient:'portrait', title:'유아휴게실 점검 체크리스트',
     fname:'유아휴게실점검_'+locLabel.replace(/[\/\s]/g,'')+'_'+mi.y+'-'+String(mi.m).padStart(2,'0')};
 }
@@ -2142,7 +2137,7 @@ function buildDoc(records, mod, tid, mi, appr, workerOverride){
     return buildGridDoc('화장실 점검표', toiletLabel(t)||('ID '+tid), MOD_META.toilet.items, '○양호 △보통 X불량 －해당없음', records, mi, appr);
   }
   if(mod==='rest'){
-    return buildGridDoc('휴게시설 관리 점검표', restLabel(Number(tid)), MOD_META.rest.items, '○적합 △미흡 ×부적합 －해당없음', records, mi, appr);
+    return buildGridDoc('휴게시설 관리 점검표', restLabel(RESTS.find(function(x){return String(x.id)===String(tid);})), MOD_META.rest.items, '○적합 △미흡 ×부적합 －해당없음', records, mi, appr);
   }
   if(mod==='baby'){
     var br=BABYROOMS.find(function(x){return String(x.id)===String(tid);})||{};
@@ -2216,8 +2211,9 @@ function docToSheet(doc){
       var addr=XLSX.utils.encode_cell({r:r,c:c});
       if(!ws[addr])ws[addr]={t:'s',v:''};
       var cls=clsMap[r+'_'+c]||'';
+      var isLf=cls.indexOf('lf')>=0, isOk=cls.indexOf('ok')>=0, isLoc=cls.indexOf('loclg')>=0;
       var s={
-        alignment:{horizontal:(cls==='lf'||cls==='ok')?'left':'center',vertical:'center',wrapText:(cls==='lf'||cls==='ok')},
+        alignment:{horizontal:(isLf||isOk)?'left':'center',vertical:'center',wrapText:(isLf||isOk)},
         font:{sz:9,name:'맑은 고딕'}
       };
       if(cls==='tt'){
@@ -2225,9 +2221,10 @@ function docToSheet(doc){
         s.alignment={horizontal:'center',vertical:'center'};
       }else{
         s.border={top:bd,bottom:bd,left:bd,right:bd};
-        if(cls==='hd'){ s.font.bold=true; s.fill={patternType:'solid',fgColor:{rgb:'FFF0F0F0'}}; s.alignment.wrapText=true; }
-        if(cls==='bx'){ s.font.bold=true; s.font.color={rgb:'FFCC0000'}; }
-        if(cls==='ok'){ s.font.bold=true; s.font.color={rgb:'FF047857'}; }
+        if(cls.indexOf('hd')>=0){ s.font.bold=true; s.fill={patternType:'solid',fgColor:{rgb:'FFF0F0F0'}}; s.alignment.wrapText=true; }
+        if(cls.indexOf('bx')>=0){ s.font.bold=true; s.font.color={rgb:'FFCC0000'}; }
+        if(isOk){ s.font.bold=true; s.font.color={rgb:'FF047857'}; }
+        if(isLoc){ s.font.bold=true; s.font.sz=12; }
       }
       ws[addr].s=s;
     }
