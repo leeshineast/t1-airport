@@ -10920,13 +10920,31 @@ async function loadUserList(){
       el.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:13px">⚠️ 사용자 목록을 불러오지 못했습니다: '+res.error.message+'<br><button onclick="loadUserList()" style="margin-top:8px;padding:6px 14px;background:var(--g1);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔄 다시 시도</button></div>';
       return;
     }
-    el.innerHTML='<div class="u-row"><div class="u-info"><div class="u-ico" style="background:var(--navy-bg);color:var(--navy)">최</div><div><div class="u-name">최고관리자</div><div class="u-sub">관리자 · 전체권한</div></div></div><span class="chip chip-ok">활성</span></div>';
-    (res.data||[]).forEach(function(u){
+    el.innerHTML='';
+    var ROLE_GROUPS=[
+      {role:'admin', label:'👑 admin (최고관리자)'},
+      {role:'manager', label:'📋 팀장'},
+      {role:'leader', label:'🏷️ 조장'},
+      {role:'acting_leader', label:'🔄 조장대행'},
+      {role:'work_vehicle', label:'🚗 차량운행'},
+      {role:'guest', label:'👤 게스트'},
+      {role:'member', label:'📖 열람전용'}
+    ];
+    var users=res.data||[];
+    var knownRoles=ROLE_GROUPS.map(function(g){return g.role;});
+    var etcUsers=users.filter(function(u){return knownRoles.indexOf(u.role)===-1;});
+    if(etcUsers.length) ROLE_GROUPS.push({role:'__etc__', label:'❓ 기타/미분류'});
+    function sectionHeader(label,count){
+      var h=document.createElement('div');
+      h.style.cssText='padding:10px 14px 6px;font-size:12.5px;font-weight:800;color:var(--g5);background:var(--g1);border-top:1px solid var(--g2)';
+      h.textContent=label+' ('+count+'명)';
+      return h;
+    }
+    function renderRow(u){
       var row=document.createElement('div');
       row.className='u-row';
       var p={};
       try{ p=typeof u.permissions==='string'?JSON.parse(u.permissions):(u.permissions||{}); }catch(e){ p={}; }
-      // userPerms 동기화 (id 기준 — name은 "게스트"처럼 중복될 수 있음)
       if(u.id) userPerms[u.id]=p;
       var permChips=['read','write','edit','download'].map(function(k){
         var labels={read:'읽기',write:'쓰기',edit:'수정',download:'다운로드'};
@@ -10941,7 +10959,19 @@ async function loadUserList(){
       row.querySelector('.perm-btn').onclick=function(){openPermEdit(this,this.dataset.name,this.dataset.id);};
       row.querySelector('.withdraw-btn').onclick=function(){withdrawUserDB(this.dataset.id,this.dataset.name);};
       if(canMoveTeam){ row.querySelector('.move-btn').onclick=function(){openTeamMove(this.dataset.id,this.dataset.name,this.dataset.team);}; }
-      el.appendChild(row);
+      return row;
+    }
+    ROLE_GROUPS.forEach(function(g){
+      var list = g.role==='__etc__' ? etcUsers : users.filter(function(u){return u.role===g.role;});
+      var extraTop = (g.role==='admin') ? 1 : 0; // 최고관리자 고정계정 포함
+      if(!list.length && !extraTop) return;
+      el.appendChild(sectionHeader(g.label, list.length+extraTop));
+      if(extraTop){
+        var top=document.createElement('div'); top.className='u-row';
+        top.innerHTML='<div class="u-info"><div class="u-ico" style="background:var(--navy-bg);color:var(--navy)">최</div><div><div class="u-name">최고관리자</div><div class="u-sub">관리자 · 전체권한</div></div></div><span class="chip chip-ok">활성</span>';
+        el.appendChild(top);
+      }
+      list.forEach(function(u){ el.appendChild(renderRow(u)); });
     });
   }catch(e){
     console.error(e);
