@@ -347,7 +347,9 @@ textarea:focus{border-color:var(--sky)}
     <!-- 대상 선택: 유아휴게실 -->
     <div class="card" id="tgtBaby" style="display:none">
       <div class="f-label">유아휴게실 선택</div>
-      <div class="f-row one"><select id="bbSel"></select></div>
+      <div class="f-row one"><select id="bbSel" onchange="loadBabyDayList()"></select></div>
+      <div class="f-label" style="margin-top:10px">점검일 <span style="font-weight:400;color:var(--g3)">(과거 날짜도 입력 가능)</span></div>
+      <div class="f-row one"><input type="date" id="babyDateSel" onchange="fillBabyList();loadBabyDayList();"></div>
     </div>
 
     <!-- 대상 선택: PBB (게이트 관리 일지) -->
@@ -394,6 +396,11 @@ textarea:focus{border-color:var(--sky)}
     </div>
 
     <button class="save-btn" id="btnSave" onclick="saveInsp()">점검 저장</button>
+    <button class="dash-btn" id="babyPrevBtn" style="display:none" onclick="previewBaby()">🖨️ 이번 달 점검표 미리보기</button>
+    <div id="babyDayListWrap" style="display:none;margin-top:14px">
+      <div class="sec-title" style="font-size:13px">이 날짜 기록 <span style="font-weight:400;color:var(--g3);font-size:11px">(하루 여러 건 가능 · 터치하면 수정)</span></div>
+      <div id="babyDayList"><div class="empty">기록 없음</div></div>
+    </div>
   </div>
 
   <!-- 흡연실 점검표 (월간 그리드 전용 화면) -->
@@ -420,6 +427,7 @@ textarea:focus{border-color:var(--sky)}
       <input type="text" id="skConfirm" placeholder="확인자 성명" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;box-sizing:border-box">
     </div>
     <button class="save-btn" id="skSaveBtn" onclick="saveSmoking()">점검 저장</button>
+    <button class="dash-btn" onclick="previewSmoking()">🖨️ 이번 달 점검표 미리보기</button>
     <button class="save-btn" id="skDelBtn" onclick="deleteSmoking()" style="background:var(--danger-bg);color:var(--danger);margin-top:8px">기록 삭제</button>
     <div class="sec-title" style="margin-top:16px">이번 달 기록 <span style="font-weight:400;color:var(--g3);font-size:11px">(터치하면 해당일 불러오기)</span></div>
     <div id="skList"><div class="empty">기록 없음</div></div>
@@ -462,6 +470,16 @@ textarea:focus{border-color:var(--sky)}
         <div class="stat-hd"><span class="icon-chip">🧹</span><span class="stat-lb">공용구역</span></div>
         <div class="stat-v" id="dCommon">-<small></small></div>
         <div class="stat-sub" id="dCommonSub"></div>
+      </div>
+      <div class="stat-card" style="--ac:#db2777;--acbg:#fce7f3">
+        <div class="stat-hd"><span class="icon-chip">👶</span><span class="stat-lb">유아휴게실</span></div>
+        <div class="stat-v" id="dBaby">-<small></small></div>
+        <div class="stat-sub" id="dBabySub"></div>
+      </div>
+      <div class="stat-card" style="--ac:#57534e;--acbg:#f5f5f4">
+        <div class="stat-hd"><span class="icon-chip">🚬</span><span class="stat-lb">흡연실</span></div>
+        <div class="stat-v" id="dSmoking">-<small></small></div>
+        <div class="stat-sub" id="dSmokingSub"></div>
       </div>
       <div class="stat-card" style="--ac:#dc2626;--acbg:#fee2e2">
         <div class="stat-hd"><span class="icon-chip">🔴</span><span class="stat-lb">불량 발생</span></div>
@@ -840,7 +858,9 @@ function openMod(mod){
   document.getElementById('inpJo').value='';
   if(mod==='toilet'){ fillToiletFloors(); fillToiletList(); }
   if(mod==='rest'){ fillRestList(); }
-  if(mod==='baby'){ fillBabyList(); }
+  if(mod==='baby'){ document.getElementById('babyDateSel').value=todayStr(); fillBabyList(); loadBabyDayList(); }
+  document.getElementById('babyDayListWrap').style.display = mod==='baby' ? 'block' : 'none';
+  var bpb=document.getElementById('babyPrevBtn'); if(bpb) bpb.style.display = mod==='baby' ? 'flex' : 'none';
   if(mod==='equip'){ fillEquipTypes(); fillTimeSels(); document.getElementById('eArea').value='';document.getElementById('eUser').value=''; }
   if(mod==='pbb'){ fillPbbList(); document.getElementById('pCnt').value=''; document.getElementById('pWorker').value=me.name||''; }
   if(mod==='common'){ fillCommonSels(); document.getElementById('cDetail').value=''; }
@@ -957,6 +977,30 @@ function fillBabyList(){
     var r=BABYROOMS[i];
     var o=document.createElement('option'); o.value=r.id; o.textContent=babyLabel(r); sel.appendChild(o);
   }
+}
+function babyDate(){
+  var el=document.getElementById('babyDateSel');
+  return (el&&el.value)?el.value:todayStr();
+}
+var babyDayRecs=[];
+function loadBabyDayList(){
+  var box=document.getElementById('babyDayList'); if(!box) return;
+  var locId=document.getElementById('bbSel').value;
+  var date=babyDate();
+  if(!locId){ box.innerHTML='<div class="empty">위치를 선택하세요</div>'; return; }
+  sbFetch('/inspection_data?insp_type=eq.baby&target_id=eq.'+encodeURIComponent(locId)+'&insp_date=eq.'+date+'&order=created_at').then(function(r){return r.json();}).then(function(rows){
+    babyDayRecs=Array.isArray(rows)?rows:[];
+    if(!babyDayRecs.length){ box.innerHTML='<div class="empty">이 날짜 기록 없음</div>'; return; }
+    box.innerHTML='';
+    babyDayRecs.forEach(function(rec,idx){
+      var bad=hasXin(rec.results);
+      var tm=rec.work_time||(rec.created_at?String(rec.created_at).slice(11,16):'');
+      var row=document.createElement('div'); row.className='rec-row';
+      row.innerHTML='<div class="rec-main"><div class="rec-t">'+(rec.shift||'')+' · '+(tm||'시간 미기재')+'</div><div class="rec-s">'+(rec.inspector||'')+'</div></div><span class="rec-badge '+(bad?'bad':'ok')+'">'+(bad?'불량':'양호')+'</span>';
+      row.onclick=function(){ startEdit({table:'inspection_data',kind:'baby',rec:babyDayRecs[idx]}); };
+      box.appendChild(row);
+    });
+  }).catch(function(){ box.innerHTML='<div class="empty">조회 실패</div>'; });
 }
 
 // ─ 장비 ─
@@ -1221,7 +1265,9 @@ function saveInsp(){
 
   var done=function(ok,errMsg){
     btn.disabled=false;
-    if(ok){ toast('✓ 저장 완료'); editRec=null; chkStates={}; renderChecklist(); document.getElementById('noteX').value='';document.getElementById('noteN').value=''; }
+    if(ok){ toast('✓ 저장 완료'); editRec=null; chkStates={}; renderChecklist(); document.getElementById('noteX').value='';document.getElementById('noteN').value='';
+      if(curMod==='baby') loadBabyDayList();
+    }
     else toast('저장 실패: '+(errMsg||'네트워크 확인'));
   };
 
@@ -1245,15 +1291,27 @@ function saveInsp(){
 
   var tgt=targetInfo();
   if(!tgt){ done(false,'대상을 선택하세요'); return; }
+  var saveDate = (curMod==='baby') ? babyDate() : todayStr();
   var rec2={
     insp_type:curMod, target_id:tgt.target_id, target_label:tgt.target_label,
-    insp_date:todayStr(), shift:curShift, team:team, jo:jo,
+    insp_date:saveDate, shift:curShift, team:team, jo:jo,
     inspector:me.name, results:results, note:note.trim(),
     work_time: inspTime(),
     updated_at:new Date().toISOString()
   };
+  if(curMod==='baby'){
+    // 하루에 여러 번 점검 가능 — 기존 기록을 덮어쓰지 않고 항상 새 기록으로 저장(수정 모드일 때만 해당 기록 patch)
+    if(editRec && editRec.table==='inspection_data'){
+      sbFetch('/inspection_data?id=eq.'+editRec.id,{method:'PATCH',body:rec2,headers:{'Prefer':'return=minimal'}})
+        .then(function(r){done(r.ok);}).catch(function(e){done(false,e.message);});
+    }else{
+      sbFetch('/inspection_data',{method:'POST',body:rec2,headers:{'Prefer':'return=minimal'}})
+        .then(function(r){done(r.ok);}).catch(function(e){done(false,e.message);});
+    }
+    return;
+  }
   upsert('inspection_data',
-    '/inspection_data?insp_type=eq.'+curMod+'&target_id=eq.'+encodeURIComponent(tgt.target_id)+'&insp_date=eq.'+todayStr()+'&shift=eq.'+encodeURIComponent(curShift)+'&select=id',
+    '/inspection_data?insp_type=eq.'+curMod+'&target_id=eq.'+encodeURIComponent(tgt.target_id)+'&insp_date=eq.'+saveDate+'&shift=eq.'+encodeURIComponent(curShift)+'&select=id',
     rec2, done);
 }
 // 같은 대상·날짜·교대 기록이 있으면 수정, 없으면 신규 (중복 방지)
@@ -1321,12 +1379,14 @@ function loadDash(){
   Promise.all([
     sbFetch('/inspection_data?insp_date=gte.'+r.from+'&insp_date=lt.'+r.to+'&select=id,insp_type,target_id,target_label,insp_date,work_time,shift,team,jo,inspector,results,note,created_at&order=created_at.desc').then(function(rr){return rr.json();}),
     sbFetch('/equip_inspection_data?insp_date=gte.'+r.from+'&insp_date=lt.'+r.to+'&select=id,equip_id,mgmt_no,insp_date,shift,team,jo,inspector,results,note,use_area,use_time,user_name,created_at&order=created_at.desc').then(function(rr){return rr.json();}),
-    sbFetch('/leaders?select=shift,team,name').then(function(rr){return rr.json();})
+    sbFetch('/leaders?select=shift,team,name').then(function(rr){return rr.json();}),
+    sbFetch('/smoking_check_data?check_date=gte.'+r.from+'&check_date=lt.'+r.to+'&order=check_date.desc').then(function(rr){return rr.json();})
   ]).then(function(res){
     var insp=Array.isArray(res[0])?res[0]:[];
     var eq=Array.isArray(res[1])?res[1]:[];
     var leaders=Array.isArray(res[2])?res[2]:[];
-    renderDash(insp,eq,leaders);
+    var sk=Array.isArray(res[3])?res[3]:[];
+    renderDash(insp,eq,leaders,sk);
   }).catch(function(){ toast('현황 로드 실패'); });
 }
 function openDash(){
@@ -1342,12 +1402,15 @@ function hasXin(results){
 function xItems(results){
   var arr=[]; for(var k in results){ if(results[k]==='X')arr.push(k); } return arr;
 }
-function renderDash(insp,eq,leaders){
+function renderDash(insp,eq,leaders,sk){
+  sk=sk||[];
   var t=insp.filter(function(r){return r.insp_type==='toilet';});
   var rst=insp.filter(function(r){return r.insp_type==='rest';});
   var pb=insp.filter(function(r){return r.insp_type==='pbb';});
   var cm=insp.filter(function(r){return r.insp_type==='common';});
+  var bb=insp.filter(function(r){return r.insp_type==='baby';});
   function xCntOf(list){ var n=0; list.forEach(function(r){ if(hasXin(r.results))n++; }); return n; }
+  function skXCnt(list){ var n=0; list.forEach(function(r){ if(r.item_ashtray==='X'||r.item_floor==='X'||r.item_airpurifier==='X'||r.item_flowerpot==='X')n++; }); return n; }
   function setStat(id,n,total,xn){
     var el=document.getElementById(id);
     var showTotal = (dashScope==='day') && total;
@@ -1365,7 +1428,9 @@ function renderDash(insp,eq,leaders){
   setStat('dEquip',Object.keys(eqDistinct).length,EQUIPS.length||172,xCntOf(eq));
   setStat('dPbb',pb.length,0,xCntOf(pb));
   setStat('dCommon',cm.length,0,xCntOf(cm));
-  var totalX=xCntOf(insp)+xCntOf(eq);
+  setStat('dBaby',bb.length,BABYROOMS.length||0,xCntOf(bb));
+  setStat('dSmoking',sk.length,SMOKEROOMS.length||0,skXCnt(sk));
+  var totalX=xCntOf(insp)+xCntOf(eq)+skXCnt(sk);
   document.getElementById('dX').innerHTML=totalX+'<small>건</small>';
   document.getElementById('dXSub').textContent=totalX>0?'즉시 조치 확인 필요':'오늘 불량 없음 ✓';
   document.getElementById('dXSub').className='stat-sub '+(totalX>0?'bad':'good');
@@ -1515,7 +1580,7 @@ function openModForEdit(d){
     }
   }
   if(mod==='rest'){ fillRestList(); document.getElementById('rSel').value=r.target_id; }
-  if(mod==='baby'){ fillBabyList(); document.getElementById('bbSel').value=r.target_id; }
+  if(mod==='baby'){ fillBabyList(); document.getElementById('bbSel').value=r.target_id; document.getElementById('babyDateSel').value=r.insp_date||todayStr(); document.getElementById('babyDayListWrap').style.display='block'; loadBabyDayList(); }
   if(mod==='pbb'){
     fillPbbList(); // multiTargets 초기화
     var gn=parseInt(r.target_id, 10) || parseInt(String(r.target_id).replace(/[^0-9]/g,''), 10);
@@ -1899,6 +1964,41 @@ function buildGridDoc(title, locLabel, items, legend, records, mi, appr){
   var cols=[3.5,20]; for(var c=0;c<half1;c++)cols.push(3.1);
   return {rows:rows, cols:cols, orient:'portrait', title:title, fname:title.replace(/\s/g,'')+'_'+locLabel.replace(/[\/\s]/g,'')+'_'+mi.y+'-'+String(mi.m).padStart(2,'0')};
 }
+// ─ 유아휴게실 점검 체크리스트 (종이양식과 동일: 일자=행, 항목=열) ─
+function buildBabyDoc(records, locLabel, mi, appr){
+  var items=MOD_META.baby.items; // 바닥,선반,정수기,침대,쇼파,세면대
+  var W=3+items.length; // 일자,시간 + 항목들 + 점검자
+  var rows=[];
+  rows.push([{v:'유아휴게실 점검 체크리스트 ('+mi.label+')',cs:W,cls:'tt'}]);
+  rows.push([
+    {v:'위치',cls:'hd'},{v:locLabel,cs:W-3,cls:'lf'},
+    {v:appr?'확인':'범례',cls:'hd'},{v:appr?sigCellText(appr):'○양호 X보통 △불량',cls:appr?'ok':'lf'}
+  ]);
+  var hd=[{v:'일자',cls:'hd'},{v:'시간',cls:'hd'}];
+  items.forEach(function(it){hd.push({v:it,cls:'hd'});});
+  hd.push({v:'점검자',cls:'hd'});
+  rows.push(hd);
+  var sorted=records.slice().sort(function(a,b){
+    if(a.insp_date!==b.insp_date) return a.insp_date<b.insp_date?-1:1;
+    return (a.created_at||'')<(b.created_at||'')?-1:1;
+  });
+  if(!sorted.length){
+    rows.push([{v:'이번 달 점검 기록이 없습니다',cs:W,cls:'lf'}]);
+  }
+  sorted.forEach(function(r){
+    var d=Number(String(r.insp_date).slice(8,10));
+    var row=[{v:String(d)},{v:r.work_time||(r.created_at?String(r.created_at).slice(11,16):'')}];
+    items.forEach(function(it){
+      var v=r.results?r.results[it]:'';
+      row.push({v:SYM[v]||v||'', cls:v==='X'?'bx':''});
+    });
+    row.push({v:r.inspector||''});
+    rows.push(row);
+  });
+  var cols=[6,9]; items.forEach(function(){cols.push(11);}); cols.push(11);
+  return {rows:rows, cols:cols, orient:'portrait', title:'유아휴게실 점검 체크리스트',
+    fname:'유아휴게실점검_'+locLabel.replace(/[\/\s]/g,'')+'_'+mi.y+'-'+String(mi.m).padStart(2,'0')};
+}
 // ─ 흡연실 월간 점검표 ─
 function buildSmokingDoc(records, locLabel, mi, appr){
   var byDay={}; records.forEach(function(r){ byDay[Number(String(r.check_date).slice(8,10))]=r; });
@@ -1919,7 +2019,7 @@ function buildSmokingDoc(records, locLabel, mi, appr){
       var nm=r&&r[half+i+'_name'], tm=r&&r[half+i+'_time'];
       if(nm) out.push(nm+(tm?' '+tm:''));
     }
-    return out.join('\n');
+    return out.join('  ');
   }
   for(var d=1;d<=mi.days;d++){
     var r=byDay[d];
@@ -1936,7 +2036,7 @@ function buildSmokingDoc(records, locLabel, mi, appr){
     ]);
   }
   var cols=[3,26,26,7,7,9,7,10];
-  return {rows:rows, cols:cols, orient:'portrait', title:'흡연실 점검표',
+  return {rows:rows, cols:cols, orient:'landscape', title:'흡연실 점검표',
     fname:'흡연실점검표_'+locLabel.replace(/[\/\s]/g,'')+'_'+mi.y+'-'+String(mi.m).padStart(2,'0')};
 }
 // ─ 장비 일지 ─
@@ -2046,7 +2146,7 @@ function buildDoc(records, mod, tid, mi, appr, workerOverride){
   }
   if(mod==='baby'){
     var br=BABYROOMS.find(function(x){return String(x.id)===String(tid);})||{};
-    return buildGridDoc('유아휴게실 점검 체크리스트', babyLabel(br)||('ID '+tid), MOD_META.baby.items, '○양호 △보통 X불량', records, mi, appr);
+    return buildBabyDoc(records, babyLabel(br)||('ID '+tid), mi, appr);
   }
   if(mod==='smoking'){
     var sr=SMOKEROOMS.find(function(x){return String(x.id)===String(tid);})||{};
@@ -2190,6 +2290,30 @@ function prExcel(){
       toast('✓ 엑셀 저장: '+doc.fname+'.xlsx'+(records.length?'':' (기록 없음 — 빈 양식)'));
     });
   });
+}
+function previewBaby(){
+  var locId=document.getElementById('bbSel').value;
+  if(!locId){ toast('유아휴게실 위치를 먼저 선택하세요'); return; }
+  fillPrMonths();
+  document.getElementById('prMod').value='baby';
+  fillPrTargets();
+  document.getElementById('prTarget').value=locId;
+  var d=babyDate();
+  document.getElementById('prMonth').value=d.slice(0,7);
+  showScr('scrPreview');
+  prPreview();
+}
+function previewSmoking(){
+  var locId=document.getElementById('skLoc').value;
+  if(!locId){ toast('흡연실 위치를 먼저 선택하세요'); return; }
+  fillPrMonths();
+  document.getElementById('prMod').value='smoking';
+  fillPrTargets();
+  document.getElementById('prTarget').value=locId;
+  var d=document.getElementById('skDate').value||todayStr();
+  document.getElementById('prMonth').value=d.slice(0,7);
+  showScr('scrPreview');
+  prPreview();
 }
 function prPreview(){
   fetchMonth(function(records,mod,tid,mi){
