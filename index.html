@@ -5141,7 +5141,7 @@ function finishLogin(){
 }
 function showInfo(){
   if(!me) return;
-  var roleLabel=me.role==='admin'?'최고관리자':me.role==='manager'?'관리자':me.role==='leader'?'팀장':me.role==='acting_leader'?'조장대행':me.role==='guest'?'게스트(조회전용)':'조장';
+  var roleLabel=me.role==='admin'?'최고관리자':me.role==='manager'?'팀장':me.role==='leader'?'조장':me.role==='acting_leader'?'조장대행':me.role==='guest'?'게스트(조회전용)':me.role==='member'?'열람전용':me.role==='work_vehicle'?'차량운행':'팀원';
   var html='<div style="padding:20px 17px">'
     +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
     +'<div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--navy));display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:900;color:white">'+me.initial+'</div>'
@@ -13320,7 +13320,7 @@ async function uploadEquipmentData(){
 // ══ 시설물 공통: 수정자 표기 / 날짜 표기 헬퍼 ══
 function facEditorTag(){
   if(!me) return '';
-  var roleLabel=me.role==='admin'?'최고관리자':me.role==='manager'?'관리자':me.role==='leader'?'팀장':me.role==='acting_leader'?'조장대행':me.role==='guest'?'게스트':'조장';
+  var roleLabel=me.role==='admin'?'최고관리자':me.role==='manager'?'팀장':me.role==='leader'?'조장':me.role==='acting_leader'?'조장대행':me.role==='guest'?'게스트':me.role==='member'?'열람전용':me.role==='work_vehicle'?'차량운행':'팀원';
   return (me.team?me.team+' ':'')+me.name+' '+roleLabel;
 }
 function facUpdatedDateShort(iso){
