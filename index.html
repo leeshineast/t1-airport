@@ -4444,7 +4444,7 @@ window.addEventListener('popstate', function(e){
 });
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sSafety','sManual','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt'];
 function goStatsDash(){
   go('statsdash');
   loadMonthlyStats();
@@ -4824,7 +4824,7 @@ function goHomeMain(){
 function go(name){
   if(me&&me.role==='vehicle_guest'&&name!=='veh'&&name!=='login'){ return; }
   if(me&&me.role==='work_vehicle'&&name!=='workveh'&&name!=='login'){ return; }
-  if(me&&me.role==='member'&&['main','notice','chat','iso9001','safety','manual','groupchat','login'].indexOf(name)===-1){ return; }
+  if(me&&me.role==='member'&&['main','notice','chat','iso9001','news','safety','manual','groupchat','login'].indexOf(name)===-1){ return; }
   if(name==='admin'&&(!me||me.role!=='admin')){ toast('⚠️ 관리자만 접근할 수 있습니다'); return; }
   if(name==='execdash'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='toilet'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
