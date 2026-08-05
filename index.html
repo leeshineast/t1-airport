@@ -4299,8 +4299,53 @@ function toKSTTime(isoStr){
 function toKSTDate(isoStr){ if(!isoStr) return ''; return new Date(new Date(isoStr).getTime()+9*3600000).toISOString().slice(0,10); }
 // UTC ISO 문자열 → KST 날짜+시각 'YYYY-MM-DD HH:MM' 반환
 function toKSTDateTime(isoStr){ if(!isoStr) return ''; var d=new Date(new Date(isoStr).getTime()+9*3600000).toISOString(); return d.slice(0,10)+' '+d.slice(11,16); }
-function showM(id){document.getElementById(id).classList.add('on');}
-function hideM(id){document.getElementById(id).classList.remove('on');}
+var _modalStack=[];
+var _curScreenName='';
+var _skipPush=false;
+var _consumeNextPop=false;
+var _exitArmed=false;
+function showM(id){
+  var el=document.getElementById(id); if(!el) return;
+  el.classList.add('on');
+  _modalStack.push(id);
+  if(!_skipPush){ try{ history.pushState({kind:'modal',id:id}, ''); }catch(e){} }
+}
+function hideM(id){
+  var el=document.getElementById(id); if(!el) return;
+  el.classList.remove('on');
+  var idx=_modalStack.lastIndexOf(id);
+  if(idx!==-1){
+    _modalStack.splice(idx,1);
+    if(history.state&&history.state.kind==='modal'&&history.state.id===id){
+      _consumeNextPop=true;
+      history.back();
+    }
+  }
+}
+window.addEventListener('popstate', function(e){
+  if(_consumeNextPop){ _consumeNextPop=false; return; }
+  if(_modalStack.length){
+    var topId=_modalStack.pop();
+    var el=document.getElementById(topId);
+    if(el) el.classList.remove('on');
+    return;
+  }
+  var st=e.state;
+  if(st&&st.kind==='screen'&&st.id&&st.id!=='main'){
+    _skipPush=true; go(st.id); _skipPush=false;
+    return;
+  }
+  // 홈(루트) 경계에 도달
+  if(_curScreenName!=='main'){
+    _skipPush=true; go('main'); _skipPush=false;
+    return;
+  }
+  if(!_exitArmed){
+    _exitArmed=true;
+    toast('👋 뒤로가기를 한 번 더 누르면 종료됩니다');
+    setTimeout(function(){ _exitArmed=false; }, 2000);
+  }
+});
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
 const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sSafety','sManual','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt'];
@@ -4690,6 +4735,10 @@ function go(name){
   if(['shower','smoking','rest','storage','baby'].indexOf(name)!==-1&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='downloadcenter'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(name==='groupchat'&&me&&me.role==='guest'){ toast('⚠️ 게스트 계정은 이용할 수 없는 기능입니다'); return; }
+  if(!_skipPush&&name!=='login'&&name!=='reg'&&name!==_curScreenName){
+    try{ history.pushState({kind:'screen',id:name}, ''); }catch(e){}
+  }
+  _curScreenName=name;
   const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',safety:'sSafety',manual:'sManual',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
