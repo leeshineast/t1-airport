@@ -184,6 +184,18 @@ textarea:focus{border-color:var(--sky)}
         <div class="mod-desc">층별 · L/S · A/S 6항목</div>
         <span class="mod-cnt">전 구역</span>
       </button>
+      <button class="mod-card" onclick="openMod('baby')">
+        <span class="mod-icon">👶</span>
+        <div class="mod-name">유아휴게실 점검</div>
+        <div class="mod-desc">바닥·선반·정수기 등 6항목</div>
+        <span class="mod-cnt" id="cntBaby">-</span>
+      </button>
+      <button class="mod-card" onclick="openSmoking()">
+        <span class="mod-icon">🚬</span>
+        <div class="mod-name">흡연실 점검</div>
+        <div class="mod-desc">월간 점검표 (재떨이·바닥 등)</div>
+        <span class="mod-cnt" id="cntSmoking">-</span>
+      </button>
     </div>
     <button class="dash-btn" onclick="openDash()">
       <span style="font-size:18px">📊</span> 실시간 현황
@@ -332,6 +344,12 @@ textarea:focus{border-color:var(--sky)}
       </div>
     </div>
 
+    <!-- 대상 선택: 유아휴게실 -->
+    <div class="card" id="tgtBaby" style="display:none">
+      <div class="f-label">유아휴게실 선택</div>
+      <div class="f-row one"><select id="bbSel"></select></div>
+    </div>
+
     <!-- 대상 선택: PBB (게이트 관리 일지) -->
     <div class="card" id="tgtPbb" style="display:none">
       <div class="f-label">게이트 선택 <span style="font-weight:400;color:var(--g3)">(여러 개 선택 가능 — 한 번에 순회 점검 시)</span></div>
@@ -376,6 +394,35 @@ textarea:focus{border-color:var(--sky)}
     </div>
 
     <button class="save-btn" id="btnSave" onclick="saveInsp()">점검 저장</button>
+  </div>
+
+  <!-- 흡연실 점검표 (월간 그리드 전용 화면) -->
+  <div class="screen" id="scrSmoking">
+    <button class="sub-back" onclick="showScr('scrMain')">← 모듈 선택</button>
+    <div class="card">
+      <div class="f-label">흡연실 위치</div>
+      <div class="f-row one"><select id="skLoc" onchange="loadSmokingDay()"></select></div>
+      <div class="f-label" style="margin-top:10px">점검일</div>
+      <div class="f-row one"><input type="date" id="skDate" onchange="loadSmokingDay()"></div>
+    </div>
+    <div class="card">
+      <div class="f-label">🌤️ 오전 점검 (점검자 / 시간, 최대 4회)</div>
+      <div id="skAmRows" style="display:flex;flex-direction:column;gap:6px"></div>
+      <div class="f-label" style="margin-top:14px">🌙 오후 점검 (점검자 / 시간, 최대 4회)</div>
+      <div id="skPmRows" style="display:flex;flex-direction:column;gap:6px"></div>
+    </div>
+    <div class="card">
+      <div class="f-label">내용 점검 (○양호 X불량)</div>
+      <div id="skChkList"></div>
+    </div>
+    <div class="card">
+      <div class="f-label">확인자</div>
+      <input type="text" id="skConfirm" placeholder="확인자 성명" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;box-sizing:border-box">
+    </div>
+    <button class="save-btn" id="skSaveBtn" onclick="saveSmoking()">점검 저장</button>
+    <button class="save-btn" id="skDelBtn" onclick="deleteSmoking()" style="background:var(--danger-bg);color:var(--danger);margin-top:8px">기록 삭제</button>
+    <div class="sec-title" style="margin-top:16px">이번 달 기록 <span style="font-weight:400;color:var(--g3);font-size:11px">(터치하면 해당일 불러오기)</span></div>
+    <div id="skList"><div class="empty">기록 없음</div></div>
   </div>
 
   <!-- 실시간 현황 -->
@@ -442,6 +489,7 @@ textarea:focus{border-color:var(--sky)}
       <button class="seg-btn" data-f="equip" onclick="setDashFilter('equip')">장비</button>
       <button class="seg-btn" data-f="pbb" onclick="setDashFilter('pbb')">PBB</button>
       <button class="seg-btn" data-f="common" onclick="setDashFilter('common')">공용</button>
+      <button class="seg-btn" data-f="baby" onclick="setDashFilter('baby')">유아휴게실</button>
     </div>
     <div id="recList"><div class="empty">기록 없음</div></div>
     <div class="sec-title" style="margin-top:16px">👤 관리자 점검 참여 <span id="joinCnt" style="font-weight:400;color:var(--g3);font-size:11px"></span></div>
@@ -464,6 +512,8 @@ textarea:focus{border-color:var(--sky)}
             <option value="equip">🔧 장비 사용·점검 일지</option>
             <option value="pbb">✈️ PBB 청소일지</option>
             <option value="common">🧹 공용구역 점검표</option>
+            <option value="baby">👶 유아휴게실 점검표</option>
+            <option value="smoking">🚬 흡연실 점검표</option>
           </select>
         </div>
         <div>
@@ -520,7 +570,7 @@ textarea:focus{border-color:var(--sky)}
 var SUPABASE_URL = 'https://smfjrnhiodyjobclnwvd.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtZmpybmhpb2R5am9iY2xud3ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODA1NDQsImV4cCI6MjA5NjU1NjU0NH0.TkrYpOXNQ0ICak6xWHbD6sOCzLqNOqAfr7FsnFY2Gns';
 var me = null;
-var TOILETS = [], EQUIPS = [], RESTS = [];
+var TOILETS = [], EQUIPS = [], RESTS = [], BABYROOMS = [], SMOKEROOMS = [];
 var curMod = null;       // toilet | rest | equip | pbb
 var curShift = '오전';
 var editRec = null;      // 수정 중인 기록 {table, id}
@@ -587,7 +637,8 @@ var MOD_META = {
   rest:   { name:'🛋️ 휴게시설 점검', items:['청소·청결, 목적 외 이용금지','온도·습도·조명·환기 적정','비품·설비 이상 여부','화기 단속','문단속','점검자 확인'], states:4 },
   equip:  { name:'🔧 장비점검', items:[], states:3 },
   pbb:    { name:'✈️ 게이트 관리 일지', items:['이동브릿지 관리여부','고정브릿지','하단 디퓨저','2단 창틀','E/L 내부','E/L 1층','E/S','계단','2층 방화문','3층 방화문'], states:4 },
-  common: { name:'🧹 공용구역 점검', items:['바닥 청소 상태(오염물·얼룩)','쓰레기통 수거 상태','유리·거울·스테인리스 청결','시설물(벤치·안내데스크 등) 청결','청소도구 정리·보관','안전 위해요소 없음(물기·장애물)'], states:3 }
+  common: { name:'🧹 공용구역 점검', items:['바닥 청소 상태(오염물·얼룩)','쓰레기통 수거 상태','유리·거울·스테인리스 청결','시설물(벤치·안내데스크 등) 청결','청소도구 정리·보관','안전 위해요소 없음(물기·장애물)'], states:3 },
+  baby: { name:'👶 유아휴게실 점검', items:['바닥','선반','정수기','침대','쇼파','세면대'], states:3 }
 };
 
 function toast(m){var t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';clearTimeout(t._t);t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(8px)';},2600);}
@@ -621,7 +672,8 @@ var RESET_MODULES=[
   {type:'rest', label:'휴게시설 점검', icon:'🛋️'},
   {type:'equip', label:'장비점검', icon:'🔧'},
   {type:'pbb', label:'게이트 관리 일지', icon:'✈️'},
-  {type:'common', label:'공용구역 점검', icon:'🧹'}
+  {type:'common', label:'공용구역 점검', icon:'🧹'},
+  {type:'baby', label:'유아휴게실 점검', icon:'👶'}
 ];
 var _resetTarget=null;
 function openReset(){
@@ -675,7 +727,7 @@ function showScr(id){
   var s=document.querySelectorAll('.screen');
   for(var i=0;i<s.length;i++)s[i].classList.remove('on');
   document.getElementById(id).classList.add('on');
-  document.getElementById('hdrTitle').textContent = id==='scrMain' ? '📝 현장점검' : (id==='scrDash' ? '📊 실시간 현황' : (id==='scrPrint'||id==='scrPreview') ? '🖨️ 출력 / 다운로드' : (MOD_META[curMod]?MOD_META[curMod].name:'점검 입력'));
+  document.getElementById('hdrTitle').textContent = id==='scrMain' ? '📝 현장점검' : (id==='scrDash' ? '📊 실시간 현황' : (id==='scrPrint'||id==='scrPreview') ? '🖨️ 출력 / 다운로드' : id==='scrSmoking' ? '🚬 흡연실 점검' : (MOD_META[curMod]?MOD_META[curMod].name:'점검 입력'));
   if(id==='scrMain'){ editRec=null; }
   window.scrollTo(0,0);
 }
@@ -699,6 +751,14 @@ function loadMasters(){
         if(Array.isArray(det))RESTS=det;
       }catch(e){}
       document.getElementById('cntRest').textContent=RESTS.length?RESTS.length+'개소':'목록 없음';
+    }),
+    sbFetch('/baby_room_master?select=*&active=eq.true&order=floor,location').then(function(r){return r.json();}).then(function(d){
+      BABYROOMS=Array.isArray(d)?d:[];
+      var el=document.getElementById('cntBaby'); if(el) el.textContent=BABYROOMS.length+'개소';
+    }),
+    sbFetch('/smoking_room_master?select=*&active=eq.true&order=floor,location').then(function(r){return r.json();}).then(function(d){
+      SMOKEROOMS=Array.isArray(d)?d:[];
+      var el=document.getElementById('cntSmoking'); if(el) el.textContent=SMOKEROOMS.length+'개소';
     })
   ];
   Promise.all(jobs).then(function(){
@@ -774,11 +834,13 @@ function openMod(mod){
   document.getElementById('tgtEquip').style.display = mod==='equip'?'block':'none';
   document.getElementById('tgtPbb').style.display = mod==='pbb'?'block':'none';
   document.getElementById('tgtCommon').style.display = mod==='common'?'block':'none';
+  document.getElementById('tgtBaby').style.display = mod==='baby'?'block':'none';
   document.getElementById('noteX').value=''; document.getElementById('noteN').value='';
   setShift(autoShift());
   document.getElementById('inpJo').value='';
   if(mod==='toilet'){ fillToiletFloors(); fillToiletList(); }
   if(mod==='rest'){ fillRestList(); }
+  if(mod==='baby'){ fillBabyList(); }
   if(mod==='equip'){ fillEquipTypes(); fillTimeSels(); document.getElementById('eArea').value='';document.getElementById('eUser').value=''; }
   if(mod==='pbb'){ fillPbbList(); document.getElementById('pCnt').value=''; document.getElementById('pWorker').value=me.name||''; }
   if(mod==='common'){ fillCommonSels(); document.getElementById('cDetail').value=''; }
@@ -881,6 +943,20 @@ function fillRestList(){
 function restLabel(i){
   var r=RESTS[i]; if(!r)return '휴게시설';
   return ((r.loc||'')+' '+(r.num||'')+(r.gender?' ('+r.gender+')':'')).trim();
+}
+
+// ─ 유아휴게실 ─
+function babyLabel(r){
+  if(!r) return '유아휴게실';
+  return ((r.floor||'')+' '+(r.zone==='Airside'?'A/S':'L/S')+' '+(r.location||'')+(r.number?' '+r.number:'')).trim();
+}
+function fillBabyList(){
+  var sel=document.getElementById('bbSel'); sel.innerHTML='';
+  if(!BABYROOMS.length){var o=document.createElement('option');o.value='';o.textContent='유아휴게실 목록 없음 (시설관리에서 먼저 등록해주세요)';sel.appendChild(o);return;}
+  for(var i=0;i<BABYROOMS.length;i++){
+    var r=BABYROOMS[i];
+    var o=document.createElement('option'); o.value=r.id; o.textContent=babyLabel(r); sel.appendChild(o);
+  }
 }
 
 // ─ 장비 ─
@@ -1042,6 +1118,12 @@ function targetInfo(){
     var i=document.getElementById('rSel').value;
     if(i==='')return null;
     return {target_id:String(i), target_label:restLabel(Number(i))};
+  }
+  if(curMod==='baby'){
+    var bid=document.getElementById('bbSel').value;
+    if(bid==='')return null;
+    var br=BABYROOMS.find(function(x){return String(x.id)===String(bid);});
+    return {target_id:String(bid), target_label:babyLabel(br)};
   }
   if(curMod==='common'){
     var f=document.getElementById('cFloor').value;
@@ -1359,7 +1441,7 @@ function renderRecList(){
   var box=document.getElementById('recList'); box.innerHTML='';
   var list=dashRecs.filter(function(d){return dashFilterV==='all'||d.kind===dashFilterV;});
   if(!list.length){ box.innerHTML='<div class="empty">기록 없음</div>'; return; }
-  var icons={toilet:'🚻',rest:'🛋️',equip:'🔧',pbb:'✈️',common:'🧹'};
+  var icons={toilet:'🚻',rest:'🛋️',equip:'🔧',pbb:'✈️',common:'🧹',baby:'👶'};
   list.forEach(function(d){
     var r=d.rec;
     var row=document.createElement('div'); row.className='rec-row';
@@ -1400,6 +1482,7 @@ function openModForEdit(d){
   document.getElementById('tgtEquip').style.display = mod==='equip'?'block':'none';
   document.getElementById('tgtPbb').style.display = mod==='pbb'?'block':'none';
   document.getElementById('tgtCommon').style.display = mod==='common'?'block':'none';
+  document.getElementById('tgtBaby').style.display = mod==='baby'?'block':'none';
   document.getElementById('inpDate').textContent='· '+(r.insp_date||todayStr());
   fillTimeSels();
   document.getElementById('timeRow').style.display = mod==='equip' ? 'none' : 'grid';
@@ -1432,6 +1515,7 @@ function openModForEdit(d){
     }
   }
   if(mod==='rest'){ fillRestList(); document.getElementById('rSel').value=r.target_id; }
+  if(mod==='baby'){ fillBabyList(); document.getElementById('bbSel').value=r.target_id; }
   if(mod==='pbb'){
     fillPbbList(); // multiTargets 초기화
     var gn=parseInt(r.target_id, 10) || parseInt(String(r.target_id).replace(/[^0-9]/g,''), 10);
@@ -1473,11 +1557,161 @@ function openModForEdit(d){
     document.getElementById('noteX').value='';
     document.getElementById('noteN').value=note;
   }
+  if(!isMultiMod() && mod!=='equip' && r.results){ for(var k3 in r.results)chkStates[k3]=r.results[k3]; }
   renderTargetTabs();
   renderChecklist();
   document.getElementById('btnSave').textContent='수정 저장';
   showScr('scrInput');
   toast('기록 수정 모드');
+}
+
+// ═══════════ 흡연실 점검표 (월간 그리드 전용) ═══════════
+var SMOKING_ITEMS=['재떨이','바닥','공기청정기','화분'];
+var skChkStates={};
+var editSkId=null;
+function openSmoking(){
+  if(!canInput()){ toast('입력 권한이 없어 조회만 가능합니다'); }
+  fillSmokingLocSel();
+  document.getElementById('skDate').value=todayStr();
+  skChkStates={}; editSkId=null;
+  showScr('scrSmoking');
+  loadSmokingDay();
+}
+function fillSmokingLocSel(){
+  var sel=document.getElementById('skLoc'); sel.innerHTML='';
+  if(!SMOKEROOMS.length){var o=document.createElement('option');o.value='';o.textContent='흡연실 목록 없음 (시설관리에서 먼저 등록해주세요)';sel.appendChild(o);return;}
+  SMOKEROOMS.forEach(function(r){
+    var o=document.createElement('option'); o.value=r.id; o.textContent=smokingLabel(r); sel.appendChild(o);
+  });
+}
+function smokingLabel(r){
+  if(!r) return '흡연실';
+  return ((r.floor||'')+' '+(r.zone==='Airside'?'A/S':'L/S')+' '+(r.location||'')).trim();
+}
+function renderSmokingTimeRows(rec){
+  var amBox=document.getElementById('skAmRows'); amBox.innerHTML='';
+  var pmBox=document.getElementById('skPmRows'); pmBox.innerHTML='';
+  for(var i=1;i<=4;i++){
+    amBox.appendChild(skTimeRow('am',i,rec));
+    pmBox.appendChild(skTimeRow('pm',i,rec));
+  }
+}
+function skTimeRow(half,i,rec){
+  var row=document.createElement('div'); row.style.cssText='display:flex;gap:6px;align-items:center';
+  var nameIn=document.createElement('input'); nameIn.type='text'; nameIn.id='sk'+half+i+'Name'; nameIn.placeholder=i+'회차 점검자';
+  nameIn.value=(rec&&rec[half+i+'_name'])||'';
+  nameIn.style.cssText='flex:2;padding:9px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;box-sizing:border-box';
+  var timeIn=document.createElement('input'); timeIn.type='time'; timeIn.id='sk'+half+i+'Time';
+  timeIn.value=(rec&&rec[half+i+'_time'])||'';
+  timeIn.style.cssText='flex:1;padding:9px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;box-sizing:border-box';
+  row.appendChild(nameIn); row.appendChild(timeIn);
+  return row;
+}
+function renderSmokingChk(){
+  var box=document.getElementById('skChkList'); box.innerHTML='';
+  SMOKING_ITEMS.forEach(function(it){
+    var row=document.createElement('div'); row.className='chk-row';
+    var nm=document.createElement('div'); nm.className='chk-name'; nm.textContent=it;
+    var bt=document.createElement('div'); bt.className='chk-btns';
+    [['O','○','sO'],['X','X','sX']].forEach(function(def){
+      var b=document.createElement('button'); b.className='st-btn'; b.textContent=def[1];
+      if(skChkStates[it]===def[0])b.classList.add(def[2]);
+      b.onclick=function(){ skChkStates[it]=def[0]; renderSmokingChk(); };
+      bt.appendChild(b);
+    });
+    row.appendChild(nm); row.appendChild(bt); box.appendChild(row);
+  });
+}
+function skRecToStates(rec){
+  skChkStates={};
+  if(!rec) return;
+  skChkStates['재떨이']=rec.item_ashtray||'';
+  skChkStates['바닥']=rec.item_floor||'';
+  skChkStates['공기청정기']=rec.item_airpurifier||'';
+  skChkStates['화분']=rec.item_flowerpot||'';
+}
+function loadSmokingDay(){
+  var locId=document.getElementById('skLoc').value;
+  var date=document.getElementById('skDate').value;
+  if(!locId||!date){ editSkId=null; skChkStates={}; renderSmokingTimeRows(null); renderSmokingChk(); document.getElementById('skConfirm').value=''; return; }
+  sbFetch('/smoking_check_data?location_id=eq.'+locId+'&check_date=eq.'+date+'&limit=1').then(function(r){return r.json();}).then(function(rows){
+    var rec=(Array.isArray(rows)&&rows[0])?rows[0]:null;
+    editSkId=rec?rec.id:null;
+    renderSmokingTimeRows(rec);
+    skRecToStates(rec);
+    renderSmokingChk();
+    document.getElementById('skConfirm').value=(rec&&rec.confirm_by)||'';
+    document.getElementById('skSaveBtn').textContent=rec?'수정 저장':'점검 저장';
+    loadSmokingMonthList();
+  }).catch(function(){ toast('조회 실패'); });
+}
+function saveSmoking(){
+  if(!canInput()){ toast('입력 권한이 없습니다'); return; }
+  var locId=document.getElementById('skLoc').value;
+  var date=document.getElementById('skDate').value;
+  if(!locId){ toast('흡연실 위치를 선택하세요'); return; }
+  if(!date){ toast('점검일을 선택하세요'); return; }
+  var loc=SMOKEROOMS.find(function(x){return String(x.id)===String(locId);});
+  var payload={
+    location_id:Number(locId), location_label:smokingLabel(loc), check_date:date,
+    item_ashtray:skChkStates['재떨이']||'', item_floor:skChkStates['바닥']||'',
+    item_airpurifier:skChkStates['공기청정기']||'', item_flowerpot:skChkStates['화분']||'',
+    confirm_by:document.getElementById('skConfirm').value.trim(),
+    inspector:me.name, updated_by:me.name, updated_at:new Date().toISOString()
+  };
+  for(var h=0;h<2;h++){
+    var half=h===0?'am':'pm';
+    for(var i=1;i<=4;i++){
+      payload[half+i+'_name']=document.getElementById('sk'+half+i+'Name').value.trim();
+      payload[half+i+'_time']=document.getElementById('sk'+half+i+'Time').value||'';
+    }
+  }
+  var btn=document.getElementById('skSaveBtn'); btn.disabled=true;
+  var done=function(ok){
+    btn.disabled=false;
+    if(ok){ toast('✓ 저장 완료'); loadSmokingDay(); }
+    else toast('저장 실패');
+  };
+  if(editSkId){
+    sbFetch('/smoking_check_data?id=eq.'+editSkId,{method:'PATCH',body:payload,headers:{'Prefer':'return=minimal'}})
+      .then(function(r){done(r.ok);}).catch(function(){done(false);});
+  }else{
+    sbFetch('/smoking_check_data',{method:'POST',body:payload,headers:{'Prefer':'return=minimal'}})
+      .then(function(r){done(r.ok);}).catch(function(){done(false);});
+  }
+}
+function deleteSmoking(){
+  if(!editSkId){ toast('삭제할 기록이 없습니다'); return; }
+  if(!isAdmin()){ toast('삭제는 관리자만 가능합니다'); return; }
+  if(!confirm('이 날짜의 점검 기록을 삭제할까요?')) return;
+  sbFetch('/smoking_check_data?id=eq.'+editSkId,{method:'DELETE'}).then(function(r){
+    if(r.ok){ toast('✓ 삭제 완료'); editSkId=null; loadSmokingDay(); }
+    else toast('삭제 실패');
+  }).catch(function(){ toast('삭제 실패'); });
+}
+function loadSmokingMonthList(){
+  var locId=document.getElementById('skLoc').value;
+  var date=document.getElementById('skDate').value;
+  var box=document.getElementById('skList');
+  if(!locId||!date){ box.innerHTML='<div class="empty">위치·날짜를 선택하세요</div>'; return; }
+  var ym=date.slice(0,7);
+  var from=ym+'-01';
+  var dObj=new Date(Number(ym.slice(0,4)),Number(ym.slice(5,7)),1);
+  var to=dObj.getFullYear()+'-'+String(dObj.getMonth()+1).padStart(2,'0')+'-01';
+  sbFetch('/smoking_check_data?location_id=eq.'+locId+'&check_date=gte.'+from+'&check_date=lt.'+to+'&order=check_date').then(function(r){return r.json();}).then(function(rows){
+    if(!Array.isArray(rows)||!rows.length){ box.innerHTML='<div class="empty">이번 달 기록 없음</div>'; return; }
+    var h='';
+    rows.forEach(function(rec){
+      var amCnt=[1,2,3,4].filter(function(i){return rec['am'+i+'_name'];}).length;
+      var pmCnt=[1,2,3,4].filter(function(i){return rec['pm'+i+'_name'];}).length;
+      var bad=[rec.item_ashtray,rec.item_floor,rec.item_airpurifier,rec.item_flowerpot].some(function(v){return v==='X';});
+      h+='<div class="rec-row" style="cursor:pointer" onclick="document.getElementById(\'skDate\').value=\''+rec.check_date+'\';loadSmokingDay();">';
+      h+='<div class="rec-main"><div class="rec-t">'+rec.check_date+'</div><div class="rec-s">오전 '+amCnt+'회 · 오후 '+pmCnt+'회 · 확인 '+(rec.confirm_by||'-')+'</div></div>';
+      h+='<span class="rec-badge '+(bad?'bad':'ok')+'">'+(bad?'불량':'양호')+'</span>';
+      h+='</div>';
+    });
+    box.innerHTML=h;
+  }).catch(function(){ box.innerHTML='<div class="empty">조회 실패</div>'; });
 }
 
 // ═══════════ 출력 / 다운로드 ═══════════
@@ -1547,6 +1781,18 @@ function fillPrTargets(){
         var o=document.createElement('option'); o.value=f+'|'+z; o.textContent=f+' '+z; g.appendChild(o);
       });
     });
+  }else if(mod==='baby'){
+    BABYROOMS.forEach(function(r){
+      var o=document.createElement('option'); o.value=String(r.id); o.textContent=babyLabel(r);
+      sel.appendChild(o);
+    });
+    if(!BABYROOMS.length){var o0b=document.createElement('option');o0b.value='';o0b.textContent='목록 없음';sel.appendChild(o0b);}
+  }else if(mod==='smoking'){
+    SMOKEROOMS.forEach(function(r){
+      var o=document.createElement('option'); o.value=String(r.id); o.textContent=smokingLabel(r);
+      sel.appendChild(o);
+    });
+    if(!SMOKEROOMS.length){var o0s=document.createElement('option');o0s.value='';o0s.textContent='목록 없음';sel.appendChild(o0s);}
   }
 }
 function fillPrDays(){
@@ -1587,6 +1833,11 @@ function fetchMonth(cb){
   var path;
   if(mod==='equip'){
     path='/equip_inspection_data?equip_id=eq.'+tid+'&insp_date=gte.'+mi.from+'&insp_date=lt.'+mi.to+'&order=insp_date,shift';
+  }else if(mod==='smoking'){
+    sbFetch('/smoking_check_data?location_id=eq.'+tid+'&check_date=gte.'+mi.from+'&check_date=lt.'+mi.to+'&order=check_date').then(function(r){return r.json();}).then(function(rows){
+      cb(Array.isArray(rows)?rows:[], mod, tid, mi);
+    }).catch(function(){ toast('데이터 조회 실패'); });
+    return;
   }else{
     path='/inspection_data?insp_type=eq.'+mod+'&target_id=eq.'+encodeURIComponent(tid)+'&insp_date=gte.'+mi.from+'&insp_date=lt.'+mi.to+'&order=insp_date,shift';
   }
@@ -1647,6 +1898,46 @@ function buildGridDoc(title, locLabel, items, legend, records, mi, appr){
   rows.push([{v:'특이사항',cs:2,cls:'hd'},{v:collectNotes(records)||'-',cs:totalCols-2,cls:'lf'}]);
   var cols=[3.5,20]; for(var c=0;c<half1;c++)cols.push(3.1);
   return {rows:rows, cols:cols, orient:'portrait', title:title, fname:title.replace(/\s/g,'')+'_'+locLabel.replace(/[\/\s]/g,'')+'_'+mi.y+'-'+String(mi.m).padStart(2,'0')};
+}
+// ─ 흡연실 월간 점검표 ─
+function buildSmokingDoc(records, locLabel, mi, appr){
+  var byDay={}; records.forEach(function(r){ byDay[Number(String(r.check_date).slice(8,10))]=r; });
+  var W=8; // 일 / 오전 / 오후 / 재떨이 / 바닥 / 공기청정기 / 화분 / 확인
+  var rows=[];
+  rows.push([{v:'흡연실 점검표 ('+mi.label+')',cs:W,cls:'tt'}]);
+  rows.push([
+    {v:'흡연실 위치',cls:'hd'},{v:locLabel,cs:W-3,cls:'lf'},
+    {v:appr?'확인':'범례',cls:'hd'},{v:appr?sigCellText(appr):'○양호 X불량',cls:appr?'ok':'lf'}
+  ]);
+  rows.push([
+    {v:'일',cls:'hd'},{v:'오전 점검자/시간',cls:'hd'},{v:'오후 점검자/시간',cls:'hd'},
+    {v:'재떨이',cls:'hd'},{v:'바닥',cls:'hd'},{v:'공기청정기',cls:'hd'},{v:'화분',cls:'hd'},{v:'확인',cls:'hd'}
+  ]);
+  function joinSlots(r,half){
+    var out=[];
+    for(var i=1;i<=4;i++){
+      var nm=r&&r[half+i+'_name'], tm=r&&r[half+i+'_time'];
+      if(nm) out.push(nm+(tm?' '+tm:''));
+    }
+    return out.join('\n');
+  }
+  for(var d=1;d<=mi.days;d++){
+    var r=byDay[d];
+    if(!r){ rows.push([{v:String(d)},{v:''},{v:''},{v:''},{v:''},{v:''},{v:''},{v:''}]); continue; }
+    rows.push([
+      {v:String(d)},
+      {v:joinSlots(r,'am'),cls:'lf'},
+      {v:joinSlots(r,'pm'),cls:'lf'},
+      {v:SYM[r.item_ashtray]||r.item_ashtray||'',cls:r.item_ashtray==='X'?'bx':''},
+      {v:SYM[r.item_floor]||r.item_floor||'',cls:r.item_floor==='X'?'bx':''},
+      {v:SYM[r.item_airpurifier]||r.item_airpurifier||'',cls:r.item_airpurifier==='X'?'bx':''},
+      {v:SYM[r.item_flowerpot]||r.item_flowerpot||'',cls:r.item_flowerpot==='X'?'bx':''},
+      {v:r.confirm_by||''}
+    ]);
+  }
+  var cols=[3,26,26,7,7,9,7,10];
+  return {rows:rows, cols:cols, orient:'portrait', title:'흡연실 점검표',
+    fname:'흡연실점검표_'+locLabel.replace(/[\/\s]/g,'')+'_'+mi.y+'-'+String(mi.m).padStart(2,'0')};
 }
 // ─ 장비 일지 ─
 function buildEquipDoc(records, tid, mi, appr){
@@ -1752,6 +2043,14 @@ function buildDoc(records, mod, tid, mi, appr, workerOverride){
   }
   if(mod==='rest'){
     return buildGridDoc('휴게시설 관리 점검표', restLabel(Number(tid)), MOD_META.rest.items, '○적합 △미흡 ×부적합 －해당없음', records, mi, appr);
+  }
+  if(mod==='baby'){
+    var br=BABYROOMS.find(function(x){return String(x.id)===String(tid);})||{};
+    return buildGridDoc('유아휴게실 점검 체크리스트', babyLabel(br)||('ID '+tid), MOD_META.baby.items, '○양호 △보통 X불량', records, mi, appr);
+  }
+  if(mod==='smoking'){
+    var sr=SMOKEROOMS.find(function(x){return String(x.id)===String(tid);})||{};
+    return buildSmokingDoc(records, smokingLabel(sr)||('ID '+tid), mi, appr);
   }
   return buildGridDoc('공용구역 점검표', String(tid).replace('|',' '), MOD_META.common.items, '○양호 △보통 X불량', records, mi, appr);
 }
