@@ -7519,6 +7519,8 @@ function subVeh(){
     var e=document.getElementById(id);if(e){e.value='';e.style.borderColor='';e.style.background='';}
   });
   setTimeSel('vhStart',''); setTimeSel('vhEnd','');
+  var _nowE=new Date(Date.now()+9*3600000);
+  setTimeSel('vhEnd', String(_nowE.getUTCHours()).padStart(2,'0')+':'+String(_nowE.getUTCMinutes()).padStart(2,'0'));
   var hw=document.getElementById('vhDistWrap');if(hw)hw.style.display='none';
   var hh=document.getElementById('vhAutoHint');if(hh)hh.style.display='none';
   vhTab(1);renderVehList(vehData);
@@ -7687,6 +7689,10 @@ function loadVehData(){
   loadVehicleFromDB();
   var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
   var vd=document.getElementById('vhDate');if(vd)vd.value=today;
+  // 도착 시간 = 작성하는 현재 한국시간으로 자동 입력 (출발시간은 직접 입력)
+  var nowKST=new Date(Date.now()+9*3600000);
+  var hh=String(nowKST.getUTCHours()).padStart(2,'0'), mm=String(nowKST.getUTCMinutes()).padStart(2,'0');
+  if(typeof setTimeSel==='function') setTimeSel('vhEnd', hh+':'+mm);
   var now=new Date();var tm=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0');
   var vf=document.getElementById('vhDlFrom');var vt=document.getElementById('vhDlTo');
   if(vf)vf.value=tm;if(vt)vt.value=tm;
@@ -7951,6 +7957,8 @@ function subWorkVeh(){
   document.querySelectorAll('#wvDestGrp .rp').forEach(function(b){b.classList.remove('on');});
   var wde=document.getElementById('wvDestEtc'); if(wde){ wde.style.display='none'; wde.value=''; }
   setTimeSel('wvStart',''); setTimeSel('wvEnd','');
+  var _nowE2=new Date(Date.now()+9*3600000);
+  setTimeSel('wvEnd', String(_nowE2.getUTCHours()).padStart(2,'0')+':'+String(_nowE2.getUTCMinutes()).padStart(2,'0'));
   var hw=document.getElementById('wvDistWrap');if(hw)hw.style.display='none';
   var hh=document.getElementById('wvAutoHint');if(hh)hh.style.display='none';
   wvTab(1);renderWorkVehList(workVehData);
@@ -9052,6 +9060,10 @@ function loadWorkVehData(){
   loadWorkVehicleFromDB();
   var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   var vd=document.getElementById('wvDate');if(vd)vd.value=today;
+  // 도착 시간 = 작성하는 현재 한국시간으로 자동 입력 (출발시간은 직접 입력)
+  var nowKST2=new Date(Date.now()+9*3600000);
+  var hh2=String(nowKST2.getUTCHours()).padStart(2,'0'), mm2=String(nowKST2.getUTCMinutes()).padStart(2,'0');
+  if(typeof setTimeSel==='function') setTimeSel('wvEnd', hh2+':'+mm2);
   var now=new Date();var tm=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0');
   var vf=document.getElementById('wvDlFrom');var vt=document.getElementById('wvDlTo');
   if(vf)vf.value=tm;if(vt)vt.value=tm;
