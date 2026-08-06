@@ -478,6 +478,7 @@ html{overflow-x:hidden}
     })();
   </script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
 </head>
 <body>
 
@@ -4715,7 +4716,7 @@ async function loadExecDashboard(){
 
 
 // 현황판 엑셀 다운로드 (admin 전용)
-function edDownloadExcel(){
+async function edDownloadExcel(){
   if(!me||me.role!=='admin'){ toast('⚠️ 관리자만 다운로드할 수 있습니다'); return; }
   var d=window.edLastData;
   if(!d){ toast('먼저 현황판 데이터를 불러온 뒤 다시 시도해주세요'); return; }
@@ -4758,8 +4759,7 @@ function edDownloadExcel(){
     var ws=XLSX.utils.aoa_to_sheet(rows);
     ws['!cols']=[{wch:22},{wch:20}];
     var wb={SheetNames:['현황판'],Sheets:{'현황판':ws}};
-        dlApplyPrintTitles(wb);
-        XLSX.writeFile(wb,'T1_현황판_'+d.dFrom+(d.dFrom!==d.dTo?'~'+d.dTo:'')+'.xlsx');
+                await dlSaveWorkbook(wb, 'T1_현황판_'+d.dFrom+(d.dFrom!==d.dTo?'~'+d.dTo:'')+'.xlsx');
     toast('✅ 현황판 엑셀 다운로드 완료');
   }catch(e){ toast('다운로드 오류: '+e.message); }
 }
@@ -5987,6 +5987,44 @@ function dlWithTitle(rows, title, rangeStr, colCount){
 }
 // 어떤 워크시트든 공공기관/경영진 보고서 수준으로 서식·인쇄설정을 입혀주는 공통 마무리 함수
 // (데이터/컬럼/순서는 절대 건드리지 않고, 스타일·페이지설정만 적용)
+// 워크북을 실제로 저장 (xlsx-js-style이 지원하지 않는 인쇄방향/폭맞춤을 JSZip으로 직접 주입 후 저장)
+async function dlSaveWorkbook(wb, filename, returnBlob){
+  dlApplyPrintTitles(wb);
+  var wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
+  var finalBlob=null;
+  try{
+    if(typeof JSZip!=='undefined'){
+      var zip=await JSZip.loadAsync(wbout);
+      var sheetFiles=Object.keys(zip.files).filter(function(f){ return /^xl\/worksheets\/sheet\d+\.xml$/.test(f); });
+      for(var i=0;i<sheetFiles.length;i++){
+        var path=sheetFiles[i];
+        var xml=await zip.file(path).async('string');
+        if(xml.indexOf('<sheetPr')===-1){
+          xml=xml.replace(/(<worksheet[^>]*>)/, '$1<sheetPr><pageSetUpPr fitToPage="1"/></sheetPr>');
+        }
+        if(xml.indexOf('<pageSetup')===-1){
+          var tag='<pageSetup orientation="landscape" paperSize="9" fitToWidth="1" fitToHeight="0"/>';
+          if(xml.indexOf('<pageMargins')!==-1){
+            xml=xml.replace(/(<pageMargins[^\/]*\/>)/, '$1'+tag);
+          }else{
+            xml=xml.replace('</worksheet>', tag+'</worksheet>');
+          }
+        }
+        zip.file(path, xml);
+      }
+      finalBlob=await zip.generateAsync({type:'blob', mimeType:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+    }
+  }catch(e){ console.error('페이지설정 후처리 실패, 기본 저장으로 대체:', e); }
+  if(!finalBlob){
+    finalBlob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  }
+  if(returnBlob) return finalBlob;
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(finalBlob);
+  a.download=filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
 // 저장 직전 호출: 시트별로 표시해둔 반복행 범위를 워크북 인쇄제목(Print Titles)으로 등록
 function dlApplyPrintTitles(wb){
   try{
@@ -6038,7 +6076,7 @@ function dlFinalizeSheet(ws){
       }
     }
     ws['!margins']={left:0.3,right:0.3,top:0.5,bottom:0.45,header:0.2,footer:0.2};
-    ws['!pageSetup']={orientation:'landscape',paperSize:9,fitToWidth:1,fitToHeight:0,scale:90};
+    ws['!pageSetup']={orientation:'landscape',paperSize:9,fitToWidth:1,fitToHeight:0,fitToPage:true};
     ws['!printOptions']={horizontalCentered:false,verticalCentered:false};
     // 인쇄 시 매 페이지 상단에 반복될 행(제목~헤더)
     ws['!repeatRowsRange']='$1:$'+(headerRow+1);
@@ -6502,14 +6540,7 @@ async function dlCSV(type){
       notice:'공지사항', regulation:'사규파일목록', users:'사용자목록', all:'전체현황'
     };
     var dlLabel=dlNameMap[type]||type;
-    dlApplyPrintTitles(wb);
-    var wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
-    var blob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-    var a=document.createElement('a');
-    a.href=URL.createObjectURL(blob);
-    a.download='T1_'+dlLabel+'_'+today+'.xlsx';
-    a.click();
-    URL.revokeObjectURL(a.href);
+    await dlSaveWorkbook(wb, 'T1_'+dlLabel+'_'+today+'.xlsx');
     toast('✅ 엑셀 다운로드 완료');
   }catch(e){console.error(e);toast('오류: '+e.message);}
 }
@@ -7613,7 +7644,7 @@ function setVhRange(el,range){
   else if(range==='last'){var l=new Date(now.getFullYear(),now.getMonth()-1,1);if(from)from.value=fmt(l);if(to)to.value=fmt(l);}
   else{if(vehData.length){var dates=vehData.map(function(r){return r.date;}).sort();var fd=new Date(dates[0]);var ld=new Date(dates[dates.length-1]);if(from)from.value=fmt(fd);if(to)to.value=fmt(ld);}}
 }
-function dlVeh(){
+async function dlVeh(){
   if(!canDownload()) return;
   var from=document.getElementById('vhDlFrom').value;
   var to=document.getElementById('vhDlTo').value;
@@ -7632,8 +7663,7 @@ function dlVeh(){
   ws['!merges']=wrap.merges;
   ws['!cols']=[{wch:11},{wch:9},{wch:9},{wch:14},{wch:14},{wch:9},{wch:9},{wch:9},{wch:12},{wch:14},{wch:12}];
   var wb={SheetNames:['차량운행일지'],Sheets:{'차량운행일지':ws}};
-    dlApplyPrintTitles(wb);
-    XLSX.writeFile(wb,'차량운행일지_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
+        await dlSaveWorkbook(wb, '차량운행일지_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
   var info=document.getElementById('vhDlInfo');if(info)info.textContent='완료: '+filtered.length+'건';
   toast('차량운행일지 다운로드 완료 ('+filtered.length+'건)');
 }
@@ -8086,7 +8116,7 @@ function setWvRange(el,range){
   else if(range==='last'){var l=new Date(now.getFullYear(),now.getMonth()-1,1);if(from)from.value=fmt(l);if(to)to.value=fmt(l);}
   else{if(workVehData.length){var dates=workVehData.map(function(r){return r.date;}).sort();var fd=new Date(dates[0]);var ld=new Date(dates[dates.length-1]);if(from)from.value=fmt(fd);if(to)to.value=fmt(ld);}}
 }
-function dlWorkVeh(){
+async function dlWorkVeh(){
   if(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader')){toast('⚠️ 팀장 이상만 다운로드할 수 있습니다');return;}
   var from=document.getElementById('wvDlFrom').value;
   var to=document.getElementById('wvDlTo').value;
@@ -8105,8 +8135,7 @@ function dlWorkVeh(){
   ws['!merges']=wrap.merges;
   ws['!cols']=[{wch:11},{wch:12},{wch:9},{wch:9},{wch:14},{wch:14},{wch:9},{wch:9},{wch:9},{wch:12},{wch:14},{wch:10},{wch:10},{wch:12}];
   var wb={SheetNames:['공사업무용차량'],Sheets:{'공사업무용차량':ws}};
-    dlApplyPrintTitles(wb);
-    XLSX.writeFile(wb,'공사업무용차량_운행일지_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
+        await dlSaveWorkbook(wb, '공사업무용차량_운행일지_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
   var info=document.getElementById('wvDlInfo');if(info)info.textContent='완료: '+filtered.length+'건';
   toast('공사업무용차량 운행일지 다운로드 완료 ('+filtered.length+'건)');
 }
@@ -8365,7 +8394,7 @@ function setJwRange(el,range){
   else if(range==='last'){var l=new Date(now.getFullYear(),now.getMonth()-1,1);if(from)from.value=fmt(l);if(to)to.value=fmt(l);}
   else{if(jointWorkData.length){var dates=jointWorkData.map(function(r){return r.work_date;}).sort();var fd=new Date(dates[0]);var ld=new Date(dates[dates.length-1]);if(from)from.value=fmt(fd);if(to)to.value=fmt(ld);}}
 }
-function dlJointWork(){
+async function dlJointWork(){
   if(!canDownload()) return;
   var from=document.getElementById('jwDlFrom').value;
   var to=document.getElementById('jwDlTo').value;
@@ -8396,8 +8425,7 @@ function dlJointWork(){
     var wb=XLSX.utils.book_new();
     dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,'공동작업');
-        dlApplyPrintTitles(wb);
-        XLSX.writeFile(wb,'T1_공동작업기록_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
+                await dlSaveWorkbook(wb, 'T1_공동작업기록_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
     toast('📥 공동작업 기록 다운로드 완료 ('+filtered.length+'건)');
   }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
@@ -11515,7 +11543,7 @@ function renderHoList(data){
 // ══════════════════════════════════════════
 // 인수인계 엑셀 다운로드
 // ══════════════════════════════════════════
-function downloadHoExcel(){
+async function downloadHoExcel(){
   if(!canDownload()) return;
   if(!hoAll||!hoAll.length){ toast('다운로드할 데이터가 없습니다'); return; }
   var mfEl=document.getElementById('hoFilterMonth');
@@ -11565,8 +11593,7 @@ function downloadHoExcel(){
     XLSX.utils.book_append_sheet(wb,ws,'인수인계');
 
     var now=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-        dlApplyPrintTitles(wb);
-        XLSX.writeFile(wb,'T1_인수인계_'+now+'.xlsx');
+                await dlSaveWorkbook(wb, 'T1_인수인계_'+now+'.xlsx');
     toast('✅ 인수인계 엑셀 다운로드 완료');
   }catch(e){ toast('다운로드 오류: '+e.message); }
 }
@@ -12589,7 +12616,7 @@ async function confirmLostEdit(){
   }catch(e){ toast('⚠️ 수정 실패: '+e.message); }
 }
 
-function downloadAccidentReportExcel(){
+async function downloadAccidentReportExcel(){
   if(!_rptData||_rptData.type!=='accident') return;
   var ambYes=document.getElementById('accAmbYes').checked;
   var ambNo=document.getElementById('accAmbNo').checked;
@@ -12643,13 +12670,12 @@ function downloadAccidentReportExcel(){
     dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,'안전사고보고서');
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-        dlApplyPrintTitles(wb);
-        XLSX.writeFile(wb,'안전사고발생보고서_'+today+'.xlsx');
+                await dlSaveWorkbook(wb, '안전사고발생보고서_'+today+'.xlsx');
     toast('📥 다운로드 완료');
   }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
 
-function downloadAccidentExcel(){
+async function downloadAccidentExcel(){
   if(!canDownload()) return;
   if(!accidentAll||!accidentAll.length){ toast('다운로드할 데이터가 없습니다'); return; }
   var mfEl=document.getElementById('accFilterMonth');
@@ -12691,8 +12717,7 @@ function downloadAccidentExcel(){
     dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,'안전사고');
     var fname='T1_안전사고현황'+(mf?'_'+mf:'')+'.xlsx';
-        dlApplyPrintTitles(wb);
-        XLSX.writeFile(wb,fname);
+                await dlSaveWorkbook(wb, fname);
     toast('📥 다운로드 완료');
   }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
@@ -12730,8 +12755,7 @@ async function downloadLostExcel(){
     dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,'습득물');
     var fname='T1_습득물관리'+(mf?'_'+mf:'')+'.xlsx';
-        dlApplyPrintTitles(wb);
-        XLSX.writeFile(wb,fname);
+                await dlSaveWorkbook(wb, fname);
     toast('📥 다운로드 완료');
   }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
@@ -13278,7 +13302,7 @@ async function deleteToiletConfirm(){
     await loadToiletFromDB();
   }catch(e){ toast('삭제 오류: '+String(e.message||e)); }
 }
-function dlToiletExcel(){
+async function dlToiletExcel(){
   if(!canDownload()) return;
   if(!toiletData.length){ toast('다운로드할 데이터가 없습니다'); return; }
   var header=['구역','성별','일반/상주','층','번호','가족실','탕비실','개수대','양변기','위생휴지통','세면기','소변기','소모품보관창고','주간관리팀','야간관리팀','사용여부'];
@@ -13298,8 +13322,7 @@ function dlToiletExcel(){
     dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,'화장실현황');
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-        dlApplyPrintTitles(wb);
-        XLSX.writeFile(wb,'T1_화장실현황_'+today+'.xlsx');
+                await dlSaveWorkbook(wb, 'T1_화장실현황_'+today+'.xlsx');
     toast('📥 다운로드 완료 ('+toiletData.length+'건)');
   }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
@@ -13743,7 +13766,7 @@ async function facDeleteConfirm(type){
     await facLoadFromDB(type);
   }catch(e){ toast('삭제 오류: '+String(e.message||e)); }
 }
-function facDownload(type){
+async function facDownload(type){
   if(!canDownload()) return;
   var cfg=FAC_CONFIGS[type];
   var data=facData[type]||[];
@@ -13761,8 +13784,7 @@ function facDownload(type){
     dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,cfg.title);
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-        dlApplyPrintTitles(wb);
-        XLSX.writeFile(wb,'T1_'+cfg.title+'현황_'+today+'.xlsx');
+                await dlSaveWorkbook(wb, 'T1_'+cfg.title+'현황_'+today+'.xlsx');
     toast('📥 다운로드 완료 ('+data.length+'건)');
   }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
@@ -14182,7 +14204,7 @@ async function deleteWaste(id){
   }catch(e){ toast('⚠️ 삭제 실패'); }
 }
 
-function downloadWasteExcel(){
+async function downloadWasteExcel(){
   if(!canDownload()) return;
   if(!wasteData||!wasteData.length){ toast('다운로드할 데이터가 없습니다'); return; }
   var mf=document.getElementById('wasteFilterMonth');
@@ -14206,8 +14228,7 @@ function downloadWasteExcel(){
     ws['!cols']=[{wch:12},{wch:8},{wch:10},{wch:16},{wch:12},{wch:16},{wch:10},{wch:10},{wch:10},{wch:12},{wch:14},{wch:10},{wch:12},{wch:16}];
     dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,'폐기물처리현황');
-        dlApplyPrintTitles(wb);
-        XLSX.writeFile(wb,'T1_폐기물처리현황'+(mfv?'_'+mfv:'')+'.xlsx');
+                await dlSaveWorkbook(wb, 'T1_폐기물처리현황'+(mfv?'_'+mfv:'')+'.xlsx');
     toast('📥 다운로드 완료');
   }catch(e){ toast('⚠️ 다운로드 실패'); }
 }
@@ -17447,7 +17468,7 @@ async function saveAccidentReport(){
 function printReport(){
   window.print();
 }
-function downloadReportExcel(){
+async function downloadReportExcel(){
   if(!_rptData){ toast('보고서 데이터가 없습니다'); return; }
   if(_rptData.type==='accident'){ downloadAccidentReportExcel(); return; }
   var f=_rptData.f;
@@ -17524,8 +17545,7 @@ function downloadReportExcel(){
     dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,'보고서');
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-        dlApplyPrintTitles(wb);
-        XLSX.writeFile(wb, f.title.replace(/\s/g,'')+'_'+today+'.xlsx');
+                await dlSaveWorkbook(wb, f.title.replace(/\s/g,'')+'_'+today+'.xlsx');
     toast('📥 다운로드 완료');
   }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
