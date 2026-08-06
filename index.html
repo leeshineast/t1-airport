@@ -90,7 +90,7 @@ html{overflow-x:hidden}
   #sExecDash #edAnalysisGrid>div>div:first-child{font-size:15px!important;margin-bottom:10px!important}
   #sExecDash #edHourPanel>div,#sExecDash #edFacTypePanel>div,#sExecDash #edAccTypePanel>div,#sExecDash #edVocTypePanel>div{margin-bottom:8px!important}
   #sExecDash #edHourPanel span[style*="width:52px"],#sExecDash #edFacTypePanel span[style*="width:52px"],#sExecDash #edAccTypePanel span[style*="width:52px"],#sExecDash #edVocTypePanel span[style*="width:52px"]{font-size:13px!important;width:80px!important}
-  #sExecDash #edHourPanel div[style*="height:7px"],#sExecDash #edFacTypePanel div[style*="height:7px"],#sExecDash #edAccTypePanel div[style*="height:7px"],#sExecDash #edVocTypePanel div[style*="height:7px"]{height:10px!important;border-radius:5px!important}
+  #sExecDash #edHourPanel div[style*="height:9px"],#sExecDash #edFacTypePanel div[style*="height:9px"],#sExecDash #edAccTypePanel div[style*="height:9px"],#sExecDash #edVocTypePanel div[style*="height:9px"]{height:12px!important;border-radius:6px!important}
   #sExecDash #edHourPanel span[style*="width:16px"],#sExecDash #edFacTypePanel span[style*="width:16px"],#sExecDash #edAccTypePanel span[style*="width:16px"],#sExecDash #edVocTypePanel span[style*="width:16px"]{font-size:14px!important;width:26px!important}
   #sExecDash #edAccTypePanel div[style*="color:var(--success)"]{font-size:15px!important;padding:10px 0!important}
 }
@@ -1737,7 +1737,7 @@ html{overflow-x:hidden}
 
   <!-- 4개 현황 패널 -->
   <div class="sec-lbl" style="padding:6px 13px 6px;font-size:12px">현황 분석</div>
-  <div id="edAnalysisGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 13px 12px">
+  <div id="edAnalysisGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 13px 12px;align-items:start">
     <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px 10px">
       <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:7px">⏰ 시간대별 현장 인원</div>
       <div id="edHourPanel"></div>
@@ -4616,7 +4616,7 @@ async function loadExecDashboard(){
 
     // ── 층별 인력 배치: 막대그래프 스타일 ──
     var maxFloor=Math.max.apply(null, floorShow.concat([1]));
-    var barAreaH=90; // px, 막대가 차지하는 최대 높이
+    var barAreaH=64; // px, 막대가 차지하는 최대 높이
     var heatHtml='';
     MS_FLOORS.forEach(function(fl,i){
       var v=floorShow[i];
@@ -4635,7 +4635,7 @@ async function loadExecDashboard(){
       var w=max?Math.round(val/max*100):0;
       return '<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">'
         +'<span style="font-size:10px;color:var(--g5);width:52px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+label+'</span>'
-        +'<div style="flex:1;height:7px;background:var(--g1);border-radius:3px;overflow:hidden"><div style="width:'+w+'%;height:100%;background:'+color+';border-radius:3px"></div></div>'
+        +'<div style="flex:1;height:9px;background:var(--g1);border-radius:5px;overflow:hidden"><div style="width:'+w+'%;height:100%;background:linear-gradient(90deg,'+color+'99,'+color+');border-radius:5px;transition:width .4s"></div></div>'
         +'<span style="font-size:10px;font-weight:800;color:var(--g7);width:16px;text-align:right;flex-shrink:0">'+val+'</span></div>';
     }
 
