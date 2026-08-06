@@ -4758,6 +4758,7 @@ async function edDownloadExcel(){
 
     var ws=XLSX.utils.aoa_to_sheet(rows);
     ws['!cols']=[{wch:22},{wch:20}];
+    dlFinalizeSheet(ws);
     var wb={SheetNames:['현황판'],Sheets:{'현황판':ws}};
                 await dlSaveWorkbook(wb, 'T1_현황판_'+d.dFrom+(d.dFrom!==d.dTo?'~'+d.dTo:'')+'.xlsx');
     toast('✅ 현황판 엑셀 다운로드 완료');
@@ -6007,7 +6008,15 @@ async function dlSaveWorkbook(wb, filename, returnBlob){
           if(xml.indexOf('<pageMargins')!==-1){
             xml=xml.replace(/(<pageMargins[^\/]*\/>)/, '$1'+tag);
           }else{
-            xml=xml.replace('</worksheet>', tag+'</worksheet>');
+            // pageMargins가 없으면 headerFooter/drawing 등 뒤쪽 요소보다 앞에 안전하게 삽입
+            var laterTags=['<headerFooter','<rowBreaks','<colBreaks','<customProperties','<cellWatches','<ignoredErrors','<smartTags','<drawing','<legacyDrawing','<picture','<oleObjects','<controls','<webPublishItems','<tableParts','<extLst'];
+            var insertPos=-1;
+            for(var li=0;li<laterTags.length;li++){
+              var idx=xml.indexOf(laterTags[li]);
+              if(idx!==-1 && (insertPos===-1||idx<insertPos)) insertPos=idx;
+            }
+            if(insertPos!==-1){ xml=xml.slice(0,insertPos)+tag+xml.slice(insertPos); }
+            else{ xml=xml.replace('</worksheet>', tag+'</worksheet>'); }
           }
         }
         zip.file(path, xml);
@@ -7662,6 +7671,7 @@ async function dlVeh(){
   var ws=XLSX.utils.aoa_to_sheet(wrap.rows);
   ws['!merges']=wrap.merges;
   ws['!cols']=[{wch:11},{wch:9},{wch:9},{wch:14},{wch:14},{wch:9},{wch:9},{wch:9},{wch:12},{wch:14},{wch:12}];
+  dlFinalizeSheet(ws);
   var wb={SheetNames:['차량운행일지'],Sheets:{'차량운행일지':ws}};
         await dlSaveWorkbook(wb, '차량운행일지_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
   var info=document.getElementById('vhDlInfo');if(info)info.textContent='완료: '+filtered.length+'건';
@@ -8134,6 +8144,7 @@ async function dlWorkVeh(){
   var ws=XLSX.utils.aoa_to_sheet(wrap.rows);
   ws['!merges']=wrap.merges;
   ws['!cols']=[{wch:11},{wch:12},{wch:9},{wch:9},{wch:14},{wch:14},{wch:9},{wch:9},{wch:9},{wch:12},{wch:14},{wch:10},{wch:10},{wch:12}];
+  dlFinalizeSheet(ws);
   var wb={SheetNames:['공사업무용차량'],Sheets:{'공사업무용차량':ws}};
         await dlSaveWorkbook(wb, '공사업무용차량_운행일지_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
   var info=document.getElementById('wvDlInfo');if(info)info.textContent='완료: '+filtered.length+'건';
