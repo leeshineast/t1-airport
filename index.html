@@ -70,9 +70,9 @@ html{overflow-x:hidden}
   /* 완료율 도넛 */
   #sExecDash #edDonutGrid{gap:10px!important}
   #sExecDash #edDonutGrid>div{padding:14px 10px!important;gap:8px!important}
-  #sExecDash .ms-donut{width:88px!important;height:88px!important}
-  #sExecDash .ms-donut::before{inset:10px!important}
-  #sExecDash .ms-donut-txt{font-size:20px!important}
+  #sExecDash .ms-donut{width:112px!important;height:112px!important}
+  #sExecDash .ms-donut::before{inset:16px!important}
+  #sExecDash .ms-donut-txt{font-size:26px!important}
   #sExecDash #edDonutGrid div[style*="font-size:10px;font-weight:700"]{font-size:13px!important}
   /* 인력현황 카드 */
   #sExecDash #edShiftRow{gap:10px!important}
@@ -93,6 +93,8 @@ html{overflow-x:hidden}
   #sExecDash #edHourPanel div[style*="height:9px"],#sExecDash #edFacTypePanel div[style*="height:9px"],#sExecDash #edAccTypePanel div[style*="height:9px"],#sExecDash #edVocTypePanel div[style*="height:9px"]{height:12px!important;border-radius:6px!important}
   #sExecDash #edHourPanel span[style*="width:16px"],#sExecDash #edFacTypePanel span[style*="width:16px"],#sExecDash #edAccTypePanel span[style*="width:16px"],#sExecDash #edVocTypePanel span[style*="width:16px"]{font-size:14px!important;width:26px!important}
   #sExecDash #edAccTypePanel div[style*="color:var(--success)"]{font-size:15px!important;padding:10px 0!important}
+  #sExecDash #edAnalysisGrid>div{box-shadow:0 2px 8px rgba(20,30,60,.05)!important}
+  #sExecDash #edShiftRow>div{box-shadow:0 2px 6px rgba(20,30,60,.05)!important}
 }
 
 /* ─ 화면 ─ */
@@ -1718,41 +1720,44 @@ html{overflow-x:hidden}
   <!-- KPI 카드 -->
   <div id="edKpiGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 13px 4px"></div>
 
-  <div id="edMainGrid" style="padding:0 13px">
-    <div id="edMainCol1">
-    <!-- 완료율 도넛 -->
-    <div class="sec-lbl" style="padding:10px 0 6px;font-size:12px">운영 완료율</div>
-    <div id="edDonutGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px"></div>
-    </div>
+  <!-- 운영현황: 완료율 + 인력현황을 하나의 큰 카드로 통합 -->
+  <div id="edOpsCard" style="margin:8px 13px 0;background:white;border:1px solid var(--g2);border-radius:16px;box-shadow:0 2px 10px rgba(20,30,60,.06);padding:14px 16px">
+    <div id="edMainGrid">
+      <div id="edMainCol1">
+      <!-- 완료율 도넛 -->
+      <div class="sec-lbl" style="padding:0 0 8px;font-size:12px">운영 완료율</div>
+      <div id="edDonutGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>
+      </div>
 
-    <div id="edMainCol2">
-    <!-- 오전/오후/야간 + 층별 히트맵 -->
-    <div class="sec-lbl" style="padding:2px 0 6px;font-size:12px">인력현황</div>
-    <div id="edShiftRow" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:6px"></div>
-    <div style="margin-bottom:8px;background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px">
-      <div id="edHeatmap" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px"></div>
-    </div>
+      <div id="edMainCol2">
+      <!-- 오전/오후/야간 + 층별 배치 -->
+      <div class="sec-lbl" style="padding:0 0 8px;font-size:12px">인력현황</div>
+      <div id="edShiftRow" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px"></div>
+      <div style="background:var(--g1);border-radius:var(--r2);padding:9px">
+        <div id="edHeatmap" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px"></div>
+      </div>
+      </div>
     </div>
   </div>
 
   <!-- 4개 현황 패널 -->
-  <div class="sec-lbl" style="padding:6px 13px 6px;font-size:12px">현황 분석</div>
-  <div id="edAnalysisGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 13px 12px;align-items:start">
-    <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px 10px">
+  <div class="sec-lbl" style="padding:10px 13px 6px;font-size:12px">현황 분석</div>
+  <div id="edAnalysisGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 13px 12px">
+    <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px 10px;display:flex;flex-direction:column">
       <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:7px">⏰ 시간대별 현장 인원</div>
-      <div id="edHourPanel"></div>
+      <div id="edHourPanel" style="flex:1;display:flex;flex-direction:column;justify-content:center"></div>
     </div>
-    <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px 10px">
+    <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px 10px;display:flex;flex-direction:column">
       <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:7px">🔧 시설물고장 유형</div>
-      <div id="edFacTypePanel"></div>
+      <div id="edFacTypePanel" style="flex:1;display:flex;flex-direction:column;justify-content:center"></div>
     </div>
-    <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px 10px">
+    <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px 10px;display:flex;flex-direction:column">
       <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:7px">⚠️ 안전사고 재해형태</div>
-      <div id="edAccTypePanel"></div>
+      <div id="edAccTypePanel" style="flex:1;display:flex;flex-direction:column;justify-content:center"></div>
     </div>
-    <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px 10px">
+    <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px 10px;display:flex;flex-direction:column">
       <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:7px">📞 민원 유형</div>
-      <div id="edVocTypePanel"></div>
+      <div id="edVocTypePanel" style="flex:1;display:flex;flex-direction:column;justify-content:center"></div>
     </div>
   </div>
 
