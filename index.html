@@ -3975,7 +3975,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
 </div></div>
 
-<div id="indModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--danger),#b03030)"><h3>🚑 산업재해 등록</h3><button class="m-x" onclick="closeInd()">×</button></div><div style="padding:15px 17px;max-height:60vh;overflow-y:auto"><div class="fg"><label class="f-lbl">결정통지일자</label><input type="date" id="indDate" class="ri" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">재해자</label><input type="text" id="indPer" class="ri" placeholder="예: 오전1팀 홍길동" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">발생 장소</label><input type="text" id="indLoc" class="ri" placeholder="예: 3F 동편 화장실" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">재해 유형</label><div class="rg" id="indTG"><div class="rp" onclick="pickIT(this)">전도</div><div class="rp" onclick="pickIT(this)">낙상</div><div class="rp" onclick="pickIT(this)">골절</div><div class="rp" onclick="pickIT(this)">타박상</div><div class="rp" onclick="pickIT(this)">열상</div><div class="rp" onclick="pickIT(this)">요통</div><div class="rp" onclick="pickIT(this)">협착</div><div class="rp" onclick="pickIT(this)">충돌</div><div class="rp" onclick="pickIT(this)">기타</div></div><input type="text" id="indTypeCustom" class="ri" placeholder="재해 유형 직접 입력" style="display:none;margin-top:7px;margin-bottom:0"></div><div class="fg"><label class="f-lbl">발생 경위 및 조치</label><textarea id="indDesc" class="f-ta show" rows="3" placeholder="발생 경위, 응급조치 등"></textarea></div><div id="indErr" style="display:none;background:var(--danger-bg);border-radius:var(--r2);padding:8px 11px;font-size:13px;color:var(--danger);font-weight:600;margin-bottom:10px"></div><button onclick="subInd()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--danger),#b03030);color:white;border:none;border-radius:var(--r2);font-size:16px;font-weight:700;cursor:pointer">등록 완료</button></div></div></div>
+<div id="indModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--danger),#b03030)"><h3 id="indModalTitle">🚑 산업재해 등록</h3><button class="m-x" onclick="closeInd()">×</button></div><div style="padding:15px 17px;max-height:60vh;overflow-y:auto"><div class="fg"><label class="f-lbl">결정통지일자</label><input type="date" id="indDate" class="ri" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">재해자</label><input type="text" id="indPer" class="ri" placeholder="예: 오전1팀 홍길동" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">발생 장소</label><input type="text" id="indLoc" class="ri" placeholder="예: 3F 동편 화장실" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">재해 유형</label><div class="rg" id="indTG"><div class="rp" onclick="pickIT(this)">전도</div><div class="rp" onclick="pickIT(this)">낙상</div><div class="rp" onclick="pickIT(this)">골절</div><div class="rp" onclick="pickIT(this)">타박상</div><div class="rp" onclick="pickIT(this)">열상</div><div class="rp" onclick="pickIT(this)">요통</div><div class="rp" onclick="pickIT(this)">협착</div><div class="rp" onclick="pickIT(this)">충돌</div><div class="rp" onclick="pickIT(this)">기타</div></div><input type="text" id="indTypeCustom" class="ri" placeholder="재해 유형 직접 입력" style="display:none;margin-top:7px;margin-bottom:0"></div><div class="fg"><label class="f-lbl">발생 경위 및 조치</label><textarea id="indDesc" class="f-ta show" rows="3" placeholder="발생 경위, 응급조치 등"></textarea></div><div id="indErr" style="display:none;background:var(--danger-bg);border-radius:var(--r2);padding:8px 11px;font-size:13px;color:var(--danger);font-weight:600;margin-bottom:10px"></div><button id="indSubBtn" onclick="subInd()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--danger),#b03030);color:white;border:none;border-radius:var(--r2);font-size:16px;font-weight:700;cursor:pointer">등록 완료</button></div></div></div>
 <div id="noticeM" class="modal-bg"><div class="modal" style="max-width:350px"><div style="background:linear-gradient(135deg,var(--navy),var(--teal2));padding:15px 17px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:21px">📢</span><div><div style="color:white;font-size:16px;font-weight:800">전체 공지사항</div><div style="color:rgba(255,255,255,.6);font-size:12px" id="noticeD"></div></div></div><button onclick="closeN()" style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:26px;height:26px;color:white;font-size:17px;cursor:pointer">×</button></div><div style="padding:17px;max-height:46vh;overflow-y:auto"><div style="font-size:17px;font-weight:800;color:var(--g7);margin-bottom:9px" id="noticeT"></div><div style="font-size:15px;color:var(--g5);line-height:1.7" id="noticeB"></div></div><div style="padding:11px 17px 17px;display:flex;gap:9px;border-top:1px solid var(--g2)"><label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--g4);cursor:pointer;flex:1"><input type="checkbox" id="noSkip" style="accent-color:var(--teal)"> 오늘 다시 보지 않기</label><button onclick="closeN()" style="padding:9px 17px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">확인</button></div></div></div>
 
 <!-- 인력현황 미입력 조장 안내 팝업 -->
@@ -4325,7 +4325,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 <div id="toast"></div>
 
 <script>
-let me=null,wdT=null,indData=[];
+let me=null,wdT=null,indData=[],indEditId=null;
 
 // ─ 유틸 ─
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';clearTimeout(t._t);t._t=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(8px)';},2600);}
@@ -5821,7 +5821,38 @@ async function pubNotice(){const t=document.getElementById('nT').value.trim();co
   document.getElementById('noticeT').textContent=t;document.getElementById('noticeB').innerHTML=b.replace(/\n/g,'<br>');const now=new Date();document.getElementById('noticeD').textContent=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0')+' 등록';try{localStorage.removeItem('nsk_'+new Date().toDateString());}catch(e){}document.getElementById('noSkip').checked=false;closeNW();document.getElementById('nT').value='';document.getElementById('nB').value='';setTimeout(()=>showM('noticeM'),500);toast('✓ 공지사항 전체 발송 완료!'); loadAdminNoticeList(); loadNoticesFromDB();}
 
 // ─ 산업재해 ─
-function openInd(){if(!me||(me.role!=='admin'&&me.role!=='manager'&&me.role!=='leader'&&me.role!=='acting_leader')){toast('팀장 이상만 등록 가능합니다');return;}const now=new Date();const local=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16);document.getElementById('indDate').value=local;['indPer','indLoc','indDesc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});document.querySelectorAll('#indTG .rp').forEach(p=>p.classList.remove('on'));document.getElementById('indErr').style.display='none';showM('indModal');}
+function openInd(){if(!me||(me.role!=='admin'&&me.role!=='manager'&&me.role!=='leader'&&me.role!=='acting_leader')){toast('팀장 이상만 등록 가능합니다');return;}indEditId=null;const now=new Date();const local=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16);document.getElementById('indDate').value=local;['indPer','indLoc','indDesc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});document.querySelectorAll('#indTG .rp').forEach(p=>p.classList.remove('on'));var ce=document.getElementById('indTypeCustom');if(ce){ce.style.display='none';ce.value='';}document.getElementById('indErr').style.display='none';var t=document.getElementById('indModalTitle');if(t)t.textContent='🚑 산업재해 등록';var b=document.getElementById('indSubBtn');if(b)b.textContent='등록 완료';showM('indModal');}
+function openIndEdit(id){
+  if(!me||(me.role!=='admin'&&me.role!=='manager'&&me.role!=='leader'&&me.role!=='acting_leader')){toast('팀장 이상만 수정 가능합니다');return;}
+  var r=indData.find(function(x){return String(x.id)===String(id);});
+  if(!r){toast('기록을 찾을 수 없습니다');return;}
+  indEditId=id;
+  var dt=(r.date||'').slice(0,10);
+  document.getElementById('indDate').value=dt;
+  document.getElementById('indPer').value=r.worker||'';
+  document.getElementById('indLoc').value=r.location||'';
+  document.getElementById('indDesc').value=r.description||'';
+  document.getElementById('indErr').style.display='none';
+  var stdTypes=['전도','낙상','골절','타박상','열상','요통','협착','충돌'];
+  var isStd=stdTypes.indexOf(r.type)!==-1;
+  document.querySelectorAll('#indTG .rp').forEach(function(p){ p.classList.toggle('on', p.textContent===r.type); });
+  var ce=document.getElementById('indTypeCustom');
+  if(!isStd&&r.type){
+    document.querySelectorAll('#indTG .rp').forEach(function(p){ p.classList.toggle('on', p.textContent==='기타'); });
+    if(ce){ ce.style.display='block'; ce.value=r.type; }
+  }else if(ce){ ce.style.display='none'; ce.value=''; }
+  var t=document.getElementById('indModalTitle'); if(t) t.textContent='🚑 산업재해 수정';
+  var b=document.getElementById('indSubBtn'); if(b) b.textContent='수정 완료';
+  showM('indModal');
+}
+async function deleteAccidentDB(id){
+  if(!me||(me.role!=='admin'&&me.role!=='manager')){toast('관리자만 삭제 가능합니다');return;}
+  if(!confirm('이 산업재해 기록을 삭제하시겠습니까?')) return;
+  var res=await sb.from('industrial_accident').delete().eq('id',id);
+  if(res.error){toast('삭제 오류: '+res.error.message);return;}
+  toast('✅ 삭제되었습니다');
+  loadAccidentsFromDB();
+}
 function closeInd(){hideM('indModal');}
 function pickIT(el){
   document.querySelectorAll('#indTG .rp').forEach(p=>p.classList.remove('on'));
@@ -5849,18 +5880,28 @@ function subInd(){
   // DB 저장 (전체 공유)
   // DB 저장 즉시 실행
   (async function(){
-    var res = await sb.from('industrial_accident').insert({
+    var payload={
       date: date,
       worker: per,
       team: me?me.team:'',
       type: type,
       location: loc,
-      description: desc,
-      action: ''
-    });
-    if(res.error){ console.error('산업재해 저장 오류:', res.error); toast('저장 오류: '+res.error.message); }
-    else { await loadAccidentsFromDB(); }
+      description: desc
+    };
+    var res;
+    if(indEditId){
+      res = await sb.from('industrial_accident').update(payload).eq('id',indEditId);
+    }else{
+      payload.action='';
+      res = await sb.from('industrial_accident').insert(payload);
+    }
+    if(res.error){ console.error('산업재해 저장 오류:', res.error); toast('저장 오류: '+res.error.message); return; }
+    toast(indEditId?'✅ 수정 완료':'✅ 등록 완료');
+    indEditId=null;
+    closeInd();
+    await loadAccidentsFromDB();
   })();
+  return;
   const yr=new Date().getFullYear();
   const yc=indData.filter(d=>d.date.startsWith(yr)).length;
   const dateStr=date.replace('T',' ').slice(0,16);
@@ -11705,6 +11746,10 @@ function renderIndList(data){
     h+='<div style="font-size:15px;font-weight:600;color:var(--g7);margin-bottom:3px">'+(r.worker||'')+'</div>';
     h+='<div style="font-size:13px;color:var(--g4)">📍 '+(r.location||'')+'</div>';
     if(r.description) h+='<div style="font-size:13px;color:var(--g5);margin-top:4px">'+(r.description)+'</div>';
+    h+='<div style="display:flex;gap:6px;margin-top:8px">';
+    h+='<button onclick="openIndEdit(\''+r.id+'\')" style="padding:5px 12px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:16px;font-size:12px;font-weight:700;cursor:pointer">✏️ 수정</button>';
+    h+='<button onclick="deleteAccidentDB(\''+r.id+'\')" style="padding:5px 12px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:16px;font-size:12px;font-weight:700;cursor:pointer">🗑 삭제</button>';
+    h+='</div>';
     h+='</div>';
   });
   el.innerHTML=h;
