@@ -3411,8 +3411,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div id="vhDistWrap" style="display:none;background:var(--teal-bg);border-radius:var(--r2);padding:11px 13px;margin-bottom:13px;align-items:center;justify-content:space-between"><span style="font-size:14px;font-weight:600;color:var(--teal2)">주행거리 (자동계산)</span><div style="display:flex;align-items:baseline;gap:3px"><span style="font-size:26px;font-weight:900;color:var(--teal2)" id="vhDist">0</span><span style="font-size:14px;color:var(--teal2);font-weight:600">km</span></div></div>
       <div class="fg"><label class="f-lbl">🕐 출발 시간 *</label><div style="display:flex;gap:6px;align-items:center"><select id="vhStartH" class="ri" style="flex:1;margin-bottom:0;text-align:center;width:auto" onchange="syncTimeSel('vhStart')"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select><span style="font-weight:700;color:var(--g4)">:</span><select id="vhStartM" class="ri" style="flex:1;margin-bottom:0;text-align:center;width:auto" onchange="syncTimeSel('vhStart')"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option></select><input type="hidden" id="vhStart"></div></div>
       <div class="fg"><label class="f-lbl">🕐 도착 시간 *</label><div style="display:flex;gap:6px;align-items:center"><select id="vhEndH" class="ri" style="flex:1;margin-bottom:0;text-align:center;width:auto" onchange="syncTimeSel('vhEnd')"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option></select><span style="font-weight:700;color:var(--g4)">:</span><select id="vhEndM" class="ri" style="flex:1;margin-bottom:0;text-align:center;width:auto" onchange="syncTimeSel('vhEnd')"><option value="">--</option><option value="00">00</option><option value="01">01</option><option value="02">02</option><option value="03">03</option><option value="04">04</option><option value="05">05</option><option value="06">06</option><option value="07">07</option><option value="08">08</option><option value="09">09</option><option value="10">10</option><option value="11">11</option><option value="12">12</option><option value="13">13</option><option value="14">14</option><option value="15">15</option><option value="16">16</option><option value="17">17</option><option value="18">18</option><option value="19">19</option><option value="20">20</option><option value="21">21</option><option value="22">22</option><option value="23">23</option><option value="24">24</option><option value="25">25</option><option value="26">26</option><option value="27">27</option><option value="28">28</option><option value="29">29</option><option value="30">30</option><option value="31">31</option><option value="32">32</option><option value="33">33</option><option value="34">34</option><option value="35">35</option><option value="36">36</option><option value="37">37</option><option value="38">38</option><option value="39">39</option><option value="40">40</option><option value="41">41</option><option value="42">42</option><option value="43">43</option><option value="44">44</option><option value="45">45</option><option value="46">46</option><option value="47">47</option><option value="48">48</option><option value="49">49</option><option value="50">50</option><option value="51">51</option><option value="52">52</option><option value="53">53</option><option value="54">54</option><option value="55">55</option><option value="56">56</option><option value="57">57</option><option value="58">58</option><option value="59">59</option></select><input type="hidden" id="vhEnd"></div></div>
-      <div class="fg"><label class="f-lbl">📍 목적지(경유지 포함) *</label><input type="text" id="vhDest" class="ri" placeholder="예: 신도시, T2" style="margin-bottom:0"></div>
-      <div class="fg"><label class="f-lbl">📋 목적 *</label><input type="text" id="vhPurpose" class="ri" placeholder="예: 직원격려 식사, 업무" style="margin-bottom:0"></div>
+      <div class="fg"><label class="f-lbl">📍 목적지(경유지 포함) *</label><input type="text" id="vhDest" class="ri" placeholder="예: 신도시, T2" style="margin-bottom:0"><div id="vhDestRecent" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px"></div></div>
+      <div class="fg"><label class="f-lbl">📋 목적 *</label><input type="text" id="vhPurpose" class="ri" placeholder="예: 직원격려 식사, 업무" style="margin-bottom:0"><div id="vhPurposeRecent" style="display:flex;flex-wrap:wrap;gap:5px;margin-top:6px"></div></div>
       <div class="fg" style="margin-bottom:0"><label class="f-lbl">📝 기타 (주유여부·주차장소 등)</label><input type="text" id="vhEtc" class="ri" placeholder="예: 주유 8만원, H11구역" style="margin-bottom:0"></div>
     </div></div>
     <div style="padding:0 13px 16px"><button class="btn-prim" onclick="subVeh()">운행 기록 저장</button></div>
@@ -4842,10 +4842,16 @@ function go(name){
     setTimeout(autoSelectHandoverTeam, 200);
   }
   if(name==='veh'){
-    loadVehicleFromDB().then(function(){ autoFillBefore(); });
+    loadVehicleFromDB().then(function(){ autoFillBefore(); renderVhRecentChips(); });
     // 소속/성명 자동입력
     var _vn=document.getElementById('vhName'); if(_vn&&me&&!_vn.value) _vn.value=me.name||'';
     var _vd=document.getElementById('vhDept'); if(_vd&&me&&!_vd.value) _vd.value=me.team||'';
+    // 도착 시간 = 화면을 여는(작성하는) 현재 한국시간으로 자동 입력 (이미 값이 있으면 덮어쓰지 않음)
+    var _veEl=document.getElementById('vhEnd');
+    if(_veEl&&!_veEl.value&&typeof setTimeSel==='function'){
+      var _nowVh=new Date(Date.now()+9*3600000);
+      setTimeSel('vhEnd', String(_nowVh.getUTCHours()).padStart(2,'0')+':'+String(_nowVh.getUTCMinutes()).padStart(2,'0'));
+    }
   }
   if(name==='workveh'){
     loadWorkVehData();
@@ -5138,6 +5144,7 @@ async function saveFavMenus(){
 // 카테고리 안의 메뉴 버튼이 전부 숨겨져 있으면(권한 없음) 카테고리 제목도 같이 숨김
 function updateMenuCatVisibility(){
   document.querySelectorAll('.menu-cat').forEach(function(cat){
+    if(cat.id==='menuCat_fav') return; // 즐겨찾기는 비어있어도(편집 유도를 위해) 별도 로직으로만 표시/숨김 제어
     var anyVisible=Array.from(cat.querySelectorAll('.menu-btn')).some(function(b){
       return getComputedStyle(b).display!=='none';
     });
@@ -7589,6 +7596,31 @@ function calcDist(){
   if(dist>0){if(wrap)wrap.style.display='flex';if(el)el.textContent=dist;}
   else{if(wrap)wrap.style.display='none';}
 }
+// 최근 사용한 목적지/목적을 탭하면 바로 입력되는 칩으로 보여줌
+function renderVhRecentChips(){
+  var destBox=document.getElementById('vhDestRecent');
+  var purBox=document.getElementById('vhPurposeRecent');
+  if(!destBox||!purBox) return;
+  function recentUnique(field){
+    var seen={}, out=[];
+    (vehData||[]).forEach(function(r){
+      var v=(r[field]||'').trim();
+      if(v&&!seen[v]){ seen[v]=true; out.push(v); }
+    });
+    return out.slice(0,10);
+  }
+  function chipHtml(list, targetId){
+    if(!list.length) return '';
+    var h='<span style="font-size:11px;color:var(--g4);width:100%;margin-bottom:1px">🕓 최근 사용</span>';
+    list.forEach(function(v){
+      var esc=v.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      h+='<span onclick="document.getElementById(&quot;'+targetId+'&quot;).value=\''+esc+'\'" style="padding:4px 10px;background:var(--g1);border:1px solid var(--g2);border-radius:20px;font-size:12px;color:var(--g6);cursor:pointer;white-space:nowrap">'+v+'</span>';
+    });
+    return h;
+  }
+  destBox.innerHTML=chipHtml(recentUnique('dest'), 'vhDest');
+  purBox.innerHTML=chipHtml(recentUnique('purpose'), 'vhPurpose');
+}
 function autoFillBefore(){
   if(!vehData||!vehData.length)return;
   var last=vehData[0];
@@ -7654,7 +7686,7 @@ function subVeh(){
   setTimeSel('vhEnd', String(_nowE.getUTCHours()).padStart(2,'0')+':'+String(_nowE.getUTCMinutes()).padStart(2,'0'));
   var hw=document.getElementById('vhDistWrap');if(hw)hw.style.display='none';
   var hh=document.getElementById('vhAutoHint');if(hh)hh.style.display='none';
-  vhTab(1);renderVehList(vehData);
+  vhTab(1);renderVehList(vehData);renderVhRecentChips();
 }
 function renderVehList(data){
   var list=document.getElementById('vhList');if(!list)return;
@@ -9191,10 +9223,12 @@ function loadWorkVehData(){
   loadWorkVehicleFromDB();
   var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   var vd=document.getElementById('wvDate');if(vd)vd.value=today;
-  // 도착 시간 = 작성하는 현재 한국시간으로 자동 입력 (출발시간은 직접 입력)
-  var nowKST2=new Date(Date.now()+9*3600000);
-  var hh2=String(nowKST2.getUTCHours()).padStart(2,'0'), mm2=String(nowKST2.getUTCMinutes()).padStart(2,'0');
-  if(typeof setTimeSel==='function') setTimeSel('wvEnd', hh2+':'+mm2);
+  // 도착 시간 = 작성하는 현재 한국시간으로 자동 입력 (이미 값 있으면 유지, 출발시간은 직접 입력)
+  var _wvEl=document.getElementById('wvEnd');
+  if(_wvEl&&!_wvEl.value&&typeof setTimeSel==='function'){
+    var nowKST2=new Date(Date.now()+9*3600000);
+    setTimeSel('wvEnd', String(nowKST2.getUTCHours()).padStart(2,'0')+':'+String(nowKST2.getUTCMinutes()).padStart(2,'0'));
+  }
   var now=new Date();var tm=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0');
   var vf=document.getElementById('wvDlFrom');var vt=document.getElementById('wvDlTo');
   if(vf)vf.value=tm;if(vt)vt.value=tm;
