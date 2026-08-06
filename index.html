@@ -4758,7 +4758,8 @@ function edDownloadExcel(){
     var ws=XLSX.utils.aoa_to_sheet(rows);
     ws['!cols']=[{wch:22},{wch:20}];
     var wb={SheetNames:['현황판'],Sheets:{'현황판':ws}};
-    XLSX.writeFile(wb,'T1_현황판_'+d.dFrom+(d.dFrom!==d.dTo?'~'+d.dTo:'')+'.xlsx');
+        dlApplyPrintTitles(wb);
+        XLSX.writeFile(wb,'T1_현황판_'+d.dFrom+(d.dFrom!==d.dTo?'~'+d.dTo:'')+'.xlsx');
     toast('✅ 현황판 엑셀 다운로드 완료');
   }catch(e){ toast('다운로드 오류: '+e.message); }
 }
@@ -5965,14 +5966,83 @@ function dlDateRangeStr(dates){
   if(!valid.length) return '00.00.00 ~ 00.00.00';
   return dlFmtDate(valid[0])+' ~ '+dlFmtDate(valid[valid.length-1]);
 }
-// 제목/기간 행을 데이터 위에 붙이고, 헤더 폭만큼 제목/기간 셀을 병합
+// 제목/기간 + 출력일시·출력자 메타 행을 데이터 위에 붙임 (2행 유지, 데이터/컬럼은 그대로)
 function dlWithTitle(rows, title, rangeStr, colCount){
-  var out=[[title], [rangeStr]].concat(rows);
+  var now=new Date(Date.now()+9*3600000);
+  var outAt=now.getUTCFullYear()+'-'+String(now.getUTCMonth()+1).padStart(2,'0')+'-'+String(now.getUTCDate()).padStart(2,'0')+' '+String(now.getUTCHours()).padStart(2,'0')+':'+String(now.getUTCMinutes()).padStart(2,'0');
+  var outBy=(typeof me!=='undefined'&&me&&me.name)?me.name:'';
+  var c1=Math.max(1,Math.floor(colCount/3));
+  var c2=Math.max(c1+1,Math.min(colCount-1,Math.floor(colCount*2/3)));
+  var metaRow=[]; for(var i=0;i<colCount;i++) metaRow.push('');
+  metaRow[0]='T1OS 운영 앱 · 조회기간: '+rangeStr;
+  metaRow[c1]='';
+  metaRow[c2]='출력일시: '+outAt+'   출력자: '+outBy;
+  var out=[[title], metaRow].concat(rows);
   var merges=[
     {s:{r:0,c:0},e:{r:0,c:colCount-1}},
-    {s:{r:1,c:0},e:{r:1,c:colCount-1}}
+    {s:{r:1,c:0},e:{r:1,c:c2-1}},
+    {s:{r:1,c:c2},e:{r:1,c:colCount-1}}
   ];
   return {rows:out, merges:merges};
+}
+// 어떤 워크시트든 공공기관/경영진 보고서 수준으로 서식·인쇄설정을 입혀주는 공통 마무리 함수
+// (데이터/컬럼/순서는 절대 건드리지 않고, 스타일·페이지설정만 적용)
+// 저장 직전 호출: 시트별로 표시해둔 반복행 범위를 워크북 인쇄제목(Print Titles)으로 등록
+function dlApplyPrintTitles(wb){
+  try{
+    if(!wb||!wb.SheetNames) return;
+    wb.Workbook=wb.Workbook||{};
+    wb.Workbook.Names=wb.Workbook.Names||[];
+    wb.SheetNames.forEach(function(name,idx){
+      var ws=wb.Sheets[name];
+      if(ws&&ws['!repeatRowsRange']){
+        wb.Workbook.Names.push({Sheet:idx, Name:'_xlnm.Print_Titles', Ref:"'"+name+"'!"+ws['!repeatRowsRange']});
+      }
+    });
+  }catch(e){}
+}
+function dlFinalizeSheet(ws){
+  try{
+    if(!ws||!ws['!ref']) return;
+    var range=XLSX.utils.decode_range(ws['!ref']);
+    var hasTitle=(ws['!merges']||[]).some(function(m){return m.s.r===0&&m.s.c===0&&m.e.c>m.s.c;});
+    var headerRow=hasTitle?2:0;
+    var thin={style:'thin',color:{rgb:'FFC3C9D1'}};
+    var border={top:thin,bottom:thin,left:thin,right:thin};
+    // 컬럼폭 자동 계산 (한글은 넓게)
+    var colW=[];
+    for(var r=range.s.r;r<=range.e.r;r++){
+      for(var c=range.s.c;c<=range.e.c;c++){
+        var cell=ws[XLSX.utils.encode_cell({r:r,c:c})];
+        if(!cell||cell.v==null) continue;
+        var s=String(cell.v);
+        var len=0; for(var k=0;k<s.length;k++){ len+= /[가-힣]/.test(s[k])?1.9:1; }
+        colW[c]=Math.max(colW[c]||6, Math.min(len+3, 42));
+      }
+    }
+    if(!ws['!cols']) ws['!cols']=colW.map(function(w){return {wch:w||10};});
+    for(var r2=range.s.r;r2<=range.e.r;r2++){
+      for(var c2=range.s.c;c2<=range.e.c;c2++){
+        var addr=XLSX.utils.encode_cell({r:r2,c:c2});
+        var cell2=ws[addr];
+        if(!cell2){ cell2=ws[addr]={t:'s',v:''}; }
+        if(hasTitle&&r2===0){
+          cell2.s={font:{sz:16,bold:true,color:{rgb:'FF1B3A6B'},name:'맑은 고딕'},alignment:{horizontal:'center',vertical:'center'}};
+        }else if(hasTitle&&r2===1){
+          cell2.s={font:{sz:9,color:{rgb:'FF6B7280'},name:'맑은 고딕'},alignment:{horizontal:c2===0?'left':'right',vertical:'center'}};
+        }else if(r2===headerRow){
+          cell2.s={font:{sz:10,bold:true,color:{rgb:'FFFFFFFF'},name:'맑은 고딕'},fill:{patternType:'solid',fgColor:{rgb:'FF1B3A6B'}},alignment:{horizontal:'center',vertical:'center',wrapText:true},border:border};
+        }else{
+          cell2.s={font:{sz:9.5,name:'맑은 고딕'},alignment:{horizontal:'left',vertical:'center',wrapText:true},border:border};
+        }
+      }
+    }
+    ws['!margins']={left:0.3,right:0.3,top:0.5,bottom:0.45,header:0.2,footer:0.2};
+    ws['!pageSetup']={orientation:'landscape',paperSize:9,fitToWidth:1,fitToHeight:0,scale:90};
+    ws['!printOptions']={horizontalCentered:false,verticalCentered:false};
+    // 인쇄 시 매 페이지 상단에 반복될 행(제목~헤더)
+    ws['!repeatRowsRange']='$1:$'+(headerRow+1);
+  }catch(e){ /* 서식 적용 실패해도 다운로드 자체는 계속 진행 */ }
 }
 async function dlCSV(type){
   if(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader')){toast('⚠️ 조장 이상만 다운로드할 수 있습니다');return;}
@@ -6011,6 +6081,7 @@ async function dlCSV(type){
           {s:{r:2,c:10},e:{r:3,c:10}}, {s:{r:2,c:11},e:{r:3,c:11}}, {s:{r:2,c:12},e:{r:3,c:12}}
         ];
         ws2['!cols']=[{wch:11},{wch:9},{wch:9},{wch:9},{wch:9},{wch:18},{wch:20},{wch:8},{wch:9},{wch:9},{wch:16},{wch:8},{wch:9}];
+        dlFinalizeSheet(ws2);        
         wb.SheetNames.push('인수인계');wb.Sheets['인수인계']=ws2;
       }
     }
@@ -6032,6 +6103,7 @@ async function dlCSV(type){
         var vWrap=dlWithTitle(vRows,'T1환경미화사업부 차량운행일지',vRange,11);
         var ws3=XLSX.utils.aoa_to_sheet(vWrap.rows);
         ws3['!merges']=vWrap.merges;
+        dlFinalizeSheet(ws3);        
         wb.SheetNames.push('차량운행');wb.Sheets['차량운행']=ws3;
       }
     }
@@ -6045,6 +6117,7 @@ async function dlCSV(type){
           iRows.push([d.date||'',d.worker||'',d.team||'',d.type||'',d.location||'',d.description||'']);
         });
         var ws4=XLSX.utils.aoa_to_sheet(iRows);
+        dlFinalizeSheet(ws4);        
         wb.SheetNames.push('산업재해');wb.Sheets['산업재해']=ws4;
       }
     }
@@ -6114,6 +6187,7 @@ async function dlCSV(type){
         var ws1=XLSX.utils.aoa_to_sheet(rows2);
         // 열 너비 설정
         ws1['!cols']=[{wch:12},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8},{wch:8}];
+        dlFinalizeSheet(ws1);        
         wb.SheetNames.push('인력현황');wb.Sheets['인력현황']=ws1;
       }
 
@@ -6142,6 +6216,7 @@ async function dlCSV(type){
         });
         var wsNs=XLSX.utils.aoa_to_sheet(nsRows);
         wsNs['!cols']=[{wch:11},{wch:8},{wch:7},{wch:6},{wch:7},{wch:7},{wch:7},{wch:7},{wch:6},{wch:11},{wch:9},{wch:7},{wch:7},{wch:18}];
+        dlFinalizeSheet(wsNs);        
         wb.SheetNames.push('야간특별작업');wb.Sheets['야간특별작업']=wsNs;
       }
     }
@@ -6172,6 +6247,7 @@ async function dlCSV(type){
         var wsv=XLSX.utils.aoa_to_sheet(vocWrap.rows);
         wsv['!cols']=[{wch:6},{wch:12},{wch:14},{wch:10},{wch:12},{wch:14},{wch:40},{wch:10},{wch:20},{wch:18}];
         wsv['!merges']=vocWrap.merges;
+        dlFinalizeSheet(wsv);        
         wb.SheetNames.push('민원(서비스응대)');wb.Sheets['민원(서비스응대)']=wsv;
       }
     }
@@ -6195,6 +6271,7 @@ async function dlCSV(type){
         });
         var wsk=XLSX.utils.aoa_to_sheet(kpiRows);
         wsk['!cols']=[{wch:6},{wch:4},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:10},{wch:30},{wch:20},{wch:12}];
+        dlFinalizeSheet(wsk);        
         wb.SheetNames.push('KPI');wb.Sheets['KPI']=wsk;
       }
     }
@@ -6218,6 +6295,7 @@ async function dlCSV(type){
         var wsl=XLSX.utils.aoa_to_sheet(lostWrap.rows);
         wsl['!merges']=lostWrap.merges;
         wsl['!cols']=[{wch:18},{wch:10},{wch:10},{wch:12},{wch:20},{wch:16},{wch:24},{wch:10},{wch:24}];
+        dlFinalizeSheet(wsl);        
         wb.SheetNames.push('습득물');wb.Sheets['습득물']=wsl;
       }
     }
@@ -6246,6 +6324,7 @@ async function dlCSV(type){
           {wch:12},{wch:12},{wch:14},{wch:10},{wch:10},
           {wch:10},{wch:12},{wch:12},{wch:12},{wch:12},{wch:12},
           {wch:10},{wch:16}];
+        dlFinalizeSheet(wsw);        
         wb.SheetNames.push('폐기물');wb.Sheets['폐기물']=wsw;
       }
     }
@@ -6261,6 +6340,7 @@ async function dlCSV(type){
           var eqSheet=[eqHeaders];
           eqDataRows.forEach(function(r){ eqSheet.push(r); });
           var wse=XLSX.utils.aoa_to_sheet(eqSheet);
+          dlFinalizeSheet(wse);          
           wb.SheetNames.push('장비현황');wb.Sheets['장비현황']=wse;
         }
       } else if(type==='equipment'){
@@ -6281,6 +6361,7 @@ async function dlCSV(type){
           ]);
         });
         var wsma=XLSX.utils.aoa_to_sheet(maRows);
+        dlFinalizeSheet(wsma);        
         wb.SheetNames.push('관리자출근현황');wb.Sheets['관리자출근현황']=wsma;
       }
     }
@@ -6299,12 +6380,14 @@ async function dlCSV(type){
         });
         var wsf=XLSX.utils.aoa_to_sheet(facRows);
         wsf['!cols']=[{wch:14},{wch:8},{wch:8},{wch:8},{wch:40}];
+        dlFinalizeSheet(wsf);        
         wb.SheetNames.push('시설현황');wb.Sheets['시설현황']=wsf;
         facTypes.forEach(function(t){
           var v=facilityData[t]; if(!v||!v.raw||!v.raw.rows.length) return;
           var sheetRows=[v.raw.headers].concat(v.raw.rows);
           var wst=XLSX.utils.aoa_to_sheet(sheetRows);
           var sheetName=t.length>28?t.slice(0,28):t;
+          dlFinalizeSheet(wst);
           wb.SheetNames.push(sheetName);wb.Sheets[sheetName]=wst;
         });
       }
@@ -6319,6 +6402,7 @@ async function dlCSV(type){
           ntRows.push([d.created_at?toKSTDate(d.created_at):'', d.title||'', d.content||'', d.author||'']);
         });
         var wsn=XLSX.utils.aoa_to_sheet(ntRows);
+        dlFinalizeSheet(wsn);        
         wb.SheetNames.push('공지사항');wb.Sheets['공지사항']=wsn;
       }
     }
@@ -6332,6 +6416,7 @@ async function dlCSV(type){
           rgRows.push([d.name||'', d.uploaded_at?toKSTDate(d.uploaded_at):'', d.url||d.file_path||'']);
         });
         var wsr=XLSX.utils.aoa_to_sheet(rgRows);
+        dlFinalizeSheet(wsr);        
         wb.SheetNames.push('사규파일목록');wb.Sheets['사규파일목록']=wsr;
       }
     }
@@ -6345,6 +6430,7 @@ async function dlCSV(type){
           usRows.push([d.name||'', d.role||'', d.team||'', d.status||'']);
         });
         var wsu=XLSX.utils.aoa_to_sheet(usRows);
+        dlFinalizeSheet(wsu);        
         wb.SheetNames.push('사용자목록');wb.Sheets['사용자목록']=wsu;
       }
     }
@@ -6358,6 +6444,7 @@ async function dlCSV(type){
           isoRows.push([d.name||'', d.uploaded_at?toKSTDate(d.uploaded_at):'', d.url||d.file_path||'']);
         });
         var wsi=XLSX.utils.aoa_to_sheet(isoRows);
+        dlFinalizeSheet(wsi);        
         wb.SheetNames.push('ISO9001파일목록');wb.Sheets['ISO9001파일목록']=wsi;
       }
     }
@@ -6371,6 +6458,7 @@ async function dlCSV(type){
           saRows.push([d.name||'', d.uploaded_at?toKSTDate(d.uploaded_at):'', d.url||d.file_path||'']);
         });
         var wssa=XLSX.utils.aoa_to_sheet(saRows);
+        dlFinalizeSheet(wssa);        
         wb.SheetNames.push('안전작업절차서목록');wb.Sheets['안전작업절차서목록']=wssa;
       }
     }
@@ -6384,6 +6472,7 @@ async function dlCSV(type){
           omRows.push([d.name||'', d.uploaded_at?toKSTDate(d.uploaded_at):'', d.url||d.file_path||'']);
         });
         var wsom=XLSX.utils.aoa_to_sheet(omRows);
+        dlFinalizeSheet(wsom);        
         wb.SheetNames.push('운영매뉴얼목록');wb.Sheets['운영매뉴얼목록']=wsom;
       }
     }
@@ -6398,6 +6487,7 @@ async function dlCSV(type){
         });
         var wsld=XLSX.utils.aoa_to_sheet(ldRows);
         wsld['!cols']=[{wch:8},{wch:8},{wch:12}];
+        dlFinalizeSheet(wsld);        
         wb.SheetNames.push('조장명단');wb.Sheets['조장명단']=wsld;
       }
     }
@@ -6412,6 +6502,7 @@ async function dlCSV(type){
       notice:'공지사항', regulation:'사규파일목록', users:'사용자목록', all:'전체현황'
     };
     var dlLabel=dlNameMap[type]||type;
+    dlApplyPrintTitles(wb);
     var wbout=XLSX.write(wb,{bookType:'xlsx',type:'array'});
     var blob=new Blob([wbout],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
     var a=document.createElement('a');
@@ -7541,7 +7632,8 @@ function dlVeh(){
   ws['!merges']=wrap.merges;
   ws['!cols']=[{wch:11},{wch:9},{wch:9},{wch:14},{wch:14},{wch:9},{wch:9},{wch:9},{wch:12},{wch:14},{wch:12}];
   var wb={SheetNames:['차량운행일지'],Sheets:{'차량운행일지':ws}};
-  XLSX.writeFile(wb,'차량운행일지_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
+    dlApplyPrintTitles(wb);
+    XLSX.writeFile(wb,'차량운행일지_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
   var info=document.getElementById('vhDlInfo');if(info)info.textContent='완료: '+filtered.length+'건';
   toast('차량운행일지 다운로드 완료 ('+filtered.length+'건)');
 }
@@ -8013,7 +8105,8 @@ function dlWorkVeh(){
   ws['!merges']=wrap.merges;
   ws['!cols']=[{wch:11},{wch:12},{wch:9},{wch:9},{wch:14},{wch:14},{wch:9},{wch:9},{wch:9},{wch:12},{wch:14},{wch:10},{wch:10},{wch:12}];
   var wb={SheetNames:['공사업무용차량'],Sheets:{'공사업무용차량':ws}};
-  XLSX.writeFile(wb,'공사업무용차량_운행일지_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
+    dlApplyPrintTitles(wb);
+    XLSX.writeFile(wb,'공사업무용차량_운행일지_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
   var info=document.getElementById('wvDlInfo');if(info)info.textContent='완료: '+filtered.length+'건';
   toast('공사업무용차량 운행일지 다운로드 완료 ('+filtered.length+'건)');
 }
@@ -8301,8 +8394,10 @@ function dlJointWork(){
     ws['!merges']=wrap.merges;
     ws['!cols']=[{wch:12},{wch:8},{wch:20},{wch:12},{wch:16},{wch:8},{wch:22},{wch:10},{wch:16},{wch:10}];
     var wb=XLSX.utils.book_new();
+    dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,'공동작업');
-    XLSX.writeFile(wb,'T1_공동작업기록_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
+        dlApplyPrintTitles(wb);
+        XLSX.writeFile(wb,'T1_공동작업기록_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
     toast('📥 공동작업 기록 다운로드 완료 ('+filtered.length+'건)');
   }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
@@ -11466,10 +11561,12 @@ function downloadHoExcel(){
       {s:{r:2,c:10},e:{r:3,c:10}}, {s:{r:2,c:11},e:{r:3,c:11}}, {s:{r:2,c:12},e:{r:3,c:12}}
     ];
     ws['!cols']=[{wch:11},{wch:9},{wch:9},{wch:9},{wch:9},{wch:18},{wch:20},{wch:8},{wch:9},{wch:9},{wch:16},{wch:8},{wch:9}];
+    dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,'인수인계');
 
     var now=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-    XLSX.writeFile(wb,'T1_인수인계_'+now+'.xlsx');
+        dlApplyPrintTitles(wb);
+        XLSX.writeFile(wb,'T1_인수인계_'+now+'.xlsx');
     toast('✅ 인수인계 엑셀 다운로드 완료');
   }catch(e){ toast('다운로드 오류: '+e.message); }
 }
@@ -12543,9 +12640,11 @@ function downloadAccidentReportExcel(){
       }
     }
     var wb=XLSX.utils.book_new();
+    dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,'안전사고보고서');
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-    XLSX.writeFile(wb,'안전사고발생보고서_'+today+'.xlsx');
+        dlApplyPrintTitles(wb);
+        XLSX.writeFile(wb,'안전사고발생보고서_'+today+'.xlsx');
     toast('📥 다운로드 완료');
   }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
@@ -12589,9 +12688,11 @@ function downloadAccidentExcel(){
     ws['!merges']=wrap.merges;
     ws['!cols']=[{wch:16},{wch:9},{wch:8},{wch:18},{wch:12},{wch:24},{wch:18},{wch:20},{wch:10},{wch:12},{wch:10},{wch:9},{wch:10},{wch:16},{wch:12}];
     var wb=XLSX.utils.book_new();
+    dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,'안전사고');
     var fname='T1_안전사고현황'+(mf?'_'+mf:'')+'.xlsx';
-    XLSX.writeFile(wb,fname);
+        dlApplyPrintTitles(wb);
+        XLSX.writeFile(wb,fname);
     toast('📥 다운로드 완료');
   }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
@@ -12626,9 +12727,11 @@ async function downloadLostExcel(){
     var ws=XLSX.utils.aoa_to_sheet(wrap.rows);
     ws['!merges']=wrap.merges;
     ws['!cols']=[{wch:18},{wch:10},{wch:10},{wch:12},{wch:20},{wch:16},{wch:24},{wch:10},{wch:24}];
+    dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,'습득물');
     var fname='T1_습득물관리'+(mf?'_'+mf:'')+'.xlsx';
-    XLSX.writeFile(wb,fname);
+        dlApplyPrintTitles(wb);
+        XLSX.writeFile(wb,fname);
     toast('📥 다운로드 완료');
   }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
@@ -13192,9 +13295,11 @@ function dlToiletExcel(){
     var ws=XLSX.utils.aoa_to_sheet(rows);
     ws['!cols']=[{wch:9},{wch:10},{wch:10},{wch:8},{wch:16},{wch:8},{wch:8},{wch:7},{wch:7},{wch:10},{wch:7},{wch:7},{wch:14},{wch:12},{wch:12},{wch:8}];
     var wb=XLSX.utils.book_new();
+    dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,'화장실현황');
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-    XLSX.writeFile(wb,'T1_화장실현황_'+today+'.xlsx');
+        dlApplyPrintTitles(wb);
+        XLSX.writeFile(wb,'T1_화장실현황_'+today+'.xlsx');
     toast('📥 다운로드 완료 ('+toiletData.length+'건)');
   }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
@@ -13653,9 +13758,11 @@ function facDownload(type){
   try{
     var ws=XLSX.utils.aoa_to_sheet(rows);
     var wb=XLSX.utils.book_new();
+    dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,cfg.title);
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-    XLSX.writeFile(wb,'T1_'+cfg.title+'현황_'+today+'.xlsx');
+        dlApplyPrintTitles(wb);
+        XLSX.writeFile(wb,'T1_'+cfg.title+'현황_'+today+'.xlsx');
     toast('📥 다운로드 완료 ('+data.length+'건)');
   }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
@@ -14097,8 +14204,10 @@ function downloadWasteExcel(){
     var wb=XLSX.utils.book_new();
     var ws=XLSX.utils.aoa_to_sheet(rows);
     ws['!cols']=[{wch:12},{wch:8},{wch:10},{wch:16},{wch:12},{wch:16},{wch:10},{wch:10},{wch:10},{wch:12},{wch:14},{wch:10},{wch:12},{wch:16}];
+    dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,'폐기물처리현황');
-    XLSX.writeFile(wb,'T1_폐기물처리현황'+(mfv?'_'+mfv:'')+'.xlsx');
+        dlApplyPrintTitles(wb);
+        XLSX.writeFile(wb,'T1_폐기물처리현황'+(mfv?'_'+mfv:'')+'.xlsx');
     toast('📥 다운로드 완료');
   }catch(e){ toast('⚠️ 다운로드 실패'); }
 }
@@ -17412,9 +17521,11 @@ function downloadReportExcel(){
       }
     }
     var wb=XLSX.utils.book_new();
+    dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,'보고서');
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-    XLSX.writeFile(wb, f.title.replace(/\s/g,'')+'_'+today+'.xlsx');
+        dlApplyPrintTitles(wb);
+        XLSX.writeFile(wb, f.title.replace(/\s/g,'')+'_'+today+'.xlsx');
     toast('📥 다운로드 완료');
   }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
