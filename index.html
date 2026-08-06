@@ -4773,7 +4773,7 @@ function goHomeMain(){
 function go(name){
   if(me&&me.role==='vehicle_guest'&&name!=='veh'&&name!=='login'){ return; }
   if(me&&me.role==='work_vehicle'&&name!=='workveh'&&name!=='login'){ return; }
-  if(me&&me.role==='member'&&['main','notice','chat','iso9001','news','safety','manual','groupchat','login'].indexOf(name)===-1){ return; }
+  if(me&&me.role==='member'&&['main','notice','chat','iso9001','news','safety','manual','login'].indexOf(name)===-1){ return; }
   if(name==='admin'&&(!me||me.role!=='admin')){ toast('⚠️ 관리자만 접근할 수 있습니다'); return; }
   if(name==='execdash'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='toilet'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
@@ -4974,7 +4974,7 @@ function applyRoleUI(){
   if(me.role==='member'){
     document.querySelectorAll('.menu-btn').forEach(function(el){
       var oc=el.getAttribute('onclick')||'';
-      var isRefMenu=(oc.indexOf("'chat'")!==-1||oc.indexOf("'iso9001'")!==-1||oc.indexOf("'news'")!==-1||oc.indexOf("'safety'")!==-1||oc.indexOf("'manual'")!==-1||oc.indexOf("'groupchat'")!==-1);
+      var isRefMenu=(oc.indexOf("'chat'")!==-1||oc.indexOf("'iso9001'")!==-1||oc.indexOf("'news'")!==-1||oc.indexOf("'safety'")!==-1||oc.indexOf("'manual'")!==-1);
       el.style.display=isRefMenu?'':'none';
     });
     document.querySelectorAll('#globalTabbar .mh-tab-item').forEach(function(el){
