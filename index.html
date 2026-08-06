@@ -11026,9 +11026,14 @@ async function saveTeamMove(){
 
 async function withdrawUserDB(id, name){
   if(!confirm(name+'님을 탈퇴 처리하시겠습니까?')) return;
-  var res=await sb.from('users').update({status:'withdrawn'}).eq('id',id);
+  var u=await sb.from('users').select('email').eq('id',id).single();
+  var origEmail=(u&&u.data&&u.data.email)||'';
+  var newEmail=origEmail?origEmail+'_withdrawn_'+Date.now():undefined;
+  var payload={status:'withdrawn'};
+  if(newEmail) payload.email=newEmail;
+  var res=await sb.from('users').update(payload).eq('id',id);
   if(res.error){toast('오류: '+res.error.message);return;}
-  toast('✅ '+name+'님 탈퇴 처리');
+  toast('✅ '+name+'님 탈퇴 처리 (아이디 '+origEmail+' 재사용 가능)');
   loadUserList();
 }
 
