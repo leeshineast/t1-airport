@@ -6203,24 +6203,21 @@ async function dlCSV(type){
     if(type==='lost'||type==='all'){
       var rl=await sb.from('lost_found').select('*').order('created_at',{ascending:false});
       if(rl.data&&rl.data.length){
-        var luRes=await sb.from('users').select('name,team');
-        var writerTeamMap={};
-        (luRes.data||[]).forEach(function(u){ if(u.name&&!writerTeamMap[u.name]) writerTeamMap[u.name]=u.team||''; });
-        var lostRows=[['접수일시','작성자','팀·조','발견자사번','발견자이름','발견위치','접수경로','물품내용','상태','처리내용','기타']];
+        var lostRows=[['접수일시','작성자','발견자사번','발견자이름','발견위치','접수경로','물품내용','상태','처리내용']];
         rl.data.forEach(function(d){
           lostRows.push([
             d.created_at?toKSTDateTime(d.created_at):'',
-            d.writer||'', (d.writer&&writerTeamMap[d.writer])||'',
+            d.writer||'',
             d.finder_id||'',d.finder_name||'',
             d.location||'',d.receipt_route||'',d.item||'',
-            d.status||'',d.status_detail||d.note||'',d.note||''
+            d.status||'',d.status_detail||d.note||''
           ]);
         });
         var lostRange=dlDateRangeStr(rl.data.map(function(d){return d.created_at;}));
-        var lostWrap=dlWithTitle(lostRows,'T1환경미화사업부 습득물 처리현황',lostRange,11);
+        var lostWrap=dlWithTitle(lostRows,'T1환경미화사업부 습득물 처리현황',lostRange,9);
         var wsl=XLSX.utils.aoa_to_sheet(lostWrap.rows);
         wsl['!merges']=lostWrap.merges;
-        wsl['!cols']=[{wch:18},{wch:10},{wch:10},{wch:10},{wch:12},{wch:20},{wch:16},{wch:24},{wch:10},{wch:20},{wch:16}];
+        wsl['!cols']=[{wch:18},{wch:10},{wch:10},{wch:12},{wch:20},{wch:16},{wch:24},{wch:10},{wch:24}];
         wb.SheetNames.push('습득물');wb.Sheets['습득물']=wsl;
       }
     }
@@ -12604,10 +12601,7 @@ async function downloadLostExcel(){
   if(!lostData||!lostData.length){ toast('다운로드할 데이터가 없습니다'); return; }
   var filterMonth=document.getElementById('lostFilterMonth');
   var mf=filterMonth?filterMonth.value:'';
-  var luRes=await sb.from('users').select('name,team');
-  var writerTeamMap={};
-  (luRes.data||[]).forEach(function(u){ if(u.name&&!writerTeamMap[u.name]) writerTeamMap[u.name]=u.team||''; });
-  var rows=[['접수일시','작성자','팀·조','발견자사번','발견자이름','발견위치','접수경로','물품내용','상태','처리내용','기타']];
+  var rows=[['접수일시','작성자','발견자사번','발견자이름','발견위치','접수경로','물품내용','상태','처리내용']];
   var filtered=lostData.filter(function(r){
     if(mf&&toKSTDate(r.found_date||r.created_at).slice(0,7)!==mf) return false;
     return true;
@@ -12615,24 +12609,23 @@ async function downloadLostExcel(){
   filtered.forEach(function(r){
     rows.push([
       toKSTDateTime(r.created_at),
-      r.writer||'', (r.writer&&writerTeamMap[r.writer])||'',
+      r.writer||'',
       r.finder_id||'',
       r.finder_name||'',
       r.location||'',
       r.receipt_route||'',
       r.item||'',
       r.status||'',
-      r.status_detail||r.note||'',
-      r.note||''
+      r.status_detail||r.note||''
     ]);
   });
   try{
     var wb=XLSX.utils.book_new();
     var range=(typeof dlDateRangeStr==='function')?dlDateRangeStr(filtered.map(function(r){return r.created_at;})):'';
-    var wrap=(typeof dlWithTitle==='function')?dlWithTitle(rows,'T1환경미화사업부 습득물 처리현황',range,11):{rows:rows,merges:[]};
+    var wrap=(typeof dlWithTitle==='function')?dlWithTitle(rows,'T1환경미화사업부 습득물 처리현황',range,9):{rows:rows,merges:[]};
     var ws=XLSX.utils.aoa_to_sheet(wrap.rows);
     ws['!merges']=wrap.merges;
-    ws['!cols']=[{wch:18},{wch:10},{wch:10},{wch:10},{wch:12},{wch:20},{wch:16},{wch:24},{wch:10},{wch:20},{wch:16}];
+    ws['!cols']=[{wch:18},{wch:10},{wch:10},{wch:12},{wch:20},{wch:16},{wch:24},{wch:10},{wch:24}];
     XLSX.utils.book_append_sheet(wb,ws,'습득물');
     var fname='T1_습득물관리'+(mf?'_'+mf:'')+'.xlsx';
     XLSX.writeFile(wb,fname);
