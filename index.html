@@ -54,7 +54,7 @@ html{overflow-x:hidden}
 
 /* ═══ 관리자 현황판 전용 "상황실" 레이아웃 — 대형 모니터(1200px+)에서 화면 꽉 채움 ═══ */
 @media (min-width:1200px){
-  #sExecDash.scr{max-width:100%!important;width:100%;box-shadow:none!important;padding:0 32px}
+  #sExecDash.scr{max-width:1400px!important;width:100%;margin:0 auto;box-shadow:none!important;padding:0 32px}
   #sExecDash .app-hd{padding-left:0;padding-right:0}
   #sExecDash h1{font-size:26px!important}
   #sExecDash small{font-size:13px!important}
@@ -79,11 +79,11 @@ html{overflow-x:hidden}
   #sExecDash #edShiftRow>div{padding:12px!important}
   #sExecDash #edShiftRow div[style*="font-size:10px;font-weight:700"]{font-size:12.5px!important}
   #sExecDash #edShiftRow div[style*="font-size:19px;font-weight:900"]{font-size:30px!important}
-  /* 층별 히트맵 */
+  /* 층별 인력 배치 (막대그래프) */
   #sExecDash #edHeatmap{gap:8px!important}
-  #sExecDash #edHeatmap>div{padding:10px 4px!important}
-  #sExecDash #edHeatmap div[style*="font-size:9px;font-weight:700"]{font-size:12px!important}
-  #sExecDash #edHeatmap div[style*="font-size:14px;font-weight:900"]{font-size:22px!important}
+  #sExecDash #edHeatmap>div{padding:8px 4px 10px!important}
+  #sExecDash #edHeatmap div[style*="font-size:11px;font-weight:700"]{font-size:13px!important}
+  #sExecDash #edHeatmap div[style*="font-size:12px;font-weight:800"]{font-size:16px!important}
   /* 현황 분석 4패널 */
   #sExecDash #edAnalysisGrid{gap:10px!important}
   #sExecDash #edAnalysisGrid>div{padding:14px 16px!important}
@@ -4614,17 +4614,19 @@ async function loadExecDashboard(){
     var sr=document.getElementById('edShiftRow'); if(sr) sr.innerHTML=shHtml;
 
 
-    // ── 층별 히트맵
+    // ── 층별 인력 배치: 막대그래프 스타일 ──
     var maxFloor=Math.max.apply(null, floorShow.concat([1]));
+    var barAreaH=90; // px, 막대가 차지하는 최대 높이
     var heatHtml='';
     MS_FLOORS.forEach(function(fl,i){
       var v=floorShow[i];
-      var intensity=maxFloor?v/maxFloor:0;
-      var bg='rgba(0,169,157,'+(0.12+intensity*0.75).toFixed(2)+')';
-      var txtCol=intensity>0.55?'white':'var(--g7)';
-      heatHtml+='<div style="background:'+bg+';border-radius:8px;padding:6px 3px;text-align:center">'
-        +'<div style="font-size:9px;font-weight:700;color:'+txtCol+';opacity:.85">'+fl+'</div>'
-        +'<div style="font-size:14px;font-weight:900;color:'+txtCol+'">'+v+'</div></div>';
+      var pct=maxFloor?Math.max(v/maxFloor*100,v>0?6:0):0;
+      heatHtml+='<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:6px 3px 8px">'
+        +'<div style="font-size:12px;font-weight:800;color:var(--g7);margin-bottom:5px">'+v+'</div>'
+        +'<div style="width:66%;height:'+barAreaH+'px;display:flex;align-items:flex-end;justify-content:center">'
+        +'<div style="width:100%;height:'+pct+'%;background:'+(v===maxFloor&&v>0?'var(--teal2)':'var(--teal)')+';border-radius:6px 6px 2px 2px;min-height:'+(v>0?'4px':'0')+'"></div>'
+        +'</div>'
+        +'<div style="font-size:11px;font-weight:700;color:var(--g5);margin-top:7px">'+fl+'</div></div>';
     });
     var hm=document.getElementById('edHeatmap'); if(hm) hm.innerHTML=heatHtml;
 
