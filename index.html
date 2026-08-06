@@ -12069,7 +12069,8 @@ function renderIndList(data){
     return;
   }
   var h='';
-  data.forEach(function(r){
+  var indShownList=data.slice(0, _lmShown.ind||30);
+  indShownList.forEach(function(r){
     var date=r.date||r.created_at||'';
     if(date&&date.length>10) date=date.slice(0,10);
     h+='<div style="padding:12px 16px;border-bottom:1px solid var(--g1)">';
@@ -12086,6 +12087,7 @@ function renderIndList(data){
     h+='</div>';
     h+='</div>';
   });
+  h+=lmButtonHtml('ind', data.length);
   el.innerHTML=h;
 }
 
@@ -12645,6 +12647,20 @@ async function loadLostFromDB(){
   }catch(e){ console.error(e); }
 }
 
+// ── 긴 목록 스크롤 시 흰 화면 깜빡임 완화용 공용 '더보기' 페이지네이션 ──
+var _lmShown={lost:30, ind:30, waste:30};
+var _lmRenderers={
+  lost:function(){ renderLostList(); },
+  ind:function(){ renderIndList(indData); },
+  waste:function(){ renderWasteList(); }
+};
+function lmMore(key){ _lmShown[key]=(_lmShown[key]||30)+30; _lmRenderers[key](); }
+function lmReset(key){ _lmShown[key]=30; }
+function lmButtonHtml(key, total){
+  var shown=_lmShown[key]||30;
+  if(total<=shown) return '';
+  return '<button onclick="lmMore(\''+key+'\')" style="width:100%;padding:11px;background:var(--g1);border:1.5px dashed var(--g3);border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer;margin-top:2px">더보기 (전체 '+total+'건 중 '+Math.min(shown,total)+'건 표시)</button>';
+}
 function renderLostList(){
   var el=document.getElementById('lostList');
   var statsEl=document.getElementById('lostStats');
@@ -12704,7 +12720,8 @@ function renderLostList(){
   var stBg={'접수':'var(--danger-bg)','완료-폐기':'var(--g1)','완료-유실물':'var(--teal-bg)','완료-인계':'var(--navy-bg)','완료-기타':'var(--g1)'};
   var stLabel={'접수':'접수중','완료-폐기':'완료·폐기','완료-유실물':'완료·유실물','완료-인계':'완료·인계','완료-기타':'완료·기타'};
   var h='';
-  filtered.forEach(function(r){
+  var lostShownList=filtered.slice(0, _lmShown.lost||30);
+  lostShownList.forEach(function(r){
     var dt=toKSTDateTime(r.found_date||r.created_at);
     var st=r.status||'접수';
     var isDone=st.startsWith('완료');
@@ -12751,6 +12768,7 @@ function renderLostList(){
     }
     h+='</div>';
   });
+  h+=lmButtonHtml('lost', filtered.length);
   el.innerHTML=h;
 }
 
@@ -14371,7 +14389,8 @@ function renderWasteList(){
   var isAdminMgr=me&&(me.role==='admin'||me.role==='manager');
   var myWasteCode=(me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
   var h='';
-  filtered.forEach(function(r){
+  var wasteShownList=filtered.slice(0, _lmShown.waste||30);
+  wasteShownList.forEach(function(r){
     var incTotal=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0);
     var recTotal=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0)+(r.misc_etc||0);
     var canEditWaste=isAdminMgr||(me&&(me.role==='leader'||me.role==='acting_leader')&&myWasteCode&&myWasteCode===r.team_code);
@@ -14404,6 +14423,7 @@ function renderWasteList(){
     h+='</div>';
     h+='</div>';
   });
+  h+=lmButtonHtml('waste', filtered.length);
   el.innerHTML=h;
 }
 
