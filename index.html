@@ -1543,7 +1543,10 @@ html{overflow-x:hidden}
     </table></div></div>
     <div class="card" id="mpTeamCard">
       <div class="cb">
-        <div style="font-size:14px;font-weight:700;color:var(--g6);margin-bottom:8px">👥 팀별 인력현황</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div style="font-size:14px;font-weight:700;color:var(--g6)">👥 팀별 인력현황</div>
+          <div style="font-size:13px;font-weight:800;color:var(--teal2)">총계 <span id="mpTeamTotal">0</span>명</div>
+        </div>
         <div id="mpTeamGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
       </div>
     </div>
@@ -7512,6 +7515,11 @@ async function loadFullStatusForDate(dateStr){
       });
     }
     var teamGridEl=document.getElementById('mpTeamGrid');
+    var teamTotalEl=document.getElementById('mpTeamTotal');
+    if(teamTotalEl){
+      var teamGrandTotal=teamOrder.reduce(function(s,t){ return s+(teamSums[t]||0); },0);
+      teamTotalEl.textContent=teamGrandTotal;
+    }
     if(teamGridEl){
       if(!teamOrder.length){
         teamGridEl.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:14px;color:var(--g3);font-size:12px">입력된 인력현황이 없습니다</div>';
