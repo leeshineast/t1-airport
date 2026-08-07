@@ -567,7 +567,7 @@ html{overflow-x:hidden}
     <div class="mh-tab-item" id="jwTabItem" onclick="go('jointwork')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="mh-tab-lb">공동작업</span></div>
   </div>
   <div class="mh-tabbar-row">
-    <div class="mh-tab-item" onclick="go('statsdash')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span><span class="mh-tab-lb">통계</span></div>
+    <div class="mh-tab-item" onclick="go('groupchat')" style="position:relative"><span id="gcTabBadge2" style="display:none;position:absolute;top:2px;right:calc(50% - 20px);min-width:16px;height:16px;padding:0 4px;background:var(--danger);color:white;border-radius:20px;font-size:9.5px;font-weight:800;align-items:center;justify-content:center"></span><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span class="mh-tab-lb">전체채팅</span></div>
     <div class="mh-tab-item" onclick="go('accident')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span class="mh-tab-lb">안전사고</span></div>
     <div class="mh-tab-item" onclick="go('veh')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="7" width="15" height="11" rx="1"/><path d="M16 10h3l3 3v4a1 1 0 0 1-1 1h-1"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg></span><span class="mh-tab-lb">차량운행</span></div>
     <div class="mh-tab-item" onclick="go('execdash')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span><span class="mh-tab-lb">현황판</span></div>
@@ -7421,6 +7421,7 @@ async function loadFullStatusForDate(dateStr){
   try{
     var mpRes=await sb.from('mp_data').select('*').eq('date',dateStr);
     var nsRes=await sb.from('night_special_data').select('*').eq('date',dateStr);
+    var mgrRes=await sb.from('mgr_attendance').select('checked').eq('date',dateStr).eq('checked',true);
     // 1) 층별(오전/오후) 합산 - recalcMpData와 동일 로직, 전역 mpData는 건드리지 않음
     var localMp=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
     if(mpRes.data){
@@ -7476,6 +7477,27 @@ async function loadFullStatusForDate(dateStr){
       if(!isNaN(na)) return -1; if(!isNaN(nb)) return 1;
       return a.localeCompare(b);
     });
+    // 5팀·10팀(야간특별작업)은 별도 테이블(night_special_data)이라 여기에 합산해서 추가
+    if(nsRes.data){
+      var nsFields=['carpet','wax','stone','wood','restroom','pbb','etc','es','toilet_daily','common_area','collection'];
+      nsRes.data.forEach(function(row){
+        var m2=(row.team_code||'').match(/^(\d+팀)/);
+        var baseTeam2=m2?m2[1]:row.team_code;
+        if(!baseTeam2) return;
+        var rowSum2=nsFields.reduce(function(s,f){ return s+(Number(row[f])||0); },0);
+        if(!teamSums[baseTeam2]){ teamSums[baseTeam2]=0; teamOrder.push(baseTeam2); }
+        teamSums[baseTeam2]+=rowSum2;
+      });
+      teamOrder.sort(function(a,b){
+        var na=parseInt(a), nb=parseInt(b);
+        if(!isNaN(na)&&!isNaN(nb)) return na-nb;
+        if(!isNaN(na)) return -1; if(!isNaN(nb)) return 1;
+        return a.localeCompare(b);
+      });
+    }
+    // 관리자 출근인원도 팀별 카드에 포함
+    var mgrCnt=(mgrRes&&mgrRes.data)?mgrRes.data.length:0;
+    if(mgrCnt>0){ teamSums['관리자']=mgrCnt; teamOrder.push('관리자'); }
     var teamGridEl=document.getElementById('mpTeamGrid');
     if(teamGridEl){
       if(!teamOrder.length){
@@ -7514,11 +7536,7 @@ function resetFullStatusToday(){
   var todayKst=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   var dEl=document.getElementById('mpFullDate');
   if(dEl) dEl.value=todayKst;
-  var titleEl=document.getElementById('mpFullNsTitle');
-  if(titleEl) titleEl.textContent='🌙 야간특별작업 인력현황 (금일)';
-  // 전역 상태(mpData/nightSpecialByLeader) 기준으로 즉시 복원
-  updateFloorChart();
-  renderNightSpecialSummary();
+  loadFullStatusForDate(todayKst);
 }
 
 function updateFloorChart(){
@@ -9694,7 +9712,7 @@ function getNightSpecialTotal(){
   return t;
 }
 function renderNightSpecialSummary(){
-  var cards=document.querySelectorAll('.ns-summary-card');
+  var cards=document.querySelectorAll('.ns-summary-card:not(#mpP1 .ns-summary-card)');
   if(!cards.length) return;
   var sums={carpet:0,wax:0,stone:0,wood:0,restroom:0,pbb:0,es:0,toilet_daily:0,common_area:0,collection:0};
   var any=false;
@@ -15983,21 +16001,25 @@ async function pollGroupChatBadge(){
 
 function updateGcBadge(){
   var badge=document.getElementById('gcTabBadge');
-  if(!badge||!me) return;
+  var badge2=document.getElementById('gcTabBadge2');
+  if((!badge&&!badge2)||!me) return;
   var lastSeen=localStorage.getItem('t1_chat_last_seen')||'1970-01-01T00:00:00.000Z';
   var unread=(gcAll||[]).filter(function(m){
     return m.sender_name!==me.name && m.created_at && m.created_at>lastSeen;
   }).length;
   if(_t1PrevGc!==null && unread>_t1PrevGc && typeof playNotifSound==='function') playNotifSound();
   _t1PrevGc=unread;
-  if(unread>0){
-    badge.textContent=unread>9?'9+':String(unread);
-    badge.style.display='flex';
-    badge.style.alignItems='center';
-    badge.style.justifyContent='center';
-  } else {
-    badge.style.display='none';
-  }
+  [badge,badge2].forEach(function(b){
+    if(!b) return;
+    if(unread>0){
+      b.textContent=unread>9?'9+':String(unread);
+      b.style.display='flex';
+      b.style.alignItems='center';
+      b.style.justifyContent='center';
+    } else {
+      b.style.display='none';
+    }
+  });
 }
 
 function markGroupChatRead(){
