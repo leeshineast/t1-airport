@@ -2045,7 +2045,7 @@ html{overflow-x:hidden}
     <!-- 통계 -->
     <div id="lostStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 13px"></div>
     <!-- 목록 -->
-    <div id="lostList" style="padding:0 13px"></div>
+    <div id="lostList" style="padding:0 13px;transform:translateZ(0)"></div>
   </div>
 
   <!-- 접수 등록 탭 -->
@@ -2560,7 +2560,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <!-- 월간 합계 -->
     <div id="wasteMonthSummary" style="margin:10px 13px"></div>
     <!-- 목록 -->
-    <div id="wasteList" style="padding:0 13px"></div>
+    <div id="wasteList" style="padding:0 13px;transform:translateZ(0)"></div>
   </div>
 
   <!-- 입력 탭 -->
@@ -3781,7 +3781,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div class="stat-box"><div class="s-lbl">전년 대비</div><div class="s-val" style="color:var(--success)">—</div></div>
       <div class="stat-box"><div class="s-lbl">누적</div><div class="s-val c-danger" id="aIndT">0</div><div class="s-unit">건</div></div>
     </div>
-    <div class="card"><div class="cb" style="padding:0" id="indList"><p style="text-align:center;padding:22px;color:var(--g3);font-size:14px">등록된 이력이 없습니다</p></div></div>
+    <div class="card"><div class="cb" style="padding:0;transform:translateZ(0)" id="indList"><p style="text-align:center;padding:22px;color:var(--g3);font-size:14px">등록된 이력이 없습니다</p></div></div>
     <div style="height:20px"></div>
   </div>
   <div id="adP4" style="display:none">
@@ -4545,7 +4545,7 @@ async function loadExecDashboard(){
       msFetchAll(function(){ return sb.from('safety_accidents').select('id,accident_type').gte('occurred_at',tsFrom).lte('occurred_at',tsTo); }),
       msFetchAll(function(){ return sb.from('night_special_data').select('date,team_code,carpet,pbb,wax,stone,wood,restroom,es,toilet_daily,common_area,collection').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('mgr_attendance').select('date,checked,status').gte('date',dFrom).lte('date',dTo); }),
-      msFetchAll(function(){ return sb.from('joint_work_data').select('id,teams,headcount').gte('work_date',dFrom).lte('work_date',dTo); })
+      msFetchAll(function(){ return sb.from('joint_work_data').select('id,teams,headcount,batch_id').gte('work_date',dFrom).lte('work_date',dTo); })
     ]);
     var mpRows=(q[0]&&q[0].data)||[], hoRows=(q[1]&&q[1].data)||[], vocRows=(q[2]&&q[2].data)||[], lostRows=(q[3]&&q[3].data)||[], accRows=(q[4]&&q[4].data)||[], nsRows=(q[5]&&q[5].data)||[], mgrRows=(q[6]&&q[6].data)||[], jwRows=(q[7]&&q[7].data)||[];
 
@@ -4603,7 +4603,7 @@ async function loadExecDashboard(){
     var issueTotal=vocTotal+lostTotal+accTotal;
     var staffLabel=isAvg?(periodLabel+' 일평균 근무인원'):(periodLabel+' 근무인원');
     var jwTotal=jwRows.length;
-    var jwHeadSum=jwRows.reduce(function(s,r){return s+(r.headcount||0);},0);
+    var jwHeadSum=jwSumHeadcount(jwRows);
 
     // ── KPI 카드
     var kpiHtml='';
@@ -8712,11 +8712,12 @@ async function subJointWork(){
     var schedItems=jwScheduleData.filter(function(s){ return jwSelectedSchedIds.indexOf(s.id)!==-1; });
     var totalHead=parseInt(document.getElementById('jwSchedHeadcount').value)||0;
     if(!totalHead||totalHead<1){ toast('총 투입 인원을 입력해주세요'); return; }
+    var jwBatchId=(Date.now().toString(36)+Math.random().toString(36).slice(2,10));
     schedItems.forEach(function(s){
       rows.push({
         work_date:date, teams:jwSelectedTeams, floors:[s.floor||''], headcount:totalHead,
         category:s.category, work_name:s.work_name, shift:shift, location:(s.location||'')+(s.detail?(' ('+s.detail+')'):''),
-        note:note||null, writer:me?me.name:''
+        note:note||null, writer:me?me.name:'', batch_id:jwBatchId
       });
     });
   }else{
@@ -8749,12 +8750,14 @@ async function subJointWork(){
     }
 
     // 항목당 선택된 (대분류,작업명) 조합 개수만큼 row 생성 (통계 정확성을 위해 1행=1작업)
+    // 같은 블록(위치·인원) 내 여러 작업명은 동일 인원이 수행한 것이므로 batch_id를 공유시켜 인원 중복집계 방지
     items.forEach(function(it){
+      var blockBatchId=(Date.now().toString(36)+Math.random().toString(36).slice(2,10));
       it.selections.forEach(function(sel){
         rows.push({
           work_date:date, teams:jwSelectedTeams, floors:[it.floor], headcount:it.headcount,
           category:sel.cat, work_name:sel.name, shift:shift, location:it.location,
-          note:note||null, writer:me?me.name:''
+          note:note||null, writer:me?me.name:'', batch_id:blockBatchId
         });
       });
     });
@@ -8899,6 +8902,17 @@ function jwRenderScheduleSummary(){
   });
   listEl.innerHTML=h;
 }
+// 공동작업 인원 합계: 같은 batch_id는 1회만 카운트 (배치 내 여러 작업행에 동일 인원이 중복 저장되므로)
+function jwSumHeadcount(rows){
+  var seen={}, sum=0;
+  (rows||[]).forEach(function(r){
+    var key=r.batch_id||('__row_'+(r.id!=null?r.id:Math.random()));
+    if(seen[key]) return;
+    seen[key]=true;
+    sum+=Number(r.headcount)||0;
+  });
+  return sum;
+}
 async function loadJointWorkFromDB(){
   try{
     var res=await sb.from('joint_work_data').select('*').order('work_date',{ascending:false}).order('created_at',{ascending:false});
@@ -8911,7 +8925,7 @@ async function loadJointWorkFromDB(){
 async function loadJointWorkTodayFromDB(){
   try{
     var today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
-    var res=await sb.from('joint_work_data').select('teams,headcount,items,category,work_name,location').eq('work_date',today);
+    var res=await sb.from('joint_work_data').select('id,teams,headcount,items,category,work_name,location,batch_id').eq('work_date',today);
     if(res.error) return;
     renderJointWorkTodayCard(res.data||[]);
   }catch(e){}
@@ -8922,7 +8936,7 @@ function renderJointWorkTodayCard(rows){
   if(!cntEl||!detailEl) return;
   rows=rows||[];
   cntEl.textContent=rows.length;
-  var totalPeople=rows.reduce(function(s,r){return s+(Number(r.headcount)||0);},0);
+  var totalPeople=jwSumHeadcount(rows);
   if(peopleEl) peopleEl.textContent=totalPeople;
   if(!rows.length){
     detailEl.textContent='등록된 공동작업이 없습니다';
@@ -8957,32 +8971,62 @@ function renderJointWorkList(){
     list.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:12px">해당 조건에 기록이 없습니다</div>';
     return;
   }
-  var h='';
+  // 같은 batch_id(한 번에 등록된 묶음)는 한 카드로 그룹화 — 인원 중복 표시 방지
+  var groups=[], groupMap={};
   filtered.forEach(function(r){
-    var wd=['일','월','화','수','목','금','토'][new Date(r.work_date+'T00:00:00').getDay()];
+    var key=r.batch_id||('__row_'+r.id);
+    if(!groupMap[key]){
+      groupMap[key]={ key:key, work_date:r.work_date, teams:(r.teams||[]).slice(), floors:[], headcount:r.headcount||0, writer:r.writer, note:r.note, rows:[] };
+      groups.push(groupMap[key]);
+    }
+    (r.floors||[]).forEach(function(f){ if(f && groupMap[key].floors.indexOf(f)===-1) groupMap[key].floors.push(f); });
+    groupMap[key].rows.push(r);
+  });
+  var h='';
+  groups.forEach(function(g){
+    var wd=['일','월','화','수','목','금','토'][new Date(g.work_date+'T00:00:00').getDay()];
     h+='<div style="background:white;border-radius:var(--r);margin:0 13px 10px;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--g2);overflow:hidden">';
     h+='<div style="background:var(--navy-bg);padding:10px 13px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">';
-    h+='<span style="font-size:12px;font-weight:800;color:var(--navy)">'+r.work_date+'('+wd+')</span>';
-    (r.teams||[]).forEach(function(t){ h+='<span style="background:var(--navy);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">'+t+'</span>'; });
-    (r.floors||[]).forEach(function(f){ h+='<span style="background:var(--teal2);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">'+f+'</span>'; });
-    h+='<span style="background:var(--warn);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">👥 '+(r.headcount||0)+'명</span>';
+    h+='<span style="font-size:12px;font-weight:800;color:var(--navy)">'+g.work_date+'('+wd+')</span>';
+    g.teams.forEach(function(t){ h+='<span style="background:var(--navy);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">'+t+'</span>'; });
+    g.floors.forEach(function(f){ h+='<span style="background:var(--teal2);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">'+f+'</span>'; });
+    h+='<span style="background:var(--warn);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">👥 '+g.headcount+'명</span>';
+    if(g.rows.length>1) h+='<span style="background:var(--g3);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">📋 '+g.rows.length+'건 묶음</span>';
     h+='</div>';
     h+='<div style="padding:10px 13px">';
-    if(r.category){
-      h+='<div style="font-size:12px;color:var(--g6);margin-bottom:4px"><b>'+(JW_CAT_ICONS[r.category]||'')+' '+r.category+'</b> · '+r.work_name+'</div>';
-      h+='<div style="font-size:12px;color:var(--g6)">📍'+(r.location||'')+(r.shift?(' · 🕐'+r.shift):'')+'</div>';
-    }else{
-      h+='<div style="font-size:10px;color:var(--g4);background:var(--g1);display:inline-block;border-radius:10px;padding:2px 8px;margin-bottom:5px">구분 이전(자유입력)</div>';
-      (r.items||[]).forEach(function(it,i){
-        h+='<div style="font-size:12px;color:var(--g6);margin-bottom:4px"><b>'+(i+1)+'.</b> 📍'+it.location+' — '+it.work+'</div>';
-      });
+    g.rows.forEach(function(r,i){
+      if(r.category){
+        h+='<div style="font-size:12px;color:var(--g6);margin-bottom:2px"><b>'+(i+1)+'. '+(JW_CAT_ICONS[r.category]||'')+' '+r.category+'</b> · '+r.work_name+(r.location?(' — 📍'+r.location):'')+(r.shift?(' · 🕐'+r.shift):'')+'</div>';
+      }else{
+        (r.items||[]).forEach(function(it,j){
+          h+='<div style="font-size:12px;color:var(--g6);margin-bottom:2px"><b>'+(i+1)+'.</b> 📍'+it.location+' — '+it.work+'</div>';
+        });
+      }
+    });
+    if(g.note) h+='<div style="margin-top:6px;font-size:11px;color:var(--warn);background:var(--warn-bg,#FFF7E0);border-radius:6px;padding:6px 8px">📝 '+g.note+'</div>';
+    h+='<div style="margin-top:8px;font-size:10px;color:var(--g3)">작성자: '+(g.writer||'')+'</div>';
+    h+='<div style="margin-top:8px;text-align:right;display:flex;gap:6px;justify-content:flex-end">';
+    if(g.rows.length===1 && g.rows[0].category){
+      h+='<button onclick="openJwEdit('+g.rows[0].id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button>';
     }
-    if(r.note) h+='<div style="margin-top:6px;font-size:11px;color:var(--warn);background:var(--warn-bg,#FFF7E0);border-radius:6px;padding:6px 8px">📝 '+r.note+'</div>';
-    h+='<div style="margin-top:8px;font-size:10px;color:var(--g3)">작성자: '+(r.writer||'')+'</div>';
-    h+='<div style="margin-top:8px;text-align:right;display:flex;gap:6px;justify-content:flex-end"><button onclick="openJwEdit('+r.id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button><button onclick="deleteJw('+r.id+')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제</button></div>';
+    h+='<button onclick="deleteJwBatch(\''+g.key+'\')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제'+(g.rows.length>1?' (전체)':'')+'</button>';
+    h+='</div>';
     h+='</div></div>';
   });
   list.innerHTML=h;
+}
+async function deleteJwBatch(key){
+  if(!canWrite()) return;
+  var rows=(jointWorkData||[]).filter(function(r){ return (r.batch_id||('__row_'+r.id))===key; });
+  if(!rows.length) return;
+  if(!confirm(rows.length>1?('묶인 '+rows.length+'건을 모두 삭제하시겠습니까?'):'이 기록을 삭제하시겠습니까?')) return;
+  try{
+    var ids=rows.map(function(r){return r.id;});
+    var res=await sb.from('joint_work_data').delete().in('id',ids);
+    if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    toast('🗑 삭제되었습니다');
+    loadJointWorkFromDB();
+  }catch(e){ toast('삭제 실패'); }
 }
 function openJwEdit(id){
   if(!canWrite()) return;
@@ -12073,7 +12117,7 @@ function renderIndList(data){
   indShownList.forEach(function(r){
     var date=r.date||r.created_at||'';
     if(date&&date.length>10) date=date.slice(0,10);
-    h+='<div style="padding:12px 16px;border-bottom:1px solid var(--g1)">';
+    h+='<div style="padding:12px 16px;border-bottom:1px solid var(--g1);transform:translateZ(0);-webkit-backface-visibility:hidden">';
     h+='<div style="display:flex;justify-content:space-between;margin-bottom:5px">';
     h+='<span style="font-size:14px;font-weight:700;color:var(--danger)">'+date+'</span>';
     h+='<span style="font-size:13px;background:var(--danger-bg);color:var(--danger);padding:2px 8px;border-radius:20px;font-weight:700">'+(r.type||'기타')+'</span>';
@@ -12725,7 +12769,7 @@ function renderLostList(){
     var dt=toKSTDateTime(r.found_date||r.created_at);
     var st=r.status||'접수';
     var isDone=st.startsWith('완료');
-    h+='<div style="background:white;border-radius:var(--r2);border:1.5px solid var(--g2);padding:13px;margin-bottom:9px">';
+    h+='<div style="background:white;border-radius:var(--r2);border:1.5px solid var(--g2);padding:13px;margin-bottom:9px;transform:translateZ(0);-webkit-backface-visibility:hidden">';
     // 헤더
     h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
     h+='<span style="font-size:13px;color:var(--g4)">📅 '+dt+'</span>';
@@ -14394,7 +14438,7 @@ function renderWasteList(){
     var incTotal=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0);
     var recTotal=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0)+(r.misc_etc||0);
     var canEditWaste=isAdminMgr||(me&&(me.role==='leader'||me.role==='acting_leader')&&myWasteCode&&myWasteCode===r.team_code);
-    h+='<div style="background:white;border-radius:var(--r2);border:1.5px solid var(--g2);padding:13px;margin-bottom:9px">';
+    h+='<div style="background:white;border-radius:var(--r2);border:1.5px solid var(--g2);padding:13px;margin-bottom:9px;transform:translateZ(0);-webkit-backface-visibility:hidden">';
     h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
     h+='<div style="display:flex;align-items:center;gap:7px">';
     h+='<span style="font-size:14px;font-weight:800;color:var(--g7)">'+r.waste_date+'</span>';
@@ -17102,7 +17146,7 @@ async function loadMonthlyStats(){
       msFetchAll(function(){ return sb.from('mgr_attendance').select('date,checked,status').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('voc_data').select('id,voc_date,status,completed_at,content,channel,category,category_etc,loc_zone,loc_side,loc_floor,created_at').gte('voc_date',dFrom).lte('voc_date',dTo); }),
       msFetchAll(function(){ return sb.from('waste_data').select('waste_date,team_code,incineration_living,incineration_synthetic,incineration_food,incineration_wood,recycle_paper,recycle_plastic,recycle_can,recycle_glass,recycle_etc,misc_etc').gte('waste_date',dFrom).lte('waste_date',dTo); }),
-      msFetchAll(function(){ return sb.from('joint_work_data').select('id,work_date,teams,floors,headcount,items').gte('work_date',dFrom).lte('work_date',dTo); })
+      msFetchAll(function(){ return sb.from('joint_work_data').select('id,work_date,teams,floors,headcount,items,batch_id').gte('work_date',dFrom).lte('work_date',dTo); })
     ]);
     var anyErr=q.some(function(r){ return r&&r.error; });
     var banner=document.getElementById('msErrBanner');
@@ -17443,11 +17487,17 @@ function msCalc(q, key){
     }
   });
   // ── 공동작업
+  var jwSeenBatch={};
   ((q[8]&&q[8].data)||[]).forEach(function(r){
     if(!r.work_date||r.work_date.indexOf(key)!==0) return;
     s.jw.total++;
-    s.jw.headSum+=(r.headcount||0);
-    (r.teams||[]).forEach(function(t){ s.jw.byTeam[t]=(s.jw.byTeam[t]||0)+(r.headcount||0); });
+    var bKey=r.batch_id||('__row_'+r.id);
+    var firstInBatch=!jwSeenBatch[bKey];
+    jwSeenBatch[bKey]=true;
+    if(firstInBatch){
+      s.jw.headSum+=(r.headcount||0);
+      (r.teams||[]).forEach(function(t){ s.jw.byTeam[t]=(s.jw.byTeam[t]||0)+(r.headcount||0); });
+    }
     (r.items||[]).forEach(function(it){
       if(it.location) s.jw.byLoc[it.location]=(s.jw.byLoc[it.location]||0)+1;
       if(it.work) s.jw.byWork[it.work]=(s.jw.byWork[it.work]||0)+1;
