@@ -945,6 +945,10 @@ html{overflow-x:hidden}
     </div>
     <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('waste')">
       <div class="s-lbl">폐기물 현황 <span style="font-size:10px;color:var(--g3);font-weight:500">(이번달 톤)</span></div>
+      <div style="display:flex;gap:5px;margin:4px 0 2px;flex-wrap:wrap">
+        <span id="dWTeam1Badge" style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;background:var(--g1);color:var(--g4)">1팀 확인중</span>
+        <span id="dWTeam6Badge" style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;background:var(--g1);color:var(--g4)">6팀 확인중</span>
+      </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-top:5px">
         <div style="font-size:12px;color:var(--g5)">생활쓰레기 <b id="dW_living" style="color:var(--g7)">0</b></div>
         <div style="font-size:12px;color:var(--g5)">폐합성 <b id="dW_syn" style="color:var(--g7)">0</b></div>
@@ -11997,6 +12001,16 @@ function updateAccComplaintCount(){
       var v=wSum(wf[1]);
       el.textContent=v===0?0:parseFloat(v.toFixed(3));
     }
+  });
+
+  // 1팀·6팀 금일 폐기물 작성여부 배지
+  var wasteToday=(wasteData||[]).filter(function(r){ return r.waste_date===today; });
+  [['dWTeam1Badge','1팀'],['dWTeam6Badge','6팀']].forEach(function(pair){
+    var el=document.getElementById(pair[0]); if(!el) return;
+    var done=wasteToday.some(function(r){ return (r.team_code||'').indexOf(pair[1])===0; });
+    el.textContent=pair[1]+(done?' ✓완료':' 미작성');
+    el.style.background=done?'var(--success-bg,#E6F7EF)':'var(--danger-bg)';
+    el.style.color=done?'var(--success,#0AA36F)':'var(--danger)';
   });
 
 }
