@@ -563,7 +563,7 @@ html{overflow-x:hidden}
   <div class="mh-tabbar-row">
     <div class="mh-tab-item on" onclick="goHomeMain()"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg></span><span class="mh-tab-lb">홈</span></div>
     <div class="mh-tab-item" onclick="go('mp')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="mh-tab-lb">인력현황</span></div>
-    <div class="mh-tab-item" onclick="go('ho')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span><span class="mh-tab-lb">인수인계</span></div>
+    <div class="mh-tab-item" onclick="go('ho')" style="position:relative"><span id="hoTabBadge" style="display:none;position:absolute;top:2px;right:calc(50% - 20px);min-width:16px;height:16px;padding:0 4px;background:var(--danger);color:white;border-radius:20px;font-size:9.5px;font-weight:800;align-items:center;justify-content:center"></span><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span><span class="mh-tab-lb">인수인계</span></div>
     <div class="mh-tab-item" id="jwTabItem" onclick="go('jointwork')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="mh-tab-lb">공동작업</span></div>
   </div>
   <div class="mh-tabbar-row">
@@ -12165,6 +12165,7 @@ async function loadHandoverFromDB(highlightNewest){
     renderHoList(hoAll);
     updateHoPending();
     updateAccComplaintCount();
+    if(typeof checkHoPending==='function') checkHoPending();
     if(highlightNewest){
       setTimeout(function(){
         var list=document.getElementById('hoAllList');
@@ -18355,32 +18356,29 @@ function checkHoPending(){
   // 이후 폴링: 새로 늘어난 경우에만 소리 + 배너
   if(isFirst){
     _t1PrevHoPending=cnt;
-    if(cnt>0){
-      var msg0='미확인 인계 '+cnt+'건이 있습니다';
-      var b0=document.getElementById('hoAlertBanner');
-      var bm0=document.getElementById('hoAlertMsg');
-      if(b0&&bm0){ bm0.textContent=msg0; b0.style.display='block';
-        setTimeout(function(){ if(b0&&b0.style.display!=='none') b0.style.display='none'; }, 10000);
-      }
-    }
+    updateHoTabBadge(cnt);
     return;
   }
-  // 새 미확인 인계가 늘었을 때 소리 + 배너
+  // 새 미확인 인계가 늘었을 때 소리만 (배너는 하단탭 뱃지로 대체됨)
   if(cnt>_t1PrevHoPending){
-    var newCnt=cnt-_t1PrevHoPending;
-    var msg='미확인 인계 '+cnt+'건 ('+newCnt+'건 새로 추가)';
-    var b=document.getElementById('hoAlertBanner');
-    var bm=document.getElementById('hoAlertMsg');
-    if(b&&bm){ bm.textContent=msg; b.style.display='block';
-      setTimeout(function(){ if(b&&b.style.display!=='none') b.style.display='none'; }, 8000);
-    }
     if(typeof playNotifSound==='function') playNotifSound();
   }
   _t1PrevHoPending=cnt;
+  updateHoTabBadge(cnt);
   // 메인 대시보드 미확인 뱃지 갱신
   var badge=document.getElementById('hoPendingBadge');
   if(badge){ badge.textContent=cnt>0?cnt+'건 미확인':''; badge.style.display=cnt>0?'block':'none'; }
   if(typeof loadExecSummary==='function') loadExecSummary();
+}
+function updateHoTabBadge(cnt){
+  var b=document.getElementById('hoTabBadge');
+  if(!b) return;
+  if(cnt>0){
+    b.textContent=cnt>9?'9+':String(cnt);
+    b.style.display='flex';
+  }else{
+    b.style.display='none';
+  }
 }
 
 function startHoPoll(){
