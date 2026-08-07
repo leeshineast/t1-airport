@@ -7421,7 +7421,7 @@ async function loadFullStatusForDate(dateStr){
   try{
     var mpRes=await sb.from('mp_data').select('*').eq('date',dateStr);
     var nsRes=await sb.from('night_special_data').select('*').eq('date',dateStr);
-    var mgrRes=await sb.from('mgr_attendance').select('checked').eq('date',dateStr).eq('checked',true);
+    var mgrRes=await sb.from('mgr_attendance').select('team,checked').eq('date',dateStr).eq('checked',true);
     // 1) 층별(오전/오후) 합산 - recalcMpData와 동일 로직, 전역 mpData는 건드리지 않음
     var localMp=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
     if(mpRes.data){
@@ -7495,9 +7495,22 @@ async function loadFullStatusForDate(dateStr){
         return a.localeCompare(b);
       });
     }
-    // 관리자 출근인원도 팀별 카드에 포함
-    var mgrCnt=(mgrRes&&mgrRes.data)?mgrRes.data.length:0;
-    if(mgrCnt>0){ teamSums['관리자']=mgrCnt; teamOrder.push('관리자'); }
+    // 관리자(팀장·조장) 출근인원도 각자 소속 팀에 합산 (별도 칸 아님)
+    if(mgrRes&&mgrRes.data){
+      mgrRes.data.forEach(function(row){
+        var t=(row.team||'').trim();
+        if(!t) return;
+        var baseTeam3 = t==='운영' ? '운영팀' : (/팀$/.test(t) ? t : t+'팀');
+        if(!teamSums[baseTeam3]){ teamSums[baseTeam3]=0; teamOrder.push(baseTeam3); }
+        teamSums[baseTeam3]+=1;
+      });
+      teamOrder.sort(function(a,b){
+        var na=parseInt(a), nb=parseInt(b);
+        if(!isNaN(na)&&!isNaN(nb)) return na-nb;
+        if(!isNaN(na)) return -1; if(!isNaN(nb)) return 1;
+        return a.localeCompare(b);
+      });
+    }
     var teamGridEl=document.getElementById('mpTeamGrid');
     if(teamGridEl){
       if(!teamOrder.length){
