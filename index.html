@@ -1537,6 +1537,12 @@ html{overflow-x:hidden}
         <tr class="tot"><td class="lbl">전체 총계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
       </tbody>
     </table></div></div>
+    <div class="card" id="mpTeamCard">
+      <div class="cb">
+        <div style="font-size:14px;font-weight:700;color:var(--g6);margin-bottom:8px">👥 팀별 인력현황</div>
+        <div id="mpTeamGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
+      </div>
+    </div>
     <div class="card ns-summary-card" style="display:none">
       <div class="cb">
         <div style="font-size:14px;font-weight:700;color:#6B21A8;margin-bottom:8px" id="mpFullNsTitle">🌙 야간특별작업 인력현황 (금일)</div>
@@ -7204,6 +7210,7 @@ function tabSwitch(prefix,n,count){
 function mpTab(n){tabSwitch('mp',n,5);if(n===1){
   var dEl=document.getElementById('mpFullDate');
   if(dEl&&!dEl.value){ dEl.value=new Date(Date.now()+9*3600000).toISOString().slice(0,10); }
+  if(dEl&&dEl.value) loadFullStatusForDate(dEl.value);
 }if(n===2){
   var t=document.querySelectorAll('#leaderViewToggle .rp');
   if(t.length){t.forEach(function(b){b.classList.remove('on');});t[0].classList.add('on');}
@@ -7441,6 +7448,39 @@ async function loadFullStatusForDate(dateStr){
     if(mpTbl){
       var trs=mpTbl.querySelectorAll('tr');
       allRows.forEach(function(rowData,ri2){if(!trs[ri2])return;var tds=trs[ri2].querySelectorAll('td');rowData.forEach(function(val,ci2){if(tds[ci2])tds[ci2].textContent=val;});});
+    }
+    // 1-1) 팀별 총원 집계 (같은 팀의 A/B/C조를 합산)
+    var teamSums={}, teamOrder=[];
+    if(mpRes.data){
+      mpRes.data.forEach(function(row){
+        if(!row.team_code||row.team_code.indexOf('_')===0) return;
+        if(!row.values) return;
+        var vals=row.values;
+        if(typeof vals==='string'){ try{ vals=JSON.parse(vals); }catch(e){ return; } }
+        if(!Array.isArray(vals)) return;
+        var m=row.team_code.match(/^(\d+팀|운영팀|관리자)/);
+        var baseTeam=m?m[1]:row.team_code;
+        var rowSum=0;
+        for(var ri3=0;ri3<4;ri3++){ if(!vals[ri3]) continue; for(var ci3=0;ci3<7;ci3++){ rowSum+=Number(vals[ri3][ci3])||0; } }
+        if(!teamSums[baseTeam]){ teamSums[baseTeam]=0; teamOrder.push(baseTeam); }
+        teamSums[baseTeam]+=rowSum;
+      });
+    }
+    teamOrder.sort(function(a,b){
+      var na=parseInt(a), nb=parseInt(b);
+      if(!isNaN(na)&&!isNaN(nb)) return na-nb;
+      if(!isNaN(na)) return -1; if(!isNaN(nb)) return 1;
+      return a.localeCompare(b);
+    });
+    var teamGridEl=document.getElementById('mpTeamGrid');
+    if(teamGridEl){
+      if(!teamOrder.length){
+        teamGridEl.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:14px;color:var(--g3);font-size:12px">입력된 인력현황이 없습니다</div>';
+      }else{
+        teamGridEl.innerHTML=teamOrder.map(function(t){
+          return '<div style="background:var(--g1);border-radius:8px;padding:9px 10px;text-align:center"><div style="font-size:11px;color:var(--g5);font-weight:700">'+t+'</div><div style="font-size:19px;font-weight:900;color:var(--teal2)">'+teamSums[t]+'<span style="font-size:10px;font-weight:600;color:var(--g4)">명</span></div></div>';
+        }).join('');
+      }
     }
     // 2) 야간특별작업 합산
     var sums={carpet:0,wax:0,stone:0,wood:0,restroom:0,pbb:0,es:0,toilet_daily:0,common_area:0,collection:0};
