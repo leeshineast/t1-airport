@@ -820,7 +820,8 @@ html{overflow-x:hidden}
         <div class="menu-desc">운영매뉴얼 PDF 열람</div>
         <span class="menu-arrow">열람하기 →</span>
       </button>
-      <button class="menu-btn" id="groupChatMenuBtn" onclick="go('groupchat')">
+      <button class="menu-btn" id="groupChatMenuBtn" onclick="go('groupchat')" style="position:relative">
+        <span id="gcTabBadge" style="display:none;position:absolute;top:8px;right:10px;min-width:18px;height:18px;padding:0 5px;background:var(--danger);color:white;border-radius:20px;font-size:10.5px;font-weight:800"></span>
         <span class="menu-icon" style="display:flex;align-items:center;justify-content:center;color:white"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
         <div class="menu-title">전체채팅</div>
         <div class="menu-desc">전 직원 단체 대화방</div>
@@ -5179,6 +5180,7 @@ async function doLogin(){
 function finishLogin(){
   applyRoleUI();
   applyFontScale();
+  setTimeout(function(){ if(typeof pollGroupChatBadge==='function') pollGroupChatBadge(); }, 800);
   var gt=document.getElementById('globalTabbar'); if(gt) gt.style.display='flex';
   // 세션 저장 (새로고침 시 자동 로그인)
   try{ localStorage.setItem('t1_me', JSON.stringify(me)); }catch(e){}
@@ -8600,18 +8602,31 @@ async function dlJointWork(){
   if(!filtered.length){toast('해당 기간에 공동작업 기록이 없습니다');return;}
   var header=['일자','근무조','참여 팀·조','작업대분류','작업명','층','세부위치','투입인원','비고','작성자'];
   var rows=[header];
+  var jwDlSeenBatch={};
   filtered.slice().sort(function(a,b){return (a.work_date||'').localeCompare(b.work_date||'');}).forEach(function(r){
     var teams=(r.teams||[]).join(', ');
+    var bKey=r.batch_id||('__row_'+r.id);
+    var showHead=!jwDlSeenBatch[bKey];
+    jwDlSeenBatch[bKey]=true;
+    var headVal=showHead?(r.headcount||0):'';
     if(r.category){
       // 표준화 방식(신형)
-      rows.push([r.work_date||'', r.shift||'', teams, r.category||'', r.work_name||'', r.floors&&r.floors[0]||'', r.location||'', r.headcount||0, r.note||'', r.writer||'']);
+      rows.push([r.work_date||'', r.shift||'', teams, r.category||'', r.work_name||'', r.floors&&r.floors[0]||'', r.location||'', headVal, r.note||'', r.writer||'']);
     }else{
       // 예전(자유입력) 방식 — 세부위치·작업내용을 items에서 합쳐 표시
       var floors=(r.floors||[]).join(', ');
       var items=(r.items||[]).map(function(it){return (it.location||'')+' - '+(it.work||'');}).join(' / ');
-      rows.push([r.work_date||'', '', teams, '(구분전)', items, floors, '', r.headcount||0, r.note||'', r.writer||'']);
+      rows.push([r.work_date||'', '', teams, '(구분전)', items, floors, '', headVal, r.note||'', r.writer||'']);
     }
   });
+  var jwDlHeadTotal=0; var jwDlSeenBatch2={};
+  filtered.forEach(function(r){
+    var bKey=r.batch_id||('__row_'+r.id);
+    if(jwDlSeenBatch2[bKey]) return;
+    jwDlSeenBatch2[bKey]=true;
+    jwDlHeadTotal+=(r.headcount||0);
+  });
+  rows.push(['','','','','','','합계(중복제거)',jwDlHeadTotal,'','']);
   try{
     var range=(typeof dlDateRangeStr==='function')?dlDateRangeStr(filtered.map(function(r){return r.work_date;})):'';
     var wrap=(typeof dlWithTitle==='function')?dlWithTitle(rows,'T1환경미화사업부 공동작업 기록',range,10):{rows:rows,merges:[]};
@@ -9148,37 +9163,30 @@ function jwRenderStats(){
   var stdFiltered=filtered.filter(function(r){ return !!r.category; }); // 통계는 표준화(신형) 데이터만 집계
   var legacyCount=filtered.length-stdFiltered.length;
   var h='';
-  if(jwStatMode==='day'){
-    if(!filtered.length){
-      h='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">해당 날짜에 공동작업 기록이 없습니다</div>';
-    }else{
-      filtered.forEach(function(r){
-        h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
-        h+='<div style="font-size:12px;font-weight:800;color:var(--navy);margin-bottom:4px">'+(r.teams||[]).join(', ')+' · '+(r.floors||[]).join(', ')+' · 👥'+(r.headcount||0)+'명</div>';
-        if(r.category){
-          h+='<div style="font-size:11px;color:var(--g5)">'+(JW_CAT_ICONS[r.category]||'')+' '+r.category+' · '+r.work_name+' · 📍'+(r.location||'')+'</div>';
-        }else{
-          (r.items||[]).forEach(function(it,i){ h+='<div style="font-size:11px;color:var(--g5)">'+(i+1)+'. 📍'+it.location+' — '+it.work+'</div>'; });
-        }
-        h+='</div>';
-      });
-    }
-  }else{
-    // 월간/연간: 표준화(신형) 데이터 기준 집계
+  {
+    // 일간/월간/연간 공통 집계 (표준화 신형 데이터 기준)
     var byTeamCnt={}, byTeamHead={}, byLoc={}, byWork={}, byCat={}, byFloor={}, byMonth={};
     var totalHead=0;
+    var jwStatSeenBatch={};
     stdFiltered.forEach(function(r){
-      totalHead+=(r.headcount||0);
-      (r.teams||[]).forEach(function(t){
-        byTeamCnt[t]=(byTeamCnt[t]||0)+1;
-        byTeamHead[t]=(byTeamHead[t]||0)+(r.headcount||0);
-      });
+      var bKey=r.batch_id||('__row_'+r.id);
+      var firstInBatch=!jwStatSeenBatch[bKey];
+      jwStatSeenBatch[bKey]=true;
+      if(firstInBatch){
+        totalHead+=(r.headcount||0);
+        (r.teams||[]).forEach(function(t){ byTeamHead[t]=(byTeamHead[t]||0)+(r.headcount||0); });
+      }
+      (r.teams||[]).forEach(function(t){ byTeamCnt[t]=(byTeamCnt[t]||0)+1; });
       if(r.location) byLoc[r.location]=(byLoc[r.location]||0)+1;
       if(r.work_name) byWork[r.work_name]=(byWork[r.work_name]||0)+1;
       if(r.category) byCat[r.category]=(byCat[r.category]||0)+1;
       (r.floors||[]).forEach(function(f){ byFloor[f]=(byFloor[f]||0)+1; });
       if(jwStatMode==='year'&&r.work_date){ var mm=r.work_date.slice(5,7); byMonth[mm]=(byMonth[mm]||0)+1; }
     });
+
+    if(!filtered.length){
+      h='<div style="text-align:center;padding:20px;color:var(--g3);font-size:12px">해당 기간에 공동작업 기록이 없습니다</div>';
+    }else{
 
     h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
     h+='<div style="display:flex;gap:8px;margin-bottom:4px">';
@@ -9260,6 +9268,7 @@ function jwRenderStats(){
     });
     if(!topLocs.length) h+='<div style="font-size:11px;color:var(--g3)">데이터 없음</div>';
     h+='</div></div>';
+    }
   }
   body.innerHTML=h;
 }
@@ -14796,6 +14805,7 @@ async function refreshMpDataLight(){
       me = JSON.parse(saved);
       applyRoleUI();
       applyFontScale();
+      setTimeout(function(){ if(typeof pollGroupChatBadge==='function') pollGroupChatBadge(); }, 800);
       var gt0=document.getElementById('globalTabbar'); if(gt0) gt0.style.display='flex';
       // 메모리 초기화 먼저 (어제 데이터 화면 노출 방지)
       mpDataByLeader={오전:{},오후:{},야간:{}};
