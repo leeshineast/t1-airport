@@ -1445,6 +1445,10 @@ html{overflow-x:hidden}
   <div id="mpP0">
     <div class="pg-hd"><div><h1>인력 입력</h1><small id="mpDate"></small></div></div>
     <div id="mpSuccessBanner" style="display:none;margin:0 13px 10px;padding:13px 15px;background:var(--success-bg,#E8F8F0);border:1.5px solid var(--success,#1AA260);border-radius:var(--r2);font-size:15px;font-weight:800;color:var(--success,#1AA260)"></div>
+    <div id="mpErrorBanner" style="display:none;margin:0 13px 10px;padding:13px 15px;background:#FDECEC;border:1.5px solid var(--danger,#E53E3E);border-radius:var(--r2);font-size:14px;font-weight:800;color:var(--danger,#E53E3E)">
+      <div id="mpErrorBannerMsg"></div>
+      <button onclick="retryLastMpSave()" style="margin-top:8px;padding:8px 14px;background:var(--danger,#E53E3E);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer">🔄 다시 저장</button>
+    </div>
     <div class="card"><div class="cb">
       <div style="font-size:14px;font-weight:700;color:var(--g6);margin-bottom:8px">근무조 선택</div>
       <div style="display:flex;gap:7px" id="shiftGrp">
@@ -7390,24 +7394,65 @@ function confirmMp(){
   // 팀코드를 "6팀 A조" 형태로 보기 좋게 변환
   var teamLabel=myTeam?myTeam.replace(/^(\d+팀)([A-Z])$/,'$1 $2조'):shKey;
 
-  // DB 저장 후 화면 갱신 + 명확한 완료 표시
+  // ★ 재시도용으로 마지막 저장 요청 내용을 기억해둠
+  _lastMpSaveArgs={shKey:shKey, saveKey:saveKey, newVals:newVals, writer:writer, proxyWriter:proxyWriter, teamLabel:teamLabel, isProxy:isProxy, total:total};
+
+  // DB 저장 후 화면 갱신 + 실제 성공/실패에 따라 다르게 표시
   saveMpToDB(shKey, saveKey, newVals, writer, proxyWriter)
-    .then(function(){
-      // ★ 이미 로컬에 반영된 상태라 전체 재조회(loadMpFromDB) 불필요 - 속도 개선
+    .then(function(result){
+      var errBanner=document.getElementById('mpErrorBanner');
+      var sucBanner=document.getElementById('mpSuccessBanner');
+      if(!result||!result.ok){
+        // ★ 저장 실패 시: 완료 토스트를 절대 띄우지 않고, 사라지지 않는 경고 배너만 표시
+        if(sucBanner) sucBanner.style.display='none';
+        if(errBanner){
+          var em=document.getElementById('mpErrorBannerMsg');
+          if(em) em.textContent='⚠️ '+teamLabel+' 저장 실패 — 입력값이 서버에 반영되지 않았습니다. ('+(result&&result.error?result.error:'알 수 없는 오류')+')';
+          errBanner.style.display='block';
+        }
+        toast('⚠️ 저장 실패 — 아래 배너를 확인해주세요');
+        return;
+      }
+      // ★ 성공 시에만 완료 표시
+      if(errBanner) errBanner.style.display='none';
       updateStaff();
       var msg='✅ '+teamLabel+' 입력완료'+(isProxy?' (대리입력)':'')+' · 금일 누계 '+total+'명';
       toast(msg);
-      var banner=document.getElementById('mpSuccessBanner');
-      if(banner){
-        banner.textContent=msg;
-        banner.style.display='block';
-        clearTimeout(banner._t);
-        banner._t=setTimeout(function(){ banner.style.display='none'; },5000);
+      if(sucBanner){
+        sucBanner.textContent=msg;
+        sucBanner.style.display='block';
+        clearTimeout(sucBanner._t);
+        sucBanner._t=setTimeout(function(){ sucBanner.style.display='none'; },5000);
       }
     });
 
   // 임시 저장 초기화
   _mpPending={shKey:'', myTeam:'', newVals:null};
+}
+var _lastMpSaveArgs=null;
+function retryLastMpSave(){
+  if(!_lastMpSaveArgs) return;
+  var a=_lastMpSaveArgs;
+  saveMpToDB(a.shKey, a.saveKey, a.newVals, a.writer, a.proxyWriter).then(function(result){
+    var errBanner=document.getElementById('mpErrorBanner');
+    var sucBanner=document.getElementById('mpSuccessBanner');
+    if(!result||!result.ok){
+      var em=document.getElementById('mpErrorBannerMsg');
+      if(em) em.textContent='⚠️ '+a.teamLabel+' 저장 실패 — 입력값이 서버에 반영되지 않았습니다. ('+(result&&result.error?result.error:'알 수 없는 오류')+')';
+      toast('⚠️ 재시도 실패 — 계속 안 되면 관리자에게 문의하세요');
+      return;
+    }
+    if(errBanner) errBanner.style.display='none';
+    updateStaff();
+    var msg='✅ '+a.teamLabel+' 입력완료'+(a.isProxy?' (대리입력)':'')+' · 금일 누계 '+a.total+'명';
+    toast(msg);
+    if(sucBanner){
+      sucBanner.textContent=msg;
+      sucBanner.style.display='block';
+      clearTimeout(sucBanner._t);
+      sucBanner._t=setTimeout(function(){ sucBanner.style.display='none'; },5000);
+    }
+  });
 }
 // ─ 관리자 인원 DB 저장/로드 ─
 
@@ -10550,12 +10595,6 @@ async function saveLeaderDataEdit(){
   }
   var mismatchMsg2=checkZoneMismatch(editTeam, newVals);
   if(mismatchMsg2 && !confirm(mismatchMsg2+'\n\n그래도 저장하시겠습니까?')) return;
-  if(!mpDataByLeader[editShift]) mpDataByLeader[editShift]={};
-  mpDataByLeader[editShift][editTeam]=newVals;
-  recalcMpData();
-  updateFloorChart();
-  updateMpSummary();
-  closeLeaderDataEdit();
   var officialName2='';
   (LEADERS[editShift]||[]).forEach(function(l){ if(l.team===editTeam) officialName2=l.name; });
   var myOwnCode2=(me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
@@ -10563,8 +10602,24 @@ async function saveLeaderDataEdit(){
   var isProxy2=isActingLeader2||(me&&(me.role==='leader'||me.role==='manager')&&officialName2&&me.name&&officialName2!==me.name);
   var writer2=isActingLeader2?(me.name+' (조장대행)'):(isProxy2?(officialName2||editTeam):(me?me.name:''));
   var proxyWriter2=isActingLeader2?(me?me.name:null):(isProxy2?(me?me.name:null):null);
-  saveMpToDB(editShift, editTeam, newVals, writer2, proxyWriter2).then(function(){ updateStaff(); });
-  toast('✅ '+editTeam+' 입력값이 수정되었습니다');
+  // ★ 저장 결과를 먼저 확인한 뒤에만 모달을 닫고 완료 표시 — 실패 시 모달 유지 + 재시도 가능
+  var saveBtn=document.querySelector('#leaderDataModal button[onclick="saveLeaderDataEdit()"]');
+  if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='저장 중...'; }
+  saveMpToDB(editShift, editTeam, newVals, writer2, proxyWriter2).then(function(result){
+    if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='수정 저장'; }
+    if(!result||!result.ok){
+      toast('⚠️ 저장 실패 — 반영되지 않았습니다. 다시 시도해주세요 ('+(result&&result.error?result.error:'알 수 없는 오류')+')');
+      return; // 모달을 닫지 않고 그대로 두어 재시도 가능
+    }
+    if(!mpDataByLeader[editShift]) mpDataByLeader[editShift]={};
+    mpDataByLeader[editShift][editTeam]=newVals;
+    recalcMpData();
+    updateFloorChart();
+    updateMpSummary();
+    updateStaff();
+    closeLeaderDataEdit();
+    toast('✅ '+editTeam+' 입력값이 수정되었습니다');
+  });
 }
 
 
@@ -14857,6 +14912,8 @@ async function loadFacilityFromDB(){
 
 // 인력현황 - DB 저장 (일별 누적)
 async function saveMpToDB(shift, teamCode, values, writer, proxyWriter){
+  // ★ 성공/실패 여부를 호출부에 그대로 반환 — 여기서 "완료" 토스트를 먼저 띄우지 않음
+  //   (호출부가 실제 결과를 보고 완료/실패 메시지를 결정하도록 함)
   try{
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
     var payload={date:today, shift:shift, team_code:teamCode, values:values, writer:writer||null, proxy_writer:proxyWriter||null};
@@ -14864,8 +14921,9 @@ async function saveMpToDB(shift, teamCode, values, writer, proxyWriter){
       payload,
       {onConflict:'date,shift,team_code'}
     );
-    if(res&&res.error) toast('⚠️ 저장오류: '+res.error.message);
-  }catch(e){ toast('⚠️ 저장예외: '+String(e.message||e)); }
+    if(res&&res.error) return {ok:false, error:res.error.message};
+    return {ok:true};
+  }catch(e){ return {ok:false, error:String(e.message||e)}; }
 }
 
 async function loadMpFromDB(){
