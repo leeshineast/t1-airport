@@ -18004,6 +18004,11 @@ function openListReport(type){
       }
       h4+='</tbody></table>';
     }
+    // 야간특별작업 인력현황 카드 (해당일에 데이터가 있을 때만 화면에 표시됨 - 표시 중일 때만 보고서에 포함)
+    var nsCard=document.querySelector('#mpP1 .ns-summary-card');
+    if(nsCard && nsCard.style.display!=='none'){
+      h4+='<div style="margin-top:14px">'+nsCard.querySelector('.cb').innerHTML+'</div>';
+    }
     bodyEl.innerHTML=h4;
   }else return;
 
