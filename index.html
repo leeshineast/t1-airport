@@ -16974,7 +16974,7 @@ function renderWeatherAlerts(w){
 }
 
 // ═══ GPS 자동 출근 (인천공항 제1여객터미널 반경 내에서 앱 접속 시 자동 출근처리) ═══
-var T1_LAT=37.4602, T1_LNG=126.4407, AUTO_CHECKIN_RADIUS_M=2000; // 터미널 건물+계류장 감안 넉넉한 반경
+var T1_LAT=37.4602, T1_LNG=126.4407, AUTO_CHECKIN_RADIUS_M=1000; // 제1여객터미널+제1교통센터(부속건물) 구역 반경
 var _autoCheckinTried=false;
 function haversineM(lat1,lng1,lat2,lng2){
   var R=6371000;
@@ -17019,10 +17019,10 @@ function myShiftForCheckin(){
 }
 // 근무조별 자동출근 허용 시간대 (분 단위, KST)
 var CHECKIN_WINDOWS={
-  '오전':[6*60, 8*60],
-  '오후':[11*60, 13*60],
-  '야간':[20*60, 22*60+30],
-  '운영팀':[6*60, 9*60+30]
+  '오전':[5*60, 10*60],
+  '오후':[10*60, 15*60],
+  '야간':[20*60, 23*60+30],
+  '운영팀':[5*60, 10*60+30]
 };
 function isWithinCheckinWindow(shift){
   var w=CHECKIN_WINDOWS[shift];
