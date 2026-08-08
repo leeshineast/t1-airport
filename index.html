@@ -18574,13 +18574,32 @@ function toggleT1Sound(){
   if(t1SoundOn){ _t1LastBeep=0; playNotifSound(); } // 미리듣기
 }
 
+// iOS Safari의 bfcache(뒤로/앱전환 복원) 이슈 방어: 캐시에서 복원된 페이지는
+// 타이머·이벤트가 멈춰있을 수 있어 화면이 "먹통"처럼 보일 수 있다. 감지되면 새로고침해 정상 상태로 되돌린다.
+window.addEventListener('pageshow', function(e){
+  if(e.persisted){ location.reload(); }
+});
+
 if('serviceWorker' in navigator){
   var _swReloaded=false;
-  // 새 서비스워커가 활성화되면(=새 버전 배포됨) 자동으로 한 번 새로고침
+  var _swPendingReload=false;
+  // 새 서비스워커가 활성화되면(=새 버전 배포됨) 새로고침한다.
+  // 단, 화면을 보고 있는 도중 갑자기 리로드되면(특히 iOS에서) 터치가 씹히는 문제가 생길 수 있어
+  // 화면이 안 보일 때(백그라운드)만 즉시 리로드하고, 보고 있을 때는 다음에 화면을 벗어날 때까지 대기한다.
   navigator.serviceWorker.addEventListener('controllerchange', function(){
     if(_swReloaded) return;
-    _swReloaded=true;
-    location.reload();
+    if(document.visibilityState==='hidden'){
+      _swReloaded=true;
+      location.reload();
+    }else{
+      _swPendingReload=true;
+    }
+  });
+  document.addEventListener('visibilitychange', function(){
+    if(_swPendingReload && document.visibilityState==='hidden' && !_swReloaded){
+      _swReloaded=true;
+      location.reload();
+    }
   });
   window.addEventListener('load', function(){
     navigator.serviceWorker.register('sw.js').then(function(reg){
