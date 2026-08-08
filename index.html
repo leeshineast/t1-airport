@@ -1518,6 +1518,7 @@ html{overflow-x:hidden}
       <input type="date" id="mpFullDate" onchange="loadFullStatusForDate(this.value)" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;background:white">
       <button onclick="resetFullStatusToday()" style="padding:8px 12px;background:var(--g1);border:none;border-radius:var(--r2);font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">오늘</button>
     </div>
+    <div style="padding:0 13px 10px"><button onclick="openListReport('mp')" style="width:100%;padding:9px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">🖨 보고서 출력</button></div>
     <div class="card"><div class="tbl-w"><table class="mp-tbl" id="mpFullTable">
       <colgroup>
   <col style="width:11.1%"><!-- 구역 -->
@@ -2188,16 +2189,30 @@ html{overflow-x:hidden}
 <!-- 상황발생보고서 (습득물/인수인계/민원/안전사고 공용) -->
 <style>
 @media print{
-  @page{ size:A4; margin:14mm; }
-  html, body{ height:0 !important; overflow:hidden !important; margin:0 !important; padding:0 !important; }
-  body *{visibility:hidden}
-  #reportModal{ visibility:visible; position:fixed !important; inset:0; height:auto !important; overflow:visible !important; background:#fff !important; }
-  #reportModal *{visibility:visible}
+  @page{ size:A4; margin:10mm 12mm; }
+  html, body{ height:auto !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
+  body > *{ display:none !important; }
+  #reportModal{ display:block !important; visibility:visible !important; position:static !important; }
+  #reportModal *{ visibility:visible !important; }
   #reportModal .m-hd, #reportModal .no-print{ display:none !important; }
-  #reportModal .modal{ position:static !important; max-width:none !important; max-height:none !important; overflow:visible !important; box-shadow:none !important; border-radius:0 !important; }
+  #reportModal .modal{ display:block !important; position:static !important; max-width:none !important; max-height:none !important; overflow:visible !important; box-shadow:none !important; border-radius:0 !important; margin:0 !important; }
   #reportModal > div > div:first-child ~ div{ padding:0 !important; }
-  #reportPrintArea{ position:static !important; width:100% !important; margin:0 !important; padding:0 !important; border:none !important; box-shadow:none !important; }
+  #reportPrintArea{ display:block !important; position:static !important; width:100% !important; margin:0 !important; padding:0 !important; border:none !important; box-shadow:none !important; }
+  #reportBigTitle{ margin-bottom:10px !important; }
+  .rpt-table{ page-break-inside:avoid !important; font-size:14px !important; }
+  .rpt-table td{ padding:9px 11px !important; }
+  .rpt-table textarea, .rpt-table input{ font-size:14px !important; }
+  .rpt-table tr, .rpt-table td{ page-break-inside:avoid !important; }
   .rpt-edit{border:none !important;background:transparent !important;-webkit-print-color-adjust:exact}
+  #listReportModal{ display:block !important; visibility:visible !important; position:static !important; }
+  #listReportModal *{ visibility:visible !important; }
+  #listReportModal .m-hd, #listReportModal .no-print{ display:none !important; }
+  #listReportModal .modal{ display:block !important; position:static !important; max-width:none !important; max-height:none !important; overflow:visible !important; box-shadow:none !important; border-radius:0 !important; margin:0 !important; }
+  #listReportModal > div > div:first-child ~ div{ padding:0 !important; }
+  #listReportPrintArea{ display:block !important; position:static !important; width:100% !important; margin:0 !important; padding:0 !important; border:none !important; box-shadow:none !important; }
+  .lrpt-table{ page-break-inside:auto; }
+  .lrpt-table tr{ page-break-inside:avoid !important; }
+  .lrpt-table thead{ display:table-header-group; }
 }
 .rpt-table{width:100%;border-collapse:collapse;font-size:13px}
 .rpt-table td{border:1px solid #333;padding:8px 10px;vertical-align:middle}
@@ -2267,6 +2282,28 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div class="no-print" style="display:flex;gap:8px;margin-top:8px">
         <button onclick="printReport()" style="flex:1;padding:12px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🖨️ 인쇄</button>
         <button onclick="downloadReportExcel()" style="flex:1;padding:12px;background:var(--teal2);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">📥 엑셀 다운로드</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 목록형 보고서 (차량운행기록/공사업무용차량/인력현황/공동작업 공용) -->
+<style>
+.lrpt-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.lrpt-table th,.lrpt-table td{border:1px solid #333;padding:5px 6px;text-align:center;vertical-align:middle}
+.lrpt-table th{background:#F2F2F2;font-weight:700;white-space:nowrap}
+</style>
+<div id="listReportModal" class="modal-bg">
+  <div class="modal" style="max-width:560px;max-height:92vh;overflow-y:auto">
+    <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3 id="listReportModalTitle">📄 보고서</h3><button class="m-x" onclick="hideM('listReportModal')">×</button></div>
+    <div style="padding:15px 17px">
+      <div id="listReportPrintArea" style="background:white;padding:16px;border:1px solid #ccc">
+        <div id="listReportBigTitle" style="text-align:center;font-size:17px;font-weight:800;letter-spacing:4px;margin-bottom:6px"></div>
+        <div id="listReportMeta" style="text-align:center;font-size:11.5px;color:#666;margin-bottom:10px"></div>
+        <div id="listReportBody"></div>
+      </div>
+      <div class="no-print" style="display:flex;gap:8px;margin-top:14px">
+        <button onclick="window.print()" style="flex:1;padding:12px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🖨️ 인쇄</button>
       </div>
     </div>
   </div>
@@ -3355,6 +3392,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <option>6팀</option><option>7팀</option><option>8팀</option><option>9팀</option>
       </select>
     </div>
+    <div style="margin:0 13px 12px"><button onclick="openListReport('jw')" style="width:100%;padding:9px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">🖨 보고서 출력</button></div>
     <div id="jwList" style="padding:0 0 20px"></div>
   </div>
 
@@ -3445,6 +3483,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <input type="month" id="vhFilterMonth" onchange="renderVehList(vehData)" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;background:white">
       <button onclick="document.getElementById('vhFilterMonth').value='';renderVehList(vehData)" style="padding:8px 12px;background:var(--g1);border:none;border-radius:var(--r2);font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">전체</button>
     </div>
+    <div style="padding:0 13px 10px"><button onclick="openListReport('veh')" style="width:100%;padding:9px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">🖨 보고서 출력</button></div>
     <div id="vhList"><div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">아직 운행 기록이 없습니다</div></div>
     <div style="height:20px"></div>
   </div>
@@ -3544,6 +3583,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       
       <button onclick="document.getElementById('wvFilterMonth').value='';renderWorkVehList(workVehData)" style="padding:8px 12px;background:var(--g1);border:none;border-radius:var(--r2);font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">전체</button>
     </div>
+    <div style="padding:0 13px 10px"><button onclick="openListReport('wv')" style="width:100%;padding:9px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">🖨 보고서 출력</button></div>
     <div id="wvList"><div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">아직 운행 기록이 없습니다</div></div>
     <div style="height:20px"></div>
   </div>
@@ -17887,6 +17927,81 @@ async function saveAccidentReport(){
 }
 function printReport(){
   window.print();
+}
+// ═══ 목록형 보고서 (차량운행기록/공사업무용차량/인력현황/공동작업) ═══
+function lrptEsc(s){ return (s===undefined||s===null)?'':String(s); }
+function openListReport(type){
+  var titleEl=document.getElementById('listReportModalTitle');
+  var bigEl=document.getElementById('listReportBigTitle');
+  var metaEl=document.getElementById('listReportMeta');
+  var bodyEl=document.getElementById('listReportBody');
+  var todayStr=(new Date(Date.now()+9*3600000)).toISOString().slice(0,10);
+
+  if(type==='veh'){
+    var mf=(document.getElementById('vhFilterMonth')||{}).value||'';
+    var filtered=(vehData||[]).filter(function(r){return !mf||(r.date&&r.date.indexOf(mf)===0);});
+    titleEl.textContent='📄 차량운행기록 보고서'; bigEl.textContent='차 량 운 행 기 록 보 고 서';
+    metaEl.textContent=(mf?mf+' 기준':'전체 기간')+' · 총 '+filtered.length+'건 · 출력일 '+todayStr;
+    var h='<table class="lrpt-table"><thead><tr><th>사용일자</th><th>소속</th><th>성명</th><th>주행 전(km)</th><th>주행 후(km)</th><th>주행거리</th><th>출발</th><th>도착</th><th>목적지</th><th>목적</th><th>기타</th></tr></thead><tbody>';
+    filtered.forEach(function(r){
+      h+='<tr><td>'+lrptEsc(r.date)+'</td><td>'+lrptEsc(r.dept||'T1운영')+'</td><td>'+lrptEsc(r.name)+'</td><td>'+lrptEsc(r.before||0)+'</td><td>'+lrptEsc(r.after||0)+'</td><td>'+lrptEsc(r.dist||0)+'</td><td>'+lrptEsc(r.start)+'</td><td>'+lrptEsc(r.end)+'</td><td>'+lrptEsc(r.dest)+'</td><td>'+lrptEsc(r.purpose)+'</td><td style="text-align:left">'+lrptEsc(r.etc)+'</td></tr>';
+    });
+    h+='</tbody></table>';
+    bodyEl.innerHTML=h;
+  }else if(type==='wv'){
+    var mf2=(document.getElementById('wvFilterMonth')||{}).value||'';
+    var vf2=(document.getElementById('wvFilterVeh')||{}).value||'';
+    var filtered2=(workVehData||[]).filter(function(r){return (!mf2||(r.date&&r.date.indexOf(mf2)===0))&&(!vf2||r.vehicle===vf2);});
+    titleEl.textContent='📄 공사업무용차량 운행일지'; bigEl.textContent='공사업무용차량 운행일지';
+    metaEl.textContent=(mf2?mf2+' 기준':'전체 기간')+(vf2?(' · '+vf2):'')+' · 총 '+filtered2.length+'건 · 출력일 '+todayStr;
+    var h2='<table class="lrpt-table"><thead><tr><th>사용일자</th><th>차량번호</th><th>소속</th><th>성명</th><th>주행 전(km)</th><th>주행 후(km)</th><th>주행거리</th><th>출발</th><th>도착</th><th>목적지</th><th>목적</th><th>선탑자</th><th>주유</th><th>기타</th></tr></thead><tbody>';
+    filtered2.forEach(function(r){
+      h2+='<tr><td>'+lrptEsc(r.date)+'</td><td>'+lrptEsc(r.vehicle)+'</td><td>'+lrptEsc(r.dept||'T1운영')+'</td><td>'+lrptEsc(r.name)+'</td><td>'+lrptEsc(r.before||0)+'</td><td>'+lrptEsc(r.after||0)+'</td><td>'+lrptEsc(r.dist||0)+'</td><td>'+lrptEsc(r.start)+'</td><td>'+lrptEsc(r.end)+'</td><td>'+lrptEsc(r.dest)+'</td><td>'+lrptEsc(r.purpose)+'</td><td>'+lrptEsc(r.co_rider)+'</td><td>'+lrptEsc(r.fuel)+'</td><td style="text-align:left">'+lrptEsc(r.etc)+'</td></tr>';
+    });
+    h2+='</tbody></table>';
+    bodyEl.innerHTML=h2;
+  }else if(type==='jw'){
+    var mf3=(document.getElementById('jwFilterMonth')||{}).value||'';
+    var tf3=(document.getElementById('jwFilterTeam')||{}).value||'';
+    var filtered3=(jointWorkData||[]).filter(function(r){
+      if(mf3 && !(r.work_date&&r.work_date.indexOf(mf3)===0)) return false;
+      if(tf3 && (!r.teams||r.teams.indexOf(tf3)===-1)) return false;
+      return true;
+    });
+    titleEl.textContent='📄 공동작업 보고서'; bigEl.textContent='공 동 작 업 보 고 서';
+    metaEl.textContent=(mf3?mf3+' 기준':'전체 기간')+(tf3?(' · '+tf3):'')+' · 총 '+filtered3.length+'건 · 출력일 '+todayStr;
+    var h3='<table class="lrpt-table"><thead><tr><th>일자</th><th>팀</th><th>층/구역</th><th>인원</th><th>작업내용</th><th>작성자</th></tr></thead><tbody>';
+    filtered3.slice().sort(function(a,b){return (a.work_date||'')<(b.work_date||'')?1:-1;}).forEach(function(r){
+      var works=(r.category?(JW_CAT_ICONS[r.category]||'')+' '+r.category+' · '+r.work_name+(r.location?(' — '+r.location):''):((r.items||[]).map(function(it){return it.location+' — '+it.work;}).join(' / ')));
+      h3+='<tr><td>'+lrptEsc(r.work_date)+'</td><td>'+lrptEsc((r.teams||[]).join(','))+'</td><td>'+lrptEsc((r.floors||[]).join(','))+'</td><td>'+lrptEsc(r.headcount||0)+'명</td><td style="text-align:left">'+lrptEsc(works)+'</td><td>'+lrptEsc(r.writer)+'</td></tr>';
+    });
+    h3+='</tbody></table>';
+    bodyEl.innerHTML=h3;
+  }else if(type==='mp'){
+    var dEl=document.getElementById('mpFullDate');
+    var dVal=dEl&&dEl.value?dEl.value:todayStr;
+    titleEl.textContent='📄 인력현황 보고서'; bigEl.textContent='인 력 현 황 보 고 서';
+    metaEl.textContent=dVal+' 기준 · 출력일 '+todayStr;
+    var tbl=document.getElementById('mpFullTable');
+    var teamGrid=document.getElementById('mpTeamGrid');
+    var teamTotal=document.getElementById('mpTeamTotal');
+    var h4='';
+    if(tbl) h4+='<div style="margin-bottom:14px">'+tbl.outerHTML+'</div>';
+    if(teamGrid && teamGrid.children.length){
+      h4+='<div style="font-size:13px;font-weight:700;margin-bottom:6px">팀별 인력현황 (총계 '+(teamTotal?teamTotal.textContent:'0')+'명)</div>';
+      h4+='<table class="lrpt-table"><tbody>';
+      var items=Array.prototype.slice.call(teamGrid.children);
+      for(var i=0;i<items.length;i+=3){
+        h4+='<tr>';
+        for(var j=i;j<i+3;j++){ h4+='<td style="text-align:left;border:1px solid #333">'+(items[j]?items[j].innerText.replace(/\n/g,' · '):'')+'</td>'; }
+        h4+='</tr>';
+      }
+      h4+='</tbody></table>';
+    }
+    bodyEl.innerHTML=h4;
+  }else return;
+
+  showM('listReportModal');
 }
 async function downloadReportExcel(){
   if(!_rptData){ toast('보고서 데이터가 없습니다'); return; }
