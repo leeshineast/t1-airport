@@ -6009,7 +6009,7 @@ function openIndEdit(id){
   showM('indModal');
 }
 async function deleteAccidentDB(id){
-  if(!me||(!(me.role==='admin'||me.role==='master')&&me.role!=='manager')){toast('관리자만 삭제 가능합니다');return;}
+  if(!me||me.role!=='master'){toast('관리자만 삭제 가능합니다');return;}
   if(!confirm('이 산업재해 기록을 삭제하시겠습니까?')) return;
   var res=await sb.from('industrial_accident').delete().eq('id',id);
   if(res.error){toast('삭제 오류: '+res.error.message);return;}
@@ -7820,7 +7820,7 @@ function renderVehList(data){
     h+='<span style="font-size:13px;color:var(--g3)"> — </span><span style="font-size:14px;color:var(--g5)">'+r.purpose+'</span></div>';
     h+='<div style="display:flex;gap:12px;font-size:13px;color:var(--g4)"><span>'+r.start+' ~ '+r.end+'</span><span>계기 '+(r.before||0).toLocaleString()+'→'+(r.after||0).toLocaleString()+'km</span></div>';
     h+=etcH;
-    h+='<div style="margin-top:8px;text-align:right;display:flex;gap:6px;justify-content:flex-end"><button onclick="openVehEdit('+r.id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:13px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button><button onclick="deleteVeh('+r.id+')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:13px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제</button></div>';
+    h+='<div style="margin-top:8px;text-align:right;display:flex;gap:6px;justify-content:flex-end"><button onclick="openVehEdit('+r.id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:13px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button>'+(me&&me.role==='master'?('<button onclick="deleteVeh('+r.id+')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:13px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제</button>'):'')+'</div>';
     h+='</div></div>';
   });
   list.innerHTML=h;updateVehStats(filtered);
@@ -7859,6 +7859,7 @@ function openVehEdit(id){
 }
 function closeVehEdit(){ hideM('vehEditModal'); }
 async function deleteVeh(id){
+  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
   if(!canWrite()) return;
   if(!confirm('이 운행 기록을 삭제하시겠습니까?')) return;
   try{
@@ -8294,7 +8295,7 @@ function renderWorkVehList(data){
         h+='</div>';
         h+='<div style="font-size:11.5px;color:var(--g4);margin-top:2px">'+r.name+' · 계기 '+(r.before||0).toLocaleString()+'→'+(r.after||0).toLocaleString()+'km</div>';
         h+=extraH+etcH;
-        h+='<div style="margin-top:6px;text-align:right;display:flex;gap:6px;justify-content:flex-end"><button onclick="openWvEdit('+r.id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button><button onclick="deleteWv('+r.id+')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제</button></div>';
+        h+='<div style="margin-top:6px;text-align:right;display:flex;gap:6px;justify-content:flex-end"><button onclick="openWvEdit('+r.id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button>'+(me&&me.role==='master'?('<button onclick="deleteWv('+r.id+')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제</button>'):'')+'</div>';
         h+='</div></div>';
       });
       h+='</div></div>';
@@ -8334,6 +8335,7 @@ function openWvEdit(id){
 }
 function closeWvEdit(){ hideM('workVehEditModal'); }
 async function deleteWv(id){
+  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
   if(!canWrite()) return;
   if(!confirm('이 운행 기록을 삭제하시겠습니까?')) return;
   try{
@@ -8933,6 +8935,7 @@ function jwRenderScheduleAdminList(){
   box.innerHTML=h;
 }
 async function jwSchedDelete(id){
+  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
   if(!confirm('이 스케줄 항목을 삭제할까요?')) return;
   var res=await sb.from('joint_work_schedule').delete().eq('id',id);
   if(res.error){ toast('삭제 실패: '+res.error.message); return; }
@@ -8941,6 +8944,7 @@ async function jwSchedDelete(id){
   jwRenderScheduleAdminList();
 }
 async function jwSchedClearAll(){
+  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
   if(!jwScheduleData.length){ toast('삭제할 스케줄이 없습니다'); return; }
   if(!confirm('등록된 스케줄 '+jwScheduleData.length+'건을 전부 삭제할까요? 되돌릴 수 없습니다.')) return;
   var res=await sb.from('joint_work_schedule').delete().neq('id',0);
@@ -9067,6 +9071,7 @@ function renderJointWorkTodayCard(rows){
 }
 function renderJointWorkList(){
   var list=document.getElementById('jwList'); if(!list) return;
+  var isAdminOnly=me&&me.role==='master';
   var mfEl=document.getElementById('jwFilterMonth'); var mf=mfEl?mfEl.value:'';
   var tfEl=document.getElementById('jwFilterTeam'); var tf=tfEl?tfEl.value:'';
   var filtered=(jointWorkData||[]).filter(function(r){
@@ -9116,13 +9121,14 @@ function renderJointWorkList(){
     if(g.rows.length===1 && g.rows[0].category){
       h+='<button onclick="openJwEdit('+g.rows[0].id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button>';
     }
-    h+='<button onclick="deleteJwBatch(\''+g.key+'\')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제'+(g.rows.length>1?' (전체)':'')+'</button>';
+    if(isAdminOnly){h+='<button onclick="deleteJwBatch(\''+g.key+'\')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제'+(g.rows.length>1?' (전체)':'')+'</button>';}
     h+='</div>';
     h+='</div></div>';
   });
   list.innerHTML=h;
 }
 async function deleteJwBatch(key){
+  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
   if(!canWrite()) return;
   var rows=(jointWorkData||[]).filter(function(r){ return (r.batch_id||('__row_'+r.id))===key; });
   if(!rows.length) return;
@@ -9174,6 +9180,7 @@ function openJwEdit(id){
   toast('수정 모드 (항목 1개만 수정 가능합니다)');
 }
 async function deleteJw(id){
+  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
   if(!canWrite()) return;
   if(!confirm('이 공동작업 기록을 삭제하시겠습니까?')) return;
   try{
@@ -9397,16 +9404,16 @@ function loadWorkVehData(){
   if(t2) t2.style.display=isDlAllowed?'':'none';
   // 전체삭제 카드는 admin 전용
   var resetCard=document.getElementById('wvResetCard');
-  if(resetCard) resetCard.style.display=(me&&(me.role==='admin'||me.role==='master'))?'block':'none';
+  if(resetCard) resetCard.style.display=(me&&me.role==='master')?'block':'none';
 }
 function openWvResetConfirm(){
-  if(!(me&&(me.role==='admin'||me.role==='master'))){ toast('관리자만 사용할 수 있습니다'); return; }
+  if(!(me&&me.role==='master')){ toast('관리자만 사용할 수 있습니다'); return; }
   document.getElementById('wvResetConfirmInput').value='';
   document.getElementById('wvResetExecBtn').disabled=true;
   showM('wvResetOverlay');
 }
 async function execWvReset(){
-  if(!(me&&(me.role==='admin'||me.role==='master'))) return;
+  if(!(me&&me.role==='master')) return;
   var btn=document.getElementById('wvResetExecBtn'); btn.disabled=true; btn.textContent='삭제 중…';
   try{
     var res=await sb.from('work_vehicle_log').delete().neq('id',0);
@@ -10359,7 +10366,7 @@ function openLeaderDataEdit(shift,team,name){
   editShift=shift; editTeam=team;
   // 당일 초기화 버튼: 최고관리자(admin)만 노출
   var rstBtn=document.getElementById('leaderDataResetBtn');
-  if(rstBtn) rstBtn.style.display=(me&&(me.role==='admin'||me.role==='master'))?'block':'none';
+  if(rstBtn) rstBtn.style.display=(me&&me.role==='master')?'block':'none';
   var title=document.getElementById('leaderDataModalTitle');
   var body=document.getElementById('leaderDataEditBody');
   if(!body) return;
@@ -10425,7 +10432,7 @@ function closeLeaderDataEdit(){hideM('leaderDataModal');}
 
 // ─ 당일 입력 초기화 (조별, 최고관리자 전용) ─
 async function resetLeaderDataToday(){
-  if(!me||!(me.role==='admin'||me.role==='master')){toast('최고관리자만 초기화할 수 있습니다');return;}
+  if(!me||me.role!=='master'){toast('최고관리자만 초기화할 수 있습니다');return;}
   if(!editShift||!editTeam) return;
   if(!confirm(editTeam+' '+editShift+' 당일 입력을 초기화할까요?\n\n오늘 입력값만 삭제되며, 해당 조장이 처음부터 다시 입력할 수 있습니다.\n(과거 이력은 그대로 보존됩니다)')) return;
   var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
@@ -10524,7 +10531,7 @@ function resetAllData(){
 }
 
 function openDataReset(){
-  if(!me||!(me.role==='admin'||me.role==='master')){toast('최고관리자만 사용 가능합니다');return;}
+  if(!me||me.role!=='master'){toast('최고관리자만 사용 가능합니다');return;}
   // 체크박스 초기화
   ['rst_mp','rst_ho','rst_ind','rst_veh','rst_kpi','rst_users','rst_voc','rst_lost','rst_waste','rst_equipment','rst_all'].forEach(function(id){
     var el=document.getElementById(id);
@@ -10600,7 +10607,7 @@ function rstCheckConfirm(){
 }
 
 async function executeDataReset(){
-  if(!me||!(me.role==='admin'||me.role==='master')) return;
+  if(!me||me.role!=='master') return;
   var ci=document.getElementById('rstConfirmInput');
   if(!ci||ci.value.trim()!=='초기화'){toast('초기화 를 입력해주세요');return;}
   var done=[];
@@ -11236,7 +11243,7 @@ async function subReg(){
 
 // ── 가입 승인 목록 로드 ──
 async function loadPendingBadge(){
-  if(!me||!(me.role==='admin'||me.role==='master')) return;
+  if(!me||me.role!=='master') return;
   try{
     var res=await sb.from('users').select('id').eq('status','pending');
     var cnt=(res.data||[]).length;
@@ -11253,7 +11260,7 @@ async function loadPendingBadge(){
 
 // ── 비밀번호 재설정 요청 (관리자) ──
 async function loadPwReqBadge(){
-  if(!me||!(me.role==='admin'||me.role==='master')) return;
+  if(!me||me.role!=='master') return;
   try{
     var res=await sb.from('pw_reset_requests').select('id').eq('status','pending');
     var cnt=(res.data||[]).length;
@@ -11266,7 +11273,7 @@ async function loadPwReqBadge(){
 }
 
 async function confirmDeleteAllPwReq(){
-  if(!me||!(me.role==='admin'||me.role==='master')){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+  if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('비밀번호 재설정 요청을 전체(대기중 포함) 삭제하시겠습니까?\n복구할 수 없습니다.')) return;
   try{
     var res=await sb.from('pw_reset_requests').delete().gte('created_at','1970-01-01');
@@ -11690,7 +11697,7 @@ async function loadAdminNoticeList(targetId){
       wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">등록된 공지사항이 없습니다</div>';
       return;
     }
-    var isAdminOnly=me&&(me.role==='admin'||me.role==='master');
+    var isAdminOnly=me&&me.role==='master';
     var canEdit=me&&(me.role==='admin'||isExecRole(me.role));
     var h='';
     res.data.forEach(function(n){
@@ -11713,7 +11720,7 @@ async function loadAdminNoticeList(targetId){
 
 async function deleteNotice(btn){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
-    if(!me||!(me.role==='admin'||me.role==='master')){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+    if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 공지사항을 삭제하시겠습니까?')) return;
   var id=btn.getAttribute('data-id');
   try{
@@ -12076,7 +12083,7 @@ function updateAccComplaintCount(){
 
 async function deleteHo(btn){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
-    if(!me||!(me.role==='admin'||me.role==='master')){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+    if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 인수인계를 삭제하시겠습니까?')) return;
   var id=btn.getAttribute('data-id');
   try{
@@ -12582,7 +12589,7 @@ async function confirmVocComplete(){
 
 async function deleteVoc(id){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
-    if(!me||!(me.role==='admin'||me.role==='master')){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+    if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 민원 기록을 삭제하시겠습니까?')) return;
   try{
     await sb.from('voc_data').delete().eq('id',parseInt(id));
@@ -12881,7 +12888,7 @@ function renderLostList(){
     return;
   }
   var isAdmin=me&&(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role));
-  var isAdminOnly=me&&(me.role==='admin'||me.role==='master');
+  var isAdminOnly=me&&me.role==='master';
   var stColor={'접수':'var(--danger)','완료-폐기':'var(--g4)','완료-유실물':'var(--teal2)','완료-인계':'var(--navy)','완료-기타':'var(--g4)'};
   var stBg={'접수':'var(--danger-bg)','완료-폐기':'var(--g1)','완료-유실물':'var(--teal-bg)','완료-인계':'var(--navy-bg)','완료-기타':'var(--g1)'};
   var stLabel={'접수':'접수중','완료-폐기':'완료·폐기','완료-유실물':'완료·유실물','완료-인계':'완료·인계','완료-기타':'완료·기타'};
@@ -13191,7 +13198,7 @@ async function confirmLostComplete(){
 
 async function deleteLost(id){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
-    if(!me||!(me.role==='admin'||me.role==='master')){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+    if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 습득물 기록을 삭제하시겠습니까?')) return;
   try{
     await sb.from('lost_found').delete().eq('id',parseInt(id));
@@ -13457,7 +13464,7 @@ function previewEquipmentFile(input){
 
 async function uploadEquipmentData(){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
-    if(!me||!(me.role==='admin'||me.role==='master')){toast('⚠️ 최고관리자만 업로드(기존 데이터 교체)할 수 있습니다');return;}
+    if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 업로드(기존 데이터 교체)할 수 있습니다');return;}
   if(!window._eqPendingData){ toast('파일을 먼저 선택해주세요'); return; }
   var btn=document.querySelector('#eqP2 .btn-prim');
   if(btn){btn.disabled=true;btn.textContent='업로드 중...';}
@@ -13655,7 +13662,7 @@ function openToiletDetail(id){
   document.getElementById('tlDNightTeam').value=r.night_team||'';
   tlSetVal('tlDActiveG', r.active===false?'false':'true');
   var delBtn=document.getElementById('tlDeleteBtn');
-  if(delBtn) delBtn.style.display=(me&&(me.role==='admin'||me.role==='master'))?'block':'none';
+  if(delBtn) delBtn.style.display=(me&&me.role==='master')?'block':'none';
   showM('toiletDetailModal');
 }
 async function saveToiletDetail(){
@@ -13688,7 +13695,7 @@ async function saveToiletDetail(){
   }catch(e){ toast('수정 오류: '+String(e.message||e)); }
 }
 async function deleteToiletConfirm(){
-  if(!me||!(me.role==='admin'||me.role==='master')){ toast('⚠️ 삭제는 관리자만 가능합니다'); return; }
+  if(!me||me.role!=='master'){ toast('⚠️ 삭제는 관리자만 가능합니다'); return; }
   if(!tlEditId) return;
   if(!confirm('이 화장실 정보를 삭제하시겠습니까?\n삭제 후에는 되돌릴 수 없습니다.')) return;
   try{
@@ -13789,6 +13796,7 @@ function previewToiletFile(input){
   reader.readAsBinaryString(file);
 }
 async function uploadToiletData(){
+  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 업로드(기존 데이터 교체)할 수 있습니다'); return; }
   if(!canWrite()) return;
   if(!window._tlPendingData||!window._tlPendingData.length){ toast('파일을 먼저 선택해주세요'); return; }
   if(!confirm('기존 화장실 데이터 '+toiletData.length+'건을 전부 삭제하고,\n새 파일의 '+window._tlPendingData.length+'건으로 교체합니다.\n계속할까요?')) return;
@@ -14131,7 +14139,7 @@ function facOpenDetail(type,id){
     else facSetVal(fid, r[f.key]!=null?r[f.key]:'', false);
   });
   var delBtn=document.getElementById(p+'DeleteBtn');
-  if(delBtn) delBtn.style.display=(me&&(me.role==='admin'||me.role==='master'))?'block':'none';
+  if(delBtn) delBtn.style.display=(me&&me.role==='master')?'block':'none';
   showM('facDetailModal2');
 }
 async function facSaveDetail(type){
@@ -14151,7 +14159,7 @@ async function facSaveDetail(type){
   }catch(e){ toast('수정 오류: '+String(e.message||e)); }
 }
 async function facDeleteConfirm(type){
-  if(!me||!(me.role==='admin'||me.role==='master')){ toast('⚠️ 삭제는 관리자만 가능합니다'); return; }
+  if(!me||me.role!=='master'){ toast('⚠️ 삭제는 관리자만 가능합니다'); return; }
   var cfg=FAC_CONFIGS[type];
   var id=facEditId[type];
   if(!id) return;
@@ -14252,6 +14260,7 @@ function facPreviewFile(type,input){
   reader.readAsBinaryString(file);
 }
 async function facUploadData(type){
+  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 업로드(기존 데이터 교체)할 수 있습니다'); return; }
   if(!canWrite()) return;
   var cfg=FAC_CONFIGS[type];
   var pending=window['_facPending_'+type];
@@ -14551,7 +14560,7 @@ function renderWasteList(){
     el.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">입력된 데이터가 없습니다</div>';
     return;
   }
-  var isAdminOnly=me&&(me.role==='admin'||me.role==='master');
+  var isAdminOnly=me&&me.role==='master';
   var isAdminMgr=me&&(me.role==='admin'||me.role==='manager'||isExecRole(me.role));
   var myWasteCode=(me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
   var h='';
@@ -14595,7 +14604,7 @@ function renderWasteList(){
 
 async function deleteWaste(id){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
-    if(!me||!(me.role==='admin'||me.role==='master')){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+    if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 기록을 삭제하시겠습니까?')) return;
   try{
     await sb.from('waste_data').delete().eq('id',parseInt(id));
@@ -14702,7 +14711,7 @@ function renderVocList(){
   }
 
   var isAdmin=me&&(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role));
-  var isAdminOnly=me&&(me.role==='admin'||me.role==='master');
+  var isAdminOnly=me&&me.role==='master';
   var stColor={접수:'var(--danger)',처리중:'#D97706',완료:'var(--teal2)'};
   var stBg={접수:'#FEF2F2',처리중:'#FFFBEB',완료:'var(--teal-bg)'};
 
@@ -15186,7 +15195,7 @@ function deleteIsoById(btn){
   deleteIso(id, path);
 }
 async function deleteIso(id, path){
-  if(!me||!(me.role==='admin'||me.role==='master')){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+  if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 문서를 삭제하시겠습니까?')) return;
   try{
     var delUrl=SUPABASE_URL+'/storage/v1/object/iso9001/'+encodeURIComponent(path);
@@ -15350,7 +15359,7 @@ function deleteNewsById(btn){
   deleteNews(id, path);
 }
 async function deleteNews(id, path){
-  if(!me||!(me.role==='admin'||me.role==='master')){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+  if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 문서를 삭제하시겠습니까?')) return;
   try{
     var delUrl=SUPABASE_URL+'/storage/v1/object/companynews/'+encodeURIComponent(path);
@@ -15532,7 +15541,7 @@ function deleteSafetyById(btn){
   deleteSafety(id, path);
 }
 async function deleteSafety(id, path){
-  if(!me||!(me.role==='admin'||me.role==='master')){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+  if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 문서를 삭제하시겠습니까?')) return;
   try{
     var delUrl=SUPABASE_URL+'/storage/v1/object/safety-procedures/'+encodeURIComponent(path);
@@ -15706,7 +15715,7 @@ function deleteManualById(btn){
   deleteManual(id, path);
 }
 async function deleteManual(id, path){
-  if(!me||!(me.role==='admin'||me.role==='master')){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+  if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 문서를 삭제하시겠습니까?')) return;
   try{
     var delUrl=SUPABASE_URL+'/storage/v1/object/operation-manuals/'+encodeURIComponent(path);
@@ -16375,7 +16384,7 @@ function deleteRegById(btn){
 }
 async function deleteReg(id, path){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
-    if(!me||!(me.role==='admin'||me.role==='master')){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+    if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 사규를 삭제하시겠습니까?')) return;
   try{
     var delUrl=SUPABASE_URL+'/storage/v1/object/regulations/'+encodeURIComponent(path);
