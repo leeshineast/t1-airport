@@ -2192,11 +2192,11 @@ html{overflow-x:hidden}
   @page{ size:A4; margin:10mm 12mm; }
   html, body{ height:auto !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
   body > *{ display:none !important; }
-  #reportModal{ display:block !important; visibility:visible !important; position:static !important; }
-  #reportModal *{ visibility:visible !important; }
-  #reportModal .m-hd, #reportModal .no-print{ display:none !important; }
-  #reportModal .modal{ display:block !important; position:static !important; max-width:none !important; max-height:none !important; overflow:visible !important; box-shadow:none !important; border-radius:0 !important; margin:0 !important; }
-  #reportModal > div > div:first-child ~ div{ padding:0 !important; }
+  #reportModal.on{ display:block !important; visibility:visible !important; position:static !important; }
+  #reportModal.on *{ visibility:visible !important; }
+  #reportModal.on .m-hd, #reportModal.on .no-print{ display:none !important; }
+  #reportModal.on .modal{ display:block !important; position:static !important; max-width:none !important; max-height:none !important; overflow:visible !important; box-shadow:none !important; border-radius:0 !important; margin:0 !important; }
+  #reportModal.on > div > div:first-child ~ div{ padding:0 !important; }
   #reportPrintArea{ display:block !important; position:static !important; width:100% !important; margin:0 !important; padding:0 !important; border:none !important; box-shadow:none !important; }
   #reportBigTitle{ margin-bottom:10px !important; }
   .rpt-table{ page-break-inside:avoid !important; font-size:14px !important; }
@@ -2204,11 +2204,11 @@ html{overflow-x:hidden}
   .rpt-table textarea, .rpt-table input{ font-size:14px !important; }
   .rpt-table tr, .rpt-table td{ page-break-inside:avoid !important; }
   .rpt-edit{border:none !important;background:transparent !important;-webkit-print-color-adjust:exact}
-  #listReportModal{ display:block !important; visibility:visible !important; position:static !important; }
-  #listReportModal *{ visibility:visible !important; }
-  #listReportModal .m-hd, #listReportModal .no-print{ display:none !important; }
-  #listReportModal .modal{ display:block !important; position:static !important; max-width:none !important; max-height:none !important; overflow:visible !important; box-shadow:none !important; border-radius:0 !important; margin:0 !important; }
-  #listReportModal > div > div:first-child ~ div{ padding:0 !important; }
+  #listReportModal.on{ display:block !important; visibility:visible !important; position:static !important; }
+  #listReportModal.on *{ visibility:visible !important; }
+  #listReportModal.on .m-hd, #listReportModal.on .no-print{ display:none !important; }
+  #listReportModal.on .modal{ display:block !important; position:static !important; max-width:none !important; max-height:none !important; overflow:visible !important; box-shadow:none !important; border-radius:0 !important; margin:0 !important; }
+  #listReportModal.on > div > div:first-child ~ div{ padding:0 !important; }
   #listReportPrintArea{ display:block !important; position:static !important; width:100% !important; margin:0 !important; padding:0 !important; border:none !important; box-shadow:none !important; }
   .lrpt-table{ page-break-inside:auto; }
   .lrpt-table tr{ page-break-inside:avoid !important; }
@@ -3385,12 +3385,14 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <!-- 이력조회 -->
   <div id="jwP1" style="display:none">
     <div style="display:flex;gap:7px;margin:13px 13px 12px;flex-wrap:wrap">
-      <input type="month" id="jwFilterMonth" onchange="renderJointWorkList()" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
+      <input type="month" id="jwFilterMonth" onchange="document.getElementById('jwFilterDate').value='';renderJointWorkList()" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
+      <input type="date" id="jwFilterDate" onchange="if(this.value){document.getElementById('jwFilterMonth').value='';}renderJointWorkList()" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
       <select id="jwFilterTeam" onchange="renderJointWorkList()" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:12px;background:white">
         <option value="">전체 팀</option>
         <option>1팀</option><option>2팀</option><option>3팀</option><option>4팀</option>
         <option>6팀</option><option>7팀</option><option>8팀</option><option>9팀</option>
       </select>
+      <button onclick="document.getElementById('jwFilterMonth').value='';document.getElementById('jwFilterDate').value='';document.getElementById('jwFilterTeam').value='';renderJointWorkList()" style="padding:8px 12px;background:var(--g1);border:none;border-radius:var(--r2);font-size:12px;font-weight:700;color:var(--g5);cursor:pointer">전체</button>
     </div>
     <div style="margin:0 13px 12px"><button onclick="openListReport('jw')" style="width:100%;padding:9px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">🖨 보고서 출력</button></div>
     <div id="jwList" style="padding:0 0 20px"></div>
@@ -9113,10 +9115,12 @@ function renderJointWorkList(){
   var list=document.getElementById('jwList'); if(!list) return;
   var isAdminOnly=me&&me.role==='master';
   var mfEl=document.getElementById('jwFilterMonth'); var mf=mfEl?mfEl.value:'';
+  var dfEl=document.getElementById('jwFilterDate'); var df=dfEl?dfEl.value:'';
   var tfEl=document.getElementById('jwFilterTeam'); var tf=tfEl?tfEl.value:'';
   var filtered=(jointWorkData||[]).filter(function(r){
     if(mf && !(r.work_date&&r.work_date.indexOf(mf)===0)) return false;
-    if(tf && (!r.teams||r.teams.indexOf(tf)===-1)) return false;
+    if(df && r.work_date!==df) return false;
+    if(tf && (!r.teams||!r.teams.some(function(t){return t.indexOf(tf)===0;}))) return false;
     return true;
   });
   if(!filtered.length){
@@ -17962,14 +17966,16 @@ function openListReport(type){
     bodyEl.innerHTML=h2;
   }else if(type==='jw'){
     var mf3=(document.getElementById('jwFilterMonth')||{}).value||'';
+    var df3=(document.getElementById('jwFilterDate')||{}).value||'';
     var tf3=(document.getElementById('jwFilterTeam')||{}).value||'';
     var filtered3=(jointWorkData||[]).filter(function(r){
       if(mf3 && !(r.work_date&&r.work_date.indexOf(mf3)===0)) return false;
-      if(tf3 && (!r.teams||r.teams.indexOf(tf3)===-1)) return false;
+      if(df3 && r.work_date!==df3) return false;
+      if(tf3 && (!r.teams||!r.teams.some(function(t){return t.indexOf(tf3)===0;}))) return false;
       return true;
     });
     titleEl.textContent='📄 공동작업 보고서'; bigEl.textContent='공 동 작 업 보 고 서';
-    metaEl.textContent=(mf3?mf3+' 기준':'전체 기간')+(tf3?(' · '+tf3):'')+' · 총 '+filtered3.length+'건 · 출력일 '+todayStr;
+    metaEl.textContent=(df3?df3+' 기준':(mf3?mf3+' 기준':'전체 기간'))+(tf3?(' · '+tf3):'')+' · 총 '+filtered3.length+'건 · 출력일 '+todayStr;
     var h3='<table class="lrpt-table"><thead><tr><th>일자</th><th>팀</th><th>층/구역</th><th>인원</th><th>작업내용</th><th>작성자</th></tr></thead><tbody>';
     filtered3.slice().sort(function(a,b){return (a.work_date||'')<(b.work_date||'')?1:-1;}).forEach(function(r){
       var works=(r.category?(JW_CAT_ICONS[r.category]||'')+' '+r.category+' · '+r.work_name+(r.location?(' — '+r.location):''):((r.items||[]).map(function(it){return it.location+' — '+it.work;}).join(' / ')));
