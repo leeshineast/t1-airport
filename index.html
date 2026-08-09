@@ -3561,6 +3561,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
           <div class="rp" onclick="pickWvPurposeChip(this,false)">폐기물 폐합성</div>
           <div class="rp" onclick="pickWvPurposeChip(this,false)">폐기물 병</div>
           <div class="rp" onclick="pickWvPurposeChip(this,false)">폐기물 캔</div>
+          <div class="rp" onclick="pickWvPurposeChip(this,false)">폐기물 폐지</div>
         </div>
         <input type="text" id="wvPurpose" class="ri" placeholder="예: 직원격려 식사, 업무" style="margin-bottom:0">
       </div>
@@ -4123,6 +4124,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <div class="rp" onclick="pickWvPurposeChip(this,true)">폐기물 폐합성</div>
         <div class="rp" onclick="pickWvPurposeChip(this,true)">폐기물 병</div>
         <div class="rp" onclick="pickWvPurposeChip(this,true)">폐기물 캔</div>
+        <div class="rp" onclick="pickWvPurposeChip(this,true)">폐기물 폐지</div>
       </div>
       <input type="text" id="wvePurpose" class="ri" placeholder="예: 직원격려 식사, 업무" style="margin-bottom:0"></div>
     <div class="fg"><label class="f-lbl">🧑‍🤝‍🧑 선탑자</label><input type="text" id="wveCoRider" class="ri" style="margin-bottom:0"></div>
@@ -8088,12 +8090,12 @@ function selWvDest(el, isEdit){
     if(purposeEl) purposeEl.value='생활폐기물 소각';
   }else if(destLabel==='자원분류처리장'){
     if(chipGrp) chipGrp.style.display='flex';
-    if(purposeEl && ['생활폐기물 소각','폐기물 PET','폐기물 폐합성','폐기물 병','폐기물 캔'].indexOf(purposeEl.value.trim())!==-1){
+    if(purposeEl && ['생활폐기물 소각','폐기물 PET','폐기물 폐합성','폐기물 병','폐기물 캔','폐기물 폐지'].indexOf(purposeEl.value.trim())!==-1){
       purposeEl.value=''; // 다른 목적지에서 자동채워진 값이면 비워서 다시 선택하게
     }
   }else{
     if(chipGrp){ chipGrp.style.display='none'; chipGrp.querySelectorAll('.rp').forEach(function(c){c.classList.remove('on');}); }
-    if(purposeEl && ['생활폐기물 소각','폐기물 PET','폐기물 폐합성','폐기물 병','폐기물 캔'].indexOf(purposeEl.value.trim())!==-1){
+    if(purposeEl && ['생활폐기물 소각','폐기물 PET','폐기물 폐합성','폐기물 병','폐기물 캔','폐기물 폐지'].indexOf(purposeEl.value.trim())!==-1){
       purposeEl.value='';
     }
   }
