@@ -5237,7 +5237,7 @@ async function doLogin(){
     var u=rows[0];
     me={name:u.name,role:u.role,team:u.team,initial:u.name[0],email:u.email,permissions:u.permissions,id:u.id,font_scale:100,favorite_menus:[]};
     try{
-      var fsRes=await sb.from('users').select('font_scale,favorite_menus').eq('id',u.id).single();
+      var fsRes=await sb.from('users').select('font_scale,favorite_menus').eq('id',u.id).maybeSingle();
       if(fsRes.data&&fsRes.data.font_scale) me.font_scale=fsRes.data.font_scale;
       if(fsRes.data&&Array.isArray(fsRes.data.favorite_menus)) me.favorite_menus=fsRes.data.favorite_menus;
     }catch(e){}
@@ -11657,7 +11657,7 @@ async function saveTeamMove(){
 
 async function withdrawUserDB(id, name){
   if(!confirm(name+'님을 탈퇴 처리하시겠습니까?')) return;
-  var u=await sb.from('users').select('email').eq('id',id).single();
+  var u=await sb.from('users').select('email').eq('id',id).maybeSingle();
   var origEmail=(u&&u.data&&u.data.email)||'';
   var newEmail=origEmail?origEmail+'_withdrawn_'+Date.now():undefined;
   var payload={status:'withdrawn'};
@@ -11700,13 +11700,18 @@ async function savePermEdit(){
   if(currentPermUserId) userPerms[currentPermUserId]=perms;
   try{ localStorage.setItem('t1_perms',JSON.stringify(userPerms)); }catch(e){}
   // DB 저장: id로 찾아서 permissions를 JSON 문자열로 저장
+  var permRes;
   try{
     if(currentPermUserId){
-      await sb.from('users').update({permissions:JSON.stringify(perms)}).eq('id',currentPermUserId);
+      permRes=await sb.from('users').update({permissions:JSON.stringify(perms)}).eq('id',currentPermUserId);
     } else {
-      await sb.from('users').update({permissions:JSON.stringify(perms)}).eq('name',currentPermUser);
+      permRes=await sb.from('users').update({permissions:JSON.stringify(perms)}).eq('name',currentPermUser);
     }
-  }catch(e){ toast('⚠️ DB 저장 실패: '+e.message); }
+  }catch(e){ permRes={error:{message:String(e.message||e)}}; }
+  if(permRes&&permRes.error){
+    toast('⚠️ 권한 저장 실패: '+permRes.error.message+' — 다시 시도해주세요');
+    return; // ★ 저장 실패 시 성공 표시·모달 닫기를 하지 않음
+  }
   updatePermChips(currentPermUser,perms);
   closePermEdit();
   toast('✅ '+currentPermUser+' 권한 저장');
