@@ -1870,10 +1870,9 @@ html{overflow-x:hidden}
   <div id="hoP0">
     <div class="pg-hd"><div><h1>전체 인수인계</h1></div></div>
     <div style="padding:0 13px 10px;display:flex;flex-direction:column;gap:6px">
-      <input type="text" id="hoSearchKeyword" oninput="renderHoList(hoAll)" placeholder="🔍 장소·내용 검색 (예: 랜드R3, 푸쉬버튼)" style="width:100%;padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;background:white;box-sizing:border-box">
       <div style="display:flex;gap:7px">
         <input type="month" id="hoFilterMonth" onchange="renderHoList(hoAll)" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;background:white">
-        <button onclick="document.getElementById('hoFilterMonth').value='';document.getElementById('hoFilterTeam').value='';document.getElementById('hoFilterAuthor').value='';document.getElementById('hoSearchKeyword').value='';renderHoList(hoAll)" style="padding:8px 12px;background:var(--g1);border:none;border-radius:var(--r2);font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">전체</button>
+        <button onclick="document.getElementById('hoFilterMonth').value='';document.getElementById('hoFilterTeam').value='';document.getElementById('hoFilterAuthor').value='';renderHoList(hoAll)" style="padding:8px 12px;background:var(--g1);border:none;border-radius:var(--r2);font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">전체</button>
       </div>
       <select id="hoFilterTeam" onchange="renderHoList(hoAll)" style="width:100%;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;background:white;color:var(--g6)">
         <option value="">-- 팀 전체 --</option>
@@ -11913,8 +11912,6 @@ function renderHoList(data){
   var tf=tfEl?tfEl.value:'';
   var afEl=document.getElementById('hoFilterAuthor');
   var af=afEl?afEl.value:'';
-  var kwEl=document.getElementById('hoSearchKeyword');
-  var kw=kwEl?kwEl.value.trim():'';
   // 작성자 옵션 동적 채우기 (현재 선택값 유지)
   if(afEl){
     var authors=[]; (data||[]).forEach(function(r){ if(r.author&&authors.indexOf(r.author)<0) authors.push(r.author); });
@@ -11943,15 +11940,8 @@ function renderHoList(data){
   if(af){
     data=(data||[]).filter(function(r){ return r.author===af; });
   }
-  if(kw){
-    var kwLower=kw.toLowerCase();
-    data=(data||[]).filter(function(r){
-      var haystack=[r.facility,r.content,r.danger,r.equipment,r.notice,r.note,r.author,r.shift].filter(Boolean).join(' ').toLowerCase();
-      return haystack.indexOf(kwLower)!==-1;
-    });
-  }
   if(!data||!data.length){
-    list.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">'+(kw?'검색 결과가 없습니다':(mf?'해당 월의 인수인계 내역이 없습니다':'인수인계 내역이 없습니다'))+'</div>';
+    list.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">'+(mf?'해당 월의 인수인계 내역이 없습니다':'인수인계 내역이 없습니다')+'</div>';
     return;
   }
   var todayKst=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
@@ -17044,7 +17034,7 @@ function renderWeatherAlerts(w){
 }
 
 // ═══ GPS 자동 출근 (인천공항 제1여객터미널 반경 내에서 앱 접속 시 자동 출근처리) ═══
-var T1_LAT=37.4602, T1_LNG=126.4407, AUTO_CHECKIN_RADIUS_M=1000; // 제1여객터미널+제1교통센터(부속건물) 구역 반경
+var T1_LAT=37.4602, T1_LNG=126.4407, AUTO_CHECKIN_RADIUS_M=2000; // 터미널 건물+계류장 감안 넉넉한 반경 (1000m는 너무 타이트해서 원복)
 var _autoCheckinTried=false;
 function haversineM(lat1,lng1,lat2,lng2){
   var R=6371000;
