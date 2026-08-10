@@ -328,10 +328,13 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
       <input type="number" id="imNewQty" placeholder="수량(입고)">
     </div>
     <button class="ghost-btn" onclick="addItemMaster()">+ 품목 추가</button>
-    <label class="ghost-btn" style="display:block;text-align:center;margin-top:8px;cursor:pointer">
-      📤 엑셀 일괄 업로드 (품명/규격/단위/수량 열)
-      <input type="file" id="imFile" accept=".xlsx,.xls" style="display:none" onchange="uploadItemMasterExcel(event)">
-    </label>
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="ghost-btn" style="flex:1" onclick="downloadItemMasterTemplate()">📥 양식 다운로드</button>
+      <label class="ghost-btn" style="flex:1;text-align:center;cursor:pointer">
+        📤 엑셀 업로드
+        <input type="file" id="imFile" accept=".xlsx,.xls" style="display:none" onchange="uploadItemMasterExcel(event)">
+      </label>
+    </div>
   </div>
   <div id="itemMasterList"></div>
 </div>
@@ -662,7 +665,7 @@ function loadDailyHeader(){
 
 function loadWarehouseItemsAndLedger(){
   document.getElementById('ledgerItems').innerHTML='<div class="empty">불러오는 중…</div>';
-  sbFetch('/warehouse_item?warehouse_id=eq.'+curWarehouse.id+'&select=id,item_id,min_qty,current_qty,item_master(item_name,spec,unit)&order=created_at.asc')
+  return sbFetch('/warehouse_item?warehouse_id=eq.'+curWarehouse.id+'&select=id,item_id,min_qty,current_qty,item_master(item_name,spec,unit)&order=created_at.asc')
     .then(function(r){return r.json();})
     .then(function(rows){
       whItems=(Array.isArray(rows)?rows:[]).map(function(r){
@@ -833,35 +836,85 @@ function uploadReceiveExcel(ev){
       var ws=wb.Sheets[wb.SheetNames[0]];
       var rows=XLSX.utils.sheet_to_json(ws,{header:1});
       var startI = /품명|품목/.test(String(rows[0]&&rows[0][0]))?1:0;
-      // 품목명(트림) 기준 매칭 맵 구성 — 같은 창고에 배정된 품목만 대상
-      var byName={};
-      whItems.forEach(function(it){ byName[String(it.item_name||'').trim()]=it; });
-      var matched=0, unmatched=[];
-      // 아직 화면에 전체 품목이 안 그려져 있으면(입고처리 모드가 아니면) 강제로 전체 표시해서
-      // 매칭된 품목의 입력칸(in_...)이 확실히 존재하도록 함
-      if(!forceShowAll){ forceShowAll=true; renderLedgerItems(); }
+      var parsed=[];
       for(var i=startI;i<rows.length;i++){
         var r=rows[i]; if(!r||!r[0]) continue;
-        var name=String(r[0]).trim();
+        var name=String(r[0]).trim(); if(!name) continue;
         var qtyRaw=r[3];
         var qty=(qtyRaw!=null && qtyRaw!=='')?(parseInt(qtyRaw,10)||0):0;
         if(!qty) continue; // 수량 비어있거나 0이면 건너뜀
-        var it=byName[name];
-        if(!it){ unmatched.push(name); continue; }
-        var inEl=document.getElementById('in_'+it.item_id);
-        if(!inEl){ unmatched.push(name+'(화면 미표시)'); continue; }
-        inEl.value=qty;
-        onQtyChange(it.item_id);
-        matched++;
+        parsed.push({name:name, spec:r[1]!=null?String(r[1]).trim():'', unit:r[2]!=null?String(r[2]).trim():'', qty:qty});
       }
-      if(matched===0 && unmatched.length===0){ toast('업로드할 입고 수량이 없습니다'); ev.target.value=''; return; }
-      var msg='✓ '+matched+'건 입고수량 반영됨 — 확인 후 [저장] 눌러주세요';
-      if(unmatched.length) msg+='\n⚠ 매칭 실패 '+unmatched.length+'건: '+unmatched.slice(0,5).join(', ')+(unmatched.length>5?' 외':'');
-      alert(msg);
-    }catch(err){ toast('엑셀 파싱 실패: '+String(err.message||err)); }
-    ev.target.value='';
+      if(!parsed.length){ toast('업로드할 입고 수량이 없습니다'); ev.target.value=''; return; }
+      processReceiveUpload(parsed);
+    }catch(err){ toast('엑셀 파싱 실패: '+String(err.message||err)); ev.target.value=''; }
   };
   reader.readAsArrayBuffer(file);
+  ev.target.value='';
+}
+function processReceiveUpload(parsed){
+  toast('처리 중… 새 품목은 자동으로 정리됩니다');
+  // 1) 이미 이 창고에 배정된 품목 → 이름으로 매핑
+  var whByName={};
+  whItems.forEach(function(it){ whByName[String(it.item_name||'').trim()]=it; });
+  // 2) 전체 품목마스터(다른 창고엔 있지만 이 창고엔 미배정) → 이름으로 매핑
+  var masterByName={};
+  (ITEMS||[]).forEach(function(m){ masterByName[String(m.item_name||'').trim()]=m; });
+
+  var toAssign=[];   // 이미 마스터엔 있는데 이 창고엔 미배정 → warehouse_item만 생성
+  var toCreate=[];   // 마스터에도 없는 완전 신규 품목 → item_master부터 생성
+  var already=[];    // 이미 이 창고에 배정되어 있음 (그대로 사용)
+  var seen={};
+  parsed.forEach(function(p){
+    if(seen[p.name]) return; seen[p.name]=true; // 같은 품목명 중복 행 방지
+    if(whByName[p.name]) already.push(p);
+    else if(masterByName[p.name]) toAssign.push(p);
+    else toCreate.push(p);
+  });
+
+  // 3) 완전 신규 품목: item_master 먼저 생성(id 회신 받기 위해 return=representation)
+  var createChain=Promise.all(toCreate.map(function(p){
+    return sbFetch('/item_master',{method:'POST',body:{item_name:p.name,spec:p.spec,unit:p.unit},headers:{'Prefer':'return=representation'}})
+      .then(function(r){return r.json();})
+      .then(function(rowsArr){
+        var newItem=Array.isArray(rowsArr)?rowsArr[0]:rowsArr;
+        if(newItem&&newItem.id){ toAssign.push({name:p.name, item_id:newItem.id}); }
+        else { p._failed=true; }
+      })
+      .catch(function(){ p._failed=true; });
+  }));
+
+  createChain.then(function(){
+    // 4) 창고 배정(warehouse_item) 생성 — 방금 만든 신규 품목 + 마스터엔 있었지만 미배정이던 품목
+    var assignCalls=toAssign.map(function(p){
+      var itemId=p.item_id || (masterByName[p.name]&&masterByName[p.name].id);
+      if(!itemId) return Promise.resolve();
+      return sbFetch('/warehouse_item',{method:'POST',body:{warehouse_id:curWarehouse.id,item_id:itemId,min_qty:0},headers:{'Prefer':'return=minimal'}})
+        .catch(function(){ p._failed=true; });
+    });
+    return Promise.all(assignCalls);
+  }).then(function(){
+    // 5) 창고 품목/원장 재로딩 후 화면에 수량 반영
+    return loadWarehouseItemsAndLedger();
+  }).then(function(){
+    if(!forceShowAll){ forceShowAll=true; renderLedgerItems(); }
+    var applied=0, failed=[];
+    parsed.forEach(function(p){
+      var it=null;
+      whItems.forEach(function(w){ if(String(w.item_name||'').trim()===p.name) it=w; });
+      if(!it){ failed.push(p.name); return; }
+      var inEl=document.getElementById('in_'+it.item_id);
+      if(!inEl){ failed.push(p.name+'(화면 미표시)'); return; }
+      inEl.value=p.qty;
+      onQtyChange(it.item_id);
+      applied++;
+    });
+    var msg='✓ '+applied+'건 입고수량 반영';
+    if(toCreate.length) msg+=' (신규 품목 '+toCreate.filter(function(p){return !p._failed;}).length+'건 자동 등록)';
+    msg+=' — 확인 후 [저장] 눌러주세요';
+    if(failed.length) msg+='\n⚠ 반영 실패 '+failed.length+'건: '+failed.slice(0,5).join(', ')+(failed.length>5?' 외':'');
+    alert(msg);
+  }).catch(function(){ toast('업로드 처리 중 오류가 발생했습니다'); });
 }
 function saveLedger(){
   if(!canInput()){ toast('입력 권한이 없습니다'); return; }
@@ -898,11 +951,18 @@ function saveLedger(){
     if(L.id) return sbFetch('/warehouse_ledger?id=eq.'+L.id,{method:'PATCH',body:rec,headers:{'Prefer':'return=minimal'}});
     return sbFetch('/warehouse_ledger',{method:'POST',body:rec,headers:{'Prefer':'return=minimal'}});
   });
-  Promise.all([headerSave].concat(itemSaves)).then(function(){
+  Promise.all([headerSave].concat(itemSaves)).then(function(results){
     btn.disabled=false; btn.textContent='💾 저장';
+    // ★ sbFetch는 HTTP 에러(4xx/5xx)에도 정상적으로 resolve되므로, resp.ok를 직접 확인해야 함
+    var failCount=0;
+    results.forEach(function(r){ if(r && r.ok===false) failCount++; });
+    if(failCount>0){
+      toast('⚠️ 저장 실패 '+failCount+'건 — 네트워크 확인 후 다시 시도해주세요');
+      return; // ★ 실패 시 완료 표시/화면 갱신을 하지 않아 재시도 가능하게 함
+    }
     toast('✓ 저장되었습니다');
     loadWarehouseItemsAndLedger();
-  }).catch(function(){ btn.disabled=false; btn.textContent='💾 저장'; toast('저장 실패'); });
+  }).catch(function(){ btn.disabled=false; btn.textContent='💾 저장'; toast('저장 실패 — 다시 시도해주세요'); });
 }
 
 // ═══ 품목 추가 모달 ═══
@@ -1308,6 +1368,21 @@ function deleteItemMaster(id){
   if(!confirm('이 품목을 삭제할까요? (배정된 창고에서도 함께 제거됩니다)'))return;
   sbFetch('/item_master?id=eq.'+id,{method:'DELETE'}).then(function(){ toast('✓ 삭제됨'); reloadItemsAndRender(); });
 }
+function downloadItemMasterTemplate(){
+  if(typeof XLSX==='undefined'){ toast('엑셀 모듈 로드 실패'); return; }
+  var aoa=[['품명','규격','단위','기준수량']];
+  // 기존 품목을 그대로 채워서 내려받게 함 → 값 수정 후 재업로드하면 자동으로 "수정"으로 처리됨
+  // 새 품목은 맨 아래에 행을 추가해서 채우면 "신규 등록"으로 처리됨
+  ITEMS.forEach(function(it){
+    aoa.push([it.item_name||'', it.spec||'', it.unit||'', it.std_qty!=null?it.std_qty:'']);
+  });
+  var ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:22},{wch:14},{wch:8},{wch:10}];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '품목마스터');
+  XLSX.writeFile(wb, '품목마스터_양식_'+todayStr()+'.xlsx');
+  toast('✓ 양식 다운로드 완료 — 기존 품목은 수정, 새 행은 신규 등록으로 처리됩니다');
+}
 function uploadItemMasterExcel(ev){
   var file=ev.target.files[0]; if(!file) return;
   var reader=new FileReader();
@@ -1317,21 +1392,40 @@ function uploadItemMasterExcel(ev){
       var ws=wb.Sheets[wb.SheetNames[0]];
       var rows=XLSX.utils.sheet_to_json(ws,{header:1});
       var startI = /품명|품목/.test(String(rows[0]&&rows[0][0]))?1:0;
-      var recs=[];
+      var parsed=[];
+      var seen={};
       for(var i=startI;i<rows.length;i++){
         var r=rows[i]; if(!r||!r[0]) continue;
+        var name=String(r[0]).trim(); if(!name||seen[name]) continue; seen[name]=true;
         var qtyRaw=r[3];
         var qty=(qtyRaw!=null && qtyRaw!=='')?(parseInt(qtyRaw,10)||0):null;
-        recs.push({item_name:String(r[0]).trim(), spec:r[1]!=null?String(r[1]).trim():'', unit:r[2]!=null?String(r[2]).trim():'', std_qty:qty});
+        parsed.push({item_name:name, spec:r[1]!=null?String(r[1]).trim():'', unit:r[2]!=null?String(r[2]).trim():'', std_qty:qty});
       }
-      if(!recs.length){ toast('업로드할 데이터가 없습니다'); return; }
-      sbFetch('/item_master',{method:'POST',body:recs,headers:{'Prefer':'return=minimal'}})
-        .then(function(){ toast('✓ '+recs.length+'건 업로드 완료'); reloadItemsAndRender(); })
-        .catch(function(){ toast('업로드 실패'); });
-    }catch(err){ toast('엑셀 파싱 실패'); }
+      if(!parsed.length){ toast('업로드할 데이터가 없습니다'); ev.target.value=''; return; }
+      // 품명 기준 중복(기존 품목) 탐지 → 있으면 수정, 없으면 신규 등록
+      var byName={}; (ITEMS||[]).forEach(function(it){ byName[String(it.item_name||'').trim()]=it; });
+      var toInsert=[], toUpdate=[];
+      parsed.forEach(function(p){
+        var ex=byName[p.item_name];
+        if(ex) toUpdate.push({id:ex.id, rec:p});
+        else toInsert.push(p);
+      });
+      if(!confirm('신규 등록 '+toInsert.length+'건, 기존 품목 수정 '+toUpdate.length+'건\n진행하시겠습니까?')){ ev.target.value=''; return; }
+      var calls=[];
+      if(toInsert.length) calls.push(sbFetch('/item_master',{method:'POST',body:toInsert,headers:{'Prefer':'return=minimal'}}));
+      toUpdate.forEach(function(u){
+        calls.push(sbFetch('/item_master?id=eq.'+u.id,{method:'PATCH',body:u.rec,headers:{'Prefer':'return=minimal'}}));
+      });
+      Promise.all(calls).then(function(results){
+        var failCount=results.filter(function(r){ return r && r.ok===false; }).length;
+        if(failCount>0){ toast('⚠️ 처리 실패 '+failCount+'건 — 다시 시도해주세요'); }
+        else{ toast('✓ 신규 '+toInsert.length+'건, 수정 '+toUpdate.length+'건 완료'); }
+        reloadItemsAndRender();
+      }).catch(function(){ toast('업로드 실패'); });
+    }catch(err){ toast('엑셀 파싱 실패: '+String(err.message||err)); }
+    ev.target.value='';
   };
   reader.readAsArrayBuffer(file);
-  ev.target.value='';
 }
 
 // ═══ 초기화 ═══
