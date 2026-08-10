@@ -9221,9 +9221,20 @@ function renderJointWorkList(){
     if(g.rows.length>1) h+='<span style="background:var(--g3);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">📋 '+g.rows.length+'건 묶음</span>';
     h+='</div>';
     h+='<div style="padding:10px 13px">';
+    var allNewFormat = g.rows.length>1 && g.rows.every(function(r){return !!r.category;});
+    if(allNewFormat){
+      h+='<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--g4);cursor:pointer;margin-bottom:6px"><input type="checkbox" onclick="jwToggleAll(this,\''+g.key+'\')"> 전체선택</label>';
+    }
     g.rows.forEach(function(r,i){
       if(r.category){
-        h+='<div style="font-size:12px;color:var(--g6);margin-bottom:2px"><b>'+(i+1)+'. '+(JW_CAT_ICONS[r.category]||'')+' '+r.category+'</b> · '+r.work_name+(r.location?(' — 📍'+r.location):'')+(r.shift?(' · 🕐'+r.shift):'')+'</div>';
+        if(allNewFormat){
+          h+='<label style="display:flex;align-items:flex-start;gap:7px;margin-bottom:4px;cursor:pointer">';
+          h+='<input type="checkbox" class="jwItemChk" data-id="'+r.id+'" data-key="'+g.key+'" style="margin-top:3px;flex-shrink:0">';
+          h+='<span style="font-size:12px;color:var(--g6)"><b>'+(i+1)+'. '+(JW_CAT_ICONS[r.category]||'')+' '+r.category+'</b> · '+r.work_name+(r.location?(' — 📍'+r.location):'')+(r.shift?(' · 🕐'+r.shift):'')+'</span>';
+          h+='</label>';
+        }else{
+          h+='<div style="font-size:12px;color:var(--g6);margin-bottom:2px"><b>'+(i+1)+'. '+(JW_CAT_ICONS[r.category]||'')+' '+r.category+'</b> · '+r.work_name+(r.location?(' — 📍'+r.location):'')+(r.shift?(' · 🕐'+r.shift):'')+'</div>';
+        }
       }else{
         (r.items||[]).forEach(function(it,j){
           h+='<div style="font-size:12px;color:var(--g6);margin-bottom:2px"><b>'+(i+1)+'.</b> 📍'+it.location+' — '+it.work+'</div>';
@@ -9233,10 +9244,15 @@ function renderJointWorkList(){
     if(g.note) h+='<div style="margin-top:6px;font-size:11px;color:var(--warn);background:var(--warn-bg,#FFF7E0);border-radius:6px;padding:6px 8px">📝 '+g.note+'</div>';
     h+='<div style="margin-top:8px;font-size:10px;color:var(--g3)">작성자: '+(g.writer||'')+'</div>';
     h+='<div style="margin-top:8px;text-align:right;display:flex;gap:6px;justify-content:flex-end">';
-    if(g.rows.length===1 && g.rows[0].category){
-      h+='<button onclick="openJwEdit('+g.rows[0].id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button>';
+    if(allNewFormat){
+      h+='<button onclick="jwEditSelected(\''+g.key+'\')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 선택 수정</button>';
+      if(isAdminOnly){h+='<button onclick="jwDeleteSelected(\''+g.key+'\')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--danger);cursor:pointer">🗑 선택 삭제</button>';}
+    }else{
+      if(g.rows.length===1 && g.rows[0].category){
+        h+='<button onclick="openJwEdit('+g.rows[0].id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button>';
+      }
+      if(isAdminOnly){h+='<button onclick="deleteJwBatch(\''+g.key+'\')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제'+(g.rows.length>1?' (전체)':'')+'</button>';}
     }
-    if(isAdminOnly){h+='<button onclick="deleteJwBatch(\''+g.key+'\')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제'+(g.rows.length>1?' (전체)':'')+'</button>';}
     h+='</div>';
     h+='</div></div>';
   });
@@ -9253,6 +9269,40 @@ async function deleteJwBatch(key){
     var res=await sb.from('joint_work_data').delete().in('id',ids);
     if(res.error){ toast('삭제 오류: '+res.error.message); return; }
     toast('🗑 삭제되었습니다');
+    loadJointWorkFromDB();
+  }catch(e){ toast('삭제 실패'); }
+}
+// ── 묶음 내 개별 항목 선택(체크박스) 수정/삭제 ──
+function jwToggleAll(el,key){
+  var boxes=document.querySelectorAll('.jwItemChk');
+  Array.prototype.forEach.call(boxes, function(b){
+    if(b.getAttribute('data-key')===key) b.checked=el.checked;
+  });
+}
+function jwGetSelectedIds(key){
+  var boxes=document.querySelectorAll('.jwItemChk');
+  var ids=[];
+  Array.prototype.forEach.call(boxes, function(b){
+    if(b.getAttribute('data-key')===key && b.checked) ids.push(parseInt(b.getAttribute('data-id'),10));
+  });
+  return ids;
+}
+function jwEditSelected(key){
+  var ids=jwGetSelectedIds(key);
+  if(!ids.length){ toast('수정할 항목을 선택해주세요'); return; }
+  if(ids.length>1){ toast('수정은 한 번에 1개 항목만 가능합니다. 1개만 선택해주세요'); return; }
+  openJwEdit(ids[0]);
+}
+async function jwDeleteSelected(key){
+  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
+  if(!canWrite()) return;
+  var ids=jwGetSelectedIds(key);
+  if(!ids.length){ toast('삭제할 항목을 선택해주세요'); return; }
+  if(!confirm(ids.length+'건을 삭제하시겠습니까?')) return;
+  try{
+    var res=await sb.from('joint_work_data').delete().in('id',ids);
+    if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    toast('🗑 '+ids.length+'건 삭제되었습니다');
     loadJointWorkFromDB();
   }catch(e){ toast('삭제 실패'); }
 }
