@@ -224,6 +224,13 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
     <input type="text" id="itemFilter" placeholder="품목 검색 (예: 리스킨)" oninput="onItemSearchInput()">
     <button class="mini-btn" onclick="openAddItemModal()">+ 신규품목</button>
   </div>
+  <div style="display:flex;gap:8px;margin-bottom:10px">
+    <button class="ghost-btn" style="flex:1" onclick="downloadReceiveTemplate()">📥 입고양식 다운로드</button>
+    <label class="ghost-btn" style="flex:1;text-align:center;cursor:pointer">
+      📤 엑셀로 입고 업로드
+      <input type="file" id="receiveExcelFile" accept=".xlsx,.xls" style="display:none" onchange="uploadReceiveExcel(event)">
+    </label>
+  </div>
   <div id="itemSearchCandsWrap" style="display:none;margin-bottom:10px">
     <div id="itemSearchCands"></div>
     <button class="save-btn" style="margin-top:8px" onclick="confirmItemSearchPick()">선택한 품목 입력하기 <span id="itemSearchPickCount">(0)</span></button>
@@ -797,6 +804,64 @@ function onQtyChange(itemId){
 
 function currentWriter(){
   return document.getElementById('leaderAm').value || document.getElementById('leaderPm').value || document.getElementById('leaderNight').value || (me?me.name:'');
+}
+// ═══ 입고 엑셀 양식 다운로드 / 업로드 ═══
+function downloadReceiveTemplate(){
+  if(typeof XLSX==='undefined'){ toast('엑셀 모듈 로드 실패'); return; }
+  if(!curWarehouse){ toast('창고를 먼저 선택해주세요'); return; }
+  var aoa=[['품목명','규격','단위','입고수량']];
+  // 이 창고에 배정된 품목 전체를 기준으로 양식 생성 (수량 칸은 비워서 현장에서 채우도록)
+  whItems.forEach(function(it){
+    aoa.push([it.item_name||'', it.spec||'', it.unit||'', '']);
+  });
+  if(whItems.length===0){ toast('이 창고에 배정된 품목이 없습니다. 품목을 먼저 등록해주세요'); return; }
+  var ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:22},{wch:14},{wch:8},{wch:10}];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, '입고입력');
+  var whName=(curWarehouse.room_no?curWarehouse.room_no+'_':'')+(curWarehouse.location_desc||'창고');
+  XLSX.writeFile(wb, '입고양식_'+whName+'_'+curDate+'.xlsx');
+  toast('✓ 양식 다운로드 완료 — 입고수량만 채워서 업로드해주세요');
+}
+function uploadReceiveExcel(ev){
+  var file=ev.target.files[0]; if(!file) return;
+  if(!canInput()){ toast('입력 권한이 없습니다'); ev.target.value=''; return; }
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{header:1});
+      var startI = /품명|품목/.test(String(rows[0]&&rows[0][0]))?1:0;
+      // 품목명(트림) 기준 매칭 맵 구성 — 같은 창고에 배정된 품목만 대상
+      var byName={};
+      whItems.forEach(function(it){ byName[String(it.item_name||'').trim()]=it; });
+      var matched=0, unmatched=[];
+      // 아직 화면에 전체 품목이 안 그려져 있으면(입고처리 모드가 아니면) 강제로 전체 표시해서
+      // 매칭된 품목의 입력칸(in_...)이 확실히 존재하도록 함
+      if(!forceShowAll){ forceShowAll=true; renderLedgerItems(); }
+      for(var i=startI;i<rows.length;i++){
+        var r=rows[i]; if(!r||!r[0]) continue;
+        var name=String(r[0]).trim();
+        var qtyRaw=r[3];
+        var qty=(qtyRaw!=null && qtyRaw!=='')?(parseInt(qtyRaw,10)||0):0;
+        if(!qty) continue; // 수량 비어있거나 0이면 건너뜀
+        var it=byName[name];
+        if(!it){ unmatched.push(name); continue; }
+        var inEl=document.getElementById('in_'+it.item_id);
+        if(!inEl){ unmatched.push(name+'(화면 미표시)'); continue; }
+        inEl.value=qty;
+        onQtyChange(it.item_id);
+        matched++;
+      }
+      if(matched===0 && unmatched.length===0){ toast('업로드할 입고 수량이 없습니다'); ev.target.value=''; return; }
+      var msg='✓ '+matched+'건 입고수량 반영됨 — 확인 후 [저장] 눌러주세요';
+      if(unmatched.length) msg+='\n⚠ 매칭 실패 '+unmatched.length+'건: '+unmatched.slice(0,5).join(', ')+(unmatched.length>5?' 외':'');
+      alert(msg);
+    }catch(err){ toast('엑셀 파싱 실패: '+String(err.message||err)); }
+    ev.target.value='';
+  };
+  reader.readAsArrayBuffer(file);
 }
 function saveLedger(){
   if(!canInput()){ toast('입력 권한이 없습니다'); return; }
