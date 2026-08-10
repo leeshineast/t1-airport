@@ -8566,6 +8566,8 @@ async function loadWorkVehicleFromDB(){
 // ═══ 공동작업 (오전·오후 겹침시간 공동작업 기록) ═══
 var jointWorkData=[];
 var jwEditId=null;
+var jwEditBatchKey=null; // 묶음 전체 수정 모드 시 원본 batch_id
+var jwEditIds=[]; // 묶음 전체 수정 모드 시 교체 대상 원본 id 목록
 var jwSelectedTeams=[]; // ['1팀A','2팀B', ...]
 var jwSelectedShift=''; // 사용자가 직접 선택한 근무조 ('오전'/'오후'/'야간')
 var jwItemSeq=0; // 작업 항목 블록 고유번호 발급용
@@ -8909,6 +8911,8 @@ async function loadJwSuggestions(){
 }
 function jwResetForm(){
   jwEditId=null;
+  jwEditBatchKey=null;
+  jwEditIds=[];
   jwSelectedSchedIds=[];
   jwSelectedShift='';
   document.getElementById('jwNote').value='';
@@ -9005,11 +9009,18 @@ async function subJointWork(){
       if(rows.length!==1){ toast('⚠️ 수정 모드에서는 대분류·작업명을 1개씩만 선택해주세요 (여러 개는 새 항목으로 등록해주세요)'); return; }
       // 수정 모드: 항목 1개만 지원(단일 row update)
       res=await sb.from('joint_work_data').update(rows[0]).eq('id',jwEditId);
+    }else if(jwEditBatchKey){
+      // 묶음 전체 수정 모드: 원본 항목 삭제 후 새로 작성한 항목들로 교체 (batch_id는 원본 유지)
+      if(!rows.length){ toast('작업 항목을 1개 이상 입력해주세요'); return; }
+      rows.forEach(function(rw){ rw.batch_id=jwEditBatchKey; });
+      var delRes=await sb.from('joint_work_data').delete().in('id',jwEditIds);
+      if(delRes.error){ toast('수정 오류: '+delRes.error.message); return; }
+      res=await sb.from('joint_work_data').insert(rows);
     }else{
       res=await sb.from('joint_work_data').insert(rows);
     }
     if(res.error){ toast('저장 오류: '+res.error.message); return; }
-    toast(jwEditId?'✅ 수정되었습니다':'✅ '+rows.length+'건 저장되었습니다');
+    toast((jwEditId||jwEditBatchKey)?'✅ 수정되었습니다':'✅ '+rows.length+'건 저장되었습니다');
     jwResetForm();
     await loadJointWorkFromDB();
     loadJointWorkTodayFromDB();
@@ -9235,20 +9246,9 @@ function renderJointWorkList(){
     if(g.rows.length>1) h+='<span style="background:var(--g3);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">📋 '+g.rows.length+'건 묶음</span>';
     h+='</div>';
     h+='<div style="padding:10px 13px">';
-    var allNewFormat = g.rows.length>1 && g.rows.every(function(r){return !!r.category;});
-    if(allNewFormat){
-      h+='<label style="display:flex;align-items:center;gap:6px;font-size:11px;color:var(--g4);cursor:pointer;margin-bottom:6px"><input type="checkbox" onclick="jwToggleAll(this,\''+g.key+'\')"> 전체선택</label>';
-    }
     g.rows.forEach(function(r,i){
       if(r.category){
-        if(allNewFormat){
-          h+='<label style="display:flex;align-items:flex-start;gap:7px;margin-bottom:4px;cursor:pointer">';
-          h+='<input type="checkbox" class="jwItemChk" data-id="'+r.id+'" data-key="'+g.key+'" style="margin-top:3px;flex-shrink:0">';
-          h+='<span style="font-size:12px;color:var(--g6)"><b>'+(i+1)+'. '+(JW_CAT_ICONS[r.category]||'')+' '+r.category+'</b> · '+r.work_name+(r.location?(' — 📍'+r.location):'')+(r.shift?(' · 🕐'+r.shift):'')+'</span>';
-          h+='</label>';
-        }else{
-          h+='<div style="font-size:12px;color:var(--g6);margin-bottom:2px"><b>'+(i+1)+'. '+(JW_CAT_ICONS[r.category]||'')+' '+r.category+'</b> · '+r.work_name+(r.location?(' — 📍'+r.location):'')+(r.shift?(' · 🕐'+r.shift):'')+'</div>';
-        }
+        h+='<div style="font-size:12px;color:var(--g6);margin-bottom:2px"><b>'+(i+1)+'. '+(JW_CAT_ICONS[r.category]||'')+' '+r.category+'</b> · '+r.work_name+(r.location?(' — 📍'+r.location):'')+(r.shift?(' · 🕐'+r.shift):'')+'</div>';
       }else{
         (r.items||[]).forEach(function(it,j){
           h+='<div style="font-size:12px;color:var(--g6);margin-bottom:2px"><b>'+(i+1)+'.</b> 📍'+it.location+' — '+it.work+'</div>';
@@ -9258,15 +9258,15 @@ function renderJointWorkList(){
     if(g.note) h+='<div style="margin-top:6px;font-size:11px;color:var(--warn);background:var(--warn-bg,#FFF7E0);border-radius:6px;padding:6px 8px">📝 '+g.note+'</div>';
     h+='<div style="margin-top:8px;font-size:10px;color:var(--g3)">작성자: '+(g.writer||'')+'</div>';
     h+='<div style="margin-top:8px;text-align:right;display:flex;gap:6px;justify-content:flex-end">';
-    if(allNewFormat){
-      h+='<button onclick="jwEditSelected(\''+g.key+'\')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 선택 수정</button>';
-      if(isAdminOnly){h+='<button onclick="jwDeleteSelected(\''+g.key+'\')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--danger);cursor:pointer">🗑 선택 삭제</button>';}
-    }else{
-      if(g.rows.length===1 && g.rows[0].category){
+    var allHaveCategory=g.rows.every(function(r){return !!r.category;});
+    if(allHaveCategory){
+      if(g.rows.length>1){
+        h+='<button onclick="openJwEditGroup(\''+g.key+'\')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button>';
+      }else{
         h+='<button onclick="openJwEdit('+g.rows[0].id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button>';
       }
-      if(isAdminOnly){h+='<button onclick="deleteJwBatch(\''+g.key+'\')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제'+(g.rows.length>1?' (전체)':'')+'</button>';}
     }
+    if(isAdminOnly){h+='<button onclick="deleteJwBatch(\''+g.key+'\')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:5px 12px;font-size:11px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제'+(g.rows.length>1?' (전체)':'')+'</button>';}
     h+='</div>';
     h+='</div></div>';
   });
@@ -9319,6 +9319,50 @@ async function jwDeleteSelected(key){
     toast('🗑 '+ids.length+'건 삭제되었습니다');
     loadJointWorkFromDB();
   }catch(e){ toast('삭제 실패'); }
+}
+function openJwEditGroup(key){
+  if(!canWrite()) return;
+  var rows=(jointWorkData||[]).filter(function(r){ return (r.batch_id||('__row_'+r.id))===key; });
+  if(!rows.length) return;
+  if(!rows.every(function(r){return !!r.category;})){
+    toast('⚠️ 구분 이전 방식으로 작성된 기록은 수정할 수 없습니다. 삭제 후 새로 등록해주세요.');
+    return;
+  }
+  jwEditId=null;
+  jwEditBatchKey=key;
+  jwEditIds=rows.map(function(r){return r.id;});
+  jwSelectedSchedIds=[];
+  jwSyncScheduleMode();
+  document.getElementById('jwDate').value=rows[0].work_date;
+  jwUpdateWeekday();
+  jwSelectedShift=(rows[0].shift==='오전'||rows[0].shift==='오후'||rows[0].shift==='야간')?rows[0].shift:'';
+  jwUpdateShiftBadge();
+  jwSelectedTeams=(rows[0].teams||[]).slice();
+  Array.from(document.getElementById('jwTeamG').children).forEach(function(c){
+    c.classList.toggle('on', jwSelectedTeams.indexOf(c.textContent.trim())!==-1);
+  });
+  document.getElementById('jwItemsWrap').innerHTML='';
+  jwItemState={};
+  rows.forEach(function(r){
+    var stdNames=JW_CATEGORIES[r.category]||[];
+    var isStd=stdNames.indexOf(r.work_name)!==-1;
+    jwAddItemBlock({
+      category:r.category,
+      workNames:isStd?[r.work_name]:['기타 전문작업'],
+      floor:(r.floors&&r.floors[0])||'',
+      location:r.location||'',
+      headcount:r.headcount||''
+    });
+    if(!isStd){
+      var bid='jwi'+jwItemSeq;
+      var etcEl=document.getElementById(bid+'_workEtc');
+      if(etcEl) etcEl.value=r.work_name||'';
+    }
+  });
+  document.getElementById('jwNote').value=rows[0].note||'';
+  var saveBtn=document.querySelector('#jwP0 .btn-prim'); if(saveBtn) saveBtn.textContent='수정 저장';
+  jwTab(0);
+  toast('수정 모드 ('+rows.length+'건 — 항목 추가·삭제·수정 후 저장하세요)');
 }
 function openJwEdit(id){
   if(!canWrite()) return;
