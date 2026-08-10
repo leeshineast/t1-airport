@@ -846,6 +846,12 @@ html{overflow-x:hidden}
         <div id="pendBadge" style="display:none;position:absolute;top:8px;right:8px;background:var(--danger);color:white;border-radius:50%;width:18px;height:18px;font-size:12px;font-weight:800;line-height:18px;text-align:center"></div>
         <span class="menu-arrow">관리하기 →</span>
       </button>
+      <button class="menu-btn" id="activeUsersBtn" onclick="go('activeUsers')" style="display:none">
+        <span class="menu-icon">🟢</span>
+        <div class="menu-title">현재 접속자</div>
+        <div class="menu-desc">최근 5분 이내 활동한 사용자 확인</div>
+        <span class="menu-arrow">보기 →</span>
+      </button>
     </div>
   </div>
 
@@ -1852,6 +1858,18 @@ html{overflow-x:hidden}
       </div>
     </div>
   </div></div>
+</div>
+<!-- ═══ 현재 접속자 (admin·master 전용) ═══ -->
+<div id="sActiveUsers" class="scr">
+  <div class="app-hd">
+    <button class="back-hd" onclick="go('main')">← 메인</button>
+    <div class="user-chip"><div class="u-av">🟢</div><span>현재 접속자</span></div>
+  </div>
+  <div class="pg-hd"><div><h1>현재 접속자</h1><small>최근 5분 이내 활동한 사용자는 온라인으로 표시됩니다</small></div>
+    <button onclick="loadActiveUsers()" style="padding:8px 14px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g6);cursor:pointer">🔄 새로고침</button>
+  </div>
+  <div id="activeUsersSummary" style="margin:0 13px 10px;font-size:13px;color:var(--g5)"></div>
+  <div id="activeUsersList" style="padding:0 13px 20px"></div>
 </div>
 <div id="sHo" class="scr">
   <div class="app-hd">
@@ -4481,7 +4499,7 @@ window.addEventListener('popstate', function(e){
 });
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sActiveUsers'];
 function goStatsDash(){
   go('statsdash');
   loadMonthlyStats();
@@ -4867,6 +4885,7 @@ function go(name){
   if(me&&me.role==='member'&&['main','notice','chat','iso9001','news','safety','manual','login'].indexOf(name)===-1){ return; }
   if(name==='execdash'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='admin'&&(!me||me.role!=='master')){ toast('⚠️ 최고관리자만 접근할 수 있습니다'); return; }
+  if(name==='activeUsers'&&(!me||!(me.role==='admin'||me.role==='master'))){ toast('⚠️ 관리자 이상만 접근할 수 있습니다'); return; }
   if(name==='toilet'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(['shower','smoking','rest','storage','baby'].indexOf(name)!==-1&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='downloadcenter'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
@@ -4875,7 +4894,7 @@ function go(name){
     try{ history.pushState({kind:'screen',id:name}, ''); }catch(e){}
   }
   _curScreenName=name;
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -4891,6 +4910,7 @@ function go(name){
   var gtb=document.getElementById('globalTabbar');
   if(gtb) gtb.style.setProperty('max-width', tbWidthMap[id]||'720px', 'important');
   window.scrollTo(0,0);
+  if(name==='activeUsers') loadActiveUsers();
   // 화면 진입 시 자동 새로고침
   if(name==='mp'){
     // 로그인한 사람 근무조/팀 자동 선택
@@ -5026,6 +5046,8 @@ function applyRoleUI(){
   var isMgr=me.role==='manager'||me.role==='admin'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role);
   var ab=document.getElementById('adminBtn');
   if(ab) ab.style.display=isMaster?'block':'none';
+  var aub=document.getElementById('activeUsersBtn');
+  if(aub) aub.style.display=(me.role==='admin'||me.role==='master')?'block':'none';
   var edb=document.getElementById('execDashMenuBtn');
   var isExecView=me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role);
   if(edb) edb.style.display=isExecView?'flex':'none';
@@ -5270,6 +5292,7 @@ function finishLogin(){
   loadFacilityData();
   loadMpFromDB();
   loadKpiData();
+  sendHeartbeat();
   setTimeout(autoSelectMyShiftTeam, 2000); // 로그인 후 자동 선택
   renderLeaderStatus();
   updateMyTeamGrp();
@@ -16734,6 +16757,68 @@ setInterval(checkShiftReset, 60000);
 setInterval(function(){ if(me){ loadMpFromDB(); checkNotifUpdates(); pollGroupChatBadge(); } }, 30000);
 setInterval(function(){ if(me) checkHeatAlert(); }, 15*60000);
 checkShiftReset();
+
+// ── 접속 하트비트: 화면이 보이는 동안 1분마다 최근활동시각 갱신 (현재 접속자 화면용) ──
+async function sendHeartbeat(){
+  if(!me || !me.id) return;
+  if(document.visibilityState!=='visible') return;
+  try{ await sb.from('users').update({last_active:new Date().toISOString()}).eq('id', me.id); }catch(e){}
+}
+setInterval(sendHeartbeat, 60000);
+document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') sendHeartbeat(); });
+
+// ── 현재 접속자 화면 (admin·master 전용) ──
+function _auEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+async function loadActiveUsers(){
+  if(!me||!(me.role==='admin'||me.role==='master')) return;
+  var listEl=document.getElementById('activeUsersList');
+  var sumEl=document.getElementById('activeUsersSummary');
+  if(!listEl) return;
+  listEl.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div>';
+  try{
+    var res=await sb.from('users').select('id,name,team,role,last_active,status').eq('status','active').order('last_active',{ascending:false,nullsFirst:false});
+    if(res.error){ listEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:14px">불러오기 실패</div>'; return; }
+    var rows=res.data||[];
+    var now=Date.now();
+    var ONLINE_MS=5*60000;
+    rows.forEach(function(r){ r._online = r.last_active ? (now-new Date(r.last_active).getTime() < ONLINE_MS) : false; });
+    rows.sort(function(a,b){
+      if(a._online!==b._online) return a._online?-1:1;
+      var at=a.last_active?new Date(a.last_active).getTime():0;
+      var bt=b.last_active?new Date(b.last_active).getTime():0;
+      return bt-at;
+    });
+    var onlineCount=rows.filter(function(r){return r._online;}).length;
+    if(sumEl) sumEl.textContent='🟢 온라인 '+onlineCount+'명  ·  전체 '+rows.length+'명';
+    var roleLabelFn=function(role){
+      return role==='master'?'최고관리자':role==='admin'?'관리자':role==='group_leader'?'그룹장':role==='division_head'?'본부장':role==='manager'?'팀장':role==='leader'?'조장':role==='acting_leader'?'조장대행':role==='guest'?'게스트':role==='member'?'열람전용':role==='work_vehicle'?'차량운행':'팀원';
+    };
+    var h='';
+    rows.forEach(function(r){
+      var timeStr='활동 기록 없음';
+      if(r.last_active){
+        var d=new Date(r.last_active);
+        var diffMin=Math.floor((now-d.getTime())/60000);
+        if(diffMin<1) timeStr='방금 전';
+        else if(diffMin<60) timeStr=diffMin+'분 전';
+        else if(diffMin<1440) timeStr=Math.floor(diffMin/60)+'시간 전';
+        else timeStr=Math.floor(diffMin/1440)+'일 전';
+      }
+      h+='<div class="card" style="margin-bottom:8px"><div class="cb" style="display:flex;align-items:center;gap:10px;padding:12px 14px">';
+      h+='<div style="width:10px;height:10px;border-radius:50%;background:'+(r._online?'#2ecc71':'#ccc')+';flex-shrink:0"></div>';
+      h+='<div style="flex:1;min-width:0">';
+      h+='<div style="font-size:14.5px;font-weight:700;color:var(--g7)">'+_auEsc(r.name)+' <span style="font-weight:400;color:var(--g4);font-size:12px">'+_auEsc(roleLabelFn(r.role))+'</span></div>';
+      h+='<div style="font-size:12px;color:var(--g4)">'+_auEsc(r.team||'')+'</div>';
+      h+='</div>';
+      h+='<div style="font-size:12px;color:var(--g4);text-align:right;flex-shrink:0">'+timeStr+'</div>';
+      h+='</div></div>';
+    });
+    listEl.innerHTML=h||'<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">사용자가 없습니다</div>';
+  }catch(e){
+    listEl.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:14px">불러오기 실패</div>';
+  }
+}
+
 </script>
 <script>
 // ═══ 관리자 출근 현황 ═══
