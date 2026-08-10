@@ -11529,7 +11529,7 @@ async function loadUserList(){
       var moveBtn=canMoveTeam?('<button class="move-btn" data-id="'+u.id+'" data-name="'+u.name+'" data-team="'+u.team+'" style="padding:4px 9px;background:var(--warn-bg,#FFF7E0);color:var(--warn);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔄 이동</button>'):'';
       var isMemberRole=(u.role==='member');
       var memberBtn=(me&&(me.role==='admin'||isExecRole(me.role)))?('<button class="member-btn" data-id="'+u.id+'" data-name="'+u.name+'" data-cur="'+(isMemberRole?'1':'0')+'" data-role="'+u.role+'" data-prevrole="'+(u.prev_role||'')+'" style="padding:4px 9px;background:'+(isMemberRole?'var(--success-bg)':'var(--g1)')+';color:'+(isMemberRole?'var(--success)':'var(--g5)')+';border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">'+(isMemberRole?'📖 열람전용 해제':'📖 열람전용 전환')+'</button>'):'';
-      row.innerHTML='<div style="display:flex;flex-direction:column;width:100%;gap:5px"><div style="display:flex;align-items:center;justify-content:space-between"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' · '+u.role+'</div></div></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="chip chip-ok">활성</span>'+moveBtn+memberBtn+'<button class="perm-btn" data-name="'+u.name+'" data-id="'+u.id+'" style="padding:4px 9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔐 권한</button><button class="withdraw-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:5px 9px;background:var(--danger-bg);color:var(--danger);border:1.5px solid rgba(217,64,64,.2);border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">탈퇴</button></div></div><div id="perm-'+u.id+'" style="display:flex;flex-wrap:wrap;gap:4px">'+permChips+'</div></div>';
+      row.innerHTML='<div style="display:flex;flex-direction:column;width:100%;gap:5px"><div style="display:flex;align-items:center;justify-content:space-between"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' · '+u.role+'</div></div></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="chip chip-ok">활성</span>'+moveBtn+memberBtn+'<button class="perm-btn" data-name="'+u.name+'" data-id="'+u.id+'" style="padding:4px 9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔐 권한</button><button class="withdraw-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:5px 9px;background:var(--danger-bg);color:var(--danger);border:1.5px solid rgba(217,64,64,.2);border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">🗑️ 완전삭제</button></div></div><div id="perm-'+u.id+'" style="display:flex;flex-wrap:wrap;gap:4px">'+permChips+'</div></div>';
       var memberBtnEl=row.querySelector('.member-btn');
       if(memberBtnEl) memberBtnEl.onclick=function(){ toggleMemberRole(this); };
       row.querySelector('.perm-btn').onclick=function(){openPermEdit(this,this.dataset.name,this.dataset.id);};
@@ -11656,15 +11656,11 @@ async function saveTeamMove(){
 }
 
 async function withdrawUserDB(id, name){
-  if(!confirm(name+'님을 탈퇴 처리하시겠습니까?')) return;
-  var u=await sb.from('users').select('email').eq('id',id).maybeSingle();
-  var origEmail=(u&&u.data&&u.data.email)||'';
-  var newEmail=origEmail?origEmail+'_withdrawn_'+Date.now():undefined;
-  var payload={status:'withdrawn'};
-  if(newEmail) payload.email=newEmail;
-  var res=await sb.from('users').update(payload).eq('id',id);
+  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 처리할 수 있습니다'); return; }
+  if(!confirm('⚠️ '+name+'님을 완전삭제 하시겠습니까?\n\n계정 정보가 영구적으로 삭제되며 되돌릴 수 없습니다.\n(재가입은 새 아이디로 바로 가능합니다)')) return;
+  var res=await sb.from('users').delete().eq('id',id);
   if(res.error){toast('오류: '+res.error.message);return;}
-  toast('✅ '+name+'님 탈퇴 처리 (아이디 '+origEmail+' 재사용 가능)');
+  toast('✅ '+name+'님 계정이 완전삭제되었습니다');
   loadUserList();
 }
 
