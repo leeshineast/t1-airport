@@ -440,9 +440,9 @@ function sbFetchAll(basePath, pageSize){
   return fetchPage(0, []);
 }
 function loadSession(){ try{var s=localStorage.getItem('t1_me'); if(!s)return null; var u=JSON.parse(s); return (u&&u.name)?u:null;}catch(e){return null;} }
-function roleLabel(r){ if(r==='admin')return '관리자'; if(r==='manager')return '매니저'; if(r==='leader')return '조장'; if(r==='deputy'||r==='acting')return '조장대행'; if(r==='teamlead')return '팀장'; return '직원'; }
-function canInput(){ if(!me)return false; var r=me.role; return r==='admin'||r==='manager'||r==='leader'||r==='deputy'||r==='acting'||r==='teamlead'; }
-function isAdmin(){ return me && (me.role==='admin'||me.role==='manager'); }
+function roleLabel(r){ if(r==='master')return '최고관리자'; if(r==='admin')return '관리자'; if(r==='manager')return '팀장'; if(r==='leader')return '조장'; if(r==='acting_leader')return '조장대행'; return '직원'; }
+function canInput(){ if(!me)return false; var r=me.role; return r==='master'||r==='admin'||r==='manager'||r==='leader'||r==='acting_leader'; }
+function isAdmin(){ return me && (me.role==='master'||me.role==='admin'||me.role==='manager'); }
 function todayStr(){ var n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); }
 function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)'; clearTimeout(t._t); t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(8px)';},2600); }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
