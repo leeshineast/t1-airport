@@ -9206,7 +9206,6 @@ function renderJointWorkList(){
     if(mf && !(r.work_date&&r.work_date.indexOf(mf)===0)) return false;
     if(df && r.work_date!==df) return false;
     if(tf && (!r.teams||!r.teams.some(function(t){return t.indexOf(tf)===0;}))) return false;
-    if(r.shift==='오후'||r.shift==='야간') return false; // 현재 오전팀만 운영 — 오후/야간 항목은 목록에서 숨김 (내년 오후팀 전환 시 이 조건 변경)
     return true;
   });
   if(!filtered.length){
