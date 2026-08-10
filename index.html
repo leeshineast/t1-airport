@@ -3359,7 +3359,11 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div id="jwP0" style="padding:0 13px">
     <div class="fg" style="margin-top:13px"><label class="f-lbl">📅 일자 *</label><input type="date" id="jwDate" class="ri" style="margin-bottom:0" onchange="jwUpdateWeekday()"></div>
     <div id="jwDateWeekday" style="font-size:11px;color:var(--g4);margin:4px 0 10px 2px"></div>
-    <div id="jwShiftBadge" style="display:inline-block;font-size:12px;font-weight:700;color:var(--teal2);background:var(--teal-bg);padding:5px 11px;border-radius:20px;margin-bottom:12px"></div>
+    <div class="fg"><label class="f-lbl">🕐 근무조 *</label><div class="rg" id="jwShiftG" style="flex-wrap:wrap;gap:6px">
+      <div class="rp" onclick="jwPickShift(this,'오전')">🌅 오전</div>
+      <div class="rp" onclick="jwPickShift(this,'오후')">🌇 오후</div>
+      <div class="rp" onclick="jwPickShift(this,'야간')">🌙 야간</div>
+    </div></div>
 
     <div class="fg"><label class="f-lbl">팀·조 선택 * <span style="font-weight:400;color:var(--g3)">(여러 팀 함께 선택 가능)</span></label>
       <div class="rg" id="jwTeamG" style="flex-wrap:wrap;gap:6px">
@@ -8563,6 +8567,7 @@ async function loadWorkVehicleFromDB(){
 var jointWorkData=[];
 var jwEditId=null;
 var jwSelectedTeams=[]; // ['1팀A','2팀B', ...]
+var jwSelectedShift=''; // 사용자가 직접 선택한 근무조 ('오전'/'오후'/'야간')
 var jwItemSeq=0; // 작업 항목 블록 고유번호 발급용
 var jwItemState={}; // {blockId: {categories:[], workSel:[{cat,name}], floor}}
 // 표준 작업 대분류/작업명 (통계 표준화를 위한 고정 목록)
@@ -8875,10 +8880,18 @@ function jwAutoShift(){
   }
   return sh;
 }
+function jwPickShift(el,sh){
+  jwSelectedShift=sh;
+  var g=document.getElementById('jwShiftG');
+  if(g) Array.from(g.children).forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+}
+// 근무조 버튼 상태 동기화: 사용자가 이미 선택했으면 그 값 유지, 아니면 자동판별값을 기본 선택
 function jwUpdateShiftBadge(){
-  var sh=jwAutoShift();
-  var el=document.getElementById('jwShiftBadge');
-  if(el) el.textContent='🕐 근무조: '+sh+' (자동)';
+  var sh=jwSelectedShift||jwAutoShift();
+  var g=document.getElementById('jwShiftG');
+  if(g) Array.from(g.children).forEach(function(c){c.classList.toggle('on', c.textContent.trim().indexOf(sh)!==-1);});
+  jwSelectedShift=sh;
   return sh;
 }
 async function loadJwSuggestions(){
@@ -8897,6 +8910,7 @@ async function loadJwSuggestions(){
 function jwResetForm(){
   jwEditId=null;
   jwSelectedSchedIds=[];
+  jwSelectedShift='';
   document.getElementById('jwNote').value='';
   document.getElementById('jwItemsWrap').innerHTML='';
   jwItemState={};
@@ -9192,6 +9206,7 @@ function renderJointWorkList(){
     if(mf && !(r.work_date&&r.work_date.indexOf(mf)===0)) return false;
     if(df && r.work_date!==df) return false;
     if(tf && (!r.teams||!r.teams.some(function(t){return t.indexOf(tf)===0;}))) return false;
+    if(r.shift==='오후'||r.shift==='야간') return false; // 현재 오전팀만 운영 — 오후/야간 항목은 목록에서 숨김 (내년 오후팀 전환 시 이 조건 변경)
     return true;
   });
   if(!filtered.length){
@@ -9319,6 +9334,8 @@ function openJwEdit(id){
   jwSyncScheduleMode();
   document.getElementById('jwDate').value=r.work_date;
   jwUpdateWeekday();
+  jwSelectedShift=(r.shift==='오전'||r.shift==='오후'||r.shift==='야간')?r.shift:'';
+  jwUpdateShiftBadge();
   jwSelectedTeams=(r.teams||[]).slice();
   Array.from(document.getElementById('jwTeamG').children).forEach(function(c){
     c.classList.toggle('on', jwSelectedTeams.indexOf(c.textContent.trim())!==-1);
