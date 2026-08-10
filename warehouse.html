@@ -109,12 +109,12 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
 .set-row button{background:none;border:none;color:var(--danger);font-size:11px;cursor:pointer}
 /* 인쇄 미리보기 */
 .prev-scroll{background:#fff;border:1px solid var(--g2);border-radius:var(--r2);overflow:auto;padding:10px;-webkit-overflow-scrolling:touch}
-.prn table{border-collapse:collapse;font-family:'Malgun Gothic','Noto Sans KR',sans-serif;width:100%}
-.prn td{border:1px solid #333;font-size:8.5pt;padding:3px 4px;text-align:center;word-break:keep-all}
-.prn .tt{font-size:15pt;font-weight:800;letter-spacing:3px;border:none;padding:6px 0 10px}
-.prn .hd{background:#f0f0f0;font-weight:700}
-.prn .lf{text-align:left;white-space:normal}
-.prn .bx{color:#c00;font-weight:700}
+.prn table,.prev-scroll table{border-collapse:collapse;font-family:'Malgun Gothic','Noto Sans KR',sans-serif;width:100%}
+.prn td,.prev-scroll td{border:1px solid #333;font-size:8.5pt;padding:3px 4px;text-align:center;word-break:keep-all}
+.prn .tt,.prev-scroll .tt{font-size:15pt;font-weight:800;letter-spacing:3px;border:none;padding:6px 0 10px}
+.prn .hd,.prev-scroll .hd{background:#f0f0f0;font-weight:700}
+.prn .lf,.prev-scroll .lf{text-align:left;white-space:normal}
+.prn .bx,.prev-scroll .bx{color:#c00;font-weight:700}
 #printArea{display:none}
 @media print{ body>*{display:none !important} #printArea{display:block !important} body{padding:0;background:#fff} }
 /* 통계 */
@@ -1120,7 +1120,9 @@ function doPrint(){
   var pa=document.getElementById('printArea'); pa.innerHTML=docToHTML(doc);
   var st=document.getElementById('pageStyle'); if(!st){ st=document.createElement('style'); st.id='pageStyle'; document.head.appendChild(st); }
   st.textContent='@page{size:A4 portrait;margin:8mm} @media print{ .prn table{width:100%} }';
-  window.print();
+  // 내용을 채운 직후 곧바로 print()를 호출하면 일부 브라우저(특히 Windows Chrome/Edge)에서
+  // 화면이 다시 그려지기 전에 인쇄 스냅샷을 찍어 빈 페이지로 보이는 문제가 있어, 한 프레임 지연 후 호출
+  requestAnimationFrame(function(){ requestAnimationFrame(function(){ window.print(); }); });
 }
 function prExcel(){
   if(!curWarehouse){ toast('창고를 먼저 선택하세요'); return; }
