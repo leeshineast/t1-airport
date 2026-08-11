@@ -4967,7 +4967,19 @@ function goHomeMain(){
 function go(name){
   if(me&&me.role==='vehicle_guest'&&name!=='veh'&&name!=='login'){ return; }
   if(me&&me.role==='work_vehicle'&&name!=='workveh'&&name!=='login'){ return; }
-  if(me&&me.role==='member'&&['main','notice','chat','iso9001','news','safety','manual','risk','login'].indexOf(name)===-1){ return; }
+  if(me&&me.role==='member'&&name!=='main'&&name!=='login'){
+    if(!window._memberAllowedScreens){
+      window._memberAllowedScreens={};
+      document.querySelectorAll('#menuCat_ref .menu-btn').forEach(function(el){
+        var oc=el.getAttribute('onclick')||'';
+        var m=oc.match(/go\('([a-zA-Z0-9_]+)'\)/);
+        if(m) window._memberAllowedScreens[m[1]]=true;
+      });
+      delete window._memberAllowedScreens['notice'];
+      delete window._memberAllowedScreens['groupchat'];
+    }
+    if(!window._memberAllowedScreens[name]) return;
+  }
   if(name==='execdash'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='admin'&&(!me||me.role!=='master')){ toast('⚠️ 최고관리자만 접근할 수 있습니다'); return; }
   if(name==='activeUsers'&&(!me||!(me.role==='admin'||me.role==='master'))){ toast('⚠️ 관리자 이상만 접근할 수 있습니다'); return; }
@@ -5184,11 +5196,13 @@ function applyRoleUI(){
     setTimeout(function(){ go('veh'); },100);
   }
   // 열람전용 팀원 계정: 홈화면 + 열람·자료 메뉴만, 하단탭도 홈만
+  // (열람·자료 섹션 전체를 기본 허용하고, 공지사항/전체채팅만 제외 → 이 섹션에 메뉴가 추가되면 자동으로 열람전용 계정에도 노출됨)
   if(me.role==='member'){
     document.querySelectorAll('.menu-btn').forEach(function(el){
       var oc=el.getAttribute('onclick')||'';
-      var isRefMenu=(oc.indexOf("'chat'")!==-1||oc.indexOf("'iso9001'")!==-1||oc.indexOf("'news'")!==-1||oc.indexOf("'safety'")!==-1||oc.indexOf("'manual'")!==-1);
-      el.style.display=isRefMenu?'':'none';
+      var inRefMenu=!!(el.closest && el.closest('#menuCat_ref'));
+      var isExcluded=(oc.indexOf("'notice'")!==-1||oc.indexOf("'groupchat'")!==-1);
+      el.style.display=(inRefMenu&&!isExcluded)?'':'none';
     });
     document.querySelectorAll('#globalTabbar .mh-tab-item').forEach(function(el){
       var oc=el.getAttribute('onclick')||'';
