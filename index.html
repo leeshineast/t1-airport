@@ -2236,7 +2236,10 @@ html{overflow-x:hidden}
   .lrpt-table{ page-break-inside:auto; }
   .lrpt-table tr{ page-break-inside:avoid !important; }
   .lrpt-table thead{ display:table-header-group; }
+  .lrpt-print-title{ display:table-row !important; }
+  #listReportModal.lrpt-repeat #listReportBigTitle, #listReportModal.lrpt-repeat #listReportMeta{ display:none !important; }
 }
+.lrpt-print-title{ display:none; }
 .rpt-table{width:100%;border-collapse:collapse;font-size:13px}
 .rpt-table td{border:1px solid #333;padding:8px 10px;vertical-align:middle}
 .rpt-lbl{background:#F2F2F2;font-weight:700;text-align:center;white-space:nowrap}
@@ -2312,9 +2315,10 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
 <!-- 목록형 보고서 (차량운행기록/공사업무용차량/인력현황/공동작업 공용) -->
 <style>
-.lrpt-table{width:100%;border-collapse:collapse;font-size:11.5px}
+.lrpt-table{width:100%;border-collapse:collapse;font-size:11.5px;table-layout:auto}
 .lrpt-table th,.lrpt-table td{border:1px solid #333;padding:5px 6px;text-align:center;vertical-align:middle}
 .lrpt-table th{background:#F2F2F2;font-weight:700;white-space:nowrap}
+.lrpt-table td.nw{white-space:nowrap}
 </style>
 <div id="listReportModal" class="modal-bg">
   <div class="modal" style="max-width:560px;max-height:92vh;overflow-y:auto">
@@ -6402,6 +6406,14 @@ async function dlCSV(type){
         var vWrap=dlWithTitle(vRows,'T1환경미화사업부 차량운행일지',vRange,11);
         var ws3=XLSX.utils.aoa_to_sheet(vWrap.rows);
         ws3['!merges']=vWrap.merges;
+        // 계기판 km(전/후) 컬럼에 천단위 쉼표 서식 적용 (헤더 다음 데이터 행부터)
+        var vHeaderRowIdx=vWrap.rows.indexOf(vRows[0]);
+        for(var v3r=vHeaderRowIdx+1; v3r<vWrap.rows.length; v3r++){
+          [3,4].forEach(function(ci){
+            var addr=XLSX.utils.encode_cell({r:v3r,c:ci});
+            if(ws3[addr]) ws3[addr].z='#,##0';
+          });
+        }
         dlFinalizeSheet(ws3);        
         wb.SheetNames.push('차량운행');wb.Sheets['차량운행']=ws3;
       }
@@ -8063,6 +8075,14 @@ async function dlVeh(){
   var ws=XLSX.utils.aoa_to_sheet(wrap.rows);
   ws['!merges']=wrap.merges;
   ws['!cols']=[{wch:11},{wch:9},{wch:9},{wch:14},{wch:14},{wch:9},{wch:9},{wch:9},{wch:12},{wch:14},{wch:12}];
+  // 계기판 km(전/후) 컬럼에 천단위 쉼표 서식 적용 (헤더 다음 데이터 행부터)
+  var vhHeaderRowIdx=wrap.rows.indexOf(header);
+  for(var vhr=vhHeaderRowIdx+1; vhr<wrap.rows.length; vhr++){
+    [3,4].forEach(function(ci){
+      var addr=XLSX.utils.encode_cell({r:vhr,c:ci});
+      if(ws[addr]) ws[addr].z='#,##0';
+    });
+  }
   dlFinalizeSheet(ws);
   var wb={SheetNames:['차량운행일지'],Sheets:{'차량운행일지':ws}};
         await dlSaveWorkbook(wb, '차량운행일지_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
@@ -8535,20 +8555,44 @@ async function dlWorkVeh(){
   filtered.sort(function(a,b){ var da=a.date||'', db=b.date||''; if(da!==db) return da<db?-1:1; return (a.start||'').localeCompare(b.start||''); });
   if(!filtered.length){toast('해당 기간에 운행 기록이 없습니다');return;}
   var header=['사용일자','차량번호','소속','성명','주행 전 계기판(km)','주행 후 계기판(km)','주행거리','출발 시간','도착 시간','목적지','목적','선탑자','주유','기타'];
-  var rows=[header];
-  filtered.forEach(function(r){
-    rows.push([r.date, r.vehicle||'', r.dept||'T1운영', r.name, r.before||0, r.after||0, r.dist||0, r.start||'', r.end||'', r.dest||'', r.purpose||'', r.co_rider||'', r.fuel||'', r.etc||'']);
-  });
   var range=(typeof dlDateRangeStr==='function')?dlDateRangeStr(filtered.map(function(r){return r.date;})):'';
-  var wrap=(typeof dlWithTitle==='function')?dlWithTitle(rows,'T1환경미화사업부 공사업무용차량 운행일지',range,14):{rows:rows,merges:[]};
-  var ws=XLSX.utils.aoa_to_sheet(wrap.rows);
-  ws['!merges']=wrap.merges;
-  ws['!cols']=[{wch:11},{wch:12},{wch:9},{wch:9},{wch:14},{wch:14},{wch:9},{wch:9},{wch:9},{wch:12},{wch:14},{wch:10},{wch:10},{wch:12}];
-  dlFinalizeSheet(ws);
-  var wb={SheetNames:['공사업무용차량'],Sheets:{'공사업무용차량':ws}};
+  // 차량번호별로 그룹화 (등장 순서 유지)
+  var vehOrder=[]; var vehGroups={};
+  filtered.forEach(function(r){
+    var v=r.vehicle||'미지정';
+    if(!vehGroups[v]){ vehGroups[v]=[]; vehOrder.push(v); }
+    vehGroups[v].push(r);
+  });
+  var usedNames={}; var sheetNames=[]; var sheets={};
+  vehOrder.forEach(function(v){
+    var rows=[header];
+    vehGroups[v].forEach(function(r){
+      rows.push([r.date, r.vehicle||'', r.dept||'T1운영', r.name, r.before||0, r.after||0, r.dist||0, r.start||'', r.end||'', r.dest||'', r.purpose||'', r.co_rider||'', r.fuel||'', r.etc||'']);
+    });
+    var wrap=(typeof dlWithTitle==='function')?dlWithTitle(rows,'T1환경미화사업부 공사업무용차량 운행일지 - '+v,range,14):{rows:rows,merges:[]};
+    var ws=XLSX.utils.aoa_to_sheet(wrap.rows);
+    ws['!merges']=wrap.merges;
+    ws['!cols']=[{wch:11},{wch:12},{wch:9},{wch:9},{wch:14},{wch:14},{wch:9},{wch:9},{wch:9},{wch:12},{wch:14},{wch:10},{wch:10},{wch:12}];
+    // 계기판 km(전/후) 컬럼에 천단위 쉼표 서식 적용 (헤더 다음 데이터 행부터)
+    var headerRowIdx=wrap.rows.indexOf(header);
+    for(var ri=headerRowIdx+1; ri<wrap.rows.length; ri++){
+      [4,5].forEach(function(ci){
+        var addr=XLSX.utils.encode_cell({r:ri,c:ci});
+        if(ws[addr]) ws[addr].z='#,##0';
+      });
+    }
+    dlFinalizeSheet(ws);
+    // 시트명 정리 (엑셀 시트명 제한: 31자, \/?*[]: 사용 불가)
+    var sname=v.replace(/[\\\/\?\*\[\]:]/g,'').slice(0,31)||'미지정';
+    if(usedNames[sname]){ usedNames[sname]++; sname=sname.slice(0,28)+'_'+usedNames[sname]; }
+    else{ usedNames[sname]=1; }
+    sheetNames.push(sname);
+    sheets[sname]=ws;
+  });
+  var wb={SheetNames:sheetNames,Sheets:sheets};
         await dlSaveWorkbook(wb, '공사업무용차량_운행일지_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
   var info=document.getElementById('wvDlInfo');if(info)info.textContent='완료: '+filtered.length+'건';
-  toast('공사업무용차량 운행일지 다운로드 완료 ('+filtered.length+'건)');
+  toast('공사업무용차량 운행일지 다운로드 완료 ('+filtered.length+'건, 차량 '+vehOrder.length+'대)');
 }
 async function loadWorkVehicleFromDB(){
   try{
@@ -18193,6 +18237,13 @@ function printReport(){
   window.print();
 }
 // ═══ 목록형 보고서 (차량운행기록/공사업무용차량/인력현황/공동작업) ═══
+// 목록형 보고서가 여러 장으로 인쇄될 때, 페이지마다 제목/기준정보가 반복되도록 thead 안에 넣는 행을 생성
+function lrptTitleRow(bigTitle, metaTxt, colspan){
+  return '<tr class="lrpt-print-title"><th colspan="'+colspan+'" style="background:#fff;border:none;padding:0 0 8px 0;text-align:center">'
+    +'<div style="font-size:15px;font-weight:800;letter-spacing:2px;color:#111">'+bigTitle+'</div>'
+    +'<div style="font-size:10.5px;color:#666;font-weight:500;margin-top:3px">'+metaTxt+'</div>'
+    +'</th></tr>';
+}
 function lrptEsc(s){ return (s===undefined||s===null)?'':String(s); }
 function openListReport(type){
   var titleEl=document.getElementById('listReportModalTitle');
@@ -18201,15 +18252,18 @@ function openListReport(type){
   var bodyEl=document.getElementById('listReportBody');
   var todayStr=(new Date(Date.now()+9*3600000)).toISOString().slice(0,10);
 
+  var lrptModalEl=document.getElementById('listReportModal');
   if(type==='veh'){
     var mf=(document.getElementById('vhFilterMonth')||{}).value||'';
     var filtered=(vehData||[]).filter(function(r){return !mf||(r.date&&r.date.indexOf(mf)===0);});
     filtered.sort(function(a,b){ var da=a.date||'', db=b.date||''; if(da!==db) return da<db?-1:1; return (a.start||'').localeCompare(b.start||''); });
     titleEl.textContent='📄 차량운행기록 보고서'; bigEl.textContent='차 량 운 행 기 록 보 고 서';
-    metaEl.textContent=(mf?mf+' 기준':'전체 기간')+' · 총 '+filtered.length+'건 · 출력일 '+todayStr;
-    var h='<table class="lrpt-table"><thead><tr><th>사용일자</th><th>소속</th><th>성명</th><th>주행 전(km)</th><th>주행 후(km)</th><th>주행거리</th><th>출발</th><th>도착</th><th>목적지</th><th>목적</th><th>기타</th></tr></thead><tbody>';
+    var metaTxt=(mf?mf+' 기준':'전체 기간')+' · 총 '+filtered.length+'건 · 출력일 '+todayStr;
+    metaEl.textContent=metaTxt;
+    if(lrptModalEl) lrptModalEl.classList.add('lrpt-repeat');
+    var h='<table class="lrpt-table"><thead>'+lrptTitleRow('차 량 운 행 기 록 보 고 서',metaTxt,11)+'<tr><th>사용일자</th><th>소속</th><th>성명</th><th>주행 전(km)</th><th>주행 후(km)</th><th>주행거리</th><th>출발</th><th>도착</th><th>목적지</th><th>목적</th><th>기타</th></tr></thead><tbody>';
     filtered.forEach(function(r){
-      h+='<tr><td>'+lrptEsc(r.date)+'</td><td>'+lrptEsc(r.dept||'T1운영')+'</td><td>'+lrptEsc(r.name)+'</td><td>'+lrptEsc(r.before||0)+'</td><td>'+lrptEsc(r.after||0)+'</td><td>'+lrptEsc(r.dist||0)+'</td><td>'+lrptEsc(r.start)+'</td><td>'+lrptEsc(r.end)+'</td><td>'+lrptEsc(r.dest)+'</td><td>'+lrptEsc(r.purpose)+'</td><td style="text-align:left">'+lrptEsc(r.etc)+'</td></tr>';
+      h+='<tr><td class="nw">'+lrptEsc(r.date)+'</td><td class="nw">'+lrptEsc(r.dept||'T1운영')+'</td><td class="nw">'+lrptEsc(r.name)+'</td><td class="nw">'+(r.before||0).toLocaleString()+'</td><td class="nw">'+(r.after||0).toLocaleString()+'</td><td class="nw">'+(r.dist||0).toLocaleString()+'</td><td class="nw">'+lrptEsc(r.start)+'</td><td class="nw">'+lrptEsc(r.end)+'</td><td>'+lrptEsc(r.dest)+'</td><td>'+lrptEsc(r.purpose)+'</td><td style="text-align:left">'+lrptEsc(r.etc)+'</td></tr>';
     });
     h+='</tbody></table>';
     bodyEl.innerHTML=h;
@@ -18219,10 +18273,12 @@ function openListReport(type){
     var filtered2=(workVehData||[]).filter(function(r){return (!mf2||(r.date&&r.date.indexOf(mf2)===0))&&(!vf2||r.vehicle===vf2);});
     filtered2.sort(function(a,b){ var da=a.date||'', db=b.date||''; if(da!==db) return da<db?-1:1; return (a.start||'').localeCompare(b.start||''); });
     titleEl.textContent='📄 공사업무용차량 운행일지'; bigEl.textContent='공사업무용차량 운행일지';
-    metaEl.textContent=(mf2?mf2+' 기준':'전체 기간')+(vf2?(' · '+vf2):'')+' · 총 '+filtered2.length+'건 · 출력일 '+todayStr;
-    var h2='<table class="lrpt-table"><thead><tr><th>사용일자</th><th>차량번호</th><th>소속</th><th>성명</th><th>주행 전(km)</th><th>주행 후(km)</th><th>주행거리</th><th>출발</th><th>도착</th><th>목적지</th><th>목적</th><th>선탑자</th><th>주유</th><th>기타</th></tr></thead><tbody>';
+    var metaTxt2=(mf2?mf2+' 기준':'전체 기간')+(vf2?(' · '+vf2):'')+' · 총 '+filtered2.length+'건 · 출력일 '+todayStr;
+    metaEl.textContent=metaTxt2;
+    if(lrptModalEl) lrptModalEl.classList.add('lrpt-repeat');
+    var h2='<table class="lrpt-table"><thead>'+lrptTitleRow('공사업무용차량 운행일지',metaTxt2,14)+'<tr><th>사용일자</th><th>차량번호</th><th>소속</th><th>성명</th><th>주행 전(km)</th><th>주행 후(km)</th><th>주행거리</th><th>출발</th><th>도착</th><th>목적지</th><th>목적</th><th>선탑자</th><th>주유</th><th>기타</th></tr></thead><tbody>';
     filtered2.forEach(function(r){
-      h2+='<tr><td>'+lrptEsc(r.date)+'</td><td>'+lrptEsc(r.vehicle)+'</td><td>'+lrptEsc(r.dept||'T1운영')+'</td><td>'+lrptEsc(r.name)+'</td><td>'+lrptEsc(r.before||0)+'</td><td>'+lrptEsc(r.after||0)+'</td><td>'+lrptEsc(r.dist||0)+'</td><td>'+lrptEsc(r.start)+'</td><td>'+lrptEsc(r.end)+'</td><td>'+lrptEsc(r.dest)+'</td><td>'+lrptEsc(r.purpose)+'</td><td>'+lrptEsc(r.co_rider)+'</td><td>'+lrptEsc(r.fuel)+'</td><td style="text-align:left">'+lrptEsc(r.etc)+'</td></tr>';
+      h2+='<tr><td class="nw">'+lrptEsc(r.date)+'</td><td class="nw">'+lrptEsc(r.vehicle)+'</td><td class="nw">'+lrptEsc(r.dept||'T1운영')+'</td><td class="nw">'+lrptEsc(r.name)+'</td><td class="nw">'+(r.before||0).toLocaleString()+'</td><td class="nw">'+(r.after||0).toLocaleString()+'</td><td class="nw">'+(r.dist||0).toLocaleString()+'</td><td class="nw">'+lrptEsc(r.start)+'</td><td class="nw">'+lrptEsc(r.end)+'</td><td>'+lrptEsc(r.dest)+'</td><td>'+lrptEsc(r.purpose)+'</td><td class="nw">'+lrptEsc(r.co_rider)+'</td><td class="nw">'+lrptEsc(r.fuel)+'</td><td style="text-align:left">'+lrptEsc(r.etc)+'</td></tr>';
     });
     h2+='</tbody></table>';
     bodyEl.innerHTML=h2;
@@ -18237,15 +18293,18 @@ function openListReport(type){
       return true;
     });
     titleEl.textContent='📄 공동작업 보고서'; bigEl.textContent='공 동 작 업 보 고 서';
-    metaEl.textContent=(df3?df3+' 기준':(mf3?mf3+' 기준':'전체 기간'))+(tf3?(' · '+tf3):'')+' · 총 '+filtered3.length+'건 · 출력일 '+todayStr;
-    var h3='<table class="lrpt-table"><thead><tr><th>일자</th><th>팀</th><th>층/구역</th><th>인원</th><th>작업내용</th><th>작성자</th></tr></thead><tbody>';
+    var metaTxt3=(df3?df3+' 기준':(mf3?mf3+' 기준':'전체 기간'))+(tf3?(' · '+tf3):'')+' · 총 '+filtered3.length+'건 · 출력일 '+todayStr;
+    metaEl.textContent=metaTxt3;
+    if(lrptModalEl) lrptModalEl.classList.add('lrpt-repeat');
+    var h3='<table class="lrpt-table"><thead>'+lrptTitleRow('공 동 작 업 보 고 서',metaTxt3,6)+'<tr><th>일자</th><th>팀</th><th>층/구역</th><th>인원</th><th>작업내용</th><th>작성자</th></tr></thead><tbody>';
     filtered3.slice().sort(function(a,b){return (a.work_date||'')<(b.work_date||'')?-1:1;}).forEach(function(r){
       var works=(r.category?(JW_CAT_ICONS[r.category]||'')+' '+r.category+' · '+r.work_name+(r.location?(' — '+r.location):''):((r.items||[]).map(function(it){return it.location+' — '+it.work;}).join(' / ')));
-      h3+='<tr><td>'+lrptEsc(r.work_date)+'</td><td>'+lrptEsc((r.teams||[]).join(','))+'</td><td>'+lrptEsc((r.floors||[]).join(','))+'</td><td>'+lrptEsc(r.headcount||0)+'명</td><td style="text-align:left">'+lrptEsc(works)+'</td><td>'+lrptEsc(r.writer)+'</td></tr>';
+      h3+='<tr><td class="nw">'+lrptEsc(r.work_date)+'</td><td class="nw">'+lrptEsc((r.teams||[]).join(','))+'</td><td class="nw">'+lrptEsc((r.floors||[]).join(','))+'</td><td class="nw">'+lrptEsc(r.headcount||0)+'명</td><td style="text-align:left">'+lrptEsc(works)+'</td><td class="nw">'+lrptEsc(r.writer)+'</td></tr>';
     });
     h3+='</tbody></table>';
     bodyEl.innerHTML=h3;
   }else if(type==='mp'){
+    if(lrptModalEl) lrptModalEl.classList.remove('lrpt-repeat');
     var dEl=document.getElementById('mpFullDate');
     var dVal=dEl&&dEl.value?dEl.value:todayStr;
     titleEl.textContent='📄 인력현황 보고서'; bigEl.textContent='인 력 현 황 보 고 서';
