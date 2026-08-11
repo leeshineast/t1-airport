@@ -6352,7 +6352,7 @@ async function dlCSV(type){
 
     // ── 인수인계 ──
     if(type==='ho'||type==='all'){
-      var r2=await sb.from('handover').select('*').order('created_at',{ascending:false});
+      var r2=await sb.from('handover').select('*').order('created_at',{ascending:true});
       if(r2.data&&r2.data.length){
         var hoRows=[];
         r2.data.forEach(function(d){
@@ -6387,7 +6387,7 @@ async function dlCSV(type){
 
     // ── 차량운행 ──
     if(type==='veh'||type==='all'){
-      var r3=await sb.from('vehicle_log').select('*').order('created_at',{ascending:false});
+      var r3=await sb.from('vehicle_log').select('*').order('created_at',{ascending:true});
       if(r3.data&&r3.data.length){
         var vRows=[['사용일자','소속','성명','주행 전 계기판(km)','주행 후 계기판(km)','주행거리','출발 시간','도착 시간','목적지','목적','기타']];
         r3.data.forEach(function(d){
@@ -6409,7 +6409,7 @@ async function dlCSV(type){
 
     // ── 산업재해 ──
     if(type==='ind'||type==='all'){
-      var r4=await sb.from('industrial_accident').select('*').order('created_at',{ascending:false});
+      var r4=await sb.from('industrial_accident').select('*').order('created_at',{ascending:true});
       if(r4.data&&r4.data.length){
         var iRows=[['결정통지일자','재해자','소속팀','재해유형','발생장소','발생경위및조치']];
         r4.data.forEach(function(d){
@@ -6522,7 +6522,7 @@ async function dlCSV(type){
 
     // ── 민원(서비스응대) ──
     if(type==='voc'||type==='all'){
-      var rv=await sb.from('voc_data').select('*').order('voc_date',{ascending:false});
+      var rv=await sb.from('voc_data').select('*').order('voc_date',{ascending:true});
       if(rv.data&&rv.data.length){
         var vocRows=[['연번','일자','작성자','접수경로','민원유형','위치','상세내용','처리상태','비고','접수일시']];
         rv.data.forEach(function(d,idx){
@@ -6553,7 +6553,7 @@ async function dlCSV(type){
 
     // ── KPI ──
     if(type==='kpi'||type==='all'){
-      var rk=await sb.from('kpi_data').select('*').order('year',{ascending:false}).order('month',{ascending:false});
+      var rk=await sb.from('kpi_data').select('*').order('year',{ascending:true}).order('month',{ascending:true});
       if(rk.data&&rk.data.length){
         var kpiRows=[['연도','월','KPI1(VOC)','KPI2','KPI3','KPI4','KPI5','KPI6(ATP)','VOC메모','비고','작성자']];
         rk.data.forEach(function(d){
@@ -6577,7 +6577,7 @@ async function dlCSV(type){
 
     // ── 습득물 ──
     if(type==='lost'||type==='all'){
-      var rl=await sb.from('lost_found').select('*').order('created_at',{ascending:false});
+      var rl=await sb.from('lost_found').select('*').order('created_at',{ascending:true});
       if(rl.data&&rl.data.length){
         var lostRows=[['접수일시','작성자','발견자사번','발견자이름','발견위치','접수경로','물품내용','상태','처리내용']];
         rl.data.forEach(function(d){
@@ -6601,7 +6601,7 @@ async function dlCSV(type){
 
     // ── 폐기물 ──
     if(type==='waste'||type==='all'){
-      var rw=await sb.from('waste_data').select('*').order('waste_date',{ascending:false});
+      var rw=await sb.from('waste_data').select('*').order('waste_date',{ascending:true});
       if(rw.data&&rw.data.length){
         var teamLabelMap2={'1팀C':'1팀 C조','6팀C':'6팀 C조'};
         var wasteRows=[['일자','조','작성자',
@@ -6649,7 +6649,7 @@ async function dlCSV(type){
 
     // ── 관리자 출근 현황 ──
     if(type==='mgrattend'||type==='all'){
-      var rma=await sb.from('mgr_attendance').select('*').order('date',{ascending:false});
+      var rma=await sb.from('mgr_attendance').select('*').order('date',{ascending:true});
       if(rma.data&&rma.data.length){
         var maRows=[['날짜','근무조','팀','직책','출근여부','체크자','체크시각']];
         rma.data.forEach(function(d){
@@ -6694,7 +6694,7 @@ async function dlCSV(type){
 
     // ── 공지사항 ──
     if(type==='notice'||type==='all'){
-      var rn=await sb.from('notices').select('*').neq('title','__ind_prev_year__').order('created_at',{ascending:false});
+      var rn=await sb.from('notices').select('*').neq('title','__ind_prev_year__').order('created_at',{ascending:true});
       if(rn.data&&rn.data.length){
         var ntRows=[['작성일','제목','내용','작성자']];
         rn.data.forEach(function(d){
@@ -8051,6 +8051,7 @@ async function dlVeh(){
   var filtered=vehData.slice();
   if(from)filtered=filtered.filter(function(r){return r.date.slice(0,7)>=from;});
   if(to)filtered=filtered.filter(function(r){return r.date.slice(0,7)<=to;});
+  filtered.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
   if(!filtered.length){toast('해당 기간에 운행 기록이 없습니다');return;}
   var header=['사용일자','소속','성명','주행 전 계기판(km)','주행 후 계기판(km)','주행거리','출발 시간','도착 시간','목적지','목적','기타'];
   var rows=[header];
@@ -8531,6 +8532,7 @@ async function dlWorkVeh(){
   var filtered=workVehData.slice();
   if(from)filtered=filtered.filter(function(r){return r.date.slice(0,7)>=from;});
   if(to)filtered=filtered.filter(function(r){return r.date.slice(0,7)<=to;});
+  filtered.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
   if(!filtered.length){toast('해당 기간에 운행 기록이 없습니다');return;}
   var header=['사용일자','차량번호','소속','성명','주행 전 계기판(km)','주행 후 계기판(km)','주행거리','출발 시간','도착 시간','목적지','목적','선탑자','주유','기타'];
   var rows=[header];
@@ -12174,7 +12176,7 @@ async function downloadHoExcel(){
     hoExport.slice().sort(function(a,b){
       var ta=new Date(a.ho_date||a.created_at||0).getTime();
       var tb=new Date(b.ho_date||b.created_at||0).getTime();
-      return tb-ta;
+      return ta-tb;
     }).forEach(function(r){
       var fp=(typeof parseHoFacility==='function')?parseHoFacility(r.facility||''):null;
       var rcvMatch=(r.facility||'').match(/\[접수자\]\s*([^\/]+?)(?=\s*\/\s*\[|$)/);
@@ -13327,7 +13329,7 @@ async function downloadAccidentExcel(){
   if(!filtered.length){ toast('해당 월의 다운로드할 데이터가 없습니다'); return; }
   var rows=[['발생일시','구분','팀','장소','관련직원','내용','피해내용','조치사항','산업재해여부','결정통지일자','작성자','확인여부','확인자','결과','결과처리자']];
   filtered.slice().sort(function(a,b){
-    return new Date(b.occurred_at||b.created_at||0)-new Date(a.occurred_at||a.created_at||0);
+    return new Date(a.occurred_at||a.created_at||0)-new Date(b.occurred_at||b.created_at||0);
   }).forEach(function(r){
     rows.push([
       r.occurred_at?toKSTDateTime(r.occurred_at):'',
@@ -13372,6 +13374,7 @@ async function downloadLostExcel(){
     if(mf&&toKSTDate(r.found_date||r.created_at).slice(0,7)!==mf) return false;
     return true;
   });
+  filtered.sort(function(a,b){ return new Date(a.created_at||0)-new Date(b.created_at||0); });
   filtered.forEach(function(r){
     rows.push([
       toKSTDateTime(r.created_at),
@@ -14856,9 +14859,9 @@ async function downloadWasteExcel(){
   var mfv=mf?mf.value:'';
   var filtered=wasteData.filter(function(r){ return !mfv||r.waste_date.slice(0,7)===mfv; });
   filtered=filtered.slice().sort(function(a,b){
-    if(a.waste_date!==b.waste_date) return a.waste_date<b.waste_date?1:-1;
+    if(a.waste_date!==b.waste_date) return a.waste_date<b.waste_date?-1:1;
     var ca=a.created_at||'', cb=b.created_at||'';
-    return ca<cb?1:ca>cb?-1:0;
+    return ca<cb?-1:ca>cb?1:0;
   });
   var teamLabelMap={'1팀C':'1팀 C조','6팀C':'6팀 C조'};
   var rows=[['일자','조','작성자','생활쓰레기(톤_소각)','폐합성(톤)','음식물쓰레기(톤)','폐지(톤)','폐페트(톤)','폐캔(톤)','병/유리류(톤)','폐고철, 가전(톤)','기타(톤)','총합계(톤)','비고']];
@@ -18201,6 +18204,7 @@ function openListReport(type){
   if(type==='veh'){
     var mf=(document.getElementById('vhFilterMonth')||{}).value||'';
     var filtered=(vehData||[]).filter(function(r){return !mf||(r.date&&r.date.indexOf(mf)===0);});
+    filtered.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
     titleEl.textContent='📄 차량운행기록 보고서'; bigEl.textContent='차 량 운 행 기 록 보 고 서';
     metaEl.textContent=(mf?mf+' 기준':'전체 기간')+' · 총 '+filtered.length+'건 · 출력일 '+todayStr;
     var h='<table class="lrpt-table"><thead><tr><th>사용일자</th><th>소속</th><th>성명</th><th>주행 전(km)</th><th>주행 후(km)</th><th>주행거리</th><th>출발</th><th>도착</th><th>목적지</th><th>목적</th><th>기타</th></tr></thead><tbody>';
@@ -18213,6 +18217,7 @@ function openListReport(type){
     var mf2=(document.getElementById('wvFilterMonth')||{}).value||'';
     var vf2=(document.getElementById('wvFilterVeh')||{}).value||'';
     var filtered2=(workVehData||[]).filter(function(r){return (!mf2||(r.date&&r.date.indexOf(mf2)===0))&&(!vf2||r.vehicle===vf2);});
+    filtered2.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
     titleEl.textContent='📄 공사업무용차량 운행일지'; bigEl.textContent='공사업무용차량 운행일지';
     metaEl.textContent=(mf2?mf2+' 기준':'전체 기간')+(vf2?(' · '+vf2):'')+' · 총 '+filtered2.length+'건 · 출력일 '+todayStr;
     var h2='<table class="lrpt-table"><thead><tr><th>사용일자</th><th>차량번호</th><th>소속</th><th>성명</th><th>주행 전(km)</th><th>주행 후(km)</th><th>주행거리</th><th>출발</th><th>도착</th><th>목적지</th><th>목적</th><th>선탑자</th><th>주유</th><th>기타</th></tr></thead><tbody>';
@@ -18234,7 +18239,7 @@ function openListReport(type){
     titleEl.textContent='📄 공동작업 보고서'; bigEl.textContent='공 동 작 업 보 고 서';
     metaEl.textContent=(df3?df3+' 기준':(mf3?mf3+' 기준':'전체 기간'))+(tf3?(' · '+tf3):'')+' · 총 '+filtered3.length+'건 · 출력일 '+todayStr;
     var h3='<table class="lrpt-table"><thead><tr><th>일자</th><th>팀</th><th>층/구역</th><th>인원</th><th>작업내용</th><th>작성자</th></tr></thead><tbody>';
-    filtered3.slice().sort(function(a,b){return (a.work_date||'')<(b.work_date||'')?1:-1;}).forEach(function(r){
+    filtered3.slice().sort(function(a,b){return (a.work_date||'')<(b.work_date||'')?-1:1;}).forEach(function(r){
       var works=(r.category?(JW_CAT_ICONS[r.category]||'')+' '+r.category+' · '+r.work_name+(r.location?(' — '+r.location):''):((r.items||[]).map(function(it){return it.location+' — '+it.work;}).join(' / ')));
       h3+='<tr><td>'+lrptEsc(r.work_date)+'</td><td>'+lrptEsc((r.teams||[]).join(','))+'</td><td>'+lrptEsc((r.floors||[]).join(','))+'</td><td>'+lrptEsc(r.headcount||0)+'명</td><td style="text-align:left">'+lrptEsc(works)+'</td><td>'+lrptEsc(r.writer)+'</td></tr>';
     });
