@@ -2235,11 +2235,12 @@ html{overflow-x:hidden}
   #listReportPrintArea{ display:block !important; position:static !important; width:100% !important; margin:0 !important; padding:0 !important; border:none !important; box-shadow:none !important; }
   .lrpt-table{ page-break-inside:auto; }
   .lrpt-table tr{ page-break-inside:avoid !important; }
-  .lrpt-table thead{ display:table-header-group; }
+  .lrpt-page-break{ page-break-after:always !important; }
   .lrpt-print-title{ display:table-row !important; }
   #listReportModal.lrpt-repeat #listReportBigTitle, #listReportModal.lrpt-repeat #listReportMeta{ display:none !important; }
 }
 .lrpt-print-title{ display:none; }
+.lrpt-page-table{ margin-bottom:14px; }
 .rpt-table{width:100%;border-collapse:collapse;font-size:13px}
 .rpt-table td{border:1px solid #333;padding:8px 10px;vertical-align:middle}
 .rpt-lbl{background:#F2F2F2;font-weight:700;text-align:center;white-space:nowrap}
@@ -18244,6 +18245,20 @@ function lrptTitleRow(bigTitle, metaTxt, colspan){
     +'<div style="font-size:10.5px;color:#666;font-weight:500;margin-top:3px">'+metaTxt+'</div>'
     +'</th></tr>';
 }
+// iOS Safari는 인쇄 시 <thead> 자동 반복을 지원하지 않아, 데이터를 페이지 단위로 직접 나눠
+// 표(테이블) 자체를 여러 개 만들고 각 표마다 제목/헤더를 반복 삽입 + 강제 페이지브레이크를 적용
+function lrptPaginate(rowsHtmlArr, bigTitle, metaTxt, headerRowHtml, colspan, rowsPerPage){
+  rowsPerPage = rowsPerPage || 20;
+  var pages=[];
+  for(var i=0;i<rowsHtmlArr.length;i+=rowsPerPage){ pages.push(rowsHtmlArr.slice(i,i+rowsPerPage)); }
+  if(!pages.length) pages=[[]];
+  var out='';
+  pages.forEach(function(chunk,idx){
+    var brk=(idx<pages.length-1)?' lrpt-page-break':'';
+    out+='<table class="lrpt-table lrpt-page-table'+brk+'"><thead>'+lrptTitleRow(bigTitle,metaTxt,colspan)+headerRowHtml+'</thead><tbody>'+chunk.join('')+'</tbody></table>';
+  });
+  return out;
+}
 function lrptEsc(s){ return (s===undefined||s===null)?'':String(s); }
 function openListReport(type){
   var titleEl=document.getElementById('listReportModalTitle');
@@ -18261,12 +18276,11 @@ function openListReport(type){
     var metaTxt=(mf?mf+' 기준':'전체 기간')+' · 총 '+filtered.length+'건 · 출력일 '+todayStr;
     metaEl.textContent=metaTxt;
     if(lrptModalEl) lrptModalEl.classList.add('lrpt-repeat');
-    var h='<table class="lrpt-table"><thead>'+lrptTitleRow('차 량 운 행 기 록 보 고 서',metaTxt,11)+'<tr><th>사용일자</th><th>소속</th><th>성명</th><th>주행 전(km)</th><th>주행 후(km)</th><th>주행거리</th><th>출발</th><th>도착</th><th>목적지</th><th>목적</th><th>기타</th></tr></thead><tbody>';
-    filtered.forEach(function(r){
-      h+='<tr><td class="nw">'+lrptEsc(r.date)+'</td><td class="nw">'+lrptEsc(r.dept||'T1운영')+'</td><td class="nw">'+lrptEsc(r.name)+'</td><td class="nw">'+(r.before||0).toLocaleString()+'</td><td class="nw">'+(r.after||0).toLocaleString()+'</td><td class="nw">'+(r.dist||0).toLocaleString()+'</td><td class="nw">'+lrptEsc(r.start)+'</td><td class="nw">'+lrptEsc(r.end)+'</td><td>'+lrptEsc(r.dest)+'</td><td>'+lrptEsc(r.purpose)+'</td><td style="text-align:left">'+lrptEsc(r.etc)+'</td></tr>';
+    var vehHeaderHtml='<tr><th>사용일자</th><th>소속</th><th>성명</th><th>주행 전(km)</th><th>주행 후(km)</th><th>주행거리</th><th>출발</th><th>도착</th><th>목적지</th><th>목적</th><th>기타</th></tr>';
+    var vehRowsArr=filtered.map(function(r){
+      return '<tr><td class="nw">'+lrptEsc(r.date)+'</td><td class="nw">'+lrptEsc(r.dept||'T1운영')+'</td><td class="nw">'+lrptEsc(r.name)+'</td><td class="nw">'+(r.before||0).toLocaleString()+'</td><td class="nw">'+(r.after||0).toLocaleString()+'</td><td class="nw">'+(r.dist||0).toLocaleString()+'</td><td class="nw">'+lrptEsc(r.start)+'</td><td class="nw">'+lrptEsc(r.end)+'</td><td>'+lrptEsc(r.dest)+'</td><td>'+lrptEsc(r.purpose)+'</td><td style="text-align:left">'+lrptEsc(r.etc)+'</td></tr>';
     });
-    h+='</tbody></table>';
-    bodyEl.innerHTML=h;
+    bodyEl.innerHTML=lrptPaginate(vehRowsArr,'차 량 운 행 기 록 보 고 서',metaTxt,vehHeaderHtml,11,20);
   }else if(type==='wv'){
     var mf2=(document.getElementById('wvFilterMonth')||{}).value||'';
     var vf2=(document.getElementById('wvFilterVeh')||{}).value||'';
@@ -18276,12 +18290,11 @@ function openListReport(type){
     var metaTxt2=(mf2?mf2+' 기준':'전체 기간')+(vf2?(' · '+vf2):'')+' · 총 '+filtered2.length+'건 · 출력일 '+todayStr;
     metaEl.textContent=metaTxt2;
     if(lrptModalEl) lrptModalEl.classList.add('lrpt-repeat');
-    var h2='<table class="lrpt-table"><thead>'+lrptTitleRow('공사업무용차량 운행일지',metaTxt2,14)+'<tr><th>사용일자</th><th>차량번호</th><th>소속</th><th>성명</th><th>주행 전(km)</th><th>주행 후(km)</th><th>주행거리</th><th>출발</th><th>도착</th><th>목적지</th><th>목적</th><th>선탑자</th><th>주유</th><th>기타</th></tr></thead><tbody>';
-    filtered2.forEach(function(r){
-      h2+='<tr><td class="nw">'+lrptEsc(r.date)+'</td><td class="nw">'+lrptEsc(r.vehicle)+'</td><td class="nw">'+lrptEsc(r.dept||'T1운영')+'</td><td class="nw">'+lrptEsc(r.name)+'</td><td class="nw">'+(r.before||0).toLocaleString()+'</td><td class="nw">'+(r.after||0).toLocaleString()+'</td><td class="nw">'+(r.dist||0).toLocaleString()+'</td><td class="nw">'+lrptEsc(r.start)+'</td><td class="nw">'+lrptEsc(r.end)+'</td><td>'+lrptEsc(r.dest)+'</td><td>'+lrptEsc(r.purpose)+'</td><td class="nw">'+lrptEsc(r.co_rider)+'</td><td class="nw">'+lrptEsc(r.fuel)+'</td><td style="text-align:left">'+lrptEsc(r.etc)+'</td></tr>';
+    var wvHeaderHtml='<tr><th>사용일자</th><th>차량번호</th><th>소속</th><th>성명</th><th>주행 전(km)</th><th>주행 후(km)</th><th>주행거리</th><th>출발</th><th>도착</th><th>목적지</th><th>목적</th><th>선탑자</th><th>주유</th><th>기타</th></tr>';
+    var wvRowsArr=filtered2.map(function(r){
+      return '<tr><td class="nw">'+lrptEsc(r.date)+'</td><td class="nw">'+lrptEsc(r.vehicle)+'</td><td class="nw">'+lrptEsc(r.dept||'T1운영')+'</td><td class="nw">'+lrptEsc(r.name)+'</td><td class="nw">'+(r.before||0).toLocaleString()+'</td><td class="nw">'+(r.after||0).toLocaleString()+'</td><td class="nw">'+(r.dist||0).toLocaleString()+'</td><td class="nw">'+lrptEsc(r.start)+'</td><td class="nw">'+lrptEsc(r.end)+'</td><td>'+lrptEsc(r.dest)+'</td><td>'+lrptEsc(r.purpose)+'</td><td class="nw">'+lrptEsc(r.co_rider)+'</td><td class="nw">'+lrptEsc(r.fuel)+'</td><td style="text-align:left">'+lrptEsc(r.etc)+'</td></tr>';
     });
-    h2+='</tbody></table>';
-    bodyEl.innerHTML=h2;
+    bodyEl.innerHTML=lrptPaginate(wvRowsArr,'공사업무용차량 운행일지',metaTxt2,wvHeaderHtml,14,20);
   }else if(type==='jw'){
     var mf3=(document.getElementById('jwFilterMonth')||{}).value||'';
     var df3=(document.getElementById('jwFilterDate')||{}).value||'';
@@ -18296,13 +18309,12 @@ function openListReport(type){
     var metaTxt3=(df3?df3+' 기준':(mf3?mf3+' 기준':'전체 기간'))+(tf3?(' · '+tf3):'')+' · 총 '+filtered3.length+'건 · 출력일 '+todayStr;
     metaEl.textContent=metaTxt3;
     if(lrptModalEl) lrptModalEl.classList.add('lrpt-repeat');
-    var h3='<table class="lrpt-table"><thead>'+lrptTitleRow('공 동 작 업 보 고 서',metaTxt3,6)+'<tr><th>일자</th><th>팀</th><th>층/구역</th><th>인원</th><th>작업내용</th><th>작성자</th></tr></thead><tbody>';
-    filtered3.slice().sort(function(a,b){return (a.work_date||'')<(b.work_date||'')?-1:1;}).forEach(function(r){
+    var jwHeaderHtml='<tr><th>일자</th><th>팀</th><th>층/구역</th><th>인원</th><th>작업내용</th><th>작성자</th></tr>';
+    var jwRowsArr=filtered3.slice().sort(function(a,b){return (a.work_date||'')<(b.work_date||'')?-1:1;}).map(function(r){
       var works=(r.category?(JW_CAT_ICONS[r.category]||'')+' '+r.category+' · '+r.work_name+(r.location?(' — '+r.location):''):((r.items||[]).map(function(it){return it.location+' — '+it.work;}).join(' / ')));
-      h3+='<tr><td class="nw">'+lrptEsc(r.work_date)+'</td><td class="nw">'+lrptEsc((r.teams||[]).join(','))+'</td><td class="nw">'+lrptEsc((r.floors||[]).join(','))+'</td><td class="nw">'+lrptEsc(r.headcount||0)+'명</td><td style="text-align:left">'+lrptEsc(works)+'</td><td class="nw">'+lrptEsc(r.writer)+'</td></tr>';
+      return '<tr><td class="nw">'+lrptEsc(r.work_date)+'</td><td class="nw">'+lrptEsc((r.teams||[]).join(','))+'</td><td class="nw">'+lrptEsc((r.floors||[]).join(','))+'</td><td class="nw">'+lrptEsc(r.headcount||0)+'명</td><td style="text-align:left">'+lrptEsc(works)+'</td><td class="nw">'+lrptEsc(r.writer)+'</td></tr>';
     });
-    h3+='</tbody></table>';
-    bodyEl.innerHTML=h3;
+    bodyEl.innerHTML=lrptPaginate(jwRowsArr,'공 동 작 업 보 고 서',metaTxt3,jwHeaderHtml,6,15);
   }else if(type==='mp'){
     if(lrptModalEl) lrptModalEl.classList.remove('lrpt-repeat');
     var dEl=document.getElementById('mpFullDate');
