@@ -821,6 +821,12 @@ html{overflow-x:hidden}
         <div class="menu-desc">운영매뉴얼 PDF 열람</div>
         <span class="menu-arrow">열람하기 →</span>
       </button>
+      <button class="menu-btn" onclick="go('risk')">
+        <span class="menu-icon">⚠️</span>
+        <div class="menu-title">위험성평가</div>
+        <div class="menu-desc">위험성평가 PDF 열람</div>
+        <span class="menu-arrow">열람하기 →</span>
+      </button>
       <button class="menu-btn" id="groupChatMenuBtn" onclick="go('groupchat')" style="position:relative">
         <span id="gcTabBadge" style="display:none;position:absolute;top:8px;right:10px;min-width:18px;height:18px;padding:0 5px;background:var(--danger);color:white;border-radius:20px;font-size:10.5px;font-weight:800"></span>
         <span class="menu-icon" style="display:flex;align-items:center;justify-content:center;color:white"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
@@ -3056,6 +3062,75 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
 </div>
 
+<!-- ══ 위험성평가 ══ -->
+<div id="sRisk" class="scr">
+  <div class="pg-hd">
+    <div><h1>⚠️ 위험성평가</h1><small>위험성평가 문서 열람</small></div>
+    <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 메인</button>
+  </div>
+
+  <!-- 탭: 목록 / 뷰어 / 업로드 -->
+  <div style="display:flex;border-bottom:1.5px solid var(--g2);margin-bottom:0">
+    <div id="riskT0" onclick="riskTab(0)" style="flex:1;padding:11px;text-align:center;font-size:14px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-1.5px">📂 문서 목록</div>
+    <div id="riskT1" onclick="riskTab(1)" style="flex:1;padding:11px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">📄 PDF 보기</div>
+    <div id="riskT2" onclick="riskTab(2)" style="flex:1;padding:11px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">⬆️ 업로드</div>
+  </div>
+
+  <!-- 탭0: 문서 목록 -->
+  <div id="riskP0" style="padding:13px">
+    <div id="riskListWrap">
+      <div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">위험성평가 문서를 불러오는 중...</div>
+    </div>
+  </div>
+
+  <!-- 탭1: PDF 뷰어 -->
+  <div id="riskP1" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
+    <div id="riskViewerTitle" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:14px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
+      <span id="riskViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
+      <button onclick="window.open(window._riskPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
+      <button onclick="riskTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
+    </div>
+    <div id="riskEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
+      <div id="riskEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:10px" ontouchstart="ebookTouchStart(event,'risk')" ontouchend="ebookTouchEnd(event,'risk')">
+        <canvas id="riskEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:10px;background:white;border-top:1px solid var(--g2);flex-shrink:0">
+        <button onclick="ebookNav('risk',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">◀</button>
+        <span id="riskEbookPageInd" style="font-size:14px;font-weight:700;color:var(--g6);min-width:60px;text-align:center">- / -</span>
+        <button onclick="ebookNav('risk',1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">▶</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 탭2: 업로드 (관리자만) -->
+  <div id="riskP2" style="display:none;padding:13px">
+    <div id="riskUploadWrap" class="card"><div class="cb">
+      <div style="font-size:15px;font-weight:700;color:var(--g7);margin-bottom:13px">📎 위험성평가 PDF 업로드</div>
+      <div id="riskAdminOnly" style="display:none">
+        <label for="riskFileInput" style="display:block;width:100%;padding:18px;background:var(--teal-bg);border:2px dashed var(--teal);border-radius:var(--r2);text-align:center;cursor:pointer;font-size:15px;color:var(--teal2);font-weight:700;margin-bottom:11px">
+          📄 PDF 파일 선택 (여러 개 가능)
+        </label>
+        <input type="file" id="riskFileInput" accept=".pdf" multiple style="display:none" onchange="handleRiskUpload(this.files)">
+        <div id="riskFileList" style="display:none;margin-bottom:11px">
+          <div style="font-size:13px;font-weight:700;color:var(--g5);margin-bottom:6px">선택된 파일:</div>
+          <div id="riskFileItems"></div>
+        </div>
+        <button id="riskUploadBtn" onclick="uploadRiskFiles()" disabled style="width:100%;padding:13px;background:var(--g3);color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:not-allowed">
+          ⬆️ 업로드
+        </button>
+        <div id="riskUploadProgress" style="display:none;margin-top:11px">
+          <div style="font-size:13px;color:var(--g5);margin-bottom:5px" id="riskProgressText">업로드 중...</div>
+          <div style="background:var(--g2);border-radius:10px;height:6px"><div id="riskProgressBar" style="background:var(--teal);height:100%;border-radius:10px;width:0%;transition:width .3s"></div></div>
+        </div>
+      </div>
+      <div id="riskNotAdmin" style="text-align:center;padding:20px;color:var(--g3);font-size:14px">관리자만 업로드 가능합니다</div>
+    </div></div>
+
+    <!-- 업로드된 문서 관리 -->
+    <div id="riskManageWrap" style="margin-top:13px"></div>
+  </div>
+</div>
+
 <!-- ══ 안전사고 ══ -->
 <div id="sAccident" class="scr">
   <div class="pg-hd">
@@ -4509,7 +4584,7 @@ window.addEventListener('popstate', function(e){
 });
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sActiveUsers'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sRisk','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sActiveUsers'];
 function goStatsDash(){
   go('statsdash');
   loadMonthlyStats();
@@ -4892,7 +4967,7 @@ function goHomeMain(){
 function go(name){
   if(me&&me.role==='vehicle_guest'&&name!=='veh'&&name!=='login'){ return; }
   if(me&&me.role==='work_vehicle'&&name!=='workveh'&&name!=='login'){ return; }
-  if(me&&me.role==='member'&&['main','notice','chat','iso9001','news','safety','manual','login'].indexOf(name)===-1){ return; }
+  if(me&&me.role==='member'&&['main','notice','chat','iso9001','news','safety','manual','risk','login'].indexOf(name)===-1){ return; }
   if(name==='execdash'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='admin'&&(!me||me.role!=='master')){ toast('⚠️ 최고관리자만 접근할 수 있습니다'); return; }
   if(name==='activeUsers'&&(!me||!(me.role==='admin'||me.role==='master'))){ toast('⚠️ 관리자 이상만 접근할 수 있습니다'); return; }
@@ -4904,7 +4979,7 @@ function go(name){
     try{ history.pushState({kind:'screen',id:name}, ''); }catch(e){}
   }
   _curScreenName=name;
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -4991,6 +5066,10 @@ function go(name){
   if(name==='manual'){
     manualTab(0);
     loadManualList();
+  }
+  if(name==='risk'){
+    riskTab(0);
+    loadRiskList();
   }
   if(name==='accident'){
     accTab(0);
@@ -16044,6 +16123,180 @@ async function deleteManual(id, path){
     toast('✅ 삭제 완료');
     loadManualManage();
     loadManualList();
+  }catch(e){ toast('삭제 실패: '+e.message); }
+}
+
+// ══ 위험성평가 (운영매뉴얼과 동일 구조) ══
+var riskFiles=[];
+var _riskUploadFiles=[];
+
+function riskTab(idx){
+  ['riskP0','riskP1','riskP2'].forEach(function(id,i){
+    var el=document.getElementById(id);
+    if(!el) return;
+    if(i===idx){
+      el.style.display=(id==='riskP1')?'flex':'block';
+    } else {
+      el.style.display='none';
+    }
+  });
+  ['riskT0','riskT1','riskT2'].forEach(function(id,i){
+    var el=document.getElementById(id); if(!el) return;
+    if(i===idx){ el.style.color='var(--teal)';el.style.fontWeight='700';el.style.borderBottom='2.5px solid var(--teal)'; }
+    else { el.style.color='var(--g5)';el.style.fontWeight='700';el.style.borderBottom='none'; }
+  });
+  if(idx===0) loadRiskList();
+  if(idx===1 && riskFiles.length===0){ toast('먼저 문서를 선택해 주세요'); riskTab(0); return; }
+  if(idx===2){
+    var isAdmin=(me&&(me.role==='admin'||isExecRole(me.role)));
+    var adminWrap=document.getElementById('riskAdminOnly');
+    var notAdmin=document.getElementById('riskNotAdmin');
+    if(adminWrap) adminWrap.style.display=isAdmin?'block':'none';
+    if(notAdmin) notAdmin.style.display=isAdmin?'none':'block';
+    if(isAdmin) loadRiskManage();
+  }
+}
+
+async function loadRiskList(){
+  var wrap=document.getElementById('riskListWrap'); if(!wrap) return;
+  try{
+    var res=await sb.from('risk_assessment_files').select('*');
+    if(res.error||!res.data||!res.data.length){
+      wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">📭 등록된 위험성평가 문서가 없습니다<br><small>관리자에게 업로드 요청하세요</small></div>';
+      return;
+    }
+    riskFiles=res.data.sort(naturalSortByName);
+    var html='<div style="margin-bottom:11px;font-size:13px;color:var(--g4)">총 '+riskFiles.length+'개 문서 등록됨 · 탭하여 열기</div>';
+    riskFiles.forEach(function(f){
+      var escapedPath=f.path.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      var escapedName=f.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      html+='<div onclick="viewRisk(\''+escapedPath+'\',\''+escapedName+'\')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
+      html+='<div style="width:38px;height:38px;background:var(--navy-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0">⚠️</div>';
+      html+='<div style="flex:1;min-width:0">';
+      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+'</div>';
+      html+='<div style="font-size:12px;color:var(--g4);margin-top:2px">'+(f.uploaded_at?f.uploaded_at.slice(0,10):'')+'</div>';
+      html+='</div>';
+      html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
+      html+='</div>';
+    });
+    wrap.innerHTML=html;
+  }catch(e){
+    wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:14px">불러오기 실패: '+e.message+'</div>';
+  }
+}
+
+function viewRisk(path, name){
+  var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/riskassessment/'+encodeURIComponent(path);
+  window._riskPdfUrl=pdfUrl;
+  var t=document.getElementById('riskViewerTitleText');
+  if(t) t.textContent='⚠️ '+name;
+  riskTab(1);
+  openEbookViewer('risk', pdfUrl, name);
+}
+
+function handleRiskUpload(files){
+  _riskUploadFiles=Array.from(files);
+  var listWrap=document.getElementById('riskFileList');
+  var items=document.getElementById('riskFileItems');
+  var btn=document.getElementById('riskUploadBtn');
+  if(!_riskUploadFiles.length){ if(listWrap) listWrap.style.display='none'; return; }
+  if(listWrap) listWrap.style.display='block';
+  if(items) items.innerHTML=_riskUploadFiles.map(function(f){
+    return '<div style="font-size:13px;color:var(--g5);padding:3px 0;border-bottom:1px solid var(--g2)">📄 '+f.name+'</div>';
+  }).join('');
+  if(btn){ btn.disabled=false; btn.style.background='var(--teal)'; btn.style.cursor='pointer'; }
+}
+
+async function uploadRiskFiles(){
+  if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
+    if(!_riskUploadFiles.length){ toast('파일을 선택해 주세요'); return; }
+  var prog=document.getElementById('riskUploadProgress');
+  var progText=document.getElementById('riskProgressText');
+  var progBar=document.getElementById('riskProgressBar');
+  if(prog) prog.style.display='block';
+  var done=0;
+  for(var i=0;i<_riskUploadFiles.length;i++){
+    var file=_riskUploadFiles[i];
+    if(progText) progText.textContent=(i+1)+'/'+_riskUploadFiles.length+' 업로드 중: '+file.name;
+    if(progBar) progBar.style.width=Math.round(i/_riskUploadFiles.length*100)+'%';
+    try{
+      var ts=Date.now()+i;
+      var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
+      var safePath='pdfs/risk_'+ts+ext;
+      var uploadUrl=SUPABASE_URL+'/storage/v1/object/riskassessment/'+encodeURIComponent(safePath);
+      var r=await fetch(uploadUrl,{
+        method:'POST',
+        headers:{
+          'apikey':SUPABASE_KEY,
+          'Authorization':'Bearer '+SUPABASE_KEY,
+          'Content-Type':'application/pdf',
+          'x-upsert':'true'
+        },
+        body:file
+      });
+      if(r.ok){
+        await sb.from('risk_assessment_files').upsert({
+          name:file.name,
+          path:safePath,
+          uploaded_at:new Date().toISOString(),
+          uploaded_by:me?me.name:'관리자'
+        },{onConflict:'name'});
+        done++;
+      } else {
+        var rText=await r.text();
+        console.error('업로드 실패:', r.status, rText);
+        toast('⚠️ '+file.name+' 업로드 실패 ('+r.status+')');
+      }
+    }catch(e){ toast('⚠️ '+file.name+' 오류: '+e.message); }
+  }
+  if(progBar) progBar.style.width='100%';
+  if(progText) progText.textContent='완료! '+done+'개 업로드됨';
+  setTimeout(function(){ if(prog) prog.style.display='none'; },1500);
+  if(done>0){
+    toast('✅ '+done+'개 위험성평가 문서 업로드 완료');
+    _riskUploadFiles=[];
+    var fi=document.getElementById('riskFileInput'); if(fi) fi.value='';
+    var fl=document.getElementById('riskFileList'); if(fl) fl.style.display='none';
+    var rb=document.getElementById('riskUploadBtn'); if(rb){ rb.disabled=true; rb.style.background='var(--g3)'; }
+    loadRiskManage();
+    loadRiskList();
+  }
+}
+
+async function loadRiskManage(){
+  var wrap=document.getElementById('riskManageWrap'); if(!wrap) return;
+  try{
+    var res=await sb.from('risk_assessment_files').select('*');
+    if(res.error||!res.data||!res.data.length){ wrap.innerHTML=''; return; }
+    var sortedData=res.data.sort(naturalSortByName);
+    var html='<div class="card"><div class="cb"><div style="font-size:14px;font-weight:800;color:var(--g7);margin-bottom:11px">등록된 문서 관리 ('+sortedData.length+'개)</div>';
+    sortedData.forEach(function(f){
+      html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g2)">';
+      html+='<span style="font-size:13px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+f.name+'</span>';
+      html+='<button data-id="'+f.id+'" data-path="'+encodeURIComponent(f.path)+'" onclick="deleteRiskById(this)" style="padding:4px 10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>';
+      html+='</div>';
+    });
+    html+='</div></div>';
+    wrap.innerHTML=html;
+  }catch(e){}
+}
+
+function deleteRiskById(btn){
+  if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
+    var id=btn.getAttribute('data-id');
+  var path=decodeURIComponent(btn.getAttribute('data-path'));
+  deleteRisk(id, path);
+}
+async function deleteRisk(id, path){
+  if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+  if(!confirm('이 문서를 삭제하시겠습니까?')) return;
+  try{
+    var delUrl=SUPABASE_URL+'/storage/v1/object/riskassessment/'+encodeURIComponent(path);
+    await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+    await sb.from('risk_assessment_files').delete().eq('id',id);
+    toast('✅ 삭제 완료');
+    loadRiskManage();
+    loadRiskList();
   }catch(e){ toast('삭제 실패: '+e.message); }
 }
 
