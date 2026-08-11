@@ -2218,7 +2218,7 @@ html{overflow-x:hidden}
 <!-- 상황발생보고서 (습득물/인수인계/민원/안전사고 공용) -->
 <style>
 @media print{
-  @page{ size:A4; margin:10mm 12mm; }
+  @page{ margin:14mm 12mm 10mm 12mm; }
   html, body{ height:auto !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
   body > *{ display:none !important; }
   #reportModal.on{ display:block !important; visibility:visible !important; position:static !important; }
@@ -18526,7 +18526,7 @@ function printReport(){
 // ═══ 목록형 보고서 (차량운행기록/공사업무용차량/인력현황/공동작업) ═══
 // 목록형 보고서가 여러 장으로 인쇄될 때, 페이지마다 제목/기준정보가 반복되도록 thead 안에 넣는 행을 생성
 function lrptTitleRow(bigTitle, metaTxt, colspan){
-  return '<tr class="lrpt-print-title"><th colspan="'+colspan+'" style="background:#fff;border:none;padding:0 0 8px 0;text-align:center">'
+  return '<tr class="lrpt-print-title"><th colspan="'+colspan+'" style="background:#fff;border:none;padding:4mm 0 8px 0;text-align:center">'
     +'<div style="font-size:15px;font-weight:800;letter-spacing:2px;color:#111">'+bigTitle+'</div>'
     +'<div style="font-size:10.5px;color:#666;font-weight:500;margin-top:3px">'+metaTxt+'</div>'
     +'</th></tr>';
