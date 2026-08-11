@@ -8051,7 +8051,7 @@ async function dlVeh(){
   var filtered=vehData.slice();
   if(from)filtered=filtered.filter(function(r){return r.date.slice(0,7)>=from;});
   if(to)filtered=filtered.filter(function(r){return r.date.slice(0,7)<=to;});
-  filtered.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+  filtered.sort(function(a,b){ var da=a.date||'', db=b.date||''; if(da!==db) return da<db?-1:1; return (a.start||'').localeCompare(b.start||''); });
   if(!filtered.length){toast('해당 기간에 운행 기록이 없습니다');return;}
   var header=['사용일자','소속','성명','주행 전 계기판(km)','주행 후 계기판(km)','주행거리','출발 시간','도착 시간','목적지','목적','기타'];
   var rows=[header];
@@ -8532,7 +8532,7 @@ async function dlWorkVeh(){
   var filtered=workVehData.slice();
   if(from)filtered=filtered.filter(function(r){return r.date.slice(0,7)>=from;});
   if(to)filtered=filtered.filter(function(r){return r.date.slice(0,7)<=to;});
-  filtered.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+  filtered.sort(function(a,b){ var da=a.date||'', db=b.date||''; if(da!==db) return da<db?-1:1; return (a.start||'').localeCompare(b.start||''); });
   if(!filtered.length){toast('해당 기간에 운행 기록이 없습니다');return;}
   var header=['사용일자','차량번호','소속','성명','주행 전 계기판(km)','주행 후 계기판(km)','주행거리','출발 시간','도착 시간','목적지','목적','선탑자','주유','기타'];
   var rows=[header];
@@ -18204,7 +18204,7 @@ function openListReport(type){
   if(type==='veh'){
     var mf=(document.getElementById('vhFilterMonth')||{}).value||'';
     var filtered=(vehData||[]).filter(function(r){return !mf||(r.date&&r.date.indexOf(mf)===0);});
-    filtered.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+    filtered.sort(function(a,b){ var da=a.date||'', db=b.date||''; if(da!==db) return da<db?-1:1; return (a.start||'').localeCompare(b.start||''); });
     titleEl.textContent='📄 차량운행기록 보고서'; bigEl.textContent='차 량 운 행 기 록 보 고 서';
     metaEl.textContent=(mf?mf+' 기준':'전체 기간')+' · 총 '+filtered.length+'건 · 출력일 '+todayStr;
     var h='<table class="lrpt-table"><thead><tr><th>사용일자</th><th>소속</th><th>성명</th><th>주행 전(km)</th><th>주행 후(km)</th><th>주행거리</th><th>출발</th><th>도착</th><th>목적지</th><th>목적</th><th>기타</th></tr></thead><tbody>';
@@ -18217,7 +18217,7 @@ function openListReport(type){
     var mf2=(document.getElementById('wvFilterMonth')||{}).value||'';
     var vf2=(document.getElementById('wvFilterVeh')||{}).value||'';
     var filtered2=(workVehData||[]).filter(function(r){return (!mf2||(r.date&&r.date.indexOf(mf2)===0))&&(!vf2||r.vehicle===vf2);});
-    filtered2.sort(function(a,b){ return (a.date||'').localeCompare(b.date||''); });
+    filtered2.sort(function(a,b){ var da=a.date||'', db=b.date||''; if(da!==db) return da<db?-1:1; return (a.start||'').localeCompare(b.start||''); });
     titleEl.textContent='📄 공사업무용차량 운행일지'; bigEl.textContent='공사업무용차량 운행일지';
     metaEl.textContent=(mf2?mf2+' 기준':'전체 기간')+(vf2?(' · '+vf2):'')+' · 총 '+filtered2.length+'건 · 출력일 '+todayStr;
     var h2='<table class="lrpt-table"><thead><tr><th>사용일자</th><th>차량번호</th><th>소속</th><th>성명</th><th>주행 전(km)</th><th>주행 후(km)</th><th>주행거리</th><th>출발</th><th>도착</th><th>목적지</th><th>목적</th><th>선탑자</th><th>주유</th><th>기타</th></tr></thead><tbody>';
