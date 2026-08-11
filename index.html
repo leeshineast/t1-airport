@@ -14820,6 +14820,39 @@ function renderWasteList(){
     });
     sh+='</div>';
 
+    // ⚠️ 입력 누락 확인 (1팀 C조 / 6팀 C조) — 조회 중인 월 기준, 조 필터와 무관하게 항상 두 조 모두 체크
+    var missCheckMonth=mfv||thisMonth;
+    var monthAllRaw=wasteData.filter(function(r){ return (r.waste_date||'').slice(0,7)===missCheckMonth; });
+    var teamDaySet={'1팀C':{},'6팀C':{}};
+    monthAllRaw.forEach(function(r){ if(teamDaySet[r.team_code]) teamDaySet[r.team_code][r.waste_date]=true; });
+    var mcParts=missCheckMonth.split('-');
+    var mcYear=parseInt(mcParts[0],10), mcMon=parseInt(mcParts[1],10);
+    var mcLastDay=new Date(mcYear,mcMon,0).getDate();
+    var mcMaxDay=(missCheckMonth===thisMonth)?parseInt(today.slice(8,10),10):mcLastDay;
+    var missList=[];
+    for(var mcD=1; mcD<=mcMaxDay; mcD++){
+      var mcDateStr=missCheckMonth+'-'+String(mcD).padStart(2,'0');
+      var mcMissing=[];
+      ['1팀C','6팀C'].forEach(function(tc){ if(!teamDaySet[tc][mcDateStr]) mcMissing.push(VLABEL[tc]); });
+      if(mcMissing.length) missList.push({date:mcDateStr, missing:mcMissing});
+    }
+    sh+='<div style="margin-bottom:12px">';
+    sh+='<div style="font-size:13px;font-weight:700;color:var(--g5);margin-bottom:6px">⚠️ 입력 누락 확인 · 1팀 C조 / 6팀 C조 ('+missCheckMonth+')</div>';
+    if(!missList.length){
+      sh+='<div style="background:var(--teal-bg);border:1.5px solid rgba(0,180,160,.25);border-radius:var(--r2);padding:10px 12px;font-size:13px;color:var(--teal2);font-weight:700">✅ 누락 없음</div>';
+    }else{
+      sh+='<div style="background:white;border:1.5px solid var(--g2);border-radius:var(--r2);overflow:hidden">';
+      missList.forEach(function(item,idx){
+        sh+='<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;'+(idx<missList.length-1?'border-bottom:1px solid var(--g1);':'')+'">';
+        sh+='<span style="font-size:13.5px;font-weight:700;color:var(--g7)">'+item.date+'</span>';
+        sh+='<span style="font-size:12.5px;color:var(--danger);font-weight:700">❌ '+item.missing.join(', ')+' 미입력</span>';
+        sh+='</div>';
+      });
+      sh+='</div>';
+      sh+='<div style="font-size:11.5px;color:var(--g4);margin-top:5px">총 '+missList.length+'일 누락</div>';
+    }
+    sh+='</div>';
+
     // ② 월별 합계 (소계 카드)
     sh+='<div style="margin-bottom:12px">';
     sh+='<div style="font-size:13px;font-weight:700;color:var(--g5);margin-bottom:6px">📆 월별 합계 ('+(mfv||thisMonth)+')</div>';
