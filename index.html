@@ -2241,6 +2241,7 @@ html{overflow-x:hidden}
   #listReportPrintArea{ display:block !important; position:static !important; width:100% !important; margin:0 !important; padding:0 !important; border:none !important; box-shadow:none !important; }
   .lrpt-table{ page-break-inside:auto; }
   .lrpt-table tr{ page-break-inside:avoid !important; }
+  .lrpt-page-table{ page-break-inside:avoid !important; }
   .lrpt-page-break{ page-break-after:always !important; }
   .lrpt-print-title{ display:table-row !important; }
   #listReportModal.lrpt-repeat #listReportBigTitle, #listReportModal.lrpt-repeat #listReportMeta{ display:none !important; }
@@ -18580,7 +18581,7 @@ function openListReport(type){
     var vehRowsArr=filtered.map(function(r){
       return '<tr><td class="nw">'+lrptEsc(r.date)+'</td><td class="nw">'+lrptEsc(r.dept||'T1운영')+'</td><td class="nw">'+lrptEsc(r.name)+'</td><td class="nw">'+(r.before||0).toLocaleString()+'</td><td class="nw">'+(r.after||0).toLocaleString()+'</td><td class="nw">'+(r.dist||0).toLocaleString()+'</td><td class="nw">'+lrptEsc(r.start)+'</td><td class="nw">'+lrptEsc(r.end)+'</td><td>'+lrptEsc(r.dest)+'</td><td>'+lrptEsc(r.purpose)+'</td><td style="text-align:left">'+lrptEsc(r.etc)+'</td></tr>';
     });
-    bodyEl.innerHTML=lrptPaginate(vehRowsArr,'차 량 운 행 기 록 보 고 서',metaTxt,vehHeaderHtml,11,20);
+    bodyEl.innerHTML=lrptPaginate(vehRowsArr,'차 량 운 행 기 록 보 고 서',metaTxt,vehHeaderHtml,11,16);
   }else if(type==='wv'){
     var mf2=(document.getElementById('wvFilterMonth')||{}).value||'';
     var vf2=(document.getElementById('wvFilterVeh')||{}).value||'';
@@ -18594,7 +18595,7 @@ function openListReport(type){
     var wvRowsArr=filtered2.map(function(r){
       return '<tr><td class="nw">'+lrptEsc(r.date)+'</td><td class="nw">'+lrptEsc(r.vehicle)+'</td><td class="nw">'+lrptEsc(r.dept||'T1운영')+'</td><td class="nw">'+lrptEsc(r.name)+'</td><td class="nw">'+(r.before||0).toLocaleString()+'</td><td class="nw">'+(r.after||0).toLocaleString()+'</td><td class="nw">'+(r.dist||0).toLocaleString()+'</td><td class="nw">'+lrptEsc(r.start)+'</td><td class="nw">'+lrptEsc(r.end)+'</td><td>'+lrptEsc(r.dest)+'</td><td>'+lrptEsc(r.purpose)+'</td><td class="nw">'+lrptEsc(r.co_rider)+'</td><td class="nw">'+lrptEsc(r.fuel)+'</td><td style="text-align:left">'+lrptEsc(r.etc)+'</td></tr>';
     });
-    bodyEl.innerHTML=lrptPaginate(wvRowsArr,'공사업무용차량 운행일지',metaTxt2,wvHeaderHtml,14,20);
+    bodyEl.innerHTML=lrptPaginate(wvRowsArr,'공사업무용차량 운행일지',metaTxt2,wvHeaderHtml,14,13);
   }else if(type==='jw'){
     var mf3=(document.getElementById('jwFilterMonth')||{}).value||'';
     var df3=(document.getElementById('jwFilterDate')||{}).value||'';
@@ -18614,7 +18615,7 @@ function openListReport(type){
       var works=(r.category?(JW_CAT_ICONS[r.category]||'')+' '+r.category+' · '+r.work_name+(r.location?(' — '+r.location):''):((r.items||[]).map(function(it){return it.location+' — '+it.work;}).join(' / ')));
       return '<tr><td class="nw">'+lrptEsc(r.work_date)+'</td><td class="nw">'+lrptEsc((r.teams||[]).join(','))+'</td><td class="nw">'+lrptEsc((r.floors||[]).join(','))+'</td><td class="nw">'+lrptEsc(r.headcount||0)+'명</td><td style="text-align:left">'+lrptEsc(works)+'</td><td class="nw">'+lrptEsc(r.writer)+'</td></tr>';
     });
-    bodyEl.innerHTML=lrptPaginate(jwRowsArr,'공 동 작 업 보 고 서',metaTxt3,jwHeaderHtml,6,15);
+    bodyEl.innerHTML=lrptPaginate(jwRowsArr,'공 동 작 업 보 고 서',metaTxt3,jwHeaderHtml,6,11);
   }else if(type==='mp'){
     if(lrptModalEl) lrptModalEl.classList.remove('lrpt-repeat');
     var dEl=document.getElementById('mpFullDate');
