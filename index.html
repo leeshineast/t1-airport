@@ -2101,6 +2101,13 @@ html{overflow-x:hidden}
 
   <!-- 접수 등록 탭 -->
   <div id="lostP1" style="display:none;padding:13px">
+    <div class="card" style="margin-bottom:10px;background:var(--teal-bg);border:1.5px dashed var(--teal)"><div class="cb">
+      <div class="fg">
+        <label class="f-lbl">📋 오픈채널 메시지 붙여넣기 <span style="font-weight:400;color:var(--g4)">(직원이 올린 글을 그대로 복사해서 붙여넣으세요)</span></label>
+        <textarea id="lostPasteBox" class="f-ta show" rows="4" placeholder="1. 발견 위치 :&#10;2. 발견 물품 :&#10;3. 사번 및 이름 :"></textarea>
+        <button type="button" onclick="parseLostPaste()" style="width:100%;margin-top:9px;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">✨ 자동 입력</button>
+      </div>
+    </div></div>
     <div class="card" style="margin-bottom:10px"><div class="cb">
       <div class="fg">
         <label class="f-lbl">발견자 사번</label>
@@ -13296,6 +13303,77 @@ function lostTab(n){
   }
 }
 
+// ── 습득물 오픈채널 메시지 붙여넣기 → 자동 파싱 ──
+// 예) "1. 발견 위치 :R4510 장애인실 / 2. 발견 물품 :휴대용 / 3. 사번 및 이름 :140643 김미정"
+function parseLostPaste(){
+  var raw=(document.getElementById('lostPasteBox').value||'').trim();
+  if(!raw){ toast('붙여넣은 내용이 없습니다'); return; }
+  var lines=raw.split(/\r?\n/);
+  var loc='', item='', idNamePart='';
+  lines.forEach(function(line){
+    var mLoc=line.match(/발견\s*위치[^:：]*[:：]\s*(.+)/);
+    var mItem=line.match(/발견\s*물품[^:：]*[:：]\s*(.+)/);
+    var mIdName=line.match(/사번[^:：]*[:：]\s*(.+)/);
+    if(mLoc) loc=mLoc[1].trim();
+    else if(mItem) item=mItem[1].trim();
+    else if(mIdName) idNamePart=mIdName[1].trim();
+  });
+  var foundAny=false;
+  if(loc){ document.getElementById('lostLocation').value=loc; foundAny=true; }
+  if(item){ document.getElementById('lostItem').value=item; foundAny=true; }
+  if(idNamePart){
+    var m=idNamePart.match(/^(\d+)\s*(.*)$/); // 앞쪽 숫자=사번, 나머지=이름
+    if(m){
+      document.getElementById('lostFinderId').value=m[1];
+      document.getElementById('lostFinderName').value=m[2].trim();
+    }else{
+      document.getElementById('lostFinderName').value=idNamePart;
+    }
+    foundAny=true;
+  }
+  // ── 2차 인식: "위치/물품/사번" 라벨이 전혀 없는 자유형식 대응 ──
+  // 예) "발견자:" 다음 줄에 "박경자141084"(이름+사번 붙여쓰기), 그 다음 줄에 위치만 적힌 경우
+  if(!loc && !idNamePart){
+    var leftover=[];
+    lines.forEach(function(line){
+      var t=line.trim();
+      if(!t) return;
+      if(/^발견자\s*[:：]?\s*$/.test(t)) return; // "발견자:" 라벨 줄은 건너뜀
+      leftover.push(t);
+    });
+    leftover.forEach(function(t){
+      var mNameId=t.match(/^([가-힣]{2,5})\s*(\d{5,8})$/); // 이름+사번 붙여쓰기
+      var mIdName2=t.match(/^(\d{5,8})\s*([가-힣]{2,5})$/); // 사번+이름 붙여쓰기
+      if(mNameId && !document.getElementById('lostFinderName').value){
+        document.getElementById('lostFinderName').value=mNameId[1];
+        document.getElementById('lostFinderId').value=mNameId[2];
+        foundAny=true;
+      }else if(mIdName2 && !document.getElementById('lostFinderName').value){
+        document.getElementById('lostFinderId').value=mIdName2[1];
+        document.getElementById('lostFinderName').value=mIdName2[2];
+        foundAny=true;
+      }else if(!document.getElementById('lostLocation').value){
+        document.getElementById('lostLocation').value=t; // 남은 한 줄 → 위치로 추정
+        foundAny=true;
+      }
+    });
+    if(foundAny && !document.getElementById('lostItem').value){
+      toast('⚠️ 발견 물품 정보가 없어 위치·이름만 채웠습니다. 물품은 직접 입력해주세요');
+      var routeBtn2=document.querySelector('#lostRouteGrp .rp[data-val="T1습득물 오픈채널접수"]');
+      if(routeBtn2) pickLostRoute(routeBtn2);
+      return;
+    }
+  }
+  if(foundAny){
+    // 접수 경로를 오픈채널접수로 자동 선택
+    var routeBtn=document.querySelector('#lostRouteGrp .rp[data-val="T1습득물 오픈채널접수"]');
+    if(routeBtn) pickLostRoute(routeBtn);
+    toast('✅ 자동 입력 완료 — 내용을 확인하고 사진을 첨부해주세요');
+  }else{
+    toast('⚠️ 양식을 인식하지 못했습니다. 직접 입력해주세요');
+  }
+}
+
 var lostSelectedRoute='현장접수';
 var lostSelectedHand='';
 var lostCompSelectedHand='';
@@ -13381,7 +13459,7 @@ async function saveLost(){
     });
     if(res.error) throw res.error;
     toast('✅ 습득물이 접수되었습니다');
-    ['lostFinderId','lostFinderName','lostFoundDate','lostLocation','lostItem','lostNote','lostRouteEtc','lostHandEtc','lostReceiver'].forEach(function(id){
+    ['lostFinderId','lostFinderName','lostFoundDate','lostLocation','lostItem','lostNote','lostRouteEtc','lostHandEtc','lostReceiver','lostPasteBox'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.value='';
     });
     document.querySelectorAll('#lostStatusGrp .rp').forEach(function(p){p.classList.remove('on');});
