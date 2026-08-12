@@ -716,7 +716,7 @@ function renderLedgerItems(){
   var shown=whItems.filter(function(it){
     if(forceShowAll) return true;
     var L=ledgerMap[it.item_id];
-    return L.prev_qty>0 || L.in_qty>0 || L.out_qty>0 || pinnedItems[it.item_id];
+    return L.remain_qty>0 || L.in_qty>0 || L.out_qty>0 || pinnedItems[it.item_id];
   });
   if(!whItems.length){
     document.getElementById('ledgerEmpty').style.display='block';
@@ -740,9 +740,9 @@ function renderLedgerItems(){
         '<div class="item-remain"><small>현재고</small><span id="rem_'+it.item_id+'">'+remainDisplay(L.remain_qty)+'</span></div>'+
       '</div>'+
       '<div class="item-nums">'+
-        '<div><label>전일재고</label><input type="number" value="'+L.prev_qty+'" readonly style="background:var(--g1);color:var(--g4)"></div>'+
-        '<div><label>입고</label><input type="number" id="in_'+it.item_id+'" value="'+(L.in_qty||'')+'" placeholder="0" '+(inputOk?'':'readonly')+' onfocus="this.select()" oninput="onQtyChange(\''+it.item_id+'\')"></div>'+
-        '<div><label>출고</label><input type="number" id="out_'+it.item_id+'" value="'+(L.out_qty||'')+'" placeholder="0" '+(inputOk?'':'readonly')+' onfocus="this.select()" oninput="onQtyChange(\''+it.item_id+'\')"></div>'+
+        '<div><label>재고</label><input type="number" value="'+L.remain_qty+'" readonly style="background:var(--g1);color:var(--g4)"></div>'+
+        '<div><label>입고</label><input type="number" id="in_'+it.item_id+'" value="" placeholder="0" '+(inputOk?'':'readonly')+' onfocus="this.select()" oninput="onQtyChange(\''+it.item_id+'\')"></div>'+
+        '<div><label>출고</label><input type="number" id="out_'+it.item_id+'" value="" placeholder="0" '+(inputOk?'':'readonly')+' onfocus="this.select()" oninput="onQtyChange(\''+it.item_id+'\')"></div>'+
       '</div>';
     box.appendChild(d);
   });
@@ -795,7 +795,7 @@ function onQtyChange(itemId){
   var inEl=document.getElementById('in_'+itemId), outEl=document.getElementById('out_'+itemId);
   var L=ledgerMap[itemId];
   var inQ=parseInt(inEl.value||'0',10)||0, outQ=parseInt(outEl.value||'0',10)||0;
-  var remain=L.prev_qty+inQ-outQ;
+  var remain=L.remain_qty+inQ-outQ;
   document.getElementById('rem_'+itemId).innerHTML=remainDisplay(remain);
   var card=document.getElementById('card_'+itemId);
   if(card){
@@ -933,21 +933,39 @@ function saveLedger(){
     });
   var writer=currentWriter();
   var teamVal=document.getElementById('teamAm').value||document.getElementById('teamPm').value||document.getElementById('teamNight').value||null;
-  var itemSaves=whItems.filter(function(it){
+  var targetItems=whItems.filter(function(it){
     var inEl=document.getElementById('in_'+it.item_id), outEl=document.getElementById('out_'+it.item_id);
     if(!inEl || !outEl) return false; // 화면에 표시되지 않은(검색 밖) 품목은 건드리지 않음
     var inQ=parseInt(inEl.value||'0',10)||0, outQ=parseInt(outEl.value||'0',10)||0;
     var L=ledgerMap[it.item_id];
     // 입고/출고가 전혀 없고 기존 기록도 없는 품목은 불필요한 0/0 이력을 만들지 않도록 건너뜀
     return inQ>0 || outQ>0 || !!L.id;
-  }).map(function(it){
+  });
+  // 출고수량이 (현재 재고 + 이번 입고)를 초과하는 품목이 있으면 전체 저장을 막음 (재고 음수 방지)
+  var overItem=null;
+  for(var vi=0; vi<targetItems.length; vi++){
+    var vit=targetItems[vi];
+    var vInQ=parseInt((document.getElementById('in_'+vit.item_id)||{}).value||'0',10)||0;
+    var vOutQ=parseInt((document.getElementById('out_'+vit.item_id)||{}).value||'0',10)||0;
+    var vL=ledgerMap[vit.item_id];
+    if(vOutQ>vL.remain_qty+vInQ){ overItem=vit; break; }
+  }
+  if(overItem){
+    btn.disabled=false; btn.textContent='💾 저장';
+    toast('⚠️ '+overItem.item_name+': 출고수량이 재고를 초과합니다');
+    return;
+  }
+  var itemSaves=targetItems.map(function(it){
     var inQ=parseInt((document.getElementById('in_'+it.item_id)||{}).value||'0',10)||0;
     var outQ=parseInt((document.getElementById('out_'+it.item_id)||{}).value||'0',10)||0;
     var L=ledgerMap[it.item_id];
-    var remain=L.prev_qty+inQ-outQ;
+    // L.in_qty / L.out_qty = 오늘 이미 저장된 누적 입출고. 이번 거래분(inQ/outQ)을 더해 새 누적값을 만든다.
+    var newInCum=(L.in_qty||0)+inQ;
+    var newOutCum=(L.out_qty||0)+outQ;
+    var remain=L.remain_qty+inQ-outQ; // 재고 승계: 저장 직전의 현재고 기준으로 이번 거래분만 반영
     var rec={ledger_date:curDate, shift:curShift, warehouse_id:curWarehouse.id, team:teamVal,
       leader_name:writer,
-      item_id:it.item_id, prev_qty:L.prev_qty, in_qty:inQ, out_qty:outQ, out_by:writer, remain_qty:remain, note:L.note||null, written_by:writer, updated_at:new Date().toISOString()};
+      item_id:it.item_id, prev_qty:L.prev_qty, in_qty:newInCum, out_qty:newOutCum, out_by:writer, remain_qty:remain, note:L.note||null, written_by:writer, updated_at:new Date().toISOString()};
     if(L.id) return sbFetch('/warehouse_ledger?id=eq.'+L.id,{method:'PATCH',body:rec,headers:{'Prefer':'return=minimal'}});
     return sbFetch('/warehouse_ledger',{method:'POST',body:rec,headers:{'Prefer':'return=minimal'}});
   });
@@ -1056,8 +1074,10 @@ function buildLedgerDoc(){
   (listed.length?listed:whItems).forEach(function(it){
     var L=ledgerMap[it.item_id]||{prev_qty:0,in_qty:0,out_qty:0,remain_qty:0};
     var inEl=document.getElementById('in_'+it.item_id), outEl=document.getElementById('out_'+it.item_id);
-    var inQ=parseInt((inEl&&inEl.value)||L.in_qty||0,10)||0;
-    var outQ=parseInt((outEl&&outEl.value)||L.out_qty||0,10)||0;
+    var pendingIn=parseInt((inEl&&inEl.value)||'0',10)||0;
+    var pendingOut=parseInt((outEl&&outEl.value)||'0',10)||0;
+    var inQ=(L.in_qty||0)+pendingIn;   // 오늘 저장된 누적 입고 + 아직 저장 전인 화면 입력분
+    var outQ=(L.out_qty||0)+pendingOut; // 오늘 저장된 누적 출고 + 아직 저장 전인 화면 입력분
     var remain=L.prev_qty+inQ-outQ;
     var low=it.min_qty>0 && remain<it.min_qty;
     rows.push([
