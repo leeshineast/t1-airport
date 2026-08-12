@@ -942,6 +942,7 @@ html{overflow-x:hidden}
       <div style="flex:1;border-left:1px solid var(--g1);padding-left:14px;display:flex;flex-direction:column;justify-content:center">
         <div style="font-size:12px;color:var(--g4);margin-bottom:3px">작업내역</div>
         <div style="font-size:12px;color:var(--g5);line-height:1.5" id="dJWDetail">등록된 공동작업이 없습니다</div>
+        <div style="font-size:11.5px;color:#E65100;line-height:1.5;margin-top:4px;display:none" id="dJWReplace"></div>
       </div>
     </div>
   </div>
@@ -9476,37 +9477,53 @@ async function loadJointWorkTodayFromDB(){
     var today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
     var res=await sb.from('joint_work_data').select('id,teams,headcount,items,category,work_name,location,batch_id,record_type').eq('work_date',today);
     if(res.error) return;
-    var rows=(res.data||[]).filter(function(r){ return r.record_type!=='replace'; }); // 작업대체는 통계와 마찬가지로 정상작업 요약에서 제외
-    renderJointWorkTodayCard(rows);
+    var all=res.data||[];
+    var rows=all.filter(function(r){ return r.record_type!=='replace'; }); // 작업대체는 통계와 마찬가지로 정상작업 요약에서 제외
+    var replaceRows=all.filter(function(r){ return r.record_type==='replace'; });
+    renderJointWorkTodayCard(rows, replaceRows);
   }catch(e){}
 }
-function renderJointWorkTodayCard(rows){
+function renderJointWorkTodayCard(rows, replaceRows){
   var cntEl=document.getElementById('dJW'), detailEl=document.getElementById('dJWDetail');
   var peopleEl=document.getElementById('dJWPeople');
+  var replaceEl=document.getElementById('dJWReplace');
   if(!cntEl||!detailEl) return;
   rows=rows||[];
+  replaceRows=replaceRows||[];
   cntEl.textContent=rows.length;
   var totalPeople=jwSumHeadcount(rows);
   if(peopleEl) peopleEl.textContent=totalPeople;
   if(!rows.length){
     detailEl.textContent='등록된 공동작업이 없습니다';
-    return;
+  }else{
+    var works=[];
+    rows.forEach(function(r){
+      if(r.category){
+        var t2=[r.location, r.work_name].filter(Boolean).join(' ');
+        if(t2) works.push(t2);
+      }else{
+        (r.items||[]).forEach(function(it){
+          var t=[it.location, it.work].filter(Boolean).join(' ');
+          if(t) works.push(t);
+        });
+      }
+    });
+    var preview=works.slice(0,3).join(', ');
+    var more=works.length>3?(' 외 '+(works.length-3)+'건'):'';
+    detailEl.textContent=(preview||'내용 미입력')+more;
   }
-  var works=[];
-  rows.forEach(function(r){
-    if(r.category){
-      var t2=[r.location, r.work_name].filter(Boolean).join(' ');
-      if(t2) works.push(t2);
+  if(replaceEl){
+    if(replaceRows.length){
+      var teamSet=[]; replaceRows.forEach(function(r){ (r.teams||[]).forEach(function(t){ if(teamSet.indexOf(t)===-1) teamSet.push(t); }); });
+      var teamTxt=teamSet.length?(teamSet.slice(0,2).join(', ')+(teamSet.length>2?' 외':'')+' — '):'';
+      var first=replaceRows[0];
+      var more2=replaceRows.length>1?(' 외 '+(replaceRows.length-1)+'건'):'';
+      replaceEl.textContent='🔄 '+teamTxt+(first.work_name||first.category)+'(으)로 공동작업 대체'+more2;
+      replaceEl.style.display='block';
     }else{
-      (r.items||[]).forEach(function(it){
-        var t=[it.location, it.work].filter(Boolean).join(' ');
-        if(t) works.push(t);
-      });
+      replaceEl.style.display='none';
     }
-  });
-  var preview=works.slice(0,3).join(', ');
-  var more=works.length>3?(' 외 '+(works.length-3)+'건'):'';
-  detailEl.textContent=(preview||'내용 미입력')+more;
+  }
 }
 function renderJointWorkList(){
   var list=document.getElementById('jwList'); if(!list) return;
