@@ -13294,10 +13294,10 @@ var lostCompleteSelectedType='완료-폐기';
 
 function lostTab(n){
   tabSwitch('lost',n,2);
-  if(n===0){
+  if(n===1){
     var dEl=document.getElementById('lostFoundDate');
     if(dEl&&!dEl.value){
-      var now=new Date(Date.now()+9*3600000);
+      var now=new Date(Date.now()+9*3600000); // 한국시간(KST, UTC+9) 기준 작성 시점
       dEl.value=now.toISOString().slice(0,16);
     }
   }
@@ -13462,6 +13462,9 @@ async function saveLost(){
     ['lostFinderId','lostFinderName','lostFoundDate','lostLocation','lostItem','lostNote','lostRouteEtc','lostHandEtc','lostReceiver','lostPasteBox'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.value='';
     });
+    // 발견일자는 다음 건 작성을 위해 현재 한국시간(KST)으로 다시 자동 채움
+    var _ldEl=document.getElementById('lostFoundDate');
+    if(_ldEl){ var _lnow=new Date(Date.now()+9*3600000); _ldEl.value=_lnow.toISOString().slice(0,16); }
     document.querySelectorAll('#lostStatusGrp .rp').forEach(function(p){p.classList.remove('on');});
     document.querySelector('#lostStatusGrp .rp').classList.add('on');
     lostSelectedStatus='접수';
@@ -15662,12 +15665,16 @@ async function checkAndShowMissingLeaderPopup(){
   // 출근 시간대(자동출근과 동일한 시간대)에만 노출 — 그 외 시간엔 굳이 안 띄움
   if(!isAnyCheckinWindowNow()) return;
   try{
-    // 당일 미입력
-    var todayMissing=[];
-    ['오전','오후','야간'].forEach(function(shift){
+    // 당일 미입력 (오전/오후/야간 교대별로 구분)
+    var shifts=['오전','오후','야간'];
+    var todayMissingByShift={}, todayTotalByShift={}, todayMissingCount=0;
+    shifts.forEach(function(shift){
       var leaders=LEADERS[shift]||[];
       var done=Object.keys(mpDataByLeader[shift]||{}).filter(function(k){ return k.indexOf('_')!==0; });
-      leaders.forEach(function(l){ if(done.indexOf(l.team)===-1) todayMissing.push(shift+' '+l.name); });
+      var missing=leaders.filter(function(l){ return done.indexOf(l.team)===-1; }).map(function(l){ return l.name; });
+      todayMissingByShift[shift]=missing;
+      todayTotalByShift[shift]=leaders.length;
+      todayMissingCount+=missing.length;
     });
     // 전일 미입력
     var kst=new Date(Date.now()+9*3600000);
@@ -15682,22 +15689,52 @@ async function checkAndShowMissingLeaderPopup(){
       var nsRes=await sb.from('night_special_data').select('team_code').eq('date',yesterday);
       if(nsRes.data) nsRes.data.forEach(function(r){ if(r.team_code&&yDoneTeams.indexOf(r.team_code)===-1) yDoneTeams.push(r.team_code); });
     }catch(e){}
-    var yesterdayMissing=[];
-    ['오전','오후','야간'].forEach(function(shift){
-      (LEADERS[shift]||[]).forEach(function(l){ if(yDoneTeams.indexOf(l.team)===-1) yesterdayMissing.push(shift+' '+l.name); });
+    var yesterdayMissingByShift={}, yesterdayTotalByShift={}, yesterdayMissingCount=0;
+    shifts.forEach(function(shift){
+      var leaders=LEADERS[shift]||[];
+      var missing=leaders.filter(function(l){ return yDoneTeams.indexOf(l.team)===-1; }).map(function(l){ return l.name; });
+      yesterdayMissingByShift[shift]=missing;
+      yesterdayTotalByShift[shift]=leaders.length;
+      yesterdayMissingCount+=missing.length;
     });
-    if(todayMissing.length===0 && yesterdayMissing.length===0) return; // 미입력 없으면 팝업 안 띔
+    if(todayMissingCount===0 && yesterdayMissingCount===0) return; // 미입력 없으면 팝업 안 띔
+    // 교대별 블록 생성: 완료된 교대는 ✅ 입력완료, 미입력 있는 교대는 명단 표시
+    function buildShiftRows(missingByShift, totalByShift){
+      var out='';
+      shifts.forEach(function(shift){
+        var total=totalByShift[shift]||0;
+        if(total===0) return; // 해당 교대에 조장이 없으면 표시 생략
+        var missing=missingByShift[shift]||[];
+        if(missing.length===0){
+          out+='<div style="display:flex;align-items:center;gap:6px;padding:8px 10px;margin-bottom:6px;background:#e8f7f0;border-radius:10px">'
+             +'<span style="font-size:14px">✅</span>'
+             +'<span style="font-size:14px;font-weight:700;color:var(--g7)">'+shift+' 입력완료</span>'
+             +'<span style="font-size:12px;color:var(--g4);margin-left:auto">'+total+'/'+total+'</span>'
+             +'</div>';
+        }else{
+          out+='<div style="padding:8px 10px;margin-bottom:6px;background:#fdecec;border-radius:10px">'
+             +'<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px">'
+             +'<span style="font-size:14px">⏳</span>'
+             +'<span style="font-size:14px;font-weight:700;color:var(--danger)">'+shift+' 미입력</span>'
+             +'<span style="font-size:12px;color:var(--g4);margin-left:auto">'+missing.length+'/'+total+'</span>'
+             +'</div>'
+             +'<div style="font-size:13px;color:var(--g6);line-height:1.7;padding-left:20px">'+missing.join(', ')+'</div>'
+             +'</div>';
+        }
+      });
+      return out;
+    }
     var html='';
-    if(todayMissing.length>0){
+    if(todayMissingCount>0 || Object.keys(todayTotalByShift).some(function(s){return todayTotalByShift[s]>0;})){
       html+='<div style="margin-bottom:14px">';
-      html+='<div style="font-size:14px;font-weight:700;color:var(--danger);margin-bottom:6px">📅 당일 미입력 조장 ('+todayMissing.length+'명)</div>';
-      html+='<div style="font-size:14px;color:var(--g6);line-height:1.8">'+todayMissing.join(', ')+'</div>';
+      html+='<div style="font-size:14px;font-weight:700;color:var(--g7);margin-bottom:8px">📅 당일 인력현황</div>';
+      html+=buildShiftRows(todayMissingByShift, todayTotalByShift);
       html+='</div>';
     }
-    if(yesterdayMissing.length>0){
+    if(yesterdayMissingCount>0){
       html+='<div>';
-      html+='<div style="font-size:14px;font-weight:700;color:var(--warn);margin-bottom:6px">⏰ 전일 미입력 조장 ('+yesterdayMissing.length+'명)</div>';
-      html+='<div style="font-size:14px;color:var(--g6);line-height:1.8">'+yesterdayMissing.join(', ')+'</div>';
+      html+='<div style="font-size:14px;font-weight:700;color:var(--g7);margin-bottom:8px">⏰ 전일 인력현황</div>';
+      html+=buildShiftRows(yesterdayMissingByShift, yesterdayTotalByShift);
       html+='</div>';
     }
     var body=document.getElementById('missingLeaderModalBody');
