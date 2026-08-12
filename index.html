@@ -2745,11 +2745,11 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <button onclick="regTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
     <div id="regEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
-      <div id="regEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px" ontouchstart="ebookTouchStart(event,'reg')" ontouchend="ebookTouchEnd(event,'reg')">
+      <div id="regEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px;touch-action:pan-x pan-y" ontouchstart="ebookTouchStart(event,'reg')" ontouchend="ebookTouchEnd(event,'reg')">
         <canvas id="regEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
       </div>
       <div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:10px;background:white;border-top:1px solid var(--g2);flex-shrink:0">
-        <button onclick="ebookNav('reg',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">◀</button>
+        <button onclick="ebookZoom('reg',-0.5)" style="padding:8px 13px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">－</button><span id="regEbookZoomInd" style="font-size:12px;font-weight:700;color:var(--g5);min-width:40px;text-align:center">100%</span><button onclick="ebookZoom('reg',0.5)" style="padding:8px 13px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">＋</button><span style="width:1px;height:20px;background:var(--g2);margin:0 4px"></span><button onclick="ebookNav('reg',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">◀</button>
         <span id="regEbookPageInd" style="font-size:14px;font-weight:700;color:var(--g6);min-width:60px;text-align:center">- / -</span>
         <button onclick="ebookNav('reg',1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">▶</button>
       </div>
@@ -2830,11 +2830,11 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <button onclick="isoTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
     <div id="isoEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
-      <div id="isoEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px" ontouchstart="ebookTouchStart(event,'iso')" ontouchend="ebookTouchEnd(event,'iso')">
+      <div id="isoEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px;touch-action:pan-x pan-y" ontouchstart="ebookTouchStart(event,'iso')" ontouchend="ebookTouchEnd(event,'iso')">
         <canvas id="isoEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
       </div>
       <div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:10px;background:white;border-top:1px solid var(--g2);flex-shrink:0">
-        <button onclick="ebookNav('iso',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">◀</button>
+        <button onclick="ebookZoom('iso',-0.5)" style="padding:8px 13px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">－</button><span id="isoEbookZoomInd" style="font-size:12px;font-weight:700;color:var(--g5);min-width:40px;text-align:center">100%</span><button onclick="ebookZoom('iso',0.5)" style="padding:8px 13px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">＋</button><span style="width:1px;height:20px;background:var(--g2);margin:0 4px"></span><button onclick="ebookNav('iso',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">◀</button>
         <span id="isoEbookPageInd" style="font-size:14px;font-weight:700;color:var(--g6);min-width:60px;text-align:center">- / -</span>
         <button onclick="ebookNav('iso',1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">▶</button>
       </div>
@@ -2899,11 +2899,11 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <button onclick="newsTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
     <div id="newsEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
-      <div id="newsEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px" ontouchstart="ebookTouchStart(event,'news')" ontouchend="ebookTouchEnd(event,'news')">
+      <div id="newsEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px;touch-action:pan-x pan-y" ontouchstart="ebookTouchStart(event,'news')" ontouchend="ebookTouchEnd(event,'news')">
         <canvas id="newsEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
       </div>
       <div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:10px;background:white;border-top:1px solid var(--g2);flex-shrink:0">
-        <button onclick="ebookNav('news',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">◀</button>
+        <button onclick="ebookZoom('news',-0.5)" style="padding:8px 13px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">－</button><span id="newsEbookZoomInd" style="font-size:12px;font-weight:700;color:var(--g5);min-width:40px;text-align:center">100%</span><button onclick="ebookZoom('news',0.5)" style="padding:8px 13px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">＋</button><span style="width:1px;height:20px;background:var(--g2);margin:0 4px"></span><button onclick="ebookNav('news',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">◀</button>
         <span id="newsEbookPageInd" style="font-size:14px;font-weight:700;color:var(--g6);min-width:60px;text-align:center">- / -</span>
         <button onclick="ebookNav('news',1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">▶</button>
       </div>
@@ -2968,11 +2968,11 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <button onclick="safetyTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
     <div id="safetyEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
-      <div id="safetyEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px" ontouchstart="ebookTouchStart(event,'safety')" ontouchend="ebookTouchEnd(event,'safety')">
+      <div id="safetyEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px;touch-action:pan-x pan-y" ontouchstart="ebookTouchStart(event,'safety')" ontouchend="ebookTouchEnd(event,'safety')">
         <canvas id="safetyEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
       </div>
       <div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:10px;background:white;border-top:1px solid var(--g2);flex-shrink:0">
-        <button onclick="ebookNav('safety',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">◀</button>
+        <button onclick="ebookZoom('safety',-0.5)" style="padding:8px 13px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">－</button><span id="safetyEbookZoomInd" style="font-size:12px;font-weight:700;color:var(--g5);min-width:40px;text-align:center">100%</span><button onclick="ebookZoom('safety',0.5)" style="padding:8px 13px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">＋</button><span style="width:1px;height:20px;background:var(--g2);margin:0 4px"></span><button onclick="ebookNav('safety',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">◀</button>
         <span id="safetyEbookPageInd" style="font-size:14px;font-weight:700;color:var(--g6);min-width:60px;text-align:center">- / -</span>
         <button onclick="ebookNav('safety',1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">▶</button>
       </div>
@@ -3037,11 +3037,11 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <button onclick="manualTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
     <div id="manualEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
-      <div id="manualEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px" ontouchstart="ebookTouchStart(event,'manual')" ontouchend="ebookTouchEnd(event,'manual')">
+      <div id="manualEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px;touch-action:pan-x pan-y" ontouchstart="ebookTouchStart(event,'manual')" ontouchend="ebookTouchEnd(event,'manual')">
         <canvas id="manualEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
       </div>
       <div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:10px;background:white;border-top:1px solid var(--g2);flex-shrink:0">
-        <button onclick="ebookNav('manual',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">◀</button>
+        <button onclick="ebookZoom('manual',-0.5)" style="padding:8px 13px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">－</button><span id="manualEbookZoomInd" style="font-size:12px;font-weight:700;color:var(--g5);min-width:40px;text-align:center">100%</span><button onclick="ebookZoom('manual',0.5)" style="padding:8px 13px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">＋</button><span style="width:1px;height:20px;background:var(--g2);margin:0 4px"></span><button onclick="ebookNav('manual',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">◀</button>
         <span id="manualEbookPageInd" style="font-size:14px;font-weight:700;color:var(--g6);min-width:60px;text-align:center">- / -</span>
         <button onclick="ebookNav('manual',1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">▶</button>
       </div>
@@ -3106,11 +3106,11 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <button onclick="riskTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
     <div id="riskEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
-      <div id="riskEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px" ontouchstart="ebookTouchStart(event,'risk')" ontouchend="ebookTouchEnd(event,'risk')">
+      <div id="riskEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px;touch-action:pan-x pan-y" ontouchstart="ebookTouchStart(event,'risk')" ontouchend="ebookTouchEnd(event,'risk')">
         <canvas id="riskEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
       </div>
       <div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:10px;background:white;border-top:1px solid var(--g2);flex-shrink:0">
-        <button onclick="ebookNav('risk',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">◀</button>
+        <button onclick="ebookZoom('risk',-0.5)" style="padding:8px 13px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">－</button><span id="riskEbookZoomInd" style="font-size:12px;font-weight:700;color:var(--g5);min-width:40px;text-align:center">100%</span><button onclick="ebookZoom('risk',0.5)" style="padding:8px 13px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">＋</button><span style="width:1px;height:20px;background:var(--g2);margin:0 4px"></span><button onclick="ebookNav('risk',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">◀</button>
         <span id="riskEbookPageInd" style="font-size:14px;font-weight:700;color:var(--g6);min-width:60px;text-align:center">- / -</span>
         <button onclick="ebookNav('risk',1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">▶</button>
       </div>
@@ -3175,11 +3175,11 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <button onclick="trainingTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
     <div id="trainingEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
-      <div id="trainingEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px" ontouchstart="ebookTouchStart(event,'training')" ontouchend="ebookTouchEnd(event,'training')">
+      <div id="trainingEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px;touch-action:pan-x pan-y" ontouchstart="ebookTouchStart(event,'training')" ontouchend="ebookTouchEnd(event,'training')">
         <canvas id="trainingEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
       </div>
       <div style="display:flex;align-items:center;justify-content:center;gap:14px;padding:10px;background:white;border-top:1px solid var(--g2);flex-shrink:0">
-        <button onclick="ebookNav('training',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">◀</button>
+        <button onclick="ebookZoom('training',-0.5)" style="padding:8px 13px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">－</button><span id="trainingEbookZoomInd" style="font-size:12px;font-weight:700;color:var(--g5);min-width:40px;text-align:center">100%</span><button onclick="ebookZoom('training',0.5)" style="padding:8px 13px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">＋</button><span style="width:1px;height:20px;background:var(--g2);margin:0 4px"></span><button onclick="ebookNav('training',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">◀</button>
         <span id="trainingEbookPageInd" style="font-size:14px;font-weight:700;color:var(--g6);min-width:60px;text-align:center">- / -</span>
         <button onclick="ebookNav('training',1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">▶</button>
       </div>
@@ -17326,6 +17326,7 @@ function openEbookViewer(prefix, url, name){
 function renderEbookPage(prefix){
   var st=_ebookState[prefix];
   if(!st) return;
+  if(!st.zoom) st.zoom=1;
   st.pdfDoc.getPage(st.curPage).then(function(page){
     var canvas=document.getElementById(prefix+'EbookCanvas');
     if(!canvas) return;
@@ -17334,7 +17335,8 @@ function renderEbookPage(prefix){
     var availHeight=(wrap?wrap.clientHeight:600)-20;
     var vp0=page.getViewport({scale:1});
     // 가로/세로 중 더 작게 맞춰지는 배율로 계산해서, 화면에 꽉 차면서도 안 잘리게(contain) 표시
-    var cssScale=Math.max(0.3, Math.min(availWidth/vp0.width, availHeight/vp0.height));
+    var fitScale=Math.max(0.3, Math.min(availWidth/vp0.width, availHeight/vp0.height));
+    var cssScale=fitScale*st.zoom; // 확대(+/-) 버튼으로 조절한 배율을 추가로 곱함
     var dpr=window.devicePixelRatio||1;
     var renderScale=cssScale*dpr; // 실제 캔버스 해상도는 화면 배율만큼 더 높게 그려서 선명하게
     var cssViewport=page.getViewport({scale:cssScale});
@@ -17345,8 +17347,10 @@ function renderEbookPage(prefix){
     page.render({canvasContext:ctx, viewport:renderViewport});
     var ind=document.getElementById(prefix+'EbookPageInd');
     if(ind) ind.textContent=st.curPage+' / '+st.totalPages;
+    var zind=document.getElementById(prefix+'EbookZoomInd');
+    if(zind) zind.textContent=Math.round(st.zoom*100)+'%';
     try{ localStorage.setItem(_ebookProgressKey(st.url), st.curPage); }catch(e){}
-    if(wrap) wrap.scrollTop=0;
+    if(st.zoom<=1 && wrap) wrap.scrollTop=0;
   });
 }
 function ebookNav(prefix, dir){
@@ -17355,11 +17359,30 @@ function ebookNav(prefix, dir){
   var np=st.curPage+dir;
   if(np<1||np>st.totalPages) return;
   st.curPage=np;
+  st.zoom=1; // 페이지 이동 시 확대 배율 초기화
+  renderEbookPage(prefix);
+}
+function ebookZoom(prefix, delta){
+  var st=_ebookState[prefix];
+  if(!st) return;
+  var z=(st.zoom||1)+delta;
+  st.zoom=Math.max(1, Math.min(3, z)); // 100%~300% 사이로 제한
   renderEbookPage(prefix);
 }
 var _ebookTouchX=0;
-function ebookTouchStart(e, prefix){ _ebookTouchX=e.changedTouches[0].clientX; }
+var _ebookTouchIsPinch=false;
+function ebookTouchStart(e, prefix){
+  // 손가락 2개 이상이면 확대(pinch) 동작이므로 스와이프 넘김 감지를 하지 않음
+  _ebookTouchIsPinch = (e.touches && e.touches.length>1);
+  if(_ebookTouchIsPinch) return;
+  _ebookTouchX=e.changedTouches[0].clientX;
+}
 function ebookTouchEnd(e, prefix){
+  // 핀치 확대 중이었거나, 남은 손가락이 있으면(줌 도중 한 손가락만 뗀 경우) 페이지 넘김 무시
+  if(_ebookTouchIsPinch || (e.touches && e.touches.length>0)){
+    _ebookTouchIsPinch=false;
+    return;
+  }
   var dx=e.changedTouches[0].clientX-_ebookTouchX;
   if(Math.abs(dx)<50) return; // 짧은 터치는 무시
   if(dx<0) ebookNav(prefix,1);  // 왼쪽으로 스와이프 → 다음 페이지
