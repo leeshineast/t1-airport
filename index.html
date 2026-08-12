@@ -4813,7 +4813,7 @@ async function loadExecDashboard(){
       msFetchAll(function(){ return sb.from('safety_accidents').select('id,accident_type').gte('occurred_at',tsFrom).lte('occurred_at',tsTo); }),
       msFetchAll(function(){ return sb.from('night_special_data').select('date,team_code,carpet,pbb,wax,stone,wood,restroom,es,toilet_daily,common_area,collection').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('mgr_attendance').select('date,checked,status').gte('date',dFrom).lte('date',dTo); }),
-      msFetchAll(function(){ return sb.from('joint_work_data').select('id,teams,headcount,batch_id').gte('work_date',dFrom).lte('work_date',dTo); })
+      msFetchAll(function(){ return sb.from('joint_work_data').select('id,teams,headcount,batch_id,record_type').gte('work_date',dFrom).lte('work_date',dTo); })
     ]);
     var mpRows=(q[0]&&q[0].data)||[], hoRows=(q[1]&&q[1].data)||[], vocRows=(q[2]&&q[2].data)||[], lostRows=(q[3]&&q[3].data)||[], accRows=(q[4]&&q[4].data)||[], nsRows=(q[5]&&q[5].data)||[], mgrRows=(q[6]&&q[6].data)||[], jwRows=((q[7]&&q[7].data)||[]).filter(function(r){return r.record_type!=='replace';});
 
@@ -9474,9 +9474,10 @@ async function loadJointWorkFromDB(){
 async function loadJointWorkTodayFromDB(){
   try{
     var today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
-    var res=await sb.from('joint_work_data').select('id,teams,headcount,items,category,work_name,location,batch_id').eq('work_date',today);
+    var res=await sb.from('joint_work_data').select('id,teams,headcount,items,category,work_name,location,batch_id,record_type').eq('work_date',today);
     if(res.error) return;
-    renderJointWorkTodayCard(res.data||[]);
+    var rows=(res.data||[]).filter(function(r){ return r.record_type!=='replace'; }); // 작업대체는 통계와 마찬가지로 정상작업 요약에서 제외
+    renderJointWorkTodayCard(rows);
   }catch(e){}
 }
 function renderJointWorkTodayCard(rows){
@@ -18304,7 +18305,7 @@ async function loadMonthlyStats(){
       msFetchAll(function(){ return sb.from('mgr_attendance').select('date,checked,status').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('voc_data').select('id,voc_date,status,completed_at,content,channel,category,category_etc,loc_zone,loc_side,loc_floor,created_at').gte('voc_date',dFrom).lte('voc_date',dTo); }),
       msFetchAll(function(){ return sb.from('waste_data').select('waste_date,team_code,incineration_living,incineration_synthetic,incineration_food,incineration_wood,recycle_paper,recycle_plastic,recycle_can,recycle_glass,recycle_etc,misc_etc').gte('waste_date',dFrom).lte('waste_date',dTo); }),
-      msFetchAll(function(){ return sb.from('joint_work_data').select('id,work_date,teams,floors,headcount,items,batch_id').gte('work_date',dFrom).lte('work_date',dTo); })
+      msFetchAll(function(){ return sb.from('joint_work_data').select('id,work_date,teams,floors,headcount,items,batch_id,record_type').gte('work_date',dFrom).lte('work_date',dTo); })
     ]);
     var anyErr=q.some(function(r){ return r&&r.error; });
     var banner=document.getElementById('msErrBanner');
@@ -18648,6 +18649,7 @@ function msCalc(q, key){
   var jwSeenBatch={};
   ((q[8]&&q[8].data)||[]).forEach(function(r){
     if(!r.work_date||r.work_date.indexOf(key)!==0) return;
+    if(r.record_type==='replace') return; // 작업대체는 정상작업 실적 통계에서 제외
     s.jw.total++;
     var bKey=r.batch_id||('__row_'+r.id);
     var firstInBatch=!jwSeenBatch[bKey];
