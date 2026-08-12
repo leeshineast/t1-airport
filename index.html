@@ -3521,6 +3521,27 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div class="rp" onclick="jwPickShift(this,'야간')">🌙 야간</div>
     </div></div>
 
+    <div class="fg"><label class="f-lbl">작성 유형</label><div class="rg" id="jwModeG" style="flex-wrap:wrap;gap:6px">
+      <div class="rp on" onclick="jwSetMode(this,'work')">🧹 정상작업</div>
+      <div class="rp" onclick="jwSetMode(this,'replace')">🔄 작업대체 (교육·회의·행사)</div>
+    </div></div>
+
+    <div class="fg" id="jwReplaceWrap" style="display:none;background:var(--teal-bg);border-radius:var(--r2);padding:12px;margin-bottom:14px">
+      <label class="f-lbl">🔄 대체 유형 *</label>
+      <div class="rg" id="jwReplaceTypeG" style="flex-wrap:wrap;gap:6px;margin-bottom:11px">
+        <div class="rp" onclick="jwPickReplaceType(this,'교육')">🎓 교육</div>
+        <div class="rp" onclick="jwPickReplaceType(this,'회의')">💬 회의</div>
+        <div class="rp" onclick="jwPickReplaceType(this,'행사')">🎉 행사</div>
+        <div class="rp" onclick="jwPickReplaceType(this,'기타')">🔖 기타</div>
+      </div>
+      <label class="f-lbl">내용 *</label>
+      <input type="text" id="jwReplaceDesc" class="ri" placeholder="예) 하절기 안전보건교육 실시" style="margin-bottom:11px">
+      <label class="f-lbl">장소 <span style="font-weight:400;color:var(--g3)">(선택)</span></label>
+      <input type="text" id="jwReplaceLoc" class="ri" placeholder="예) T1 교육장" style="margin-bottom:11px">
+      <label class="f-lbl">👥 인원 *</label>
+      <input type="number" id="jwReplaceHead" class="ri" placeholder="예) 4" min="1">
+    </div>
+
     <div class="fg"><label class="f-lbl">팀·조 선택 * <span style="font-weight:400;color:var(--g3)">(여러 팀 함께 선택 가능)</span></label>
       <div class="rg" id="jwTeamG" style="flex-wrap:wrap;gap:6px">
         <div class="rp" onclick="jwToggleTeam(this,'1팀A')">1팀A</div>
@@ -4794,7 +4815,7 @@ async function loadExecDashboard(){
       msFetchAll(function(){ return sb.from('mgr_attendance').select('date,checked,status').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('joint_work_data').select('id,teams,headcount,batch_id').gte('work_date',dFrom).lte('work_date',dTo); })
     ]);
-    var mpRows=(q[0]&&q[0].data)||[], hoRows=(q[1]&&q[1].data)||[], vocRows=(q[2]&&q[2].data)||[], lostRows=(q[3]&&q[3].data)||[], accRows=(q[4]&&q[4].data)||[], nsRows=(q[5]&&q[5].data)||[], mgrRows=(q[6]&&q[6].data)||[], jwRows=(q[7]&&q[7].data)||[];
+    var mpRows=(q[0]&&q[0].data)||[], hoRows=(q[1]&&q[1].data)||[], vocRows=(q[2]&&q[2].data)||[], lostRows=(q[3]&&q[3].data)||[], accRows=(q[4]&&q[4].data)||[], nsRows=(q[5]&&q[5].data)||[], mgrRows=(q[6]&&q[6].data)||[], jwRows=((q[7]&&q[7].data)||[]).filter(function(r){return r.record_type!=='replace';});
 
     // 인력 집계 (층별 7 + 교대별) — 기간 내 일수로 나눠 일평균 산출
     var floorSum=[0,0,0,0,0,0,0];
@@ -8808,7 +8829,11 @@ var JW_CATEGORIES={
   '오염관리':['오염 제거','찌든때 제거'],
   '특수작업':['바닥 왁스 작업','카펫 샴푸 작업','기타 전문작업']
 };
-var JW_CAT_ICONS={'바닥관리':'🧹','화장실관리':'🚻','샤워실관리':'🚿','승강설비관리':'🛗','시설물관리':'🏢','분진관리':'💨','오염관리':'🧽','특수작업':'⭐'};
+var JW_CAT_ICONS={'바닥관리':'🧹','화장실관리':'🚻','샤워실관리':'🚿','승강설비관리':'🛗','시설물관리':'🏢','분진관리':'💨','오염관리':'🧽','특수작업':'⭐','교육':'🎓','회의':'💬','행사':'🎉','기타':'🔖'};
+// 작업대체(정상 공동작업 대신 교육/회의/행사 등이 있었던 경우) — 통계에서 실제 작업실적과 분리 집계됨
+var JW_REPLACE_TYPES=['교육','회의','행사','기타'];
+var jwCurMode='work'; // 'work' | 'replace'
+var jwReplaceType=null;
 
 // ── 작업 항목 블록 (여러 개 추가 가능, 각 블록: 대분류→작업명(다중선택)→층→세부위치→투입인원) ──
 function jwAddItemBlock(prefill){
@@ -9113,6 +9138,32 @@ function jwPickShift(el,sh){
   if(g) Array.from(g.children).forEach(function(c){c.classList.remove('on');});
   el.classList.add('on');
 }
+function jwSetMode(el,mode){
+  jwCurMode=mode;
+  var g=document.getElementById('jwModeG');
+  if(g) Array.from(g.children).forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+  var replaceWrap=document.getElementById('jwReplaceWrap');
+  var schedWrap=document.getElementById('jwSchedWrap');
+  var schedSummaryWrap=document.getElementById('jwSchedSummaryWrap');
+  var manualWrap=document.getElementById('jwManualWrap');
+  if(mode==='replace'){
+    if(replaceWrap) replaceWrap.style.display='block';
+    if(schedWrap) schedWrap.style.display='none';
+    if(schedSummaryWrap) schedSummaryWrap.style.display='none';
+    if(manualWrap) manualWrap.style.display='none';
+  }else{
+    if(replaceWrap) replaceWrap.style.display='none';
+    if(manualWrap) manualWrap.style.display='';
+    jwSyncScheduleMode(); // 사전등록 작업 모드 여부에 따라 schedWrap/schedSummaryWrap/manualWrap 재계산
+  }
+}
+function jwPickReplaceType(el,type){
+  jwReplaceType=type;
+  var g=document.getElementById('jwReplaceTypeG');
+  if(g) Array.from(g.children).forEach(function(c){c.classList.remove('on');});
+  el.classList.add('on');
+}
 // 근무조 버튼 상태 동기화: 사용자가 이미 선택했으면 그 값 유지, 아니면 자동판별값을 기본 선택
 function jwUpdateShiftBadge(){
   var sh=jwSelectedShift||jwAutoShift();
@@ -9143,6 +9194,15 @@ function jwResetForm(){
   document.getElementById('jwNote').value='';
   document.getElementById('jwItemsWrap').innerHTML='';
   jwItemState={};
+  // 작성 유형(정상작업/작업대체) 초기화
+  jwCurMode='work'; jwReplaceType=null;
+  var modeG=document.getElementById('jwModeG');
+  if(modeG){ Array.from(modeG.children).forEach(function(c,i){ c.classList.toggle('on', i===0); }); }
+  var rTypeG=document.getElementById('jwReplaceTypeG');
+  if(rTypeG) Array.from(rTypeG.children).forEach(function(c){c.classList.remove('on');});
+  ['jwReplaceDesc','jwReplaceLoc','jwReplaceHead'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
+  var replaceWrap=document.getElementById('jwReplaceWrap'); if(replaceWrap) replaceWrap.style.display='none';
+  var manualWrap=document.getElementById('jwManualWrap'); if(manualWrap) manualWrap.style.display='';
   Array.from(document.getElementById('jwTeamG').children).forEach(function(c){c.classList.remove('on');});
   jwSelectedTeams=[];
   // 로그인한 사용자의 팀·조 자동 선택 (요청 7-②③: 팀/조 자동)
@@ -9172,7 +9232,21 @@ async function subJointWork(){
 
   var rows=[];
 
-  if(jwSelectedSchedIds.length){
+  if(jwCurMode==='replace'){
+    // ── 작업대체(교육/회의/행사) 모드: 카테고리 항목 블록 없이 단일 레코드로 저장 ──
+    if(!jwReplaceType){ toast('대체 유형을 선택해주세요'); return; }
+    var rDesc=(document.getElementById('jwReplaceDesc').value||'').trim();
+    var rLoc=(document.getElementById('jwReplaceLoc').value||'').trim();
+    var rHead=parseInt(document.getElementById('jwReplaceHead').value)||0;
+    if(!rDesc){ toast('내용을 입력해주세요'); return; }
+    if(!rHead||rHead<1){ toast('인원을 입력해주세요'); return; }
+    rows.push({
+      work_date:date, teams:jwSelectedTeams, floors:[], headcount:rHead,
+      category:jwReplaceType, work_name:rDesc, shift:shift, location:rLoc||null,
+      note:note||null, writer:me?me.name:'', batch_id:(Date.now().toString(36)+Math.random().toString(36).slice(2,10)),
+      record_type:'replace'
+    });
+  }else if(jwSelectedSchedIds.length){
     // ── 사전등록 작업 선택 모드: 요약 리스트 + 총인원 1개로 저장 ──
     var schedItems=jwScheduleData.filter(function(s){ return jwSelectedSchedIds.indexOf(s.id)!==-1; });
     var totalHead=parseInt(document.getElementById('jwSchedHeadcount').value)||0;
@@ -9469,6 +9543,7 @@ function renderJointWorkList(){
     g.floors.forEach(function(f){ h+='<span style="background:var(--teal2);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">'+f+'</span>'; });
     h+='<span style="background:var(--warn);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">👥 '+g.headcount+'명</span>';
     if(g.rows.length>1) h+='<span style="background:var(--g3);color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">📋 '+g.rows.length+'건 묶음</span>';
+    if(g.rows[0]&&g.rows[0].record_type==='replace') h+='<span style="background:#E65100;color:white;border-radius:20px;padding:2px 9px;font-size:10px;font-weight:700">🔄 작업대체</span>';
     h+='</div>';
     h+='<div style="padding:10px 13px">';
     g.rows.forEach(function(r,i){
@@ -9599,7 +9674,6 @@ function openJwEdit(id){
   }
   jwEditId=id;
   jwSelectedSchedIds=[];
-  jwSyncScheduleMode();
   document.getElementById('jwDate').value=r.work_date;
   jwUpdateWeekday();
   jwSelectedShift=(r.shift==='오전'||r.shift==='오후'||r.shift==='야간')?r.shift:'';
@@ -9608,6 +9682,23 @@ function openJwEdit(id){
   Array.from(document.getElementById('jwTeamG').children).forEach(function(c){
     c.classList.toggle('on', jwSelectedTeams.indexOf(c.textContent.trim())!==-1);
   });
+  document.getElementById('jwNote').value=r.note||'';
+  var saveBtn=document.querySelector('#jwP0 .btn-prim');
+  if(r.record_type==='replace'){
+    var modeBtns=document.getElementById('jwModeG');
+    if(modeBtns) jwSetMode(modeBtns.children[1], 'replace');
+    jwPickReplaceType(Array.from(document.getElementById('jwReplaceTypeG').children).find(function(c){return c.textContent.trim().indexOf(r.category)!==-1;})||document.getElementById('jwReplaceTypeG').children[0], r.category);
+    document.getElementById('jwReplaceDesc').value=r.work_name||'';
+    document.getElementById('jwReplaceLoc').value=r.location||'';
+    document.getElementById('jwReplaceHead').value=r.headcount||'';
+    if(saveBtn) saveBtn.textContent='수정 저장';
+    jwTab(0);
+    toast('수정 모드 (작업대체 기록)');
+    return;
+  }
+  var modeBtns2=document.getElementById('jwModeG');
+  if(modeBtns2) jwSetMode(modeBtns2.children[0], 'work');
+  jwSyncScheduleMode();
   document.getElementById('jwItemsWrap').innerHTML='';
   jwItemState={};
   var stdNames=JW_CATEGORIES[r.category]||[];
@@ -9624,8 +9715,7 @@ function openJwEdit(id){
     var etcEl=document.getElementById(bid+'_workEtc');
     if(etcEl) etcEl.value=r.work_name||'';
   }
-  document.getElementById('jwNote').value=r.note||'';
-  var saveBtn=document.querySelector('#jwP0 .btn-prim'); if(saveBtn) saveBtn.textContent='수정 저장';
+  if(saveBtn) saveBtn.textContent='수정 저장';
   jwTab(0);
   toast('수정 모드 (항목 1개만 수정 가능합니다)');
 }
@@ -9709,8 +9799,9 @@ function jwRenderStats(){
     if(nextBtn) nextBtn.style.opacity=isThisYear?'0.3':'1';
   }
   var filtered=(jointWorkData||[]).filter(function(r){ return r.work_date && r.work_date.indexOf(prefix)===0; });
-  var stdFiltered=filtered.filter(function(r){ return !!r.category; }); // 통계는 표준화(신형) 데이터만 집계
-  var legacyCount=filtered.length-stdFiltered.length;
+  var replaceFiltered=filtered.filter(function(r){ return r.record_type==='replace'; });
+  var stdFiltered=filtered.filter(function(r){ return !!r.category && r.record_type!=='replace'; }); // 통계는 표준화(신형) 정상작업 데이터만 집계 (작업대체는 별도 집계)
+  var legacyCount=filtered.length-stdFiltered.length-replaceFiltered.length;
   var h='';
   {
     // 일간/월간/연간 공통 집계 (표준화 신형 데이터 기준)
@@ -9757,6 +9848,28 @@ function jwRenderStats(){
     });
     if(!catKeys.length) h+='<div style="font-size:11px;color:var(--g3)">데이터 없음</div>';
     h+='</div></div>';
+
+    // 작업대체(교육/회의/행사) 현황 — 정상작업 실적과 분리 집계
+    if(replaceFiltered.length){
+      var byReplaceType={}, replaceHeadSum=0;
+      var jwReplaceSeenBatch={};
+      replaceFiltered.forEach(function(r){
+        byReplaceType[r.category]=(byReplaceType[r.category]||0)+1;
+        var bKey=r.batch_id||('__row_'+r.id);
+        if(!jwReplaceSeenBatch[bKey]){ jwReplaceSeenBatch[bKey]=true; replaceHeadSum+=(r.headcount||0); }
+      });
+      h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
+      h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">🔄 작업대체 현황 (교육·회의·행사)</div>';
+      h+='<div style="display:flex;gap:8px;margin-bottom:8px">';
+      h+='<div style="flex:1;background:var(--teal-bg);border-radius:8px;padding:9px 11px"><div style="font-size:10px;color:var(--g5);font-weight:700">대체 건수</div><div style="font-size:18px;font-weight:900;color:var(--teal2)">'+replaceFiltered.length+'<span style="font-size:10px;font-weight:600;color:var(--g4)">건</span></div></div>';
+      h+='<div style="flex:1;background:var(--teal-bg);border-radius:8px;padding:9px 11px"><div style="font-size:10px;color:var(--g5);font-weight:700">대체 인원</div><div style="font-size:18px;font-weight:900;color:var(--teal2)">'+replaceHeadSum+'<span style="font-size:10px;font-weight:600;color:var(--g4)">명</span></div></div>';
+      h+='</div>';
+      h+='<div style="display:flex;flex-direction:column;gap:4px">';
+      Object.keys(byReplaceType).sort(function(a,b){return byReplaceType[b]-byReplaceType[a];}).forEach(function(c){
+        h+='<div style="display:flex;justify-content:space-between;font-size:11px;color:var(--g6)"><span>'+(JW_CAT_ICONS[c]||'')+' '+c+'</span><span style="font-weight:800;color:var(--teal2)">'+byReplaceType[c]+'건</span></div>';
+      });
+      h+='</div></div>';
+    }
 
     // 층별 작업건수
     h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
