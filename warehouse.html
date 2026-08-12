@@ -348,6 +348,46 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
     <input type="text" id="addItemSearch" placeholder="품명 검색" oninput="renderAddItemCands()" style="margin-bottom:10px">
     <div id="addItemCands"></div>
     <button class="save-btn" style="margin-top:10px" onclick="commitAddItems()">선택한 품목 추가</button>
+    <button class="mini-btn" style="width:100%;margin-top:8px;padding:11px;background:var(--g1);color:var(--g6)" onclick="openNewItemModal()">🆕 찾는 품목이 없어요 · 신규 품목 만들기</button>
+  </div>
+</div>
+
+<!-- 신규 품목 등록(+즉시 입고) 모달 -->
+<div class="overlay" id="newItemOverlay">
+  <div class="modal">
+    <div class="modal-title">신규 품목 등록 <button class="modal-close" onclick="closeNewItemModal()">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <div><label style="font-size:11.5px;font-weight:700;color:var(--g5);display:block;margin-bottom:3px">품목명 *</label>
+        <input type="text" id="newItemName" placeholder="예: 볼펜"></div>
+      <div><label style="font-size:11.5px;font-weight:700;color:var(--g5);display:block;margin-bottom:3px">규격</label>
+        <input type="text" id="newItemSpec" placeholder="예: 0.5mm (없으면 비워두세요)"></div>
+      <div><label style="font-size:11.5px;font-weight:700;color:var(--g5);display:block;margin-bottom:3px">단위 *</label>
+        <input type="text" id="newItemUnit" placeholder="예: EA"></div>
+      <div style="display:flex;gap:9px">
+        <div style="flex:1"><label style="font-size:11.5px;font-weight:700;color:var(--g5);display:block;margin-bottom:3px">초기재고</label>
+          <input type="number" id="newItemInitQty" placeholder="0" value="0" oninput="updateNewItemPreview()"></div>
+        <div style="flex:1"><label style="font-size:11.5px;font-weight:700;color:var(--g5);display:block;margin-bottom:3px">입고수량</label>
+          <input type="number" id="newItemInQty" placeholder="0" oninput="updateNewItemPreview()"></div>
+      </div>
+      <div id="newItemPreview" style="font-size:12.5px;color:var(--g4);padding:6px 2px">현재고 미리보기: <b id="newItemPreviewVal" style="color:var(--g6)">0</b></div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="mini-btn" style="flex:1;background:var(--g2);color:var(--g6);padding:12px" onclick="closeNewItemModal()">취소</button>
+      <button class="save-btn" style="flex:1.4;margin-top:0" onclick="submitNewItem()">등록 및 입고</button>
+    </div>
+  </div>
+</div>
+
+<!-- 유사 품목 확인 모달 -->
+<div class="overlay" id="similarItemOverlay">
+  <div class="modal">
+    <div class="modal-title">유사한 품목이 등록되어 있습니다 <button class="modal-close" onclick="closeSimilarItemModal()">✕</button></div>
+    <div style="font-size:12.5px;color:var(--g4);margin-bottom:10px">입력하신 품목과 이름이 비슷한 기존 품목이에요. 혹시 같은 물품이라면 기존 품목을 사용해주세요.</div>
+    <div id="similarItemCands"></div>
+    <div style="display:flex;gap:8px;margin-top:10px">
+      <button class="mini-btn" style="flex:1;background:var(--g2);color:var(--g6);padding:12px" onclick="closeSimilarItemModal()">취소</button>
+      <button class="save-btn" style="flex:1.4;margin-top:0;background:var(--danger)" onclick="forceCreateNewItem()">그래도 신규 등록</button>
+    </div>
   </div>
 </div>
 
@@ -1011,6 +1051,138 @@ function commitAddItems(){
   if(!ids.length){ toast('추가할 품목을 선택하세요'); return; }
   var calls=ids.map(function(id){ return sbFetch('/warehouse_item',{method:'POST',body:{warehouse_id:curWarehouse.id,item_id:id,min_qty:0},headers:{'Prefer':'return=minimal'}}); });
   Promise.all(calls).then(function(){ toast('✓ '+ids.length+'개 품목 추가됨'); closeAddItemModal(); loadWarehouseItemsAndLedger(); }).catch(function(){ toast('추가 실패'); });
+}
+
+// ═══ 신규 품목 등록 + 즉시 입고 ═══
+var _pendingNewItem=null; // 유사품목 확인 대기 중인 입력값
+
+function normKey(name,spec,unit){
+  return (String(name||'').trim().toLowerCase()+'|'+String(spec||'').trim().toLowerCase()+'|'+String(unit||'').trim().toLowerCase());
+}
+function openNewItemModal(){
+  var q=(document.getElementById('addItemSearch').value||'').trim();
+  document.getElementById('newItemName').value=q;
+  document.getElementById('newItemSpec').value='';
+  document.getElementById('newItemUnit').value='';
+  document.getElementById('newItemInitQty').value='0';
+  document.getElementById('newItemInQty').value='';
+  updateNewItemPreview();
+  document.getElementById('newItemOverlay').classList.add('on');
+}
+function closeNewItemModal(){ document.getElementById('newItemOverlay').classList.remove('on'); }
+function updateNewItemPreview(){
+  var initQ=parseInt(document.getElementById('newItemInitQty').value||'0',10)||0;
+  var inQ=parseInt(document.getElementById('newItemInQty').value||'0',10)||0;
+  document.getElementById('newItemPreviewVal').textContent=(initQ+inQ);
+}
+function submitNewItem(){
+  var name=(document.getElementById('newItemName').value||'').trim();
+  var spec=(document.getElementById('newItemSpec').value||'').trim();
+  var unit=(document.getElementById('newItemUnit').value||'').trim();
+  var initQ=parseInt(document.getElementById('newItemInitQty').value||'0',10)||0;
+  var inQ=parseInt(document.getElementById('newItemInQty').value||'0',10)||0;
+  if(!name){ toast('⚠️ 품목명을 입력해주세요'); return; }
+  if(!unit){ toast('⚠️ 단위를 입력해주세요'); return; }
+  if(initQ<0||inQ<0){ toast('⚠️ 재고/입고수량은 0 이상이어야 합니다'); return; }
+  if(initQ===0 && inQ===0){ toast('⚠️ 초기재고 또는 입고수량 중 하나는 0보다 커야 합니다'); return; }
+  // 완전 동일 품목(품목명+규격+단위) 존재 여부 확인 — 전체 품목마스터 기준
+  var key=normKey(name,spec,unit);
+  var exact=(ITEMS||[]).filter(function(m){ return normKey(m.item_name,m.spec,m.unit)===key; });
+  if(exact.length){
+    toast('⚠️ 동일한 품목이 이미 등록되어 있습니다. 기존 품목을 사용해주세요');
+    return;
+  }
+  // 유사 품목(품목명 기준 부분일치) 확인
+  var nameLower=name.toLowerCase();
+  var similar=(ITEMS||[]).filter(function(m){
+    var mn=String(m.item_name||'').trim().toLowerCase();
+    return mn.indexOf(nameLower)>=0 || nameLower.indexOf(mn)>=0;
+  });
+  _pendingNewItem={name:name,spec:spec,unit:unit,initQ:initQ,inQ:inQ};
+  if(similar.length){
+    openSimilarItemModal(similar);
+  } else {
+    doCreateNewItem(_pendingNewItem);
+  }
+}
+function openSimilarItemModal(similar){
+  var box=document.getElementById('similarItemCands');
+  box.innerHTML='';
+  similar.forEach(function(m){
+    var row=document.createElement('div');
+    row.className='cand-row';
+    row.style.cursor='default';
+    row.innerHTML='<div><div class="cand-name">'+esc(m.item_name)+'</div><div class="cand-spec">'+esc(m.spec||'')+(m.unit?' · '+esc(m.unit):'')+'</div></div>'+
+      '<button class="mini-btn" style="padding:0 12px;height:30px">이 품목 사용</button>';
+    row.querySelector('button').onclick=function(){ useSimilarItem(m); };
+    box.appendChild(row);
+  });
+  closeNewItemModal();
+  document.getElementById('similarItemOverlay').classList.add('on');
+}
+function closeSimilarItemModal(){ document.getElementById('similarItemOverlay').classList.remove('on'); _pendingNewItem=null; }
+function forceCreateNewItem(){
+  document.getElementById('similarItemOverlay').classList.remove('on');
+  if(_pendingNewItem) doCreateNewItem(_pendingNewItem);
+}
+function useSimilarItem(m){
+  document.getElementById('similarItemOverlay').classList.remove('on');
+  _pendingNewItem=null;
+  closeAddItemModal();
+  var already=whItems.some(function(it){ return it.item_id===m.id; });
+  var linkStep=already?Promise.resolve():sbFetch('/warehouse_item',{method:'POST',body:{warehouse_id:curWarehouse.id,item_id:m.id,min_qty:0},headers:{'Prefer':'return=minimal'}});
+  linkStep.then(function(){
+    return loadWarehouseItemsAndLedger();
+  }).then(function(){
+    forceShowAll=true;
+    document.getElementById('itemFilter').value='';
+    document.getElementById('itemSearchCandsWrap').style.display='none';
+    document.getElementById('ledgerItems').style.display='';
+    renderLedgerItems();
+    var card=document.getElementById('card_'+m.id);
+    if(card) card.scrollIntoView({behavior:'smooth',block:'center'});
+    toast('✓ 기존 품목 "'+m.item_name+'"을(를) 사용합니다. 입고수량을 입력해주세요');
+  });
+}
+function doCreateNewItem(p){
+  var writer=currentWriter();
+  var teamVal=document.getElementById('teamAm').value||document.getElementById('teamPm').value||document.getElementById('teamNight').value||null;
+  sbFetch('/item_master',{method:'POST',body:{item_name:p.name,spec:p.spec||null,unit:p.unit},headers:{'Prefer':'return=representation'}})
+    .then(function(r){return r.json();})
+    .then(function(rowsArr){
+      var newItem=Array.isArray(rowsArr)?rowsArr[0]:rowsArr;
+      if(!newItem||!newItem.id){ toast('⚠️ 품목 생성 실패'); return Promise.reject(new Error('no id')); }
+      var remain=p.initQ+p.inQ;
+      return sbFetch('/warehouse_item',{method:'POST',body:{warehouse_id:curWarehouse.id,item_id:newItem.id,min_qty:0,current_qty:remain},headers:{'Prefer':'return=minimal'}})
+        .then(function(){
+          return sbFetch('/warehouse_ledger',{method:'POST',body:{
+            ledger_date:curDate, shift:curShift, warehouse_id:curWarehouse.id, team:teamVal,
+            leader_name:writer, item_id:newItem.id, prev_qty:p.initQ, in_qty:p.inQ, out_qty:0,
+            remain_qty:remain, out_by:writer, written_by:writer, updated_at:new Date().toISOString()
+          },headers:{'Prefer':'return=minimal'}});
+        })
+        .then(function(){
+          return sbFetch('/item_master?select=*&active=eq.true&order=item_name').then(function(r){return r.json();});
+        })
+        .then(function(list){
+          ITEMS=Array.isArray(list)?list:ITEMS;
+          return loadWarehouseItemsAndLedger();
+        })
+        .then(function(){
+          forceShowAll=true;
+          _pendingNewItem=null;
+          closeNewItemModal();
+          closeAddItemModal();
+          document.getElementById('itemFilter').value='';
+          document.getElementById('itemSearchCandsWrap').style.display='none';
+          document.getElementById('ledgerItems').style.display='';
+          renderLedgerItems();
+          var card=document.getElementById('card_'+newItem.id);
+          if(card) card.scrollIntoView({behavior:'smooth',block:'center'});
+          toast('✓ "'+p.name+'" 등록 및 입고 완료 (현재고 '+remain+')');
+        });
+    })
+    .catch(function(e){ if(e&&e.message!=='no id') toast('⚠️ 등록 중 오류가 발생했습니다'); });
 }
 
 // ═══ 배정품목/최소재고 설정 ═══
