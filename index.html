@@ -4876,7 +4876,7 @@ async function loadExecDashboard(){
     var lostRate=lostTotal?Math.round(lostDone/lostTotal*100):100;
 
     var accTotal=accRows.length;
-    var issueTotal=vocTotal+lostTotal+accTotal;
+    var eventTotal=hoRows.filter(function(r){ return r.facility && r.facility!=='없음'; }).length;
     var staffLabel=isAvg?(periodLabel+' 일평균 근무인원'):(periodLabel+' 근무인원');
     var jwTotal=jwRows.length;
     var jwHeadSum=jwSumHeadcount(jwRows);
@@ -4890,7 +4890,7 @@ async function loadExecDashboard(){
     kpiHtml+=edKpiCard('🧳',periodLabel+' 유실물 접수건수', lostTotal, '건','neutral');
     kpiHtml+=edKpiCard('⚠️',periodLabel+' 안전사고', accTotal, '건', accTotal===0?'ok':'danger');
     kpiHtml+=edKpiCard('❗','현재 미확인 인계', hoTotal-hoConfirmed, '건', (hoTotal-hoConfirmed)===0?'ok':'warn');
-    kpiHtml+=edKpiCard('📌',periodLabel+' 특이사항 합계', issueTotal, '건', issueTotal===0?'ok':'neutral');
+    kpiHtml+=edKpiCard('📌',periodLabel+' 이벤트 현황', eventTotal, '건', eventTotal===0?'ok':'neutral');
     kpiHtml+=edKpiCard('🤝',periodLabel+' 공동작업 건수', jwTotal, '건','neutral');
     kpiHtml+=edKpiCard('👥',periodLabel+' 공동작업 투입인원', jwHeadSum, '명','neutral');
     var kg=document.getElementById('edKpiGrid'); if(kg) kg.innerHTML=kpiHtml;
@@ -5003,7 +5003,7 @@ async function loadExecDashboard(){
       hoTotal:hoTotal, hoConfirmed:hoConfirmed, hoRate:hoRate,
       vocTotal:vocTotal, vocRate:vocRate,
       lostTotal:lostTotal, lostRate:lostRate,
-      accTotal:accTotal, issueTotal:issueTotal,
+      accTotal:accTotal, eventTotal:eventTotal,
       shiftShow:shiftShow, floorShow:floorShow,
       facTypeCount:facTypeCount, accTypeCount:accTypeCount, vocTypeCount:vocTypeCount
     };
@@ -5033,7 +5033,7 @@ async function edDownloadExcel(){
     rows.push(['유실물 접수건수', d.lostTotal]);
     rows.push(['유실물 처리율(%)', d.lostRate]);
     rows.push(['안전사고', d.accTotal]);
-    rows.push(['특이사항 합계', d.issueTotal]);
+    rows.push(['이벤트 현황', d.eventTotal]);
     rows.push([]);
     rows.push(['[인력현황]']);
     rows.push(['오전팀(명)', d.shiftShow['오전']]);
