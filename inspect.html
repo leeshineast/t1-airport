@@ -676,15 +676,16 @@ function loadSession(){
   try{ var s=localStorage.getItem('t1_me'); if(!s)return null; var u=JSON.parse(s); return (u&&u.name)?u:null; }catch(e){ return null; }
 }
 function roleLabel(r){
-  if(r==='admin')return '관리자'; if(r==='manager')return '매니저';
-  if(r==='leader')return '조장'; if(r==='deputy'||r==='acting')return '조장대행';
-  if(r==='teamlead')return '팀장'; return '직원';
+  if(r==='master')return '최고관리자'; if(r==='admin')return '관리자'; if(r==='manager')return '팀장';
+  if(r==='leader')return '조장'; if(r==='acting_leader')return '조장대행';
+  if(r==='group_leader')return '그룹장'; if(r==='division_head')return '본부장';
+  if(r==='guest'||r==='vehicle_guest')return '게스트'; return '직원';
 }
 function canInput(){
   if(!me)return false; var r=me.role;
-  return r==='admin'||r==='manager'||r==='leader'||r==='deputy'||r==='acting'||r==='teamlead';
+  return r==='master'||r==='admin'||r==='manager'||r==='leader'||r==='acting_leader'||r==='group_leader'||r==='division_head';
 }
-function isAdmin(){ return me && (me.role==='admin'||me.role==='manager'); }
+function isAdmin(){ return me && (me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='group_leader'||me.role==='division_head'); }
 
 // ═══ 데이터 초기화 (테스트 기간 전용, 관리자만) ═══
 var RESET_MODULES=[
