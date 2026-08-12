@@ -9403,6 +9403,7 @@ var jwSelectedSchedIds=[];
 function jwRenderScheduleSuggestions(){
   var wrap=document.getElementById('jwSchedWrap'); var listEl=document.getElementById('jwSchedList');
   if(!wrap||!listEl) return;
+  if(jwCurMode==='replace'){ wrap.style.display='none'; return; } // 작업대체 모드에서는 사전등록 작업 제안을 표시하지 않음
   if(!jwSelectedTeams.length||!jwScheduleData.length){ wrap.style.display='none'; jwSyncScheduleMode(); return; }
   var matched=jwScheduleData.filter(function(s){ return jwSelectedTeams.indexOf(s.team)!==-1; });
   if(!matched.length){ wrap.style.display='none'; jwSyncScheduleMode(); return; }
