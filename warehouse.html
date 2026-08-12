@@ -3,14 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#4ade80">
+<meta name="theme-color" content="#5D7DA3">
 <title>T1OS 창고 재고관리</title>
 <script src="https://cdn.jsdelivr.net/npm/xlsx-js-style@1.2.0/dist/xlsx.min.js"></script>
 <style>
 :root{
-  --sky:#86efac; --sky2:#4ade80; --sky3:#16a34a;
+  --sky:#7C97BE; --sky2:#4A6B94; --sky3:#2E4A6B;
   --g0:#f8fafc; --g1:#f1f5f9; --g2:#e2e8f0; --g3:#94a3b8; --g4:#475569; --g5:#1e293b;
   --danger:#ef4444; --dangerBg:#fee2e2; --ok:#10b981; --okBg:#d1fae5; --warn:#f59e0b; --warnBg:#fef3c7;
+  --navy-bg:#EAF0F7;
   --r1:8px; --r2:12px; --r3:16px;
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -19,7 +20,7 @@ button{font-family:inherit}
 select,input[type=text],input[type=number],input[type=date]{width:100%;padding:10px 11px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13.5px;font-family:inherit;background:#fff;color:var(--g5);outline:none}
 select:focus,input:focus{border-color:var(--sky)}
 textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;font-family:inherit;background:#fff;outline:none;resize:vertical;min-height:40px}
-.hdr{background:linear-gradient(135deg,#bbf7d0 0%,#86efac 45%,#4ade80 100%);padding:14px 16px 16px;padding-top:calc(14px + env(safe-area-inset-top, 10px));color:#fff;border-radius:0 0 20px 20px;box-shadow:0 4px 14px rgba(74,222,128,.25);position:sticky;top:0;z-index:10}
+.hdr{background:linear-gradient(135deg,#B7C8DE 0%,#93AAC9 45%,#5D7DA3 100%);padding:14px 16px 16px;padding-top:calc(14px + env(safe-area-inset-top, 10px));color:#fff;border-radius:0 0 20px 20px;box-shadow:0 4px 14px rgba(93,125,163,.28);position:sticky;top:0;z-index:10}
 .hdr-top{display:flex;align-items:center;gap:10px}
 .back-btn{background:rgba(255,255,255,.22);border:none;color:#fff;width:34px;height:34px;border-radius:10px;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .hdr-title{font-size:16px;font-weight:800;letter-spacing:-.3px}
@@ -52,36 +53,45 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
 .empty{text-align:center;color:var(--g3);font-size:12px;padding:26px 0}
 /* 창고 목록 */
 .wh-search{position:relative;margin-bottom:10px}
-.zone-seg{display:flex;gap:6px;margin-bottom:10px;overflow-x:auto}
-.zone-seg .seg-btn{padding:7px 13px;font-size:11.5px;white-space:nowrap;flex-shrink:0}
-.wh-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.wh-card{position:relative;background:#fff;border:1px solid var(--g2);border-radius:var(--r2);padding:8px 8px 7px;cursor:pointer;min-height:88px;display:flex;flex-direction:column}
-.wh-card:active{transform:scale(.98)}
-.wh-top{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
-.wh-zone{font-size:8px;font-weight:800;border-radius:99px;padding:1px 6px;background:var(--g1);color:var(--g4)}
-.wh-zone.as{background:#f0fdf4;color:var(--sky3)}
-.wh-room{font-size:10.5px;font-weight:800;color:var(--g5)}
-.wh-loc{font-size:10px;color:var(--g4);margin-top:3px;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1}
-.wh-teams{font-size:9px;color:var(--sky3);font-weight:700;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zone-seg{display:flex;gap:7px;margin-bottom:14px;overflow-x:auto}
+.zone-seg .seg-btn{padding:9px 16px;font-size:12.5px;white-space:nowrap;flex-shrink:0;border-radius:99px}
+.zone-seg .seg-btn.on{background:var(--sky2);border-color:var(--sky2);box-shadow:0 2px 8px rgba(74,107,148,.28)}
+.wh-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:9px}
+.wh-card{position:relative;background:#fff;border:1px solid var(--g2);border-radius:14px;padding:12px 12px 11px;cursor:pointer;min-height:96px;display:flex;flex-direction:column;box-shadow:0 1px 3px rgba(30,41,59,.04);transition:transform .1s}
+.wh-card:active{transform:scale(.97)}
+.wh-top{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:5px}
+.wh-zone{font-size:9px;font-weight:800;border-radius:99px;padding:2.5px 8px;background:var(--g1);color:var(--g4);letter-spacing:.2px}
+.wh-zone.as{background:var(--navy-bg);color:var(--sky3)}
+.wh-room{font-size:13px;font-weight:800;color:var(--g5);letter-spacing:-.2px}
+.wh-loc{font-size:11px;color:var(--g4);margin-top:2px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1}
+.wh-teams{font-size:10px;color:var(--sky3);font-weight:700;margin-top:6px;padding-top:6px;border-top:1px dashed var(--g2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .wh-teams.mine{color:#c026d3}
-.wh-edit-btn{position:absolute;top:5px;right:5px;background:var(--g1);border:none;border-radius:6px;width:18px;height:18px;font-size:9.5px;color:var(--g4);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
-.wh-group-lbl{font-size:11px;font-weight:800;color:var(--g3);margin:14px 2px 7px;grid-column:1/-1}
-.wh-stat-summary{font-size:9.5px;color:var(--sky3);font-weight:700;margin-top:4px}
+.wh-edit-btn{position:absolute;top:8px;right:8px;background:var(--g1);border:none;border-radius:7px;width:22px;height:22px;font-size:10.5px;color:var(--g4);cursor:pointer;display:flex;align-items:center;justify-content:center;z-index:2}
+.wh-group-lbl{font-size:12px;font-weight:800;color:var(--sky3);margin:18px 2px 8px;grid-column:1/-1;padding-left:9px;border-left:3px solid var(--sky2)}
+.wh-stat-summary{font-size:10px;color:var(--sky3);font-weight:700;margin-top:6px;padding-top:6px;border-top:1px dashed var(--g2)}
 .wh-stat-summary.none{color:var(--g3);font-weight:600}
 /* 관리대장 */
 .info-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .info-grid .full{grid-column:1/-1}
-.item-card{background:#fff;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 12px;margin-bottom:8px}
+.item-card{background:#fff;border:1px solid var(--g2);border-radius:14px;padding:13px 13px 12px;margin-bottom:10px;box-shadow:0 1px 3px rgba(30,41,59,.04)}
 .item-card.low{border-color:var(--danger);background:var(--dangerBg)}
 .item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px}
-.item-name{font-size:13.5px;font-weight:800;color:var(--g5)}
-.item-spec{font-size:10.5px;color:var(--g3);margin-top:1px}
-.item-remain{font-size:15px;font-weight:800;color:var(--g5);text-align:right}
+.item-name{font-size:14.5px;font-weight:800;color:var(--g5)}
+.item-spec{font-size:11px;color:var(--g3);margin-top:2px}
+.item-remain{font-size:17px;font-weight:900;color:var(--sky3);text-align:right}
 .item-remain small{font-size:9.5px;color:var(--g3);font-weight:600;display:block}
 .item-card.low .item-remain{color:var(--danger)}
-.item-nums{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:8px}
-.item-nums label{font-size:9.5px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px}
-.item-nums input{padding:7px 8px;font-size:13px;text-align:center}
+.item-nums{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:11px;align-items:end}
+.item-nums label{font-size:10.5px;color:var(--g4);font-weight:800;display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:5px}
+.item-nums label .dot{width:6px;height:6px;border-radius:50%;display:inline-block}
+.item-nums .in label .dot{background:#2F6FE0}
+.item-nums .out label .dot{background:#E0522F}
+.item-nums input{padding:10px 6px;font-size:15.5px;font-weight:800;text-align:center;min-height:42px;border-radius:10px}
+.item-nums .stock input{background:var(--g1);color:var(--g4);border-color:var(--g2)}
+.item-nums .in input{background:#EEF4FF;border-color:#C7DAF5;color:#1D4E9E}
+.item-nums .in input:focus{border-color:#2F6FE0}
+.item-nums .out input{background:#FFF1EE;border-color:#F3CBBF;color:#B8391B}
+.item-nums .out input:focus{border-color:#E0522F}
 .item-extra{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
 .item-extra label{font-size:9.5px;color:var(--g4);font-weight:700;display:block;margin-bottom:3px}
 .item-note{margin-top:6px}
@@ -178,7 +188,7 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
 <!-- ═══ 창고 목록 ═══ -->
 <div class="screen" id="scrMain">
   <button class="sub-back" onclick="go('scrHome')">← 메뉴</button>
-  <div id="mainModeHint" style="display:none;background:#f0fdf4;border:1px solid var(--sky);color:var(--sky3);font-size:12px;font-weight:700;border-radius:var(--r2);padding:9px 12px;margin-bottom:10px">📥 입고 처리할 창고를 선택하세요</div>
+  <div id="mainModeHint" style="display:none;background:var(--navy-bg);border:1px solid var(--sky);color:var(--sky3);font-size:12px;font-weight:700;border-radius:var(--r2);padding:9px 12px;margin-bottom:10px">📥 입고 처리할 창고를 선택하세요</div>
   <div class="wh-search">
     <input type="text" id="whSearch" placeholder="창고 위치·실번호·품목으로 검색" oninput="renderWarehouses()">
   </div>
@@ -780,9 +790,9 @@ function renderLedgerItems(){
         '<div class="item-remain"><small>현재고</small><span id="rem_'+it.item_id+'">'+remainDisplay(L.remain_qty)+'</span></div>'+
       '</div>'+
       '<div class="item-nums">'+
-        '<div><label>재고</label><input type="number" value="'+L.remain_qty+'" readonly style="background:var(--g1);color:var(--g4)"></div>'+
-        '<div><label>입고</label><input type="number" id="in_'+it.item_id+'" value="" placeholder="0" '+(inputOk?'':'readonly')+' onfocus="this.select()" oninput="onQtyChange(\''+it.item_id+'\')"></div>'+
-        '<div><label>출고</label><input type="number" id="out_'+it.item_id+'" value="" placeholder="0" '+(inputOk?'':'readonly')+' onfocus="this.select()" oninput="onQtyChange(\''+it.item_id+'\')"></div>'+
+        '<div class="stock"><label>재고</label><input type="number" value="'+L.remain_qty+'" readonly></div>'+
+        '<div class="in"><label><span class="dot"></span>입고</label><input type="number" id="in_'+it.item_id+'" value="" placeholder="0" '+(inputOk?'':'readonly')+' onfocus="this.select()" oninput="onQtyChange(\''+it.item_id+'\')"></div>'+
+        '<div class="out"><label><span class="dot"></span>출고</label><input type="number" id="out_'+it.item_id+'" value="" placeholder="0" '+(inputOk?'':'readonly')+' onfocus="this.select()" oninput="onQtyChange(\''+it.item_id+'\')"></div>'+
       '</div>';
     box.appendChild(d);
   });
