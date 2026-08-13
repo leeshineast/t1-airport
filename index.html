@@ -14713,17 +14713,21 @@ function previewToiletFile(input){
       if(!json||json.length<2){ toast('데이터가 없습니다'); return; }
       var headers=(json[0]||[]).map(function(h){return String(h||'').trim();});
       var rows=json.slice(1).filter(function(r){ return r.some(function(c){return c!==null&&c!=='';}); });
-      // 컬럼 위치 자동 탐지(엑셀 원본 헤더명 기준)
-      var idx=function(name){ return headers.indexOf(name); };
+      // 컬럼 위치 자동 탐지: 앱 자체 다운로드 헤더와, 기존 원본 양식 헤더 둘 다 인식
+      var idx=function(names){
+        if(!Array.isArray(names)) names=[names];
+        for(var i=0;i<names.length;i++){ var p=headers.indexOf(names[i]); if(p>=0) return p; }
+        return -1;
+      };
       var col={
-        resp: idx('응답일시'), seqNo: idx('연번'), zone: idx('랜드/에어 구분'), gender: idx('남자/여자 구분'),
-        category: idx('일반/상주 구분'), floor: idx('화장실 층 구분'), number: idx('화장실 Number'),
-        family: idx('가족실 유무'), kitchen: idx('탕비실 유무'), sinkStation: idx('개수대'),
-        storage: idx('소모품 보관창고'), toiletCnt: idx('양변기 수량'), tissue: idx('위생휴지통'),
-        sinkCnt: idx('세면기 수량'), urinalCnt: idx('소변기 수량'), team: idx('주간관리팀'), nightTeam: idx('야간관리팀')
+        resp: idx('응답일시'), seqNo: idx('연번'), zone: idx(['구역','랜드/에어 구분']), gender: idx(['성별','남자/여자 구분']),
+        category: idx(['일반/상주','일반/상주 구분']), floor: idx(['층','화장실 층 구분']), number: idx(['번호','화장실 Number']),
+        family: idx(['가족실','가족실 유무']), kitchen: idx(['탕비실','탕비실 유무']), sinkStation: idx('개수대'),
+        storage: idx(['소모품보관창고','소모품 보관창고']), toiletCnt: idx(['양변기','양변기 수량']), tissue: idx(['위생휴지통']),
+        sinkCnt: idx(['세면기','세면기 수량']), urinalCnt: idx(['소변기','소변기 수량']), team: idx('주간관리팀'), nightTeam: idx('야간관리팀')
       };
       if(col.zone<0||col.gender<0||col.floor<0||col.number<0){
-        toast('⚠️ 필수 컬럼(랜드/에어 구분, 남자/여자 구분, 화장실 층 구분, 화장실 Number)을 찾을 수 없습니다. 원본 양식과 동일한 헤더를 사용해주세요.');
+        toast('⚠️ 필수 컬럼(구역, 성별, 층, 번호)을 찾을 수 없습니다. 앱에서 다운로드한 양식과 동일한 헤더를 사용해주세요.');
         return;
       }
       var norm=function(v){ if(v===null||v===undefined||v===0||v==='0'||v==='-') return '없음'; return String(v).trim(); };
@@ -14834,6 +14838,7 @@ var FAC_CONFIGS={
     fields:[
       {key:'seq_no', label:'연번', xh:'연번', type:'number'},
       {key:'zone', label:'구역', xh:'랜드/에어', type:'select', required:true, options:[['Airside','A/S (에어사이드)'],['Landside','L/S (랜드사이드)']]},
+      {key:'floor', label:'층', xh:'휴게실 층', type:'select', required:true, options:['지하2층','지하1층','1층','2층','3층','4층']},
       {key:'location', label:'위치', xh:'휴게실 위치', type:'text', required:true},
       {key:'number', label:'번호', xh:'휴게실 NUMBER', type:'text'},
       {key:'gender', label:'남/여/공용', xh:'남/여', type:'select', options:['남자','여자','공용']},
@@ -14848,20 +14853,21 @@ var FAC_CONFIGS={
       {key:'board_type', label:'게시판', xh:'게시판', type:'text'}
     ],
     listTitle:function(r){ return (r.location||''); },
-    listSub:function(r){ return (r.zone==='Airside'?'A/S':'L/S')+' · '+(r.gender||'-')+' · '+(r.use_team||''); },
+    listSub:function(r){ return (r.zone==='Airside'?'A/S':'L/S')+' · '+(r.floor||'-')+' · '+(r.gender||'-')+' · '+(r.use_team||''); },
     listDetail:function(r){ return '냉장고'+(r.fridge_cnt||0)+' 전자레인지'+(r.microwave_cnt||0)+' 정수기'+(r.water_cnt||0); }
   },
   storage:{table:'storage_room_master', icon:'📦', title:'창고', screen:'sStorageMgmt', pfx:'st',
     fields:[
       {key:'seq_no', label:'연번', xh:'연번', type:'number'},
       {key:'zone', label:'구역', xh:'랜드/에어', type:'select', required:true, options:[['Airside','A/S (에어사이드)'],['Landside','L/S (랜드사이드)']]},
+      {key:'floor', label:'층', xh:'창고 층', type:'select', required:true, options:['지하2층','지하1층','1층','2층','3층','4층']},
       {key:'location', label:'위치', xh:'창고 위치', type:'text', required:true},
       {key:'number', label:'번호', xh:'창고 NUMBER', type:'text'},
       {key:'storage_type', label:'창고 종류(용품/장비/문서 등)', xh:'창고 종류', type:'text'},
       {key:'manager', label:'관리 주체', xh:'관리 주체', type:'text'}
     ],
     listTitle:function(r){ return (r.location||''); },
-    listSub:function(r){ return (r.zone==='Airside'?'A/S':'L/S')+' · '+(r.number||''); },
+    listSub:function(r){ return (r.zone==='Airside'?'A/S':'L/S')+' · '+(r.floor||'-')+' · '+(r.number||''); },
     listDetail:function(r){ return (r.storage_type||'-')+' · 관리: '+(r.manager||'-'); }
   },
   baby:{table:'baby_room_master', icon:'👶', title:'유아휴게실', screen:'sBabyMgmt', pfx:'bb',
