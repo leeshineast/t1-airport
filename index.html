@@ -7197,7 +7197,8 @@ async function loadTeamAvgAttendance(prefix){
   try{
     var mpRes=await sb.from('mp_data').select('date,team_code,values').gte('date',dFrom).lte('date',dTo);
     var mgrRes=await sb.from('mgr_attendance').select('date,team,name,checked').gte('date',dFrom).lte('date',dTo).eq('checked',true);
-    var mpData=mpRes.data||[], mgrData=mgrRes.data||[];
+    var nsRes=await sb.from('night_special_data').select('date,team_code,carpet,wax,stone,wood,restroom,pbb,etc,es,toilet_daily,common_area,collection').gte('date',dFrom).lte('date',dTo);
+    var mpData=mpRes.data||[], mgrData=mgrRes.data||[], nsData=nsRes.data||[];
     var sumByTeam={}, daysByTeam={};
     TEAM_AVG_ORDER.forEach(function(tc){ sumByTeam[tc]=0; daysByTeam[tc]={}; });
     mpData.forEach(function(r){
@@ -7210,6 +7211,16 @@ async function loadTeamAvgAttendance(prefix){
         if(!vals[ri]||!Array.isArray(vals[ri])) continue;
         for(var ci=0;ci<7;ci++){ sum+=Number(vals[ri][ci])||0; }
       }
+      if(sum<=0) return;
+      sumByTeam[r.team_code]+=sum;
+      daysByTeam[r.team_code][r.date]=1;
+    });
+    // 야간특별작업(5팀/10팀)은 별도 입력 방식이라 night_special_data의 카테고리별 인원을 합산
+    var NS_COLS=['carpet','pbb','wax','stone','wood','restroom','es','toilet_daily','common_area','collection'];
+    nsData.forEach(function(r){
+      if(!r.team_code || sumByTeam[r.team_code]===undefined) return;
+      var sum=0;
+      NS_COLS.forEach(function(cc){ sum+=Number(r[cc])||0; });
       if(sum<=0) return;
       sumByTeam[r.team_code]+=sum;
       daysByTeam[r.team_code][r.date]=1;
@@ -19031,6 +19042,12 @@ function msCalc(q, key){
     s.mp.days[r.date]=(s.mp.days[r.date]||0)+sum;
     s.mp.shiftSum['야간']+=sum; s.mp.shiftDays['야간'][r.date]=1;
     if(r.proxy_writer) s.mp.proxy++;
+    // 조별 평균표(5팀/10팀)에도 반영 — 야간은 mp_data 대신 이 테이블로 인원 입력
+    if(r.team_code){
+      s.mp.byTeamSum[r.team_code]=(s.mp.byTeamSum[r.team_code]||0)+sum;
+      if(!s.mp.byTeamDays[r.team_code]) s.mp.byTeamDays[r.team_code]={};
+      s.mp.byTeamDays[r.team_code][r.date]=1;
+    }
     // 시간대별: 야간 22~23, 0~6
     [22,23,0,1,2,3,4,5,6].forEach(function(hri){ s.mp.hourly[hri]+=sum; s.mp.hourlyDays[hri]++; s.mp.hourlyByShift['야간'][hri]+=sum; });
   });
