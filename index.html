@@ -17388,30 +17388,44 @@ function renderEbookPage(prefix){
         return page.getTextContent();
       }).then(function(tc){
         var qLower=st.searchQuery.toLowerCase();
+        var qLen=qLower.length;
+        if(qLen===0) return;
+        // 페이지 전체를 한 문자열로 이어붙이되, 각 글자가 어느 item의 몇 번째 글자인지 기록
+        // (한글 PDF는 한 단어가 여러 item으로 쪼개진 경우가 많아, item 하나만 봐서는 못 찾는 단어가 있음)
+        var combined='', map=[];
+        tc.items.forEach(function(item){
+          var s=item.str||'';
+          for(var i=0;i<s.length;i++) map.push({item:item, charIdx:i});
+          combined+=s;
+          if(item.hasEOL){ combined+=' '; map.push(null); }
+        });
+        var combinedLower=combined.toLowerCase();
         ctx.save();
         ctx.fillStyle='rgba(255,224,0,0.55)'; // 반투명 노란색 하이라이트
-        tc.items.forEach(function(item){
-          try{
-            var s=item.str||'';
-            if(!s || !item.transform) return;
-            var sLower=s.toLowerCase();
-            var qLen=qLower.length;
-            if(qLen===0) return;
-            var tx=window.pdfjsLib.Util.transform(renderViewport.transform, item.transform);
-            var fontHeight=Math.hypot(tx[2], tx[3]);
-            var scaleX=Math.hypot(tx[0], tx[1]);
-            var charWidth=(item.width||0)*scaleX/Math.max(s.length,1); // 글자당 평균 너비(근사치)
-            var baseX=tx[4], baseY=tx[5];
-            var pos=0, found;
-            while((found=sLower.indexOf(qLower,pos))!==-1){
-              var mx=baseX+found*charWidth;
-              var mw=qLen*charWidth;
-              var my=baseY-fontHeight;
+        var pos=0, found;
+        while((found=combinedLower.indexOf(qLower,pos))!==-1){
+          var i=found;
+          while(i<found+qLen){
+            var m=map[i];
+            if(!m){ i++; continue; }
+            var item=m.item, startIdx=m.charIdx, endIdx=startIdx, j=i+1;
+            // 같은 item 안에서 연속되는 글자는 한 번에 묶어서 사각형 하나로 처리
+            while(j<found+qLen && map[j] && map[j].item===item && map[j].charIdx===endIdx+1){ endIdx=map[j].charIdx; j++; }
+            try{
+              var tx=window.pdfjsLib.Util.transform(renderViewport.transform, item.transform);
+              var fontHeight=Math.hypot(tx[2], tx[3]);
+              var scaleX=Math.hypot(tx[0], tx[1]);
+              var itemLen=Math.max((item.str||'').length,1);
+              var charWidth=(item.width||0)*scaleX/itemLen;
+              var mx=tx[4]+startIdx*charWidth;
+              var mw=(endIdx-startIdx+1)*charWidth;
+              var my=tx[5]-fontHeight;
               ctx.fillRect(mx, my, mw, fontHeight*1.15);
-              pos=found+qLen;
-            }
-          }catch(itemErr){ /* 항목 하나 실패해도 나머지는 계속 처리 */ }
-        });
+            }catch(itemErr){ /* 항목 하나 실패해도 나머지는 계속 처리 */ }
+            i=j;
+          }
+          pos=found+qLen;
+        }
         ctx.restore();
       }).catch(function(){});
     }
@@ -17463,7 +17477,11 @@ function ebookGetPageTexts(prefix){
       return st.pdfDoc.getPage(pageNum).then(function(page){
         return page.getTextContent();
       }).then(function(tc){
-        return tc.items.map(function(it){ return it.str; }).join(' ');
+        // 조각(item) 사이에 무조건 공백을 넣으면 "여비"가 "여 비"처럼 쪼개져 검색이 안 되므로,
+        // 줄이 끝나는 지점(hasEOL)에만 공백을 넣고 나머지는 그대로 이어붙임
+        var s='';
+        tc.items.forEach(function(it){ s+=(it.str||''); if(it.hasEOL) s+=' '; });
+        return s;
       }).catch(function(){ return ''; });
     })(i));
   }
