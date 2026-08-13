@@ -7192,35 +7192,44 @@ async function loadTeamAvgAttendance(prefix){
       if(sumByTeam[tc]===undefined) return;
       sumByTeam[tc]+=1;
     });
-    var h='';
-    var TEAM_ROW_PAIRS=[['1팀','6팀'],['2팀','7팀'],['3팀','8팀'],['4팀','9팀'],['5팀','10팀']];
+    var TEAM_ROW_ORDER=['1팀','6팀','2팀','7팀','3팀','8팀','4팀','9팀','5팀','10팀'];
     var TEAM_SUBGROUPS={'1팀':['A','B','C'],'2팀':['A','B'],'3팀':['A','B'],'4팀':['A','B'],'6팀':['A','B','C'],'7팀':['A','B'],'8팀':['A','B'],'9팀':['A','B'],'5팀':['A','B'],'10팀':['A','B']};
     function taTeamVal(tc){
       if(mode==='day') return sumByTeam[tc]||0;
       var d=Object.keys(daysByTeam[tc]||{}).length||1;
       return Math.round((sumByTeam[tc]||0)/d);
     }
-    function taTeamCard(team){
-      var subs=TEAM_SUBGROUPS[team]||[];
-      var rows='', teamTotal=0;
-      subs.forEach(function(s){
-        var tc=team+s, v=taTeamVal(tc); teamTotal+=v;
-        var zero=(v===0);
-        rows+='<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0">'+
-          '<span style="font-size:12.5px;color:'+(zero?'var(--g3)':'var(--g5)')+';font-weight:600">'+s+'조</span>'+
-          '<span style="font-size:15px;font-weight:900;color:'+(zero?'var(--g3)':'var(--navy)')+'">'+v+'<span style="font-size:10.5px;font-weight:600;margin-left:1px">명</span></span>'+
-          '</div>';
-      });
-      return '<div style="background:var(--g0);border:1px solid var(--g2);border-radius:12px;padding:10px 13px">'+
-        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">'+
-        '<span style="font-size:13.5px;font-weight:800;color:var(--g6)">'+team+'</span>'+
-        '<span style="font-size:11px;font-weight:700;color:var(--teal2)">총 '+teamTotal+'명</span></div>'+
-        rows+'</div>';
+    function taCell(v){
+      if(v===null) return '<span style="color:var(--g2)">-</span>';
+      if(v===0) return '<span style="color:var(--g3)">0</span>';
+      return v;
     }
-    TEAM_ROW_PAIRS.forEach(function(pair){
-      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px">'+
-        taTeamCard(pair[0])+taTeamCard(pair[1])+'</div>';
+    var rowsHtml='';
+    TEAM_ROW_ORDER.forEach(function(team,i){
+      var subs=TEAM_SUBGROUPS[team]||[];
+      var a=subs.indexOf('A')!==-1?taTeamVal(team+'A'):null;
+      var b=subs.indexOf('B')!==-1?taTeamVal(team+'B'):null;
+      var c=subs.indexOf('C')!==-1?taTeamVal(team+'C'):null;
+      var total=(a||0)+(b||0)+(c||0);
+      var isPairStart=(i%2===0);
+      var bg=(Math.floor(i/2)%2===0)?'var(--navy-bg)':'transparent';
+      var topBorder=isPairStart?'border-top:2px solid var(--g3)':'border-top:1px solid var(--g1)';
+      rowsHtml+='<tr style="background:'+bg+'">'+
+        '<td style="padding:8px 4px;'+topBorder+';font-weight:800;color:var(--g6);font-size:13px">'+team+'</td>'+
+        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taCell(a)+'</td>'+
+        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taCell(b)+'</td>'+
+        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taCell(c)+'</td>'+
+        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:900;color:var(--teal2)">'+total+'</td>'+
+        '</tr>';
     });
+    var h='<table style="width:100%;border-collapse:collapse">'+
+      '<thead><tr style="color:var(--g4);font-size:11px">'+
+      '<th style="text-align:left;padding:2px 4px 6px;font-weight:700">팀</th>'+
+      '<th style="padding:2px 4px 6px;font-weight:700">A조</th>'+
+      '<th style="padding:2px 4px 6px;font-weight:700">B조</th>'+
+      '<th style="padding:2px 4px 6px;font-weight:700">C조</th>'+
+      '<th style="padding:2px 4px 6px;font-weight:700;color:var(--teal2)">계</th>'+
+      '</tr></thead><tbody>'+rowsHtml+'</tbody></table>';
     grid.innerHTML=h;
   }catch(e){ grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--g4);padding:11px">불러오기 실패</div>'; }
 }
