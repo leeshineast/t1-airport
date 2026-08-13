@@ -17393,16 +17393,23 @@ function renderEbookPage(prefix){
         tc.items.forEach(function(item){
           try{
             var s=item.str||'';
-            if(!s || s.toLowerCase().indexOf(qLower)===-1) return;
-            if(!item.transform) return;
-            // pdf.js 좌표계를 캔버스(렌더 뷰포트) 좌표로 변환
+            if(!s || !item.transform) return;
+            var sLower=s.toLowerCase();
+            var qLen=qLower.length;
+            if(qLen===0) return;
             var tx=window.pdfjsLib.Util.transform(renderViewport.transform, item.transform);
             var fontHeight=Math.hypot(tx[2], tx[3]);
             var scaleX=Math.hypot(tx[0], tx[1]);
-            var w=(item.width||0)*scaleX;
-            var x=tx[4];
-            var y=tx[5]-fontHeight;
-            ctx.fillRect(x, y, w, fontHeight*1.15);
+            var charWidth=(item.width||0)*scaleX/Math.max(s.length,1); // 글자당 평균 너비(근사치)
+            var baseX=tx[4], baseY=tx[5];
+            var pos=0, found;
+            while((found=sLower.indexOf(qLower,pos))!==-1){
+              var mx=baseX+found*charWidth;
+              var mw=qLen*charWidth;
+              var my=baseY-fontHeight;
+              ctx.fillRect(mx, my, mw, fontHeight*1.15);
+              pos=found+qLen;
+            }
           }catch(itemErr){ /* 항목 하나 실패해도 나머지는 계속 처리 */ }
         });
         ctx.restore();
