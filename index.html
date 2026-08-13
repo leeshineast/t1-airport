@@ -1314,7 +1314,12 @@ html{overflow-x:hidden}
       <div id="taT_month" onclick="taSetMode('','month')" style="flex:1;text-align:center;padding:7px 0;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--g2);color:var(--g5)">월</div>
       <div id="taT_year" onclick="taSetMode('','year')" style="flex:1;text-align:center;padding:7px 0;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--g2);color:var(--g5)">연</div>
     </div>
-    <div style="font-size:11.5px;color:var(--g4);padding:0 13px 8px" id="taPeriodLbl">오늘 · 조원 + 조장 포함</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 13px 8px">
+      <button onclick="taNav('',-1)" style="width:30px;height:30px;border-radius:50%;border:1.5px solid var(--g2);background:white;color:var(--g5);font-size:14px;cursor:pointer">◀</button>
+      <div style="font-size:12.5px;color:var(--g5);font-weight:700" id="taPeriodLbl">오늘 · 조원 + 조장 + 팀장 포함</div>
+      <button onclick="taNav('',1)" style="width:30px;height:30px;border-radius:50%;border:1.5px solid var(--g2);background:white;color:var(--g5);font-size:14px;cursor:pointer">▶</button>
+    </div>
+    <div style="text-align:center;margin-bottom:8px"><span onclick="taNavToday('')" style="font-size:11.5px;color:var(--teal2);font-weight:700;cursor:pointer">오늘로</span></div>
     <div class="card" style="margin:0 13px 13px"><div class="cb" style="padding:11px 13px">
       <div id="taGrid">불러오는 중…</div>
     </div></div>
@@ -7131,6 +7136,27 @@ setInterval(updateStaff,60000);
 // ─ 조별 평균 출근인원 (일/월/연) — mp_data(조원) + mgr_attendance의 '조장'만 합산 (팀장/운영팀 제외) ─
 var TEAM_AVG_ORDER=['1팀A','1팀B','1팀C','2팀A','2팀B','3팀A','3팀B','4팀A','4팀B','6팀A','6팀B','6팀C','7팀A','7팀B','8팀A','8팀B','9팀A','9팀B','5팀A','5팀B','10팀A','10팀B'];
 var taModeMap={'':'day','mp':'day'};
+var taAnchorMap={'':null,'mp':null}; // null이면 오늘 기준
+function taNavToday(prefix){
+  taAnchorMap[prefix]=null;
+  loadTeamAvgAttendance(prefix);
+}
+function taNav(prefix, dir){
+  var nowKst=new Date(Date.now()+9*3600000);
+  var todayStr=nowKst.toISOString().slice(0,10);
+  var cur=taAnchorMap[prefix]||todayStr;
+  var mode=taModeMap[prefix]||'day';
+  var parts=cur.split('-').map(Number);
+  var y=parts[0], m=parts[1], d=parts[2];
+  var nd;
+  if(mode==='day'){ nd=new Date(Date.UTC(y,m-1,d)); nd.setUTCDate(nd.getUTCDate()+dir); }
+  else if(mode==='month'){ nd=new Date(Date.UTC(y,m-1+dir,1)); }
+  else{ nd=new Date(Date.UTC(y+dir,m-1,1)); }
+  var newStr=nd.getUTCFullYear()+'-'+String(nd.getUTCMonth()+1).padStart(2,'0')+'-'+String(nd.getUTCDate()).padStart(2,'0');
+  if(newStr>todayStr) return; // 미래로는 이동 불가
+  taAnchorMap[prefix]=newStr;
+  loadTeamAvgAttendance(prefix);
+}
 function taSetMode(prefix, m){
   taModeMap[prefix]=m;
   ['day','month','year'].forEach(function(k){
@@ -7152,11 +7178,13 @@ async function loadTeamAvgAttendance(prefix){
   var lblEl=document.getElementById(lblId);
   var nowKst=new Date(Date.now()+9*3600000);
   var todayStr=nowKst.toISOString().slice(0,10);
-  // 전체현황(mp) 탭이면, 화면 상단에서 고른 날짜를 기준으로 계산 (없으면 오늘)
+  // 전체현황(mp) 탭이면 화면 상단에서 고른 날짜를, 홈 위젯이면 화살표로 이동한 날짜를 기준으로 계산 (둘 다 없으면 오늘)
   var anchorDate=todayStr;
   if(prefix==='mp'){
     var fdEl=document.getElementById('mpFullDate');
     if(fdEl && fdEl.value) anchorDate=fdEl.value;
+  }else if(taAnchorMap[prefix]){
+    anchorDate=taAnchorMap[prefix];
   }
   var dFrom, dTo, periodLbl;
   if(mode==='day'){ dFrom=dTo=anchorDate; periodLbl=(anchorDate===todayStr)?'오늘':anchorDate; }
