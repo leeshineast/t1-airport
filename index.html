@@ -2493,6 +2493,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
   <!-- 작성 탭 -->
   <div id="tlP0" style="padding:13px">
+    <div class="fg"><label class="f-lbl">연번</label><input type="number" id="tlSeqNo" class="ri" placeholder="예: 1" style="margin-bottom:0"></div>
     <div class="fg"><label class="f-lbl">구역 *</label>
       <div class="rg" id="tlZoneG">
         <div class="rp" onclick="selRP(this)" data-v="Airside">A/S (에어사이드)</div>
@@ -2606,6 +2607,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <button class="m-x" onclick="hideM('toiletDetailModal')">×</button>
     </div>
     <div style="padding:16px 17px">
+      <div class="fg"><label class="f-lbl">연번</label><input type="number" id="tlDSeqNo" class="ri" style="margin-bottom:0"></div>
       <div class="fg"><label class="f-lbl">구역 *</label>
         <div class="rg" id="tlDZoneG"><div class="rp" onclick="selRP(this)" data-v="Airside">A/S</div><div class="rp" onclick="selRP(this)" data-v="Landside">L/S</div></div>
       </div>
@@ -14495,7 +14497,7 @@ function tlResetForm(){
     document.querySelectorAll('#'+g+' .rp').forEach(function(c){c.classList.remove('on');});
   });
   tlSetVal('tlFamilyG','없음'); tlSetVal('tlKitchenG','없음'); tlSetVal('tlActiveG','true');
-  ['tlNumber','tlCategoryEtc','tlSinkStation','tlToiletCnt','tlSinkCnt','tlUrinalCnt','tlTissueBin','tlSupplyStorage','tlTeam','tlNightTeam'].forEach(function(id){
+  ['tlNumber','tlSeqNo','tlCategoryEtc','tlSinkStation','tlToiletCnt','tlSinkCnt','tlUrinalCnt','tlTissueBin','tlSupplyStorage','tlTeam','tlNightTeam'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
   var err=document.getElementById('tlFormErr'); if(err) err.style.display='none';
@@ -14512,6 +14514,7 @@ async function subToiletNew(){
   }
   err.style.display='none';
   var payload={
+    seq_no:parseInt(document.getElementById('tlSeqNo').value)||null,
     zone:zone, gender:gender, category:category||null, floor:floor, number:number,
     family_room:tlGetVal('tlFamilyG')||'없음', kitchenette:tlGetVal('tlKitchenG')||'없음',
     sink_station:parseInt(document.getElementById('tlSinkStation').value)||null,
@@ -14548,6 +14551,14 @@ function renderToiletList(){
     if(fTeam && !((r.team||'').indexOf(fTeam)!==-1 || (r.night_team||'').indexOf(fTeam)!==-1)) return false;
     if(q && (r.number||'').toLowerCase().indexOf(q)===-1 && (r.category||'').toLowerCase().indexOf(q)===-1) return false;
     return true;
+  });
+  filtered.sort(function(a,b){
+    var av=(a.seq_no!=null&&a.seq_no!=='')?Number(a.seq_no):null;
+    var bv=(b.seq_no!=null&&b.seq_no!=='')?Number(b.seq_no):null;
+    if(av!=null&&bv!=null) return av-bv;
+    if(av!=null) return -1;
+    if(bv!=null) return 1;
+    return 0;
   });
   // 통계
   var statsEl=document.getElementById('tlStats');
@@ -14592,6 +14603,7 @@ function openToiletDetail(id){
   if(!r) return;
   tlEditId=id;
   document.getElementById('tlDetailTitle').textContent='🚻 '+(r.number||'')+' 상세';
+  document.getElementById('tlDSeqNo').value=r.seq_no!=null?r.seq_no:'';
   tlSetVal('tlDZoneG', r.zone||'');
   tlSetVal('tlDGenderG', r.gender||'');
   var stdCat=(r.category==='일반'||r.category==='상주')?r.category:'';
@@ -14622,6 +14634,7 @@ async function saveToiletDetail(){
   var category=tlGetVal('tlDCategoryG')||document.getElementById('tlDCategoryEtc').value.trim();
   if(!zone||!gender||!floor||!number){ toast('⚠️ 구역·성별·층·화장실 번호는 필수입니다'); return; }
   var payload={
+    seq_no:parseInt(document.getElementById('tlDSeqNo').value)||null,
     zone:zone, gender:gender, category:category||null, floor:floor, number:number,
     family_room:tlGetVal('tlDFamilyG')||'없음', kitchenette:tlGetVal('tlDKitchenG')||'없음',
     sink_station:parseInt(document.getElementById('tlDSinkStation').value)||null,
@@ -14658,10 +14671,19 @@ async function deleteToiletConfirm(){
 async function dlToiletExcel(){
   if(!canDownload()) return;
   if(!toiletData.length){ toast('다운로드할 데이터가 없습니다'); return; }
-  var header=['구역','성별','일반/상주','층','번호','가족실','탕비실','개수대','양변기','위생휴지통','세면기','소변기','소모품보관창고','주간관리팀','야간관리팀','사용여부'];
+  var sorted=toiletData.slice().sort(function(a,b){
+    var av=(a.seq_no!=null&&a.seq_no!=='')?Number(a.seq_no):null;
+    var bv=(b.seq_no!=null&&b.seq_no!=='')?Number(b.seq_no):null;
+    if(av!=null&&bv!=null) return av-bv;
+    if(av!=null) return -1;
+    if(bv!=null) return 1;
+    return 0;
+  });
+  var header=['연번','구역','성별','일반/상주','층','번호','가족실','탕비실','개수대','양변기','위생휴지통','세면기','소변기','소모품보관창고','주간관리팀','야간관리팀','사용여부'];
   var rows=[header];
-  toiletData.forEach(function(r){
+  sorted.forEach(function(r){
     rows.push([
+      r.seq_no!=null?r.seq_no:'',
       r.zone==='Airside'?'Airside':'Landside', r.gender||'', r.category||'', r.floor||'', r.number||'',
       r.family_room||'', r.kitchenette||'', r.sink_station!=null?r.sink_station:'', r.toilet_cnt!=null?r.toilet_cnt:'',
       r.tissue_bin||'', r.sink_cnt!=null?r.sink_cnt:'', r.urinal_cnt!=null?r.urinal_cnt:'',
@@ -14670,7 +14692,7 @@ async function dlToiletExcel(){
   });
   try{
     var ws=XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols']=[{wch:9},{wch:10},{wch:10},{wch:8},{wch:16},{wch:8},{wch:8},{wch:7},{wch:7},{wch:10},{wch:7},{wch:7},{wch:14},{wch:12},{wch:12},{wch:8}];
+    ws['!cols']=[{wch:6},{wch:9},{wch:10},{wch:10},{wch:8},{wch:16},{wch:8},{wch:8},{wch:7},{wch:7},{wch:10},{wch:7},{wch:7},{wch:14},{wch:12},{wch:12},{wch:8}];
     var wb=XLSX.utils.book_new();
     dlFinalizeSheet(ws);
     XLSX.utils.book_append_sheet(wb,ws,'화장실현황');
@@ -14694,7 +14716,7 @@ function previewToiletFile(input){
       // 컬럼 위치 자동 탐지(엑셀 원본 헤더명 기준)
       var idx=function(name){ return headers.indexOf(name); };
       var col={
-        resp: idx('응답일시'), zone: idx('랜드/에어 구분'), gender: idx('남자/여자 구분'),
+        resp: idx('응답일시'), seqNo: idx('연번'), zone: idx('랜드/에어 구분'), gender: idx('남자/여자 구분'),
         category: idx('일반/상주 구분'), floor: idx('화장실 층 구분'), number: idx('화장실 Number'),
         family: idx('가족실 유무'), kitchen: idx('탕비실 유무'), sinkStation: idx('개수대'),
         storage: idx('소모품 보관창고'), toiletCnt: idx('양변기 수량'), tissue: idx('위생휴지통'),
@@ -14707,6 +14729,7 @@ function previewToiletFile(input){
       var norm=function(v){ if(v===null||v===undefined||v===0||v==='0'||v==='-') return '없음'; return String(v).trim(); };
       var parsed=rows.map(function(r){
         return {
+          seq_no: (col.seqNo>=0 && r[col.seqNo]!=null && r[col.seqNo]!=='')?parseInt(r[col.seqNo])||null:null,
           zone: r[col.zone]!=null?String(r[col.zone]).trim():null,
           gender: r[col.gender]!=null?String(r[col.gender]).trim():null,
           category: r[col.category]!=null?String(r[col.category]).trim():null,
@@ -14772,6 +14795,7 @@ async function uploadToiletData(){
 var FAC_CONFIGS={
   shower:{table:'shower_master', icon:'🚿', title:'샤워실', screen:'sShowerMgmt', pfx:'sw',
     fields:[
+      {key:'seq_no', label:'연번', xh:'연번', type:'number'},
       {key:'zone', label:'구역', xh:'랜드/에어', type:'select', required:true, options:[['Airside','A/S (에어사이드)'],['Landside','L/S (랜드사이드)']]},
       {key:'gender', label:'성별 구분', xh:'남자/여자', type:'select', required:true, options:[['남자 샤워실','남자 샤워실'],['여자 샤워실','여자 샤워실']]},
       {key:'category', label:'구분(예: 상주직원 전용)', xh:'일반/상주', type:'text'},
@@ -14790,6 +14814,7 @@ var FAC_CONFIGS={
   },
   smoking:{table:'smoking_room_master', icon:'🚬', title:'흡연실', screen:'sSmokingMgmt', pfx:'sm',
     fields:[
+      {key:'seq_no', label:'연번', xh:'연번', type:'number'},
       {key:'zone', label:'구역', xh:'에어 구분', type:'select', required:true, options:[['Airside','A/S (에어사이드)'],['Landside','L/S (랜드사이드)']]},
       {key:'indoor_outdoor', label:'내부/외부', xh:'내부/외부', type:'select', required:true, options:['내부','외부']},
       {key:'category', label:'일반/상주 구분', xh:'일반/상주', type:'select', options:['일반','상주']},
@@ -14807,6 +14832,7 @@ var FAC_CONFIGS={
   },
   rest:{table:'rest_facility_master', icon:'😴', title:'휴게시설', screen:'sRestMgmt', pfx:'rf',
     fields:[
+      {key:'seq_no', label:'연번', xh:'연번', type:'number'},
       {key:'zone', label:'구역', xh:'랜드/에어', type:'select', required:true, options:[['Airside','A/S (에어사이드)'],['Landside','L/S (랜드사이드)']]},
       {key:'location', label:'위치', xh:'휴게실 위치', type:'text', required:true},
       {key:'number', label:'번호', xh:'휴게실 NUMBER', type:'text'},
@@ -14827,6 +14853,7 @@ var FAC_CONFIGS={
   },
   storage:{table:'storage_room_master', icon:'📦', title:'창고', screen:'sStorageMgmt', pfx:'st',
     fields:[
+      {key:'seq_no', label:'연번', xh:'연번', type:'number'},
       {key:'zone', label:'구역', xh:'랜드/에어', type:'select', required:true, options:[['Airside','A/S (에어사이드)'],['Landside','L/S (랜드사이드)']]},
       {key:'location', label:'위치', xh:'창고 위치', type:'text', required:true},
       {key:'number', label:'번호', xh:'창고 NUMBER', type:'text'},
@@ -14839,6 +14866,7 @@ var FAC_CONFIGS={
   },
   baby:{table:'baby_room_master', icon:'👶', title:'유아휴게실', screen:'sBabyMgmt', pfx:'bb',
     fields:[
+      {key:'seq_no', label:'연번', xh:'연번', type:'number'},
       {key:'zone', label:'구역', xh:'랜드/에어', type:'select', required:true, options:[['Airside','A/S (에어사이드)'],['Landside','L/S (랜드사이드)']]},
       {key:'floor', label:'층', xh:'층구분', type:'select', required:true, options:['1F','2F','3F','4F']},
       {key:'location', label:'위치', xh:'휴게실 위치', type:'text', required:true},
@@ -15026,6 +15054,15 @@ function facRenderList(type){
     }
     return true;
   });
+  // 연번(seq_no) 순으로 정렬 — 연번 있는 항목이 먼저, 그 안에서는 숫자 오름차순, 연번 없는 항목은 뒤로
+  filtered.sort(function(a,b){
+    var av=(a.seq_no!=null&&a.seq_no!=='')?Number(a.seq_no):null;
+    var bv=(b.seq_no!=null&&b.seq_no!=='')?Number(b.seq_no):null;
+    if(av!=null&&bv!=null) return av-bv;
+    if(av!=null) return -1;
+    if(bv!=null) return 1;
+    return 0;
+  });
   var statsEl=document.getElementById(p+'Stats');
   var asCount=filtered.filter(function(r){return r.zone==='Airside';}).length;
   var lsCount=filtered.filter(function(r){return r.zone==='Landside';}).length;
@@ -15124,7 +15161,14 @@ async function facDeleteConfirm(type){
 async function facDownload(type){
   if(!canDownload()) return;
   var cfg=FAC_CONFIGS[type];
-  var data=facData[type]||[];
+  var data=(facData[type]||[]).slice().sort(function(a,b){
+    var av=(a.seq_no!=null&&a.seq_no!=='')?Number(a.seq_no):null;
+    var bv=(b.seq_no!=null&&b.seq_no!=='')?Number(b.seq_no):null;
+    if(av!=null&&bv!=null) return av-bv;
+    if(av!=null) return -1;
+    if(bv!=null) return 1;
+    return 0;
+  });
   if(!data.length){ toast('다운로드할 데이터가 없습니다'); return; }
   var header=cfg.fields.map(function(f){return f.label.replace(/\(.*?\)/g,'').trim();}).concat(['사용여부']);
   var rows=[header];
