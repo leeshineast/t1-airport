@@ -19674,19 +19674,46 @@ function msRenderDetail(key){
     var floorBarsHtml='';
     for(var fi=0;fi<7;fi++){ floorBarsHtml+=msBar(MS_FLOORS[fi], favg[fi], fmx, 'linear-gradient(90deg,var(--teal),var(--teal2))', '명'); }
     h+='<div class="ms-bargroup">'+floorBarsHtml+'</div>';
-    // 조별 평균 출근인원 — 1팀A~10팀B 전체 조를 정해진 순서로 모두 표시 (선택 기간 중 해당 조가 입력한 일수 기준 평균)
+    // 조별 평균 출근인원 — 1팀·6팀, 2팀·7팀... 페어 순서로 표(팀/A조/B조/C조/계) 형태 (선택된 기간·일자 기준)
     h+=msSub('조별 평균 출근인원');
-    var teamOrderAll=['1팀A','1팀B','1팀C','2팀A','2팀B','3팀A','3팀B','4팀A','4팀B','6팀A','6팀B','6팀C','7팀A','7팀B','8팀A','8팀B','9팀A','9팀B','5팀A','5팀B','10팀A','10팀B'];
-    var teamAvgObj={};
-    teamOrderAll.forEach(function(tc){
+    var TA_ROW_ORDER=['1팀','6팀','2팀','7팀','3팀','8팀','4팀','9팀','5팀','10팀'];
+    var TA_SUBGROUPS={'1팀':['A','B','C'],'2팀':['A','B'],'3팀':['A','B'],'4팀':['A','B'],'6팀':['A','B','C'],'7팀':['A','B'],'8팀':['A','B'],'9팀':['A','B'],'5팀':['A','B'],'10팀':['A','B']};
+    function taDashVal(tc){
       var sum=c.mp.byTeamSum[tc]||0;
       var d=Object.keys(c.mp.byTeamDays[tc]||{}).length;
-      teamAvgObj[tc]=d?Math.round(sum/d*10)/10:0;
+      return d?Math.round(sum/d):0;
+    }
+    function taDashCell(v){
+      if(v===null) return '<span style="color:var(--g2)">-</span>';
+      if(v===0) return '<span style="color:var(--g3)">0</span>';
+      return v;
+    }
+    var taRowsHtml='';
+    TA_ROW_ORDER.forEach(function(team,ti){
+      var subs=TA_SUBGROUPS[team]||[];
+      var a=subs.indexOf('A')!==-1?taDashVal(team+'A'):null;
+      var b=subs.indexOf('B')!==-1?taDashVal(team+'B'):null;
+      var c2=subs.indexOf('C')!==-1?taDashVal(team+'C'):null;
+      var total=(a||0)+(b||0)+(c2||0);
+      var isPairStart=(ti%2===0);
+      var rowBg=(Math.floor(ti/2)%2===0)?'var(--navy-bg)':'transparent';
+      var topBorder=isPairStart?'border-top:2px solid var(--g3)':'border-top:1px solid var(--g1)';
+      taRowsHtml+='<tr style="background:'+rowBg+'">'+
+        '<td style="padding:8px 4px;'+topBorder+';font-weight:800;color:var(--g6);font-size:13px">'+team+'</td>'+
+        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taDashCell(a)+'</td>'+
+        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taDashCell(b)+'</td>'+
+        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taDashCell(c2)+'</td>'+
+        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:900;color:var(--teal2)">'+total+'</td>'+
+        '</tr>';
     });
-    var teamMax=Math.max.apply(null, teamOrderAll.map(function(tc){return teamAvgObj[tc];}).concat([1]));
-    var teamBarsHtml='';
-    teamOrderAll.forEach(function(tc){ teamBarsHtml+=msBar(tc, teamAvgObj[tc], teamMax, 'linear-gradient(90deg,var(--navy),#3E6BB5)', '명'); });
-    h+='<div class="ms-bargroup" style="flex-wrap:wrap">'+teamBarsHtml+'</div>';
+    h+='<table style="width:100%;border-collapse:collapse;margin-bottom:4px">'+
+      '<thead><tr style="color:var(--g4);font-size:11px">'+
+      '<th style="text-align:left;padding:2px 4px 6px;font-weight:700">팀</th>'+
+      '<th style="padding:2px 4px 6px;font-weight:700">A조</th>'+
+      '<th style="padding:2px 4px 6px;font-weight:700">B조</th>'+
+      '<th style="padding:2px 4px 6px;font-weight:700">C조</th>'+
+      '<th style="padding:2px 4px 6px;font-weight:700;color:var(--teal2)">계</th>'+
+      '</tr></thead><tbody>'+taRowsHtml+'</tbody></table>';
     // 시간대별 인원 일평균 (구간별 카드) - shiftDays 기준 정확한 평균
     h+=msSub('시간대별 인원 일평균');
     var amDays=Object.keys(c.mp.shiftDays['오전']||{}).length||1;
