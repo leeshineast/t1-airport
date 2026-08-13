@@ -544,7 +544,7 @@ function navBack(){
   if(home.classList.contains('on')) location.href='index.html';
   else go('scrHome');
 }
-function go(id){
+function go(id, _fromPop){
   var s=document.querySelectorAll('.screen');
   for(var i=0;i<s.length;i++)s[i].classList.remove('on');
   document.getElementById(id).classList.add('on');
@@ -554,6 +554,20 @@ function go(id){
   if(id==='scrPrint'){ renderPrintPreview(); }
   if(id==='scrHome'){ loadHomeSummary(); }
   window.scrollTo(0,0);
+  // 폰 뒤로가기(스와이프/버튼)로 창고 화면 안에서 단계별로 돌아갈 수 있도록 히스토리 기록
+  // (popstate 처리 중에 다시 push하면 무한루프/중복이 생기므로, 뒤로가기로 호출된 경우는 push하지 않음)
+  if(!_fromPop){
+    if(history.state && history.state.whScreen===id) return; // 같은 화면 중복 push 방지
+    history.pushState({whScreen:id}, '', '#'+id);
+  }
+}
+window.addEventListener('popstate', function(e){
+  var target=(e.state && e.state.whScreen) ? e.state.whScreen : 'scrHome';
+  go(target, true);
+});
+// 최초 진입 시 현재 상태를 히스토리에 기록해둬야, 첫 뒤로가기부터 정상 동작함
+if(!history.state || !history.state.whScreen){
+  history.replaceState({whScreen:'scrHome'}, '', '#scrHome');
 }
 function autoShift(){ var h=new Date().getHours(); return (h>=6&&h<14)?'오전':(h>=14&&h<22)?'오후':'야간'; }
 function setShift(s){ curShift=s; var b=document.querySelectorAll('#shiftSeg .seg-btn'); for(var i=0;i<b.length;i++)b[i].classList.toggle('on',b[i].getAttribute('data-s')===s); }

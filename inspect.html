@@ -744,13 +744,25 @@ function navBack(){
   if(main.classList.contains('on')) location.href='index.html';
   else showScr('scrMain');
 }
-function showScr(id){
+function showScr(id, _fromPop){
   var s=document.querySelectorAll('.screen');
   for(var i=0;i<s.length;i++)s[i].classList.remove('on');
   document.getElementById(id).classList.add('on');
   document.getElementById('hdrTitle').textContent = id==='scrMain' ? '📝 현장점검' : (id==='scrDash' ? '📊 실시간 현황' : (id==='scrPrint'||id==='scrPreview') ? '🖨️ 출력 / 다운로드' : id==='scrSmoking' ? '🚬 흡연실 점검' : (MOD_META[curMod]?MOD_META[curMod].name:'점검 입력'));
   if(id==='scrMain'){ editRec=null; }
   window.scrollTo(0,0);
+  // 폰 뒤로가기(스와이프/버튼)로 앱 내부 화면을 단계별로 되돌아갈 수 있도록 히스토리 기록
+  if(!_fromPop){
+    if(history.state && history.state.inspScreen===id) return; // 같은 화면 중복 push 방지
+    history.pushState({inspScreen:id}, '', '#'+id);
+  }
+}
+window.addEventListener('popstate', function(e){
+  var target=(e.state && e.state.inspScreen) ? e.state.inspScreen : 'scrMain';
+  showScr(target, true);
+});
+if(!history.state || !history.state.inspScreen){
+  history.replaceState({inspScreen:'scrMain'}, '', '#scrMain');
 }
 
 // ─ 마스터 로드 ─
