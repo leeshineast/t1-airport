@@ -7247,6 +7247,7 @@ async function loadTeamAvgAttendance(prefix){
       return v;
     }
     var rowsHtml='';
+    var sumMgr=0, sumA=0, sumB=0, sumC=0, sumTotal=0;
     TEAM_ROW_ORDER.forEach(function(team,i){
       var subs=TEAM_SUBGROUPS[team]||[];
       var mgr=taMgrVal(team);
@@ -7254,6 +7255,7 @@ async function loadTeamAvgAttendance(prefix){
       var b=subs.indexOf('B')!==-1?taTeamVal(team+'B'):null;
       var c=subs.indexOf('C')!==-1?taTeamVal(team+'C'):null;
       var total=mgr+(a||0)+(b||0)+(c||0);
+      sumMgr+=mgr; sumA+=(a||0); sumB+=(b||0); sumC+=(c||0); sumTotal+=total;
       var isPairStart=(i%2===0);
       var bg=(Math.floor(i/2)%2===0)?'var(--navy-bg)':'transparent';
       var topBorder=isPairStart?'border-top:2px solid var(--g3)':'border-top:1px solid var(--g1)';
@@ -7266,6 +7268,14 @@ async function loadTeamAvgAttendance(prefix){
         '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:900;color:var(--teal2);font-size:13px">'+total+'</td>'+
         '</tr>';
     });
+    rowsHtml+='<tr style="background:var(--navy)">'+
+      '<td style="padding:7px 4px;font-weight:900;color:white;font-size:12.5px">총계</td>'+
+      '<td style="padding:7px 4px;text-align:center;font-weight:900;color:white;font-size:13px">'+sumMgr+'</td>'+
+      '<td style="padding:7px 4px;text-align:center;font-weight:900;color:white;font-size:13px">'+sumA+'</td>'+
+      '<td style="padding:7px 4px;text-align:center;font-weight:900;color:white;font-size:13px">'+sumB+'</td>'+
+      '<td style="padding:7px 4px;text-align:center;font-weight:900;color:white;font-size:13px">'+sumC+'</td>'+
+      '<td style="padding:7px 4px;text-align:center;font-weight:900;color:#FFE9A8;font-size:14px">'+sumTotal+'</td>'+
+      '</tr>';
     var h='<table style="width:100%;border-collapse:collapse">'+
       '<thead><tr style="color:var(--g4);font-size:10.5px">'+
       '<th style="text-align:left;padding:2px 4px 5px;font-weight:700">팀</th>'+
@@ -19751,6 +19761,7 @@ function msRenderDetail(key){
       return v;
     }
     var taRowsHtml='';
+    var taSumMgr=0, taSumA=0, taSumB=0, taSumC=0, taSumTotal=0;
     TA_ROW_ORDER.forEach(function(team,ti){
       var subs=TA_SUBGROUPS[team]||[];
       var mgr=taDashMgrVal(team);
@@ -19758,6 +19769,7 @@ function msRenderDetail(key){
       var b=subs.indexOf('B')!==-1?taDashVal(team+'B'):null;
       var c2=subs.indexOf('C')!==-1?taDashVal(team+'C'):null;
       var total=mgr+(a||0)+(b||0)+(c2||0);
+      taSumMgr+=mgr; taSumA+=(a||0); taSumB+=(b||0); taSumC+=(c2||0); taSumTotal+=total;
       var isPairStart=(ti%2===0);
       var rowBg=(Math.floor(ti/2)%2===0)?'var(--navy-bg)':'transparent';
       var topBorder=isPairStart?'border-top:2px solid var(--g3)':'border-top:1px solid var(--g1)';
@@ -19770,6 +19782,14 @@ function msRenderDetail(key){
         '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:900;color:var(--teal2)">'+total+'</td>'+
         '</tr>';
     });
+    taRowsHtml+='<tr style="background:var(--navy)">'+
+      '<td style="padding:9px 4px;font-weight:900;color:white;font-size:13px">총계</td>'+
+      '<td style="padding:9px 4px;text-align:center;font-weight:900;color:white">'+taSumMgr+'</td>'+
+      '<td style="padding:9px 4px;text-align:center;font-weight:900;color:white">'+taSumA+'</td>'+
+      '<td style="padding:9px 4px;text-align:center;font-weight:900;color:white">'+taSumB+'</td>'+
+      '<td style="padding:9px 4px;text-align:center;font-weight:900;color:white">'+taSumC+'</td>'+
+      '<td style="padding:9px 4px;text-align:center;font-weight:900;color:#FFE9A8;font-size:14px">'+taSumTotal+'</td>'+
+      '</tr>';
     h+='<table style="width:100%;border-collapse:collapse;margin-bottom:4px">'+
       '<thead><tr style="color:var(--g4);font-size:11px">'+
       '<th style="text-align:left;padding:2px 4px 6px;font-weight:700">팀</th>'+
