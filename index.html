@@ -17375,7 +17375,7 @@ function renderEbookPage(prefix){
     // 가로/세로 중 더 작게 맞춰지는 배율로 계산해서, 화면에 꽉 차면서도 안 잘리게(contain) 표시
     var fitScale=Math.max(0.3, Math.min(availWidth/vp0.width, availHeight/vp0.height));
     var cssScale=fitScale*st.zoom; // 확대(+/-) 버튼으로 조절한 배율을 추가로 곱함
-    var dpr=window.devicePixelRatio||1;
+    var dpr=Math.max(window.devicePixelRatio||1, 2); // PC 등 배율 1배 화면에서도 최소 2배 해상도로 그려 선명하게
     var renderScale=cssScale*dpr; // 실제 캔버스 해상도는 화면 배율만큼 더 높게 그려서 선명하게
     var cssViewport=page.getViewport({scale:cssScale});
     var renderViewport=page.getViewport({scale:renderScale});
@@ -17391,16 +17391,19 @@ function renderEbookPage(prefix){
         ctx.save();
         ctx.fillStyle='rgba(255,224,0,0.55)'; // 반투명 노란색 하이라이트
         tc.items.forEach(function(item){
-          var s=item.str||'';
-          if(!s || s.toLowerCase().indexOf(qLower)===-1) return;
-          // pdf.js 좌표계를 캔버스(렌더 뷰포트) 좌표로 변환
-          var tx=window.pdfjsLib.Util.transform(renderViewport.transform, item.transform);
-          var fontHeight=Math.hypot(tx[2], tx[3]);
-          var scaleX=Math.hypot(tx[0], tx[1]);
-          var w=(item.width||0)*scaleX;
-          var x=tx[4];
-          var y=tx[5]-fontHeight;
-          ctx.fillRect(x, y, w, fontHeight*1.15);
+          try{
+            var s=item.str||'';
+            if(!s || s.toLowerCase().indexOf(qLower)===-1) return;
+            if(!item.transform) return;
+            // pdf.js 좌표계를 캔버스(렌더 뷰포트) 좌표로 변환
+            var tx=window.pdfjsLib.Util.transform(renderViewport.transform, item.transform);
+            var fontHeight=Math.hypot(tx[2], tx[3]);
+            var scaleX=Math.hypot(tx[0], tx[1]);
+            var w=(item.width||0)*scaleX;
+            var x=tx[4];
+            var y=tx[5]-fontHeight;
+            ctx.fillRect(x, y, w, fontHeight*1.15);
+          }catch(itemErr){ /* 항목 하나 실패해도 나머지는 계속 처리 */ }
         });
         ctx.restore();
       }).catch(function(){});
