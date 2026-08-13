@@ -1306,6 +1306,20 @@ html{overflow-x:hidden}
     </div>
   </div>
 
+  <!-- 조별 평균 출근인원 -->
+  <div style="margin:0">
+    <div class="sec-lbl" style="padding:16px 13px 8px">👥 조별 평균 출근인원</div>
+    <div style="display:flex;gap:7px;padding:0 13px;margin-bottom:11px">
+      <div id="taT_day" onclick="taSetMode('day')" style="flex:1;text-align:center;padding:7px 0;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;background:var(--teal);color:white">일</div>
+      <div id="taT_month" onclick="taSetMode('month')" style="flex:1;text-align:center;padding:7px 0;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--g2);color:var(--g5)">월</div>
+      <div id="taT_year" onclick="taSetMode('year')" style="flex:1;text-align:center;padding:7px 0;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--g2);color:var(--g5)">연</div>
+    </div>
+    <div style="font-size:11.5px;color:var(--g4);padding:0 13px 8px" id="taPeriodLbl">오늘 · 조원 + 조장 포함</div>
+    <div class="card" style="margin:0 13px 13px"><div class="cb" style="padding:11px 13px">
+      <div id="taGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0">불러오는 중…</div>
+    </div></div>
+  </div>
+
   <!-- 장비현황 요약 -->
   <div style="margin:0">
     <div class="sec-lbl" style="padding:16px 13px 8px">🔧 장비현황</div>
@@ -5498,6 +5512,7 @@ function finishLogin(){
   updateStaff();
   updateFloorChart();
   updateMpSummary();
+  loadTeamAvgAttendance();
   loadIndPrev();
   updateIndCmp();
   loadVehData();
@@ -7100,6 +7115,74 @@ async function loadPrevStaff(){
 }
 setInterval(updateStaff,60000);
 
+
+// ─ 조별 평균 출근인원 (일/월/연) — mp_data(조원) + mgr_attendance의 '조장'만 합산 (팀장/운영팀 제외) ─
+var TEAM_AVG_ORDER=['1팀A','1팀B','1팀C','2팀A','2팀B','3팀A','3팀B','4팀A','4팀B','6팀A','6팀B','6팀C','7팀A','7팀B','8팀A','8팀B','9팀A','9팀B','5팀A','5팀B','10팀A','10팀B'];
+var taMode='day';
+function taSetMode(m){
+  taMode=m;
+  ['day','month','year'].forEach(function(k){
+    var el=document.getElementById('taT_'+k);
+    if(!el) return;
+    var on=(k===m);
+    el.style.background=on?'var(--teal)':'var(--g2)';
+    el.style.color=on?'white':'var(--g5)';
+    el.style.fontWeight=on?'700':'600';
+  });
+  loadTeamAvgAttendance();
+}
+async function loadTeamAvgAttendance(){
+  var grid=document.getElementById('taGrid'); if(!grid) return;
+  var lblEl=document.getElementById('taPeriodLbl');
+  var nowKst=new Date(Date.now()+9*3600000);
+  var todayStr=nowKst.toISOString().slice(0,10);
+  var dFrom, dTo=todayStr, periodLbl;
+  if(taMode==='day'){ dFrom=todayStr; periodLbl='오늘'; }
+  else if(taMode==='month'){ dFrom=todayStr.slice(0,7)+'-01'; periodLbl='이번달 일평균'; }
+  else{ dFrom=todayStr.slice(0,4)+'-01-01'; periodLbl='올해 일평균'; }
+  if(lblEl) lblEl.textContent=periodLbl+' · 조원 + 조장 포함';
+  grid.innerHTML='불러오는 중…';
+  try{
+    var mpRes=await sb.from('mp_data').select('date,team_code,values').gte('date',dFrom).lte('date',dTo);
+    var mgrRes=await sb.from('mgr_attendance').select('date,team,name,checked').gte('date',dFrom).lte('date',dTo).eq('checked',true);
+    var mpData=mpRes.data||[], mgrData=mgrRes.data||[];
+    var sumByTeam={}, daysByTeam={};
+    TEAM_AVG_ORDER.forEach(function(tc){ sumByTeam[tc]=0; daysByTeam[tc]={}; });
+    mpData.forEach(function(r){
+      if(!r.team_code || TEAM_AVG_ORDER.indexOf(r.team_code)===-1) return;
+      var vals=r.values;
+      if(typeof vals==='string'){ try{ vals=JSON.parse(vals); }catch(e){ return; } }
+      if(!Array.isArray(vals)) return;
+      var sum=0;
+      for(var ri=0;ri<4;ri++){
+        if(!vals[ri]||!Array.isArray(vals[ri])) continue;
+        for(var ci=0;ci<7;ci++){ sum+=Number(vals[ri][ci])||0; }
+      }
+      if(sum<=0) return;
+      sumByTeam[r.team_code]+=sum;
+      daysByTeam[r.team_code][r.date]=1;
+    });
+    // 조장(A조장/B조장/C조장)만 반영 — 팀장/사업부장 등 운영팀 직책은 제외
+    mgrData.forEach(function(r){
+      var m=(r.name||'').match(/^([A-Z])조장$/);
+      if(!m) return;
+      var tc=r.team+m[1];
+      if(sumByTeam[tc]===undefined) return;
+      sumByTeam[tc]+=1;
+    });
+    var h='';
+    TEAM_AVG_ORDER.forEach(function(tc){
+      var val;
+      if(taMode==='day'){ val=sumByTeam[tc]; }
+      else{ var d=Object.keys(daysByTeam[tc]).length||1; val=Math.round(sumByTeam[tc]/d*10)/10; }
+      h+='<div style="text-align:center;padding:9px 2px;border-bottom:1px solid var(--g1)">'+
+        '<div style="font-size:11.5px;color:var(--g4);font-weight:600">'+tc+'</div>'+
+        '<div style="font-size:19px;font-weight:900;color:var(--navy);margin-top:2px">'+val+'</div>'+
+        '</div>';
+    });
+    grid.innerHTML=h;
+  }catch(e){ grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--g4);padding:11px">불러오기 실패</div>'; }
+}
 
 // ─ 층별 인력현황 탭 ─
 const FL_TABS=['all','B2F','B1F','1F','2F','3F','4F'];
@@ -19539,14 +19622,19 @@ function msRenderDetail(key){
     var floorBarsHtml='';
     for(var fi=0;fi<7;fi++){ floorBarsHtml+=msBar(MS_FLOORS[fi], favg[fi], fmx, 'linear-gradient(90deg,var(--teal),var(--teal2))', '명'); }
     h+='<div class="ms-bargroup">'+floorBarsHtml+'</div>';
-    // 조별 평균 출근인원 (선택된 기간 동안 해당 조가 입력한 일수 기준 평균)
+    // 조별 평균 출근인원 — 1팀A~10팀B 전체 조를 정해진 순서로 모두 표시 (선택 기간 중 해당 조가 입력한 일수 기준 평균)
     h+=msSub('조별 평균 출근인원');
+    var teamOrderAll=['1팀A','1팀B','1팀C','2팀A','2팀B','3팀A','3팀B','4팀A','4팀B','6팀A','6팀B','6팀C','7팀A','7팀B','8팀A','8팀B','9팀A','9팀B','5팀A','5팀B','10팀A','10팀B'];
     var teamAvgObj={};
-    Object.keys(c.mp.byTeamSum).forEach(function(tc){
-      var d=Object.keys(c.mp.byTeamDays[tc]||{}).length||1;
-      teamAvgObj[tc]=Math.round(c.mp.byTeamSum[tc]/d*10)/10;
+    teamOrderAll.forEach(function(tc){
+      var sum=c.mp.byTeamSum[tc]||0;
+      var d=Object.keys(c.mp.byTeamDays[tc]||{}).length;
+      teamAvgObj[tc]=d?Math.round(sum/d*10)/10:0;
     });
-    h+=msTopBars(teamAvgObj, 10, 'linear-gradient(90deg,var(--navy),#3E6BB5)', '명');
+    var teamMax=Math.max.apply(null, teamOrderAll.map(function(tc){return teamAvgObj[tc];}).concat([1]));
+    var teamBarsHtml='';
+    teamOrderAll.forEach(function(tc){ teamBarsHtml+=msBar(tc, teamAvgObj[tc], teamMax, 'linear-gradient(90deg,var(--navy),#3E6BB5)', '명'); });
+    h+='<div class="ms-bargroup" style="flex-wrap:wrap">'+teamBarsHtml+'</div>';
     // 시간대별 인원 일평균 (구간별 카드) - shiftDays 기준 정확한 평균
     h+=msSub('시간대별 인원 일평균');
     var amDays=Object.keys(c.mp.shiftDays['오전']||{}).length||1;
