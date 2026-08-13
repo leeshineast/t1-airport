@@ -7162,7 +7162,7 @@ async function loadTeamAvgAttendance(prefix){
   if(mode==='day'){ dFrom=dTo=anchorDate; periodLbl=(anchorDate===todayStr)?'오늘':anchorDate; }
   else if(mode==='month'){ dFrom=anchorDate.slice(0,7)+'-01'; dTo=anchorDate; periodLbl=anchorDate.slice(0,7)+' 일평균'; }
   else{ dFrom=anchorDate.slice(0,4)+'-01-01'; dTo=anchorDate; periodLbl=anchorDate.slice(0,4)+'년 일평균'; }
-  if(lblEl) lblEl.textContent=periodLbl+' · 조원 + 조장 포함';
+  if(lblEl) lblEl.textContent=periodLbl+' · 조원 + 조장 + 팀장 포함';
   grid.innerHTML='불러오는 중…';
   try{
     var mpRes=await sb.from('mp_data').select('date,team_code,values').gte('date',dFrom).lte('date',dTo);
@@ -7184,13 +7184,20 @@ async function loadTeamAvgAttendance(prefix){
       sumByTeam[r.team_code]+=sum;
       daysByTeam[r.team_code][r.date]=1;
     });
-    // 조장(A조장/B조장/C조장)만 반영 — 팀장/사업부장 등 운영팀 직책은 제외
+    // 조장(A조장/B조장/C조장)은 해당 조에, 팀장은 팀 단위로 별도 집계
+    var sumTeamMgr={}, daysTeamMgr={};
     mgrData.forEach(function(r){
       var m=(r.name||'').match(/^([A-Z])조장$/);
-      if(!m) return;
-      var tc=r.team+m[1];
-      if(sumByTeam[tc]===undefined) return;
-      sumByTeam[tc]+=1;
+      if(m){
+        var tc=r.team+m[1];
+        if(sumByTeam[tc]!==undefined) sumByTeam[tc]+=1;
+        return;
+      }
+      if(r.name==='팀장'){
+        sumTeamMgr[r.team]=(sumTeamMgr[r.team]||0)+1;
+        if(!daysTeamMgr[r.team]) daysTeamMgr[r.team]={};
+        daysTeamMgr[r.team][r.date]=1;
+      }
     });
     var TEAM_ROW_ORDER=['1팀','6팀','2팀','7팀','3팀','8팀','4팀','9팀','5팀','10팀'];
     var TEAM_SUBGROUPS={'1팀':['A','B','C'],'2팀':['A','B'],'3팀':['A','B'],'4팀':['A','B'],'6팀':['A','B','C'],'7팀':['A','B'],'8팀':['A','B'],'9팀':['A','B'],'5팀':['A','B'],'10팀':['A','B']};
@@ -7198,6 +7205,11 @@ async function loadTeamAvgAttendance(prefix){
       if(mode==='day') return sumByTeam[tc]||0;
       var d=Object.keys(daysByTeam[tc]||{}).length||1;
       return Math.round((sumByTeam[tc]||0)/d);
+    }
+    function taMgrVal(team){
+      if(mode==='day') return sumTeamMgr[team]||0;
+      var d=Object.keys(daysTeamMgr[team]||{}).length||1;
+      return Math.round((sumTeamMgr[team]||0)/d);
     }
     function taCell(v){
       if(v===null) return '<span style="color:var(--g2)">-</span>';
@@ -7207,15 +7219,17 @@ async function loadTeamAvgAttendance(prefix){
     var rowsHtml='';
     TEAM_ROW_ORDER.forEach(function(team,i){
       var subs=TEAM_SUBGROUPS[team]||[];
+      var mgr=taMgrVal(team);
       var a=subs.indexOf('A')!==-1?taTeamVal(team+'A'):null;
       var b=subs.indexOf('B')!==-1?taTeamVal(team+'B'):null;
       var c=subs.indexOf('C')!==-1?taTeamVal(team+'C'):null;
-      var total=(a||0)+(b||0)+(c||0);
+      var total=mgr+(a||0)+(b||0)+(c||0);
       var isPairStart=(i%2===0);
       var bg=(Math.floor(i/2)%2===0)?'var(--navy-bg)':'transparent';
       var topBorder=isPairStart?'border-top:2px solid var(--g3)':'border-top:1px solid var(--g1)';
       rowsHtml+='<tr style="background:'+bg+'">'+
         '<td style="padding:8px 4px;'+topBorder+';font-weight:800;color:var(--g6);font-size:13px">'+team+'</td>'+
+        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taCell(mgr)+'</td>'+
         '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taCell(a)+'</td>'+
         '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taCell(b)+'</td>'+
         '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taCell(c)+'</td>'+
@@ -7225,6 +7239,7 @@ async function loadTeamAvgAttendance(prefix){
     var h='<table style="width:100%;border-collapse:collapse">'+
       '<thead><tr style="color:var(--g4);font-size:11px">'+
       '<th style="text-align:left;padding:2px 4px 6px;font-weight:700">팀</th>'+
+      '<th style="padding:2px 4px 6px;font-weight:700">팀장</th>'+
       '<th style="padding:2px 4px 6px;font-weight:700">A조</th>'+
       '<th style="padding:2px 4px 6px;font-weight:700">B조</th>'+
       '<th style="padding:2px 4px 6px;font-weight:700">C조</th>'+
@@ -18759,7 +18774,7 @@ async function loadMonthlyStats(){
       msFetchAll(function(){ return sb.from('handover').select('id,created_at,ho_date,shift,team,confirmed,facility,danger,equipment,notice').gte('created_at',tsFrom).lte('created_at',tsTo); }),
       msFetchAll(function(){ return sb.from('lost_found').select('id,found_date,status,completed_at,location,item,receipt_route,handover_to,receiver_name').gte('found_date',tsFrom).lte('found_date',tsTo); }),
       msFetchAll(function(){ return sb.from('safety_accidents').select('id,occurred_at,team,accident_type,location').gte('occurred_at',tsFrom).lte('occurred_at',tsTo); }),
-      msFetchAll(function(){ return sb.from('mgr_attendance').select('date,checked,status').gte('date',dFrom).lte('date',dTo); }),
+      msFetchAll(function(){ return sb.from('mgr_attendance').select('date,team,name,checked,status').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('voc_data').select('id,voc_date,status,completed_at,content,channel,category,category_etc,loc_zone,loc_side,loc_floor,created_at').gte('voc_date',dFrom).lte('voc_date',dTo); }),
       msFetchAll(function(){ return sb.from('waste_data').select('waste_date,team_code,incineration_living,incineration_synthetic,incineration_food,incineration_wood,recycle_paper,recycle_plastic,recycle_can,recycle_glass,recycle_etc,misc_etc').gte('waste_date',dFrom).lte('waste_date',dTo); }),
       msFetchAll(function(){ return sb.from('joint_work_data').select('id,work_date,teams,floors,headcount,items,batch_id,record_type').gte('work_date',dFrom).lte('work_date',dTo); })
@@ -18920,7 +18935,7 @@ function msClassifyVocTop3ForForm(text){
 }
 
 function msCalc(q, key){
-  var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorDays:{},nsSum:{},lsSum:0,asSum:0,byTeamSum:{},byTeamDays:{},hourly:new Array(24).fill(0),hourlyDays:new Array(24).fill(0),hourlyByShift:{오전:new Array(24).fill(0),오후:new Array(24).fill(0),야간:new Array(24).fill(0)}},
+  var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorDays:{},nsSum:{},lsSum:0,asSum:0,byTeamSum:{},byTeamDays:{},byTeamMgrSum:{},byTeamMgrDays:{},hourly:new Array(24).fill(0),hourlyDays:new Array(24).fill(0),hourlyByShift:{오전:new Array(24).fill(0),오후:new Array(24).fill(0),야간:new Array(24).fill(0)}},
           mgr:{days:{},trip:0,edu:0},
           ho:{total:0,confirmed:0,byTeam:{},byType:{시설물:0,기타:0},byFacLoc:{},byFacDesc:{},byFacType:{},byShift:{오전:0,오후:0,야간:0}},
           lost:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byLoc:{},byItem:{},byHour:[0,0,0,0],hourUnknown:0,itemEtc:[],locEtc:[],byRoute:{},routeEtc:[],byHandover:{},handoverEtc:[],byShift:{오전:0,오후:0,야간:0}},
@@ -19061,6 +19076,18 @@ function msCalc(q, key){
     s.mgr.days[r.date]=(s.mgr.days[r.date]||0)+1;
     if(r.status==='출장') s.mgr.trip++;
     if(r.status==='교육') s.mgr.edu++;
+    // 조장(A/B/C조장)은 조별 인원(byTeamSum)에 합산, 팀장은 팀 단위로 별도 집계(byTeamMgrSum)
+    var mM=(r.name||'').match(/^([A-Z])조장$/);
+    if(mM && r.team){
+      var tc2=r.team+mM[1];
+      s.mp.byTeamSum[tc2]=(s.mp.byTeamSum[tc2]||0)+1;
+      if(!s.mp.byTeamDays[tc2]) s.mp.byTeamDays[tc2]={};
+      s.mp.byTeamDays[tc2][r.date]=1;
+    }else if(r.name==='팀장' && r.team){
+      s.mp.byTeamMgrSum[r.team]=(s.mp.byTeamMgrSum[r.team]||0)+1;
+      if(!s.mp.byTeamMgrDays[r.team]) s.mp.byTeamMgrDays[r.team]={};
+      s.mp.byTeamMgrDays[r.team][r.date]=1;
+    }
   });
   // ── 민원 (voc_data)
   ((q[6]&&q[6].data)||[]).forEach(function(r){
@@ -19683,6 +19710,11 @@ function msRenderDetail(key){
       var d=Object.keys(c.mp.byTeamDays[tc]||{}).length;
       return d?Math.round(sum/d):0;
     }
+    function taDashMgrVal(team){
+      var sum=c.mp.byTeamMgrSum[team]||0;
+      var d=Object.keys(c.mp.byTeamMgrDays[team]||{}).length;
+      return d?Math.round(sum/d):0;
+    }
     function taDashCell(v){
       if(v===null) return '<span style="color:var(--g2)">-</span>';
       if(v===0) return '<span style="color:var(--g3)">0</span>';
@@ -19691,15 +19723,17 @@ function msRenderDetail(key){
     var taRowsHtml='';
     TA_ROW_ORDER.forEach(function(team,ti){
       var subs=TA_SUBGROUPS[team]||[];
+      var mgr=taDashMgrVal(team);
       var a=subs.indexOf('A')!==-1?taDashVal(team+'A'):null;
       var b=subs.indexOf('B')!==-1?taDashVal(team+'B'):null;
       var c2=subs.indexOf('C')!==-1?taDashVal(team+'C'):null;
-      var total=(a||0)+(b||0)+(c2||0);
+      var total=mgr+(a||0)+(b||0)+(c2||0);
       var isPairStart=(ti%2===0);
       var rowBg=(Math.floor(ti/2)%2===0)?'var(--navy-bg)':'transparent';
       var topBorder=isPairStart?'border-top:2px solid var(--g3)':'border-top:1px solid var(--g1)';
       taRowsHtml+='<tr style="background:'+rowBg+'">'+
         '<td style="padding:8px 4px;'+topBorder+';font-weight:800;color:var(--g6);font-size:13px">'+team+'</td>'+
+        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taDashCell(mgr)+'</td>'+
         '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taDashCell(a)+'</td>'+
         '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taDashCell(b)+'</td>'+
         '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taDashCell(c2)+'</td>'+
@@ -19709,6 +19743,7 @@ function msRenderDetail(key){
     h+='<table style="width:100%;border-collapse:collapse;margin-bottom:4px">'+
       '<thead><tr style="color:var(--g4);font-size:11px">'+
       '<th style="text-align:left;padding:2px 4px 6px;font-weight:700">팀</th>'+
+      '<th style="padding:2px 4px 6px;font-weight:700">팀장</th>'+
       '<th style="padding:2px 4px 6px;font-weight:700">A조</th>'+
       '<th style="padding:2px 4px 6px;font-weight:700">B조</th>'+
       '<th style="padding:2px 4px 6px;font-weight:700">C조</th>'+
