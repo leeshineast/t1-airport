@@ -444,6 +444,9 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
   <div class="modal">
     <div class="modal-title">배정 품목 · 재고 설정 <button class="modal-close" onclick="closeSetModal()">✕</button></div>
     <input type="text" id="setSearch" placeholder="품목 검색" oninput="renderSetList()" style="margin-bottom:8px">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
+      <button class="ghost-btn" id="setShowAllBtn" style="padding:5px 11px;font-size:11.5px" onclick="toggleSetShowAll()">전체보기</button>
+    </div>
     <div style="display:flex;gap:8px;padding:0 0 6px;font-size:9.5px;color:var(--g3);font-weight:700">
       <span style="flex:1">품목명</span><span style="width:56px;text-align:center">순서</span><span style="width:70px;text-align:center">현재고</span><span style="width:70px;text-align:center">최소재고</span><span style="width:34px"></span>
     </div>
@@ -1300,13 +1303,27 @@ function doCreateNewItem(p){
 // ═══ 배정품목/최소재고 설정 ═══
 function openSetModal(){
   document.getElementById('setSearch').value='';
+  setShowAll=false;
+  var btn=document.getElementById('setShowAllBtn'); if(btn) btn.textContent='전체보기';
   renderSetList();
   document.getElementById('setOverlay').classList.add('on');
+}
+var setShowAll=false;
+function toggleSetShowAll(){
+  setShowAll=!setShowAll;
+  var btn=document.getElementById('setShowAllBtn');
+  if(btn) btn.textContent=setShowAll?'재고있는것만':'전체보기';
+  renderSetList();
 }
 function renderSetList(){
   var box=document.getElementById('setList'); box.innerHTML='';
   var q=(document.getElementById('setSearch').value||'').trim().toLowerCase();
-  var list=whItems.filter(function(it){ return !q || (it.item_name+' '+it.spec).toLowerCase().indexOf(q)>=0; });
+  var list=whItems.filter(function(it){
+    if(q && (it.item_name+' '+it.spec).toLowerCase().indexOf(q)<0) return false;
+    if(setShowAll) return true;
+    var L=ledgerMap[it.item_id];
+    return L && L.remain_qty>0;
+  });
   list.forEach(function(it){
     var row=document.createElement('div'); row.className='set-row';
     row.innerHTML='<span class="nm">'+esc(it.item_name)+'</span>'+
@@ -1316,7 +1333,7 @@ function renderSetList(){
       '<button onclick="removeWhItem(\''+it.wid+'\')">삭제</button>';
     box.appendChild(row);
   });
-  if(!list.length) box.innerHTML='<div class="empty">검색 결과가 없습니다</div>';
+  if(!list.length) box.innerHTML='<div class="empty">'+(setShowAll?'검색 결과가 없습니다':'재고 있는 품목이 없습니다. 전체보기를 눌러 확인하세요')+'</div>';
 }
 function updateDisplayOrder(wid,val){
   var order=parseInt(val||'0',10)||0;
