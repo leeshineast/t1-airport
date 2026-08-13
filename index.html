@@ -2741,10 +2741,10 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div id="regP1" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
     <div id="regViewerTitle" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:14px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
       <span id="regViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
-      <button onclick="window.open(window._regPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
+      <button onclick="ebookSearchToggle('reg')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔍 검색</button><button onclick="window.open(window._regPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
       <button onclick="regTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
-    <div id="regEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
+    <div id="regEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659"><div id="regEbookSearchBar" style="display:none;flex-direction:column;background:var(--g1);border-bottom:1px solid var(--g2);padding:9px 10px;flex-shrink:0"><div style="display:flex;align-items:center;gap:6px"><input type="text" id="regEbookSearchInput" placeholder="검색어 입력 (예: 경조)" style="flex:1;padding:9px 10px;border:1px solid var(--g3);border-radius:8px;font-size:14px" onkeydown="if(event.key==='Enter'){ebookSearch('reg')}"><button onclick="ebookSearch('reg')" style="padding:9px 13px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">검색</button><button onclick="ebookSearchClose('reg')" style="padding:9px 11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-size:13px;cursor:pointer;flex-shrink:0">✕</button></div><div id="regEbookSearchResults" style="margin-top:8px;display:none"></div></div>
       <div id="regEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px;touch-action:pan-x pan-y" ontouchstart="ebookTouchStart(event,'reg')" ontouchend="ebookTouchEnd(event,'reg')">
         <canvas id="regEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
       </div>
@@ -2826,10 +2826,10 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div id="isoP1" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
     <div id="isoViewerTitle" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:14px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
       <span id="isoViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
-      <button onclick="window.open(window._isoPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
+      <button onclick="ebookSearchToggle('iso')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔍 검색</button><button onclick="window.open(window._isoPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
       <button onclick="isoTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
-    <div id="isoEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
+    <div id="isoEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659"><div id="isoEbookSearchBar" style="display:none;flex-direction:column;background:var(--g1);border-bottom:1px solid var(--g2);padding:9px 10px;flex-shrink:0"><div style="display:flex;align-items:center;gap:6px"><input type="text" id="isoEbookSearchInput" placeholder="검색어 입력 (예: 경조)" style="flex:1;padding:9px 10px;border:1px solid var(--g3);border-radius:8px;font-size:14px" onkeydown="if(event.key==='Enter'){ebookSearch('iso')}"><button onclick="ebookSearch('iso')" style="padding:9px 13px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">검색</button><button onclick="ebookSearchClose('iso')" style="padding:9px 11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-size:13px;cursor:pointer;flex-shrink:0">✕</button></div><div id="isoEbookSearchResults" style="margin-top:8px;display:none"></div></div>
       <div id="isoEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px;touch-action:pan-x pan-y" ontouchstart="ebookTouchStart(event,'iso')" ontouchend="ebookTouchEnd(event,'iso')">
         <canvas id="isoEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
       </div>
@@ -2895,10 +2895,10 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div id="newsP1" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
     <div id="newsViewerTitle" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:14px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
       <span id="newsViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
-      <button onclick="window.open(window._newsPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
+      <button onclick="ebookSearchToggle('news')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔍 검색</button><button onclick="window.open(window._newsPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
       <button onclick="newsTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
-    <div id="newsEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
+    <div id="newsEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659"><div id="newsEbookSearchBar" style="display:none;flex-direction:column;background:var(--g1);border-bottom:1px solid var(--g2);padding:9px 10px;flex-shrink:0"><div style="display:flex;align-items:center;gap:6px"><input type="text" id="newsEbookSearchInput" placeholder="검색어 입력 (예: 경조)" style="flex:1;padding:9px 10px;border:1px solid var(--g3);border-radius:8px;font-size:14px" onkeydown="if(event.key==='Enter'){ebookSearch('news')}"><button onclick="ebookSearch('news')" style="padding:9px 13px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">검색</button><button onclick="ebookSearchClose('news')" style="padding:9px 11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-size:13px;cursor:pointer;flex-shrink:0">✕</button></div><div id="newsEbookSearchResults" style="margin-top:8px;display:none"></div></div>
       <div id="newsEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px;touch-action:pan-x pan-y" ontouchstart="ebookTouchStart(event,'news')" ontouchend="ebookTouchEnd(event,'news')">
         <canvas id="newsEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
       </div>
@@ -2964,10 +2964,10 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div id="safetyP1" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
     <div id="safetyViewerTitle" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:14px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
       <span id="safetyViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
-      <button onclick="window.open(window._safetyPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
+      <button onclick="ebookSearchToggle('safety')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔍 검색</button><button onclick="window.open(window._safetyPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
       <button onclick="safetyTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
-    <div id="safetyEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
+    <div id="safetyEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659"><div id="safetyEbookSearchBar" style="display:none;flex-direction:column;background:var(--g1);border-bottom:1px solid var(--g2);padding:9px 10px;flex-shrink:0"><div style="display:flex;align-items:center;gap:6px"><input type="text" id="safetyEbookSearchInput" placeholder="검색어 입력 (예: 경조)" style="flex:1;padding:9px 10px;border:1px solid var(--g3);border-radius:8px;font-size:14px" onkeydown="if(event.key==='Enter'){ebookSearch('safety')}"><button onclick="ebookSearch('safety')" style="padding:9px 13px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">검색</button><button onclick="ebookSearchClose('safety')" style="padding:9px 11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-size:13px;cursor:pointer;flex-shrink:0">✕</button></div><div id="safetyEbookSearchResults" style="margin-top:8px;display:none"></div></div>
       <div id="safetyEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px;touch-action:pan-x pan-y" ontouchstart="ebookTouchStart(event,'safety')" ontouchend="ebookTouchEnd(event,'safety')">
         <canvas id="safetyEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
       </div>
@@ -3033,10 +3033,10 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div id="manualP1" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
     <div id="manualViewerTitle" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:14px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
       <span id="manualViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
-      <button onclick="window.open(window._manualPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
+      <button onclick="ebookSearchToggle('manual')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔍 검색</button><button onclick="window.open(window._manualPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
       <button onclick="manualTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
-    <div id="manualEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
+    <div id="manualEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659"><div id="manualEbookSearchBar" style="display:none;flex-direction:column;background:var(--g1);border-bottom:1px solid var(--g2);padding:9px 10px;flex-shrink:0"><div style="display:flex;align-items:center;gap:6px"><input type="text" id="manualEbookSearchInput" placeholder="검색어 입력 (예: 경조)" style="flex:1;padding:9px 10px;border:1px solid var(--g3);border-radius:8px;font-size:14px" onkeydown="if(event.key==='Enter'){ebookSearch('manual')}"><button onclick="ebookSearch('manual')" style="padding:9px 13px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">검색</button><button onclick="ebookSearchClose('manual')" style="padding:9px 11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-size:13px;cursor:pointer;flex-shrink:0">✕</button></div><div id="manualEbookSearchResults" style="margin-top:8px;display:none"></div></div>
       <div id="manualEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px;touch-action:pan-x pan-y" ontouchstart="ebookTouchStart(event,'manual')" ontouchend="ebookTouchEnd(event,'manual')">
         <canvas id="manualEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
       </div>
@@ -3102,10 +3102,10 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div id="riskP1" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
     <div id="riskViewerTitle" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:14px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
       <span id="riskViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
-      <button onclick="window.open(window._riskPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
+      <button onclick="ebookSearchToggle('risk')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔍 검색</button><button onclick="window.open(window._riskPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
       <button onclick="riskTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
-    <div id="riskEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
+    <div id="riskEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659"><div id="riskEbookSearchBar" style="display:none;flex-direction:column;background:var(--g1);border-bottom:1px solid var(--g2);padding:9px 10px;flex-shrink:0"><div style="display:flex;align-items:center;gap:6px"><input type="text" id="riskEbookSearchInput" placeholder="검색어 입력 (예: 경조)" style="flex:1;padding:9px 10px;border:1px solid var(--g3);border-radius:8px;font-size:14px" onkeydown="if(event.key==='Enter'){ebookSearch('risk')}"><button onclick="ebookSearch('risk')" style="padding:9px 13px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">검색</button><button onclick="ebookSearchClose('risk')" style="padding:9px 11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-size:13px;cursor:pointer;flex-shrink:0">✕</button></div><div id="riskEbookSearchResults" style="margin-top:8px;display:none"></div></div>
       <div id="riskEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px;touch-action:pan-x pan-y" ontouchstart="ebookTouchStart(event,'risk')" ontouchend="ebookTouchEnd(event,'risk')">
         <canvas id="riskEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
       </div>
@@ -3171,10 +3171,10 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div id="trainingP1" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
     <div id="trainingViewerTitle" style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:14px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
       <span id="trainingViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
-      <button onclick="window.open(window._trainingPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
+      <button onclick="ebookSearchToggle('training')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔍 검색</button><button onclick="window.open(window._trainingPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
       <button onclick="trainingTab(0)" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
-    <div id="trainingEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
+    <div id="trainingEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659"><div id="trainingEbookSearchBar" style="display:none;flex-direction:column;background:var(--g1);border-bottom:1px solid var(--g2);padding:9px 10px;flex-shrink:0"><div style="display:flex;align-items:center;gap:6px"><input type="text" id="trainingEbookSearchInput" placeholder="검색어 입력 (예: 경조)" style="flex:1;padding:9px 10px;border:1px solid var(--g3);border-radius:8px;font-size:14px" onkeydown="if(event.key==='Enter'){ebookSearch('training')}"><button onclick="ebookSearch('training')" style="padding:9px 13px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">검색</button><button onclick="ebookSearchClose('training')" style="padding:9px 11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-size:13px;cursor:pointer;flex-shrink:0">✕</button></div><div id="trainingEbookSearchResults" style="margin-top:8px;display:none"></div></div>
       <div id="trainingEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px;touch-action:pan-x pan-y" ontouchstart="ebookTouchStart(event,'training')" ontouchend="ebookTouchEnd(event,'training')">
         <canvas id="trainingEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>
       </div>
@@ -17347,6 +17347,7 @@ function _ebookProgressKey(url){
 function openEbookViewer(prefix, url, name){
   var wrap=document.getElementById(prefix+'EbookCanvasWrap');
   if(wrap) wrap.innerHTML='<canvas id="'+prefix+'EbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas><div style="color:white;font-size:14px;padding:20px">📖 불러오는 중...</div>';
+  ebookSearchClose(prefix); // 새 문서를 열면 이전 문서의 검색창/결과는 닫음
   loadPdfJs(function(){
     window.pdfjsLib.getDocument(url).promise.then(function(pdf){
       var savedPage=1;
@@ -17398,6 +17399,101 @@ function ebookNav(prefix, dir){
   st.curPage=np;
   st.zoom=1; // 페이지 이동 시 확대 배율 초기화
   renderEbookPage(prefix);
+}
+// ── 문서 내 검색 (pdf.js 텍스트 추출 기반) ──
+function ebookSearchToggle(prefix){
+  var bar=document.getElementById(prefix+'EbookSearchBar');
+  if(!bar) return;
+  var show=(bar.style.display==='none'||!bar.style.display);
+  bar.style.display=show?'flex':'none';
+  if(show){
+    var inp=document.getElementById(prefix+'EbookSearchInput');
+    if(inp) inp.focus();
+  }
+}
+function ebookSearchClose(prefix){
+  var bar=document.getElementById(prefix+'EbookSearchBar');
+  if(bar) bar.style.display='none';
+  var inp=document.getElementById(prefix+'EbookSearchInput');
+  if(inp) inp.value='';
+  var resBox=document.getElementById(prefix+'EbookSearchResults');
+  if(resBox){ resBox.style.display='none'; resBox.innerHTML=''; }
+  var st=_ebookState[prefix];
+  if(st){ st.searchMatches=null; st.searchIdx=0; }
+}
+function ebookGetPageTexts(prefix){
+  var st=_ebookState[prefix];
+  if(!st||!st.pdfDoc) return Promise.resolve([]);
+  if(st.pageTexts) return Promise.resolve(st.pageTexts); // 이미 추출했으면 캐시 사용 (재검색 시 즉시 응답)
+  var jobs=[];
+  for(var i=1;i<=st.totalPages;i++){
+    jobs.push((function(pageNum){
+      return st.pdfDoc.getPage(pageNum).then(function(page){
+        return page.getTextContent();
+      }).then(function(tc){
+        return tc.items.map(function(it){ return it.str; }).join(' ');
+      }).catch(function(){ return ''; });
+    })(i));
+  }
+  return Promise.all(jobs).then(function(texts){ st.pageTexts=texts; return texts; });
+}
+function ebookSearch(prefix){
+  var inp=document.getElementById(prefix+'EbookSearchInput');
+  var q=(inp&&inp.value||'').trim();
+  var resBox=document.getElementById(prefix+'EbookSearchResults');
+  if(!resBox) return;
+  if(!q){ resBox.style.display='none'; resBox.innerHTML=''; return; }
+  resBox.style.display='block';
+  resBox.innerHTML='<div style="padding:8px;color:var(--g4);font-size:13px">🔍 문서 전체에서 검색 중...</div>';
+  ebookGetPageTexts(prefix).then(function(texts){
+    var qLower=q.toLowerCase();
+    var matches=[];
+    texts.forEach(function(t,idx){
+      var tl=(t||'').toLowerCase();
+      var count=0, pos=0;
+      while(true){
+        var found=tl.indexOf(qLower,pos);
+        if(found===-1) break;
+        count++; pos=found+qLower.length;
+      }
+      if(count>0) matches.push({page:idx+1, count:count});
+    });
+    var st=_ebookState[prefix];
+    st.searchMatches=matches; st.searchIdx=0;
+    if(matches.length===0){
+      resBox.innerHTML='<div style="padding:8px;color:var(--g4);font-size:13px">"'+q+'" 검색 결과가 없습니다</div>';
+      return;
+    }
+    var totalCount=matches.reduce(function(a,m){ return a+m.count; },0);
+    var html='<div style="font-size:12px;color:var(--g5);margin-bottom:6px">"'+q+'" 총 '+totalCount+'건 · '+matches.length+'개 페이지</div>';
+    html+='<div style="max-height:110px;overflow-y:auto;margin-bottom:8px">';
+    matches.forEach(function(m,i){
+      html+='<div onclick="ebookSearchGoto(\''+prefix+'\','+i+')" style="padding:7px 9px;border-radius:8px;background:white;margin-bottom:4px;font-size:13px;font-weight:700;color:var(--g7);cursor:pointer;display:flex;justify-content:space-between">'
+          +'<span>📄 '+m.page+'페이지</span><span style="color:var(--teal2)">'+m.count+'건</span></div>';
+    });
+    html+='</div>';
+    html+='<div style="display:flex;gap:8px">'
+        +'<button onclick="ebookSearchStep(\''+prefix+'\',-1)" style="flex:1;padding:9px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">◀ 이전 찾기</button>'
+        +'<button onclick="ebookSearchStep(\''+prefix+'\',1)" style="flex:1;padding:9px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">다음 찾기 ▶</button>'
+        +'</div>';
+    resBox.innerHTML=html;
+    ebookSearchGoto(prefix,0); // 첫 결과로 바로 이동
+  });
+}
+function ebookSearchGoto(prefix, idx){
+  var st=_ebookState[prefix];
+  if(!st||!st.searchMatches||!st.searchMatches[idx]) return;
+  st.searchIdx=idx;
+  st.curPage=st.searchMatches[idx].page;
+  st.zoom=1;
+  renderEbookPage(prefix);
+}
+function ebookSearchStep(prefix, dir){
+  var st=_ebookState[prefix];
+  if(!st||!st.searchMatches||st.searchMatches.length===0) return;
+  var n=st.searchMatches.length;
+  var idx=((st.searchIdx||0)+dir+n)%n; // 마지막에서 다음 누르면 처음으로 순환
+  ebookSearchGoto(prefix, idx);
 }
 function ebookZoom(prefix, delta){
   var st=_ebookState[prefix];
