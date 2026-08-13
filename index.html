@@ -17382,7 +17382,29 @@ function renderEbookPage(prefix){
     canvas.width=renderViewport.width; canvas.height=renderViewport.height;
     canvas.style.width=cssViewport.width+'px'; canvas.style.height=cssViewport.height+'px';
     var ctx=canvas.getContext('2d');
-    page.render({canvasContext:ctx, viewport:renderViewport});
+    var renderTask=page.render({canvasContext:ctx, viewport:renderViewport});
+    if(st.searchQuery){
+      renderTask.promise.then(function(){
+        return page.getTextContent();
+      }).then(function(tc){
+        var qLower=st.searchQuery.toLowerCase();
+        ctx.save();
+        ctx.fillStyle='rgba(255,224,0,0.55)'; // 반투명 노란색 하이라이트
+        tc.items.forEach(function(item){
+          var s=item.str||'';
+          if(!s || s.toLowerCase().indexOf(qLower)===-1) return;
+          // pdf.js 좌표계를 캔버스(렌더 뷰포트) 좌표로 변환
+          var tx=window.pdfjsLib.Util.transform(renderViewport.transform, item.transform);
+          var fontHeight=Math.hypot(tx[2], tx[3]);
+          var scaleX=Math.hypot(tx[0], tx[1]);
+          var w=(item.width||0)*scaleX;
+          var x=tx[4];
+          var y=tx[5]-fontHeight;
+          ctx.fillRect(x, y, w, fontHeight*1.15);
+        });
+        ctx.restore();
+      }).catch(function(){});
+    }
     var ind=document.getElementById(prefix+'EbookPageInd');
     if(ind) ind.textContent=st.curPage+' / '+st.totalPages;
     var zind=document.getElementById(prefix+'EbookZoomInd');
@@ -17419,7 +17441,7 @@ function ebookSearchClose(prefix){
   var resBox=document.getElementById(prefix+'EbookSearchResults');
   if(resBox){ resBox.style.display='none'; resBox.innerHTML=''; }
   var st=_ebookState[prefix];
-  if(st){ st.searchMatches=null; st.searchIdx=0; }
+  if(st){ st.searchMatches=null; st.searchIdx=0; st.searchQuery=null; renderEbookPage(prefix); }
 }
 function ebookGetPageTexts(prefix){
   var st=_ebookState[prefix];
@@ -17459,7 +17481,7 @@ function ebookSearch(prefix){
       if(count>0) matches.push({page:idx+1, count:count});
     });
     var st=_ebookState[prefix];
-    st.searchMatches=matches; st.searchIdx=0;
+    st.searchMatches=matches; st.searchIdx=0; st.searchQuery=q;
     if(matches.length===0){
       resBox.innerHTML='<div style="padding:8px;color:var(--g4);font-size:13px">"'+q+'" 검색 결과가 없습니다</div>';
       return;
