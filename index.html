@@ -1310,13 +1310,13 @@ html{overflow-x:hidden}
   <div style="margin:0">
     <div class="sec-lbl" style="padding:16px 13px 8px">👥 조별 평균 출근인원</div>
     <div style="display:flex;gap:7px;padding:0 13px;margin-bottom:11px">
-      <div id="taT_day" onclick="taSetMode('day')" style="flex:1;text-align:center;padding:7px 0;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;background:var(--teal);color:white">일</div>
-      <div id="taT_month" onclick="taSetMode('month')" style="flex:1;text-align:center;padding:7px 0;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--g2);color:var(--g5)">월</div>
-      <div id="taT_year" onclick="taSetMode('year')" style="flex:1;text-align:center;padding:7px 0;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--g2);color:var(--g5)">연</div>
+      <div id="taT_day" onclick="taSetMode('','day')" style="flex:1;text-align:center;padding:7px 0;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;background:var(--teal);color:white">일</div>
+      <div id="taT_month" onclick="taSetMode('','month')" style="flex:1;text-align:center;padding:7px 0;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--g2);color:var(--g5)">월</div>
+      <div id="taT_year" onclick="taSetMode('','year')" style="flex:1;text-align:center;padding:7px 0;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--g2);color:var(--g5)">연</div>
     </div>
     <div style="font-size:11.5px;color:var(--g4);padding:0 13px 8px" id="taPeriodLbl">오늘 · 조원 + 조장 포함</div>
     <div class="card" style="margin:0 13px 13px"><div class="cb" style="padding:11px 13px">
-      <div id="taGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0">불러오는 중…</div>
+      <div id="taGrid">불러오는 중…</div>
     </div></div>
   </div>
 
@@ -1587,6 +1587,18 @@ html{overflow-x:hidden}
           <div style="font-size:13px;font-weight:800;color:var(--teal2)">총계 <span id="mpTeamTotal">0</span>명</div>
         </div>
         <div id="mpTeamGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
+      </div>
+    </div>
+    <div class="card" id="mpTeamAvgCard">
+      <div class="cb">
+        <div style="font-size:14px;font-weight:700;color:var(--g6);margin-bottom:8px">📊 조별 평균 인력현황</div>
+        <div style="display:flex;gap:7px;margin-bottom:9px">
+          <div id="mpTaT_day" onclick="taSetMode('mp','day')" style="flex:1;text-align:center;padding:6px 0;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;background:var(--teal);color:white">일</div>
+          <div id="mpTaT_month" onclick="taSetMode('mp','month')" style="flex:1;text-align:center;padding:6px 0;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--g2);color:var(--g5)">월</div>
+          <div id="mpTaT_year" onclick="taSetMode('mp','year')" style="flex:1;text-align:center;padding:6px 0;border-radius:20px;font-size:12.5px;font-weight:600;cursor:pointer;background:var(--g2);color:var(--g5)">연</div>
+        </div>
+        <div style="font-size:11px;color:var(--g4);margin-bottom:6px" id="mpTaPeriodLbl">오늘 · 조원 + 조장 포함</div>
+        <div id="mpTaGrid">불러오는 중…</div>
       </div>
     </div>
     <div class="card ns-summary-card" style="display:none">
@@ -5512,7 +5524,7 @@ function finishLogin(){
   updateStaff();
   updateFloorChart();
   updateMpSummary();
-  loadTeamAvgAttendance();
+  loadTeamAvgAttendance('');
   loadIndPrev();
   updateIndCmp();
   loadVehData();
@@ -7118,28 +7130,38 @@ setInterval(updateStaff,60000);
 
 // ─ 조별 평균 출근인원 (일/월/연) — mp_data(조원) + mgr_attendance의 '조장'만 합산 (팀장/운영팀 제외) ─
 var TEAM_AVG_ORDER=['1팀A','1팀B','1팀C','2팀A','2팀B','3팀A','3팀B','4팀A','4팀B','6팀A','6팀B','6팀C','7팀A','7팀B','8팀A','8팀B','9팀A','9팀B','5팀A','5팀B','10팀A','10팀B'];
-var taMode='day';
-function taSetMode(m){
-  taMode=m;
+var taModeMap={'':'day','mp':'day'};
+function taSetMode(prefix, m){
+  taModeMap[prefix]=m;
   ['day','month','year'].forEach(function(k){
-    var el=document.getElementById('taT_'+k);
+    var el=document.getElementById((prefix==='mp'?'mpTaT_':'taT_')+k);
     if(!el) return;
     var on=(k===m);
     el.style.background=on?'var(--teal)':'var(--g2)';
     el.style.color=on?'white':'var(--g5)';
     el.style.fontWeight=on?'700':'600';
   });
-  loadTeamAvgAttendance();
+  loadTeamAvgAttendance(prefix);
 }
-async function loadTeamAvgAttendance(){
-  var grid=document.getElementById('taGrid'); if(!grid) return;
-  var lblEl=document.getElementById('taPeriodLbl');
+async function loadTeamAvgAttendance(prefix){
+  prefix=prefix||'';
+  var gridId=(prefix==='mp'?'mpTaGrid':'taGrid');
+  var lblId=(prefix==='mp'?'mpTaPeriodLbl':'taPeriodLbl');
+  var mode=taModeMap[prefix]||'day';
+  var grid=document.getElementById(gridId); if(!grid) return;
+  var lblEl=document.getElementById(lblId);
   var nowKst=new Date(Date.now()+9*3600000);
   var todayStr=nowKst.toISOString().slice(0,10);
-  var dFrom, dTo=todayStr, periodLbl;
-  if(taMode==='day'){ dFrom=todayStr; periodLbl='오늘'; }
-  else if(taMode==='month'){ dFrom=todayStr.slice(0,7)+'-01'; periodLbl='이번달 일평균'; }
-  else{ dFrom=todayStr.slice(0,4)+'-01-01'; periodLbl='올해 일평균'; }
+  // 전체현황(mp) 탭이면, 화면 상단에서 고른 날짜를 기준으로 계산 (없으면 오늘)
+  var anchorDate=todayStr;
+  if(prefix==='mp'){
+    var fdEl=document.getElementById('mpFullDate');
+    if(fdEl && fdEl.value) anchorDate=fdEl.value;
+  }
+  var dFrom, dTo, periodLbl;
+  if(mode==='day'){ dFrom=dTo=anchorDate; periodLbl=(anchorDate===todayStr)?'오늘':anchorDate; }
+  else if(mode==='month'){ dFrom=anchorDate.slice(0,7)+'-01'; dTo=anchorDate; periodLbl=anchorDate.slice(0,7)+' 일평균'; }
+  else{ dFrom=anchorDate.slice(0,4)+'-01-01'; dTo=anchorDate; periodLbl=anchorDate.slice(0,4)+'년 일평균'; }
   if(lblEl) lblEl.textContent=periodLbl+' · 조원 + 조장 포함';
   grid.innerHTML='불러오는 중…';
   try{
@@ -7171,14 +7193,33 @@ async function loadTeamAvgAttendance(){
       sumByTeam[tc]+=1;
     });
     var h='';
-    TEAM_AVG_ORDER.forEach(function(tc){
-      var val;
-      if(taMode==='day'){ val=sumByTeam[tc]; }
-      else{ var d=Object.keys(daysByTeam[tc]).length||1; val=Math.round(sumByTeam[tc]/d*10)/10; }
-      h+='<div style="text-align:center;padding:9px 2px;border-bottom:1px solid var(--g1)">'+
-        '<div style="font-size:11.5px;color:var(--g4);font-weight:600">'+tc+'</div>'+
-        '<div style="font-size:19px;font-weight:900;color:var(--navy);margin-top:2px">'+val+'</div>'+
-        '</div>';
+    var TEAM_ROW_PAIRS=[['1팀','6팀'],['2팀','7팀'],['3팀','8팀'],['4팀','9팀'],['5팀','10팀']];
+    var TEAM_SUBGROUPS={'1팀':['A','B','C'],'2팀':['A','B'],'3팀':['A','B'],'4팀':['A','B'],'6팀':['A','B','C'],'7팀':['A','B'],'8팀':['A','B'],'9팀':['A','B'],'5팀':['A','B'],'10팀':['A','B']};
+    function taTeamVal(tc){
+      if(mode==='day') return sumByTeam[tc]||0;
+      var d=Object.keys(daysByTeam[tc]||{}).length||1;
+      return Math.round((sumByTeam[tc]||0)/d);
+    }
+    function taTeamCard(team){
+      var subs=TEAM_SUBGROUPS[team]||[];
+      var rows='', teamTotal=0;
+      subs.forEach(function(s){
+        var tc=team+s, v=taTeamVal(tc); teamTotal+=v;
+        var zero=(v===0);
+        rows+='<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0">'+
+          '<span style="font-size:12.5px;color:'+(zero?'var(--g3)':'var(--g5)')+';font-weight:600">'+s+'조</span>'+
+          '<span style="font-size:15px;font-weight:900;color:'+(zero?'var(--g3)':'var(--navy)')+'">'+v+'<span style="font-size:10.5px;font-weight:600;margin-left:1px">명</span></span>'+
+          '</div>';
+      });
+      return '<div style="background:var(--g0);border:1px solid var(--g2);border-radius:12px;padding:10px 13px">'+
+        '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:2px">'+
+        '<span style="font-size:13.5px;font-weight:800;color:var(--g6)">'+team+'</span>'+
+        '<span style="font-size:11px;font-weight:700;color:var(--teal2)">총 '+teamTotal+'명</span></div>'+
+        rows+'</div>';
+    }
+    TEAM_ROW_PAIRS.forEach(function(pair){
+      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:9px">'+
+        taTeamCard(pair[0])+taTeamCard(pair[1])+'</div>';
     });
     grid.innerHTML=h;
   }catch(e){ grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--g4);padding:11px">불러오기 실패</div>'; }
@@ -7606,6 +7647,7 @@ function mpTab(n){tabSwitch('mp',n,5);if(n===1){
   var dEl=document.getElementById('mpFullDate');
   if(dEl&&!dEl.value){ dEl.value=new Date(Date.now()+9*3600000).toISOString().slice(0,10); }
   if(dEl&&dEl.value) loadFullStatusForDate(dEl.value);
+  loadTeamAvgAttendance('mp');
 }if(n===2){
   var t=document.querySelectorAll('#leaderViewToggle .rp');
   if(t.length){t.forEach(function(b){b.classList.remove('on');});t[0].classList.add('on');}
@@ -7850,6 +7892,7 @@ function updateMpSummary(){
 // ═══ 전체현황 탭 전용 날짜별 조회 (다른 탭 전역상태에는 영향 없음) ═══
 async function loadFullStatusForDate(dateStr){
   if(!dateStr) return;
+  loadTeamAvgAttendance('mp'); // 선택한 날짜 기준으로 조별 평균도 함께 갱신
   try{
     var mpRes=await sb.from('mp_data').select('*').eq('date',dateStr);
     var nsRes=await sb.from('night_special_data').select('*').eq('date',dateStr);
@@ -15727,7 +15770,7 @@ async function refreshMpDataLight(){
       mpDataByLeader={오전:{},오후:{},야간:{}};
       mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
       go('main');
-      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); }, 500);
+      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); }, 500);
       setTimeout(function(){ tryAutoCheckin(); checkHeatAlert(); }, 2000);
       return;
     }
