@@ -1309,18 +1309,20 @@ html{overflow-x:hidden}
   <!-- 조별 평균 출근인원 -->
   <div style="margin:0">
     <div class="sec-lbl" style="padding:16px 13px 8px">👥 조별 평균 출근인원</div>
-    <div style="display:flex;gap:7px;padding:0 13px;margin-bottom:11px">
-      <div id="taT_day" onclick="taSetMode('','day')" style="flex:1;text-align:center;padding:7px 0;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;background:var(--teal);color:white">일</div>
-      <div id="taT_month" onclick="taSetMode('','month')" style="flex:1;text-align:center;padding:7px 0;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--g2);color:var(--g5)">월</div>
-      <div id="taT_year" onclick="taSetMode('','year')" style="flex:1;text-align:center;padding:7px 0;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--g2);color:var(--g5)">연</div>
+    <div style="display:flex;gap:7px;padding:0 13px;margin-bottom:8px">
+      <div id="taT_day" onclick="taSetMode('','day')" style="flex:1;text-align:center;padding:6px 0;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;background:var(--teal);color:white">일</div>
+      <div id="taT_month" onclick="taSetMode('','month')" style="flex:1;text-align:center;padding:6px 0;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--g2);color:var(--g5)">월</div>
+      <div id="taT_year" onclick="taSetMode('','year')" style="flex:1;text-align:center;padding:6px 0;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;background:var(--g2);color:var(--g5)">연</div>
     </div>
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 13px 8px">
-      <button onclick="taNav('',-1)" style="width:30px;height:30px;border-radius:50%;border:1.5px solid var(--g2);background:white;color:var(--g5);font-size:14px;cursor:pointer">◀</button>
-      <div style="font-size:12.5px;color:var(--g5);font-weight:700" id="taPeriodLbl">오늘 · 조원 + 조장 + 팀장 포함</div>
-      <button onclick="taNav('',1)" style="width:30px;height:30px;border-radius:50%;border:1.5px solid var(--g2);background:white;color:var(--g5);font-size:14px;cursor:pointer">▶</button>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:0 13px 7px;gap:8px">
+      <button onclick="taNav('',-1)" style="width:26px;height:26px;flex-shrink:0;border-radius:50%;border:1.5px solid var(--g2);background:white;color:var(--g5);font-size:12px;cursor:pointer">◀</button>
+      <div style="text-align:center;min-width:0">
+        <span style="font-size:12.5px;color:var(--g5);font-weight:700" id="taPeriodLbl">오늘</span>
+        <span onclick="taNavToday('')" id="taTodayBtn" style="font-size:11px;color:var(--teal2);font-weight:700;cursor:pointer;margin-left:6px">⚡실시간</span>
+      </div>
+      <button onclick="taNav('',1)" style="width:26px;height:26px;flex-shrink:0;border-radius:50%;border:1.5px solid var(--g2);background:white;color:var(--g5);font-size:12px;cursor:pointer">▶</button>
     </div>
-    <div style="text-align:center;margin-bottom:8px"><span onclick="taNavToday('')" style="font-size:11.5px;color:var(--teal2);font-weight:700;cursor:pointer">오늘로</span></div>
-    <div class="card" style="margin:0 13px 13px"><div class="cb" style="padding:11px 13px">
+    <div class="card" style="margin:0 13px 13px"><div class="cb" style="padding:7px 9px">
       <div id="taGrid">불러오는 중…</div>
     </div></div>
   </div>
@@ -7256,22 +7258,22 @@ async function loadTeamAvgAttendance(prefix){
       var bg=(Math.floor(i/2)%2===0)?'var(--navy-bg)':'transparent';
       var topBorder=isPairStart?'border-top:2px solid var(--g3)':'border-top:1px solid var(--g1)';
       rowsHtml+='<tr style="background:'+bg+'">'+
-        '<td style="padding:8px 4px;'+topBorder+';font-weight:800;color:var(--g6);font-size:13px">'+team+'</td>'+
-        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taCell(mgr)+'</td>'+
-        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taCell(a)+'</td>'+
-        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taCell(b)+'</td>'+
-        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taCell(c)+'</td>'+
-        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:900;color:var(--teal2)">'+total+'</td>'+
+        '<td style="padding:5px 4px;'+topBorder+';font-weight:800;color:var(--g6);font-size:12.5px">'+team+'</td>'+
+        '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy);font-size:13px">'+taCell(mgr)+'</td>'+
+        '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy);font-size:13px">'+taCell(a)+'</td>'+
+        '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy);font-size:13px">'+taCell(b)+'</td>'+
+        '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy);font-size:13px">'+taCell(c)+'</td>'+
+        '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:900;color:var(--teal2);font-size:13px">'+total+'</td>'+
         '</tr>';
     });
     var h='<table style="width:100%;border-collapse:collapse">'+
-      '<thead><tr style="color:var(--g4);font-size:11px">'+
-      '<th style="text-align:left;padding:2px 4px 6px;font-weight:700">팀</th>'+
-      '<th style="padding:2px 4px 6px;font-weight:700">팀장</th>'+
-      '<th style="padding:2px 4px 6px;font-weight:700">A조</th>'+
-      '<th style="padding:2px 4px 6px;font-weight:700">B조</th>'+
-      '<th style="padding:2px 4px 6px;font-weight:700">C조</th>'+
-      '<th style="padding:2px 4px 6px;font-weight:700;color:var(--teal2)">계</th>'+
+      '<thead><tr style="color:var(--g4);font-size:10.5px">'+
+      '<th style="text-align:left;padding:2px 4px 5px;font-weight:700">팀</th>'+
+      '<th style="padding:2px 4px 5px;font-weight:700">팀장</th>'+
+      '<th style="padding:2px 4px 5px;font-weight:700">A조</th>'+
+      '<th style="padding:2px 4px 5px;font-weight:700">B조</th>'+
+      '<th style="padding:2px 4px 5px;font-weight:700">C조</th>'+
+      '<th style="padding:2px 4px 5px;font-weight:700;color:var(--teal2)">계</th>'+
       '</tr></thead><tbody>'+rowsHtml+'</tbody></table>';
     grid.innerHTML=h;
   }catch(e){ grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--g4);padding:11px">불러오기 실패</div>'; }
