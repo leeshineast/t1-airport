@@ -161,6 +161,7 @@ html{overflow-x:hidden}
 /* ─ 메인 메뉴 버튼 ─ */
 .menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 13px 13px}
 .fac-badge{display:inline-flex;align-items:center;font-size:13px;font-weight:800;padding:5px 12px;border-radius:8px;white-space:nowrap}
+.fac-badge-sm{font-size:10.5px!important;padding:3px 7px!important;border-radius:6px!important}
 .fac-b-zone{background:var(--navy-bg);color:var(--navy)}
 .fac-b-floor{background:#EEF4FF;color:#1D4E9E}
 .fac-b-cat{background:#FFF3E0;color:#B8600B}
@@ -14587,22 +14588,55 @@ function renderToiletList(){
     return;
   }
   var h='';
+  // 번호(위치) 기준으로 그룹핑 — 같은 번호에 남/여 화장실이 각각 1개씩 있으면 '페어'로 간주
+  var groups={}, groupOrder=[];
   filtered.forEach(function(r){
+    var key=r.number?('n:'+r.number):('id:'+r.id);
+    if(!groups[key]){ groups[key]=[]; groupOrder.push(key); }
+    groups[key].push(r);
+  });
+  function tlDetailTxt(r){
+    return '양변기'+(r.toilet_cnt||0)+' 세면기'+(r.sink_cnt||0)+(r.urinal_cnt?(' 소변기'+r.urinal_cnt):'')+' · 주간 '+(r.team||'-')+' · 야간 '+(r.night_team||'-');
+  }
+  function tlEditTxt(r){ return r.updated_by?(r.updated_by+' · '+facUpdatedDateShort(r.updated_at)):''; }
+  function tlFullCard(r){
     var zoneLbl=r.zone==='Airside'?'A/S':'L/S';
     var closedBadge=r.active===false?'<span style="background:var(--danger-bg);color:var(--danger);border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700;margin-left:5px">폐쇄</span>':'';
     var badges='<span class="fac-badge fac-b-zone">'+zoneLbl+'</span>'+(r.floor?'<span class="fac-badge fac-b-floor">'+r.floor+'</span>':'')+(r.category?'<span class="fac-badge fac-b-cat">'+r.category+'</span>':'');
-    var lineTxt='양변기'+(r.toilet_cnt||0)+' 세면기'+(r.sink_cnt||0)+(r.urinal_cnt?(' 소변기'+r.urinal_cnt):'')+' · 주간 '+(r.team||'-')+' · 야간 '+(r.night_team||'-');
-    var editTxt=r.updated_by?(r.updated_by+' · '+facUpdatedDateShort(r.updated_at)):'';
-    h+='<div onclick="openToiletDetail('+r.id+')" style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.04)">';
-    h+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
-    h+='<div style="display:flex;align-items:center;gap:7px;min-width:0">'+facGenderBadge(r.gender)+'<span style="font-size:15px;font-weight:800;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(r.number||'')+'</span>'+closedBadge+'</div>';
-    h+='<div style="display:flex;gap:6px;flex-shrink:0">'+badges+'</div>';
-    h+='</div>';
-    h+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:7px;gap:8px">';
-    h+='<span style="font-size:11px;color:var(--g4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+lineTxt+'</span>';
-    if(editTxt) h+='<span style="font-size:10px;color:var(--teal2);font-weight:600;white-space:nowrap;flex-shrink:0">'+editTxt+'</span>';
-    h+='</div>';
-    h+='</div>';
+    var editTxt=tlEditTxt(r);
+    var s='<div onclick="openToiletDetail('+r.id+')" style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.04)">';
+    s+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
+    s+='<div style="display:flex;align-items:center;gap:7px;min-width:0">'+facGenderBadge(r.gender)+'<span style="font-size:15px;font-weight:800;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(r.number||'')+'</span>'+closedBadge+'</div>';
+    s+='<div style="display:flex;gap:6px;flex-shrink:0">'+badges+'</div>';
+    s+='</div>';
+    s+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:7px;gap:8px">';
+    s+='<span style="font-size:11px;color:var(--g4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+tlDetailTxt(r)+'</span>';
+    if(editTxt) s+='<span style="font-size:10px;color:var(--teal2);font-weight:600;white-space:nowrap;flex-shrink:0">'+editTxt+'</span>';
+    s+='</div></div>';
+    return s;
+  }
+  function tlPairCard(r){
+    var zoneLbl=r.zone==='Airside'?'A/S':'L/S';
+    var closedBadge=r.active===false?'<span style="background:var(--danger-bg);color:var(--danger);border-radius:9px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:3px">폐쇄</span>':'';
+    var badges='<span class="fac-badge fac-badge-sm fac-b-zone">'+zoneLbl+'</span>'+(r.floor?'<span class="fac-badge fac-badge-sm fac-b-floor">'+r.floor+'</span>':'')+(r.category?'<span class="fac-badge fac-badge-sm fac-b-cat">'+r.category+'</span>':'');
+    var editTxt=tlEditTxt(r);
+    var s='<div onclick="openToiletDetail('+r.id+')" style="flex:1;min-width:0;background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:10px 11px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.04)">';
+    s+='<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">'+facGenderBadge(r.gender)+'<span style="font-size:14px;font-weight:800;color:var(--g7)">'+(r.number||'')+'</span>'+closedBadge+'</div>';
+    s+='<div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap">'+badges+'</div>';
+    s+='<div style="font-size:10px;color:var(--g4);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+tlDetailTxt(r)+'</div>';
+    if(editTxt) s+='<div style="font-size:9.5px;color:var(--teal2);font-weight:600;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+editTxt+'</div>';
+    s+='</div>';
+    return s;
+  }
+  groupOrder.forEach(function(key){
+    var grp=groups[key];
+    var isPair=grp.length===2 && grp[0].number && (grp[0].gender||'')!==(grp[1].gender||'');
+    if(isPair){
+      var ordered=grp.slice().sort(function(a,b){ return ((a.gender||'').indexOf('남')>=0?0:1)-((b.gender||'').indexOf('남')>=0?0:1); });
+      h+='<div style="display:flex;gap:8px;margin-bottom:8px">'+ordered.map(tlPairCard).join('')+'</div>';
+    }else{
+      grp.forEach(function(r){ h+=tlFullCard(r); });
+    }
   });
   listEl.innerHTML=h;
 }
