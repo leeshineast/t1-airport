@@ -15208,9 +15208,15 @@ function facPreviewFile(type,input){
       var rows=json.slice(1).filter(function(r){ return r.some(function(c){return c!==null&&c!=='';}); });
       // 헤더명(원본 라벨 포함)으로 컬럼 위치를 유연하게 탐색
       var idxFor=function(f){
-        var target=(f.xh||f.label.replace(/\(.*?\)/g,'').trim());
-        for(var i=0;i<headers.length;i++){
-          if(headers[i]===f.key || headers[i]===target || headers[i].indexOf(target)!==-1) return i;
+        var labelTarget=f.label.replace(/\(.*?\)/g,'').trim();
+        var candidates=[f.key, labelTarget];
+        if(f.xh && f.xh!==labelTarget) candidates.push(f.xh);
+        for(var c=0;c<candidates.length;c++){
+          var target=candidates[c];
+          if(!target) continue;
+          for(var i=0;i<headers.length;i++){
+            if(headers[i]===target || headers[i].indexOf(target)!==-1) return i;
+          }
         }
         return -1;
       };
