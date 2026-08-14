@@ -2515,10 +2515,10 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     </div>
     <div class="fg"><label class="f-lbl">일반/상주 구분 *</label>
       <div class="rg" id="tlCategoryG">
-        <div class="rp" onclick="selRP(this)" data-v="일반">일반</div>
-        <div class="rp" onclick="selRP(this)" data-v="상주">상주</div>
+        <div class="rp" onclick="selRP(this);document.getElementById('tlCategoryEtc').value='';" data-v="일반">일반</div>
+        <div class="rp" onclick="selRP(this);document.getElementById('tlCategoryEtc').value='';" data-v="상주">상주</div>
       </div>
-      <input type="text" id="tlCategoryEtc" class="ri" placeholder="그 외 구분이면 직접 입력 (예: 귀빈실, 난민실 등)" style="margin-top:6px;margin-bottom:0">
+      <input type="text" id="tlCategoryEtc" class="ri" placeholder="그 외 구분이면 직접 입력 (예: 귀빈실, 난민실 등)" style="margin-top:6px;margin-bottom:0" oninput="if(this.value)tlSetVal('tlCategoryG','')">
     </div>
     <div class="fg"><label class="f-lbl">층 *</label>
       <div class="rg" id="tlFloorG" style="flex-wrap:wrap">
@@ -2622,8 +2622,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <div class="rg" id="tlDGenderG"><div class="rp" onclick="selRP(this)" data-v="남자 화장실">남자</div><div class="rp" onclick="selRP(this)" data-v="여자 화장실">여자</div><div class="rp" onclick="selRP(this)" data-v="공용 화장실">공용</div></div>
       </div>
       <div class="fg"><label class="f-lbl">일반/상주 구분</label>
-        <div class="rg" id="tlDCategoryG"><div class="rp" onclick="selRP(this)" data-v="일반">일반</div><div class="rp" onclick="selRP(this)" data-v="상주">상주</div></div>
-        <input type="text" id="tlDCategoryEtc" class="ri" placeholder="그 외 구분 직접입력" style="margin-top:6px;margin-bottom:0">
+        <div class="rg" id="tlDCategoryG"><div class="rp" onclick="selRP(this);document.getElementById('tlDCategoryEtc').value='';" data-v="일반">일반</div><div class="rp" onclick="selRP(this);document.getElementById('tlDCategoryEtc').value='';" data-v="상주">상주</div></div>
+        <input type="text" id="tlDCategoryEtc" class="ri" placeholder="그 외 구분 직접입력" style="margin-top:6px;margin-bottom:0" oninput="if(this.value)tlSetVal('tlDCategoryG','')">
       </div>
       <div class="fg"><label class="f-lbl">층 *</label>
         <div class="rg" id="tlDFloorG" style="flex-wrap:wrap">
