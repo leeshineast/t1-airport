@@ -3712,6 +3712,22 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <h3 style="font-size:15px;margin-bottom:6px">📋 사전등록 작업 스케줄 관리</h3>
       <p style="font-size:13px;color:var(--g5);line-height:1.7;margin-bottom:10px">팀별 순환 작업을 엑셀로 업로드하면, 작성자가 공동작업 입력 시 팀을 선택하고 바로 탭해서 항목을 자동 채울 수 있습니다.<br>양식: <b>팀 | 층 | 세부위치 | 대분류 | 작업내역</b><br>팀 값 예시: 1팀A, 1팀B, 2팀A ...</p>
       <input type="file" id="jwSchedFileInput" accept=".xlsx,.xls" onchange="jwSchedUpload(this)" style="width:100%;padding:10px;border:2px dashed var(--g2);border-radius:var(--r2);font-size:14px;background:var(--g1);margin-bottom:10px">
+      <div style="display:flex;gap:8px;margin-bottom:14px">
+        <button class="btn-prim" style="flex:1;background:var(--teal2)" onclick="jwSchedDownload()">📥 스케줄 다운로드 (xlsx)</button>
+      </div>
+
+      <div style="background:var(--teal-bg);border-radius:var(--r2);padding:12px;margin-bottom:14px">
+        <label class="f-lbl">✍️ 직접 작성</label>
+        <select id="jwSchedNewTeam" class="ri" style="margin-bottom:8px">
+          <option value="">팀 선택</option>
+        </select>
+        <input type="text" id="jwSchedNewFloor" class="ri" placeholder="층 (예: 3층)" style="margin-bottom:8px">
+        <input type="text" id="jwSchedNewLoc" class="ri" placeholder="세부위치 (예: 선큰가든(동))" style="margin-bottom:8px">
+        <input type="text" id="jwSchedNewCategory" class="ri" placeholder="대분류 (예: 바닥관리)" style="margin-bottom:8px">
+        <input type="text" id="jwSchedNewWork" class="ri" placeholder="작업내역 (예: 오점 제거작업)" style="margin-bottom:10px">
+        <button class="btn-prim" onclick="jwSchedAddOne()">+ 스케줄 추가</button>
+      </div>
+
       <div id="jwSchedAdminList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
       <button class="btn-prim" style="background:var(--danger)" onclick="jwSchedClearAll()">🗑️ 전체 스케줄 삭제</button>
     </div></div>
@@ -9286,7 +9302,7 @@ function jwTab(n){
     var schedCard=document.getElementById('jwSchedAdminCard');
     if(schedCard){
       schedCard.style.display=(me&&(me.role==='admin'||me.role==='manager'||isExecRole(me.role)))?'block':'none';
-      if(schedCard.style.display==='block') jwRenderScheduleAdminList();
+      if(schedCard.style.display==='block'){ jwSchedFillTeamSelect(); jwRenderScheduleAdminList(); }
     }
   }
 }
@@ -9663,6 +9679,52 @@ async function subJointWork(){
     loadJointWorkTodayFromDB();
     jwTab(1);
   }catch(e){ toast('저장 오류: '+String(e.message||e)); }
+}
+// 사전등록 스케줄 '팀' 드롭다운을 22개 조로 채움 (한 번만)
+function jwSchedFillTeamSelect(){
+  var sel=document.getElementById('jwSchedNewTeam');
+  if(!sel || sel.options.length>1) return;
+  JW_ALL_TEAMS.forEach(function(tc){
+    var o=document.createElement('option'); o.value=tc; o.textContent=tc; sel.appendChild(o);
+  });
+}
+async function jwSchedAddOne(){
+  if(!canWrite()) return;
+  var team=document.getElementById('jwSchedNewTeam').value;
+  var floor=(document.getElementById('jwSchedNewFloor').value||'').trim();
+  var loc=(document.getElementById('jwSchedNewLoc').value||'').trim();
+  var category=(document.getElementById('jwSchedNewCategory').value||'').trim();
+  var work=(document.getElementById('jwSchedNewWork').value||'').trim();
+  if(!team){ toast('⚠️ 팀을 선택해주세요'); return; }
+  if(!category||!work){ toast('⚠️ 대분류·작업내역은 필수입니다'); return; }
+  try{
+    var res=await sb.from('joint_work_schedule').insert({
+      team:team, floor:floor||null, location:loc||null, category:category, work_name:work, updated_by:me?me.name:''
+    });
+    if(res.error){ toast('추가 오류: '+res.error.message); return; }
+    toast('✓ 스케줄이 추가되었습니다');
+    ['jwSchedNewFloor','jwSchedNewLoc','jwSchedNewCategory','jwSchedNewWork'].forEach(function(id){ document.getElementById(id).value=''; });
+    await loadJointWorkSchedule();
+    jwRenderScheduleAdminList();
+  }catch(e){ toast('추가 오류: '+String(e.message||e)); }
+}
+async function jwSchedDownload(){
+  if(!jwScheduleData.length){ toast('다운로드할 스케줄이 없습니다'); return; }
+  var header=['팀','층','세부위치','대분류','작업내역'];
+  var rows=[header];
+  jwScheduleData.forEach(function(s){
+    rows.push([s.team||'', s.floor||'', s.location||'', s.category||'', s.work_name||'']);
+  });
+  try{
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:8},{wch:8},{wch:24},{wch:14},{wch:30}];
+    var wb=XLSX.utils.book_new();
+    dlFinalizeSheet(ws);
+    XLSX.utils.book_append_sheet(wb,ws,'사전등록스케줄');
+    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+    await dlSaveWorkbook(wb, 'T1_공동작업_사전등록스케줄_'+today+'.xlsx');
+    toast('📥 다운로드 완료 ('+jwScheduleData.length+'건)');
+  }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
 }
 function jwSchedUpload(inputEl){
   var file=inputEl.files[0]; if(!file) return;
