@@ -3718,9 +3718,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
       <div style="background:var(--teal-bg);border-radius:var(--r2);padding:12px;margin-bottom:14px">
         <label class="f-lbl">✍️ 직접 작성</label>
-        <select id="jwSchedNewTeam" class="ri" style="margin-bottom:8px">
-          <option value="">팀 선택</option>
-        </select>
+        <label class="f-lbl" style="font-weight:400;color:var(--g4);margin-bottom:5px">팀·조 선택 (중복 선택 가능 · 선택한 팀마다 각각 등록됩니다)</label>
+        <div class="rg" id="jwSchedNewTeamG" style="flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
         <select id="jwSchedNewFloor" class="ri" style="margin-bottom:8px">
           <option value="">층 선택</option>
           <option value="지하2층">지하2층</option>
@@ -9698,30 +9697,40 @@ async function subJointWork(){
     jwTab(1);
   }catch(e){ toast('저장 오류: '+String(e.message||e)); }
 }
-// 사전등록 스케줄 '팀' 드롭다운을 22개 조로 채움 (한 번만)
+// 사전등록 스케줄 '팀' 버튼그룹을 22개 조로 채움 (한 번만, 중복선택 가능)
+var jwSchedNewTeams=[];
 function jwSchedFillTeamSelect(){
-  var sel=document.getElementById('jwSchedNewTeam');
-  if(!sel || sel.options.length>1) return;
+  var g=document.getElementById('jwSchedNewTeamG');
+  if(!g || g.children.length) return;
   JW_ALL_TEAMS.forEach(function(tc){
-    var o=document.createElement('option'); o.value=tc; o.textContent=tc; sel.appendChild(o);
+    var b=document.createElement('div'); b.className='rp'; b.textContent=tc;
+    b.onclick=function(){ jwSchedToggleNewTeam(b,tc); };
+    g.appendChild(b);
   });
+}
+function jwSchedToggleNewTeam(el,tc){
+  var idx=jwSchedNewTeams.indexOf(tc);
+  if(idx>=0){ jwSchedNewTeams.splice(idx,1); el.classList.remove('on'); }
+  else{ jwSchedNewTeams.push(tc); el.classList.add('on'); }
 }
 async function jwSchedAddOne(){
   if(!canWrite()) return;
-  var team=document.getElementById('jwSchedNewTeam').value;
   var floor=(document.getElementById('jwSchedNewFloor').value||'').trim();
   var loc=(document.getElementById('jwSchedNewLoc').value||'').trim();
   var category=(document.getElementById('jwSchedNewCategory').value||'').trim();
   var work=(document.getElementById('jwSchedNewWork').value||'').trim();
-  if(!team){ toast('⚠️ 팀을 선택해주세요'); return; }
+  if(!jwSchedNewTeams.length){ toast('⚠️ 팀을 1개 이상 선택해주세요'); return; }
   if(!category||!work){ toast('⚠️ 대분류·작업내역은 필수입니다'); return; }
   try{
-    var res=await sb.from('joint_work_schedule').insert({
-      team:team, floor:floor||null, location:loc||null, category:category, work_name:work, updated_by:me?me.name:''
+    var payload=jwSchedNewTeams.map(function(tc){
+      return {team:tc, floor:floor||null, location:loc||null, category:category, work_name:work, updated_by:me?me.name:''};
     });
+    var res=await sb.from('joint_work_schedule').insert(payload);
     if(res.error){ toast('추가 오류: '+res.error.message); return; }
-    toast('✓ 스케줄이 추가되었습니다');
+    toast('✓ '+jwSchedNewTeams.length+'개 팀에 스케줄이 추가되었습니다');
     ['jwSchedNewFloor','jwSchedNewLoc','jwSchedNewCategory','jwSchedNewWork'].forEach(function(id){ document.getElementById(id).value=''; });
+    jwSchedNewTeams=[];
+    Array.from(document.getElementById('jwSchedNewTeamG').children).forEach(function(c){c.classList.remove('on');});
     await loadJointWorkSchedule();
     jwRenderScheduleAdminList();
   }catch(e){ toast('추가 오류: '+String(e.message||e)); }
