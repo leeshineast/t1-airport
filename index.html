@@ -160,6 +160,10 @@ html{overflow-x:hidden}
 
 /* ─ 메인 메뉴 버튼 ─ */
 .menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 13px 13px}
+.fac-badge{display:inline-flex;align-items:center;font-size:13px;font-weight:800;padding:5px 12px;border-radius:8px;white-space:nowrap}
+.fac-b-zone{background:var(--navy-bg);color:var(--navy)}
+.fac-b-floor{background:#EEF4FF;color:#1D4E9E}
+.fac-b-cat{background:#FFF3E0;color:#B8600B}
 .menu-btn{background:white;border-radius:var(--r2);padding:11px 12px;box-shadow:0 1px 5px rgba(0,0,0,.06);border:1px solid var(--g2);cursor:pointer;text-align:left;transition:all .15s;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:10px}
 .menu-btn:active{transform:scale(.97);background:var(--g1)}
 .menu-icon{font-size:26px;display:block;flex-shrink:0}
@@ -14586,14 +14590,18 @@ function renderToiletList(){
   filtered.forEach(function(r){
     var zoneLbl=r.zone==='Airside'?'A/S':'L/S';
     var closedBadge=r.active===false?'<span style="background:var(--danger-bg);color:var(--danger);border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700;margin-left:5px">폐쇄</span>':'';
+    var badges='<span class="fac-badge fac-b-zone">'+zoneLbl+'</span>'+(r.floor?'<span class="fac-badge fac-b-floor">'+r.floor+'</span>':'')+(r.category?'<span class="fac-badge fac-b-cat">'+r.category+'</span>':'');
+    var lineTxt='양변기'+(r.toilet_cnt||0)+' 세면기'+(r.sink_cnt||0)+(r.urinal_cnt?(' 소변기'+r.urinal_cnt):'')+' · 주간 '+(r.team||'-')+' · 야간 '+(r.night_team||'-');
+    var editTxt=r.updated_by?(r.updated_by+' · '+facUpdatedDateShort(r.updated_at)):'';
     h+='<div onclick="openToiletDetail('+r.id+')" style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.04)">';
-    h+='<div style="display:flex;justify-content:space-between;align-items:center">';
-    h+='<div style="display:flex;align-items:center;gap:7px">'+facGenderBadge(r.gender)+'<span style="font-size:14px;font-weight:800;color:var(--g7)">'+(r.number||'')+'</span>'+closedBadge+'</div>';
-    h+='<span style="font-size:11px;color:var(--g4)">'+zoneLbl+' · '+(r.floor||'')+'</span>';
+    h+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
+    h+='<div style="display:flex;align-items:center;gap:7px;min-width:0">'+facGenderBadge(r.gender)+'<span style="font-size:15px;font-weight:800;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(r.number||'')+'</span>'+closedBadge+'</div>';
+    h+='<div style="display:flex;gap:6px;flex-shrink:0">'+badges+'</div>';
     h+='</div>';
-    h+='<div style="font-size:12px;color:var(--g5);margin-top:4px">'+(r.category||'-')+' · 양변기'+(r.toilet_cnt||0)+' 세면기'+(r.sink_cnt||0)+(r.urinal_cnt?(' 소변기'+r.urinal_cnt):'')+'</div>';
-    h+='<div style="font-size:11px;color:var(--g4);margin-top:2px">주간 '+(r.team||'-')+' · 야간 '+(r.night_team||'-')+'</div>';
-    if(r.updated_by){ h+='<div style="font-size:11px;color:var(--teal2);margin-top:4px;font-weight:600">✎ '+r.updated_by+' · '+facUpdatedDateShort(r.updated_at)+' 수정</div>'; }
+    h+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:7px;gap:8px">';
+    h+='<span style="font-size:11px;color:var(--g4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+lineTxt+'</span>';
+    if(editTxt) h+='<span style="font-size:10px;color:var(--teal2);font-weight:600;white-space:nowrap;flex-shrink:0">'+editTxt+'</span>';
+    h+='</div>';
     h+='</div>';
   });
   listEl.innerHTML=h;
@@ -14813,7 +14821,7 @@ var FAC_CONFIGS={
       {key:'night_team', label:'야간관리팀', xh:'야간관리팀', type:'text'}
     ],
     listTitle:function(r){ return (r.number||''); },
-    listSub:function(r){ return (r.zone==='Airside'?'A/S':'L/S')+' · '+(r.floor||''); },
+    listSub:function(r){ return ''; },
     listDetail:function(r){ return (r.category||'-')+' · 샤워기'+(r.shower_cnt||0)+' 세면대'+(r.sink_cnt||0); }
   },
   smoking:{table:'smoking_room_master', icon:'🚬', title:'흡연실', screen:'sSmokingMgmt', pfx:'sm',
@@ -14831,7 +14839,7 @@ var FAC_CONFIGS={
       {key:'night_team', label:'야간관리팀', xh:'야간관리팀', type:'text'}
     ],
     listTitle:function(r){ return (r.location||''); },
-    listSub:function(r){ return (r.zone==='Airside'?'A/S':'L/S')+' · '+(r.floor||'')+' · '+(r.indoor_outdoor||''); },
+    listSub:function(r){ return (r.indoor_outdoor||''); },
     listDetail:function(r){ return (r.category||'-')+' · 재떨이'+(r.ashtray_cnt||0)+' 쓰레기통(내'+(r.indoor_trash_cnt||0)+'/외'+(r.outdoor_trash_cnt||0)+')'; }
   },
   rest:{table:'rest_facility_master', icon:'😴', title:'휴게시설', screen:'sRestMgmt', pfx:'rf',
@@ -14853,7 +14861,7 @@ var FAC_CONFIGS={
       {key:'board_type', label:'게시판', xh:'게시판', type:'text'}
     ],
     listTitle:function(r){ return (r.location||''); },
-    listSub:function(r){ return (r.zone==='Airside'?'A/S':'L/S')+' · '+(r.floor||'-')+' · '+(r.gender||'-')+' · '+(r.use_team||''); },
+    listSub:function(r){ return (r.gender||'-')+' · '+(r.use_team||''); },
     listDetail:function(r){ return '냉장고'+(r.fridge_cnt||0)+' 전자레인지'+(r.microwave_cnt||0)+' 정수기'+(r.water_cnt||0); }
   },
   storage:{table:'storage_room_master', icon:'📦', title:'창고', screen:'sStorageMgmt', pfx:'st',
@@ -14867,7 +14875,7 @@ var FAC_CONFIGS={
       {key:'manager', label:'관리 주체', xh:'관리 주체', type:'text'}
     ],
     listTitle:function(r){ return (r.location||''); },
-    listSub:function(r){ return (r.zone==='Airside'?'A/S':'L/S')+' · '+(r.floor||'-')+' · '+(r.number||''); },
+    listSub:function(r){ return (r.number||''); },
     listDetail:function(r){ return (r.storage_type||'-')+' · 관리: '+(r.manager||'-'); }
   },
   baby:{table:'baby_room_master', icon:'👶', title:'유아휴게실', screen:'sBabyMgmt', pfx:'bb',
@@ -14881,7 +14889,7 @@ var FAC_CONFIGS={
       {key:'night_team', label:'야간관리팀', type:'text'}
     ],
     listTitle:function(r){ return (r.location||''); },
-    listSub:function(r){ return (r.zone==='Airside'?'A/S':'L/S')+' · '+(r.floor||''); },
+    listSub:function(r){ return ''; },
     listDetail:function(r){ return '번호: '+(r.number||'-')+' · '+(r.team||'-'); }
   }
 };
@@ -15096,17 +15104,24 @@ function facRenderList(type){
     return;
   }
   var hasGender=cfg.fields.some(function(f){return f.key==='gender';});
+  var hasFloor=cfg.fields.some(function(f){return f.key==='floor';});
   var h='';
   filtered.forEach(function(r){
     var zoneLbl=r.zone==='Airside'?'A/S':'L/S';
     var closedBadge=r.active===false?'<span style="background:var(--danger-bg);color:var(--danger);border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700;margin-left:5px">폐쇄</span>':'';
+    var badges='<span class="fac-badge fac-b-zone">'+zoneLbl+'</span>'+(hasFloor&&r.floor?'<span class="fac-badge fac-b-floor">'+r.floor+'</span>':'');
+    var subTxt=cfg.listSub(r); var detailTxt=cfg.listDetail(r);
+    var lineTxt=[subTxt,detailTxt].filter(Boolean).join(' · ');
+    var editTxt=r.updated_by?(r.updated_by+' · '+facUpdatedDateShort(r.updated_at)):'';
     h+='<div onclick="facOpenDetail(\''+type+'\','+r.id+')" style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.04)">';
-    h+='<div style="display:flex;justify-content:space-between;align-items:center">';
-    h+='<div style="display:flex;align-items:center;gap:7px">'+(hasGender?facGenderBadge(r.gender):'')+'<span style="font-size:14px;font-weight:800;color:var(--g7)">'+cfg.icon+' '+(cfg.listTitle(r)||'(위치 미상)')+'</span>'+closedBadge+'</div>';
+    h+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
+    h+='<div style="display:flex;align-items:center;gap:7px;min-width:0">'+(hasGender?facGenderBadge(r.gender):'')+'<span style="font-size:15px;font-weight:800;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cfg.icon+' '+(cfg.listTitle(r)||'(위치 미상)')+'</span>'+closedBadge+'</div>';
+    h+='<div style="display:flex;gap:6px;flex-shrink:0">'+badges+'</div>';
     h+='</div>';
-    h+='<div style="font-size:12px;color:var(--g5);margin-top:4px">'+cfg.listSub(r)+'</div>';
-    h+='<div style="font-size:11px;color:var(--g4);margin-top:2px">'+cfg.listDetail(r)+'</div>';
-    if(r.updated_by){ h+='<div style="font-size:11px;color:var(--teal2);margin-top:4px;font-weight:600">✎ '+r.updated_by+' · '+facUpdatedDateShort(r.updated_at)+' 수정</div>'; }
+    h+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:7px;gap:8px">';
+    h+='<span style="font-size:11px;color:var(--g4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+lineTxt+'</span>';
+    if(editTxt) h+='<span style="font-size:10px;color:var(--teal2);font-weight:600;white-space:nowrap;flex-shrink:0">'+editTxt+'</span>';
+    h+='</div>';
     h+='</div>';
   });
   listEl.innerHTML=h;
