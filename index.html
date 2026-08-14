@@ -4099,7 +4099,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <label class="f-lbl">비고 <span style="font-size:12px;color:var(--g4)">(선택)</span></label>
         <textarea id="vocNote" class="ri" rows="2" placeholder="처리결과, 담당자 등 추가사항" style="resize:vertical;font-size:15px"></textarea>
       </div>
-      <div style="background:var(--teal-bg);border:1.5px dashed var(--teal);border-radius:var(--r2);padding:12px;margin-bottom:16px">
+      <div id="vocPasteWrap" style="display:none;background:var(--teal-bg);border:1.5px dashed var(--teal);border-radius:var(--r2);padding:12px;margin-bottom:16px">
         <label class="f-lbl">📞 통화 내용 붙여넣기 <span style="font-weight:400;color:var(--g4)">(분류만 자동으로 채워집니다 · 이 텍스트 자체는 저장되지 않아요)</span></label>
         <textarea id="vocPasteBox" class="ri" rows="4" placeholder="예) 3층 화장실에 물기가 많아서 미끄러울 것 같다고 민원 접수됨..." style="resize:vertical;font-size:14px;margin-top:6px;margin-bottom:0"></textarea>
         <button type="button" onclick="parseVocPaste()" style="width:100%;margin-top:9px;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">✨ 자동 입력</button>
@@ -13505,7 +13505,8 @@ function pickVocSide(el){
   if(floorEl) floorEl.style.display='block';
 }
 
-// 통화내용(녹음→텍스트 변환분) 붙여넣기 자동입력
+// 탭 진입 시 초기화
+// 통화내용(녹음→텍스트 변환분) 붙여넣기 자동입력 — admin 전용 기능
 function parseVocPaste(){
   var raw=(document.getElementById('vocPasteBox').value||'').trim();
   if(!raw){ toast('붙여넣은 내용이 없습니다'); return; }
@@ -13523,6 +13524,7 @@ function parseVocPaste(){
     if(top.length) selectVocCategoryByValue(top[0]);
   }
 
+  // ③ 위치: L/S·A/S, 동편·서편, 층수, 공항 랜드마크 키워드로 추정
   var landmarkHit=null;
   var asLandmarks=['탑승동','게이트','면세점','라운지','셔틀트레인','출국심사','pbb','스카이허브'];
   var lsLandmarks=['체크인카운터','체크인 카운터','출국장','입국장','수하물','캐로셀','환전소','여행자보험','관광안내소','로비'];
@@ -13573,7 +13575,6 @@ function parseVocPaste(){
   toast('✅ 접수경로/유형/위치/상세내용 요약까지 자동 입력 완료 — 확인 후 필요하면 수정해주세요');
 }
 
-// 탭 진입 시 초기화
 function initVocForm(){
   // 날짜 오늘로 자동
   var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
@@ -13603,6 +13604,9 @@ function initVocForm(){
   });
   document.querySelectorAll('.chip-quick.on').forEach(function(c){c.classList.remove('on');});
   var catSuggestEl=document.getElementById('vocCatSuggest'); if(catSuggestEl) catSuggestEl.style.display='none';
+  // 통화 내용 붙여넣기(자동입력) — admin 전용
+  var pasteWrap=document.getElementById('vocPasteWrap');
+  if(pasteWrap) pasteWrap.style.display=(me&&me.role==='master')?'block':'none';
 }
 
 async function saveVoc(){
