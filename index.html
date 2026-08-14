@@ -14758,6 +14758,13 @@ function tlResetForm(){
     var el=document.getElementById(id); if(el) el.value='';
   });
   var err=document.getElementById('tlFormErr'); if(err) err.style.display='none';
+  // 연번 자동 제안: 현재 등록된 화장실 중 가장 큰 연번 + 1을 기본값으로 채워줌 (직접 수정 가능)
+  var seqEl=document.getElementById('tlSeqNo');
+  if(seqEl){
+    var maxSeq=0;
+    (toiletData||[]).forEach(function(r){ if(r.seq_no!=null && Number(r.seq_no)>maxSeq) maxSeq=Number(r.seq_no); });
+    seqEl.value=maxSeq+1;
+  }
 }
 async function subToiletNew(){
   if(!canWrite()) return;
