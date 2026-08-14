@@ -3728,6 +3728,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
           <option value="2층">2층</option>
           <option value="3층">3층</option>
           <option value="4층">4층</option>
+          <option value="담당구역">담당구역</option>
         </select>
         <input type="text" id="jwSchedNewLoc" class="ri" placeholder="세부위치 (예: 선큰가든(동))" style="margin-bottom:8px">
         <select id="jwSchedNewCategory" class="ri" style="margin-bottom:8px">
@@ -3740,6 +3741,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
           <option value="분진관리">분진관리</option>
           <option value="오염관리">오염관리</option>
           <option value="특수작업">특수작업</option>
+          <option value="창고관리">창고관리</option>
         </select>
         <input type="text" id="jwSchedNewWork" class="ri" placeholder="작업내역 (예: 오점 제거작업)" style="margin-bottom:10px">
         <button class="btn-prim" onclick="jwSchedAddOne()">+ 스케줄 추가</button>
@@ -9103,9 +9105,10 @@ var JW_CATEGORIES={
   '시설물관리':['스테인리스 청소','스테인리스 보호대 청소','스테인리스 광택 작업','유리 청소','유리 오염 제거','난간 청소','보호대 먼지 제거'],
   '분진관리':['분진 제거','거미줄 제거'],
   '오염관리':['오염 제거','찌든때 제거'],
-  '특수작업':['바닥 왁스 작업','카펫 샴푸 작업','기타 전문작업']
+  '특수작업':['바닥 왁스 작업','카펫 샴푸 작업','기타 전문작업'],
+  '창고관리':['창고 정리·정돈','재고 확인 및 정리','창고 청소']
 };
-var JW_CAT_ICONS={'바닥관리':'🧹','화장실관리':'🚻','샤워실관리':'🚿','승강설비관리':'🛗','시설물관리':'🏢','분진관리':'💨','오염관리':'🧽','특수작업':'⭐','교육':'🎓','회의':'💬','행사':'🎉','일상작업 커버':'🔄','기타':'🔖'};
+var JW_CAT_ICONS={'바닥관리':'🧹','화장실관리':'🚻','샤워실관리':'🚿','승강설비관리':'🛗','시설물관리':'🏢','분진관리':'💨','오염관리':'🧽','특수작업':'⭐','창고관리':'📦','교육':'🎓','회의':'💬','행사':'🎉','일상작업 커버':'🔄','기타':'🔖'};
 // 작업대체(정상 공동작업 대신 교육/회의/행사 등이 있었던 경우) — 통계에서 실제 작업실적과 분리 집계됨
 var JW_REPLACE_TYPES=['교육','회의','행사','일상작업 커버','기타'];
 var jwCurMode='work'; // 'work' | 'replace'
