@@ -3574,6 +3574,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <div class="fg"><label class="f-lbl">작성 유형</label><div class="rg" id="jwModeG" style="flex-wrap:wrap;gap:6px">
       <div class="rp on" onclick="jwSetMode(this,'work')">🧹 정상작업</div>
       <div class="rp" onclick="jwSetMode(this,'replace')">🔄 작업대체 (교육·회의·행사)</div>
+      <div class="rp" onclick="jwSetMode(this,'dayswap')">🔁 연계팀 대체</div>
     </div></div>
 
     <div class="fg" id="jwReplaceWrap" style="display:none;background:var(--teal-bg);border-radius:var(--r2);padding:12px;margin-bottom:14px">
@@ -3582,7 +3583,6 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <div class="rp" onclick="jwPickReplaceType(this,'교육')">🎓 교육</div>
         <div class="rp" onclick="jwPickReplaceType(this,'회의')">💬 회의</div>
         <div class="rp" onclick="jwPickReplaceType(this,'행사')">🎉 행사</div>
-        <div class="rp" onclick="jwPickReplaceType(this,'일상작업 커버')">🔄 일상작업 커버</div>
         <div class="rp" onclick="jwPickReplaceType(this,'기타')">🔖 기타</div>
       </div>
       <label class="f-lbl">내용 *</label>
@@ -3591,6 +3591,25 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <input type="text" id="jwReplaceLoc" class="ri" placeholder="예) T1 교육장" style="margin-bottom:11px">
       <label class="f-lbl">👥 인원 *</label>
       <input type="number" id="jwReplaceHead" class="ri" placeholder="예) 4" min="1">
+    </div>
+
+    <div class="fg" id="jwDaySwapWrap" style="display:none;background:var(--teal-bg);border-radius:var(--r2);padding:12px;margin-bottom:14px">
+      <label class="f-lbl">🔁 대체 유형</label>
+      <div class="rg" style="margin-bottom:11px"><div class="rp on" style="pointer-events:none">일상작업</div></div>
+      <label class="f-lbl">👥 연계팀 조 선택 <span style="font-weight:400;color:var(--g3)">(행사 참여하는 연계팀 조 · 중복 선택 가능)</span></label>
+      <div class="rg" id="jwDaySwapPairG" style="flex-wrap:wrap;gap:6px;margin-bottom:11px"></div>
+      <label class="f-lbl">📋 행사 내용 *</label>
+      <div class="rg" id="jwDaySwapEventG" style="flex-wrap:wrap;gap:6px;margin-bottom:11px">
+        <div class="rp" onclick="selRP(this)" data-v="교육">🎓 교육</div>
+        <div class="rp" onclick="selRP(this)" data-v="회의">💬 회의</div>
+        <div class="rp" onclick="selRP(this)" data-v="소통포럼">🗣️ 소통포럼</div>
+        <div class="rp" onclick="selRP(this)" data-v="행사">🎉 행사</div>
+        <div class="rp" onclick="selRP(this)" data-v="기타">🔖 기타</div>
+      </div>
+      <label class="f-lbl">🙋 작성팀 조 선택 <span style="font-weight:400;color:var(--g3)">(일상작업 커버하는 우리 팀 조 · 중복 선택 가능)</span></label>
+      <div class="rg" id="jwDaySwapMyG" style="flex-wrap:wrap;gap:6px;margin-bottom:11px"></div>
+      <label class="f-lbl">👥 인원 <span style="font-weight:400;color:var(--teal2)">(조 선택 시 금일 출근인원 자동입력 · 수정 가능)</span></label>
+      <input type="number" id="jwDaySwapHead" class="ri" placeholder="조를 선택하면 자동 입력됩니다">
     </div>
 
     <div class="fg"><label class="f-lbl">팀·조 선택 * <span style="font-weight:400;color:var(--g3)">(여러 팀 함께 선택 가능)</span></label>
@@ -9362,23 +9381,99 @@ function jwPickShift(el,sh){
   if(g) Array.from(g.children).forEach(function(c){c.classList.remove('on');});
   el.classList.add('on');
 }
+// ─ 연계팀 대체(dayswap) 모드 ─
+var JW_ALL_TEAMS=['1팀A','1팀B','1팀C','2팀A','2팀B','3팀A','3팀B','4팀A','4팀B','6팀A','6팀B','6팀C','7팀A','7팀B','8팀A','8팀B','9팀A','9팀B','5팀A','5팀B','10팀A','10팀B'];
+var jwDaySwapPairTeams=[], jwDaySwapMyTeams=[];
+function jwInitDaySwap(){
+  jwDaySwapPairTeams=[]; jwDaySwapMyTeams=[];
+  var pairG=document.getElementById('jwDaySwapPairG'), myG=document.getElementById('jwDaySwapMyG');
+  if(pairG && !pairG.children.length){
+    JW_ALL_TEAMS.forEach(function(tc){
+      var b=document.createElement('div'); b.className='rp'; b.textContent=tc;
+      b.onclick=function(){ jwToggleDaySwapTeam(b,tc,'pair'); };
+      pairG.appendChild(b);
+    });
+  }else if(pairG){ Array.from(pairG.children).forEach(function(c){c.classList.remove('on');}); }
+  if(myG && !myG.children.length){
+    JW_ALL_TEAMS.forEach(function(tc){
+      var b=document.createElement('div'); b.className='rp'; b.textContent=tc;
+      b.onclick=function(){ jwToggleDaySwapTeam(b,tc,'my'); };
+      myG.appendChild(b);
+    });
+  }else if(myG){ Array.from(myG.children).forEach(function(c){c.classList.remove('on');}); }
+  var headEl=document.getElementById('jwDaySwapHead'); if(headEl) headEl.value='';
+}
+function jwToggleDaySwapTeam(el,code,which){
+  var arr=which==='pair'?jwDaySwapPairTeams:jwDaySwapMyTeams;
+  var idx=arr.indexOf(code);
+  if(idx>=0){ arr.splice(idx,1); el.classList.remove('on'); }
+  else{ arr.push(code); el.classList.add('on'); }
+  if(which==='my') jwRecalcDaySwapHeadcount();
+}
+// 작성팀 조를 선택하면, 그 조들의 금일 실제 출근인원(조원+조장)을 합산해서 인원칸에 자동입력
+async function jwRecalcDaySwapHeadcount(){
+  var headEl=document.getElementById('jwDaySwapHead');
+  if(!headEl) return;
+  if(!jwDaySwapMyTeams.length){ headEl.value=''; return; }
+  var nowKst=new Date(Date.now()+9*3600000);
+  var todayStr=nowKst.toISOString().slice(0,10);
+  try{
+    var mpRes=await sb.from('mp_data').select('team_code,values').eq('date',todayStr);
+    var mgrRes=await sb.from('mgr_attendance').select('team,name,checked').eq('date',todayStr).eq('checked',true);
+    var mpData=mpRes.data||[], mgrData=mgrRes.data||[];
+    var sumByTeam={};
+    mpData.forEach(function(r){
+      if(!r.team_code || jwDaySwapMyTeams.indexOf(r.team_code)===-1) return;
+      var vals=r.values;
+      if(typeof vals==='string'){ try{ vals=JSON.parse(vals); }catch(e){ return; } }
+      if(!Array.isArray(vals)) return;
+      var sum=0;
+      for(var ri=0;ri<4;ri++){ if(!vals[ri]||!Array.isArray(vals[ri])) continue; for(var ci=0;ci<7;ci++){ sum+=Number(vals[ri][ci])||0; } }
+      sumByTeam[r.team_code]=(sumByTeam[r.team_code]||0)+sum;
+    });
+    mgrData.forEach(function(r){
+      var m=(r.name||'').match(/^([A-Z])조장$/);
+      if(!m) return;
+      var tc=r.team+m[1];
+      if(jwDaySwapMyTeams.indexOf(tc)===-1) return;
+      sumByTeam[tc]=(sumByTeam[tc]||0)+1;
+    });
+    var total=0;
+    jwDaySwapMyTeams.forEach(function(tc){ total+=sumByTeam[tc]||0; });
+    headEl.value=total;
+  }catch(e){}
+}
 function jwSetMode(el,mode){
   jwCurMode=mode;
   var g=document.getElementById('jwModeG');
   if(g) Array.from(g.children).forEach(function(c){c.classList.remove('on');});
   el.classList.add('on');
   var replaceWrap=document.getElementById('jwReplaceWrap');
+  var daySwapWrap=document.getElementById('jwDaySwapWrap');
   var schedWrap=document.getElementById('jwSchedWrap');
   var schedSummaryWrap=document.getElementById('jwSchedSummaryWrap');
   var manualWrap=document.getElementById('jwManualWrap');
+  var teamWrap=document.getElementById('jwTeamG');
   if(mode==='replace'){
     if(replaceWrap) replaceWrap.style.display='block';
+    if(daySwapWrap) daySwapWrap.style.display='none';
     if(schedWrap) schedWrap.style.display='none';
     if(schedSummaryWrap) schedSummaryWrap.style.display='none';
     if(manualWrap) manualWrap.style.display='none';
+    if(teamWrap && teamWrap.closest('.fg')) teamWrap.closest('.fg').style.display='';
+  }else if(mode==='dayswap'){
+    if(replaceWrap) replaceWrap.style.display='none';
+    if(daySwapWrap){ daySwapWrap.style.display='block'; jwInitDaySwap(); }
+    if(schedWrap) schedWrap.style.display='none';
+    if(schedSummaryWrap) schedSummaryWrap.style.display='none';
+    if(manualWrap) manualWrap.style.display='none';
+    // 이 모드는 조 선택을 전용 박스(연계팀 조 / 작성팀 조)에서 따로 하므로, 기존 '팀·조 선택'은 숨김
+    if(teamWrap && teamWrap.closest('.fg')) teamWrap.closest('.fg').style.display='none';
   }else{
     if(replaceWrap) replaceWrap.style.display='none';
+    if(daySwapWrap) daySwapWrap.style.display='none';
     if(manualWrap) manualWrap.style.display='';
+    if(teamWrap && teamWrap.closest('.fg')) teamWrap.closest('.fg').style.display='';
     jwSyncScheduleMode(); // 사전등록 작업 모드 여부에 따라 schedWrap/schedSummaryWrap/manualWrap 재계산
   }
 }
@@ -9426,6 +9521,10 @@ function jwResetForm(){
   if(rTypeG) Array.from(rTypeG.children).forEach(function(c){c.classList.remove('on');});
   ['jwReplaceDesc','jwReplaceLoc','jwReplaceHead'].forEach(function(id){ var el=document.getElementById(id); if(el) el.value=''; });
   var replaceWrap=document.getElementById('jwReplaceWrap'); if(replaceWrap) replaceWrap.style.display='none';
+  var daySwapWrap=document.getElementById('jwDaySwapWrap'); if(daySwapWrap) daySwapWrap.style.display='none';
+  jwDaySwapPairTeams=[]; jwDaySwapMyTeams=[];
+  var eventG=document.getElementById('jwDaySwapEventG'); if(eventG) Array.from(eventG.children).forEach(function(c){c.classList.remove('on');});
+  var dsHeadEl=document.getElementById('jwDaySwapHead'); if(dsHeadEl) dsHeadEl.value='';
   var manualWrap=document.getElementById('jwManualWrap'); if(manualWrap) manualWrap.style.display='';
   Array.from(document.getElementById('jwTeamG').children).forEach(function(c){c.classList.remove('on');});
   jwSelectedTeams=[];
@@ -9452,11 +9551,26 @@ async function subJointWork(){
   var note=document.getElementById('jwNote').value.trim();
   var shift=jwUpdateShiftBadge();
   if(!date){ toast('일자를 입력해주세요'); return; }
-  if(!jwSelectedTeams.length){ toast('팀·조를 1개 이상 선택해주세요'); return; }
+  if(jwCurMode!=='dayswap' && !jwSelectedTeams.length){ toast('팀·조를 1개 이상 선택해주세요'); return; }
 
   var rows=[];
 
-  if(jwCurMode==='replace'){
+  if(jwCurMode==='dayswap'){
+    // ── 연계팀 대체(일상작업 커버) 모드 ──
+    if(!jwDaySwapPairTeams.length){ toast('연계팀 조를 1개 이상 선택해주세요'); return; }
+    if(!jwDaySwapMyTeams.length){ toast('작성팀 조를 1개 이상 선택해주세요'); return; }
+    var eventEl=document.getElementById('jwDaySwapEventG').querySelector('.rp.on');
+    if(!eventEl){ toast('행사 내용을 선택해주세요'); return; }
+    var eventVal=eventEl.dataset.v;
+    var dsHead=parseInt(document.getElementById('jwDaySwapHead').value)||0;
+    if(!dsHead||dsHead<1){ toast('인원을 확인해주세요'); return; }
+    rows.push({
+      work_date:date, teams:jwDaySwapMyTeams, floors:[], headcount:dsHead,
+      category:'일상작업', work_name:eventVal, shift:shift, location:'연계팀:'+jwDaySwapPairTeams.join(','),
+      note:note||null, writer:me?me.name:'', batch_id:(Date.now().toString(36)+Math.random().toString(36).slice(2,10)),
+      record_type:'replace'
+    });
+  }else if(jwCurMode==='replace'){
     // ── 작업대체(교육/회의/행사) 모드: 카테고리 항목 블록 없이 단일 레코드로 저장 ──
     if(!jwReplaceType){ toast('대체 유형을 선택해주세요'); return; }
     var rDesc=(document.getElementById('jwReplaceDesc').value||'').trim();
@@ -9736,17 +9850,36 @@ function renderJointWorkTodayCard(rows, replaceRows){
     detailEl.textContent=(preview||'내용 미입력')+more;
   }
   if(replaceEl){
-    if(replaceRows.length){
-      var teamSet=[]; replaceRows.forEach(function(r){ (r.teams||[]).forEach(function(t){ if(teamSet.indexOf(t)===-1) teamSet.push(t); }); });
+    var dayswapRows=replaceRows.filter(function(r){ return r.category==='일상작업' && (r.location||'').indexOf('연계팀:')===0; });
+    var otherReplace=replaceRows.filter(function(r){ return !(r.category==='일상작업' && (r.location||'').indexOf('연계팀:')===0); });
+    var lines=[];
+    dayswapRows.forEach(function(r){
+      var pairTeams=(r.location||'').replace('연계팀:','');
+      var myTeams=(r.teams||[]).join(',');
+      lines.push('🔁 '+pairTeams+' '+(r.work_name||'')+jwKoParticle(r.work_name)+' '+myTeams+' 일상작업 시행 '+(r.headcount||0)+'명');
+    });
+    if(otherReplace.length){
+      var teamSet=[]; otherReplace.forEach(function(r){ (r.teams||[]).forEach(function(t){ if(teamSet.indexOf(t)===-1) teamSet.push(t); }); });
       var teamTxt=teamSet.length?(teamSet.slice(0,2).join(', ')+(teamSet.length>2?' 외':'')+' — '):'';
-      var first=replaceRows[0];
-      var more2=replaceRows.length>1?(' 외 '+(replaceRows.length-1)+'건'):'';
-      replaceEl.textContent='🔄 '+teamTxt+(first.work_name||first.category)+'(으)로 공동작업 대체'+more2;
+      var first=otherReplace[0];
+      var more2=otherReplace.length>1?(' 외 '+(otherReplace.length-1)+'건'):'';
+      lines.push('🔄 '+teamTxt+(first.work_name||first.category)+'(으)로 공동작업 대체'+more2);
+    }
+    if(lines.length){
+      replaceEl.innerHTML=lines.map(function(l){return '<div>'+l.replace(/</g,'&lt;')+'</div>';}).join('');
       replaceEl.style.display='block';
     }else{
       replaceEl.style.display='none';
     }
   }
+}
+// 한국어 받침 유무에 따라 '으로'/'로' 자동 선택 (마지막 글자 기준)
+function jwKoParticle(word){
+  if(!word) return '으로';
+  var ch=word.trim().slice(-1);
+  var code=ch.charCodeAt(0);
+  if(code<0xAC00||code>0xD7A3) return '으로';
+  return ((code-0xAC00)%28!==0) ? '으로' : '로';
 }
 function renderJointWorkList(){
   var list=document.getElementById('jwList'); if(!list) return;
