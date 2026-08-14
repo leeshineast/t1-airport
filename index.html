@@ -3582,6 +3582,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <div class="rp" onclick="jwPickReplaceType(this,'교육')">🎓 교육</div>
         <div class="rp" onclick="jwPickReplaceType(this,'회의')">💬 회의</div>
         <div class="rp" onclick="jwPickReplaceType(this,'행사')">🎉 행사</div>
+        <div class="rp" onclick="jwPickReplaceType(this,'일상작업 커버')">🔄 일상작업 커버</div>
         <div class="rp" onclick="jwPickReplaceType(this,'기타')">🔖 기타</div>
       </div>
       <label class="f-lbl">내용 *</label>
@@ -9052,9 +9053,9 @@ var JW_CATEGORIES={
   '오염관리':['오염 제거','찌든때 제거'],
   '특수작업':['바닥 왁스 작업','카펫 샴푸 작업','기타 전문작업']
 };
-var JW_CAT_ICONS={'바닥관리':'🧹','화장실관리':'🚻','샤워실관리':'🚿','승강설비관리':'🛗','시설물관리':'🏢','분진관리':'💨','오염관리':'🧽','특수작업':'⭐','교육':'🎓','회의':'💬','행사':'🎉','기타':'🔖'};
+var JW_CAT_ICONS={'바닥관리':'🧹','화장실관리':'🚻','샤워실관리':'🚿','승강설비관리':'🛗','시설물관리':'🏢','분진관리':'💨','오염관리':'🧽','특수작업':'⭐','교육':'🎓','회의':'💬','행사':'🎉','일상작업 커버':'🔄','기타':'🔖'};
 // 작업대체(정상 공동작업 대신 교육/회의/행사 등이 있었던 경우) — 통계에서 실제 작업실적과 분리 집계됨
-var JW_REPLACE_TYPES=['교육','회의','행사','기타'];
+var JW_REPLACE_TYPES=['교육','회의','행사','일상작업 커버','기타'];
 var jwCurMode='work'; // 'work' | 'replace'
 var jwReplaceType=null;
 
