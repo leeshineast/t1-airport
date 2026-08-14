@@ -14716,8 +14716,28 @@ async function loadToiletFromDB(){
     var res=await sb.from('toilet_master').select('*').order('updated_at',{ascending:false});
     if(res.error){ console.error(res.error); return; }
     toiletData=res.data||[];
+    tlRefreshCategoryFilterOptions();
     renderToiletList();
   }catch(e){}
+}
+// 구분 필터 드롭다운을 실제 데이터에 있는 값들(일반/상주 + 직접 입력한 것들)로 동적 구성
+function tlRefreshCategoryFilterOptions(){
+  var sel=document.getElementById('tlFilterCategory');
+  if(!sel) return;
+  var cur=sel.value;
+  var cats=[]; // 일반/상주를 항상 먼저, 그 외 직접 입력값은 사용빈도순
+  var etcCount={};
+  toiletData.forEach(function(r){
+    var c=(r.category||'').trim();
+    if(!c) return;
+    if(c==='일반'||c==='상주') return;
+    etcCount[c]=(etcCount[c]||0)+1;
+  });
+  var etcList=Object.keys(etcCount).sort(function(a,b){ return etcCount[b]-etcCount[a]; });
+  var html='<option value="">전체 구분</option><option value="일반">일반</option><option value="상주">상주</option>';
+  etcList.forEach(function(c){ html+='<option value="'+c+'">'+c+'</option>'; });
+  sel.innerHTML=html;
+  if(cur && Array.prototype.some.call(sel.options,function(o){return o.value===cur;})) sel.value=cur;
 }
 function tlGetVal(groupId){
   var on=document.querySelector('#'+groupId+' .rp.on');
