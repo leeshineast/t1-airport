@@ -3721,9 +3721,27 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <select id="jwSchedNewTeam" class="ri" style="margin-bottom:8px">
           <option value="">팀 선택</option>
         </select>
-        <input type="text" id="jwSchedNewFloor" class="ri" placeholder="층 (예: 3층)" style="margin-bottom:8px">
+        <select id="jwSchedNewFloor" class="ri" style="margin-bottom:8px">
+          <option value="">층 선택</option>
+          <option value="지하2층">지하2층</option>
+          <option value="지하1층">지하1층</option>
+          <option value="1층">1층</option>
+          <option value="2층">2층</option>
+          <option value="3층">3층</option>
+          <option value="4층">4층</option>
+        </select>
         <input type="text" id="jwSchedNewLoc" class="ri" placeholder="세부위치 (예: 선큰가든(동))" style="margin-bottom:8px">
-        <input type="text" id="jwSchedNewCategory" class="ri" placeholder="대분류 (예: 바닥관리)" style="margin-bottom:8px">
+        <select id="jwSchedNewCategory" class="ri" style="margin-bottom:8px">
+          <option value="">대분류 선택</option>
+          <option value="바닥관리">바닥관리</option>
+          <option value="화장실관리">화장실관리</option>
+          <option value="샤워실관리">샤워실관리</option>
+          <option value="승강설비관리">승강설비관리</option>
+          <option value="시설물관리">시설물관리</option>
+          <option value="분진관리">분진관리</option>
+          <option value="오염관리">오염관리</option>
+          <option value="특수작업">특수작업</option>
+        </select>
         <input type="text" id="jwSchedNewWork" class="ri" placeholder="작업내역 (예: 오점 제거작업)" style="margin-bottom:10px">
         <button class="btn-prim" onclick="jwSchedAddOne()">+ 스케줄 추가</button>
       </div>
@@ -9301,7 +9319,7 @@ function jwTab(n){
     if(vt&&!vt.value) vt.value=tm;
     var schedCard=document.getElementById('jwSchedAdminCard');
     if(schedCard){
-      schedCard.style.display=(me&&(me.role==='admin'||me.role==='manager'||isExecRole(me.role)))?'block':'none';
+      schedCard.style.display=(me&&(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))?'block':'none';
       if(schedCard.style.display==='block'){ jwSchedFillTeamSelect(); jwRenderScheduleAdminList(); }
     }
   }
@@ -17409,13 +17427,13 @@ async function loadTrainingManage(){
 }
 
 function deleteTrainingById(btn){
-  if(!me||!(me.role==='master'||me.role==='admin')){toast('⚠️ 최고관리자/관리자만 삭제할 수 있습니다');return;}
+  if(!me||me.role!=='master'){toast('⚠️ 최고관리자/관리자만 삭제할 수 있습니다');return;}
   var id=btn.getAttribute('data-id');
   var path=decodeURIComponent(btn.getAttribute('data-path'));
   deleteTraining(id, path);
 }
 async function deleteTraining(id, path){
-  if(!me||!(me.role==='master'||me.role==='admin')){toast('⚠️ 최고관리자/관리자만 삭제할 수 있습니다');return;}
+  if(!me||me.role!=='master'){toast('⚠️ 최고관리자/관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 문서를 삭제하시겠습니까?')) return;
   try{
     var delUrl=SUPABASE_URL+'/storage/v1/object/trainingmaterial/'+encodeURIComponent(path);
