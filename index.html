@@ -162,7 +162,8 @@ html{overflow-x:hidden}
 .menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 13px 13px}
 .fac-badge{display:inline-flex;align-items:center;font-size:13px;font-weight:800;padding:5px 12px;border-radius:8px;white-space:nowrap}
 .fac-badge-sm{font-size:10.5px!important;padding:3px 7px!important;border-radius:6px!important}
-.fac-b-zone{background:var(--navy-bg);color:var(--navy)}
+.fac-b-zone-as{background:#E0F2FE;color:#0369A1}
+.fac-b-zone-ls{background:#E8F5E9;color:#2E7D32}
 .fac-b-floor{background:#EEF4FF;color:#1D4E9E}
 .fac-b-cat{background:#FFF3E0;color:#B8600B}
 .menu-btn{background:white;border-radius:var(--r2);padding:11px 12px;box-shadow:0 1px 5px rgba(0,0,0,.06);border:1px solid var(--g2);cursor:pointer;text-align:left;transition:all .15s;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:10px}
@@ -2509,6 +2510,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div class="rg" id="tlGenderG">
         <div class="rp" onclick="selRP(this)" data-v="남자 화장실">남자 화장실</div>
         <div class="rp" onclick="selRP(this)" data-v="여자 화장실">여자 화장실</div>
+        <div class="rp" onclick="selRP(this)" data-v="공용 화장실">공용 화장실</div>
       </div>
     </div>
     <div class="fg"><label class="f-lbl">일반/상주 구분 *</label>
@@ -2548,7 +2550,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div class="fg"><label class="f-lbl">야간관리팀</label><input type="text" id="tlNightTeam" class="ri" placeholder="예: 10팀" style="margin-bottom:0"></div>
     </div>
     <div class="fg"><label class="f-lbl">사용 여부</label>
-      <div class="rg" id="tlActiveG"><div class="rp on" onclick="selRP(this)" data-v="true">사용중</div><div class="rp" onclick="selRP(this)" data-v="false">폐쇄</div></div>
+      <div class="rg" id="tlActiveG" style="flex-wrap:wrap;gap:6px"><div class="rp on" onclick="selRP(this)" data-v="사용중">사용중</div><div class="rp" onclick="selRP(this)" data-v="공사중">공사중</div><div class="rp" onclick="selRP(this)" data-v="폐쇄">폐쇄</div><div class="rp" onclick="selRP(this)" data-v="기타">기타</div></div>
     </div>
     <div id="tlFormErr" style="color:var(--danger);font-size:13px;margin-bottom:8px;display:none"></div>
     <button class="btn-prim" onclick="subToiletNew()">➕ 화장실 추가 등록</button>
@@ -2617,7 +2619,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <div class="rg" id="tlDZoneG"><div class="rp" onclick="selRP(this)" data-v="Airside">A/S</div><div class="rp" onclick="selRP(this)" data-v="Landside">L/S</div></div>
       </div>
       <div class="fg"><label class="f-lbl">성별 구분 *</label>
-        <div class="rg" id="tlDGenderG"><div class="rp" onclick="selRP(this)" data-v="남자 화장실">남자</div><div class="rp" onclick="selRP(this)" data-v="여자 화장실">여자</div></div>
+        <div class="rg" id="tlDGenderG"><div class="rp" onclick="selRP(this)" data-v="남자 화장실">남자</div><div class="rp" onclick="selRP(this)" data-v="여자 화장실">여자</div><div class="rp" onclick="selRP(this)" data-v="공용 화장실">공용</div></div>
       </div>
       <div class="fg"><label class="f-lbl">일반/상주 구분</label>
         <div class="rg" id="tlDCategoryG"><div class="rp" onclick="selRP(this)" data-v="일반">일반</div><div class="rp" onclick="selRP(this)" data-v="상주">상주</div></div>
@@ -2645,7 +2647,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <div class="fg"><label class="f-lbl">주간관리팀</label><input type="text" id="tlDTeam" class="ri" style="margin-bottom:0"></div>
         <div class="fg"><label class="f-lbl">야간관리팀</label><input type="text" id="tlDNightTeam" class="ri" style="margin-bottom:0"></div>
       </div>
-      <div class="fg"><label class="f-lbl">사용 여부</label><div class="rg" id="tlDActiveG"><div class="rp" onclick="selRP(this)" data-v="true">사용중</div><div class="rp" onclick="selRP(this)" data-v="false">폐쇄</div></div></div>
+      <div class="fg"><label class="f-lbl">사용 여부</label><div class="rg" id="tlDActiveG" style="flex-wrap:wrap;gap:6px"><div class="rp" onclick="selRP(this)" data-v="사용중">사용중</div><div class="rp" onclick="selRP(this)" data-v="공사중">공사중</div><div class="rp" onclick="selRP(this)" data-v="폐쇄">폐쇄</div><div class="rp" onclick="selRP(this)" data-v="기타">기타</div></div></div>
       <div style="display:flex;gap:7px;margin-top:14px">
         <button id="tlDeleteBtn" onclick="deleteToiletConfirm()" style="display:none;padding:11px 16px;background:var(--danger-bg);color:var(--danger);border:1px solid rgba(217,64,64,.25);border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🗑 삭제</button>
         <button onclick="saveToiletDetail()" style="flex:1;padding:11px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">💾 수정 저장</button>
@@ -14501,7 +14503,7 @@ function tlResetForm(){
   ['tlZoneG','tlGenderG','tlCategoryG','tlFloorG'].forEach(function(g){
     document.querySelectorAll('#'+g+' .rp').forEach(function(c){c.classList.remove('on');});
   });
-  tlSetVal('tlFamilyG','없음'); tlSetVal('tlKitchenG','없음'); tlSetVal('tlActiveG','true');
+  tlSetVal('tlFamilyG','없음'); tlSetVal('tlKitchenG','없음'); tlSetVal('tlActiveG','사용중');
   ['tlNumber','tlSeqNo','tlCategoryEtc','tlSinkStation','tlToiletCnt','tlSinkCnt','tlUrinalCnt','tlTissueBin','tlSupplyStorage','tlTeam','tlNightTeam'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
@@ -14530,7 +14532,7 @@ async function subToiletNew(){
     supply_storage:document.getElementById('tlSupplyStorage').value.trim()||null,
     team:document.getElementById('tlTeam').value.trim()||null,
     night_team:document.getElementById('tlNightTeam').value.trim()||null,
-    active:tlGetVal('tlActiveG')==='true',
+    status:tlGetVal('tlActiveG')||'사용중',
     updated_at:new Date().toISOString(), updated_by:facEditorTag()
   };
   try{
@@ -14601,8 +14603,8 @@ function renderToiletList(){
   function tlEditTxt(r){ return r.updated_by?(r.updated_by+' · '+facUpdatedDateShort(r.updated_at)):''; }
   function tlFullCard(r){
     var zoneLbl=r.zone==='Airside'?'A/S':'L/S';
-    var closedBadge=r.active===false?'<span style="background:var(--danger-bg);color:var(--danger);border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700;margin-left:5px">폐쇄</span>':'';
-    var badges='<span class="fac-badge fac-b-zone">'+zoneLbl+'</span>'+(r.floor?'<span class="fac-badge fac-b-floor">'+r.floor+'</span>':'')+(r.category?'<span class="fac-badge fac-b-cat">'+r.category+'</span>':'');
+    var closedBadge=facStatusBadge(r.status);
+    var badges='<span class="fac-badge fac-b-zone '+(r.zone==='Airside'?'fac-b-zone-as':'fac-b-zone-ls')+'">'+zoneLbl+'</span>'+(r.floor?'<span class="fac-badge fac-b-floor">'+r.floor+'</span>':'')+(r.category?'<span class="fac-badge fac-b-cat">'+r.category+'</span>':'');
     var editTxt=tlEditTxt(r);
     var s='<div onclick="openToiletDetail('+r.id+')" style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.04)">';
     s+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
@@ -14617,8 +14619,8 @@ function renderToiletList(){
   }
   function tlPairCard(r){
     var zoneLbl=r.zone==='Airside'?'A/S':'L/S';
-    var closedBadge=r.active===false?'<span style="background:var(--danger-bg);color:var(--danger);border-radius:9px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:3px">폐쇄</span>':'';
-    var badges='<span class="fac-badge fac-badge-sm fac-b-zone">'+zoneLbl+'</span>'+(r.floor?'<span class="fac-badge fac-badge-sm fac-b-floor">'+r.floor+'</span>':'')+(r.category?'<span class="fac-badge fac-badge-sm fac-b-cat">'+r.category+'</span>':'');
+    var closedBadge=facStatusBadge(r.status);
+    var badges='<span class="fac-badge fac-badge-sm fac-b-zone '+(r.zone==='Airside'?'fac-b-zone-as':'fac-b-zone-ls')+'">'+zoneLbl+'</span>'+(r.floor?'<span class="fac-badge fac-badge-sm fac-b-floor">'+r.floor+'</span>':'')+(r.category?'<span class="fac-badge fac-badge-sm fac-b-cat">'+r.category+'</span>':'');
     var editTxt=tlEditTxt(r);
     var s='<div onclick="openToiletDetail('+r.id+')" style="flex:1;min-width:0;background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:10px 11px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.04)">';
     s+='<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">'+facGenderBadge(r.gender)+'<span style="font-size:14px;font-weight:800;color:var(--g7)">'+(r.number||'')+'</span>'+closedBadge+'</div>';
@@ -14663,7 +14665,7 @@ function openToiletDetail(id){
   document.getElementById('tlDSupplyStorage').value=r.supply_storage||'';
   document.getElementById('tlDTeam').value=r.team||'';
   document.getElementById('tlDNightTeam').value=r.night_team||'';
-  tlSetVal('tlDActiveG', r.active===false?'false':'true');
+  tlSetVal('tlDActiveG', r.status||'사용중');
   var delBtn=document.getElementById('tlDeleteBtn');
   if(delBtn) delBtn.style.display=(me&&me.role==='master')?'block':'none';
   showM('toiletDetailModal');
@@ -14687,7 +14689,7 @@ async function saveToiletDetail(){
     supply_storage:document.getElementById('tlDSupplyStorage').value.trim()||null,
     team:document.getElementById('tlDTeam').value.trim()||null,
     night_team:document.getElementById('tlDNightTeam').value.trim()||null,
-    active:tlGetVal('tlDActiveG')==='true',
+    status:tlGetVal('tlDActiveG')||'사용중',
     updated_at:new Date().toISOString(), updated_by:facEditorTag()
   };
   try{
@@ -14729,7 +14731,7 @@ async function dlToiletExcel(){
       r.zone==='Airside'?'Airside':'Landside', r.gender||'', r.category||'', r.floor||'', r.number||'',
       r.family_room||'', r.kitchenette||'', r.sink_station!=null?r.sink_station:'', r.toilet_cnt!=null?r.toilet_cnt:'',
       r.tissue_bin||'', r.sink_cnt!=null?r.sink_cnt:'', r.urinal_cnt!=null?r.urinal_cnt:'',
-      r.supply_storage||'', r.team||'', r.night_team||'', r.active===false?'폐쇄':'사용중'
+      r.supply_storage||'', r.team||'', r.night_team||'', r.status||'사용중'
     ]);
   });
   try{
@@ -14766,7 +14768,8 @@ function previewToiletFile(input){
         category: idx(['일반/상주','일반/상주 구분']), floor: idx(['층','화장실 층 구분']), number: idx(['번호','화장실 Number']),
         family: idx(['가족실','가족실 유무']), kitchen: idx(['탕비실','탕비실 유무']), sinkStation: idx('개수대'),
         storage: idx(['소모품보관창고','소모품 보관창고']), toiletCnt: idx(['양변기','양변기 수량']), tissue: idx(['위생휴지통']),
-        sinkCnt: idx(['세면기','세면기 수량']), urinalCnt: idx(['소변기','소변기 수량']), team: idx('주간관리팀'), nightTeam: idx('야간관리팀')
+        sinkCnt: idx(['세면기','세면기 수량']), urinalCnt: idx(['소변기','소변기 수량']), team: idx('주간관리팀'), nightTeam: idx('야간관리팀'),
+        status: idx('사용여부')
       };
       if(col.zone<0||col.gender<0||col.floor<0||col.number<0){
         toast('⚠️ 필수 컬럼(구역, 성별, 층, 번호)을 찾을 수 없습니다. 앱에서 다운로드한 양식과 동일한 헤더를 사용해주세요.');
@@ -14791,7 +14794,7 @@ function previewToiletFile(input){
           urinal_cnt: (col.urinalCnt>=0 && typeof r[col.urinalCnt]==='number')?r[col.urinalCnt]:null,
           team: (col.team>=0 && r[col.team])?String(r[col.team]).trim():null,
           night_team: (col.nightTeam>=0 && r[col.nightTeam])?String(r[col.nightTeam]).trim():null,
-          active:true
+          status: (col.status>=0 && r[col.status]!=null && String(r[col.status]).trim())?String(r[col.status]).trim():'사용중'
         };
       }).filter(function(p){ return p.zone&&p.gender&&p.floor&&p.number; });
       if(!parsed.length){ toast('⚠️ 유효한 데이터 행이 없습니다'); return; }
@@ -14853,7 +14856,8 @@ var FAC_CONFIGS={
       {key:'has_toilet', label:'화장실 유무', xh:'화장실 유무', type:'text'},
       {key:'team', label:'주간관리팀', xh:'주간관리팀', type:'text'},
       {key:'night_team', label:'야간관리팀', xh:'야간관리팀', type:'text'}
-    ],
+    ,
+      {key:'status', label:'사용 여부', xh:'사용여부', type:'select', options:['사용중','공사중','폐쇄','기타'], default:'사용중'}],
     listTitle:function(r){ return (r.number||''); },
     listSub:function(r){ return ''; },
     listDetail:function(r){ return (r.category||'-')+' · 샤워기'+(r.shower_cnt||0)+' 세면대'+(r.sink_cnt||0); }
@@ -14871,7 +14875,8 @@ var FAC_CONFIGS={
       {key:'outdoor_trash_cnt', label:'외부 쓰레기통 수량', xh:'외부 쓰레기통', type:'number'},
       {key:'team', label:'주간관리팀', xh:'주간관리팀', type:'text'},
       {key:'night_team', label:'야간관리팀', xh:'야간관리팀', type:'text'}
-    ],
+    ,
+      {key:'status', label:'사용 여부', xh:'사용여부', type:'select', options:['사용중','공사중','폐쇄','기타'], default:'사용중'}],
     listTitle:function(r){ return (r.location||''); },
     listSub:function(r){ return (r.indoor_outdoor||''); },
     listDetail:function(r){ return (r.category||'-')+' · 재떨이'+(r.ashtray_cnt||0)+' 쓰레기통(내'+(r.indoor_trash_cnt||0)+'/외'+(r.outdoor_trash_cnt||0)+')'; }
@@ -14893,7 +14898,8 @@ var FAC_CONFIGS={
       {key:'water_cnt', label:'정수기(생수) 수량', xh:'정수기', type:'number'},
       {key:'hanger_cnt', label:'공용 옷걸이 수량', xh:'옷걸이', type:'number'},
       {key:'board_type', label:'게시판', xh:'게시판', type:'text'}
-    ],
+    ,
+      {key:'status', label:'사용 여부', xh:'사용여부', type:'select', options:['사용중','공사중','폐쇄','기타'], default:'사용중'}],
     listTitle:function(r){ return (r.location||''); },
     listSub:function(r){ return (r.gender||'-')+' · '+(r.use_team||''); },
     listDetail:function(r){ return '냉장고'+(r.fridge_cnt||0)+' 전자레인지'+(r.microwave_cnt||0)+' 정수기'+(r.water_cnt||0); }
@@ -14907,7 +14913,8 @@ var FAC_CONFIGS={
       {key:'number', label:'번호', xh:'창고 NUMBER', type:'text'},
       {key:'storage_type', label:'창고 종류(용품/장비/문서 등)', xh:'창고 종류', type:'text'},
       {key:'manager', label:'관리 주체', xh:'관리 주체', type:'text'}
-    ],
+    ,
+      {key:'status', label:'사용 여부', xh:'사용여부', type:'select', options:['사용중','공사중','폐쇄','기타'], default:'사용중'}],
     listTitle:function(r){ return (r.location||''); },
     listSub:function(r){ return (r.number||''); },
     listDetail:function(r){ return (r.storage_type||'-')+' · 관리: '+(r.manager||'-'); }
@@ -14921,7 +14928,8 @@ var FAC_CONFIGS={
       {key:'number', label:'번호', xh:'휴게실 NUMBER', type:'text'},
       {key:'team', label:'주간관리팀', type:'text'},
       {key:'night_team', label:'야간관리팀', type:'text'}
-    ],
+    ,
+      {key:'status', label:'사용 여부', xh:'사용여부', type:'select', options:['사용중','공사중','폐쇄','기타'], default:'사용중'}],
     listTitle:function(r){ return (r.location||''); },
     listSub:function(r){ return ''; },
     listDetail:function(r){ return '번호: '+(r.number||'-')+' · '+(r.team||'-'); }
@@ -14980,6 +14988,12 @@ function facBuildScreenHtml(type){
   return h;
 }
 // 입력필드 HTML 생성 (신규작성용 prefix='' / 상세수정용 prefix='D')
+function facStatusBadge(status){
+  if(!status || status==='사용중') return '';
+  var colors={'공사중':['#FEF6E0','#C57C00'],'폐쇄':['var(--danger-bg)','var(--danger)'],'기타':['var(--g1)','var(--g5)']};
+  var c=colors[status]||colors['기타'];
+  return '<span style="background:'+c[0]+';color:'+c[1]+';border-radius:9px;padding:1px 7px;font-size:10.5px;font-weight:700;margin-left:4px">'+status+'</span>';
+}
 function facRenderFieldsHtml(type,prefix){
   var cfg=FAC_CONFIGS[type];
   var p=cfg.pfx+prefix;
@@ -15040,7 +15054,7 @@ function facResetForm(type){
   facEditId[type]=null;
   cfg.fields.forEach(function(f){
     var fid=p+'_'+f.key;
-    if(f.type==='select') facSetVal(fid,'',true);
+    if(f.type==='select') facSetVal(fid, f.default||'', true);
     else facSetVal(fid,'',false);
   });
   var err=document.getElementById(p+'FormErr'); if(err) err.style.display='none';
@@ -15142,8 +15156,8 @@ function facRenderList(type){
   var h='';
   filtered.forEach(function(r){
     var zoneLbl=r.zone==='Airside'?'A/S':'L/S';
-    var closedBadge=r.active===false?'<span style="background:var(--danger-bg);color:var(--danger);border-radius:10px;padding:1px 8px;font-size:11px;font-weight:700;margin-left:5px">폐쇄</span>':'';
-    var badges='<span class="fac-badge fac-b-zone">'+zoneLbl+'</span>'+(hasFloor&&r.floor?'<span class="fac-badge fac-b-floor">'+r.floor+'</span>':'');
+    var closedBadge=facStatusBadge(r.status);
+    var badges='<span class="fac-badge fac-b-zone '+(r.zone==='Airside'?'fac-b-zone-as':'fac-b-zone-ls')+'">'+zoneLbl+'</span>'+(hasFloor&&r.floor?'<span class="fac-badge fac-b-floor">'+r.floor+'</span>':'');
     var subTxt=cfg.listSub(r); var detailTxt=cfg.listDetail(r);
     var lineTxt=[subTxt,detailTxt].filter(Boolean).join(' · ');
     var editTxt=r.updated_by?(r.updated_by+' · '+facUpdatedDateShort(r.updated_at)):'';
@@ -15229,7 +15243,7 @@ async function facDownload(type){
   var rows=[header];
   data.forEach(function(r){
     var row=cfg.fields.map(function(f){ return r[f.key]!=null?r[f.key]:''; });
-    row.push(r.active===false?'폐쇄':'사용중');
+    row.push(r.status||'사용중');
     rows.push(row);
   });
   try{
