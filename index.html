@@ -166,6 +166,7 @@ html{overflow-x:hidden}
 .fac-b-zone-ls{background:#E8F5E9;color:#2E7D32}
 .fac-b-floor{background:#EEF4FF;color:#1D4E9E}
 .fac-b-cat{background:#FFF3E0;color:#B8600B}
+#lostList>div,#wasteList>div,#accAllList>div{content-visibility:auto;contain-intrinsic-size:0 160px}
 .menu-btn{background:white;border-radius:var(--r2);padding:11px 12px;box-shadow:0 1px 5px rgba(0,0,0,.06);border:1px solid var(--g2);cursor:pointer;text-align:left;transition:all .15s;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;gap:10px}
 .menu-btn:active{transform:scale(.97);background:var(--g1)}
 .menu-icon{font-size:26px;display:block;flex-shrink:0}
@@ -4737,6 +4738,13 @@ function kstDate(input){
   if(isNaN(d.getTime())) return '';
   var kst=new Date(d.getTime()+9*3600000);
   return kst.getUTCFullYear()+'-'+String(kst.getUTCMonth()+1).padStart(2,'0')+'-'+String(kst.getUTCDate()).padStart(2,'0');
+}
+// 'HH:MM'(KST) — toLocaleTimeString(Intl) 없이 순수 산술로 빠르게 계산
+function kstTime(input){
+  var d=input?new Date(input):new Date();
+  if(isNaN(d.getTime())) return '';
+  var kst=new Date(d.getTime()+9*3600000);
+  return String(kst.getUTCHours()).padStart(2,'0')+':'+String(kst.getUTCMinutes()).padStart(2,'0');
 }
 function toKSTTime(isoStr){
   if(!isoStr) return '';
@@ -17509,7 +17517,7 @@ function accTab(idx){
     if(i===idx){ el.style.color='var(--teal)';el.style.fontWeight='700';el.style.borderBottom='2.5px solid var(--teal)'; }
     else { el.style.color='var(--g5)';el.style.fontWeight='700';el.style.borderBottom='none'; }
   });
-  if(idx===0){ renderAccList(accidentAll); }
+  if(idx===0){ requestAnimationFrame(function(){ renderAccList(accidentAll); }); }
   if(idx===1){ resetAccForm(); }
 }
 
@@ -17639,7 +17647,7 @@ function renderAccList(data){
 
     dayData.forEach(function(r){
       var isDone=r.confirmed;
-      var ts=r.occurred_at?new Date(r.occurred_at).toLocaleTimeString('ko-KR',{timeZone:'Asia/Seoul',hour:'2-digit',minute:'2-digit',hour12:false}):'';
+      var ts=r.occurred_at?kstTime(r.occurred_at):'';
       var writer=r.writer||'작성자';
       var initial=writer[0]||'?';
       var teamLabel=r.team||'';
