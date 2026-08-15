@@ -2135,7 +2135,7 @@ html{overflow-x:hidden}
     <!-- 통계 -->
     <div id="lostStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 13px"></div>
     <!-- 목록 -->
-    <div id="lostList" style="padding:0 13px;transform:translateZ(0)"></div>
+    <div id="lostList" style="padding:0 13px"></div>
   </div>
 
   <!-- 접수 등록 탭 -->
@@ -2702,7 +2702,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <!-- 월간 합계 -->
     <div id="wasteMonthSummary" style="margin:10px 13px"></div>
     <!-- 목록 -->
-    <div id="wasteList" style="padding:0 13px;transform:translateZ(0)"></div>
+    <div id="wasteList" style="padding:0 13px"></div>
   </div>
 
   <!-- 입력 탭 -->
@@ -4155,7 +4155,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div class="stat-box"><div class="s-lbl">전년 대비</div><div class="s-val" style="color:var(--success)">—</div></div>
       <div class="stat-box"><div class="s-lbl">누적</div><div class="s-val c-danger" id="aIndT">0</div><div class="s-unit">건</div></div>
     </div>
-    <div class="card"><div class="cb" style="padding:0;transform:translateZ(0)" id="indList"><p style="text-align:center;padding:22px;color:var(--g3);font-size:14px">등록된 이력이 없습니다</p></div></div>
+    <div class="card"><div class="cb" style="padding:0" id="indList"><p style="text-align:center;padding:22px;color:var(--g3);font-size:14px">등록된 이력이 없습니다</p></div></div>
     <div style="height:20px"></div>
   </div>
   <div id="adP4" style="display:none">
@@ -13295,7 +13295,7 @@ function renderIndList(data){
   indShownList.forEach(function(r){
     var date=r.date||r.created_at||'';
     if(date&&date.length>10) date=date.slice(0,10);
-    h+='<div style="padding:12px 16px;border-bottom:1px solid var(--g1);transform:translateZ(0);-webkit-backface-visibility:hidden">';
+    h+='<div style="padding:12px 16px;border-bottom:1px solid var(--g1)">';
     h+='<div style="display:flex;justify-content:space-between;margin-bottom:5px">';
     h+='<span style="font-size:14px;font-weight:700;color:var(--danger)">'+date+'</span>';
     h+='<span style="font-size:13px;background:var(--danger-bg);color:var(--danger);padding:2px 8px;border-radius:20px;font-weight:700">'+(r.type||'기타')+'</span>';
@@ -14093,7 +14093,7 @@ function renderLostList(){
     var dt=toKSTDateTime(r.found_date||r.created_at);
     var st=r.status||'접수';
     var isDone=st.startsWith('완료');
-    h+='<div style="background:white;border-radius:var(--r2);border:1.5px solid var(--g2);padding:13px;margin-bottom:9px;transform:translateZ(0);-webkit-backface-visibility:hidden">';
+    h+='<div style="background:white;border-radius:var(--r2);border:1.5px solid var(--g2);padding:13px;margin-bottom:9px">';
     // 헤더
     h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
     h+='<span style="font-size:13px;color:var(--g4)">📅 '+dt+'</span>';
@@ -15935,7 +15935,7 @@ function renderWasteList(){
     var incTotal=(r.incineration_living||0)+(r.incineration_synthetic||0)+(r.incineration_food||0);
     var recTotal=(r.recycle_paper||0)+(r.recycle_plastic||0)+(r.recycle_can||0)+(r.recycle_glass||0)+(r.recycle_etc||0)+(r.misc_etc||0);
     var canEditWaste=isAdminMgr||(me&&(me.role==='leader'||me.role==='acting_leader')&&myWasteCode&&myWasteCode===r.team_code);
-    h+='<div style="background:white;border-radius:var(--r2);border:1.5px solid var(--g2);padding:13px;margin-bottom:9px;transform:translateZ(0);-webkit-backface-visibility:hidden">';
+    h+='<div style="background:white;border-radius:var(--r2);border:1.5px solid var(--g2);padding:13px;margin-bottom:9px">';
     h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">';
     h+='<div style="display:flex;align-items:center;gap:7px">';
     h+='<span style="font-size:14px;font-weight:800;color:var(--g7)">'+r.waste_date+'</span>';
