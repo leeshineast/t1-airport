@@ -488,6 +488,11 @@ html{overflow-x:hidden}
 </head>
 <body>
 
+<!-- iOS/PC 전용 뒤로가기 버튼 (안드로이드는 자체 뒤로가기 버튼/제스처가 있어서 제외) -->
+<div id="iosBackBtn" onclick="history.back()" style="display:none;position:fixed;left:14px;bottom:88px;width:48px;height:48px;border-radius:50%;background:rgba(30,37,48,.72);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);color:white;z-index:500;align-items:center;justify-content:center;box-shadow:0 3px 10px rgba(0,0,0,.25);cursor:pointer;-webkit-tap-highlight-color:transparent">
+  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="white" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+</div>
+
 <!-- ══ 로그인 ══ -->
 <!-- ══ 알림 드로어 ══ -->
 <div id="notifOverlay" onclick="closeNotifDrawer()" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.35);z-index:400"></div>
@@ -5186,6 +5191,15 @@ function goHomeMain(){
     if(sc) sc.scrollLeft = sc.clientWidth;
   }, 60);
 }
+var _isAndroidDevice=/Android/i.test(navigator.userAgent);
+// iOS/PC에서만 플로팅 뒤로가기 버튼을 보여줌 (안드로이드는 자체 뒤로가기가 있으므로 항상 숨김).
+// 홈(main)이나 로그인 화면에서는 더 뒤로 갈 곳이 없으므로 숨김.
+function updateIosBackBtn(){
+  var btn=document.getElementById('iosBackBtn');
+  if(!btn) return;
+  if(_isAndroidDevice){ btn.style.display='none'; return; }
+  btn.style.display=(_curScreenName&&_curScreenName!=='main'&&_curScreenName!=='login'&&_curScreenName!=='reg')?'flex':'none';
+}
 function go(name){
   if(me&&me.role==='vehicle_guest'&&name!=='veh'&&name!=='login'){ return; }
   if(me&&me.role==='work_vehicle'&&name!=='workveh'&&name!=='login'){ return; }
@@ -5215,6 +5229,7 @@ function go(name){
     try{ history.pushState({kind:'screen',id:name}, ''); }catch(e){}
   }
   _curScreenName=name;
+  updateIosBackBtn();
   const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
