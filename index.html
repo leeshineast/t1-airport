@@ -4730,6 +4730,14 @@ function isExecRole(r){return r==='group_leader'||r==='division_head'||r==='mast
 // ─ 유틸 ─
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';clearTimeout(t._t);t._t=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(8px)';},2600);}
 // UTC ISO 문자열 → KST 날짜 'YYYY-MM-DD' 반환
+// toLocaleDateString+timeZone(Intl API)은 iOS Safari에서 유독 느려서, 반복 호출 시 화면이 멈춘 것처럼 느려질 수 있음.
+// 순수 산술(UTC+9 오프셋)로 같은 결과(YYYY-MM-DD, KST 기준)를 훨씬 빠르게 계산.
+function kstDate(input){
+  var d=input?new Date(input):new Date();
+  if(isNaN(d.getTime())) return '';
+  var kst=new Date(d.getTime()+9*3600000);
+  return kst.getUTCFullYear()+'-'+String(kst.getUTCMonth()+1).padStart(2,'0')+'-'+String(kst.getUTCDate()).padStart(2,'0');
+}
 function toKSTTime(isoStr){
   if(!isoStr) return '';
   try{
@@ -9903,7 +9911,7 @@ async function loadJointWorkFromDB(){
 // 홈 화면 - 금일 공동작업 요약 카드
 async function loadJointWorkTodayFromDB(){
   try{
-    var today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
+    var today=kstDate();
     var res=await sb.from('joint_work_data').select('id,teams,headcount,items,category,work_name,location,batch_id,record_type').eq('work_date',today);
     if(res.error) return;
     var all=res.data||[];
@@ -12867,7 +12875,7 @@ function renderHoList(data){
   if(mf){
     data=(data||[]).filter(function(r){
       var baseTs=r.ho_date||r.created_at;
-      var ym=baseTs?new Date(baseTs).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'}).slice(0,7):'';
+      var ym=baseTs?kstDate(baseTs).slice(0,7):'';
       return ym===mf;
     });
   }
@@ -12892,7 +12900,7 @@ function renderHoList(data){
   var groups={};
   data.forEach(function(r){
     var baseTs=r.ho_date||r.created_at;
-    var d=baseTs?new Date(baseTs).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'}):'';
+    var d=baseTs?kstDate(baseTs):'';
     if(!groups[d]) groups[d]=[];
     groups[d].push(r);
   });
@@ -13047,10 +13055,10 @@ async function confHODB(id, btn, domId){
 
 function updateAccComplaintCount(){
   // 안전사고: 신규 안전사고 모듈(safety_accidents) 기준 / 민원: ARS민원(voc_data) 단일 기준 (KST 기준)
-  var today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
+  var today=kstDate();
   var todayAcc=(accidentAll||[]).filter(function(r){
     var d=r.occurred_at||r.created_at||'';
-    var dKst=d?new Date(d).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'}):'';
+    var dKst=d?kstDate(d):'';
     return dKst===today;
   });
   var accToday=todayAcc.length;
@@ -13071,7 +13079,7 @@ function updateAccComplaintCount(){
   // 습득물 요약 (금일 접수 건수 / 미처리=접수 상태)
   var lostToday=(lostData||[]).filter(function(r){
     var d=r.created_at||'';
-    return d?new Date(d).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'})===today:false;
+    return d?kstDate(d)===today:false;
   }).length;
   var lostPending=(lostData||[]).filter(function(r){
     var s=r.status||'';
@@ -15789,7 +15797,7 @@ function renderWasteList(){
   var el=document.getElementById('wasteList');
   var summaryEl=document.getElementById('wasteMonthSummary');
   if(!el) return;
-  var today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
+  var today=kstDate();
   var thisMonth=today.slice(0,7);
   var mf=document.getElementById('wasteFilterMonth');
   var tf=document.getElementById('wasteFilterTeam');
@@ -15845,7 +15853,7 @@ function renderWasteList(){
     var sh='';
 
     // ① 당일 + 전일 합산 (데이터 없어도 0으로 항상 표시)
-    var yesterday=new Date(Date.now()-86400000).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'});
+    var yesterday=kstDate(Date.now()-86400000);
     var todayDi=dayMap[today]||{inc:0,rec:0};
     var ydayDi=dayMap[yesterday]||{inc:0,rec:0};
     sh+='<div style="margin-bottom:12px">';
@@ -17598,7 +17606,7 @@ function renderAccList(data){
   var mf=mfEl?mfEl.value:'';
   if(mf){
     data=(data||[]).filter(function(r){
-      var ym=r.occurred_at?new Date(r.occurred_at).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'}).slice(0,7):'';
+      var ym=r.occurred_at?kstDate(r.occurred_at).slice(0,7):'';
       return ym===mf;
     });
   }
@@ -17610,7 +17618,7 @@ function renderAccList(data){
 
   var groups={};
   data.forEach(function(r){
-    var d=r.occurred_at?new Date(r.occurred_at).toLocaleDateString('en-CA',{timeZone:'Asia/Seoul'}):'';
+    var d=r.occurred_at?kstDate(r.occurred_at):'';
     if(!groups[d]) groups[d]=[];
     groups[d].push(r);
   });
