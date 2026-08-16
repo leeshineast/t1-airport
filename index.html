@@ -16023,7 +16023,11 @@ function prfGoToMonth(y,m){
 
 function prfRenderDayList(ds){
   var wrap=document.getElementById('prfDayListWrap'); if(!wrap) return;
-  if(!ds){ wrap.innerHTML=''; return; }
+  if(!ds){
+    if(prfMode==='month'){ prfRenderMonthList(wrap); }
+    else{ wrap.innerHTML=''; }
+    return;
+  }
   var list=perfData.filter(function(r){ return r.occurred_at&&kstDate(r.occurred_at)===ds; });
   list.sort(function(a,b){ return new Date(b.occurred_at)-new Date(a.occurred_at); });
   var dObj=new Date(ds+'T00:00:00Z');
@@ -16033,6 +16037,36 @@ function prfRenderDayList(ds){
     h+='<div style="text-align:center;padding:24px;color:var(--g3);font-size:13px;background:white;border-radius:12px">등록된 수행실적이 없습니다</div>';
   }else{
     list.forEach(function(r){
+      var loc=[r.location_main,r.location_detail].filter(Boolean).join(' · ');
+      var meta=[loc,r.team,r.writer,kstTime(r.occurred_at)].filter(Boolean).join(' · ');
+      h+='<div onclick="prfOpenEdit('+r.id+')" style="background:white;border-radius:12px;padding:13px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.05);cursor:pointer">'
+        +'<span style="display:inline-block;background:var(--navy-bg);color:var(--navy);font-size:11px;font-weight:800;padding:3px 9px;border-radius:7px;margin-bottom:5px">'+(r.category||'')+'</span>'
+        +'<div style="font-size:14px;color:var(--g6);line-height:1.5">'+String(r.content||'').replace(/</g,'&lt;')+'</div>'
+        +'<div style="font-size:11px;color:var(--g4);margin-top:6px">'+meta+'</div>'
+        +'</div>';
+    });
+  }
+  wrap.innerHTML=h;
+}
+// 월 보기에서 날짜 선택을 해제했을 때 — 그 달 전체 목록을 날짜별로 묶어서 표시
+function prfRenderMonthList(wrap){
+  var anchor=prfGetAnchor();
+  var y=anchor.getUTCFullYear(), m=anchor.getUTCMonth();
+  var monthPrefix=y+'-'+String(m+1).padStart(2,'0');
+  var monthList=perfData.filter(function(r){ return r.occurred_at&&kstDate(r.occurred_at).indexOf(monthPrefix)===0; });
+  monthList.sort(function(a,b){ return new Date(b.occurred_at)-new Date(a.occurred_at); });
+  var h='<div style="font-size:14px;font-weight:800;color:var(--g7);margin-bottom:8px">'+y+'년 '+(m+1)+'월 전체 · 주요 수행실적 '+monthList.length+'건</div>';
+  if(!monthList.length){
+    h+='<div style="text-align:center;padding:24px;color:var(--g3);font-size:13px;background:white;border-radius:12px">등록된 수행실적이 없습니다</div>';
+  }else{
+    var lastDate=null;
+    monthList.forEach(function(r){
+      var rd=kstDate(r.occurred_at);
+      if(rd!==lastDate){
+        var dObj=new Date(rd+'T00:00:00Z');
+        h+='<div style="font-size:12.5px;font-weight:800;color:var(--teal2);margin:14px 0 6px;padding-left:2px">'+(dObj.getUTCMonth()+1)+'월 '+dObj.getUTCDate()+'일</div>';
+        lastDate=rd;
+      }
       var loc=[r.location_main,r.location_detail].filter(Boolean).join(' · ');
       var meta=[loc,r.team,r.writer,kstTime(r.occurred_at)].filter(Boolean).join(' · ');
       h+='<div onclick="prfOpenEdit('+r.id+')" style="background:white;border-radius:12px;padding:13px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.05);cursor:pointer">'
