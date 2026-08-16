@@ -16791,6 +16791,8 @@ function closeMissingLeaderModal(){
   var m=document.getElementById('missingLeaderModal'); if(m) m.style.display='none';
 }
 async function checkAndShowMissingLeaderPopup(){
+  // 열람전용 계정은 인력현황 입력 자체를 안 하므로 이 안내가 필요 없음
+  if(me&&me.role==='member') return;
   // 출근 시간대(자동출근과 동일한 시간대)에만 노출 — 그 외 시간엔 굳이 안 띄움
   if(!isAnyCheckinWindowNow()) return;
   try{
