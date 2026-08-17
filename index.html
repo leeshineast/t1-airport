@@ -19340,9 +19340,9 @@ var RAIN_LEVELS=[
 ];
 var _heatCheckedAt=0;
 // WMO 날씨코드 → 아이콘 매핑 (T1 실시간 날씨 표시용, Open-Meteo 기준)
-function weatherCodeToIcon(code){
-  if(code===0) return '☀️';
-  if(code===1||code===2) return '⛅';
+function weatherCodeToIcon(code, isDay){
+  if(code===0) return isDay ? '☀️' : '🌙';
+  if(code===1||code===2) return isDay ? '⛅' : '☁️';
   if(code===3) return '☁️';
   if(code===45||code===48) return '🌫️';
   if(code>=51&&code<=57) return '🌦️';
@@ -19351,15 +19351,15 @@ function weatherCodeToIcon(code){
   if(code===80||code===81||code===82) return '🌦️';
   if(code===85||code===86) return '🌨️';
   if(code>=95&&code<=99) return '⛈️';
-  return '🌡️';
+  return isDay ? '🌡️' : '🌙';
 }
-function updateWeatherIconBadge(code, temp){
+function updateWeatherIconBadge(code, temp, isDay){
   var badge=document.getElementById('weatherIconBadge');
   var emojiEl=document.getElementById('weatherIconEmoji');
   var tempEl=document.getElementById('weatherIconTemp');
   if(!badge||!emojiEl||!tempEl) return;
   if(code===undefined||code===null||temp===undefined||temp===null) return;
-  emojiEl.textContent=weatherCodeToIcon(code);
+  emojiEl.textContent=weatherCodeToIcon(code, isDay);
   tempEl.textContent=Math.round(temp)+'℃';
   badge.style.display='block';
 }
@@ -19369,7 +19369,7 @@ async function checkHeatAlert(){
   _heatCheckedAt=now;
   try{
     var url='https://api.open-meteo.com/v1/forecast?latitude='+T1_LAT+'&longitude='+T1_LNG
-      +'&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,wind_speed_10m,wind_gusts_10m'
+      +'&current=temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,weather_code,is_day,wind_speed_10m,wind_gusts_10m'
       +'&wind_speed_unit=ms'
       +'&hourly=precipitation&timezone=Asia%2FSeoul&forecast_days=1&past_days=1';
     var res=await fetch(url);
@@ -19377,7 +19377,7 @@ async function checkHeatAlert(){
     var data=await res.json();
     var cur=data&&data.current;
     if(!cur) return;
-    updateWeatherIconBadge(cur.weather_code, cur.temperature_2m);
+    updateWeatherIconBadge(cur.weather_code, cur.temperature_2m, cur.is_day===1);
     // 최근 3시간·12시간 누적 강수량 계산 (hourly.precipitation에서 현재시각까지 역산 합산)
     var rain3h=cur.precipitation||0, rain12h=cur.precipitation||0;
     try{
