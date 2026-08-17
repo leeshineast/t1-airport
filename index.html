@@ -1387,6 +1387,20 @@ html{overflow-x:hidden}
     </div>
   </div>
 
+  <!-- 주요 수행실적 캘린더 -->
+  <div style="margin:0">
+    <div class="sec-lbl" style="padding:16px 13px 8px">📋 주요 수행실적</div>
+    <div class="card" style="margin:0 13px 13px">
+      <div class="cb">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div id="prfHomeCalLbl" style="font-size:14px;font-weight:800;color:var(--g7)"></div>
+          <button onclick="go('perf')" style="padding:5px 12px;background:var(--teal-bg);color:var(--teal2);border:none;border-radius:16px;font-size:12px;font-weight:700;cursor:pointer">전체보기 →</button>
+        </div>
+        <div id="prfHomeCalWrap"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- 월간 통계 -->
   
 
@@ -1477,18 +1491,6 @@ html{overflow-x:hidden}
           <button onclick="go('facility')" style="margin-top:8px;padding:7px 16px;background:var(--teal-bg);color:var(--teal2);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">🏢 시설현황 →</button>
         </div>
       </div>
-    </div>
-  </div>
-
-  <!-- 주요 수행실적 캘린더 -->
-  <div class="sec-lbl">📋 주요 수행실적</div>
-  <div class="card" style="margin-bottom:11px">
-    <div class="cb">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-        <div id="prfHomeCalLbl" style="font-size:14px;font-weight:800;color:var(--g7)"></div>
-        <button onclick="go('perf')" style="padding:5px 12px;background:var(--teal-bg);color:var(--teal2);border:none;border-radius:16px;font-size:12px;font-weight:700;cursor:pointer">전체보기 →</button>
-      </div>
-      <div id="prfHomeCalWrap"></div>
     </div>
   </div>
 
@@ -16120,7 +16122,11 @@ function prfRenderMonthList(wrap){
   var y=anchor.getUTCFullYear(), m=anchor.getUTCMonth();
   var monthPrefix=y+'-'+String(m+1).padStart(2,'0');
   var monthList=perfData.filter(function(r){ return r.occurred_at&&kstDate(r.occurred_at).indexOf(monthPrefix)===0; });
-  monthList.sort(function(a,b){ return new Date(b.occurred_at)-new Date(a.occurred_at); });
+  monthList.sort(function(a,b){ return new Date(a.occurred_at)-new Date(b.occurred_at); }); // 1일→말일 오름차순
+  var todayStr0=kstDate();
+  var prfTodays=monthList.filter(function(r){ return kstDate(r.occurred_at)===todayStr0; });
+  var prfOthers=monthList.filter(function(r){ return kstDate(r.occurred_at)!==todayStr0; });
+  monthList=prfTodays.concat(prfOthers); // 오늘 카드가 최상단, 이후 1일~말일 순
   var h='<div style="font-size:14px;font-weight:800;color:var(--g7);margin-bottom:8px">'+y+'년 '+(m+1)+'월 전체 · 주요 수행실적 '+monthList.length+'건</div>';
   if(!monthList.length){
     h+='<div style="text-align:center;padding:24px;color:var(--g3);font-size:13px;background:white;border-radius:12px">등록된 수행실적이 없습니다</div>';
