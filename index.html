@@ -1480,6 +1480,18 @@ html{overflow-x:hidden}
     </div>
   </div>
 
+  <!-- 주요 수행실적 캘린더 -->
+  <div class="sec-lbl">📋 주요 수행실적</div>
+  <div class="card" style="margin-bottom:11px">
+    <div class="cb">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div id="prfHomeCalLbl" style="font-size:14px;font-weight:800;color:var(--g7)"></div>
+        <button onclick="go('perf')" style="padding:5px 12px;background:var(--teal-bg);color:var(--teal2);border:none;border-radius:16px;font-size:12px;font-weight:700;cursor:pointer">전체보기 →</button>
+      </div>
+      <div id="prfHomeCalWrap"></div>
+    </div>
+  </div>
+
     </div>
   </div>
   <script>
@@ -16270,7 +16282,33 @@ async function prfDelete(){
 }
 
 // 홈화면 요약 카드 갱신
+function prfRenderHomeCal(){
+  var wrap=document.getElementById('prfHomeCalWrap'); if(!wrap) return;
+  var now=new Date(Date.now()+9*3600000);
+  var y=now.getUTCFullYear(), m=now.getUTCMonth();
+  var lbl=document.getElementById('prfHomeCalLbl');
+  if(lbl) lbl.textContent=y+'년 '+(m+1)+'월';
+  var counts=prfCountByDate();
+  var todayStr=kstDate();
+  var firstDow=new Date(Date.UTC(y,m,1)).getUTCDay();
+  var daysInMonth=new Date(Date.UTC(y,m+1,0)).getUTCDate();
+  var h='<div onclick="go(\'perf\')" style="cursor:pointer">'
+    +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center">';
+  ['일','월','화','수','목','금','토'].forEach(function(dw){ h+='<div style="font-size:11px;color:var(--g4);font-weight:700;padding-bottom:4px">'+dw+'</div>'; });
+  for(var i=0;i<firstDow;i++) h+='<div></div>';
+  for(var dnum=1;dnum<=daysInMonth;dnum++){
+    var ds=y+'-'+String(m+1).padStart(2,'0')+'-'+String(dnum).padStart(2,'0');
+    var cnt=counts[ds]||0;
+    var isToday=(ds===todayStr);
+    var bg=isToday?'background:var(--navy-bg);color:var(--navy)':'';
+    var badge=cnt?'<span style="font-size:9px;background:var(--teal2);color:white;border-radius:6px;padding:0 4px;margin-top:1px;display:inline-block">'+cnt+'</span>':'';
+    h+='<div style="aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:8px;font-size:13px;font-weight:'+(isToday?'800':'400')+';'+bg+'">'+dnum+badge+'</div>';
+  }
+  h+='</div></div>';
+  wrap.innerHTML=h;
+}
 function prfUpdateHomeSummary(){
+  prfRenderHomeCal();
   var rowEl=document.getElementById('prfHomeRow');
   var cntEl=document.getElementById('prfHomeCount');
   if(!cntEl||!rowEl) return;
