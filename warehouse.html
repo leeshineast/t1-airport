@@ -276,7 +276,10 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
 
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
     <div style="font-size:12px;color:#8a94a6">품목이 많으면 옆으로 밀어서 보세요 →</div>
-    <button class="ghost-btn" id="showAllToggleBtn" style="padding:6px 12px;font-size:12px" onclick="toggleShowAll()">전체보기</button>
+    <button class="ghost-btn" id="showAllToggleBtn" style="padding:6px 12px;font-size:12px;display:flex;align-items:center;gap:6px" onclick="toggleShowAll()">
+      <span id="showAllToggleDot" style="width:9px;height:9px;border-radius:50%;background:#8a94a6;display:inline-block"></span>
+      <span id="showAllToggleLabel">지금: 재고있는것만</span>
+    </button>
   </div>
   <div class="ledger-table-wrap">
     <table class="ledger-table">
@@ -444,14 +447,27 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
 <div class="overlay" id="setOverlay">
   <div class="modal">
     <div class="modal-title">배정 품목 · 재고 설정 <button class="modal-close" onclick="closeSetModal()">✕</button></div>
+    <button id="whWipeBtn" onclick="wipeWarehouseAll()" style="display:none;width:100%;margin-bottom:10px;padding:9px;background:#FEECEC;color:#D94040;border:1.5px solid #D94040;border-radius:8px;font-size:13px;font-weight:800;cursor:pointer">🗑️ 이 창고 재고 전체 삭제 (최고관리자 전용)</button>
     <input type="text" id="setSearch" placeholder="품목 검색" oninput="renderSetList()" style="margin-bottom:8px">
     <div style="display:flex;justify-content:flex-end;margin-bottom:6px">
-      <button class="ghost-btn" id="setShowAllBtn" style="padding:5px 11px;font-size:11.5px" onclick="toggleSetShowAll()">전체보기</button>
+      <button class="ghost-btn" id="setShowAllBtn" style="padding:5px 11px;font-size:11.5px;display:flex;align-items:center;gap:6px" onclick="toggleSetShowAll()">
+        <span id="setShowAllDot" style="width:9px;height:9px;border-radius:50%;background:#8a94a6;display:inline-block"></span>
+        <span id="setShowAllLabel">지금: 재고있는것만</span>
+      </button>
     </div>
     <div style="display:flex;gap:8px;padding:0 0 6px;font-size:9.5px;color:var(--g3);font-weight:700">
       <span style="flex:1">품목명</span><span style="width:56px;text-align:center">순서</span><span style="width:70px;text-align:center">현재고</span><span style="width:70px;text-align:center">최소재고</span><span style="width:44px"></span><span style="width:34px"></span>
     </div>
     <div id="setList"></div>
+  </div>
+</div>
+
+<!-- 품목별 입출고 이력 모달 (master는 개별 삭제 가능) -->
+<div class="overlay" id="historyOverlay">
+  <div class="modal">
+    <div class="modal-title"><span id="historyItemName">이력</span> <button class="modal-close" onclick="closeItemHistory()">✕</button></div>
+    <div style="font-size:12px;color:#8a94a6;margin-bottom:8px">날짜가 최신순으로 표시됩니다. 삭제하면 그 이후 날짜의 재고가 자동으로 다시 계산됩니다.</div>
+    <div id="historyList" style="max-height:60vh;overflow-y:auto"></div>
   </div>
 </div>
 
@@ -535,6 +551,7 @@ function loadSession(){ try{var s=localStorage.getItem('t1_me'); if(!s)return nu
 function roleLabel(r){ if(r==='master')return '최고관리자'; if(r==='admin')return '관리자'; if(r==='manager')return '팀장'; if(r==='leader')return '조장'; if(r==='acting_leader')return '조장대행'; return '직원'; }
 function canInput(){ if(!me)return false; var r=me.role; return r==='master'||r==='admin'||r==='manager'||r==='leader'||r==='acting_leader'; }
 function isAdmin(){ return me && (me.role==='master'||me.role==='admin'||me.role==='manager'); }
+function isMaster(){ return !!(me && me.role==='master'); }
 function todayStr(){ var n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); }
 function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)'; clearTimeout(t._t); t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(8px)';},2600); }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -822,9 +839,14 @@ function remainDisplay(v){
 }
 function toggleShowAll(){
   forceShowAll=!forceShowAll;
-  var btn=document.getElementById('showAllToggleBtn');
-  if(btn) btn.textContent=forceShowAll?'재고있는것만 보기':'전체보기';
+  updateShowAllToggleUI();
   renderLedgerItems();
+}
+function updateShowAllToggleUI(){
+  var dot=document.getElementById('showAllToggleDot');
+  var lbl=document.getElementById('showAllToggleLabel');
+  if(dot) dot.style.background=forceShowAll?'#4CAF50':'#8a94a6';
+  if(lbl) lbl.textContent=forceShowAll?'지금: 전체보기':'지금: 재고있는것만';
 }
 var editingItems={}; // item_id -> true (오늘자 저장분 수정 모드 여부)
 function renderLedgerItems(){
@@ -839,7 +861,7 @@ function renderLedgerItems(){
     return L.remain_qty>0 || L.in_qty>0 || L.out_qty>0 || pinnedItems[it.item_id];
   });
   var toggleBtn=document.getElementById('showAllToggleBtn');
-  if(toggleBtn) toggleBtn.textContent=forceShowAll?'재고있는것만 보기':'전체보기';
+  updateShowAllToggleUI();
   if(!whItems.length){
     document.getElementById('ledgerEmpty').style.display='block';
     document.getElementById('ledgerEmpty').textContent="이 창고에 배정된 품목이 없습니다. '+ 품목추가'로 등록하세요.";
@@ -871,6 +893,7 @@ function renderLedgerItems(){
       '<td class="act-cell">'+
         (inputOk?'<button class="row-save-btn" onclick="saveOneItem(\''+it.item_id+'\')">'+(editing?'수정저장':'저장')+'</button>':'')+
         (canEditToday?'<button class="row-edit-btn'+(editing?' on':'')+'" onclick="toggleEditToday(\''+it.item_id+'\')" title="오늘 저장한 수량 고치기">'+(editing?'취소':'✏️')+'</button>':'')+
+        '<button class="row-edit-btn" onclick="openItemHistory(\''+it.item_id+'\',\''+esc(it.item_name)+'\')" title="날짜별 입출고 이력 보기">📜</button>'+
       '</td>';
     box.appendChild(tr);
   });
@@ -1319,19 +1342,43 @@ function doCreateNewItem(p){
 }
 
 // ═══ 배정품목/최소재고 설정 ═══
+// 창고 전체 재고 삭제 (master 전용) — 이력 전체 삭제 + 배정품목 재고 0으로 초기화
+async function wipeWarehouseAll(){
+  if(!isMaster()){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
+  if(!curWarehouse){ return; }
+  var whName=(curWarehouse.room_no||'')+' '+(curWarehouse.location_desc||curWarehouse.name||('창고 #'+curWarehouse.id));
+  if(!confirm('⚠️ "'+whName+'" 창고의 모든 입출고 이력과 재고를 전부 삭제합니다.\n\n이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?')) return;
+  if(prompt('정말 삭제하려면 "삭제" 라고 입력해주세요') !== '삭제'){ toast('취소되었습니다'); return; }
+  try{
+    var delLedger=await sbFetch('/warehouse_ledger?warehouse_id=eq.'+curWarehouse.id,{method:'DELETE'});
+    var delDaily=await sbFetch('/warehouse_daily?warehouse_id=eq.'+curWarehouse.id,{method:'DELETE'});
+    var resetItems=await sbFetch('/warehouse_item?warehouse_id=eq.'+curWarehouse.id,{method:'PATCH',body:{current_qty:0},headers:{'Prefer':'return=minimal'}});
+    if(!delLedger.ok || !resetItems.ok){ toast('⚠️ 일부 삭제에 실패했습니다'); return; }
+    toast('✅ 창고 전체 재고가 초기화되었습니다');
+    closeSetModal();
+    loadWarehouseItemsAndLedger();
+  }catch(e){ toast('삭제 실패: '+String(e.message||e)); }
+}
 function openSetModal(){
   document.getElementById('setSearch').value='';
   setShowAll=false;
-  var btn=document.getElementById('setShowAllBtn'); if(btn) btn.textContent='전체보기';
+  updateSetShowAllUI();
   renderSetList();
+  var wipeBtn=document.getElementById('whWipeBtn');
+  if(wipeBtn) wipeBtn.style.display=isMaster()?'block':'none';
   document.getElementById('setOverlay').classList.add('on');
 }
 var setShowAll=false;
 function toggleSetShowAll(){
   setShowAll=!setShowAll;
-  var btn=document.getElementById('setShowAllBtn');
-  if(btn) btn.textContent=setShowAll?'재고있는것만':'전체보기';
+  updateSetShowAllUI();
   renderSetList();
+}
+function updateSetShowAllUI(){
+  var dot=document.getElementById('setShowAllDot');
+  var lbl=document.getElementById('setShowAllLabel');
+  if(dot) dot.style.background=setShowAll?'#4CAF50':'#8a94a6';
+  if(lbl) lbl.textContent=setShowAll?'지금: 전체보기':'지금: 재고있는것만';
 }
 function renderSetList(){
   var box=document.getElementById('setList'); box.innerHTML='';
@@ -1355,6 +1402,74 @@ function renderSetList(){
   });
   if(!list.length) box.innerHTML='<div class="empty">'+(setShowAll?'검색 결과가 없습니다':'재고 있는 품목이 없습니다. 전체보기를 눌러 확인하세요')+'</div>';
 }
+
+// ═══ 품목별 입출고 이력 · 개별 삭제(master) ═══
+var historyItemId=null;
+function openItemHistory(itemId, itemName){
+  historyItemId=itemId;
+  document.getElementById('historyItemName').textContent='📜 '+itemName+' 이력';
+  document.getElementById('historyList').innerHTML='<div class="empty">불러오는 중…</div>';
+  document.getElementById('historyOverlay').classList.add('on');
+  loadItemHistory();
+}
+function closeItemHistory(){
+  document.getElementById('historyOverlay').classList.remove('on');
+  historyItemId=null;
+}
+function loadItemHistory(){
+  if(!curWarehouse||!historyItemId) return;
+  sbFetchAll('/warehouse_ledger?warehouse_id=eq.'+curWarehouse.id+'&item_id=eq.'+historyItemId+'&order=ledger_date.desc')
+    .then(function(rows){
+      renderItemHistory(Array.isArray(rows)?rows:[]);
+    }).catch(function(){ document.getElementById('historyList').innerHTML='<div class="empty">불러오기 실패</div>'; });
+}
+function renderItemHistory(rows){
+  var box=document.getElementById('historyList');
+  if(!rows.length){ box.innerHTML='<div class="empty">이력이 없습니다</div>'; return; }
+  var h='';
+  rows.forEach(function(r){
+    h+='<div style="display:flex;align-items:center;gap:8px;padding:9px 4px;border-bottom:1px solid #eee">'
+      +'<div style="flex:1">'
+      +'<div style="font-weight:800;font-size:13px">'+esc(r.ledger_date)+' <span style="font-weight:400;color:#8a94a6;font-size:11.5px">('+esc(r.team||'-')+' · '+esc(r.written_by||r.leader_name||'-')+')</span></div>'
+      +'<div style="font-size:12.5px;color:#555;margin-top:2px">입고 '+(r.in_qty||0)+' · 출고 '+(r.out_qty||0)+' · 그날 재고 '+r.remain_qty+'</div>'
+      +'</div>'
+      +(isMaster()?'<button onclick="deleteHistoryEntry('+r.id+')" style="padding:6px 10px;background:#FEECEC;color:#D94040;border:1px solid #D94040;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>':'')
+      +'</div>';
+  });
+  box.innerHTML=h;
+}
+async function deleteHistoryEntry(rowId){
+  if(!isMaster()){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
+  if(!confirm('이 날짜의 기록을 삭제하시겠습니까?\n삭제 후 이 품목의 이후 날짜 재고가 자동으로 다시 계산됩니다.')) return;
+  try{
+    var delRes=await sbFetch('/warehouse_ledger?id=eq.'+rowId,{method:'DELETE'});
+    if(!delRes.ok){ toast('삭제 실패'); return; }
+    await recalcItemLedgerChain(curWarehouse.id, historyItemId);
+    toast('✅ 삭제 및 재계산 완료');
+    loadItemHistory();
+    loadWarehouseItemsAndLedger();
+  }catch(e){ toast('삭제 실패'); }
+}
+// 특정 창고+품목의 남은 이력을 날짜순으로 처음부터 다시 계산해서 prev_qty/remain_qty를 갱신
+async function recalcItemLedgerChain(warehouseId, itemId){
+  var rows=await sbFetchAll('/warehouse_ledger?warehouse_id=eq.'+warehouseId+'&item_id=eq.'+itemId+'&order=ledger_date.asc');
+  rows=Array.isArray(rows)?rows:[];
+  var runningPrev=0;
+  var updates=[];
+  rows.forEach(function(r, idx){
+    var newPrev = idx===0 ? (r.prev_qty!=null ? r.prev_qty : 0) : runningPrev;
+    var newRemain = newPrev + (r.in_qty||0) - (r.out_qty||0);
+    updates.push({id:r.id, prev_qty:newPrev, remain_qty:newRemain});
+    runningPrev = newRemain;
+  });
+  await Promise.all(updates.map(function(u){
+    return sbFetch('/warehouse_ledger?id=eq.'+u.id,{method:'PATCH',body:{prev_qty:u.prev_qty,remain_qty:u.remain_qty},headers:{'Prefer':'return=minimal'}});
+  }));
+  // warehouse_item의 current_qty도 최신 재고로 동기화
+  var latestRemain = updates.length? updates[updates.length-1].remain_qty : 0;
+  await sbFetch('/warehouse_item?warehouse_id=eq.'+warehouseId+'&item_id=eq.'+itemId,{method:'PATCH',body:{current_qty:latestRemain},headers:{'Prefer':'return=minimal'}});
+}
+
 function saveSetRow(wid){
   var orderEl=document.getElementById('setOrder_'+wid);
   var qtyEl=document.getElementById('setQty_'+wid);
