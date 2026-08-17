@@ -882,6 +882,12 @@ html{overflow-x:hidden}
         <div class="menu-desc">최근 5분 이내 활동한 사용자 확인</div>
         <span class="menu-arrow">보기 →</span>
       </button>
+      <button class="menu-btn" id="deleteLogsBtn" onclick="go('deleteLogs')" style="display:none">
+        <span class="menu-icon">🗑️</span>
+        <div class="menu-title">삭제 기록</div>
+        <div class="menu-desc">누가 무엇을 삭제했는지 확인</div>
+        <span class="menu-arrow">보기 →</span>
+      </button>
     </div>
   </div>
 
@@ -1938,6 +1944,28 @@ html{overflow-x:hidden}
       </div>
     </div>
   </div></div>
+</div>
+<!-- ═══ 삭제 기록 (master 전용) ═══ -->
+<div id="sDeleteLogs" class="scr" style="display:none">
+  <div class="app-hd">
+    <button class="back-hd" onclick="go('main')">← 메인</button>
+    <div class="user-chip"><div class="u-av">🗑️</div><span>삭제 기록</span></div>
+  </div>
+  <div class="pg-hd"><div><h1>삭제 기록</h1><small>인수인계·공동작업·민원·습득물·안전사고·주요수행실적 삭제 이력</small></div>
+    <button onclick="loadDeleteLogs()" style="padding:8px 14px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g6);cursor:pointer">🔄 새로고침</button>
+  </div>
+  <div style="padding:0 13px 13px">
+    <select id="delLogFilterModule" onchange="renderDeleteLogs()" style="width:100%;padding:11px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;font-weight:700;color:var(--g6);margin-bottom:10px">
+      <option value="">전체 항목</option>
+      <option value="인수인계">인수인계</option>
+      <option value="공동작업">공동작업</option>
+      <option value="민원">민원</option>
+      <option value="습득물">습득물</option>
+      <option value="안전사고">안전사고</option>
+      <option value="주요 수행실적">주요 수행실적</option>
+    </select>
+    <div id="deleteLogsList"></div>
+  </div>
 </div>
 <!-- ═══ 현재 접속자 (admin·master 전용) ═══ -->
 <div id="sActiveUsers" class="scr">
@@ -4814,6 +4842,17 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 <script>
 let me=null,wdT=null,indData=[],indEditId=null;
 function isExecRole(r){return r==='group_leader'||r==='division_head'||r==='master';} // 그룹장/본부장/최고관리자: admin과 동일 이상 권한
+function canDeleteWorkItem(){
+  return !!(me && (me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)));
+}
+async function logDeletion(moduleName, summary){
+  try{
+    await sb.from('delete_logs').insert({
+      module: moduleName, record_summary: String(summary||'').slice(0,300),
+      deleted_by: me?me.name:'', deleted_by_role: me?me.role:''
+    });
+  }catch(e){ console.error('삭제기록 저장 실패', e); }
+}
 
 // ─ 유틸 ─
 function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.opacity='1';t.style.transform='translateX(-50%) translateY(0)';clearTimeout(t._t);t._t=setTimeout(()=>{t.style.opacity='0';t.style.transform='translateX(-50%) translateY(8px)';},2600);}
@@ -4894,7 +4933,7 @@ window.addEventListener('popstate', function(e){
 });
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sRisk','sTraining','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sActiveUsers','sPerf'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sRisk','sTraining','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sActiveUsers','sPerf','sDeleteLogs'];
 function goStatsDash(){
   go('statsdash');
   loadMonthlyStats();
@@ -5319,6 +5358,7 @@ function go(name){
   if(name==='training'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(name==='admin'&&(!me||me.role!=='master')){ toast('⚠️ 최고관리자만 접근할 수 있습니다'); return; }
   if(name==='activeUsers'&&(!me||!(me.role==='admin'||me.role==='master'))){ toast('⚠️ 관리자 이상만 접근할 수 있습니다'); return; }
+  if(name==='deleteLogs'&&(!me||me.role!=='master')){ toast('⚠️ 최고관리자만 접근할 수 있습니다'); return; }
   if(name==='toilet'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='perf'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(['shower','smoking','rest','storage','baby'].indexOf(name)!==-1&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
@@ -5329,7 +5369,7 @@ function go(name){
   }
   _curScreenName=name;
   updateIosBackBtn();
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers',perf:'sPerf'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -5346,6 +5386,7 @@ function go(name){
   if(gtb) gtb.style.setProperty('max-width', tbWidthMap[id]||'720px', 'important');
   window.scrollTo(0,0);
   if(name==='activeUsers') loadActiveUsers();
+  if(name==='deleteLogs') loadDeleteLogs();
   // 화면 진입 시 자동 새로고침
   if(name==='mp'){
     // 로그인한 사람 근무조/팀 자동 선택
@@ -5495,6 +5536,8 @@ function applyRoleUI(){
   if(ab) ab.style.display=isMaster?'block':'none';
   var aub=document.getElementById('activeUsersBtn');
   if(aub) aub.style.display=(me.role==='admin'||me.role==='master')?'block':'none';
+  var dlb=document.getElementById('deleteLogsBtn');
+  if(dlb) dlb.style.display=isMaster?'block':'none';
   var edb=document.getElementById('execDashMenuBtn');
   var isExecView=me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role);
   if(edb) edb.style.display=isExecView?'flex':'none';
@@ -10108,7 +10151,7 @@ function jwKoParticle(word){
 }
 function renderJointWorkList(){
   var list=document.getElementById('jwList'); if(!list) return;
-  var isAdminOnly=me&&me.role==='master';
+  var isAdminOnly=canDeleteWorkItem();
   var mfEl=document.getElementById('jwFilterMonth'); var mf=mfEl?mfEl.value:'';
   var dfEl=document.getElementById('jwFilterDate'); var df=dfEl?dfEl.value:'';
   var tfEl=document.getElementById('jwFilterTeam'); var tf=tfEl?tfEl.value:'';
@@ -10173,7 +10216,7 @@ function renderJointWorkList(){
   list.innerHTML=h;
 }
 async function deleteJwBatch(key){
-  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
+  if(!canDeleteWorkItem()){ toast('⚠️ 삭제 권한이 없습니다'); return; }
   if(!canWrite()) return;
   var rows=(jointWorkData||[]).filter(function(r){ return (r.batch_id||('__row_'+r.id))===key; });
   if(!rows.length) return;
@@ -10182,6 +10225,7 @@ async function deleteJwBatch(key){
     var ids=rows.map(function(r){return r.id;});
     var res=await sb.from('joint_work_data').delete().in('id',ids);
     if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    logDeletion('공동작업', rows.map(function(r){return (r.teams||r.location||'')+' '+(r.category||'');}).join(' / ').slice(0,300));
     toast('🗑 삭제되었습니다');
     loadJointWorkFromDB();
   }catch(e){ toast('삭제 실패'); }
@@ -10208,14 +10252,16 @@ function jwEditSelected(key){
   openJwEdit(ids[0]);
 }
 async function jwDeleteSelected(key){
-  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
+  if(!canDeleteWorkItem()){ toast('⚠️ 삭제 권한이 없습니다'); return; }
   if(!canWrite()) return;
   var ids=jwGetSelectedIds(key);
   if(!ids.length){ toast('삭제할 항목을 선택해주세요'); return; }
   if(!confirm(ids.length+'건을 삭제하시겠습니까?')) return;
   try{
+    var targets=(jointWorkData||[]).filter(function(r){ return ids.indexOf(r.id)!==-1; });
     var res=await sb.from('joint_work_data').delete().in('id',ids);
     if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    logDeletion('공동작업', targets.map(function(r){return (r.teams||r.location||'')+' '+(r.category||'');}).join(' / ').slice(0,300));
     toast('🗑 '+ids.length+'건 삭제되었습니다');
     loadJointWorkFromDB();
   }catch(e){ toast('삭제 실패'); }
@@ -10320,12 +10366,14 @@ function openJwEdit(id){
   toast('수정 모드 (항목 1개만 수정 가능합니다)');
 }
 async function deleteJw(id){
-  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
+  if(!canDeleteWorkItem()){ toast('⚠️ 삭제 권한이 없습니다'); return; }
   if(!canWrite()) return;
   if(!confirm('이 공동작업 기록을 삭제하시겠습니까?')) return;
   try{
+    var target=(jointWorkData||[]).find(function(r){return r.id===id;});
     var res=await sb.from('joint_work_data').delete().eq('id',id);
     if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    logDeletion('공동작업', target?((target.teams||target.location||'')+' '+(target.category||'')):('id:'+id));
     jointWorkData=jointWorkData.filter(function(r){return r.id!==id;});
     renderJointWorkList();
     loadJointWorkTodayFromDB();
@@ -13257,12 +13305,14 @@ function updateAccComplaintCount(){
 
 async function deleteHo(btn){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
-    if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+  if(!canDeleteWorkItem()){toast('⚠️ 삭제 권한이 없습니다');return;}
   if(!confirm('이 인수인계를 삭제하시겠습니까?')) return;
   var id=btn.getAttribute('data-id');
   try{
+    var target=(hoAll||[]).find(function(r){ return String(r.id)===String(id); });
     var res=await sb.from('handover').delete().eq('id',id);
     if(res&&res.error){toast('삭제 오류: '+res.error.message);return;}
+    logDeletion('인수인계', target?((target.team||'')+' '+(target.notice||target.facility||'').slice(0,60)):('id:'+id));
     toast('✅ 삭제 완료');
     loadHandoverFromDB();
   }catch(e){toast('오류: '+e.message);}
@@ -13835,10 +13885,12 @@ async function confirmVocComplete(){
 
 async function deleteVoc(id){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
-    if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+  if(!canDeleteWorkItem()){toast('⚠️ 삭제 권한이 없습니다');return;}
   if(!confirm('이 민원 기록을 삭제하시겠습니까?')) return;
   try{
+    var target=(vocData||[]).find(function(r){return String(r.id)===String(id);});
     await sb.from('voc_data').delete().eq('id',parseInt(id));
+    logDeletion('민원', target?((target.location||target.channel||'')+' '+(target.content||target.detail||'').slice(0,60)):('id:'+id));
     toast('🗑️ 삭제되었습니다');
     loadVocFromDB();
   }catch(e){ toast('⚠️ 삭제 실패'); }
@@ -14208,7 +14260,7 @@ function renderLostList(){
     return;
   }
   var isAdmin=me&&(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role));
-  var isAdminOnly=me&&me.role==='master';
+  var isAdminOnly=canDeleteWorkItem();
   var stColor={'접수':'var(--danger)','완료-폐기':'var(--g4)','완료-유실물':'var(--teal2)','완료-인계':'var(--navy)','완료-기타':'var(--g4)'};
   var stBg={'접수':'var(--danger-bg)','완료-폐기':'var(--g1)','완료-유실물':'var(--teal-bg)','완료-인계':'var(--navy-bg)','완료-기타':'var(--g1)'};
   var stLabel={'접수':'접수중','완료-폐기':'완료·폐기','완료-유실물':'완료·유실물','완료-인계':'완료·인계','완료-기타':'완료·기타'};
@@ -14519,10 +14571,12 @@ async function confirmLostComplete(){
 
 async function deleteLost(id){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
-    if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+  if(!canDeleteWorkItem()){toast('⚠️ 삭제 권한이 없습니다');return;}
   if(!confirm('이 습득물 기록을 삭제하시겠습니까?')) return;
   try{
+    var target=(lostData||[]).find(function(r){return String(r.id)===String(id);});
     await sb.from('lost_found').delete().eq('id',parseInt(id));
+    logDeletion('습득물', target?((target.item_name||target.location||'')+' '+(target.status||'')):('id:'+id));
     toast('🗑️ 삭제되었습니다');
     loadLostFromDB();
   }catch(e){ toast('⚠️ 삭제 실패'); }
@@ -15909,7 +15963,7 @@ async function loadPerfFromDB(){
 }
 
 function prfCanWrite(){ return me&&(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='master'||isExecRole(me.role)); }
-function prfCanDelete(){ return me&&me.role==='master'; }
+function prfCanDelete(){ return canDeleteWorkItem(); }
 
 function prfSetMode(mode){
   prfMode=mode;
@@ -16201,12 +16255,14 @@ async function prfSave(){
 }
 
 async function prfDelete(){
-  if(!prfCanDelete()){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
+  if(!prfCanDelete()){ toast('⚠️ 삭제 권한이 없습니다'); return; }
   if(!prfEditId) return;
   if(!confirm('이 수행실적을 삭제할까요?')) return;
   try{
+    var target=(perfData||[]).find(function(r){return r.id===prfEditId;});
     var res=await sb.from('performance_records').delete().eq('id',prfEditId);
     if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    logDeletion('주요 수행실적', target?((target.category||'')+' '+(target.content||'').slice(0,60)):('id:'+prfEditId));
     toast('✓ 삭제되었습니다');
     hideM('prfModal');
     await loadPerfFromDB();
@@ -16548,7 +16604,7 @@ function renderVocList(){
   }
 
   var isAdmin=me&&(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role));
-  var isAdminOnly=me&&me.role==='master';
+  var isAdminOnly=canDeleteWorkItem();
   var stColor={접수:'var(--danger)',처리중:'#D97706',완료:'var(--teal2)'};
   var stBg={접수:'#FEF2F2',처리중:'#FFFBEB',완료:'var(--teal-bg)'};
 
@@ -18133,6 +18189,7 @@ function renderAccList(data){
         +'<span class="chip '+(isDone?'chip-ok':'chip-warn')+'"><span class="chip-dot"></span>'+(isDone?'조치완료':'대기')+'</span>'
         +'</div><div style="display:flex;align-items:center;gap:7px">'
         +((me&&['admin','manager','leader','acting_leader'].indexOf(me.role)>=0)?'<span onclick="editAccident('+r.id+')" style="font-size:12px;color:var(--teal2);font-weight:700;cursor:pointer;padding:2px 6px;border:1px solid var(--teal);border-radius:10px">✏️ 수정</span>':'')
+        +(canDeleteWorkItem()?'<span onclick="deleteAccident('+r.id+')" style="font-size:12px;color:var(--danger);font-weight:700;cursor:pointer;padding:2px 6px;border:1px solid var(--danger);border-radius:10px">🗑 삭제</span>':'')
         +'<span class="ho-time">'+ts+'</span></div></div>'
         +'<div class="w-row"><div class="w-av" style="background:var(--danger)">'+initial+'</div>'
         +'<span class="w-nm">'+writer+' 작성</span></div>'
@@ -18161,6 +18218,18 @@ function setAccChip(groupId, customId, value){
   }
 }
 
+async function deleteAccident(id){
+  if(!canDeleteWorkItem()){ toast('⚠️ 삭제 권한이 없습니다'); return; }
+  if(!confirm('이 안전사고 기록을 삭제하시겠습니까?')) return;
+  try{
+    var target=(accidentAll||[]).find(function(r){return r.id===id;});
+    var res=await sb.from('safety_accidents').delete().eq('id',id);
+    if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    logDeletion('안전사고', target?((target.team||'')+' '+(target.location||'')+' '+(target.description||'').slice(0,60)):('id:'+id));
+    toast('🗑 삭제되었습니다');
+    await loadAccidentFromDB();
+  }catch(e){ toast('삭제 오류: '+String(e.message||e)); }
+}
 function editAccident(id){
   if(!me||['admin','manager','leader','acting_leader'].indexOf(me.role)<0){ toast('⚠️ 조장 이상만 수정할 수 있습니다'); return; }
   var r=(accidentAll||[]).filter(function(x){ return x.id===id; })[0];
@@ -19056,6 +19125,43 @@ document.addEventListener('visibilitychange', function(){ if(document.visibility
 
 // ── 현재 접속자 화면 (admin·master 전용) ──
 function _auEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+// ── 삭제 기록 (master 전용) ──
+var deleteLogsData=[];
+async function loadDeleteLogs(){
+  try{
+    var res=await sb.from('delete_logs').select('*').order('deleted_at',{ascending:false}).limit(300);
+    if(res.error){ console.error(res.error); return; }
+    deleteLogsData=res.data||[];
+    renderDeleteLogs();
+  }catch(e){ console.error(e); }
+}
+function renderDeleteLogs(){
+  var wrap=document.getElementById('deleteLogsList');
+  if(!wrap) return;
+  var filterEl=document.getElementById('delLogFilterModule');
+  var mf=filterEl?filterEl.value:'';
+  var list=deleteLogsData.slice();
+  if(mf) list=list.filter(function(r){ return r.module===mf; });
+  if(!list.length){
+    wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">삭제 기록이 없습니다</div>';
+    return;
+  }
+  var moduleColor={'인수인계':'var(--navy)','공동작업':'#B45309','민원':'#0E7490','습득물':'#166534','안전사고':'var(--danger)','주요 수행실적':'var(--teal2)'};
+  var h='';
+  list.forEach(function(r){
+    var dt=r.deleted_at?new Date(new Date(r.deleted_at).getTime()+9*3600000).toISOString().replace('T',' ').slice(0,16):'';
+    var col=moduleColor[r.module]||'var(--g5)';
+    h+='<div style="background:white;border-radius:12px;padding:13px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.05)">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">'
+      +'<span style="display:inline-block;background:'+col+';color:white;font-size:11px;font-weight:800;padding:3px 9px;border-radius:7px">'+(r.module||'')+'</span>'
+      +'<span style="font-size:11.5px;color:var(--g4)">'+dt+'</span>'
+      +'</div>'
+      +'<div style="font-size:14px;color:var(--g6);line-height:1.5">'+String(r.record_summary||'').replace(/</g,'&lt;')+'</div>'
+      +'<div style="font-size:12px;color:var(--g4);margin-top:5px">삭제한 사람: <b style="color:var(--g6)">'+(r.deleted_by||'-')+'</b> ('+(r.deleted_by_role||'-')+')</div>'
+      +'</div>';
+  });
+  wrap.innerHTML=h;
+}
 async function loadActiveUsers(){
   if(!me||!(me.role==='admin'||me.role==='master')) return;
   var listEl=document.getElementById('activeUsersList');
