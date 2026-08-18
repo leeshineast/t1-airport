@@ -15640,24 +15640,62 @@ function facRenderList(type){
   var hasGender=cfg.fields.some(function(f){return f.key==='gender';});
   var hasFloor=cfg.fields.some(function(f){return f.key==='floor';});
   var h='';
-  filtered.forEach(function(r){
+  function facFullCard(r){
     var zoneLbl=r.zone==='Airside'?'A/S':'L/S';
     var closedBadge=facStatusBadge(r.status);
     var badges='<span class="fac-badge fac-b-zone '+(r.zone==='Airside'?'fac-b-zone-as':'fac-b-zone-ls')+'">'+zoneLbl+'</span>'+(hasFloor&&r.floor?'<span class="fac-badge fac-b-floor">'+r.floor+'</span>':'');
     var subTxt=cfg.listSub(r); var detailTxt=cfg.listDetail(r);
     var lineTxt=[subTxt,detailTxt].filter(Boolean).join(' · ');
     var editTxt=r.updated_by?(r.updated_by+' · '+facUpdatedDateShort(r.updated_at)):'';
-    h+='<div onclick="facOpenDetail(\''+type+'\','+r.id+')" style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.04)">';
-    h+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
-    h+='<div style="display:flex;align-items:center;gap:7px;min-width:0">'+(hasGender?facGenderBadge(r.gender):'')+'<span style="font-size:15px;font-weight:800;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cfg.icon+' '+(cfg.listTitle(r)||'(위치 미상)')+'</span>'+closedBadge+'</div>';
-    h+='<div style="display:flex;gap:6px;flex-shrink:0">'+badges+'</div>';
-    h+='</div>';
-    h+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:7px;gap:8px">';
-    h+='<span style="font-size:11px;color:var(--g4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+lineTxt+'</span>';
-    if(editTxt) h+='<span style="font-size:10px;color:var(--teal2);font-weight:600;white-space:nowrap;flex-shrink:0">'+editTxt+'</span>';
-    h+='</div>';
-    h+='</div>';
-  });
+    var s='<div onclick="facOpenDetail(\''+type+'\','+r.id+')" style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.04)">';
+    s+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
+    s+='<div style="display:flex;align-items:center;gap:7px;min-width:0">'+(hasGender?facGenderBadge(r.gender):'')+'<span style="font-size:15px;font-weight:800;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cfg.icon+' '+(cfg.listTitle(r)||'(위치 미상)')+'</span>'+closedBadge+'</div>';
+    s+='<div style="display:flex;gap:6px;flex-shrink:0">'+badges+'</div>';
+    s+='</div>';
+    s+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:7px;gap:8px">';
+    s+='<span style="font-size:11px;color:var(--g4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+lineTxt+'</span>';
+    if(editTxt) s+='<span style="font-size:10px;color:var(--teal2);font-weight:600;white-space:nowrap;flex-shrink:0">'+editTxt+'</span>';
+    s+='</div></div>';
+    return s;
+  }
+  function facPairCard(r){
+    var zoneLbl=r.zone==='Airside'?'A/S':'L/S';
+    var closedBadge=facStatusBadge(r.status);
+    var badges='<span class="fac-badge fac-badge-sm fac-b-zone '+(r.zone==='Airside'?'fac-b-zone-as':'fac-b-zone-ls')+'">'+zoneLbl+'</span>'+(hasFloor&&r.floor?'<span class="fac-badge fac-badge-sm fac-b-floor">'+r.floor+'</span>':'');
+    var subTxt=cfg.listSub(r); var detailTxt=cfg.listDetail(r);
+    var lineTxt=[subTxt,detailTxt].filter(Boolean).join(' · ');
+    var editTxt=r.updated_by?(r.updated_by+' · '+facUpdatedDateShort(r.updated_at)):'';
+    var s='<div onclick="facOpenDetail(\''+type+'\','+r.id+')" style="flex:1;min-width:0;background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:10px 11px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.04)">';
+    s+='<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">'+facGenderBadge(r.gender)+'<span style="font-size:14px;font-weight:800;color:var(--g7)">'+cfg.icon+' '+(cfg.listTitle(r)||'(위치 미상)')+'</span>'+closedBadge+'</div>';
+    s+='<div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap">'+badges+'</div>';
+    s+='<div style="font-size:10px;color:var(--g4);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+lineTxt+'</div>';
+    if(editTxt) s+='<div style="font-size:9.5px;color:var(--teal2);font-weight:600;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+editTxt+'</div>';
+    s+='</div>';
+    return s;
+  }
+  if(!hasGender){
+    filtered.forEach(function(r){ h+=facFullCard(r); });
+  }else{
+    // 위치명(성별 단어 제외) 기준으로 그룹핑 — 남/여 두 건이 있으면 화장실관리처럼 페어로 나란히 표시
+    var groups={}, groupOrder=[];
+    filtered.forEach(function(r){
+      var rawKey=cfg.listTitle(r)||'';
+      var normKey=rawKey.replace(/(남자|여자)/g,'').replace(/\s+/g,' ').trim();
+      var key=normKey?('n:'+normKey):('id:'+r.id);
+      if(!groups[key]){ groups[key]=[]; groupOrder.push(key); }
+      groups[key].push(r);
+    });
+    groupOrder.forEach(function(key){
+      var grp=groups[key];
+      var isPair=grp.length===2 && (grp[0].gender||'') && (grp[1].gender||'') && (grp[0].gender||'')!==(grp[1].gender||'');
+      if(isPair){
+        var ordered=grp.slice().sort(function(a,b){ return ((a.gender||'').indexOf('남')>=0?0:1)-((b.gender||'').indexOf('남')>=0?0:1); });
+        h+='<div style="display:flex;gap:8px;margin-bottom:8px">'+ordered.map(facPairCard).join('')+'</div>';
+      }else{
+        grp.forEach(function(r){ h+=facFullCard(r); });
+      }
+    });
+  }
   listEl.innerHTML=h;
 }
 function facOpenDetail(type,id){
