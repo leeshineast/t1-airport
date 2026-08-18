@@ -15032,6 +15032,7 @@ function renderToiletList(){
   });
   var asCount=filtered.filter(function(r){return r.zone==='Airside';}).length;
   var lsCount=filtered.filter(function(r){return r.zone==='Landside';}).length;
+  var statsEl=document.getElementById('tlStats');
   statsEl.innerHTML=
     '<div style="background:var(--g1);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--g5);font-weight:700">전체</div><div style="font-size:18px;font-weight:900;color:var(--teal2)">'+filtered.length+'</div></div>'
     +'<div style="background:var(--g1);border-radius:8px;padding:10px;text-align:center"><div style="font-size:10px;color:var(--g5);font-weight:700">A/S</div><div style="font-size:18px;font-weight:900;color:var(--navy)">'+asCount+'</div></div>'
