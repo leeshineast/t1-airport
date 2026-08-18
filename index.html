@@ -6064,8 +6064,14 @@ function highlightMpZone(teamCode){
     return;
   }
   // L/S 동편(0), L/S 서편(1), A/S 동편(2), A/S 서편(3) / 열: 0~5=층, 6=집하장
+  var teamNumM=String(teamCode).match(/^(\d+)팀/);
+  var teamNum=teamNumM?teamNumM[1]:null;
   var matchRows;
-  if(zone==='집하장'){ matchRows=[0,1,2,3]; }
+  if(zone==='집하장'){
+    if(teamNum==='1') matchRows=[3];      // 1팀C: A/S 서편 집하장만
+    else if(teamNum==='6') matchRows=[2]; // 6팀C: A/S 동편 집하장만
+    else matchRows=[0,1,2,3];
+  }
   else if(zone==='동편'){ matchRows = building==='AS' ? [2] : building==='LS' ? [0] : [0,2]; }
   else { matchRows = building==='AS' ? [3] : building==='LS' ? [1] : [1,3]; }
   rows.forEach(function(row,ri){
@@ -6085,7 +6091,8 @@ function highlightMpZone(teamCode){
   calcMp();
   if(hint){
     if(zone==='집하장'){
-      hint.textContent='📍 '+teamCode+' 담당구역: 집하장 — 맨 오른쪽 "집하장" 칸에만 입력 가능합니다';
+      var yardZoneLabel = teamNum==='1' ? 'A/S 서편 집하장' : teamNum==='6' ? 'A/S 동편 집하장' : '집하장';
+      hint.textContent='📍 '+teamCode+' 담당구역: '+yardZoneLabel+' — 강조된 줄의 맨 오른쪽 "집하장" 칸에만 입력 가능합니다';
     }else{
       hint.textContent='📍 '+teamCode+' 담당구역: '+zone+' — 강조된 줄(노란 배경)에만 입력 가능합니다';
     }
@@ -6118,7 +6125,13 @@ function checkZoneMismatch(teamCode, newVals){
     if(yardSum>0) return '⚠️ 이 조는 서편 담당인데 집하장 칸에도 인원이 입력되어 있습니다.';
     if(otherBuildingWestSum>0) return '⚠️ 이 조는 담당 건물(L/S·A/S)이 아닌 서편 칸에 인원이 입력되어 있습니다.';
   } else if(zone==='집하장'){
+    var teamNumCk=String(teamCode).match(/^(\d+)팀/); teamNumCk=teamNumCk?teamNumCk[1]:null;
     if(eastSum>0||westSum>0) return '⚠️ 이 조는 집하장 담당인데 동편/서편 칸에도 인원이 입력되어 있습니다.';
+    if(teamNumCk==='1'){
+      if(sum([0,1,2],yardCol)>0) return '⚠️ 1팀C조는 A/S 서편 집하장만 담당인데 다른 집하장 칸에도 인원이 입력되어 있습니다.';
+    }else if(teamNumCk==='6'){
+      if(sum([0,1,3],yardCol)>0) return '⚠️ 6팀C조는 A/S 동편 집하장만 담당인데 다른 집하장 칸에도 인원이 입력되어 있습니다.';
+    }
   }
   return '';
 }
