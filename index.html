@@ -15017,7 +15017,12 @@ function renderToiletList(){
     if(q && (r.number||'').toLowerCase().indexOf(q)===-1 && (r.category||'').toLowerCase().indexOf(q)===-1) return false;
     return true;
   });
+  // 층 순으로 정렬(지하2층→지하1층→1층→2층...), 같은 층 내에서는 연번(seq_no) 오름차순
+  var tlFloorOrder=['지하2층','지하1층','1층','2층','3층','4층'];
   filtered.sort(function(a,b){
+    var fa=tlFloorOrder.indexOf(a.floor), fb=tlFloorOrder.indexOf(b.floor);
+    if(fa===-1) fa=999; if(fb===-1) fb=999;
+    if(fa!==fb) return fa-fb;
     var av=(a.seq_no!=null&&a.seq_no!=='')?Number(a.seq_no):null;
     var bv=(b.seq_no!=null&&b.seq_no!=='')?Number(b.seq_no):null;
     if(av!=null&&bv!=null) return av-bv;
@@ -15025,8 +15030,6 @@ function renderToiletList(){
     if(bv!=null) return 1;
     return 0;
   });
-  // 통계
-  var statsEl=document.getElementById('tlStats');
   var asCount=filtered.filter(function(r){return r.zone==='Airside';}).length;
   var lsCount=filtered.filter(function(r){return r.zone==='Landside';}).length;
   statsEl.innerHTML=
@@ -15581,8 +15584,13 @@ function facRenderList(type){
     }
     return true;
   });
-  // 연번(seq_no) 순으로 정렬 — 연번 있는 항목이 먼저, 그 안에서는 숫자 오름차순, 연번 없는 항목은 뒤로
+  // 층 순으로 정렬(지하2층→지하1층→1층→2층...), 같은 층 내에서는 연번(seq_no) 오름차순
+  var floorFieldSort=cfg.fields.find(function(f){return f.key==='floor';});
+  var floorOrderSort=floorFieldSort?floorFieldSort.options.map(function(o){return Array.isArray(o)?o[0]:o;}):[];
   filtered.sort(function(a,b){
+    var fa=floorOrderSort.indexOf(a.floor), fb=floorOrderSort.indexOf(b.floor);
+    if(fa===-1) fa=999; if(fb===-1) fb=999;
+    if(fa!==fb) return fa-fb;
     var av=(a.seq_no!=null&&a.seq_no!=='')?Number(a.seq_no):null;
     var bv=(b.seq_no!=null&&b.seq_no!=='')?Number(b.seq_no):null;
     if(av!=null&&bv!=null) return av-bv;
@@ -18602,9 +18610,8 @@ function openEbookViewer(prefix, url, name){
   ebookSearchClose(prefix); // 새 문서를 열면 이전 문서의 검색창/결과는 닫음
   loadPdfJs(function(){
     window.pdfjsLib.getDocument(url).promise.then(function(pdf){
-      var savedPage=1;
-      try{ var sp=localStorage.getItem(_ebookProgressKey(url)); if(sp) savedPage=Math.min(parseInt(sp),pdf.numPages); }catch(e){}
-      _ebookState[prefix]={pdfDoc:pdf, curPage:savedPage||1, totalPages:pdf.numPages, url:url, name:name};
+      // 항상 1번 페이지(맨 앞장)부터 열림 — 이전 열람 페이지를 기억하지 않음
+      _ebookState[prefix]={pdfDoc:pdf, curPage:1, totalPages:pdf.numPages, url:url, name:name};
       if(wrap) wrap.innerHTML='<canvas id="'+prefix+'EbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas>';
       renderEbookPage(prefix);
     }).catch(function(e){
