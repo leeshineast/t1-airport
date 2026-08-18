@@ -18704,6 +18704,24 @@ function renderEbookPage(prefix){
     var renderViewport=page.getViewport({scale:renderScale});
     canvas.width=renderViewport.width; canvas.height=renderViewport.height;
     canvas.style.width=cssViewport.width+'px'; canvas.style.height=cssViewport.height+'px';
+    // 확대해서 캔버스가 화면(wrap)보다 커지면, flexbox 가운데 정렬(justify-content:center) 방식이
+    // 크롬(안드로이드)에서 왼쪽/위쪽 방향으로 스크롤을 못 만드는 버그가 있어 정렬 방식을 전환함
+    if(wrap){
+      var isOverflowing = cssViewport.width>availWidth+2 || cssViewport.height>availHeight+2;
+      if(isOverflowing){
+        wrap.style.display='block';
+        wrap.style.textAlign='center';
+        canvas.style.display='inline-block';
+        canvas.style.margin='10px';
+      }else{
+        wrap.style.display='flex';
+        wrap.style.alignItems='center';
+        wrap.style.justifyContent='center';
+        wrap.style.textAlign='';
+        canvas.style.display='';
+        canvas.style.margin='';
+      }
+    }
     var ctx=canvas.getContext('2d');
     var renderTask=page.render({canvasContext:ctx, viewport:renderViewport});
     if(st.searchQuery){
