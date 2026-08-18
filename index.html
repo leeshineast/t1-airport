@@ -18659,6 +18659,7 @@ function openEbookViewer(prefix, url, name){
   var wrap=document.getElementById(prefix+'EbookCanvasWrap');
   if(wrap) wrap.innerHTML='<canvas id="'+prefix+'EbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white;max-width:100%"></canvas><div style="color:white;font-size:14px;padding:20px">📖 불러오는 중...</div>';
   ebookSearchClose(prefix); // 새 문서를 열면 이전 문서의 검색창/결과는 닫음
+  ebookObserveResize(prefix); // 뷰어 영역 실제 크기 변화를 계속 감시 (전체화면/회전/주소창 접힘 등 어떤 원인이든 즉시 재계산)
   loadPdfJs(function(){
     window.pdfjsLib.getDocument(url).promise.then(function(pdf){
       // 항상 1번 페이지(맨 앞장)부터 열림 — 이전 열람 페이지를 기억하지 않음
@@ -18670,6 +18671,18 @@ function openEbookViewer(prefix, url, name){
       if(wrap) wrap.innerHTML='<div style="color:white;font-size:14px;padding:20px;text-align:center">불러오기 실패<br>"원본으로" 버튼으로 확인해주세요</div>';
     });
   });
+}
+// 뷰어 영역(wrap)의 실제 픽셀 크기가 바뀔 때마다(원인 불문) 즉시 다시 그림 — resize/orientationchange 이벤트 타이밍 문제를 근본적으로 회피
+var _ebookResizeObservers={};
+function ebookObserveResize(prefix){
+  if(_ebookResizeObservers[prefix]) return; // 이미 감시 중이면 중복 등록 방지
+  var wrap=document.getElementById(prefix+'EbookCanvasWrap');
+  if(!wrap || typeof ResizeObserver==='undefined') return;
+  var ro=new ResizeObserver(function(){
+    if(_ebookState[prefix]) renderEbookPage(prefix);
+  });
+  ro.observe(wrap);
+  _ebookResizeObservers[prefix]=ro;
 }
 function renderEbookPage(prefix){
   var st=_ebookState[prefix];
