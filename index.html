@@ -18716,6 +18716,11 @@ function renderEbookPage(prefix){
         wrap.style.textAlign='center';
         canvas.style.display='inline-block';
         canvas.style.margin='10px';
+        // block 모드는 기본 스크롤 위치가 왼쪽 상단이라 오른쪽이 잘려 보이므로, 렌더 직후 가운데로 스크롤 위치를 맞춰줌
+        requestAnimationFrame(function(){
+          wrap.scrollLeft=Math.max(0, (canvas.offsetWidth-wrap.clientWidth)/2);
+          wrap.scrollTop=Math.max(0, (canvas.offsetHeight-wrap.clientHeight)/2);
+        });
       }else{
         wrap.style.display='flex';
         wrap.style.alignItems='center';
