@@ -15515,6 +15515,13 @@ function facResetForm(type){
     if(f.type==='select') facSetVal(fid, f.default||'', true);
     else facSetVal(fid,'',false);
   });
+  // 연번 자동 제안: 현재 등록된 항목 중 가장 큰 연번 + 1을 기본값으로 채워줌 (직접 수정 가능)
+  var hasSeq=cfg.fields.some(function(f){ return f.key==='seq_no'; });
+  if(hasSeq){
+    var maxSeq=0;
+    (facData[type]||[]).forEach(function(r){ if(r.seq_no!=null && Number(r.seq_no)>maxSeq) maxSeq=Number(r.seq_no); });
+    facSetVal(p+'_seq_no', maxSeq+1, false);
+  }
   var err=document.getElementById(p+'FormErr'); if(err) err.style.display='none';
 }
 async function facLoadFromDB(type){
