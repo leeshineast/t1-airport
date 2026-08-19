@@ -935,12 +935,12 @@ html{overflow-x:hidden}
   </div>
   <!-- 주요 수행실적 한 줄 -->
   <div class="stat-row" id="prfHomeRow" style="grid-template-columns:1fr;display:none">
-    <div class="stat-box" style="cursor:pointer;display:flex;gap:14px" onclick="go('perf')">
+    <div class="stat-box" style="cursor:pointer;display:flex;gap:14px;min-width:0" onclick="go('perf')">
       <div style="flex:none;min-width:64px">
         <div class="s-lbl">📋 주요 수행실적</div>
         <div id="prfHomeCount" style="font-size:13px;color:var(--teal2);font-weight:800;margin-top:6px">금일 0건</div>
       </div>
-      <div id="prfHomeBody" style="flex:1;border-left:1px solid var(--g1);padding-left:14px;display:flex;flex-direction:column;justify-content:center">
+      <div id="prfHomeBody" style="flex:1;min-width:0;border-left:1px solid var(--g1);padding-left:14px;display:flex;flex-direction:column;justify-content:center">
         <div style="color:var(--g4);font-size:13px">등록된 수행실적이 없습니다</div>
       </div>
     </div>
@@ -4435,10 +4435,15 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
   <!-- 저장공간 현황 -->
   <div id="adP6" style="display:none">
-    <div class="pg-hd"><div><h1>💾 저장공간 현황</h1><small style="color:var(--g4)">Supabase 스토리지 실시간 사용량</small></div>
-      <button onclick="loadStorageUsage()" style="padding:7px 13px;background:var(--g1);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">🔄 새로고침</button>
+    <div class="pg-hd"><div><h1>📎 파일 저장공간</h1><small style="color:var(--g4)">사규·PDF·사진 등 첨부파일 용량</small></div>
+      <button onclick="loadStorageUsage();loadDbUsage();" style="padding:7px 13px;background:var(--g1);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">🔄 새로고침</button>
     </div>
     <div id="storageUsageWrap">
+      <div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div>
+    </div>
+    <div style="height:20px"></div>
+    <div class="pg-hd"><div><h1>🗄️ 입력 데이터(DB) 현황</h1><small style="color:var(--g4)">인력현황·인수인계 등 직접 입력한 값들의 DB 용량</small></div></div>
+    <div id="dbUsageWrap">
       <div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div>
     </div>
     <div style="height:20px"></div>
@@ -8170,7 +8175,7 @@ function adTab(n){
   if(n===0) loadPendingUsers();
   if(n===1) loadUserList();
   if(n===5) loadPwResetRequests();
-  if(n===6) loadStorageUsage();
+  if(n===6){ loadStorageUsage(); loadDbUsage(); }
 }
 function vhTab(n){tabSwitch('vh',n,3);if(n===0)autoFillBefore();}
 
@@ -12630,6 +12635,72 @@ async function confirmDeleteAllPwReq(){
     loadPwResetRequests();
   }catch(e){ toast('삭제 오류: '+String(e.message||e)); }
 }
+var DB_TOTAL_BYTES = 500*1024*1024; // Supabase Free 플랜 기준 DB 500MB
+var DB_TABLE_LABELS={
+  'mp_data':'인력현황 입력값', 'handover':'인수인계', 'mgr_attendance':'관리자 출근기록',
+  'facility_data':'시설물 현황', 'joint_work_data':'공동작업', 'equipment_master':'장비 마스터',
+  'toilet_master':'화장실 관리', 'inspection_data':'현장점검', 'warehouse_item':'창고 품목',
+  'warehouse_ledger':'창고 입출고 기록', 'warehouse_master':'창고 마스터', 'users':'사용자 계정',
+  'delete_logs':'삭제 기록', 'accident_data':'안전사고', 'voc_data':'민원(VOC)',
+  'companynews_files':'회사소식 문서', 'companynews_posts':'회사소식 작성글',
+  'regulation_files':'사규 문서', 'iso9001_files':'ISO9001 문서', 'safety_files':'안전작업절차서 문서',
+  'operation_manual_files':'운영매뉴얼 문서', 'risk_assessment_files':'위험성평가 문서',
+  'training_material_files':'교육자료 문서', 'perf_data':'주요 수행실적', 'notice_data':'공지사항',
+  'lost_items':'습득물', 'night_special_data':'야간 특별작업'
+};
+async function loadDbUsage(){
+  var wrap=document.getElementById('dbUsageWrap');
+  if(!wrap) return;
+  wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div>';
+  try{
+    var results=await Promise.all([
+      sb.rpc('get_db_total_size', {}),
+      sb.rpc('get_db_usage', {})
+    ]);
+    var totalRes=results[0], tablesRes=results[1];
+    if(totalRes.error||tablesRes.error){
+      wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:14px">불러오기 실패</div>';
+      return;
+    }
+    var usedBytes=parseInt(totalRes.data)||0;
+    var remainBytes=Math.max(0, DB_TOTAL_BYTES-usedBytes);
+    var pct=Math.min(100, usedBytes/DB_TOTAL_BYTES*100);
+    var gaugeColor = pct>=90 ? 'var(--danger)' : pct>=70 ? 'var(--warn)' : 'var(--navy)';
+    var rows=(tablesRes.data||[]).filter(function(r){ return (parseInt(r.total_bytes)||0)>0; });
+
+    var html='';
+    html+='<div class="card" style="margin-bottom:13px"><div class="cb">';
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">';
+    html+='<span style="font-size:13px;font-weight:700;color:var(--g5)">DB 사용량</span>';
+    html+='<span style="font-size:13px;font-weight:800;color:'+gaugeColor+'">'+formatBytes(usedBytes)+' / '+formatBytes(DB_TOTAL_BYTES)+' ('+pct.toFixed(1)+'%)</span>';
+    html+='</div>';
+    html+='<div style="background:var(--g1);border-radius:10px;height:14px;overflow:hidden;margin-bottom:8px"><div style="width:'+pct.toFixed(1)+'%;height:100%;background:linear-gradient(90deg,var(--navy),'+gaugeColor+');border-radius:10px;transition:width .6s ease"></div></div>';
+    html+='<div style="text-align:right;font-size:12px;color:var(--teal2);font-weight:700">잔여 '+formatBytes(remainBytes)+'</div>';
+    html+='</div></div>';
+
+    if(rows.length){
+      var maxBytes=Math.max.apply(null, rows.map(function(r){return parseInt(r.total_bytes)||0;}));
+      html+='<div class="card"><div class="cb">';
+      html+='<div style="font-size:14px;font-weight:800;color:var(--g7);margin-bottom:13px">📋 테이블별 용량 (상위 '+Math.min(rows.length,12)+'개)</div>';
+      rows.slice(0,12).forEach(function(r){
+        var bytes=parseInt(r.total_bytes)||0;
+        var barPct=maxBytes?Math.max(3, bytes/maxBytes*100):0;
+        var label=DB_TABLE_LABELS[r.table_name]||r.table_name;
+        html+='<div style="margin-bottom:13px">';
+        html+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px">';
+        html+='<span style="font-size:13px;font-weight:700;color:var(--g6)">'+label+'</span>';
+        html+='<span style="font-size:12px;color:var(--g4)">'+formatBytes(bytes)+' · '+Math.round(r.row_count||0)+'행</span>';
+        html+='</div>';
+        html+='<div style="background:var(--g1);border-radius:8px;height:9px;overflow:hidden"><div style="width:'+barPct.toFixed(1)+'%;height:100%;background:linear-gradient(90deg,var(--navy),#4A7BC8);border-radius:8px"></div></div>';
+        html+='</div>';
+      });
+      html+='</div></div>';
+    }
+    wrap.innerHTML=html;
+  }catch(e){
+    wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:14px">불러오기 실패: '+e.message+'</div>';
+  }
+}
 var STORAGE_BUCKET_LABELS={
   'regulations':{name:'사규', icon:'📜'},
   'iso9001':{name:'ISO9001', icon:'📋'},
@@ -16563,9 +16634,12 @@ function prfUpdateHomeSummary(){
   var cntEl=document.getElementById('prfHomeCount');
   if(!cntEl||!rowEl) return;
   var todayStr=kstDate();
+  var tomorrowStr=kstDate(new Date(Date.now()+24*3600000));
   var todays=perfData.filter(function(r){ return r.occurred_at&&kstDate(r.occurred_at)===todayStr; });
+  var tomorrows=perfData.filter(function(r){ return r.occurred_at&&kstDate(r.occurred_at)===tomorrowStr; });
   todays.sort(function(a,b){ return new Date(a.occurred_at)-new Date(b.occurred_at); });
-  if(!todays.length){
+  tomorrows.sort(function(a,b){ return new Date(a.occurred_at)-new Date(b.occurred_at); });
+  if(!todays.length && !tomorrows.length){
     rowEl.style.display='none';
     return;
   }
@@ -16573,11 +16647,22 @@ function prfUpdateHomeSummary(){
   cntEl.textContent='금일 '+todays.length+'건';
   var bodyEl=document.getElementById('prfHomeBody');
   if(!bodyEl) return;
-  var cats=[]; todays.forEach(function(r){ if(r.category&&cats.indexOf(r.category)===-1) cats.push(r.category); });
-  var first=todays[0];
-  var more=todays.length>1?(' 외 '+(todays.length-1)+'건'):'';
-  bodyEl.innerHTML='<div style="font-size:12.5px;color:var(--teal2);font-weight:700;margin-bottom:3px">'+cats.join(' · ')+'</div>'
-    +'<div style="font-size:13px;color:var(--g6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+String(first.content||'').replace(/</g,'&lt;')+more+'</div>';
+  var html='';
+  if(todays.length){
+    var cats=[]; todays.forEach(function(r){ if(r.category&&cats.indexOf(r.category)===-1) cats.push(r.category); });
+    var first=todays[0];
+    var more=todays.length>1?(' 외 '+(todays.length-1)+'건'):'';
+    html+='<div style="font-size:12.5px;color:var(--teal2);font-weight:700;margin-bottom:3px">'+cats.join(' · ')+'</div>'
+      +'<div style="font-size:13px;color:var(--g6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+String(first.content||'').replace(/</g,'&lt;')+more+'</div>';
+  }else{
+    html+='<div style="color:var(--g4);font-size:13px">등록된 수행실적이 없습니다</div>';
+  }
+  if(tomorrows.length){
+    var tFirst=tomorrows[0];
+    var tMore=tomorrows.length>1?(' 외 '+(tomorrows.length-1)+'건'):'';
+    html+='<div style="font-size:12px;color:var(--navy);font-weight:700;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">🔜 내일 '+tomorrows.length+'건: '+String(tFirst.content||'').replace(/</g,'&lt;')+tMore+'</div>';
+  }
+  bodyEl.innerHTML=html;
 }
 
 async function loadWasteFromDB(){
