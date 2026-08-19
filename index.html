@@ -17273,6 +17273,9 @@ async function uploadIsoFiles(){
     if(progText) progText.textContent=(i+1)+'/'+_isoUploadFiles.length+' 업로드 중: '+file.name;
     if(progBar) progBar.style.width=Math.round(i/_isoUploadFiles.length*100)+'%';
     try{
+      // 같은 제목(name)으로 이미 등록된 파일이 있으면, 나중에 그 파일을 지우기 위해 기존 경로를 먼저 조회
+      var existingRes=await sb.from('iso9001_files').select('*').eq('name',file.name);
+      var existingPath=existingRes&&existingRes.data&&existingRes.data[0]&&existingRes.data[0].path;
       var ts=Date.now()+i;
       var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
       var safePath='pdfs/iso9001_'+ts+ext;
@@ -17294,6 +17297,13 @@ async function uploadIsoFiles(){
           uploaded_at:new Date().toISOString(),
           uploaded_by:me?me.name:'관리자'
         },{onConflict:'name'});
+        // 같은 제목의 옛날 파일이 있었으면 저장공간에서 삭제 (유령파일 방지)
+        if(existingPath && existingPath!==safePath){
+          try{
+            var oldDelUrl=SUPABASE_URL+'/storage/v1/object/iso9001/'+encodeURIComponent(existingPath);
+            await fetch(oldDelUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+          }catch(delErr){ console.error('이전 파일 삭제 실패:', delErr); }
+        }
         done++;
       } else {
         var rText=await r.text();
@@ -17655,6 +17665,9 @@ async function uploadNewsFiles(){
     if(progText) progText.textContent=(i+1)+'/'+_newsUploadFiles.length+' 업로드 중: '+file.name;
     if(progBar) progBar.style.width=Math.round(i/_newsUploadFiles.length*100)+'%';
     try{
+      // 같은 제목(name)으로 이미 등록된 파일이 있으면, 나중에 그 파일을 지우기 위해 기존 경로를 먼저 조회
+      var existingRes=await sb.from('companynews_files').select('*').eq('name',file.name);
+      var existingPath=existingRes&&existingRes.data&&existingRes.data[0]&&existingRes.data[0].path;
       var ts=Date.now()+i;
       var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
       var safePath='pdfs/news_'+ts+ext;
@@ -17680,6 +17693,13 @@ async function uploadNewsFiles(){
           uploaded_at:new Date().toISOString(),
           uploaded_by:me?me.name:'관리자'
         },{onConflict:'name'});
+        // 같은 제목의 옛날 파일이 있었으면 저장공간에서 삭제 (유령파일 방지)
+        if(existingPath && existingPath!==safePath){
+          try{
+            var oldDelUrl=SUPABASE_URL+'/storage/v1/object/companynews/'+encodeURIComponent(existingPath);
+            await fetch(oldDelUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+          }catch(delErr){ console.error('이전 파일 삭제 실패:', delErr); }
+        }
         done++;
       } else {
         var rText=await r.text();
@@ -17839,6 +17859,9 @@ async function uploadSafetyFiles(){
     if(progText) progText.textContent=(i+1)+'/'+_safetyUploadFiles.length+' 업로드 중: '+file.name;
     if(progBar) progBar.style.width=Math.round(i/_safetyUploadFiles.length*100)+'%';
     try{
+      // 같은 제목(name)으로 이미 등록된 파일이 있으면, 나중에 그 파일을 지우기 위해 기존 경로를 먼저 조회
+      var existingRes=await sb.from('safety_files').select('*').eq('name',file.name);
+      var existingPath=existingRes&&existingRes.data&&existingRes.data[0]&&existingRes.data[0].path;
       var ts=Date.now()+i;
       var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
       var safePath='pdfs/safety_'+ts+ext;
@@ -17860,6 +17883,13 @@ async function uploadSafetyFiles(){
           uploaded_at:new Date().toISOString(),
           uploaded_by:me?me.name:'관리자'
         },{onConflict:'name'});
+        // 같은 제목의 옛날 파일이 있었으면 저장공간에서 삭제 (유령파일 방지)
+        if(existingPath && existingPath!==safePath){
+          try{
+            var oldDelUrl=SUPABASE_URL+'/storage/v1/object/safety-procedures/'+encodeURIComponent(existingPath);
+            await fetch(oldDelUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+          }catch(delErr){ console.error('이전 파일 삭제 실패:', delErr); }
+        }
         done++;
       } else {
         var rText=await r.text();
@@ -18014,6 +18044,9 @@ async function uploadManualFiles(){
     if(progText) progText.textContent=(i+1)+'/'+_manualUploadFiles.length+' 업로드 중: '+file.name;
     if(progBar) progBar.style.width=Math.round(i/_manualUploadFiles.length*100)+'%';
     try{
+      // 같은 제목(name)으로 이미 등록된 파일이 있으면, 나중에 그 파일을 지우기 위해 기존 경로를 먼저 조회
+      var existingRes=await sb.from('operation_manual_files').select('*').eq('name',file.name);
+      var existingPath=existingRes&&existingRes.data&&existingRes.data[0]&&existingRes.data[0].path;
       var ts=Date.now()+i;
       var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
       var safePath='pdfs/manual_'+ts+ext;
@@ -18035,6 +18068,13 @@ async function uploadManualFiles(){
           uploaded_at:new Date().toISOString(),
           uploaded_by:me?me.name:'관리자'
         },{onConflict:'name'});
+        // 같은 제목의 옛날 파일이 있었으면 저장공간에서 삭제 (유령파일 방지)
+        if(existingPath && existingPath!==safePath){
+          try{
+            var oldDelUrl=SUPABASE_URL+'/storage/v1/object/operation-manuals/'+encodeURIComponent(existingPath);
+            await fetch(oldDelUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+          }catch(delErr){ console.error('이전 파일 삭제 실패:', delErr); }
+        }
         done++;
       } else {
         var rText=await r.text();
@@ -18189,6 +18229,9 @@ async function uploadRiskFiles(){
     if(progText) progText.textContent=(i+1)+'/'+_riskUploadFiles.length+' 업로드 중: '+file.name;
     if(progBar) progBar.style.width=Math.round(i/_riskUploadFiles.length*100)+'%';
     try{
+      // 같은 제목(name)으로 이미 등록된 파일이 있으면, 나중에 그 파일을 지우기 위해 기존 경로를 먼저 조회
+      var existingRes=await sb.from('risk_assessment_files').select('*').eq('name',file.name);
+      var existingPath=existingRes&&existingRes.data&&existingRes.data[0]&&existingRes.data[0].path;
       var ts=Date.now()+i;
       var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
       var safePath='pdfs/risk_'+ts+ext;
@@ -18210,6 +18253,13 @@ async function uploadRiskFiles(){
           uploaded_at:new Date().toISOString(),
           uploaded_by:me?me.name:'관리자'
         },{onConflict:'name'});
+        // 같은 제목의 옛날 파일이 있었으면 저장공간에서 삭제 (유령파일 방지)
+        if(existingPath && existingPath!==safePath){
+          try{
+            var oldDelUrl=SUPABASE_URL+'/storage/v1/object/riskassessment/'+encodeURIComponent(existingPath);
+            await fetch(oldDelUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+          }catch(delErr){ console.error('이전 파일 삭제 실패:', delErr); }
+        }
         done++;
       } else {
         var rText=await r.text();
@@ -18364,6 +18414,9 @@ async function uploadTrainingFiles(){
     if(progText) progText.textContent=(i+1)+'/'+_trainingUploadFiles.length+' 업로드 중: '+file.name;
     if(progBar) progBar.style.width=Math.round(i/_trainingUploadFiles.length*100)+'%';
     try{
+      // 같은 제목(name)으로 이미 등록된 파일이 있으면, 나중에 그 파일을 지우기 위해 기존 경로를 먼저 조회
+      var existingRes=await sb.from('training_material_files').select('*').eq('name',file.name);
+      var existingPath=existingRes&&existingRes.data&&existingRes.data[0]&&existingRes.data[0].path;
       var ts=Date.now()+i;
       var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
       var safePath='pdfs/training_'+ts+ext;
@@ -18385,6 +18438,13 @@ async function uploadTrainingFiles(){
           uploaded_at:new Date().toISOString(),
           uploaded_by:me?me.name:'관리자'
         },{onConflict:'name'});
+        // 같은 제목의 옛날 파일이 있었으면 저장공간에서 삭제 (유령파일 방지)
+        if(existingPath && existingPath!==safePath){
+          try{
+            var oldDelUrl=SUPABASE_URL+'/storage/v1/object/trainingmaterial/'+encodeURIComponent(existingPath);
+            await fetch(oldDelUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+          }catch(delErr){ console.error('이전 파일 삭제 실패:', delErr); }
+        }
         done++;
       } else {
         var rText=await r.text();
@@ -19422,6 +19482,9 @@ async function uploadRegFiles(){
     if(progText) progText.textContent=(i+1)+'/'+_regUploadFiles.length+' 업로드 중: '+file.name;
     if(progBar) progBar.style.width=Math.round(i/_regUploadFiles.length*100)+'%';
     try{
+      // 같은 제목(name)으로 이미 등록된 파일이 있으면, 나중에 그 파일을 지우기 위해 기존 경로를 먼저 조회
+      var existingRes=await sb.from('regulation_files').select('*').eq('name',file.name);
+      var existingPath=existingRes&&existingRes.data&&existingRes.data[0]&&existingRes.data[0].path;
       // 파일명을 안전한 영문으로 변환 (한글/특수문자 Storage 불허)
       var ts=Date.now()+i;
       var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
@@ -19445,6 +19508,13 @@ async function uploadRegFiles(){
           uploaded_at:new Date().toISOString(),
           uploaded_by:me?me.name:'관리자'
         },{onConflict:'name'});
+        // 같은 제목의 옛날 파일이 있었으면 저장공간에서 삭제 (유령파일 방지)
+        if(existingPath && existingPath!==safePath){
+          try{
+            var oldDelUrl=SUPABASE_URL+'/storage/v1/object/regulations/'+encodeURIComponent(existingPath);
+            await fetch(oldDelUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+          }catch(delErr){ console.error('이전 파일 삭제 실패:', delErr); }
+        }
         done++;
       } else {
         var rText=await r.text();
