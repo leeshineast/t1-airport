@@ -17537,7 +17537,7 @@ async function submitNewsPost(){
 }
 // 상세보기에서 "수정" 누르면 작성 폼에 기존 내용을 채워서 수정모드로 전환
 async function editNewsPostFromDetail(id){
-  if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
+  if(!me||(me.role!=='master'&&me.role!=='admin')){toast('⚠️ 수정은 관리자만 가능합니다');return;}
   try{
     var res=await sb.from('companynews_posts').select('*').eq('id',id);
     var p=res&&res.data&&res.data[0];
@@ -17564,7 +17564,7 @@ async function editNewsPostFromDetail(id){
   }catch(e){ toast('⚠️ 오류: '+e.message); }
 }
 async function deleteNewsPostFromDetail(id, imagePath){
-  if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
+  if(!me||(me.role!=='master'&&me.role!=='admin')){toast('⚠️ 삭제는 관리자만 가능합니다');return;}
   if(!confirm('이 소식을 삭제하시겠습니까?')) return;
   try{
     if(imagePath){
@@ -17598,7 +17598,7 @@ async function viewNewsPost(id){
     html+='<div style="font-size:12px;color:var(--g4);margin-bottom:10px">'+(p.uploaded_at?p.uploaded_at.slice(0,16).replace('T',' '):'')+' · '+(p.uploaded_by||'')+'</div>';
     html+='<div style="font-size:15px;color:var(--g7);line-height:1.7;white-space:pre-wrap">'+(p.content||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
     body.innerHTML=html;
-    var isAdmin=(me&&(me.role==='admin'||isExecRole(me.role)));
+    var isAdmin=(me&&(me.role==='master'||me.role==='admin'));
     if(isAdmin&&actions){
       actions.style.display='flex';
       var editBtn=document.getElementById('newsPostEditBtn');
