@@ -5851,7 +5851,7 @@ async function doLogin(){
 function finishLogin(){
   applyRoleUI();
   applyFontScale();
-  setTimeout(function(){ if(typeof pollGroupChatBadge==='function') pollGroupChatBadge(); }, 800);
+  setTimeout(function(){ if(typeof fetchChatLastRead==='function') fetchChatLastRead().then(function(){ if(typeof pollGroupChatBadge==='function') pollGroupChatBadge(); }); }, 800);
   var gt=document.getElementById('globalTabbar'); if(gt) gt.style.display='flex';
   // 세션 저장 (새로고침 시 자동 로그인)
   try{ localStorage.setItem('t1_me', JSON.stringify(me)); }catch(e){}
@@ -17196,7 +17196,7 @@ async function refreshMpDataLight(){
       me = JSON.parse(saved);
       applyRoleUI();
       applyFontScale();
-      setTimeout(function(){ if(typeof pollGroupChatBadge==='function') pollGroupChatBadge(); }, 800);
+      setTimeout(function(){ if(typeof fetchChatLastRead==='function') fetchChatLastRead().then(function(){ if(typeof pollGroupChatBadge==='function') pollGroupChatBadge(); }); }, 800);
       var gt0=document.getElementById('globalTabbar'); if(gt0) gt0.style.display='flex';
       // 메모리 초기화 먼저 (어제 데이터 화면 노출 방지)
       mpDataByLeader={오전:{},오후:{},야간:{}};
@@ -19003,8 +19003,18 @@ async function loadGroupChat(){
 }
 
 // 화면에 안 들어가 있어도 안읽음 배지만 가볍게 갱신 (전역 30초 폴링용)
+var _chatLastReadServer=null; // 서버(계정)에 저장된 마지막 읽음 시각 — 폰 로컬저장소 초기화되어도 안전하게 유지됨
+async function fetchChatLastRead(){
+  if(!me||!me.id) return;
+  try{
+    var res=await sb.from('users').select('chat_last_read').eq('id',me.id);
+    var row=res&&res.data&&res.data[0];
+    _chatLastReadServer=(row&&row.chat_last_read)||null;
+  }catch(e){}
+}
 async function pollGroupChatBadge(){
   if(!me||me.role==='guest') return;
+  if(_chatLastReadServer===null) await fetchChatLastRead(); // 아직 서버값을 못 받아왔으면 먼저 받아온 뒤 계산
   try{
     var res=await sb.from('chat_messages').select('*').order('created_at',{ascending:true}).limit(200);
     if(res.error) return;
@@ -19017,7 +19027,7 @@ function updateGcBadge(){
   var badge=document.getElementById('gcTabBadge');
   var badge2=document.getElementById('gcTabBadge2');
   if((!badge&&!badge2)||!me) return;
-  var lastSeen=localStorage.getItem('t1_chat_last_seen')||'1970-01-01T00:00:00.000Z';
+  var lastSeen=_chatLastReadServer||localStorage.getItem('t1_chat_last_seen')||'1970-01-01T00:00:00.000Z';
   var unread=(gcAll||[]).filter(function(m){
     return m.sender_name!==me.name && m.created_at && m.created_at>lastSeen;
   }).length;
@@ -19037,8 +19047,15 @@ function updateGcBadge(){
 }
 
 function markGroupChatRead(){
-  try{ localStorage.setItem('t1_chat_last_seen', new Date().toISOString()); }catch(e){}
+  var nowIso=new Date().toISOString();
+  _chatLastReadServer=nowIso; // 화면에는 즉시 반영(낙관적 업데이트)
+  try{ localStorage.setItem('t1_chat_last_seen', nowIso); }catch(e){} // 예전 방식도 폴백용으로 같이 저장
   updateGcBadge();
+  if(me&&me.id){
+    (async function(){
+      try{ await sb.from('users').update({chat_last_read:nowIso}).eq('id',me.id); }catch(e){}
+    })();
+  }
 }
 
 function renderGroupChat(){
