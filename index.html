@@ -3024,12 +3024,12 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <!-- 탭2: 업로드 (관리자만) -->
   <div id="newsP2" style="display:none;padding:13px">
     <div id="newsUploadWrap" class="card"><div class="cb">
-      <div style="font-size:15px;font-weight:700;color:var(--g7);margin-bottom:13px">📎 회사소식 PDF 업로드</div>
+      <div style="font-size:15px;font-weight:700;color:var(--g7);margin-bottom:13px">📎 회사소식 PDF/이미지 업로드</div>
       <div id="newsAdminOnly" style="display:none">
         <label for="newsFileInput" style="display:block;width:100%;padding:18px;background:var(--teal-bg);border:2px dashed var(--teal);border-radius:var(--r2);text-align:center;cursor:pointer;font-size:15px;color:var(--teal2);font-weight:700;margin-bottom:11px">
-          📄 PDF 파일 선택 (여러 개 가능)
+          📄 PDF/이미지 파일 선택 (여러 개 가능)
         </label>
-        <input type="file" id="newsFileInput" accept=".pdf" multiple style="display:none" onchange="handleNewsUpload(this.files)">
+        <input type="file" id="newsFileInput" accept=".pdf,.jpg,.jpeg,.png" multiple style="display:none" onchange="handleNewsUpload(this.files)">
         <div id="newsFileList" style="display:none;margin-bottom:11px">
           <div style="font-size:13px;font-weight:700;color:var(--g5);margin-bottom:6px">선택된 파일:</div>
           <div id="newsFileItems"></div>
@@ -17395,12 +17395,16 @@ async function uploadNewsFiles(){
       var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
       var safePath='pdfs/news_'+ts+ext;
       var uploadUrl=SUPABASE_URL+'/storage/v1/object/companynews/'+encodeURIComponent(safePath);
+      var extLower=ext.toLowerCase();
+      var contentType = (extLower==='.jpg'||extLower==='.jpeg') ? 'image/jpeg'
+        : extLower==='.png' ? 'image/png'
+        : 'application/pdf';
       var r=await fetch(uploadUrl,{
         method:'POST',
         headers:{
           'apikey':SUPABASE_KEY,
           'Authorization':'Bearer '+SUPABASE_KEY,
-          'Content-Type':'application/pdf',
+          'Content-Type':contentType,
           'x-upsert':'true'
         },
         body:file
@@ -18700,10 +18704,26 @@ function openEbookViewer(prefix, url, name){
   if(wrap) wrap.innerHTML='<canvas id="'+prefix+'EbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white"></canvas><div style="color:white;font-size:14px;padding:20px">📖 불러오는 중...</div>';
   ebookSearchClose(prefix); // 새 문서를 열면 이전 문서의 검색창/결과는 닫음
   ebookObserveResize(prefix); // 뷰어 영역 실제 크기 변화를 계속 감시 (전체화면/회전/주소창 접힘 등 어떤 원인이든 즉시 재계산)
+  var isImageFile = /\.(jpe?g|png)(\?|$)/i.test(name||'') || /\.(jpe?g|png)(\?|$)/i.test(url||'');
+  if(isImageFile){
+    var img=new Image();
+    img.onload=function(){
+      // 항상 처음 열림 상태로 시작 — 이미지는 페이지 개념이 없어 1페이지 고정
+      _ebookState[prefix]={type:'image', imgEl:img, curPage:1, totalPages:1, url:url, name:name};
+      if(wrap) wrap.innerHTML='<canvas id="'+prefix+'EbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white"></canvas>';
+      renderEbookPage(prefix);
+    };
+    img.onerror=function(){
+      toast('⚠️ 이미지를 불러올 수 없습니다. "원본으로" 버튼을 이용해주세요.');
+      if(wrap) wrap.innerHTML='<div style="color:white;font-size:14px;padding:20px;text-align:center">불러오기 실패<br>"원본으로" 버튼으로 확인해주세요</div>';
+    };
+    img.src=url;
+    return;
+  }
   loadPdfJs(function(){
     window.pdfjsLib.getDocument(url).promise.then(function(pdf){
       // 항상 1번 페이지(맨 앞장)부터 열림 — 이전 열람 페이지를 기억하지 않음
-      _ebookState[prefix]={pdfDoc:pdf, curPage:1, totalPages:pdf.numPages, url:url, name:name};
+      _ebookState[prefix]={type:'pdf', pdfDoc:pdf, curPage:1, totalPages:pdf.numPages, url:url, name:name};
       if(wrap) wrap.innerHTML='<canvas id="'+prefix+'EbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white"></canvas>';
       renderEbookPage(prefix);
     }).catch(function(e){
@@ -18724,10 +18744,60 @@ function ebookObserveResize(prefix){
   ro.observe(wrap);
   _ebookResizeObservers[prefix]=ro;
 }
+// 이미지(jpg/png) 전용 렌더링 — PDF와 동일한 화면 맞춤/확대/스크롤 로직을 그대로 사용
+function renderEbookImagePage(prefix){
+  var st=_ebookState[prefix];
+  if(!st||!st.imgEl) return;
+  var canvas=document.getElementById(prefix+'EbookCanvas');
+  if(!canvas) return;
+  var wrap=document.getElementById(prefix+'EbookCanvasWrap');
+  var availWidth=(wrap?wrap.clientWidth:360)-20;
+  var availHeight=(wrap?wrap.clientHeight:600)-20;
+  var natW=st.imgEl.naturalWidth, natH=st.imgEl.naturalHeight;
+  var rawFitScale=Math.min(availWidth/natW, availHeight/natH);
+  var fitScale=(isFinite(rawFitScale)&&rawFitScale>0)?rawFitScale:1;
+  var cssScale=fitScale*st.zoom;
+  var dpr=Math.max(window.devicePixelRatio||1, 2);
+  var renderScale=cssScale*dpr;
+  var cssW=natW*cssScale, cssH=natH*cssScale;
+  var renderW=natW*renderScale, renderH=natH*renderScale;
+  canvas.width=renderW; canvas.height=renderH;
+  canvas.style.width=cssW+'px'; canvas.style.height=cssH+'px';
+  if(wrap){
+    var isOverflowing = cssW>availWidth+2 || cssH>availHeight+2;
+    if(isOverflowing){
+      wrap.style.display='block';
+      wrap.style.textAlign='center';
+      canvas.style.display='inline-block';
+      canvas.style.margin='10px';
+      requestAnimationFrame(function(){
+        wrap.scrollLeft=Math.max(0, (canvas.offsetWidth-wrap.clientWidth)/2);
+        wrap.scrollTop=Math.max(0, (canvas.offsetHeight-wrap.clientHeight)/2);
+      });
+    }else{
+      wrap.style.display='flex';
+      wrap.style.alignItems='center';
+      wrap.style.justifyContent='center';
+      wrap.style.textAlign='';
+      canvas.style.display='';
+      canvas.style.margin='';
+    }
+  }
+  var ctx=canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.drawImage(st.imgEl, 0, 0, renderW, renderH);
+  var pind=document.getElementById(prefix+'EbookPageInd');
+  if(pind) pind.textContent='1 / 1';
+  var zind=document.getElementById(prefix+'EbookZoomInd');
+  if(zind) zind.textContent=Math.round(st.zoom*100)+'%';
+  try{ localStorage.setItem(_ebookProgressKey(st.url), 1); }catch(e){}
+  if(st.zoom<=1 && wrap) wrap.scrollTop=0;
+}
 function renderEbookPage(prefix){
   var st=_ebookState[prefix];
   if(!st) return;
   if(!st.zoom) st.zoom=1;
+  if(st.type==='image'){ renderEbookImagePage(prefix); return; }
   st.pdfDoc.getPage(st.curPage).then(function(page){
     var canvas=document.getElementById(prefix+'EbookCanvas');
     if(!canvas) return;
