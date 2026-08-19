@@ -17509,9 +17509,9 @@ async function viewNewsPost(id){
   body.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3)">불러오는 중...</div>';
   panel.style.display='flex';
   try{
-    var res=await sb.from('companynews_posts').select('*').eq('id',id).single();
-    if(res.error||!res.data){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">불러오기 실패</div>'; return; }
-    var p=res.data;
+    var res=await sb.from('companynews_posts').select('*').eq('id',id);
+    var p=res&&res.data&&res.data[0];
+    if(res.error||!p){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">불러오기 실패</div>'; return; }
     var html='';
     if(p.image_path){
       html+='<img src="'+SUPABASE_URL+'/storage/v1/object/public/companynews/'+encodeURIComponent(p.image_path)+'" style="width:100%;border-radius:var(--r2);margin-bottom:14px">';
