@@ -19753,6 +19753,84 @@ var WCLOUDDARK='<defs><linearGradient id="wgCloudD" x1="0" y1="0" x2="0" y2="1">
   +'<path d="M28.5 28h-16a6.5 6.5 0 0 1-1-12.9 8 8 0 0 1 15.4-3A6 6 0 0 1 28.5 28z" fill="url(#wgCloudD)"/>';
 function wSunSmall(x,y,s){ return '<g transform="translate('+x+','+y+') scale('+s+')">'+WSUN+'</g>'; }
 function wMoonSmall(x,y,s){ return '<g transform="translate('+x+','+y+') scale('+s+')">'+WMOON+'</g>'; }
+// ══ 기상청(공공데이터포털) 초단기실황·초단기예보 연동 — 홈 화면 날씨 아이콘/기온을 실제 관측치로 표시 ══
+var KMA_SERVICE_KEY='OfMIOyC1LmQm4EnKA1XeXo%2BChdvKsgaaxLe%2BBtwVWJD7NIL9qkQ3BWWw7KeB5g0bZMHrEpf0iMQpmYjWuLkvjg%3D%3D'; // 이미 URL 인코딩된 키 — encodeURIComponent로 재인코딩하지 말 것
+// 위경도 → 기상청 격자좌표(nx, ny) 변환 (기상청 공식 LCC DFS 변환식)
+function latLonToKmaGrid(lat, lon){
+  var RE=6371.00877, GRID=5.0, SLAT1=30.0, SLAT2=60.0, OLON=126.0, OLAT=38.0, XO=43, YO=136;
+  var DEGRAD=Math.PI/180.0;
+  var re=RE/GRID;
+  var slat1=SLAT1*DEGRAD, slat2=SLAT2*DEGRAD, olon=OLON*DEGRAD, olat=OLAT*DEGRAD;
+  var sn=Math.tan(Math.PI*0.25+slat2*0.5)/Math.tan(Math.PI*0.25+slat1*0.5);
+  sn=Math.log(Math.cos(slat1)/Math.cos(slat2))/Math.log(sn);
+  var sf=Math.tan(Math.PI*0.25+slat1*0.5);
+  sf=Math.pow(sf,sn)*Math.cos(slat1)/sn;
+  var ro=Math.tan(Math.PI*0.25+olat*0.5);
+  ro=re*sf/Math.pow(ro,sn);
+  var ra=Math.tan(Math.PI*0.25+lat*DEGRAD*0.5);
+  ra=re*sf/Math.pow(ra,sn);
+  var theta=lon*DEGRAD-olon;
+  if(theta>Math.PI) theta-=2*Math.PI;
+  if(theta<-Math.PI) theta+=2*Math.PI;
+  theta*=sn;
+  var nx=Math.floor(ra*Math.sin(theta)+XO+0.5);
+  var ny=Math.floor(ro-ra*Math.cos(theta)+YO+0.5);
+  return {nx:nx, ny:ny};
+}
+// 기상청 SKY(하늘상태)+PTY(강수형태) 조합을 기존 weatherSVGIcon()이 쓰는 코드로 매핑
+function kmaSkyPtyToCode(sky, pty){
+  var p=parseInt(pty)||0;
+  if(p===1||p===4||p===5) return 63;      // 비/소나기/빗방울
+  if(p===2||p===6) return 66;             // 비 또는 눈(진눈깨비)
+  if(p===3||p===7) return 73;             // 눈/눈날림
+  var s=parseInt(sky)||1;
+  if(s===1) return 0;   // 맑음
+  if(s===3) return 2;   // 구름많음
+  return 3;              // 흐림(4) 및 그 외
+}
+// base_date/base_time 계산 — 발표 후 45분부터 제공되므로, 45분 이전이면 한 시간 전 자료 사용
+function kmaBaseDateTime(){
+  var now=new Date(Date.now()+9*3600000); // KST
+  if(now.getUTCMinutes()<45) now=new Date(now.getTime()-3600000);
+  var y=now.getUTCFullYear(), m=String(now.getUTCMonth()+1).padStart(2,'0'), d=String(now.getUTCDate()).padStart(2,'0');
+  var h=String(now.getUTCHours()).padStart(2,'0');
+  return {date:y+m+d, time:h+'00'};
+}
+async function fetchKmaCurrentWeather(){
+  try{
+    var grid=latLonToKmaGrid(T1_LAT, T1_LNG);
+    var bt=kmaBaseDateTime();
+    var ncstUrl='https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtNcst'
+      +'?serviceKey='+KMA_SERVICE_KEY+'&pageNo=1&numOfRows=20&dataType=JSON'
+      +'&base_date='+bt.date+'&base_time='+bt.time+'&nx='+grid.nx+'&ny='+grid.ny;
+    var fcstUrl='https://apis.data.go.kr/1360000/VilageFcstInfoService_2.0/getUltraSrtFcst'
+      +'?serviceKey='+KMA_SERVICE_KEY+'&pageNo=1&numOfRows=60&dataType=JSON'
+      +'&base_date='+bt.date+'&base_time='+bt.time+'&nx='+grid.nx+'&ny='+grid.ny;
+    var results=await Promise.all([fetch(ncstUrl), fetch(fcstUrl)]);
+    if(!results[0].ok||!results[1].ok) return false;
+    var ncstData=await results[0].json();
+    var fcstData=await results[1].json();
+    var ncstItems=ncstData&&ncstData.response&&ncstData.response.body&&ncstData.response.body.items&&ncstData.response.body.items.item;
+    var fcstItems=fcstData&&fcstData.response&&fcstData.response.body&&fcstData.response.body.items&&fcstData.response.body.items.item;
+    if(!ncstItems||!ncstItems.length) return false;
+    var temp=null, pty=0;
+    ncstItems.forEach(function(it){
+      if(it.category==='T1H') temp=parseFloat(it.obsrValue);
+      if(it.category==='PTY') pty=parseInt(it.obsrValue)||0;
+    });
+    var sky=1;
+    if(fcstItems&&fcstItems.length){
+      var skyItems=fcstItems.filter(function(it){return it.category==='SKY';})
+        .sort(function(a,b){ return (a.fcstDate+a.fcstTime)-(b.fcstDate+b.fcstTime); });
+      if(skyItems.length) sky=parseInt(skyItems[0].fcstValue)||1;
+    }
+    if(temp===null||isNaN(temp)) return false;
+    var nowKst=new Date(Date.now()+9*3600000);
+    var isDay = nowKst.getUTCHours()>=6 && nowKst.getUTCHours()<19;
+    updateWeatherIconBadge(kmaSkyPtyToCode(sky,pty), temp, isDay);
+    return true;
+  }catch(e){ return false; } // 실패 시 조용히 무시하고 호출부에서 오픈메테오로 대체
+}
 function weatherSVGIcon(code, isDay){
   var body='';
   if(code===0){ // 맑음
@@ -19800,7 +19878,9 @@ async function checkHeatAlert(){
     var data=await res.json();
     var cur=data&&data.current;
     if(!cur) return;
-    updateWeatherIconBadge(cur.weather_code, cur.temperature_2m, cur.is_day===1);
+    // 홈 화면 날씨 아이콘/기온은 기상청(실제 관측치) 우선 시도, 실패하면 오픈메테오 값으로 대체
+    var kmaOk=await fetchKmaCurrentWeather();
+    if(!kmaOk) updateWeatherIconBadge(cur.weather_code, cur.temperature_2m, cur.is_day===1);
     // 최근 3시간·12시간 누적 강수량 계산 (hourly.precipitation에서 현재시각까지 역산 합산)
     var rain3h=cur.precipitation||0, rain12h=cur.precipitation||0;
     try{
