@@ -17592,11 +17592,11 @@ async function viewNewsPost(id){
     var p=res&&res.data&&res.data[0];
     if(res.error||!p){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">불러오기 실패</div>'; return; }
     var html='';
-    if(p.image_path){
-      html+='<img src="'+SUPABASE_URL+'/storage/v1/object/public/companynews/'+encodeURIComponent(p.image_path)+'" style="width:100%;border-radius:var(--r2);margin-bottom:14px">';
-    }
     html+='<div style="font-size:12px;color:var(--g4);margin-bottom:10px">'+(p.uploaded_at?p.uploaded_at.slice(0,16).replace('T',' '):'')+' · '+(p.uploaded_by||'')+'</div>';
     html+='<div style="font-size:15px;color:var(--g7);line-height:1.7;white-space:pre-wrap">'+(p.content||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
+    if(p.image_path){
+      html+='<img src="'+SUPABASE_URL+'/storage/v1/object/public/companynews/'+encodeURIComponent(p.image_path)+'" style="width:100%;border-radius:var(--r2);margin-top:14px">';
+    }
     body.innerHTML=html;
     var isAdmin=(me&&(me.role==='master'||me.role==='admin'));
     if(isAdmin&&actions){
