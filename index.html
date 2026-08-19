@@ -3055,6 +3055,9 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <div class="card"><div class="cb">
       <div id="newsPostFormTitle" style="font-size:15px;font-weight:700;color:var(--g7);margin-bottom:13px">✍️ 회사소식 작성</div>
       <div id="newsPostAdminOnly" style="display:none">
+        <div class="fg"><label class="f-lbl">제목 *</label>
+          <input type="text" id="newsPostTitle" class="ri" placeholder="제목을 입력하세요">
+        </div>
         <div class="fg"><label class="f-lbl">내용 *</label>
           <textarea id="newsPostContent" class="ri" rows="6" placeholder="회사소식 내용을 입력하세요" style="resize:vertical"></textarea>
         </div>
@@ -17417,9 +17420,12 @@ async function loadNewsList(){
         html+='</div>';
       }else{
         var p=m.data;
-        var excerpt=(p.content||'').replace(/\n/g,' ').slice(0,40);
-        if((p.content||'').length>40) excerpt+='…';
-        excerpt=excerpt.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        var listTitle=(p.title||'').trim();
+        if(!listTitle){
+          listTitle=(p.content||'').replace(/\n/g,' ').slice(0,40);
+          if((p.content||'').length>40) listTitle+='…';
+        }
+        listTitle=listTitle.replace(/</g,'&lt;').replace(/>/g,'&gt;');
         html+='<div onclick="viewNewsPost('+p.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
         if(p.image_path){
           html+='<img src="'+SUPABASE_URL+'/storage/v1/object/public/companynews/'+encodeURIComponent(p.image_path)+'" style="width:38px;height:38px;object-fit:cover;border-radius:8px;flex-shrink:0">';
@@ -17427,7 +17433,7 @@ async function loadNewsList(){
           html+='<div style="width:38px;height:38px;background:var(--teal-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0">📝</div>';
         }
         html+='<div style="flex:1;min-width:0">';
-        html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(excerpt||'(내용 없음)')+'</div>';
+        html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(listTitle||'(제목 없음)')+'</div>';
         html+='<div style="font-size:12px;color:var(--g4);margin-top:2px">'+(p.uploaded_at?p.uploaded_at.slice(0,10):'')+' · '+(p.uploaded_by||'')+docViewBadge(p)+'</div>';
         html+='</div>';
         html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
@@ -17477,6 +17483,7 @@ function newsStartNewPost(){
   _newsPostEditId=null;
   _newsPostExistingImagePath=null;
   _newsPostImageRemoved=false;
+  var titleEl=document.getElementById('newsPostTitle'); if(titleEl) titleEl.value='';
   var contentEl=document.getElementById('newsPostContent'); if(contentEl) contentEl.value='';
   clearNewsPostImage();
   _newsPostImageRemoved=false; // clearNewsPostImage가 true로 만들지만 새 글쓰기이므로 다시 false
@@ -17487,8 +17494,11 @@ function newsStartNewPost(){
 }
 async function submitNewsPost(){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
+  var titleEl=document.getElementById('newsPostTitle');
+  var title=(titleEl&&titleEl.value||'').trim();
   var contentEl=document.getElementById('newsPostContent');
   var content=(contentEl&&contentEl.value||'').trim();
+  if(!title){ toast('⚠️ 제목을 입력해주세요'); return; }
   if(!content){ toast('⚠️ 내용을 입력해주세요'); return; }
   var prog=document.getElementById('newsPostProgress');
   var btn=document.getElementById('newsPostSubmitBtn');
@@ -17515,10 +17525,10 @@ async function submitNewsPost(){
     }
     var result;
     if(_newsPostEditId){
-      result=await sb.from('companynews_posts').update({content:content, image_path:imagePath}).eq('id',_newsPostEditId);
+      result=await sb.from('companynews_posts').update({title:title, content:content, image_path:imagePath}).eq('id',_newsPostEditId);
     }else{
       result=await sb.from('companynews_posts').insert({
-        content:content, image_path:imagePath,
+        title:title, content:content, image_path:imagePath,
         uploaded_at:new Date().toISOString(),
         uploaded_by:me?me.name:'관리자'
       });
@@ -17546,6 +17556,7 @@ async function editNewsPostFromDetail(id){
     _newsPostExistingImagePath=p.image_path||null;
     _newsPostImageRemoved=false;
     _newsPostImageFile=null;
+    var titleEl=document.getElementById('newsPostTitle'); if(titleEl) titleEl.value=p.title||'';
     var contentEl=document.getElementById('newsPostContent'); if(contentEl) contentEl.value=p.content||'';
     var fi=document.getElementById('newsPostImageInput'); if(fi) fi.value='';
     var img=document.getElementById('newsPostImagePreview');
@@ -17593,6 +17604,9 @@ async function viewNewsPost(id){
     var p=res&&res.data&&res.data[0];
     if(res.error||!p){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">불러오기 실패</div>'; return; }
     var html='';
+    if(p.title){
+      html+='<div style="font-size:19px;font-weight:800;color:var(--g7);margin-bottom:8px;line-height:1.4">'+String(p.title).replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
+    }
     html+='<div style="font-size:12px;color:var(--g4);margin-bottom:10px">'+(p.uploaded_at?p.uploaded_at.slice(0,16).replace('T',' '):'')+' · '+(p.uploaded_by||'')+'</div>';
     html+='<div style="font-size:15px;color:var(--g7);line-height:1.7;white-space:pre-wrap">'+(p.content||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
     if(p.image_path){
