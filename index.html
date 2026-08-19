@@ -2993,7 +2993,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <div id="newsT0" onclick="newsTab(0)" style="flex:1;padding:11px;text-align:center;font-size:14px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-1.5px">📂 문서 목록</div>
     <div id="newsT1" onclick="newsTab(1)" style="flex:1;padding:11px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">📄 PDF 보기</div>
     <div id="newsT2" onclick="newsTab(2)" style="flex:1;padding:11px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">⬆️ 업로드</div>
-    <div id="newsT3" onclick="newsTab(3)" style="flex:1;padding:11px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">✍️ 소식 작성</div>
+    <div id="newsT3" onclick="newsStartNewPost()" style="flex:1;padding:11px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">✍️ 소식 작성</div>
   </div>
 
   <!-- 탭0: 문서 목록 -->
@@ -3053,7 +3053,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <!-- 탭3: 소식 작성 (내용+이미지, 관리자만) -->
   <div id="newsP3" style="display:none;padding:13px">
     <div class="card"><div class="cb">
-      <div style="font-size:15px;font-weight:700;color:var(--g7);margin-bottom:13px">✍️ 회사소식 작성</div>
+      <div id="newsPostFormTitle" style="font-size:15px;font-weight:700;color:var(--g7);margin-bottom:13px">✍️ 회사소식 작성</div>
       <div id="newsPostAdminOnly" style="display:none">
         <div class="fg"><label class="f-lbl">내용 *</label>
           <textarea id="newsPostContent" class="ri" rows="6" placeholder="회사소식 내용을 입력하세요" style="resize:vertical"></textarea>
@@ -3068,9 +3068,14 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
             <button onclick="clearNewsPostImage()" style="margin-top:6px;padding:6px 12px;background:var(--g1);color:var(--g5);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">사진 제거</button>
           </div>
         </div>
-        <button id="newsPostSubmitBtn" onclick="submitNewsPost()" style="width:100%;padding:13px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">
+        <div style="display:flex;gap:8px">
+        <button id="newsPostSubmitBtn" onclick="submitNewsPost()" style="flex:1;padding:13px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">
           📝 게시하기
         </button>
+        <button id="newsPostCancelBtn" onclick="newsStartNewPost()" style="display:none;flex:0 0 auto;padding:13px 16px;background:var(--g2);color:var(--g6);border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">
+          취소
+        </button>
+        </div>
         <div id="newsPostProgress" style="display:none;margin-top:11px;text-align:center;font-size:13px;color:var(--g5)">게시 중...</div>
       </div>
       <div id="newsPostNotAdmin" style="text-align:center;padding:20px;color:var(--g3);font-size:14px">관리자만 작성 가능합니다</div>
@@ -3084,6 +3089,10 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <button onclick="closeNewsPostDetail()" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
     </div>
     <div style="flex:1;overflow-y:auto;padding:16px" id="newsPostDetailBody"></div>
+    <div id="newsPostDetailActions" style="display:none;flex-shrink:0;gap:8px;padding:11px 16px;border-top:1px solid var(--g2)">
+      <button id="newsPostEditBtn" style="flex:1;padding:12px;background:var(--g1);color:var(--g6);border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">✏️ 수정</button>
+      <button id="newsPostDeleteBtn" style="flex:1;padding:12px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🗑️ 삭제</button>
+    </div>
   </div>
 </div>
 
@@ -17439,11 +17448,15 @@ function viewNews(path, name, id){
   newsTab(1);
   openEbookViewer('news', pdfUrl, name);
 }
-// ── 회사소식 작성 (내용+이미지) ──
-var _newsPostImageFile=null;
+// ── 회사소식 작성/수정 (내용+이미지) ──
+var _newsPostImageFile=null;      // 새로 선택한 이미지 파일 (있으면 업로드해서 교체)
+var _newsPostEditId=null;         // 수정 중인 게시글 id (null이면 새 글쓰기)
+var _newsPostExistingImagePath=null; // 수정 시 원래 있던 이미지 경로
+var _newsPostImageRemoved=false;  // 수정 중 "사진 제거"를 눌렀는지
 function handleNewsPostImage(files){
   if(!files||!files.length){ return; }
   _newsPostImageFile=files[0];
+  _newsPostImageRemoved=false;
   var reader=new FileReader();
   reader.onload=function(e){
     var img=document.getElementById('newsPostImagePreview');
@@ -17455,8 +17468,22 @@ function handleNewsPostImage(files){
 }
 function clearNewsPostImage(){
   _newsPostImageFile=null;
+  _newsPostImageRemoved=true; // 수정 모드일 때 기존 사진도 제거하겠다는 표시
   var fi=document.getElementById('newsPostImageInput'); if(fi) fi.value='';
   var wrap=document.getElementById('newsPostImagePreviewWrap'); if(wrap) wrap.style.display='none';
+}
+// "소식 작성" 탭을 새 글쓰기 상태로 초기화하고 이동 (탭 버튼에서 호출)
+function newsStartNewPost(){
+  _newsPostEditId=null;
+  _newsPostExistingImagePath=null;
+  _newsPostImageRemoved=false;
+  var contentEl=document.getElementById('newsPostContent'); if(contentEl) contentEl.value='';
+  clearNewsPostImage();
+  _newsPostImageRemoved=false; // clearNewsPostImage가 true로 만들지만 새 글쓰기이므로 다시 false
+  var title=document.getElementById('newsPostFormTitle'); if(title) title.textContent='✍️ 회사소식 작성';
+  var submitBtn=document.getElementById('newsPostSubmitBtn'); if(submitBtn) submitBtn.textContent='📝 게시하기';
+  var cancelBtn=document.getElementById('newsPostCancelBtn'); if(cancelBtn) cancelBtn.style.display='none';
+  newsTab(3);
 }
 async function submitNewsPost(){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
@@ -17468,32 +17495,39 @@ async function submitNewsPost(){
   if(prog) prog.style.display='block';
   if(btn){ btn.disabled=true; btn.style.cursor='not-allowed'; btn.style.opacity='0.6'; }
   try{
-    var imagePath=null;
+    // 이미지 경로 결정: 새 파일 선택 > 제거 눌렀으면 null > 그대로(수정 시 기존 경로 유지)
+    var imagePath=_newsPostExistingImagePath;
+    if(_newsPostImageRemoved) imagePath=null;
     if(_newsPostImageFile){
       var ts=Date.now();
       var ext=_newsPostImageFile.name.lastIndexOf('.')>=0?_newsPostImageFile.name.slice(_newsPostImageFile.name.lastIndexOf('.')):'.jpg';
-      imagePath='posts/news_post_'+ts+ext;
+      var newPath='posts/news_post_'+ts+ext;
       var extLower=ext.toLowerCase();
       var contentType=(extLower==='.png')?'image/png':'image/jpeg';
-      var uploadUrl=SUPABASE_URL+'/storage/v1/object/companynews/'+encodeURIComponent(imagePath);
+      var uploadUrl=SUPABASE_URL+'/storage/v1/object/companynews/'+encodeURIComponent(newPath);
       var r=await fetch(uploadUrl,{
         method:'POST',
         headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':contentType,'x-upsert':'true'},
         body:_newsPostImageFile
       });
       if(!r.ok){ toast('⚠️ 사진 업로드 실패'); if(prog) prog.style.display='none'; if(btn){btn.disabled=false;btn.style.cursor='pointer';btn.style.opacity='1';} return; }
+      imagePath=newPath;
     }
-    var ins=await sb.from('companynews_posts').insert({
-      content:content, image_path:imagePath,
-      uploaded_at:new Date().toISOString(),
-      uploaded_by:me?me.name:'관리자'
-    });
-    if(ins.error){ toast('⚠️ 게시 실패: '+ins.error.message); if(prog) prog.style.display='none'; if(btn){btn.disabled=false;btn.style.cursor='pointer';btn.style.opacity='1';} return; }
-    toast('✅ 회사소식이 게시되었습니다');
-    if(contentEl) contentEl.value='';
-    clearNewsPostImage();
+    var result;
+    if(_newsPostEditId){
+      result=await sb.from('companynews_posts').update({content:content, image_path:imagePath}).eq('id',_newsPostEditId);
+    }else{
+      result=await sb.from('companynews_posts').insert({
+        content:content, image_path:imagePath,
+        uploaded_at:new Date().toISOString(),
+        uploaded_by:me?me.name:'관리자'
+      });
+    }
+    if(result.error){ toast('⚠️ 저장 실패: '+result.error.message); if(prog) prog.style.display='none'; if(btn){btn.disabled=false;btn.style.cursor='pointer';btn.style.opacity='1';} return; }
+    toast(_newsPostEditId?'✅ 수정되었습니다':'✅ 회사소식이 게시되었습니다');
     if(prog) prog.style.display='none';
     if(btn){ btn.disabled=false; btn.style.cursor='pointer'; btn.style.opacity='1'; }
+    newsStartNewPost(); // 폼 초기화 (수정모드 해제)
     newsTab(0);
   }catch(e){
     toast('⚠️ 오류: '+e.message);
@@ -17501,12 +17535,57 @@ async function submitNewsPost(){
     if(btn){ btn.disabled=false; btn.style.cursor='pointer'; btn.style.opacity='1'; }
   }
 }
+// 상세보기에서 "수정" 누르면 작성 폼에 기존 내용을 채워서 수정모드로 전환
+async function editNewsPostFromDetail(id){
+  if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
+  try{
+    var res=await sb.from('companynews_posts').select('*').eq('id',id);
+    var p=res&&res.data&&res.data[0];
+    if(res.error||!p){ toast('⚠️ 불러오기 실패'); return; }
+    _newsPostEditId=p.id;
+    _newsPostExistingImagePath=p.image_path||null;
+    _newsPostImageRemoved=false;
+    _newsPostImageFile=null;
+    var contentEl=document.getElementById('newsPostContent'); if(contentEl) contentEl.value=p.content||'';
+    var fi=document.getElementById('newsPostImageInput'); if(fi) fi.value='';
+    var img=document.getElementById('newsPostImagePreview');
+    var wrap=document.getElementById('newsPostImagePreviewWrap');
+    if(p.image_path){
+      if(img) img.src=SUPABASE_URL+'/storage/v1/object/public/companynews/'+encodeURIComponent(p.image_path);
+      if(wrap) wrap.style.display='block';
+    }else{
+      if(wrap) wrap.style.display='none';
+    }
+    var title=document.getElementById('newsPostFormTitle'); if(title) title.textContent='✏️ 회사소식 수정';
+    var submitBtn=document.getElementById('newsPostSubmitBtn'); if(submitBtn) submitBtn.textContent='✅ 수정 완료';
+    var cancelBtn=document.getElementById('newsPostCancelBtn'); if(cancelBtn) cancelBtn.style.display='block';
+    closeNewsPostDetail();
+    newsTab(3); // 새 글쓰기 초기화 없이 바로 이동 (수정 데이터 유지)
+  }catch(e){ toast('⚠️ 오류: '+e.message); }
+}
+async function deleteNewsPostFromDetail(id, imagePath){
+  if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
+  if(!confirm('이 소식을 삭제하시겠습니까?')) return;
+  try{
+    if(imagePath){
+      var delUrl=SUPABASE_URL+'/storage/v1/object/companynews/'+encodeURIComponent(imagePath);
+      await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+    }
+    var res=await sb.from('companynews_posts').delete().eq('id',id);
+    if(res.error){ toast('⚠️ 삭제 실패: '+res.error.message); return; }
+    toast('✅ 삭제되었습니다');
+    closeNewsPostDetail();
+    if(document.getElementById('newsP0').style.display!=='none') loadNewsList();
+  }catch(e){ toast('⚠️ 오류: '+e.message); }
+}
 var newsPosts=[];
 async function viewNewsPost(id){
   var body=document.getElementById('newsPostDetailBody');
   var panel=document.getElementById('newsP4');
+  var actions=document.getElementById('newsPostDetailActions');
   if(!body||!panel) return;
   body.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3)">불러오는 중...</div>';
+  if(actions) actions.style.display='none';
   panel.style.display='flex';
   try{
     var res=await sb.from('companynews_posts').select('*').eq('id',id);
@@ -17519,6 +17598,14 @@ async function viewNewsPost(id){
     html+='<div style="font-size:12px;color:var(--g4);margin-bottom:10px">'+(p.uploaded_at?p.uploaded_at.slice(0,16).replace('T',' '):'')+' · '+(p.uploaded_by||'')+'</div>';
     html+='<div style="font-size:15px;color:var(--g7);line-height:1.7;white-space:pre-wrap">'+(p.content||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
     body.innerHTML=html;
+    var isAdmin=(me&&(me.role==='admin'||isExecRole(me.role)));
+    if(isAdmin&&actions){
+      actions.style.display='flex';
+      var editBtn=document.getElementById('newsPostEditBtn');
+      var delBtn=document.getElementById('newsPostDeleteBtn');
+      if(editBtn) editBtn.onclick=function(){ editNewsPostFromDetail(p.id); };
+      if(delBtn) delBtn.onclick=function(){ deleteNewsPostFromDetail(p.id, p.image_path); };
+    }
   }catch(e){
     body.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">불러오기 실패: '+e.message+'</div>';
   }
