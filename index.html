@@ -888,6 +888,12 @@ html{overflow-x:hidden}
         <div class="menu-desc">누가 무엇을 삭제했는지 확인</div>
         <span class="menu-arrow">보기 →</span>
       </button>
+      <button class="menu-btn" id="adcMenuBtn" onclick="go('admconfirm')" style="display:none">
+        <span class="menu-icon">📋</span>
+        <div class="menu-title">관리자 확인사항</div>
+        <div class="menu-desc">회람확인서 작성·전자서명·문서함</div>
+        <span class="menu-arrow">보기 →</span>
+      </button>
     </div>
   </div>
 
@@ -2556,6 +2562,138 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
 <!-- 장비현황 개별 항목 수정 모달 -->
 <div id="eqEditModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3 id="eqEditModalTitle">✏️ 장비 정보 수정</h3><button class="m-x" onclick="closeEqEditModal()">×</button></div><div style="padding:15px 17px;max-height:65vh;overflow-y:auto" id="eqEditBody"></div><div style="padding:0 17px 15px;display:flex;gap:8px"><button onclick="closeEqEditModal()" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">취소</button><button onclick="eqSaveEdit()" style="flex:1;padding:11px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">저장</button></div></div></div>
+
+<!-- ══ 관리자 확인사항 ══ -->
+<style>
+@media print{
+  #adcPrintArea{ display:block !important; }
+}
+.adc-sig-table{width:100%;border-collapse:collapse;font-size:12px}
+.adc-sig-table th,.adc-sig-table td{border:1px solid #333;padding:6px 5px;text-align:center;vertical-align:middle}
+.adc-sig-table th{background:#F2F2F2;font-weight:700}
+</style>
+<div id="sAdc" class="scr" style="display:none">
+  <div class="pg-hd">
+    <div><h1>📋 관리자 확인사항</h1><small>회람확인서 작성·전자서명·문서함</small></div>
+    <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 메인</button>
+  </div>
+
+  <!-- 탭 -->
+  <div style="display:flex;border-bottom:2px solid var(--g2)">
+    <div id="adcT0" onclick="adcTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:14px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">회람확인서</div>
+    <div id="adcT1" onclick="adcTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">PDF 문서</div>
+    <div id="adcT2" onclick="adcTab(2)" style="flex:1;text-align:center;padding:10px 0;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">내 서명 등록</div>
+  </div>
+
+  <!-- 탭0: 회람확인서 -->
+  <div id="adcP0" style="padding:13px">
+    <div id="adcDocListView">
+      <button id="adcNewDocBtn" onclick="adcOpenCreateDoc()" style="display:none;width:100%;margin-bottom:12px;padding:11px;background:var(--teal-bg);border:1.5px dashed var(--teal);border-radius:var(--r2);font-size:14px;font-weight:700;color:var(--teal2);cursor:pointer">➕ 새 회람확인서 작성</button>
+      <div id="adcDocListWrap"><div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div></div>
+    </div>
+    <div id="adcDocDetailView" style="display:none">
+      <button onclick="adcBackToDocList()" style="padding:6px 12px;background:var(--g1);border:1.5px solid var(--g2);border-radius:20px;font-size:13px;font-weight:700;color:var(--g5);cursor:pointer;margin-bottom:12px">← 목록</button>
+      <div id="adcDocDetailBody"></div>
+    </div>
+  </div>
+
+  <!-- 탭1: PDF 문서 -->
+  <div id="adcP1" style="display:none;padding:13px">
+    <div id="adcPdfUploadWrap" style="display:none;margin-bottom:12px">
+      <label for="adcPdfFileInput" style="display:block;width:100%;padding:16px;background:var(--teal-bg);border:2px dashed var(--teal);border-radius:var(--r2);text-align:center;cursor:pointer;font-size:14px;color:var(--teal2);font-weight:700">📄 PDF 업로드 (제목은 파일명으로 자동 지정)</label>
+      <input type="file" id="adcPdfFileInput" accept=".pdf" multiple style="display:none" onchange="adcUploadPdfs(this.files)">
+    </div>
+    <div id="adcPdfListWrap"><div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div></div>
+  </div>
+
+  <!-- 탭1 하위: PDF 뷰어 오버레이 -->
+  <div id="adcPv" style="display:none;padding:0;position:fixed;top:0;left:0;width:100%;height:100%;z-index:999;background:white;flex-direction:column">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 13px;font-size:14px;font-weight:700;color:var(--g6);border-bottom:1px solid var(--g2);background:var(--g1);flex-shrink:0">
+      <span id="adcViewerTitleText" style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-right:8px">PDF 뷰어</span>
+      <button onclick="ebookSearchToggle('adc')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔍 검색</button>
+      <button id="adcOrigBtn" onclick="if(canDownloadOriginal())window.open(window._adcPdfUrl,'_blank')" style="padding:5px 10px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">🔗 원본으로</button>
+      <button id="adcFsBtn" onclick="ebookToggleFullscreen('adc')" style="padding:5px 9px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:15px;font-weight:700;cursor:pointer;flex-shrink:0;margin-right:6px">⛶</button>
+      <button onclick="adcCloseViewer()" style="padding:5px 12px;background:var(--navy);color:white;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">← 목록</button>
+    </div>
+    <div id="adcEbookWrap" style="flex:1;display:flex;flex-direction:column;overflow:hidden;background:#525659">
+      <div id="adcEbookSearchBar" style="display:none;flex-direction:column;background:var(--g1);border-bottom:1px solid var(--g2);padding:9px 10px;flex-shrink:0">
+        <div style="display:flex;align-items:center;gap:6px">
+          <input type="text" id="adcEbookSearchInput" placeholder="검색어 입력" style="flex:1;padding:9px 10px;border:1px solid var(--g3);border-radius:8px;font-size:14px" onkeydown="if(event.key==='Enter'){ebookSearch('adc')}">
+          <button onclick="ebookSearch('adc')" style="padding:9px 13px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;flex-shrink:0">검색</button>
+          <button onclick="ebookSearchClose('adc')" style="padding:9px 11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-size:13px;cursor:pointer;flex-shrink:0">✕</button>
+        </div>
+        <div id="adcEbookSearchResults" style="margin-top:8px;display:none"></div>
+      </div>
+      <div id="adcEbookCanvasWrap" style="flex:1;overflow:auto;display:flex;align-items:center;justify-content:center;padding:10px;touch-action:pan-x pan-y" ontouchstart="ebookTouchStart(event,'adc')" ontouchmove="ebookTouchMove(event,'adc')" ontouchend="ebookTouchEnd(event,'adc')">
+        <canvas id="adcEbookCanvas" style="box-shadow:0 2px 12px rgba(0,0,0,.3);background:white"></canvas>
+      </div>
+      <div id="adcEbookBar" style="display:flex;align-items:center;justify-content:center;gap:14px;padding:10px;background:white;border-top:1px solid var(--g2);flex-shrink:0">
+        <button onclick="ebookZoom('adc',-0.5)" style="padding:8px 13px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">－</button>
+        <span id="adcEbookZoomInd" style="font-size:12px;font-weight:700;color:var(--g5);min-width:40px;text-align:center">100%</span>
+        <button onclick="ebookZoom('adc',0.5)" style="padding:8px 13px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">＋</button>
+        <span style="width:1px;height:20px;background:var(--g2);margin:0 4px"></span>
+        <button onclick="ebookNav('adc',-1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">◀</button>
+        <span id="adcEbookPageInd" style="font-size:14px;font-weight:700;color:var(--g6);min-width:60px;text-align:center">- / -</span>
+        <button onclick="ebookNav('adc',1)" style="padding:8px 16px;background:var(--g1);border:none;border-radius:20px;font-size:16px;font-weight:800;cursor:pointer">▶</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 탭2: 내 서명 등록 -->
+  <div id="adcP2" style="display:none;padding:13px">
+    <div class="card"><div class="cb">
+      <div style="font-size:14px;font-weight:700;color:var(--g6);margin-bottom:4px">✍️ 내 서명 정보 등록</div>
+      <div style="font-size:12.5px;color:var(--g4);margin-bottom:13px;line-height:1.6">한 번 등록해두면 회람확인서 서명 시 자동으로 채워집니다.</div>
+      <div class="fg"><label class="f-lbl">소속</label><input type="text" id="adcMyDept" class="ri" value="T1환경미화사업부"></div>
+      <div class="fg"><label class="f-lbl">직책</label><input type="text" id="adcMyPosition" class="ri" placeholder="예: 과장, 팀장, 사원"></div>
+      <div class="fg"><label class="f-lbl">사번</label><input type="text" id="adcMyEmpId" class="ri" placeholder="사번 입력"></div>
+      <div class="fg">
+        <label class="f-lbl">서명 이미지</label>
+        <label for="adcMySigInput" style="display:block;width:100%;padding:14px;background:var(--teal-bg);border:2px dashed var(--teal);border-radius:var(--r2);text-align:center;cursor:pointer;font-size:13px;color:var(--teal2);font-weight:700;margin-bottom:8px">📝 서명 이미지 선택 (jpg/png)</label>
+        <input type="file" id="adcMySigInput" accept=".jpg,.jpeg,.png" style="display:none" onchange="adcPreviewMySig(this.files)">
+        <div id="adcMySigPreviewWrap" style="display:none;text-align:center;background:#fafafa;border:1px solid var(--g2);border-radius:var(--r2);padding:10px;margin-bottom:8px">
+          <img id="adcMySigPreview" style="max-height:70px">
+        </div>
+      </div>
+      <button onclick="adcSaveMySig()" class="btn-prim" style="width:100%">💾 내 서명정보 저장</button>
+    </div></div>
+  </div>
+</div>
+
+<!-- 회람확인서 작성 모달 -->
+<div id="adcCreateModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📋 회람확인서 작성</h3><button class="m-x" onclick="hideM('adcCreateModal')">×</button></div><div style="padding:15px 17px">
+  <div class="fg"><label class="f-lbl">① 회람내용 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewContent1" class="ri" placeholder="예: 「인사평가 적용기준 안내」,「사업2본부 인사평가 가·감점 기준」"></div>
+  <div class="fg"><label class="f-lbl">② 회람대상 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewContent2" class="ri" placeholder="예: 그룹·사업부 인사평가 평가자"></div>
+  <div class="fg"><label class="f-lbl">연월일</label><input type="date" id="adcNewDate" class="ri" style="margin-bottom:0"></div>
+  <div style="font-size:11.5px;color:var(--g4);margin:8px 0 0;line-height:1.6">③ 회람방법은 "회람 내용 확인 후 평가자 전원 아래 서명란에 서명"으로 고정됩니다.</div>
+  <button onclick="adcSaveNewDoc()" class="btn-prim" style="width:100%;margin-top:13px">📋 작성 완료</button>
+</div></div></div>
+
+<!-- 인쇄용 회람확인서 -->
+<style>
+@media print{
+  @page{ margin:14mm 12mm 10mm 12mm; }
+  html, body{ height:auto !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
+  body > *{ display:none !important; }
+  #adcPrintModal.on{ display:block !important; visibility:visible !important; position:static !important; }
+  #adcPrintModal.on *{ visibility:visible !important; }
+  #adcPrintModal.on .m-hd, #adcPrintModal.on .no-print{ display:none !important; }
+  #adcPrintModal.on .modal{ display:block !important; position:static !important; max-width:none !important; max-height:none !important; overflow:visible !important; box-shadow:none !important; border-radius:0 !important; margin:0 !important; }
+  #adcPrintModal.on > div > div:first-child ~ div{ padding:0 !important; }
+  #adcPrintArea{ display:block !important; position:static !important; width:100% !important; margin:0 !important; padding:0 !important; }
+}
+</style>
+<div id="adcPrintModal" class="modal-bg">
+  <div class="modal" style="max-width:640px;max-height:92vh;overflow-y:auto">
+    <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🖨️ 회람확인서 인쇄</h3><button class="m-x" onclick="hideM('adcPrintModal')">×</button></div>
+    <div style="padding:15px 17px">
+      <div id="adcPrintArea" style="background:white;padding:16px;border:1px solid #ccc"></div>
+      <div class="no-print" style="display:flex;gap:8px;margin-top:14px">
+        <button onclick="window.print()" style="flex:1;padding:12px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🖨️ 인쇄 / PDF저장</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- ══ 화장실 관리 ══ -->
 <div id="sToiletMgmt" class="scr" style="display:none">
@@ -4921,6 +5059,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 <script>
 let me=null,wdT=null,indData=[],indEditId=null;
 function isExecRole(r){return r==='group_leader'||r==='division_head'||r==='master';} // 그룹장/본부장/최고관리자: admin과 동일 이상 권한
+function canAdcManage(){ return !!(me && (me.role==='master'||me.role==='admin'||me.role==='manager'||isExecRole(me.role))); } // 관리자 확인사항: 업로드/작성/서명/수정/삭제 권한
 function canDeleteWorkItem(){
   return !!(me && (me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)));
 }
@@ -5012,7 +5151,7 @@ window.addEventListener('popstate', function(e){
 });
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sRisk','sTraining','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sActiveUsers','sPerf','sDeleteLogs'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sRisk','sTraining','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sActiveUsers','sPerf','sDeleteLogs','sAdc'];
 function goStatsDash(){
   go('statsdash');
   loadMonthlyStats();
@@ -5438,6 +5577,7 @@ function go(name){
   if(name==='admin'&&(!me||me.role!=='master')){ toast('⚠️ 최고관리자만 접근할 수 있습니다'); return; }
   if(name==='activeUsers'&&(!me||!(me.role==='admin'||me.role==='master'))){ toast('⚠️ 관리자 이상만 접근할 수 있습니다'); return; }
   if(name==='deleteLogs'&&(!me||me.role!=='master')){ toast('⚠️ 최고관리자만 접근할 수 있습니다'); return; }
+  if(name==='admconfirm'&&(!me||!(me.role==='master'||me.role==='admin'||me.role==='manager'||isExecRole(me.role)))){ toast('⚠️ 관리자 이상만 접근할 수 있습니다'); return; }
   if(name==='toilet'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='perf'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(['shower','smoking','rest','storage','baby'].indexOf(name)!==-1&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
@@ -5448,7 +5588,7 @@ function go(name){
   }
   _curScreenName=name;
   updateIosBackBtn();
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs',admconfirm:'sAdc'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -5617,6 +5757,8 @@ function applyRoleUI(){
   if(aub) aub.style.display=(me.role==='admin'||me.role==='master')?'block':'none';
   var dlb=document.getElementById('deleteLogsBtn');
   if(dlb) dlb.style.display=isMaster?'block':'none';
+  var adcb=document.getElementById('adcMenuBtn');
+  if(adcb) adcb.style.display=canAdcManage()?'block':'none';
   var edb=document.getElementById('execDashMenuBtn');
   var isExecView=me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role);
   if(edb) edb.style.display=isExecView?'flex':'none';
@@ -15167,6 +15309,344 @@ async function uploadEquipmentData(){
     eqTab(0);
   }catch(e){ toast('⚠️ 업로드 실패: '+e.message);
   }finally{ if(btn){btn.disabled=false;btn.textContent='🔧 장비현황 업로드';} }
+}
+
+// ══ 관리자 확인사항 ══
+function adcTab(n){
+  ['adcT0','adcT1','adcT2'].forEach(function(id,i){
+    var el=document.getElementById(id);
+    if(el){ el.style.color=i===n?'var(--teal)':'var(--g5)'; el.style.borderBottom=i===n?'2.5px solid var(--teal)':'none'; el.style.marginBottom=i===n?'-2px':'0'; }
+  });
+  ['adcP0','adcP1','adcP2'].forEach(function(id,i){
+    var el=document.getElementById(id); if(el) el.style.display=i===n?'block':'none';
+  });
+  var pv=document.getElementById('adcPv'); if(pv) pv.style.display='none';
+  if(n===0){ adcBackToDocList(); loadAdcDocList(); }
+  else if(n===1){
+    var uw=document.getElementById('adcPdfUploadWrap'); if(uw) uw.style.display=canAdcManage()?'block':'none';
+    loadAdcPdfList();
+  }
+  else if(n===2){ loadAdcMySig(); }
+}
+
+// ── 회람확인서 목록/작성/서명/인쇄 ──
+function adcBackToDocList(){
+  var lv=document.getElementById('adcDocListView'); if(lv) lv.style.display='block';
+  var dv=document.getElementById('adcDocDetailView'); if(dv) dv.style.display='none';
+}
+async function loadAdcDocList(){
+  var wrap=document.getElementById('adcDocListWrap'); if(!wrap) return;
+  var newBtn=document.getElementById('adcNewDocBtn'); if(newBtn) newBtn.style.display=canAdcManage()?'block':'none';
+  try{
+    var docRes=await sb.from('admin_confirm_docs').select('*').order('created_at',{ascending:false});
+    if(docRes.error||!docRes.data||!docRes.data.length){
+      wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">📭 등록된 회람확인서가 없습니다</div>';
+      return;
+    }
+    var docs=docRes.data;
+    var sigRes=await sb.from('admin_confirm_signatures').select('doc_id');
+    var countMap={};
+    if(sigRes.data) sigRes.data.forEach(function(s){ countMap[s.doc_id]=(countMap[s.doc_id]||0)+1; });
+    var h='';
+    docs.forEach(function(d){
+      h+='<div onclick="adcOpenDocDetail('+d.id+')" style="background:white;border:1.5px solid var(--g2);border-radius:var(--r2);padding:13px 14px;margin-bottom:9px;cursor:pointer">'
+        +'<div style="font-size:14.5px;font-weight:700;color:var(--g7);margin-bottom:5px">📋 '+lrptEsc(d.content1)+'</div>'
+        +'<div style="font-size:12.5px;color:var(--g4)">대상: '+lrptEsc(d.content2)+'</div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:7px">'
+        +'<span style="font-size:12px;color:var(--g4)">'+lrptEsc(d.doc_date)+' · '+lrptEsc(d.created_by)+'</span>'
+        +'<span style="background:var(--teal-bg);color:var(--teal2);border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700">서명 '+(countMap[d.id]||0)+'명</span>'
+        +'</div></div>';
+    });
+    wrap.innerHTML=h;
+  }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger);font-size:14px">불러오기 실패</div>'; }
+}
+function adcOpenCreateDoc(){
+  if(!canAdcManage()){ toast('⚠️ 관리자 이상만 작성할 수 있습니다'); return; }
+  document.getElementById('adcNewContent1').value='';
+  document.getElementById('adcNewContent2').value='';
+  document.getElementById('adcNewDate').value=kstDate();
+  showM('adcCreateModal');
+}
+async function adcSaveNewDoc(){
+  if(!canAdcManage()){ toast('⚠️ 관리자 이상만 작성할 수 있습니다'); return; }
+  var content1=document.getElementById('adcNewContent1').value.trim();
+  var content2=document.getElementById('adcNewContent2').value.trim();
+  var docDate=document.getElementById('adcNewDate').value;
+  if(!content1||!content2||!docDate){ toast('① 회람내용, ② 회람대상, 연월일을 모두 입력해주세요'); return; }
+  try{
+    var res=await sb.from('admin_confirm_docs').insert({content1:content1,content2:content2,doc_date:docDate,created_by:me?me.name:''});
+    if(res.error) throw res.error;
+    toast('✅ 회람확인서가 작성되었습니다');
+    hideM('adcCreateModal');
+    loadAdcDocList();
+  }catch(e){ toast('⚠️ 저장 실패: '+e.message); }
+}
+async function adcOpenDocDetail(id){
+  var lv=document.getElementById('adcDocListView'); if(lv) lv.style.display='none';
+  var dv=document.getElementById('adcDocDetailView'); if(dv) dv.style.display='block';
+  var body=document.getElementById('adcDocDetailBody'); if(!body) return;
+  body.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3)">불러오는 중...</div>';
+  try{
+    var docRes=await sb.from('admin_confirm_docs').select('*').eq('id',id);
+    var d=docRes&&docRes.data&&docRes.data[0];
+    if(!d){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">문서를 찾을 수 없습니다</div>'; return; }
+    var sigRes=await sb.from('admin_confirm_signatures').select('*').eq('doc_id',id).order('seq',{ascending:true});
+    var sigs=(sigRes&&sigRes.data)||[];
+    var alreadySigned=me&&sigs.some(function(s){ return s.signed_by===me.id; });
+    var canEdit=canAdcManage();
+    var h='<div class="card" style="margin-bottom:12px"><div class="cb">'
+      +'<div style="font-size:16px;font-weight:800;color:var(--g7);margin-bottom:4px">회 람 확 인 서</div>'
+      +'<div style="font-size:12px;color:var(--g4);margin-bottom:10px">'+lrptEsc(d.doc_date)+'</div>'
+      +'<div style="font-size:13px;color:var(--g6);line-height:1.8">'
+      +'1. (회람내용) '+lrptEsc(d.content1)+'<br>'
+      +'2. (회람대상) '+lrptEsc(d.content2)+'<br>'
+      +'3. (회람방법) 회람 내용 확인 후 평가자 전원 아래 서명란에 서명'
+      +'</div></div></div>';
+    h+='<table class="adc-sig-table"><thead><tr><th>연번</th><th>소속</th><th>직책</th><th>사번</th><th>성명</th><th>확인일자</th><th>서명</th>'+(canEdit?'<th></th>':'')+'</tr></thead><tbody>';
+    sigs.forEach(function(s,i){
+      var sigImg=s.signature_path?'<img src="'+SUPABASE_URL+'/storage/v1/object/public/adminconfirm/'+encodeURIComponent(s.signature_path)+'" style="height:26px">':'';
+      h+='<tr><td>'+(i+1)+'</td><td>'+lrptEsc(s.dept)+'</td><td>'+lrptEsc(s.position)+'</td><td>'+lrptEsc(s.employee_id)+'</td><td>'+lrptEsc(s.name)+'</td><td>'+lrptEsc(s.confirmed_date)+'</td><td>'+sigImg+'</td>'
+        +(canEdit?'<td><span onclick="adcDeleteSignature('+s.id+','+id+')" style="cursor:pointer" title="삭제">🗑️</span></td>':'')
+        +'</tr>';
+    });
+    h+='</tbody></table>';
+    h+='<div style="display:flex;gap:8px;margin-top:14px">';
+    if(canEdit&&!alreadySigned){
+      h+='<button onclick="adcSign('+id+')" class="btn-prim" style="flex:1">✍️ 서명하기</button>';
+    }else if(alreadySigned){
+      h+='<div style="flex:1;text-align:center;padding:12px;color:var(--teal2);font-weight:700;font-size:14px;background:var(--teal-bg);border-radius:var(--r2)">✅ 이미 서명하셨습니다</div>';
+    }
+    h+='<button onclick="adcPrintDoc('+id+')" style="flex:1;padding:12px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🖨️ 인쇄</button>';
+    h+='</div>';
+    if(canEdit){
+      h+='<button onclick="adcDeleteDoc('+id+')" style="width:100%;margin-top:8px;padding:10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">🗑️ 이 회람확인서 전체 삭제</button>';
+    }
+    body.innerHTML=h;
+  }catch(e){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">불러오기 실패: '+e.message+'</div>'; }
+}
+async function adcSign(docId){
+  if(!canAdcManage()){ toast('⚠️ 관리자 이상만 서명할 수 있습니다'); return; }
+  if(!me){ return; }
+  try{
+    var profRes=await sb.from('user_signatures').select('*').eq('username',me.id);
+    var prof=profRes&&profRes.data&&profRes.data[0];
+    if(!prof||!prof.signature_path||!prof.dept||!prof.position||!prof.employee_id){
+      toast('⚠️ 먼저 "내 서명 등록" 탭에서 소속·직책·사번·서명 이미지를 등록해주세요');
+      adcTab(2);
+      return;
+    }
+    var sigRes=await sb.from('admin_confirm_signatures').select('seq').eq('doc_id',docId);
+    var maxSeq=0;
+    if(sigRes.data) sigRes.data.forEach(function(s){ if(s.seq>maxSeq) maxSeq=s.seq; });
+    var res=await sb.from('admin_confirm_signatures').insert({
+      doc_id:docId, seq:maxSeq+1, dept:prof.dept, position:prof.position, employee_id:prof.employee_id,
+      name:me.name, confirmed_date:kstDate(), signature_path:prof.signature_path,
+      signed_by:me.id, signed_by_role:me.role
+    });
+    if(res.error) throw res.error;
+    toast('✅ 서명이 완료되었습니다');
+    adcOpenDocDetail(docId);
+  }catch(e){ toast('⚠️ 서명 실패: '+e.message); }
+}
+async function adcDeleteSignature(sigId, docId){
+  if(!canAdcManage()){ toast('⚠️ 관리자 이상만 삭제할 수 있습니다'); return; }
+  if(!confirm('이 서명을 삭제하시겠습니까?')) return;
+  try{
+    var res=await sb.from('admin_confirm_signatures').delete().eq('id',sigId);
+    if(res.error) throw res.error;
+    await logDeletion('관리자확인사항(서명)', '서명 1건 삭제');
+    toast('✅ 삭제되었습니다');
+    adcOpenDocDetail(docId);
+  }catch(e){ toast('⚠️ 삭제 실패: '+e.message); }
+}
+async function adcDeleteDoc(id){
+  if(!canAdcManage()){ toast('⚠️ 관리자 이상만 삭제할 수 있습니다'); return; }
+  if(!confirm('이 회람확인서와 모든 서명 기록을 삭제하시겠습니까?')) return;
+  try{
+    var docRes=await sb.from('admin_confirm_docs').select('content1').eq('id',id);
+    var summary=docRes&&docRes.data&&docRes.data[0]?docRes.data[0].content1:('id '+id);
+    var res=await sb.from('admin_confirm_docs').delete().eq('id',id);
+    if(res.error) throw res.error;
+    await logDeletion('관리자확인사항', summary);
+    toast('✅ 삭제되었습니다');
+    adcBackToDocList();
+    loadAdcDocList();
+  }catch(e){ toast('⚠️ 삭제 실패: '+e.message); }
+}
+async function adcPrintDoc(id){
+  try{
+    var docRes=await sb.from('admin_confirm_docs').select('*').eq('id',id);
+    var d=docRes&&docRes.data&&docRes.data[0];
+    if(!d){ toast('⚠️ 문서를 찾을 수 없습니다'); return; }
+    var sigRes=await sb.from('admin_confirm_signatures').select('*').eq('doc_id',id).order('seq',{ascending:true});
+    var sigs=(sigRes&&sigRes.data)||[];
+    var area=document.getElementById('adcPrintArea'); if(!area) return;
+    var h='<div style="text-align:center;font-size:19px;font-weight:800;letter-spacing:6px;margin-bottom:6px">회 람 확 인 서</div>';
+    h+='<div style="text-align:left;font-size:12px;color:#333;margin-bottom:14px">'+lrptEsc(d.doc_date)+'</div>';
+    h+='<div style="font-size:12.5px;line-height:1.9;margin-bottom:14px">'
+      +'1. (회람내용) '+lrptEsc(d.content1)+'<br>'
+      +'2. (회람대상) '+lrptEsc(d.content2)+'<br>'
+      +'3. (회람방법) 회람 내용 확인 후 평가자 전원 아래 서명란에 서명'
+      +'</div>';
+    h+='<table class="adc-sig-table"><thead><tr><th style="width:6%">연번</th><th style="width:16%">소속</th><th style="width:12%">직책</th><th style="width:12%">사번</th><th style="width:12%">성명</th><th style="width:14%">확인일자</th><th style="width:18%">서명</th></tr></thead><tbody>';
+    var maxRows=Math.max(20, sigs.length);
+    for(var i=0;i<maxRows;i++){
+      var s=sigs[i];
+      if(s){
+        var sigImg=s.signature_path?'<img src="'+SUPABASE_URL+'/storage/v1/object/public/adminconfirm/'+encodeURIComponent(s.signature_path)+'" style="height:24px">':'';
+        h+='<tr><td>'+(i+1)+'</td><td>'+lrptEsc(s.dept)+'</td><td>'+lrptEsc(s.position)+'</td><td>'+lrptEsc(s.employee_id)+'</td><td>'+lrptEsc(s.name)+'</td><td>'+lrptEsc(s.confirmed_date)+'</td><td>'+sigImg+'</td></tr>';
+      }else{
+        h+='<tr><td>'+(i+1)+'</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
+      }
+    }
+    h+='</tbody></table>';
+    h+='<div style="font-size:12.5px;text-align:center;margin-top:18px;line-height:1.8">상기 회람자는 '+lrptEsc(d.content1)+'의 내용을 확인·숙지 하였습니다.</div>';
+    area.innerHTML=h;
+    showM('adcPrintModal');
+  }catch(e){ toast('⚠️ 인쇄 준비 실패: '+e.message); }
+}
+
+// ── PDF 문서함 ──
+async function loadAdcPdfList(){
+  var wrap=document.getElementById('adcPdfListWrap'); if(!wrap) return;
+  try{
+    var res=await sb.from('admin_confirm_files').select('*').order('created_at',{ascending:false});
+    if(res.error||!res.data||!res.data.length){
+      wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">📭 등록된 문서가 없습니다</div>';
+      return;
+    }
+    var canEdit=canAdcManage();
+    var h='';
+    res.data.forEach(function(f){
+      h+='<div style="display:flex;align-items:center;gap:10px;background:white;border:1.5px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:8px">'
+        +'<div onclick="adcOpenPdf('+f.id+',\''+String(f.file_path).replace(/'/g,"\\'")+'\',\''+String(f.title).replace(/'/g,"\\'")+'\')" style="flex:1;cursor:pointer;min-width:0">'
+        +'<div style="font-size:14px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+lrptEsc(f.title)+'</div>'
+        +'<div style="font-size:11.5px;color:var(--g4);margin-top:2px">'+(f.created_at?toKSTDate(f.created_at):'')+' · '+lrptEsc(f.uploaded_by)+' · 조회 '+(f.view_count||0)+'</div>'
+        +'</div>'
+        +(canEdit?'<span onclick="adcDeletePdf('+f.id+',\''+String(f.file_path).replace(/'/g,"\\'")+'\')" style="cursor:pointer;flex-shrink:0" title="삭제">🗑️</span>':'')
+        +'</div>';
+    });
+    wrap.innerHTML=h;
+  }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger);font-size:14px">불러오기 실패</div>'; }
+}
+function adcOpenPdf(id, path, title){
+  bumpViewCount('admin_confirm_files', id);
+  var url=SUPABASE_URL+'/storage/v1/object/public/adminconfirm/'+encodeURIComponent(path);
+  window._adcPdfUrl=url;
+  var t=document.getElementById('adcViewerTitleText'); if(t) t.textContent='📄 '+title;
+  var pv=document.getElementById('adcPv'); if(pv){ pv.style.display='flex'; }
+  openEbookViewer('adc', url, title);
+}
+function adcCloseViewer(){
+  var pv=document.getElementById('adcPv'); if(pv) pv.style.display='none';
+}
+async function adcUploadPdfs(files){
+  if(!canAdcManage()){ toast('⚠️ 관리자 이상만 업로드할 수 있습니다'); return; }
+  if(!files||!files.length) return;
+  for(var i=0;i<files.length;i++){
+    var file=files[i];
+    try{
+      var ts=Date.now()+i;
+      var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
+      var safePath='pdfs/adc_'+ts+ext;
+      var titleNoExt=file.name.lastIndexOf('.')>=0?file.name.slice(0,file.name.lastIndexOf('.')):file.name;
+      var uploadUrl=SUPABASE_URL+'/storage/v1/object/adminconfirm/'+encodeURIComponent(safePath);
+      var r=await fetch(uploadUrl,{
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/pdf','x-upsert':'true'},
+        body:file
+      });
+      if(r.ok){
+        await sb.from('admin_confirm_files').insert({title:titleNoExt, file_path:safePath, uploaded_by:me?me.name:''});
+      }
+    }catch(e){ console.error('업로드 실패', e); }
+  }
+  toast('✅ 업로드 완료');
+  var fi=document.getElementById('adcPdfFileInput'); if(fi) fi.value='';
+  loadAdcPdfList();
+}
+async function adcDeletePdf(id, path){
+  if(!canAdcManage()){ toast('⚠️ 관리자 이상만 삭제할 수 있습니다'); return; }
+  if(!confirm('이 문서를 삭제하시겠습니까?')) return;
+  try{
+    if(path){
+      var delUrl=SUPABASE_URL+'/storage/v1/object/adminconfirm/'+encodeURIComponent(path);
+      await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+    }
+    var res=await sb.from('admin_confirm_files').delete().eq('id',id);
+    if(res.error) throw res.error;
+    await logDeletion('관리자확인사항(PDF)', 'PDF 문서 1건 삭제');
+    toast('✅ 삭제되었습니다');
+    loadAdcPdfList();
+  }catch(e){ toast('⚠️ 삭제 실패: '+e.message); }
+}
+
+// ── 내 서명 등록 ──
+var _adcMySigFile=null;
+var _adcMySigExistingPath=null;
+async function loadAdcMySig(){
+  if(!me) return;
+  try{
+    var res=await sb.from('user_signatures').select('*').eq('username',me.id);
+    var p=res&&res.data&&res.data[0];
+    document.getElementById('adcMyDept').value=(p&&p.dept)||'T1환경미화사업부';
+    document.getElementById('adcMyPosition').value=(p&&p.position)||'';
+    document.getElementById('adcMyEmpId').value=(p&&p.employee_id)||'';
+    _adcMySigExistingPath=(p&&p.signature_path)||null;
+    _adcMySigFile=null;
+    var wrap=document.getElementById('adcMySigPreviewWrap');
+    var img=document.getElementById('adcMySigPreview');
+    if(p&&p.signature_path&&wrap&&img){
+      img.src=SUPABASE_URL+'/storage/v1/object/public/adminconfirm/'+encodeURIComponent(p.signature_path);
+      wrap.style.display='block';
+    }else if(wrap){ wrap.style.display='none'; }
+  }catch(e){}
+}
+function adcPreviewMySig(files){
+  if(!files||!files[0]) return;
+  _adcMySigFile=files[0];
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var img=document.getElementById('adcMySigPreview');
+    var wrap=document.getElementById('adcMySigPreviewWrap');
+    if(img) img.src=e.target.result;
+    if(wrap) wrap.style.display='block';
+  };
+  reader.readAsDataURL(_adcMySigFile);
+}
+async function adcSaveMySig(){
+  if(!me){ return; }
+  var dept=document.getElementById('adcMyDept').value.trim();
+  var position=document.getElementById('adcMyPosition').value.trim();
+  var empId=document.getElementById('adcMyEmpId').value.trim();
+  if(!dept||!position||!empId){ toast('소속·직책·사번을 모두 입력해주세요'); return; }
+  var sigPath=_adcMySigExistingPath;
+  try{
+    if(_adcMySigFile){
+      var ext=_adcMySigFile.name.lastIndexOf('.')>=0?_adcMySigFile.name.slice(_adcMySigFile.name.lastIndexOf('.')):'.png';
+      sigPath='signatures/'+me.id+'_'+Date.now()+ext;
+      var uploadUrl=SUPABASE_URL+'/storage/v1/object/adminconfirm/'+encodeURIComponent(sigPath);
+      var r=await fetch(uploadUrl,{
+        method:'POST',
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':_adcMySigFile.type||'image/png','x-upsert':'true'},
+        body:_adcMySigFile
+      });
+      if(!r.ok) throw new Error('서명 이미지 업로드 실패');
+      if(_adcMySigExistingPath&&_adcMySigExistingPath!==sigPath){
+        try{
+          var oldDelUrl=SUPABASE_URL+'/storage/v1/object/adminconfirm/'+encodeURIComponent(_adcMySigExistingPath);
+          await fetch(oldDelUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+        }catch(delErr){}
+      }
+    }
+    if(!sigPath){ toast('⚠️ 서명 이미지를 선택해주세요'); return; }
+    var res=await sb.from('user_signatures').upsert({
+      username:me.id, dept:dept, position:position, employee_id:empId, signature_path:sigPath, updated_at:new Date().toISOString()
+    },{onConflict:'username'});
+    if(res.error) throw res.error;
+    _adcMySigExistingPath=sigPath; _adcMySigFile=null;
+    toast('✅ 서명정보가 저장되었습니다');
+  }catch(e){ toast('⚠️ 저장 실패: '+e.message); }
 }
 
 // ══ 시설물 공통: 수정자 표기 / 날짜 표기 헬퍼 ══
