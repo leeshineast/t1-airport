@@ -892,7 +892,7 @@ html{overflow-x:hidden}
       <button class="menu-btn" id="adcMenuBtn" onclick="go('admconfirm')" style="display:none">
         <span class="menu-icon">📋</span>
         <div class="menu-title">관리자 확인사항</div>
-        <div class="menu-desc">회람확인서 작성·전자서명·문서함</div>
+        <div class="menu-desc">확인서 작성·전자서명·문서함</div>
         <span class="menu-arrow">보기 →</span>
       </button>
     </div>
@@ -2575,21 +2575,21 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 </style>
 <div id="sAdc" class="scr" style="display:none">
   <div class="pg-hd">
-    <div><h1>📋 관리자 확인사항</h1><small>회람확인서 작성·전자서명·문서함</small></div>
+    <div><h1>📋 관리자 확인사항</h1><small>확인서 작성·전자서명·문서함</small></div>
     <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 메인</button>
   </div>
 
   <!-- 탭 -->
   <div style="display:flex;border-bottom:2px solid var(--g2)">
-    <div id="adcT0" onclick="adcTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:14px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">회람확인서</div>
+    <div id="adcT0" onclick="adcTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:14px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">확인서</div>
     <div id="adcT1" onclick="adcTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">PDF 문서</div>
     <div id="adcT2" onclick="adcTab(2)" style="flex:1;text-align:center;padding:10px 0;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">내 서명 등록</div>
   </div>
 
-  <!-- 탭0: 회람확인서 -->
+  <!-- 탭0: 확인서 -->
   <div id="adcP0" style="padding:13px">
     <div id="adcDocListView">
-      <button id="adcNewDocBtn" onclick="adcOpenCreateDoc()" style="display:none;width:100%;margin-bottom:12px;padding:11px;background:var(--teal-bg);border:1.5px dashed var(--teal);border-radius:var(--r2);font-size:14px;font-weight:700;color:var(--teal2);cursor:pointer">➕ 새 회람확인서 작성</button>
+      <button id="adcNewDocBtn" onclick="adcOpenCreateDoc()" style="display:none;width:100%;margin-bottom:12px;padding:11px;background:var(--teal-bg);border:1.5px dashed var(--teal);border-radius:var(--r2);font-size:14px;font-weight:700;color:var(--teal2);cursor:pointer">➕ 새 확인서 작성</button>
       <div id="adcDocListWrap"><div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div></div>
     </div>
     <div id="adcDocDetailView" style="display:none">
@@ -2644,7 +2644,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div id="adcP2" style="display:none;padding:13px">
     <div class="card"><div class="cb">
       <div style="font-size:14px;font-weight:700;color:var(--g6);margin-bottom:4px">✍️ 내 서명 정보 등록</div>
-      <div style="font-size:12.5px;color:var(--g4);margin-bottom:13px;line-height:1.6">한 번 등록해두면 회람확인서 서명 시 자동으로 채워집니다.</div>
+      <div style="font-size:12.5px;color:var(--g4);margin-bottom:13px;line-height:1.6">한 번 등록해두면 확인서 서명 시 자동으로 채워집니다.</div>
       <div class="fg"><label class="f-lbl">소속</label><input type="text" id="adcMyDept" class="ri" value="T1환경미화사업부"></div>
       <div class="fg"><label class="f-lbl">직책</label><input type="text" id="adcMyPosition" class="ri" placeholder="예: 과장, 팀장, 사원"></div>
       <div class="fg"><label class="f-lbl">사번</label><input type="text" id="adcMyEmpId" class="ri" placeholder="사번 입력"></div>
@@ -2661,8 +2661,9 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
 </div>
 
-<!-- 회람확인서 작성 모달 -->
-<div id="adcCreateModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📋 회람확인서 작성</h3><button class="m-x" onclick="hideM('adcCreateModal')">×</button></div><div style="padding:15px 17px">
+<!-- 확인서 작성 모달 -->
+<div id="adcCreateModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📋 확인서 작성</h3><button class="m-x" onclick="hideM('adcCreateModal')">×</button></div><div style="padding:15px 17px">
+  <div class="fg"><label class="f-lbl">제목 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewTitle" class="ri" placeholder="예: 2026년 8월 인사평가 회람확인서"></div>
   <div class="fg"><label class="f-lbl">① 회람내용 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewContent1" class="ri" placeholder="예: 「인사평가 적용기준 안내」,「사업2본부 인사평가 가·감점 기준」"></div>
   <div class="fg"><label class="f-lbl">② 회람대상 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewContent2" class="ri" placeholder="예: 그룹·사업부 인사평가 평가자"></div>
   <div class="fg"><label class="f-lbl">연월일</label><input type="date" id="adcNewDate" class="ri" style="margin-bottom:0"></div>
@@ -2670,7 +2671,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <button onclick="adcSaveNewDoc()" class="btn-prim" style="width:100%;margin-top:13px">📋 작성 완료</button>
 </div></div></div>
 
-<!-- 인쇄용 회람확인서 -->
+<!-- 인쇄용 확인서 -->
 <style>
 @media print{
   @page{ margin:14mm 12mm 10mm 12mm; }
@@ -2686,7 +2687,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 </style>
 <div id="adcPrintModal" class="modal-bg">
   <div class="modal" style="max-width:640px;max-height:92vh;overflow-y:auto">
-    <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🖨️ 회람확인서 인쇄</h3><button class="m-x" onclick="hideM('adcPrintModal')">×</button></div>
+    <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🖨️ 확인서 인쇄</h3><button class="m-x" onclick="hideM('adcPrintModal')">×</button></div>
     <div style="padding:15px 17px">
       <div id="adcPrintArea" style="background:white;padding:16px;border:1px solid #ccc"></div>
       <div class="no-print" style="display:flex;gap:8px;margin-top:14px">
@@ -5709,6 +5710,9 @@ function go(name){
   }
   if(name==='waste'){
     loadWasteFromDB();
+  }
+  if(name==='admconfirm'){
+    adcTab(0);
   }
   if(name==='perf'){
     loadPerfFromDB();
@@ -15330,7 +15334,7 @@ function adcTab(n){
   else if(n===2){ loadAdcMySig(); }
 }
 
-// ── 회람확인서 목록/작성/서명/인쇄 ──
+// ── 확인서 목록/작성/서명/인쇄 ──
 function adcBackToDocList(){
   var lv=document.getElementById('adcDocListView'); if(lv) lv.style.display='block';
   var dv=document.getElementById('adcDocDetailView'); if(dv) dv.style.display='none';
@@ -15341,7 +15345,7 @@ async function loadAdcDocList(){
   try{
     var docRes=await sb.from('admin_confirm_docs').select('*').order('created_at',{ascending:false});
     if(docRes.error||!docRes.data||!docRes.data.length){
-      wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">📭 등록된 회람확인서가 없습니다</div>';
+      wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">📭 등록된 확인서가 없습니다</div>';
       return;
     }
     var docs=docRes.data;
@@ -15351,7 +15355,7 @@ async function loadAdcDocList(){
     var h='';
     docs.forEach(function(d){
       h+='<div onclick="adcOpenDocDetail('+d.id+')" style="background:white;border:1.5px solid var(--g2);border-radius:var(--r2);padding:13px 14px;margin-bottom:9px;cursor:pointer">'
-        +'<div style="font-size:14.5px;font-weight:700;color:var(--g7);margin-bottom:5px">📋 '+lrptEsc(d.content1)+'</div>'
+        +'<div style="font-size:14.5px;font-weight:700;color:var(--g7);margin-bottom:5px">📋 '+lrptEsc(d.title||d.content1)+'</div>'
         +'<div style="font-size:12.5px;color:var(--g4)">대상: '+lrptEsc(d.content2)+'</div>'
         +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:7px">'
         +'<span style="font-size:12px;color:var(--g4)">'+lrptEsc(d.doc_date)+' · '+lrptEsc(d.created_by)+'</span>'
@@ -15363,6 +15367,7 @@ async function loadAdcDocList(){
 }
 function adcOpenCreateDoc(){
   if(!canAdcManage()){ toast('⚠️ 관리자 이상만 작성할 수 있습니다'); return; }
+  document.getElementById('adcNewTitle').value='';
   document.getElementById('adcNewContent1').value='';
   document.getElementById('adcNewContent2').value='';
   document.getElementById('adcNewDate').value=kstDate();
@@ -15370,14 +15375,15 @@ function adcOpenCreateDoc(){
 }
 async function adcSaveNewDoc(){
   if(!canAdcManage()){ toast('⚠️ 관리자 이상만 작성할 수 있습니다'); return; }
+  var title=document.getElementById('adcNewTitle').value.trim();
   var content1=document.getElementById('adcNewContent1').value.trim();
   var content2=document.getElementById('adcNewContent2').value.trim();
   var docDate=document.getElementById('adcNewDate').value;
-  if(!content1||!content2||!docDate){ toast('① 회람내용, ② 회람대상, 연월일을 모두 입력해주세요'); return; }
+  if(!title||!content1||!content2||!docDate){ toast('제목, ① 회람내용, ② 회람대상, 연월일을 모두 입력해주세요'); return; }
   try{
-    var res=await sb.from('admin_confirm_docs').insert({content1:content1,content2:content2,doc_date:docDate,created_by:me?me.name:''});
+    var res=await sb.from('admin_confirm_docs').insert({title:title,content1:content1,content2:content2,doc_date:docDate,created_by:me?me.name:''});
     if(res.error) throw res.error;
-    toast('✅ 회람확인서가 작성되었습니다');
+    toast('✅ 확인서가 작성되었습니다');
     hideM('adcCreateModal');
     loadAdcDocList();
   }catch(e){ toast('⚠️ 저장 실패: '+e.message); }
@@ -15397,6 +15403,10 @@ async function adcOpenDocDetail(id){
     var canEdit=canAdcManage();
     var h='<div class="card" style="margin-bottom:12px"><div class="cb">'
       +'<div style="text-align:right;margin-bottom:8px"><img src="'+ADC_BANNER_B64+'" style="height:20px"></div>'
+      +'<div style="display:flex;align-items:center;justify-content:center;gap:6px;margin-bottom:6px">'
+      +'<span style="font-size:14px;font-weight:700;color:var(--teal2)">'+lrptEsc(d.title||'')+'</span>'
+      +(canEdit?'<span onclick="adcEditTitle('+id+',\''+String(d.title||'').replace(/'/g,"\\'")+'\')" style="cursor:pointer;font-size:13px" title="제목 수정">✏️</span>':'')
+      +'</div>'
       +'<div style="border-top:3px double #444;border-bottom:3px double #444;padding:9px 0;text-align:center;font-size:17px;font-weight:800;letter-spacing:6px;color:var(--g7);margin-bottom:10px">회 람 확 인 서</div>'
       +'<div style="font-size:12px;color:var(--g4);margin-bottom:10px">'+lrptEsc(d.doc_date)+'</div>'
       +'<div style="font-size:13px;color:var(--g6);line-height:1.8">'
@@ -15421,10 +15431,23 @@ async function adcOpenDocDetail(id){
     h+='<button onclick="adcPrintDoc('+id+')" style="flex:1;padding:12px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🖨️ 인쇄</button>';
     h+='</div>';
     if(canEdit){
-      h+='<button onclick="adcDeleteDoc('+id+')" style="width:100%;margin-top:8px;padding:10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">🗑️ 이 회람확인서 전체 삭제</button>';
+      h+='<button onclick="adcDeleteDoc('+id+')" style="width:100%;margin-top:8px;padding:10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">🗑️ 이 확인서 전체 삭제</button>';
     }
     body.innerHTML=h;
   }catch(e){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">불러오기 실패: '+e.message+'</div>'; }
+}
+async function adcEditTitle(id, currentTitle){
+  if(!canAdcManage()){ toast('⚠️ 관리자 이상만 수정할 수 있습니다'); return; }
+  var newTitle=prompt('제목을 입력해주세요', currentTitle||'');
+  if(newTitle===null) return;
+  newTitle=newTitle.trim();
+  if(!newTitle){ toast('제목을 입력해주세요'); return; }
+  try{
+    var res=await sb.from('admin_confirm_docs').update({title:newTitle}).eq('id',id);
+    if(res.error) throw res.error;
+    toast('✅ 제목이 수정되었습니다');
+    adcOpenDocDetail(id);
+  }catch(e){ toast('⚠️ 수정 실패: '+e.message); }
 }
 async function adcSign(docId){
   if(!canAdcManage()){ toast('⚠️ 관리자 이상만 서명할 수 있습니다'); return; }
@@ -15463,7 +15486,7 @@ async function adcDeleteSignature(sigId, docId){
 }
 async function adcDeleteDoc(id){
   if(!canAdcManage()){ toast('⚠️ 관리자 이상만 삭제할 수 있습니다'); return; }
-  if(!confirm('이 회람확인서와 모든 서명 기록을 삭제하시겠습니까?')) return;
+  if(!confirm('이 확인서와 모든 서명 기록을 삭제하시겠습니까?')) return;
   try{
     var docRes=await sb.from('admin_confirm_docs').select('content1').eq('id',id);
     var summary=docRes&&docRes.data&&docRes.data[0]?docRes.data[0].content1:('id '+id);
