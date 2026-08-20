@@ -4231,17 +4231,17 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         </div>
         <div style="display:none;gap:7px;margin-top:8px" id="vocSideWrap">
           <div class="rp" data-v="동편" onclick="pickVocSide(this)" style="flex:1;text-align:center">동편</div>
+          <div class="rp" data-v="중앙" onclick="pickVocSide(this)" style="flex:1;text-align:center">중앙</div>
           <div class="rp" data-v="서편" onclick="pickVocSide(this)" style="flex:1;text-align:center">서편</div>
         </div>
-        <select id="vocFloor" class="ri" style="margin-top:8px;display:none;font-size:15px">
-          <option value="">층 선택</option>
-          <option value="B2F">B2F</option>
-          <option value="B1F">B1F</option>
-          <option value="1F">1F</option>
-          <option value="2F">2F</option>
-          <option value="3F">3F</option>
-          <option value="4F">4F</option>
-        </select>
+        <div style="display:none;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:8px" id="vocFloorWrap">
+          <div class="rp" data-v="B2F" onclick="pickVocFloor(this)" style="text-align:center;padding:8px 2px;font-size:12px">B2F</div>
+          <div class="rp" data-v="B1F" onclick="pickVocFloor(this)" style="text-align:center;padding:8px 2px;font-size:12px">B1F</div>
+          <div class="rp" data-v="1F" onclick="pickVocFloor(this)" style="text-align:center;padding:8px 2px;font-size:12px">1F</div>
+          <div class="rp" data-v="2F" onclick="pickVocFloor(this)" style="text-align:center;padding:8px 2px;font-size:12px">2F</div>
+          <div class="rp" data-v="3F" onclick="pickVocFloor(this)" style="text-align:center;padding:8px 2px;font-size:12px">3F</div>
+          <div class="rp" data-v="4F" onclick="pickVocFloor(this)" style="text-align:center;padding:8px 2px;font-size:12px">4F</div>
+        </div>
       </div>
       <!-- ④ 상세내용 -->
       <div style="margin-bottom:12px">
@@ -4277,11 +4277,6 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div style="margin-bottom:16px">
         <label class="f-lbl">비고 <span style="font-size:12px;color:var(--g4)">(선택)</span></label>
         <textarea id="vocNote" class="ri" rows="2" placeholder="처리결과, 담당자 등 추가사항" style="resize:vertical;font-size:15px"></textarea>
-      </div>
-      <div id="vocPasteWrap" style="display:none;background:var(--teal-bg);border:1.5px dashed var(--teal);border-radius:var(--r2);padding:12px;margin-bottom:16px">
-        <label class="f-lbl">📞 통화 내용 붙여넣기 <span style="font-weight:400;color:var(--g4)">(분류만 자동으로 채워집니다 · 이 텍스트 자체는 저장되지 않아요)</span></label>
-        <textarea id="vocPasteBox" class="ri" rows="4" placeholder="예) 3층 화장실에 물기가 많아서 미끄러울 것 같다고 민원 접수됨..." style="resize:vertical;font-size:14px;margin-top:6px;margin-bottom:0"></textarea>
-        <button type="button" onclick="parseVocPaste()" style="width:100%;margin-top:9px;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">✨ 자동 입력</button>
       </div>
       <button class="btn-prim" onclick="saveVoc()" style="width:100%">📞 민원 접수 저장</button>
     </div></div>
@@ -13889,6 +13884,7 @@ var vocSelectedChannel = '';
 var vocSelectedCategory = '';
 var vocSelectedZone = '';
 var vocSelectedSide = '';
+var vocSelectedFloor = '';
 
 function vocTab(n){ tabSwitch('voc',n,2); }
 
@@ -13958,80 +13954,18 @@ function pickVocSide(el){
   var wrap=document.getElementById('vocSideWrap');
   if(wrap) Array.prototype.forEach.call(wrap.children,function(c){ c.classList.remove('on'); });
   el.classList.add('on');
-  var floorEl=document.getElementById('vocFloor');
-  if(floorEl) floorEl.style.display='block';
+  var floorWrap=document.getElementById('vocFloorWrap');
+  if(floorWrap) floorWrap.style.display='grid';
+}
+
+function pickVocFloor(el){
+  vocSelectedFloor=el.getAttribute('data-v');
+  var wrap=document.getElementById('vocFloorWrap');
+  if(wrap) Array.prototype.forEach.call(wrap.children,function(c){ c.classList.remove('on'); });
+  el.classList.add('on');
 }
 
 // 탭 진입 시 초기화
-// 통화내용(녹음→텍스트 변환분) 붙여넣기 자동입력 — admin 전용 기능
-function parseVocPaste(){
-  var raw=(document.getElementById('vocPasteBox').value||'').trim();
-  if(!raw){ toast('붙여넣은 내용이 없습니다'); return; }
-  var textLower=raw.toLowerCase();
-
-  // ① 접수경로: 전화로 받는다고 하셨으니 기본 '일반전화'로 지정 (이미 다른 값이 선택돼 있으면 유지)
-  if(!vocSelectedChannel){
-    var chWrap=document.getElementById('vocChannelWrap');
-    if(chWrap){ var btn=Array.prototype.find.call(chWrap.children,function(b){return b.getAttribute('data-v')==='일반전화';}); if(btn) pickVocChannel(btn); }
-  }
-
-  // ② 민원내용 유형: 기존 자동추천 로직(msClassifyVocTop3ForForm) 재사용해서 1순위 자동 선택
-  if(typeof msClassifyVocTop3ForForm==='function'){
-    var top=msClassifyVocTop3ForForm(raw);
-    if(top.length) selectVocCategoryByValue(top[0]);
-  }
-
-  // ③ 위치: L/S·A/S, 동편·서편, 층수, 공항 랜드마크 키워드로 추정
-  var landmarkHit=null;
-  var asLandmarks=['탑승동','게이트','면세점','라운지','셔틀트레인','출국심사','pbb','스카이허브'];
-  var lsLandmarks=['체크인카운터','체크인 카운터','출국장','입국장','수하물','캐로셀','환전소','여행자보험','관광안내소','로비'];
-  var hasAsLandmark=asLandmarks.some(function(k){ if(textLower.indexOf(k)>=0){ landmarkHit=k; return true;} return false; });
-  var hasLsLandmark=hasAsLandmark?false:lsLandmarks.some(function(k){ if(textLower.indexOf(k)>=0){ landmarkHit=k; return true;} return false; });
-  var zoneKw=(textLower.indexOf('a/s')>=0||textLower.indexOf('에어사이드')>=0||textLower.indexOf('탑승동')>=0||/에어(?!컨)/.test(raw)||hasAsLandmark)?'A/S':((textLower.indexOf('l/s')>=0||textLower.indexOf('랜드사이드')>=0||/랜드(?!마크)/.test(raw)||hasLsLandmark)?'L/S':null);
-  if(zoneKw){
-    var zWrap=document.getElementById('vocZoneWrap');
-    if(zWrap){ var zbtn=Array.prototype.find.call(zWrap.children,function(b){return b.getAttribute('data-v')===zoneKw;}); if(zbtn) pickVocZone(zbtn); }
-  }
-  var sideKw=raw.indexOf('동편')>=0?'동편':(raw.indexOf('서편')>=0?'서편':null);
-  if(sideKw){
-    var sWrap=document.getElementById('vocSideWrap');
-    if(sWrap){ var sbtn=Array.prototype.find.call(sWrap.children,function(b){return b.getAttribute('data-v')===sideKw;}); if(sbtn) pickVocSide(sbtn); }
-  }
-  var floorMatch=raw.match(/\b(B2F|B1F|[1-4]F)\b/i) || raw.match(/([1-4])\s*층/) || raw.match(/지하\s*([12])\s*층/);
-  var floorEl=document.getElementById('vocFloor');
-  var floorLabel=null;
-  if(floorMatch && floorEl && floorEl.style.display!=='none'){
-    var fv=floorMatch[0].toUpperCase();
-    if(/^[1-4]$/.test(fv)) fv=fv+'F';
-    else if(floorMatch[1] && /^[12]$/.test(floorMatch[1]) && raw.indexOf('지하')>=0) fv='B'+floorMatch[1]+'F';
-    var opt=Array.prototype.find.call(floorEl.options,function(o){return o.value===fv;});
-    if(opt){ floorEl.value=fv; floorLabel=fv; }
-  }
-
-  // ④ 상세내용: 통화 원문 전체가 아니라, 핵심만 뽑아 짧게 요약해서 채움 (원문 자체는 어디에도 저장되지 않음 — 저장은 이 요약문으로만 됨)
-  var DETAIL_KW=['음료','토사물','용변','오물','유리','물기','먼지','막힘','파손','누수','악취','유실물','직원 응대'];
-  var matchedKw=DETAIL_KW.filter(function(k){ return raw.indexOf(k)>=0; });
-  var locLabel=[landmarkHit,floorLabel].filter(Boolean).join(' ');
-  var summaryParts=[];
-  if(locLabel) summaryParts.push(locLabel);
-  if(matchedKw.length) summaryParts.push(matchedKw.join('·'));
-  var contentEl=document.getElementById('vocContent');
-  if(contentEl){
-    var summary;
-    if(summaryParts.length){
-      summary=summaryParts.join(' ')+' 관련 민원';
-    }else{
-      // 핵심 키워드를 못 찾았으면, 흔한 말버릇만 제거하고 앞부분만 짧게 정리
-      var cleaned=raw.replace(/여기요|여기|저기요|저기|그니까|그런데요|그런데|인데요|있잖아요/g,'').replace(/\s{2,}/g,' ').trim();
-      summary=cleaned.length>40?cleaned.slice(0,40)+'…':cleaned;
-    }
-    contentEl.value=summary;
-    updateVocCatSuggest();
-  }
-
-  toast('✅ 접수경로/유형/위치/상세내용 요약까지 자동 입력 완료 — 확인 후 필요하면 수정해주세요');
-}
-
 function initVocForm(){
   // 날짜 오늘로 자동
   var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
@@ -14047,23 +13981,20 @@ function initVocForm(){
     if(btn){ btn.classList.remove('on'); if(i===0) btn.classList.add('on'); }
   });
   // 접수경로/유형/위치 초기화
-  vocSelectedChannel=''; vocSelectedCategory=''; vocSelectedZone=''; vocSelectedSide='';
-  ['vocChannelWrap','vocCategoryWrap','vocZoneWrap','vocSideWrap'].forEach(function(id){
+  vocSelectedChannel=''; vocSelectedCategory=''; vocSelectedZone=''; vocSelectedSide=''; vocSelectedFloor='';
+  ['vocChannelWrap','vocCategoryWrap','vocZoneWrap','vocSideWrap','vocFloorWrap'].forEach(function(id){
     var wrap=document.getElementById(id);
     if(wrap) Array.prototype.forEach.call(wrap.children,function(c){ c.classList.remove('on'); });
   });
   var sideWrap=document.getElementById('vocSideWrap'); if(sideWrap) sideWrap.style.display='none';
-  var floorEl=document.getElementById('vocFloor'); if(floorEl){ floorEl.style.display='none'; floorEl.value=''; }
+  var floorWrap=document.getElementById('vocFloorWrap'); if(floorWrap){ floorWrap.style.display='none'; }
   var etcEl=document.getElementById('vocCategoryEtc'); if(etcEl){ etcEl.style.display='none'; etcEl.value=''; }
   // 내용/비고 초기화
-  ['vocContent','vocNote','vocPasteBox'].forEach(function(id){
+  ['vocContent','vocNote'].forEach(function(id){
     var el=document.getElementById(id); if(el) el.value='';
   });
   document.querySelectorAll('.chip-quick.on').forEach(function(c){c.classList.remove('on');});
   var catSuggestEl=document.getElementById('vocCatSuggest'); if(catSuggestEl) catSuggestEl.style.display='none';
-  // 통화 내용 붙여넣기(자동입력) — admin 전용
-  var pasteWrap=document.getElementById('vocPasteWrap');
-  if(pasteWrap) pasteWrap.style.display=(me&&me.role==='master')?'block':'none';
 }
 
 async function saveVoc(){
@@ -14079,7 +14010,7 @@ async function saveVoc(){
   if(vocSelectedCategory==='기타'&&!categoryEtc){ toast('기타 내용을 입력해주세요'); return; }
   if(!vocSelectedZone){ toast('③ 위치(L/S, A/S)를 선택해주세요'); return; }
   if(!vocSelectedSide){ toast('③ 위치(동편, 서편)를 선택해주세요'); return; }
-  var floor=document.getElementById('vocFloor').value;
+  var floor=vocSelectedFloor;
   if(!floor){ toast('③ 층을 선택해주세요'); return; }
   var note=document.getElementById('vocNote').value.trim();
   var btn=document.querySelector('#vocP1 .btn-prim');
