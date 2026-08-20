@@ -2553,6 +2553,9 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
 </div>
 
+<!-- 장비현황 개별 항목 수정 모달 -->
+<div id="eqEditModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>✏️ 장비 정보 수정</h3><button class="m-x" onclick="closeEqEditModal()">×</button></div><div style="padding:15px 17px;max-height:65vh;overflow-y:auto" id="eqEditBody"></div><div style="padding:0 17px 15px;display:flex;gap:8px"><button onclick="closeEqEditModal()" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">취소</button><button onclick="eqSaveEdit()" style="flex:1;padding:11px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">저장</button></div></div></div>
+
 <!-- ══ 화장실 관리 ══ -->
 <div id="sToiletMgmt" class="scr" style="display:none">
   <div class="pg-hd">
@@ -14795,6 +14798,7 @@ async function deleteLost(id){
 
 // ══ 장비현황 ══
 var equipmentData=null; // {headers:[], rows:[[]], uploadDate:'', uploader:''}
+var eqDbRowId=null; // equipment_data 테이블의 단일 row id (개별 항목 수정/삭제 시 update 대상)
 
 function eqTab(n){
   tabSwitch('eq',n,3);
@@ -14895,10 +14899,12 @@ async function loadEquipmentFromDB(){
     if(res.error) throw res.error;
     if(res.data&&res.data.length){
       var row=res.data[0];
+      eqDbRowId=row.id;
       equipmentData=row.data;
       equipmentData.uploadDate=toKSTDate(row.created_at);
       equipmentData.uploader=row.uploader||'';
     } else {
+      eqDbRowId=null;
       equipmentData=null;
     }
     renderEquipment();
@@ -14965,12 +14971,14 @@ function renderEquipment(){
   // 테이블
   var mgmtColIdx=headers.findIndex(function(h){ return String(h).indexOf('관리번호')!==-1; });
   var nameColIdx=headers.findIndex(function(h){ return String(h).indexOf('장비명')!==-1; });
+  var canEdit=canDeleteWorkItem();
   var h='<table style="width:100%;border-collapse:collapse;font-size:14px;min-width:500px">';
   h+='<thead><tr>';
   headers.forEach(function(hd,hi){
     var w=hi===0?'width:1%;text-align:center;':''; // 순번 컬럼: 내용 크기에 맞춤
     h+='<th style="'+w+'padding:8px 10px;background:var(--navy);color:white;text-align:left;white-space:nowrap;font-size:13px">'+hd+'</th>';
   });
+  if(canEdit) h+='<th style="width:1%;padding:8px 10px;background:var(--navy);color:white;text-align:center;white-space:nowrap;font-size:13px">관리</th>';
   h+='</tr></thead><tbody>';
   filtered.forEach(function(r,i){
     h+='<tr style="background:'+(i%2===0?'white':'var(--g1)')+';">';
@@ -14984,10 +14992,71 @@ function renderEquipment(){
       var onclickAttr=isLink?' onclick="location.href=\'inspect.html?openEquip=\'+encodeURIComponent(\''+String(mgmtNo).replace(/'/g,"\\'")+'\')"':'';
       h+='<td style="'+tdStyle+'"'+onclickAttr+'>'+val+'</td>';
     });
+    if(canEdit){
+      var origIdx=equipmentData.rows.indexOf(r);
+      h+='<td style="padding:5px 6px;border-bottom:1px solid var(--g2);white-space:nowrap;text-align:center">'
+        +'<span onclick="eqOpenEditModal('+origIdx+')" style="cursor:pointer;margin-right:8px" title="수정">✏️</span>'
+        +'<span onclick="eqDeleteRow('+origIdx+')" style="cursor:pointer" title="삭제">🗑️</span>'
+        +'</td>';
+    }
     h+='</tr>';
   });
   h+='</tbody></table>';
   tableEl.innerHTML=h;
+}
+
+var _eqEditIdx=null; // 현재 수정 중인 equipmentData.rows 내 인덱스
+function eqOpenEditModal(idx){
+  if(!canDeleteWorkItem()){ toast('⚠️ 조장 이상만 수정할 수 있습니다'); return; }
+  if(!equipmentData||!equipmentData.rows||!equipmentData.rows[idx]) return;
+  _eqEditIdx=idx;
+  var headers=equipmentData.headers||[];
+  var row=equipmentData.rows[idx];
+  var body=document.getElementById('eqEditBody');
+  if(!body) return;
+  var h='';
+  headers.forEach(function(hd,hi){
+    var val=(row[hi]!==null&&row[hi]!==undefined?row[hi]:'');
+    h+='<div class="fg"><label class="f-lbl">'+hd+'</label><input type="text" class="ri eq-edit-inp" data-ci="'+hi+'" value="'+String(val).replace(/"/g,'&quot;')+'" style="margin-bottom:0"></div>';
+  });
+  body.innerHTML=h;
+  showM('eqEditModal');
+}
+function closeEqEditModal(){ hideM('eqEditModal'); _eqEditIdx=null; }
+async function eqSaveEdit(){
+  if(_eqEditIdx===null||!equipmentData||!eqDbRowId){ toast('⚠️ 오류: 수정 대상을 찾을 수 없습니다'); return; }
+  if(!canDeleteWorkItem()){ toast('⚠️ 조장 이상만 수정할 수 있습니다'); return; }
+  var inputs=document.querySelectorAll('#eqEditBody .eq-edit-inp');
+  var newRow=equipmentData.rows[_eqEditIdx].slice();
+  inputs.forEach(function(inp){
+    var ci=parseInt(inp.getAttribute('data-ci'));
+    newRow[ci]=inp.value;
+  });
+  equipmentData.rows[_eqEditIdx]=newRow;
+  try{
+    var res=await sb.from('equipment_data').update({data:{headers:equipmentData.headers,rows:equipmentData.rows}}).eq('id',eqDbRowId);
+    if(res.error) throw res.error;
+    toast('✅ 수정되었습니다');
+    closeEqEditModal();
+    renderEquipment();
+  }catch(e){ toast('⚠️ 수정 실패: '+e.message); }
+}
+async function eqDeleteRow(idx){
+  if(!canDeleteWorkItem()){ toast('⚠️ 조장 이상만 삭제할 수 있습니다'); return; }
+  if(!equipmentData||!equipmentData.rows||!equipmentData.rows[idx]||!eqDbRowId) return;
+  if(!confirm('이 장비 항목을 삭제하시겠습니까?')) return;
+  var headers=equipmentData.headers||[];
+  var row=equipmentData.rows[idx];
+  var nameIdx=headers.findIndex(function(h){ return String(h).indexOf('장비명')!==-1; });
+  var summary=nameIdx>=0?String(row[nameIdx]||''):row.join(' ');
+  try{
+    equipmentData.rows.splice(idx,1);
+    var res=await sb.from('equipment_data').update({data:{headers:equipmentData.headers,rows:equipmentData.rows}}).eq('id',eqDbRowId);
+    if(res.error) throw res.error;
+    await logDeletion('장비현황', summary);
+    toast('✅ 삭제되었습니다');
+    renderEquipment();
+  }catch(e){ toast('⚠️ 삭제 실패: '+e.message); }
 }
 
 function previewEquipmentFile(input){
