@@ -15102,8 +15102,15 @@ function eqParseEndYear(v){
   return (y>=2000&&y<2100)?y:0;
 }
 var eqEndFilterOn=false;
+var eqEndFilterYear=null; // null이면 렌더링 시 올해로 초기화
 function eqToggleEndFilter(){
   eqEndFilterOn=!eqEndFilterOn;
+  renderEquipment();
+}
+function eqChangeEndYear(delta){
+  var curYear=new Date(Date.now()+9*3600000).getUTCFullYear();
+  if(eqEndFilterYear===null) eqEndFilterYear=curYear;
+  eqEndFilterYear+=delta;
   renderEquipment();
 }
 
@@ -15125,10 +15132,12 @@ function renderEquipment(){
   if(floorColIdx>=0){
     rows=rows.slice().sort(function(a,b){ return floorSortKey(a[floorColIdx])-floorSortKey(b[floorColIdx]); });
   }
-  // 당해년도 종료 집계
+  // 선택 연도 종료 집계 (기본값: 올해)
   var endColIdx=headers.findIndex(function(h){ return String(h).indexOf('종료')!==-1; });
   var curYear=new Date(Date.now()+9*3600000).getUTCFullYear();
-  var endThisYear=endColIdx>=0?rows.filter(function(r){ return eqParseEndYear(r[endColIdx])===curYear; }).length:0;
+  if(eqEndFilterYear===null) eqEndFilterYear=curYear;
+  var selYear=eqEndFilterYear;
+  var endThisYear=endColIdx>=0?rows.filter(function(r){ return eqParseEndYear(r[endColIdx])===selYear; }).length:0;
   // 검색 필터
   var kw=(document.getElementById('eqSearch')||{}).value||'';
   var filtered=rows;
@@ -15136,9 +15145,9 @@ function renderEquipment(){
     var kl=kw.toLowerCase();
     filtered=rows.filter(function(r){ return r.some(function(c){ return String(c||'').toLowerCase().includes(kl); }); });
   }
-  // 당해년도 종료 필터 (카드 클릭 토글)
+  // 선택 연도 종료 필터 (카드 클릭 토글)
   if(eqEndFilterOn&&endColIdx>=0){
-    filtered=filtered.filter(function(r){ return eqParseEndYear(r[endColIdx])===curYear; });
+    filtered=filtered.filter(function(r){ return eqParseEndYear(r[endColIdx])===selYear; });
   }
   // 업로드 정보
   if(infoEl) infoEl.textContent='📅 '+equipmentData.uploadDate+(equipmentData.uploader?' · '+equipmentData.uploader:'')+'  총 '+rows.length+'건';
@@ -15147,7 +15156,13 @@ function renderEquipment(){
     statsEl.innerHTML=
       '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--g2)"><div style="font-size:21px;font-weight:900;color:var(--navy)">'+rows.length+'</div><div style="font-size:12px;color:var(--g4)">전체</div></div>'+
       '<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--teal)"><div style="font-size:21px;font-weight:900;color:var(--teal2)">'+filtered.length+'</div><div style="font-size:12px;color:var(--g4)">검색결과</div></div>'+
-      '<div onclick="eqToggleEndFilter()" style="background:'+(eqEndFilterOn?'var(--danger-bg)':'white')+';border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid '+(eqEndFilterOn?'var(--danger)':'rgba(217,64,64,.35)')+';cursor:pointer"><div style="font-size:21px;font-weight:900;color:var(--danger)">'+endThisYear+'</div><div style="font-size:12px;color:var(--danger);font-weight:700">'+curYear+'년 종료'+(eqEndFilterOn?' ✓':'')+'</div></div>';
+      '<div style="background:'+(eqEndFilterOn?'var(--danger-bg)':'white')+';border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid '+(eqEndFilterOn?'var(--danger)':'rgba(217,64,64,.35)')+'">'
+        +'<div onclick="eqToggleEndFilter()" style="cursor:pointer;font-size:21px;font-weight:900;color:var(--danger)">'+endThisYear+'</div>'
+        +'<div style="display:flex;align-items:center;justify-content:center;gap:2px">'
+        +'<span onclick="event.stopPropagation();eqChangeEndYear(-1)" style="cursor:pointer;padding:2px 6px;color:var(--danger);font-weight:900;font-size:13px">◀</span>'
+        +'<span onclick="eqToggleEndFilter()" style="cursor:pointer;font-size:12px;color:var(--danger);font-weight:700;white-space:nowrap">'+selYear+'년 종료'+(eqEndFilterOn?' ✓':'')+'</span>'
+        +'<span onclick="event.stopPropagation();eqChangeEndYear(1)" style="cursor:pointer;padding:2px 6px;color:var(--danger);font-weight:900;font-size:13px">▶</span>'
+        +'</div></div>';
   }
   // 테이블
   var mgmtColIdx=headers.findIndex(function(h){ return String(h).indexOf('관리번호')!==-1; });
