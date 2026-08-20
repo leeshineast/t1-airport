@@ -2666,8 +2666,9 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div class="fg"><label class="f-lbl">제목 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewTitle" class="ri" placeholder="예: 회 람 확 인 서"></div>
   <div class="fg"><label class="f-lbl">① 회람내용 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewContent1" class="ri" placeholder="예: 「인사평가 적용기준 안내」,「사업2본부 인사평가 가·감점 기준」"></div>
   <div class="fg"><label class="f-lbl">② 회람대상 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewContent2" class="ri" placeholder="예: 그룹·사업부 인사평가 평가자"></div>
+  <div class="fg"><label class="f-lbl">③ 회람방법 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewContent3" class="ri" placeholder="예: 회람 내용 확인 후 평가자 전원 아래 서명란에 서명"></div>
   <div class="fg"><label class="f-lbl">연월일</label><input type="date" id="adcNewDate" class="ri" style="margin-bottom:0"></div>
-  <div style="font-size:11.5px;color:var(--g4);margin:8px 0 0;line-height:1.6">③ 회람방법은 "회람 내용 확인 후 평가자 전원 아래 서명란에 서명"으로 고정됩니다.</div>
+  <div style="font-size:11.5px;color:var(--g4);margin:8px 0 0;line-height:1.6">교육서명지·출장희망·수요조사 등 다양한 용도로 자유롭게 문구를 바꿔서 쓰실 수 있습니다.</div>
   <button onclick="adcSaveNewDoc()" class="btn-prim" style="width:100%;margin-top:13px">📋 작성 완료</button>
 </div></div></div>
 
@@ -15370,6 +15371,7 @@ function adcOpenCreateDoc(){
   document.getElementById('adcNewTitle').value='';
   document.getElementById('adcNewContent1').value='';
   document.getElementById('adcNewContent2').value='';
+  document.getElementById('adcNewContent3').value='회람 내용 확인 후 평가자 전원 아래 서명란에 서명';
   document.getElementById('adcNewDate').value=kstDate();
   showM('adcCreateModal');
 }
@@ -15378,10 +15380,11 @@ async function adcSaveNewDoc(){
   var title=document.getElementById('adcNewTitle').value.trim();
   var content1=document.getElementById('adcNewContent1').value.trim();
   var content2=document.getElementById('adcNewContent2').value.trim();
+  var content3=document.getElementById('adcNewContent3').value.trim();
   var docDate=document.getElementById('adcNewDate').value;
-  if(!title||!content1||!content2||!docDate){ toast('제목, ① 회람내용, ② 회람대상, 연월일을 모두 입력해주세요'); return; }
+  if(!title||!content1||!content2||!content3||!docDate){ toast('제목, ①②③, 연월일을 모두 입력해주세요'); return; }
   try{
-    var res=await sb.from('admin_confirm_docs').insert({title:title,content1:content1,content2:content2,doc_date:docDate,created_by:me?me.name:''});
+    var res=await sb.from('admin_confirm_docs').insert({title:title,content1:content1,content2:content2,content3:content3,doc_date:docDate,created_by:me?me.name:''});
     if(res.error) throw res.error;
     toast('✅ 확인서가 작성되었습니다');
     hideM('adcCreateModal');
@@ -15401,17 +15404,21 @@ async function adcOpenDocDetail(id){
     var sigs=(sigRes&&sigRes.data)||[];
     var alreadySigned=me&&sigs.some(function(s){ return s.signed_by===me.id; });
     var canEdit=canAdcManage();
+    var esc1=String(d.content1||'').replace(/'/g,"\\'");
+    var esc2=String(d.content2||'').replace(/'/g,"\\'");
+    var esc3=String(d.content3||'').replace(/'/g,"\\'");
+    var escT=String(d.title||'').replace(/'/g,"\\'");
     var h='<div class="card" style="margin-bottom:12px"><div class="cb">'
       +'<div style="text-align:right;margin-bottom:8px"><img src="'+ADC_BANNER_B64+'" style="height:20px"></div>'
       +'<div style="border-top:3px double #444;border-bottom:3px double #444;padding:9px 0;text-align:center;margin-bottom:10px">'
       +'<span style="font-size:17px;font-weight:800;letter-spacing:1px;color:var(--g7)">'+lrptEsc(d.title||'제목 없음')+'</span>'
-      +(canEdit?' <span onclick="adcEditTitle('+id+',\''+String(d.title||'').replace(/'/g,"\\'")+'\')" style="cursor:pointer;font-size:14px" title="제목 수정">✏️</span>':'')
+      +(canEdit?' <span onclick="adcEditField('+id+',\'title\',\''+escT+'\',\'제목\')" style="cursor:pointer;font-size:14px" title="제목 수정">✏️</span>':'')
       +'</div>'
       +'<div style="font-size:12px;color:var(--g4);margin-bottom:10px">'+lrptEsc(d.doc_date)+'</div>'
-      +'<div style="font-size:13px;color:var(--g6);line-height:1.8">'
-      +'1. (회람내용) '+lrptEsc(d.content1)+'<br>'
-      +'2. (회람대상) '+lrptEsc(d.content2)+'<br>'
-      +'3. (회람방법) 회람 내용 확인 후 평가자 전원 아래 서명란에 서명'
+      +'<div style="font-size:13px;color:var(--g6);line-height:2.1">'
+      +'1. (회람내용) '+lrptEsc(d.content1)+(canEdit?' <span onclick="adcEditField('+id+',\'content1\',\''+esc1+'\',\'①회람내용\')" style="cursor:pointer;font-size:12px" title="수정">✏️</span>':'')+'<br>'
+      +'2. (회람대상) '+lrptEsc(d.content2)+(canEdit?' <span onclick="adcEditField('+id+',\'content2\',\''+esc2+'\',\'②회람대상\')" style="cursor:pointer;font-size:12px" title="수정">✏️</span>':'')+'<br>'
+      +'3. (회람방법) '+lrptEsc(d.content3)+(canEdit?' <span onclick="adcEditField('+id+',\'content3\',\''+esc3+'\',\'③회람방법\')" style="cursor:pointer;font-size:12px" title="수정">✏️</span>':'')
       +'</div></div></div>';
     h+='<table class="adc-sig-table"><thead><tr><th>연번</th><th>소속</th><th>직책</th><th>사번</th><th>성명</th><th>확인일자</th><th>서명</th>'+(canEdit?'<th></th>':'')+'</tr></thead><tbody>';
     sigs.forEach(function(s,i){
@@ -15435,16 +15442,17 @@ async function adcOpenDocDetail(id){
     body.innerHTML=h;
   }catch(e){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">불러오기 실패: '+e.message+'</div>'; }
 }
-async function adcEditTitle(id, currentTitle){
+async function adcEditField(id, field, currentValue, label){
   if(!canAdcManage()){ toast('⚠️ 관리자 이상만 수정할 수 있습니다'); return; }
-  var newTitle=prompt('제목을 입력해주세요', currentTitle||'');
-  if(newTitle===null) return;
-  newTitle=newTitle.trim();
-  if(!newTitle){ toast('제목을 입력해주세요'); return; }
+  var newVal=prompt(label+'을(를) 입력해주세요', currentValue||'');
+  if(newVal===null) return;
+  newVal=newVal.trim();
+  if(!newVal){ toast(label+'을(를) 입력해주세요'); return; }
   try{
-    var res=await sb.from('admin_confirm_docs').update({title:newTitle}).eq('id',id);
+    var payload={}; payload[field]=newVal;
+    var res=await sb.from('admin_confirm_docs').update(payload).eq('id',id);
     if(res.error) throw res.error;
-    toast('✅ 제목이 수정되었습니다');
+    toast('✅ 수정되었습니다');
     adcOpenDocDetail(id);
   }catch(e){ toast('⚠️ 수정 실패: '+e.message); }
 }
@@ -15511,7 +15519,7 @@ async function adcPrintDoc(id){
     h+='<div style="font-size:12.5px;line-height:1.9;margin-bottom:14px">'
       +'1. (회람내용) '+lrptEsc(d.content1)+'<br>'
       +'2. (회람대상) '+lrptEsc(d.content2)+'<br>'
-      +'3. (회람방법) 회람 내용 확인 후 평가자 전원 아래 서명란에 서명'
+      +'3. (회람방법) '+lrptEsc(d.content3)
       +'</div>';
     h+='<table class="adc-sig-table"><thead><tr><th style="width:6%">연번</th><th style="width:16%">소속</th><th style="width:12%">직책</th><th style="width:12%">사번</th><th style="width:12%">성명</th><th style="width:14%">확인일자</th><th style="width:18%">서명</th></tr></thead><tbody>';
     var maxRows=Math.max(20, sigs.length);
