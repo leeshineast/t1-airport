@@ -564,7 +564,7 @@ html{overflow-x:hidden}
     </div>
     <div style="height:10px"></div>
     <div style="font-size:13px;font-weight:700;color:var(--g4);margin-bottom:6px">직급 *</div>
-    <div class="role-row" style="flex-wrap:wrap"><div class="r-btn" onclick="pickR(this)">그룹장</div><div class="r-btn" onclick="pickR(this)">본부장</div><div class="r-btn" onclick="pickR(this)">팀장</div><div class="r-btn" onclick="pickR(this)">조장</div><div class="r-btn" onclick="pickR(this)">조장대행</div><div class="r-btn" onclick="pickR(this)">기타</div><div class="r-btn" onclick="pickR(this)">차량운행</div><div class="r-btn" onclick="pickR(this)">게스트</div><div class="r-btn" onclick="pickR(this)">열람전용</div></div>
+    <div class="role-row" style="flex-wrap:wrap"><div class="r-btn" onclick="pickR(this)">그룹장</div><div class="r-btn" onclick="pickR(this)">본부장</div><div class="r-btn" onclick="pickR(this)">팀장</div><div class="r-btn" onclick="pickR(this)">조장</div><div class="r-btn" onclick="pickR(this)">액팅리더</div><div class="r-btn" onclick="pickR(this)">기타</div><div class="r-btn" onclick="pickR(this)">차량운행</div><div class="r-btn" onclick="pickR(this)">게스트</div><div class="r-btn" onclick="pickR(this)">열람전용</div></div>
     <div class="err" id="rErr"></div>
     <button class="btn-prim" onclick="subReg()">가입 신청 제출</button>
     <p style="text-align:center;font-size:13px;color:var(--g3);margin-top:11px">승인 후 로그인 가능합니다</p>
@@ -4913,7 +4913,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <div class="r-btn" onclick="pickMoveRole(this)">본부장</div>
         <div class="r-btn" onclick="pickMoveRole(this)">팀장</div>
         <div class="r-btn" onclick="pickMoveRole(this)">조장</div>
-        <div class="r-btn" onclick="pickMoveRole(this)">조장대행</div>
+        <div class="r-btn" onclick="pickMoveRole(this)">액팅리더</div>
         <div class="r-btn" onclick="pickMoveRole(this)">기타</div>
         <div class="r-btn" onclick="pickMoveRole(this)">차량운행</div>
         <div class="r-btn" onclick="pickMoveRole(this)">게스트</div>
@@ -6053,7 +6053,7 @@ function finishLogin(){
 }
 function showInfo(){
   if(!me) return;
-  var roleLabel=me.role==='master'?'최고관리자':me.role==='admin'?'관리자':me.role==='group_leader'?'그룹장':me.role==='division_head'?'본부장':me.role==='manager'?'팀장':me.role==='leader'?'조장':me.role==='acting_leader'?'조장대행':me.role==='guest'?'게스트(조회전용)':me.role==='member'?'열람전용':me.role==='work_vehicle'?'차량운행':'팀원';
+  var roleLabel=me.role==='master'?'최고관리자':me.role==='admin'?'관리자':me.role==='group_leader'?'그룹장':me.role==='division_head'?'본부장':me.role==='manager'?'팀장':me.role==='leader'?'조장':me.role==='acting_leader'?'액팅리더':me.role==='guest'?'게스트(조회전용)':me.role==='member'?'열람전용':me.role==='work_vehicle'?'차량운행':'팀원';
   var html='<div style="padding:20px 17px">'
     +'<div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">'
     +'<div style="width:48px;height:48px;border-radius:50%;background:linear-gradient(135deg,var(--teal),var(--navy));display:flex;align-items:center;justify-content:center;font-size:23px;font-weight:900;color:white">'+me.initial+'</div>'
@@ -6228,7 +6228,7 @@ function pickR(el){document.querySelectorAll('.r-btn').forEach(b=>b.classList.re
 function closeRegOk(){hideM('regOk');goLogin();}
 // ─ 인력현황 ─
 function pickShift(el){
-  // 조장/조장대행은 근무조 변경 불가
+  // 조장/액팅리더은 근무조 변경 불가
   if(me&&(me.role==='leader'||me.role==='acting_leader')){
     toast('⚠️ 본인 근무조만 입력 가능합니다');
     return;
@@ -8394,7 +8394,7 @@ function confirmMp(){
   var myOwnCode=(me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
   var isActingLeader=me&&me.role==='acting_leader';
   var isProxy=isActingLeader||(me&&(me.role==='leader'||me.role==='manager')&&officialName&&me.name&&officialName!==me.name);
-  var writer=isActingLeader?(me.name+' (조장대행)'):(isProxy?(officialName||myTeam):(me?me.name:''));
+  var writer=isActingLeader?(me.name+' (액팅리더)'):(isProxy?(officialName||myTeam):(me?me.name:''));
   var proxyWriter=isActingLeader?(me?me.name:null):(isProxy?(me?me.name:''):null);
 
   // 팀코드를 "6팀 A조" 형태로 보기 좋게 변환
@@ -11218,7 +11218,7 @@ async function confirmNs(){
   (LEADERS['야간']||[]).forEach(function(l){ if(l.team===team) officialName=l.name; });
   var isActingLeaderNs=me&&me.role==='acting_leader';
   var isProxy=isActingLeaderNs||(me&&(me.role==='leader'||me.role==='manager')&&officialName&&me.name&&officialName!==me.name);
-  var writer=isActingLeaderNs?(me.name+' (조장대행)'):(isProxy?(officialName||team):(me?me.name:''));
+  var writer=isActingLeaderNs?(me.name+' (액팅리더)'):(isProxy?(officialName||team):(me?me.name:''));
   var proxyWriter=isActingLeaderNs?(me?me.name:null):(isProxy?(me?me.name:null):null);
   try{
     var payload=Object.assign({date:today,team_code:team,writer:writer,proxy_writer:proxyWriter},vals);
@@ -12007,7 +12007,7 @@ async function saveLeaderDataEdit(){
     (LEADERS['야간']||[]).forEach(function(l){ if(l.team===editTeam) officialName3=l.name; });
     var isActingLeader3=me&&me.role==='acting_leader';
     var isProxy3=isActingLeader3||(me&&(me.role==='leader'||me.role==='manager')&&officialName3&&me.name&&officialName3!==me.name);
-    var writer3=isActingLeader3?(me.name+' (조장대행)'):(isProxy3?(officialName3||editTeam):(me?me.name:''));
+    var writer3=isActingLeader3?(me.name+' (액팅리더)'):(isProxy3?(officialName3||editTeam):(me?me.name:''));
     var proxyWriter3=isActingLeader3?(me?me.name:null):(isProxy3?(me?me.name:null):null);
     try{
       var payload2=Object.assign({date:today2,team_code:editTeam,writer:writer3,proxy_writer:proxyWriter3},vals2);
@@ -12033,7 +12033,7 @@ async function saveLeaderDataEdit(){
   var myOwnCode2=(me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
   var isActingLeader2=me&&me.role==='acting_leader';
   var isProxy2=isActingLeader2||(me&&(me.role==='leader'||me.role==='manager')&&officialName2&&me.name&&officialName2!==me.name);
-  var writer2=isActingLeader2?(me.name+' (조장대행)'):(isProxy2?(officialName2||editTeam):(me?me.name:''));
+  var writer2=isActingLeader2?(me.name+' (액팅리더)'):(isProxy2?(officialName2||editTeam):(me?me.name:''));
   var proxyWriter2=isActingLeader2?(me?me.name:null):(isProxy2?(me?me.name:null):null);
   // ★ 저장 결과를 먼저 확인한 뒤에만 모달을 닫고 완료 표시 — 실패 시 모달 유지 + 재시도 가능
   var saveBtn=document.querySelector('#leaderDataModal button[onclick="saveLeaderDataEdit()"]');
@@ -12718,7 +12718,7 @@ async function subReg(){
     '6팀':['A조','B조','C조','운전'],'7팀':['A조','B조'],'8팀':['A조','B조'],'9팀':['A조','B조'],
     '5팀':['A조','B조'],'10팀':['A조','B조']
   };
-  var needsJo=(roleVal==='조장'||roleVal==='조장대행'||roleVal==='차량운행');
+  var needsJo=(roleVal==='조장'||roleVal==='액팅리더'||roleVal==='차량운행');
   if(needsJo&&regJoMap[team]&&!jo){err.textContent='⚠️ 조를 선택해주세요';err.style.display='block';return;}
 
   // Supabase 연결 확인
@@ -12728,7 +12728,7 @@ async function subReg(){
     return;
   }
 
-  var roleMap={'팀장':'manager','조장':'leader','조장대행':'acting_leader','기타':'staff','게스트':'guest','차량운행':'work_vehicle','열람전용':'member','그룹장':'group_leader','본부장':'division_head'};
+  var roleMap={'팀장':'manager','조장':'leader','액팅리더':'acting_leader','기타':'staff','게스트':'guest','차량운행':'work_vehicle','열람전용':'member','그룹장':'group_leader','본부장':'division_head'};
   var isT1 = (team==='T1운영');
   var isExecSelect = (roleVal==='그룹장'||roleVal==='본부장');
   var finalRole = isExecSelect ? roleMap[roleVal] : (isT1 ? 'admin' : (roleMap[roleVal]||'staff'));
@@ -13074,7 +13074,7 @@ async function loadUserList(){
       {role:'admin', label:'👑 admin (최고관리자)'},
       {role:'manager', label:'📋 팀장'},
       {role:'leader', label:'🏷️ 조장'},
-      {role:'acting_leader', label:'🔄 조장대행'},
+      {role:'acting_leader', label:'🔄 액팅리더'},
       {role:'work_vehicle', label:'🚗 차량운행'},
       {role:'guest', label:'👤 게스트'},
       {role:'member', label:'📖 열람전용'}
@@ -13156,7 +13156,7 @@ var TM_JO_MAP={
   '6팀':['A조','B조','C조','운전'],'7팀':['A조','B조'],'8팀':['A조','B조'],'9팀':['A조','B조'],
   '5팀':['A조','B조'],'10팀':['A조','B조']
 };
-var TM_ROLE_MAP={'팀장':'manager','조장':'leader','조장대행':'acting_leader','기타':'staff','게스트':'guest','차량운행':'work_vehicle','그룹장':'group_leader','본부장':'division_head'};
+var TM_ROLE_MAP={'팀장':'manager','조장':'leader','액팅리더':'acting_leader','기타':'staff','게스트':'guest','차량운행':'work_vehicle','그룹장':'group_leader','본부장':'division_head'};
 function openTeamMove(id, name, currentTeam){
   if(!(me&&me.role==='master')){ toast('권한이 없습니다'); return; }
   tmTarget={id:id, name:name};
@@ -13187,7 +13187,7 @@ function tmRefreshJoVisibility(){
   var joWrap=document.getElementById('tmJoWrap');
   var joGrp=document.getElementById('tmJoGrp');
   if(!tmSelectedTeam || tmSelectedTeam==='T1운영' || tmSelectedTeam==='IAOS'){ joWrap.style.display='none'; joGrp.innerHTML=''; return; }
-  var needsJo=(tmSelectedRole==='조장'||tmSelectedRole==='조장대행'||tmSelectedRole==='차량운행');
+  var needsJo=(tmSelectedRole==='조장'||tmSelectedRole==='액팅리더'||tmSelectedRole==='차량운행');
   var jos=TM_JO_MAP[tmSelectedTeam]||[];
   if(!needsJo || !jos.length){ joWrap.style.display='none'; joGrp.innerHTML=''; return; }
   // 기존 선택 유지 시도
@@ -13209,7 +13209,7 @@ async function saveTeamMove(){
   err.style.display='none';
   if(!tmSelectedTeam){ err.textContent='⚠️ 소속 팀을 선택해주세요'; err.style.display='block'; return; }
   if(!tmSelectedRole){ err.textContent='⚠️ 직급을 선택해주세요'; err.style.display='block'; return; }
-  var needsJo=(tmSelectedRole==='조장'||tmSelectedRole==='조장대행'||tmSelectedRole==='차량운행');
+  var needsJo=(tmSelectedRole==='조장'||tmSelectedRole==='액팅리더'||tmSelectedRole==='차량운행');
   var jos=TM_JO_MAP[tmSelectedTeam]||[];
   var joEl=document.querySelector('#tmJoGrp .t-btn.on');
   var jo=joEl?joEl.textContent.trim():'';
@@ -15781,7 +15781,7 @@ async function adcSaveMySig(){
 // ══ 시설물 공통: 수정자 표기 / 날짜 표기 헬퍼 ══
 function facEditorTag(){
   if(!me) return '';
-  var roleLabel=me.role==='master'?'최고관리자':me.role==='admin'?'관리자':me.role==='group_leader'?'그룹장':me.role==='division_head'?'본부장':me.role==='manager'?'팀장':me.role==='leader'?'조장':me.role==='acting_leader'?'조장대행':me.role==='guest'?'게스트':me.role==='member'?'열람전용':me.role==='work_vehicle'?'차량운행':'팀원';
+  var roleLabel=me.role==='master'?'최고관리자':me.role==='admin'?'관리자':me.role==='group_leader'?'그룹장':me.role==='division_head'?'본부장':me.role==='manager'?'팀장':me.role==='leader'?'조장':me.role==='acting_leader'?'액팅리더':me.role==='guest'?'게스트':me.role==='member'?'열람전용':me.role==='work_vehicle'?'차량운행':'팀원';
   return (me.team?me.team+' ':'')+me.name+' '+roleLabel;
 }
 function facUpdatedDateShort(iso){
@@ -20721,7 +20721,7 @@ async function loadActiveUsers(){
     var onlineCount=rows.filter(function(r){return r._online;}).length;
     if(sumEl) sumEl.textContent='🟢 온라인 '+onlineCount+'명  ·  전체 '+rows.length+'명';
     var roleLabelFn=function(role){
-      return role==='master'?'최고관리자':role==='admin'?'관리자':role==='group_leader'?'그룹장':role==='division_head'?'본부장':role==='manager'?'팀장':role==='leader'?'조장':role==='acting_leader'?'조장대행':role==='guest'?'게스트':role==='member'?'열람전용':role==='work_vehicle'?'차량운행':'팀원';
+      return role==='master'?'최고관리자':role==='admin'?'관리자':role==='group_leader'?'그룹장':role==='division_head'?'본부장':role==='manager'?'팀장':role==='leader'?'조장':role==='acting_leader'?'액팅리더':role==='guest'?'게스트':role==='member'?'열람전용':role==='work_vehicle'?'차량운행':'팀원';
     };
     var h='';
     rows.forEach(function(r){
