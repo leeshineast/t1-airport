@@ -574,15 +574,15 @@ html{overflow-x:hidden}
 <!-- ══ 앱 메인 ══ -->
 <div id="globalTabbar" class="mh-tabbar" style="display:none">
   <div class="mh-tabbar-row">
-    <div class="mh-tab-item on" onclick="goHomeMain()"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg></span><span class="mh-tab-lb">홈</span></div>
+    <div class="mh-tab-item" onclick="go('voc')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/></svg></span><span class="mh-tab-lb">민원응대</span></div>
     <div class="mh-tab-item" onclick="go('mp')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="mh-tab-lb">인력현황</span></div>
     <div class="mh-tab-item" onclick="go('ho')" style="position:relative"><span id="hoTabBadge" style="display:none;position:absolute;top:2px;right:calc(50% - 20px);min-width:16px;height:16px;padding:0 4px;background:var(--danger);color:white;border-radius:20px;font-size:9.5px;font-weight:800;align-items:center;justify-content:center"></span><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span><span class="mh-tab-lb">인수인계</span></div>
     <div class="mh-tab-item" id="jwTabItem" onclick="go('jointwork')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="mh-tab-lb">공동작업</span></div>
   </div>
   <div class="mh-tabbar-row">
-    <div class="mh-tab-item" onclick="go('groupchat')" style="position:relative"><span id="gcTabBadge2" style="display:none;position:absolute;top:2px;right:calc(50% - 20px);min-width:16px;height:16px;padding:0 4px;background:var(--danger);color:white;border-radius:20px;font-size:9.5px;font-weight:800;align-items:center;justify-content:center"></span><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span class="mh-tab-lb">전체채팅</span></div>
+    <div class="mh-tab-item" onclick="go('lost')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="mh-tab-lb">습득물관리</span></div>
     <div class="mh-tab-item" onclick="go('accident')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span class="mh-tab-lb">안전사고</span></div>
-    <div class="mh-tab-item" onclick="go('veh')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="7" width="15" height="11" rx="1"/><path d="M16 10h3l3 3v4a1 1 0 0 1-1 1h-1"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg></span><span class="mh-tab-lb">차량운행</span></div>
+    <div class="mh-tab-item" onclick="go('workveh')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="7" width="15" height="11" rx="1"/><path d="M16 10h3l3 3v4a1 1 0 0 1-1 1h-1"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg></span><span class="mh-tab-lb">공사차량</span></div>
     <div class="mh-tab-item" onclick="location.href='warehouse.html'"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21V12h6v9"/></svg></span><span class="mh-tab-lb">재고관리</span></div>
   </div>
 </div>
@@ -2063,7 +2063,7 @@ html{overflow-x:hidden}
     <div class="card" style="margin-bottom:10px"><div class="cb">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
         <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">1</div>
-        <span style="font-size:15px;font-weight:800;color:var(--g7)">인계 팀 선택 <span style="color:var(--danger);font-size:12px">* 필수</span></span>
+        <span style="font-size:15px;font-weight:800;color:var(--g7)">인계 팀 선택 <span style="color:var(--danger);font-size:12px">* 필수 (복수선택 가능)</span></span>
       </div>
       <div class="rg" id="hoSG" style="flex-wrap:wrap;gap:7px">
         <div class="rp" onclick="pickHS(this)">1팀</div>
@@ -2078,6 +2078,7 @@ html{overflow-x:hidden}
         <div class="rp" onclick="pickHS(this)">10팀</div>
       </div>
       <div id="hoW" style="display:none;font-size:13px;color:var(--danger);margin-top:6px;font-weight:600">⚠️ 인계 팀을 먼저 선택해주세요</div>
+      <div style="font-size:11.5px;color:var(--g4);margin-top:7px;line-height:1.5">💡 여러 팀을 함께 선택하면, 아래 작성한 내용이 각 팀에게 개별 카드로 전달되어 팀마다 따로 인수 확인할 수 있습니다.</div>
     </div></div>
 
     <!-- 2. 시설물 고장 -->
@@ -2152,6 +2153,7 @@ html{overflow-x:hidden}
         <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">3</div>
         <span style="font-size:15px;font-weight:800;color:var(--g7)">업무 진행 사항 및 특이사항</span>
       </div>
+      <div id="hEtcRecent" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
       <textarea class="f-ta show" id="hEtc" rows="3" placeholder="업무 진행 내용, 특이사항 등 자유롭게 작성" style="display:block"></textarea>
     </div></div>
 
@@ -6529,6 +6531,36 @@ function pickFacLoc(loc){
   if(s) s.style.display='none';
 }
 // 최근 사용한 접수자 추출 (최신순, 중복 제거, 최대 5명)
+function getRecentNotices(){
+  if(typeof hoAll==='undefined'||!hoAll) return [];
+  var rows=hoAll.slice().sort(function(a,b){
+    var ta=new Date(a.ho_date||a.created_at||0).getTime();
+    var tb=new Date(b.ho_date||b.created_at||0).getTime();
+    return tb-ta; // 최신순
+  });
+  var texts=[];
+  rows.forEach(function(r){
+    if(!r.notice) return;
+    var t=r.notice.trim();
+    if(t && texts.indexOf(t)<0) texts.push(t);
+  });
+  return texts.slice(0,8);
+}
+function loadHEtcRecent(){
+  var wrap=document.getElementById('hEtcRecent');
+  if(!wrap) return;
+  var texts=getRecentNotices();
+  if(!texts.length){ wrap.innerHTML=''; return; }
+  wrap.innerHTML='<div style="width:100%;font-size:10px;font-weight:700;color:var(--g5);margin-bottom:1px">💡 최근 작성 내용 (클릭해서 불러오기)</div>'
+    +texts.map(function(t){
+      var short=t.length>18?t.slice(0,18)+'…':t;
+      return '<span class="fac-chip" onclick="pickHEtc(\''+t.replace(/'/g,"\\'").replace(/\n/g,' ')+'\')" title="'+t.replace(/"/g,'&quot;')+'">'+short+'</span>';
+    }).join('');
+}
+function pickHEtc(text){
+  var el=document.getElementById('hEtc');
+  if(el) el.value=text;
+}
 function getRecentReceivers(type){
   if(typeof hoAll==='undefined'||!hoAll) return [];
   var rows=hoAll.slice().sort(function(a,b){
@@ -6628,7 +6660,7 @@ function checkHoDupWarn(){
     }catch(e){ /* 경고 기능 오류는 제출에 영향 주지 않도록 무시 */ }
   }, 400);
 }
-function pickHS(el){document.querySelectorAll('#hoSG .rp').forEach(p=>p.classList.remove('on'));el.classList.add('on');document.getElementById('hoW').style.display='none';}
+function pickHS(el){el.classList.toggle('on');document.getElementById('hoW').style.display='none';}
 
 function autoSelectHandoverTeam(){
   if(!me||!me.team) return;
@@ -6677,19 +6709,11 @@ function confHO(btn){
 function subHO(){
   // write 권한 체크
   if(!canWrite()) return;
-  const sel=document.querySelector('#hoSG .rp.on');
-  if(!sel){document.getElementById('hoW').style.display='block';toast('⚠️ 인계 팀을 먼저 선택해주세요');return;}
-  const raw=sel.textContent.trim(); // '1팀'~'10팀'
+  const selEls=Array.from(document.querySelectorAll('#hoSG .rp.on'));
+  if(!selEls.length){document.getElementById('hoW').style.display='block';toast('⚠️ 인계 팀을 먼저 선택해주세요');return;}
   // 팀번호 → 근무조 매핑
-  var teamNum=parseInt(raw.replace('팀',''));
   var shiftMap={1:'오전팀',2:'오전팀',3:'오전팀',4:'오전팀',5:'야간팀',6:'오후팀',7:'오후팀',8:'오후팀',9:'오후팀',10:'야간팀'};
-  let sNm=shiftMap[teamNum]||'오전팀';
   const toMap={'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'};
-  const zoneChain=([1,2,5,6,7].indexOf(teamNum)>=0)?'LS':(([3,4,8,9,10].indexOf(teamNum)>=0)?'AS':null);
-  const pMap={'오전팀':'pill-am','오후팀':'pill-pm','야간팀':'pill-nt'};
-  const avC={'오전팀':'var(--navy)','오후팀':'var(--teal2)','야간팀':'#6B21A8'};
-  const toNm=toMap[sNm];
-  const toLabel=hoNextTeamLabel(teamNum)||toNm;
   const fWrap=document.getElementById('hFWrap');
   const dE=document.getElementById('hD'),eE=document.getElementById('hE');
   var fT='없음';
@@ -6718,7 +6742,7 @@ function subHO(){
   var _dateInputEl=document.getElementById('hoDateInput');
   var _dateLocal=(_dateInputEl&&_dateInputEl.value)?_dateInputEl.value:new Date(Date.now()+9*3600000).toISOString().slice(0,16);
   var _hoDateISO=new Date(_dateLocal+':00+09:00').toISOString();
-  toast('✓ 인수인계 제출 완료!');
+  toast(selEls.length>1?('✓ '+selEls.length+'개 팀에 인수인계 제출 완료!'):'✓ 인수인계 제출 완료!');
   // 폼 초기화
   document.querySelectorAll('#hoSG .rp').forEach(p=>p.classList.remove('on'));
   document.getElementById('hoW').style.display='none';
@@ -6735,51 +6759,28 @@ function subHO(){
   ['hN'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});
   if(_dateInputEl) _dateInputEl.value='';
   document.querySelectorAll('#hoP4 .fg').forEach(g=>{const ps=g.querySelectorAll('.rp');ps.forEach(p=>p.classList.remove('on','on-d'));if(ps[0])ps[0].classList.add('on');});
-  // 카드 생성
-  const now=new Date(_hoDateISO);
-  const ts=(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0')+' '+now.getHours().toString().padStart(2,'0')+':'+now.getMinutes().toString().padStart(2,'0');
-  let fields='';
-  if(fT!=='없음')fields+=`<div class="ho-f"><div class="ho-lbl">🔧 EVENT</div><div class="ho-val">${fT}</div></div>`;
-  if(dT!=='없음')fields+=`<div class="ho-f"><div class="ho-lbl">⚠️ 위험구역</div><div class="ho-val">${dT}</div></div>`;
-  if(eT!=='이상없음')fields+=`<div class="ho-f"><div class="ho-lbl">🚛 장비·차량</div><div class="ho-val">${eT}</div></div>`;
-  if(_hEtcVal) fields='<div class="ho-f"><div class="ho-lbl">📝 업무내용</div><div class="ho-val">'+_hEtcVal+'</div></div>'+fields;
-  if(!fields)fields='<p style="font-size:13px;color:var(--g4);font-style:italic">이상 없음</p>';
-  const card=document.createElement('div');
-  card.className='ho-card';
-  card.innerHTML=`<div class="ho-hd">${hoBadgeHtml(sNm, raw, toLabel, false)}<span class="ho-time">${ts}</span></div><div class="w-row"><div class="w-av" style="background:${avC[sNm]}">${me?me.initial:'?'}</div><span class="w-nm">${me?me.name:'작성자'} · ${me?me.team:''} 작성</span></div><div class="ho-body">${fields}</div><div class="conf-row"><button class="btn-conf" onclick="confHO(this)">✔ 인수 확인</button></div>`;
-  // ① DB에 저장 (전체 공유)
-  var hoData = {
-    shift: raw+' ('+sNm+')', // '4팀 (오전팀)' 형식으로 저장
-    to_shift: toNm,
-    author: me?me.name:'작성자',
-    team: me?me.team:'',
-    facility: fT!=='없음'?fT:null,
-    complaint: null,
-    danger: dT!=='없음'?dT:null,
-    accident: null,
-    equipment: eT!=='이상없음'?eT:null,
-    notice: _hEtcVal,
-    confirmed: false,
-    ho_date: _hoDateISO,
-    zone_chain: zoneChain
-  };
-  // ① 수정 모드면 update, 신규면 insert
+  // ① 수정 모드면 update(선택한 팀 중 첫 번째 기준, 단일), 신규면 선택된 팀 수만큼 각각 row 생성(팀별 개별 인수확인)
   const submitBtn=document.querySelector('#hoP4 .btn-prim');
   const editId=submitBtn?submitBtn._editId:null;
   if(editId){
-    // 수정 저장 (update)
+    var rawE=selEls[0].textContent.trim();
+    var teamNumE=parseInt(rawE.replace('팀',''));
+    var sNmE=shiftMap[teamNumE]||'오전팀';
+    var toNmE=toMap[sNmE];
+    var zoneChainE=([1,2,5,6,7].indexOf(teamNumE)>=0)?'LS':(([3,4,8,9,10].indexOf(teamNumE)>=0)?'AS':null);
     var resEditEl=document.getElementById('hoResultEdit');
     var updatePayload={
-      shift: hoData.shift,
-      to_shift: hoData.to_shift,
-      facility: hoData.facility,
-      complaint: submitBtn&&submitBtn._origComplaint!==undefined?submitBtn._origComplaint:hoData.complaint,
-      danger: hoData.danger,
-      accident: submitBtn&&submitBtn._origAccident!==undefined?submitBtn._origAccident:hoData.accident,
-      equipment: hoData.equipment,
-      notice: hoData.notice,
-      ho_date: hoData.ho_date,
-      zone_chain: hoData.zone_chain
+      shift: rawE+' ('+sNmE+')',
+      to_shift: toNmE,
+      facility: fT!=='없음'?fT:null,
+      complaint: submitBtn&&submitBtn._origComplaint!==undefined?submitBtn._origComplaint:null,
+      danger: dT!=='없음'?dT:null,
+      accident: submitBtn&&submitBtn._origAccident!==undefined?submitBtn._origAccident:null,
+      equipment: eT!=='이상없음'?eT:null,
+      notice: _hEtcVal,
+      ho_date: _hoDateISO,
+      zone_chain: zoneChainE,
+      to_team: rawE
     };
     if(resEditEl&&document.getElementById('hoResultEditWrap').style.display!=='none'){
       updatePayload.result=resEditEl.value.trim();
@@ -6794,9 +6795,32 @@ function subHO(){
     if(submitBtn){ submitBtn.textContent='📋 인수인계 제출'; delete submitBtn._editId; delete submitBtn._origAccident; delete submitBtn._origComplaint; }
     var rw=document.getElementById('hoResultEditWrap'); if(rw) rw.style.display='none';
   } else {
-    // 신규 저장 (insert)
-    saveHandoverToDB(hoData);
-    const pb=document.getElementById('dHO');if(pb)pb.textContent=parseInt(pb.textContent||0)+1;
+    // 신규 저장: 선택된 팀마다 별도 row 생성 → 팀마다 독립적으로 인수확인 가능
+    var rowsToInsert=selEls.map(function(elx){
+      var rawX=elx.textContent.trim();
+      var teamNumX=parseInt(rawX.replace('팀',''));
+      var sNmX=shiftMap[teamNumX]||'오전팀';
+      var toNmX=toMap[sNmX];
+      var zoneChainX=([1,2,5,6,7].indexOf(teamNumX)>=0)?'LS':(([3,4,8,9,10].indexOf(teamNumX)>=0)?'AS':null);
+      return {
+        shift: rawX+' ('+sNmX+')',
+        to_shift: toNmX,
+        author: me?me.name:'작성자',
+        team: me?me.team:'',
+        facility: fT!=='없음'?fT:null,
+        complaint: null,
+        danger: dT!=='없음'?dT:null,
+        accident: null,
+        equipment: eT!=='이상없음'?eT:null,
+        notice: _hEtcVal,
+        confirmed: false,
+        ho_date: _hoDateISO,
+        zone_chain: zoneChainX,
+        to_team: rawX
+      };
+    });
+    saveHandoverToDB(rowsToInsert);
+    const pb=document.getElementById('dHO');if(pb)pb.textContent=parseInt(pb.textContent||0)+rowsToInsert.length;
   }
   // ② 전체 탭(0)으로 이동
   hoTab(0);
@@ -8269,6 +8293,7 @@ function hoTab(n){
       var kst=new Date(Date.now()+9*3600000);
       dEl.value=kst.toISOString().slice(0,16);
     }
+    loadHEtcRecent();
   }
 }
 
@@ -8285,6 +8310,13 @@ async function loadHandoverByShift(shift){
     if(!isAdminMgr&&myChainSh) q=q.eq('zone_chain',myChainSh);
     var res = await q.order('created_at',{ascending:false}).limit(30);
     if(res.data) res.data=res.data.filter(function(r){return !r.confirmed;});
+    if(res.data && !isAdminMgr){
+      var myTeamLabelSh=myTeamNumSh?(myTeamNumSh+'팀'):null;
+      res.data=res.data.filter(function(r){
+        if(!r.to_team) return true; // 팀 미지정(구버전 방식) → zone_chain 필터로 이미 걸러짐
+        return r.to_team===myTeamLabelSh;
+      });
+    }
     if(res.error || !res.data || !res.data.length){
       el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">✅ 확인할 인수인계가 없습니다</div>';
       return;
@@ -8296,7 +8328,7 @@ async function loadHandoverByShift(shift){
     res.data.forEach(function(r){
       var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[r.shift]);
       var ps2=parseShift(r.shift);
-      var toLabel=hoNextTeamLabel(parseInt(ps2.team))||toNm;
+      var toLabel=r.to_team||hoNextTeamLabel(parseInt(ps2.team))||toNm;
       var isDone=r.confirmed;
       var ts=(r.ho_date||r.created_at)?new Date(r.ho_date||r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
       var author=r.author||'작성자';
@@ -13530,7 +13562,7 @@ function renderHoList(data){
     var sNm=r.shift||'오전팀';
     var toNm=r.to_shift||({'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'}[sNm]);
     var _teamNumAll=parseInt((sNm.match(/\d+/)||[])[0]);
-    var toLabel=hoNextTeamLabel(_teamNumAll)||toNm;
+    var toLabel=r.to_team||hoNextTeamLabel(_teamNumAll)||toNm;
     var _groupAll=(sNm.match(/\(([^)]+)\)/)||[])[1]||'오전팀';
     var isDone=r.confirmed;
     var ts=(r.ho_date||r.created_at)?new Date(r.ho_date||r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
