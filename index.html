@@ -2664,11 +2664,11 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 <!-- 확인서 작성 모달 -->
 <div id="adcCreateModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📋 확인서 작성</h3><button class="m-x" onclick="hideM('adcCreateModal')">×</button></div><div style="padding:15px 17px">
   <div class="fg"><label class="f-lbl">제목 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewTitle" class="ri" placeholder="예: 회 람 확 인 서"></div>
-  <div class="fg"><label class="f-lbl">① 회람내용 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewContent1" class="ri" placeholder="예: 「인사평가 적용기준 안내」,「사업2본부 인사평가 가·감점 기준」"></div>
-  <div class="fg"><label class="f-lbl">② 회람대상 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewContent2" class="ri" placeholder="예: 그룹·사업부 인사평가 평가자"></div>
-  <div class="fg"><label class="f-lbl">③ 회람방법 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewContent3" class="ri" placeholder="예: 회람 내용 확인 후 평가자 전원 아래 서명란에 서명"></div>
+  <div class="fg"><label class="f-lbl">① 항목명 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewLabel1" class="ri" placeholder="예: 회람내용, 교육내용, 출장목적" style="margin-bottom:6px"><input type="text" id="adcNewContent1" class="ri" placeholder="내용 입력"></div>
+  <div class="fg"><label class="f-lbl">② 항목명 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewLabel2" class="ri" placeholder="예: 회람대상, 교육대상, 대상부서" style="margin-bottom:6px"><input type="text" id="adcNewContent2" class="ri" placeholder="내용 입력"></div>
+  <div class="fg"><label class="f-lbl">③ 항목명 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewLabel3" class="ri" placeholder="예: 회람방법, 서명방법" style="margin-bottom:6px"><input type="text" id="adcNewContent3" class="ri" placeholder="내용 입력"></div>
   <div class="fg"><label class="f-lbl">연월일</label><input type="date" id="adcNewDate" class="ri" style="margin-bottom:0"></div>
-  <div style="font-size:11.5px;color:var(--g4);margin:8px 0 0;line-height:1.6">교육서명지·출장희망·수요조사 등 다양한 용도로 자유롭게 문구를 바꿔서 쓰실 수 있습니다.</div>
+  <div style="font-size:11.5px;color:var(--g4);margin:8px 0 0;line-height:1.6">항목명과 내용 모두 자유롭게 바꿔서 교육서명지·출장희망·수요조사 등 다양한 용도로 쓰실 수 있습니다.</div>
   <button onclick="adcSaveNewDoc()" class="btn-prim" style="width:100%;margin-top:13px">📋 작성 완료</button>
 </div></div></div>
 
@@ -15369,8 +15369,11 @@ async function loadAdcDocList(){
 function adcOpenCreateDoc(){
   if(!canAdcManage()){ toast('⚠️ 관리자 이상만 작성할 수 있습니다'); return; }
   document.getElementById('adcNewTitle').value='';
+  document.getElementById('adcNewLabel1').value='회람내용';
   document.getElementById('adcNewContent1').value='';
+  document.getElementById('adcNewLabel2').value='회람대상';
   document.getElementById('adcNewContent2').value='';
+  document.getElementById('adcNewLabel3').value='회람방법';
   document.getElementById('adcNewContent3').value='회람 내용 확인 후 평가자 전원 아래 서명란에 서명';
   document.getElementById('adcNewDate').value=kstDate();
   showM('adcCreateModal');
@@ -15378,13 +15381,16 @@ function adcOpenCreateDoc(){
 async function adcSaveNewDoc(){
   if(!canAdcManage()){ toast('⚠️ 관리자 이상만 작성할 수 있습니다'); return; }
   var title=document.getElementById('adcNewTitle').value.trim();
+  var label1=document.getElementById('adcNewLabel1').value.trim();
   var content1=document.getElementById('adcNewContent1').value.trim();
+  var label2=document.getElementById('adcNewLabel2').value.trim();
   var content2=document.getElementById('adcNewContent2').value.trim();
+  var label3=document.getElementById('adcNewLabel3').value.trim();
   var content3=document.getElementById('adcNewContent3').value.trim();
   var docDate=document.getElementById('adcNewDate').value;
-  if(!title||!content1||!content2||!content3||!docDate){ toast('제목, ①②③, 연월일을 모두 입력해주세요'); return; }
+  if(!title||!label1||!content1||!label2||!content2||!label3||!content3||!docDate){ toast('제목, ①②③ 항목명·내용, 연월일을 모두 입력해주세요'); return; }
   try{
-    var res=await sb.from('admin_confirm_docs').insert({title:title,content1:content1,content2:content2,content3:content3,doc_date:docDate,created_by:me?me.name:''});
+    var res=await sb.from('admin_confirm_docs').insert({title:title,label1:label1,content1:content1,label2:label2,content2:content2,label3:label3,content3:content3,doc_date:docDate,created_by:me?me.name:''});
     if(res.error) throw res.error;
     toast('✅ 확인서가 작성되었습니다');
     hideM('adcCreateModal');
@@ -15407,6 +15413,9 @@ async function adcOpenDocDetail(id){
     var esc1=String(d.content1||'').replace(/'/g,"\\'");
     var esc2=String(d.content2||'').replace(/'/g,"\\'");
     var esc3=String(d.content3||'').replace(/'/g,"\\'");
+    var escL1=String(d.label1||'').replace(/'/g,"\\'");
+    var escL2=String(d.label2||'').replace(/'/g,"\\'");
+    var escL3=String(d.label3||'').replace(/'/g,"\\'");
     var escT=String(d.title||'').replace(/'/g,"\\'");
     var h='<div class="card" style="margin-bottom:12px"><div class="cb">'
       +'<div style="text-align:right;margin-bottom:8px"><img src="'+ADC_BANNER_B64+'" style="height:20px"></div>'
@@ -15416,9 +15425,9 @@ async function adcOpenDocDetail(id){
       +'</div>'
       +'<div style="font-size:12px;color:var(--g4);margin-bottom:10px">'+lrptEsc(d.doc_date)+'</div>'
       +'<div style="font-size:13px;color:var(--g6);line-height:2.1">'
-      +'1. (회람내용) '+lrptEsc(d.content1)+(canEdit?' <span onclick="adcEditField('+id+',\'content1\',\''+esc1+'\',\'①회람내용\')" style="cursor:pointer;font-size:12px" title="수정">✏️</span>':'')+'<br>'
-      +'2. (회람대상) '+lrptEsc(d.content2)+(canEdit?' <span onclick="adcEditField('+id+',\'content2\',\''+esc2+'\',\'②회람대상\')" style="cursor:pointer;font-size:12px" title="수정">✏️</span>':'')+'<br>'
-      +'3. (회람방법) '+lrptEsc(d.content3)+(canEdit?' <span onclick="adcEditField('+id+',\'content3\',\''+esc3+'\',\'③회람방법\')" style="cursor:pointer;font-size:12px" title="수정">✏️</span>':'')
+      +'1. ('+lrptEsc(d.label1||'회람내용')+') '+lrptEsc(d.content1)+(canEdit?' <span onclick="adcEditLine('+id+',1,\''+escL1+'\',\''+esc1+'\')" style="cursor:pointer;font-size:12px" title="수정">✏️</span>':'')+'<br>'
+      +'2. ('+lrptEsc(d.label2||'회람대상')+') '+lrptEsc(d.content2)+(canEdit?' <span onclick="adcEditLine('+id+',2,\''+escL2+'\',\''+esc2+'\')" style="cursor:pointer;font-size:12px" title="수정">✏️</span>':'')+'<br>'
+      +'3. ('+lrptEsc(d.label3||'회람방법')+') '+lrptEsc(d.content3)+(canEdit?' <span onclick="adcEditLine('+id+',3,\''+escL3+'\',\''+esc3+'\')" style="cursor:pointer;font-size:12px" title="수정">✏️</span>':'')
       +'</div></div></div>';
     h+='<table class="adc-sig-table"><thead><tr><th>연번</th><th>소속</th><th>직책</th><th>사번</th><th>성명</th><th>확인일자</th><th>서명</th>'+(canEdit?'<th></th>':'')+'</tr></thead><tbody>';
     sigs.forEach(function(s,i){
@@ -15450,6 +15459,24 @@ async function adcEditField(id, field, currentValue, label){
   if(!newVal){ toast(label+'을(를) 입력해주세요'); return; }
   try{
     var payload={}; payload[field]=newVal;
+    var res=await sb.from('admin_confirm_docs').update(payload).eq('id',id);
+    if(res.error) throw res.error;
+    toast('✅ 수정되었습니다');
+    adcOpenDocDetail(id);
+  }catch(e){ toast('⚠️ 수정 실패: '+e.message); }
+}
+async function adcEditLine(id, idx, currentLabel, currentContent){
+  if(!canAdcManage()){ toast('⚠️ 관리자 이상만 수정할 수 있습니다'); return; }
+  var newLabel=prompt('항목명을 입력해주세요 (예: 회람내용, 교육내용, 출장목적)', currentLabel||'');
+  if(newLabel===null) return;
+  newLabel=newLabel.trim();
+  if(!newLabel){ toast('항목명을 입력해주세요'); return; }
+  var newContent=prompt('내용을 입력해주세요', currentContent||'');
+  if(newContent===null) return;
+  newContent=newContent.trim();
+  if(!newContent){ toast('내용을 입력해주세요'); return; }
+  try{
+    var payload={}; payload['label'+idx]=newLabel; payload['content'+idx]=newContent;
     var res=await sb.from('admin_confirm_docs').update(payload).eq('id',id);
     if(res.error) throw res.error;
     toast('✅ 수정되었습니다');
@@ -15517,9 +15544,9 @@ async function adcPrintDoc(id){
     h+='<div style="border-top:3px double #333;border-bottom:3px double #333;padding:10px 0;text-align:center;font-size:19px;font-weight:800;letter-spacing:1px;margin-bottom:6px">'+lrptEsc(d.title||'제목 없음')+'</div>';
     h+='<div style="text-align:left;font-size:12px;color:#333;margin-bottom:14px">'+lrptEsc(d.doc_date)+'</div>';
     h+='<div style="font-size:12.5px;line-height:1.9;margin-bottom:14px">'
-      +'1. (회람내용) '+lrptEsc(d.content1)+'<br>'
-      +'2. (회람대상) '+lrptEsc(d.content2)+'<br>'
-      +'3. (회람방법) '+lrptEsc(d.content3)
+      +'1. ('+lrptEsc(d.label1||'회람내용')+') '+lrptEsc(d.content1)+'<br>'
+      +'2. ('+lrptEsc(d.label2||'회람대상')+') '+lrptEsc(d.content2)+'<br>'
+      +'3. ('+lrptEsc(d.label3||'회람방법')+') '+lrptEsc(d.content3)
       +'</div>';
     h+='<table class="adc-sig-table"><thead><tr><th style="width:6%">연번</th><th style="width:16%">소속</th><th style="width:12%">직책</th><th style="width:12%">사번</th><th style="width:12%">성명</th><th style="width:14%">확인일자</th><th style="width:18%">서명</th></tr></thead><tbody>';
     var maxRows=Math.max(20, sigs.length);
