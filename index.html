@@ -307,7 +307,7 @@ html{overflow-x:hidden}
 
 /* ─ 토스트 ─ */
 #toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(8px);background:rgba(30,37,48,.92);color:white;padding:9px 18px;border-radius:22px;font-size:14px;font-weight:600;z-index:999;opacity:0;transition:opacity .25s,transform .25s;white-space:nowrap;pointer-events:none}
-.mh-scroller{display:flex;overflow-x:auto;scroll-snap-type:x proximity;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.mh-scroller{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .mh-scroller::-webkit-scrollbar{display:none}
 .mh-panel{flex:0 0 100%;scroll-snap-align:start;min-width:100%;max-width:100%;padding-bottom:114px}
 .mh-dots{display:flex;justify-content:center;gap:5px;padding:6px 0 2px}
