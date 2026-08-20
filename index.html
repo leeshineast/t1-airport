@@ -17780,6 +17780,16 @@ async function deleteNewsPostFromDetail(id, imagePath){
   }catch(e){ toast('⚠️ 오류: '+e.message); }
 }
 var newsPosts=[];
+function linkifyText(escapedText){
+  // 이미 &lt;/&gt;로 이스케이프된 텍스트 안의 URL만 <a> 링크로 변환 (XSS 안전)
+  return String(escapedText||'').replace(/((?:https?:\/\/|www\.)[^\s]+)/g, function(url){
+    var trail=''; // 문장 끝 구두점(. , ) 등)은 링크에서 제외
+    var m=url.match(/([.,)\]!?]+)$/);
+    if(m){ trail=m[1]; url=url.slice(0, url.length-trail.length); }
+    var href=/^https?:\/\//i.test(url) ? url : 'https://'+url;
+    return '<a href="'+href+'" target="_blank" rel="noopener noreferrer" style="color:var(--teal2);text-decoration:underline;word-break:break-all">'+url+'</a>'+trail;
+  });
+}
 async function viewNewsPost(id){
   bumpViewCount('companynews_posts', id);
   var body=document.getElementById('newsPostDetailBody');
@@ -17798,7 +17808,7 @@ async function viewNewsPost(id){
       html+='<div style="font-size:19px;font-weight:800;color:var(--g7);margin-bottom:8px;line-height:1.4">'+String(p.title).replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
     }
     html+='<div style="font-size:12px;color:var(--g4);margin-bottom:10px">'+(p.uploaded_at?p.uploaded_at.slice(0,16).replace('T',' '):'')+' · '+(p.uploaded_by||'')+'</div>';
-    html+='<div style="font-size:15px;color:var(--g7);line-height:1.7;white-space:pre-wrap">'+(p.content||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
+    html+='<div style="font-size:15px;color:var(--g7);line-height:1.7;white-space:pre-wrap">'+linkifyText((p.content||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'))+'</div>';
     if(p.image_path){
       html+='<img src="'+SUPABASE_URL+'/storage/v1/object/public/companynews/'+encodeURIComponent(p.image_path)+'" style="width:100%;border-radius:var(--r2);margin-top:14px">';
     }
