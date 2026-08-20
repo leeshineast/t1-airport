@@ -583,7 +583,7 @@ html{overflow-x:hidden}
     <div class="mh-tab-item" onclick="go('groupchat')" style="position:relative"><span id="gcTabBadge2" style="display:none;position:absolute;top:2px;right:calc(50% - 20px);min-width:16px;height:16px;padding:0 4px;background:var(--danger);color:white;border-radius:20px;font-size:9.5px;font-weight:800;align-items:center;justify-content:center"></span><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span><span class="mh-tab-lb">전체채팅</span></div>
     <div class="mh-tab-item" onclick="go('accident')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span class="mh-tab-lb">안전사고</span></div>
     <div class="mh-tab-item" onclick="go('veh')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="7" width="15" height="11" rx="1"/><path d="M16 10h3l3 3v4a1 1 0 0 1-1 1h-1"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg></span><span class="mh-tab-lb">차량운행</span></div>
-    <div class="mh-tab-item" onclick="go('execdash')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span><span class="mh-tab-lb">현황판</span></div>
+    <div class="mh-tab-item" onclick="location.href='warehouse.html'"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21V12h6v9"/></svg></span><span class="mh-tab-lb">재고관리</span></div>
   </div>
 </div>
 <!-- ══ 미확인 인계 알림 배너 ══ -->
@@ -5060,7 +5060,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 <script>
 let me=null,wdT=null,indData=[],indEditId=null;
 function isExecRole(r){return r==='group_leader'||r==='division_head'||r==='master';} // 그룹장/본부장/최고관리자: admin과 동일 이상 권한
-function canAdcManage(){ return !!(me && (me.role==='master'||me.role==='admin'||me.role==='manager'||isExecRole(me.role))); } // 관리자 확인사항: 업로드/작성/서명/수정/삭제 권한
+function canAdcManage(){ return !!(me && (me.role==='master'||me.role==='admin'||me.role==='manager')); } // 관리자 확인사항: master/admin/manager만 (그 외 전원 불가)
 function canDeleteWorkItem(){
   return !!(me && (me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)));
 }
@@ -5578,7 +5578,7 @@ function go(name){
   if(name==='admin'&&(!me||me.role!=='master')){ toast('⚠️ 최고관리자만 접근할 수 있습니다'); return; }
   if(name==='activeUsers'&&(!me||!(me.role==='admin'||me.role==='master'))){ toast('⚠️ 관리자 이상만 접근할 수 있습니다'); return; }
   if(name==='deleteLogs'&&(!me||me.role!=='master')){ toast('⚠️ 최고관리자만 접근할 수 있습니다'); return; }
-  if(name==='admconfirm'&&(!me||!(me.role==='master'||me.role==='admin'||me.role==='manager'||isExecRole(me.role)))){ toast('⚠️ 관리자 이상만 접근할 수 있습니다'); return; }
+  if(name==='admconfirm'&&(!me||!canAdcManage())){ toast('⚠️ master·admin·manager만 접근할 수 있습니다'); return; }
   if(name==='toilet'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='perf'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(['shower','smoking','rest','storage','baby'].indexOf(name)!==-1&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
@@ -15587,7 +15587,7 @@ async function adcDeletePdf(id, path){
 // ── 내 서명 등록 ──
 var _adcMySigFile=null;
 var _adcMySigExistingPath=null;
-// 서명 이미지의 밝은 배경(종이색)을 자동으로 투명 처리 (잉크 부분만 남김)
+// 서명 이미지의 밝은 배경(종이색/얼룩)을 순백색으로 정리해서 표에 깔끔하게 들어가도록 처리
 function adcMakeSigTransparent(file, cb){
   var img=new Image();
   var reader=new FileReader();
@@ -15596,18 +15596,23 @@ function adcMakeSigTransparent(file, cb){
       var canvas=document.createElement('canvas');
       canvas.width=img.width; canvas.height=img.height;
       var ctx=canvas.getContext('2d');
+      ctx.fillStyle='#fff';
+      ctx.fillRect(0,0,canvas.width,canvas.height);
       ctx.drawImage(img,0,0);
       try{
         var imageData=ctx.getImageData(0,0,canvas.width,canvas.height);
         var d=imageData.data;
-        var dark=120, light=195; // 이 밝기 구간을 서서히 투명하게 (자연스러운 경계)
+        var dark=120, light=195; // 이 밝기 구간을 흰색쪽으로 서서히 정리 (자연스러운 경계)
         for(var i=0;i<d.length;i+=4){
           var lum=0.299*d[i]+0.587*d[i+1]+0.114*d[i+2];
-          var alpha;
-          if(lum<=dark) alpha=255;
-          else if(lum>=light) alpha=0;
-          else alpha=Math.round(255*(light-lum)/(light-dark));
-          d[i+3]=alpha;
+          if(lum>=light){ d[i]=255; d[i+1]=255; d[i+2]=255; }
+          else if(lum>dark){
+            var t=(light-lum)/(light-dark); // 0=흰쪽, 1=잉크쪽
+            d[i]=Math.round(d[i]*t+255*(1-t));
+            d[i+1]=Math.round(d[i+1]*t+255*(1-t));
+            d[i+2]=Math.round(d[i+2]*t+255*(1-t));
+          }
+          d[i+3]=255; // 항상 불투명
         }
         ctx.putImageData(imageData,0,0);
       }catch(e){} // 처리 실패 시 원본 그대로 사용
@@ -15639,7 +15644,7 @@ async function loadAdcMySig(){
 }
 function adcPreviewMySig(files){
   if(!files||!files[0]) return;
-  toast('🪄 배경 투명 처리 중...');
+  toast('🪄 배경 정리 중...');
   adcMakeSigTransparent(files[0], function(blob){
     _adcMySigFile=blob;
     var url=URL.createObjectURL(blob);
@@ -15647,7 +15652,7 @@ function adcPreviewMySig(files){
     var wrap=document.getElementById('adcMySigPreviewWrap');
     if(img) img.src=url;
     if(wrap) wrap.style.display='block';
-    toast('✅ 배경 투명 처리 완료');
+    toast('✅ 배경 정리 완료');
   });
 }
 async function adcSaveMySig(){
