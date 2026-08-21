@@ -14549,22 +14549,42 @@ function parseLostPaste(){
   }
 
   // ── 1단계: 라벨(동의어 포함) + 콜론 또는 공백 구분 ──
+  // 콜론이 있는 줄은 콜론 기준으로 "라벨부분:값부분"을 나눠서, 라벨부분에 다른 글자가 섞여 있어도
+  // (예: "사번 및 이름 : 141048 강지원") 값이 통째로 잘못 삼켜지지 않게 처리
+  lines.forEach(function(line,i){
+    if(usedLines[i]) return;
+    var colonIdx=line.search(/[:：]/);
+    if(colonIdx>=0){
+      var labelPart=line.slice(0,colonIdx);
+      var valuePart=cleanVal(line.slice(colonIdx+1));
+      if(!valuePart){ if(/위치|장소|물품|품목|습득물|분실물|사번|사원\s*번호|성명|이름|발견자/.test(labelPart)) usedLines[i]=true; return; }
+      if(/사번|사원\s*번호/.test(labelPart) && !id){ // "사번" 또는 "사번 및 이름"처럼 라벨이 섞여도 인식
+        var mm=valuePart.match(/^(\d{4,8})\s*(.*)$/);
+        if(mm){ id=mm[1]; if(mm[2]&&!name) name=mm[2].trim(); } else { id=valuePart; }
+        usedLines[i]=true;
+      }else if(/위치|장소/.test(labelPart) && !loc){ loc=valuePart; usedLines[i]=true; }
+      else if(/물품|품목|습득물|분실물/.test(labelPart) && !item){ item=valuePart; usedLines[i]=true; }
+      else if(/성명|이름|발견자/.test(labelPart) && !name){ name=valuePart; usedLines[i]=true; }
+    }
+  });
+  // 콜론이 없는 줄은 "라벨 바로 뒤 공백 + 값" 형태만 인식 (엉뚱한 단어가 라벨과 값 사이에 끼는 것 방지)
   var labelPatterns=[
-    {key:'loc',  re:/^(?:발견\s*)?(?:위치|장소)\s*[:：]?\s*(.+)$/},
-    {key:'item', re:/^(?:발견\s*)?(?:물품|품목|습득물|분실물)\s*[:：]?\s*(.+)$/},
-    {key:'id',   re:/^사(?:번|원\s*번호)\s*[:：]?\s*(.+)$/},
-    {key:'name', re:/^(?:성명|이름|발견자)\s*[:：]?\s*(.+)$/}
+    {key:'loc',  re:/^(?:발견\s*)?(?:위치|장소)\s+(.+)$/},
+    {key:'item', re:/^(?:발견\s*)?(?:물품|품목|습득물|분실물)\s+(.+)$/},
+    {key:'id',   re:/^사(?:번|원\s*번호)\s*(\d{4,8}\s*.*)$/}, // "사번141084" 처럼 라벨-숫자 사이 공백 없어도 인식 (뒤에 숫자가 바로 와야 함 — "사번 및..."과 구분)
+    {key:'name', re:/^(?:성명|이름|발견자)\s+(.+)$/}
   ];
   lines.forEach(function(line,i){
+    if(usedLines[i]) return;
     for(var p=0;p<labelPatterns.length;p++){
       var m=line.match(labelPatterns[p].re);
       if(!m) continue;
       var val=cleanVal(m[1]);
-      if(!val){ usedLines[i]=true; continue; } // "발견자:" 처럼 라벨만 있고 값이 없는 줄은 소비 처리하고 건너뜀
+      if(!val) continue;
       if(labelPatterns[p].key==='loc'&&!loc){ loc=val; usedLines[i]=true; }
       else if(labelPatterns[p].key==='item'&&!item){ item=val; usedLines[i]=true; }
       else if(labelPatterns[p].key==='id'&&!id){
-        var mm=val.match(/^(\d{4,8})\s*(.*)$/); // 사번 뒤에 이름이 붙어있는 경우까지 처리
+        var mm=val.match(/^(\d{4,8})\s*(.*)$/);
         if(mm){ id=mm[1]; if(mm[2]&&!name) name=mm[2].trim(); } else { id=val; }
         usedLines[i]=true;
       }
@@ -14607,12 +14627,26 @@ function parseLostPaste(){
   }
 
   // ── 4단계: 위치 라벨이 없으면 공항 장소 키워드가 포함된 줄을 위치로 추정 ──
+  var locKeyword=/(층|B\d\s*F|\d\s*F|게이트|탑승동|탑승교|환승|체크인|카운터|라운지|화장실|샤워실|흡연실|출국장|입국장|검색대|수하물|주차장|터미널|스타라인|셔틀|엘리베이터|에스컬레이터|계단|에어|랜드|공항|동편|서편|남측|북측|인근|근처|중앙|입구|출구|측|편)/;
   if(!loc){
-    var locKeyword=/(층|B\d\s*F|\d\s*F|게이트|탑승동|탑승교|환승|체크인|카운터|라운지|화장실|샤워실|흡연실|출국장|입국장|검색대|수하물|주차장|터미널|스타라인|셔틀|엘리베이터|에스컬레이터|계단)/;
     lines.forEach(function(line,i){
       if(loc||usedLines[i]) return;
       if(locKeyword.test(line)){ loc=line; usedLines[i]=true; }
     });
+  }
+
+  // ── 4-1단계: 위치 문장 앞/뒤에 물품명이 그대로 붙어있는 경우(예: "지갑 에어3층...", "...중앙 화장실 R3507 지갑") 물품 단어를 분리 ──
+  if(loc && !item){
+    var tokens=loc.split(/\s+/);
+    var frontItems=[], backItems=[];
+    while(tokens.length>1 && /^[가-힣]{2,6}$/.test(tokens[0]) && !locKeyword.test(tokens[0])){
+      frontItems.push(tokens.shift());
+    }
+    while(tokens.length>1 && /^[가-힣]{2,6}$/.test(tokens[tokens.length-1]) && !locKeyword.test(tokens[tokens.length-1])){
+      backItems.unshift(tokens.pop());
+    }
+    var combined=frontItems.concat(backItems);
+    if(combined.length){ item=combined.join(' '); loc=tokens.join(' '); }
   }
 
   // ── 5단계: 물품 라벨이 없으면, 아직 안 쓰인 줄 중 가장 긴 줄을 물품 설명으로 추정 ──
