@@ -2182,6 +2182,20 @@ html{overflow-x:hidden}
     <textarea id="hD" style="display:none"></textarea>
     <textarea id="hE" style="display:none"></textarea>
 
+    <!-- 묶음 수정 안내 (여러 팀에 동시 인계된 건을 수정할 때만 표시) -->
+    <div class="card" id="hoBatchEditWrap" style="display:none;margin-bottom:10px;border:1.5px solid var(--teal)"><div class="cb">
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div>
+          <div style="font-size:14px;font-weight:800;color:var(--g7)">🔗 <span id="hoBatchEditCount">2</span>개 팀에 함께 전송된 인계입니다</div>
+          <div style="font-size:12px;color:var(--g4);margin-top:2px">묶음 전체에 적용하면 공지·시설물·위험요소·장비·인계일시가 나머지 팀 건에도 같이 반영됩니다 (수신팀·확인상태는 각자 유지)</div>
+        </div>
+        <label style="display:flex;align-items:center;gap:6px;flex-shrink:0;cursor:pointer">
+          <input type="checkbox" id="hoBatchEditToggle" checked style="width:18px;height:18px">
+          <span style="font-size:13px;font-weight:700;color:var(--teal2)">묶음 전체 적용</span>
+        </label>
+      </div>
+    </div></div>
+
     <!-- 처리결과 수정 (수정모드에서만 표시) -->
     <div class="card" id="hoResultEditWrap" style="display:none;margin-bottom:10px"><div class="cb">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
@@ -6825,15 +6839,34 @@ function subHO(){
       updatePayload.result_by=me?me.name:'';
       updatePayload.result_at=new Date().toISOString();
     }
-    sb.from('handover').update(updatePayload).eq('id', editId).then(function(res){
-      if(res.error) toast('수정 오류: '+res.error.message);
-      else{ loadHandoverFromDB(); toast('✅ 인수인계가 수정되었습니다'); }
+    // 묶음 전체 적용이 체크돼 있으면, 같은 batch_id의 다른 팀 건에는 공통 항목만 같이 반영 (수신팀·시프트·확인상태는 각자 유지)
+    var batchToggleEl=document.getElementById('hoBatchEditToggle');
+    var applyBatch=batchToggleEl&&batchToggleEl.checked&&submitBtn&&submitBtn._batchIds&&submitBtn._batchIds.length>1;
+    var otherBatchIds=applyBatch?submitBtn._batchIds.filter(function(bid){return String(bid)!==String(editId);}):[];
+    var sharedPayload={
+      facility: updatePayload.facility,
+      complaint: updatePayload.complaint,
+      danger: updatePayload.danger,
+      accident: updatePayload.accident,
+      equipment: updatePayload.equipment,
+      notice: updatePayload.notice,
+      ho_date: updatePayload.ho_date
+    };
+    var updatePromises=[ sb.from('handover').update(updatePayload).eq('id', editId) ];
+    otherBatchIds.forEach(function(bid){ updatePromises.push(sb.from('handover').update(sharedPayload).eq('id', bid)); });
+    Promise.all(updatePromises).then(function(resArr){
+      var errRes=resArr.find(function(rz){return rz.error;});
+      if(errRes) toast('수정 오류: '+errRes.error.message);
+      else{ loadHandoverFromDB(); toast(otherBatchIds.length?('✅ 인수인계 '+(otherBatchIds.length+1)+'건이 묶음으로 수정되었습니다'):'✅ 인수인계가 수정되었습니다'); }
     });
     // 버튼 원상복귀
-    if(submitBtn){ submitBtn.textContent='📋 인수인계 제출'; delete submitBtn._editId; delete submitBtn._origAccident; delete submitBtn._origComplaint; }
+    if(submitBtn){ submitBtn.textContent='📋 인수인계 제출'; delete submitBtn._editId; delete submitBtn._origAccident; delete submitBtn._origComplaint; delete submitBtn._batchIds; }
     var rw=document.getElementById('hoResultEditWrap'); if(rw) rw.style.display='none';
+    var bw=document.getElementById('hoBatchEditWrap'); if(bw) bw.style.display='none';
   } else {
     // 신규 저장: 선택된 팀마다 별도 row 생성 → 팀마다 독립적으로 인수확인 가능
+    // 2개 팀 이상 동시 인계 시 batch_id로 묶어서, 나중에 "묶음 전체 수정"이 가능하게 함
+    var hoBatchIdX=selEls.length>1?(Date.now().toString(36)+Math.random().toString(36).slice(2,10)):null;
     var rowsToInsert=selEls.map(function(elx){
       var rawX=elx.textContent.trim();
       var teamNumX=parseInt(rawX.replace('팀',''));
@@ -6854,7 +6887,8 @@ function subHO(){
         confirmed: false,
         ho_date: _hoDateISO,
         zone_chain: zoneChainX,
-        to_team: rawX
+        to_team: rawX,
+        batch_id: hoBatchIdX
       };
     });
     saveHandoverToDB(rowsToInsert);
@@ -13997,6 +14031,20 @@ function editHo(btn){
     // 수정 모드 표시
     var submitBtn=document.querySelector('#hoP4 .btn-prim');
     if(submitBtn){ submitBtn.textContent='✏️ 인수인계 수정'; submitBtn._editId=id; submitBtn._origAccident=r.accident||null; submitBtn._origComplaint=r.complaint||null; }
+    // 묶음 수정 안내 — 같은 batch_id로 여러 팀에 함께 전송된 건이면 "묶음 전체 적용" 토글 표시
+    var batchWrap=document.getElementById('hoBatchEditWrap');
+    if(batchWrap){
+      var siblingIds=[];
+      if(r.batch_id){ siblingIds=(hoAll||[]).filter(function(x){return x.batch_id===r.batch_id;}).map(function(x){return x.id;}); }
+      if(submitBtn) submitBtn._batchIds=siblingIds;
+      if(siblingIds.length>1){
+        var cntEl=document.getElementById('hoBatchEditCount'); if(cntEl) cntEl.textContent=siblingIds.length;
+        var toggleEl=document.getElementById('hoBatchEditToggle'); if(toggleEl) toggleEl.checked=true;
+        batchWrap.style.display='block';
+      }else{
+        batchWrap.style.display='none';
+      }
+    }
     toast('수정할 내용을 변경 후 제출하세요');
   },100);
 }
