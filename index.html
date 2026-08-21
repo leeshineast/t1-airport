@@ -3687,7 +3687,16 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <input type="date" id="eeDeadline" class="ri" style="margin-bottom:11px">
 
         <div class="f-lbl">비고</div>
-        <input type="text" id="eeNote" class="ri" placeholder="비고 (선택)" style="margin-bottom:5px">
+        <input type="text" id="eeNote" class="ri" placeholder="비고 (선택)" style="margin-bottom:11px">
+
+        <div class="f-lbl">공개 대상 (선택 안 하면 관리자만 볼 수 있음)</div>
+        <div class="rg" id="eeTargetRoleG" style="flex-wrap:wrap;gap:6px;margin-bottom:5px">
+          <div class="rp" data-role="__all__" onclick="eeToggleTargetRole(this)">전체공개</div>
+          <div class="rp" data-role="manager" onclick="eeToggleTargetRole(this)">팀장</div>
+          <div class="rp" data-role="leader" onclick="eeToggleTargetRole(this)">조장</div>
+          <div class="rp" data-role="acting_leader" onclick="eeToggleTargetRole(this)">액팅리더</div>
+          <div class="rp" data-role="member" onclick="eeToggleTargetRole(this)">조별공용계정</div>
+        </div>
       </div></div>
 
       <div class="card" style="margin-top:11px"><div class="cb">
@@ -11010,6 +11019,42 @@ async function eeSyncPerfForEvent(eventId, category, title, scheds){
   }catch(e){ console.log('주요수행실적 동기화(삭제) 오류:',e); }
   await eeLogToPerf(eventId, category, title, scheds);
 }
+// 공개대상 칩 토글: "전체공개"는 나머지와 배타적, 나머지 역할칩은 다중선택 가능
+function eeToggleTargetRole(el){
+  var role=el.dataset.role;
+  if(role==='__all__'){
+    document.querySelectorAll('#eeTargetRoleG .rp').forEach(function(p){ p.classList.remove('on'); });
+    el.classList.add('on');
+  }else{
+    document.querySelector('#eeTargetRoleG .rp[data-role="__all__"]').classList.remove('on');
+    el.classList.toggle('on');
+  }
+}
+// 현재 체크된 상태를 target_roles 값으로 변환: 전체공개=null(제한없음), 아무것도 선택 안함=[](관리자만), 특정역할 선택=[role,...]
+function eeGetTargetRolesFromUI(){
+  var chips=Array.from(document.querySelectorAll('#eeTargetRoleG .rp.on'));
+  if(chips.some(function(p){return p.dataset.role==='__all__';})) return null;
+  return chips.map(function(p){return p.dataset.role;});
+}
+// target_roles 값을 체크박스 상태로 반영: null=전체공개, []=아무것도 선택안함, [role,...]=해당 역할만 체크
+function eeSetTargetRolesUI(targetRoles){
+  document.querySelectorAll('#eeTargetRoleG .rp').forEach(function(p){ p.classList.remove('on'); });
+  if(targetRoles==null){
+    document.querySelector('#eeTargetRoleG .rp[data-role="__all__"]').classList.add('on');
+  }else{
+    targetRoles.forEach(function(r){
+      var chip=document.querySelector('#eeTargetRoleG .rp[data-role="'+r+'"]');
+      if(chip) chip.classList.add('on');
+    });
+  }
+}
+// 대상 역할로 볼 수 있는지 판정: master/admin은 무조건 통과, target_roles가 null이면 전체공개(기존데이터 호환), []면 관리자만, 배열이면 포함여부로 판정
+function eeCanViewByTarget(e){
+  if(me&&(me.role==='master'||me.role==='admin')) return true;
+  if(e.target_roles==null) return true;
+  if(!e.target_roles.length) return false;
+  return me&&e.target_roles.indexOf(me.role)!==-1;
+}
 async function eeSubmitEvent(){
   try{
   if(!eeCanAdmin()){ toast('⚠️ 조장 이상만 등록할 수 있습니다'); return; }
@@ -11040,8 +11085,9 @@ async function eeSubmitEvent(){
   if(eeEditingEventId){
     // ── 수정 모드 ──
     var eventId=eeEditingEventId;
+    var targetRoles=eeGetTargetRolesFromUI();
     var updRes=await sb.from('edu_events').update({
-      category:category, category_custom:categoryCustom, title:title, content:content, apply_deadline:deadline, note:note
+      category:category, category_custom:categoryCustom, title:title, content:content, apply_deadline:deadline, note:note, target_roles:targetRoles
     }).eq('id',eventId);
     if(updRes.error){ toast('수정 실패: '+updRes.error.message); return; }
 
@@ -11079,9 +11125,10 @@ async function eeSubmitEvent(){
   }else{
     // ── 신규 등록 모드 ──
     var evId=eeGenToken();
+    var targetRoles=eeGetTargetRolesFromUI();
     var evRes=await sb.from('edu_events').insert({
       id:evId, category:category, category_custom:categoryCustom, title:title, content:content,
-      apply_deadline:deadline, note:note, created_by:me?me.name:''
+      apply_deadline:deadline, note:note, created_by:me?me.name:'', target_roles:targetRoles
     });
     if(evRes.error){ toast('등록 실패: '+evRes.error.message); return; }
     scheds.forEach(function(s){ s.origId=eeGenToken(); }); // 회차별 id를 미리 정해서 실적 기록과 연결
@@ -11100,6 +11147,7 @@ async function eeSubmitEvent(){
   document.getElementById('eeCatCustom').value='';
   document.getElementById('eeScheduleRows').innerHTML='';
   eeSetCat(document.querySelector('#eeCatG .rp'),'교육');
+  eeSetTargetRolesUI([]);
   eeAddScheduleRow();
   eeTab(0);
   }catch(err){
@@ -11125,6 +11173,7 @@ async function eeEditEvent(eventId){
   var catBtn=Array.from(document.querySelectorAll('#eeCatG .rp')).find(function(p){ return p.textContent===ev.category; })||document.querySelector('#eeCatG .rp');
   eeSetCat(catBtn, ev.category==='기타'?'기타':catBtn.textContent);
   if(ev.category==='기타') document.getElementById('eeCatCustom').value=ev.category_custom||'';
+  eeSetTargetRolesUI(ev.target_roles===undefined?null:ev.target_roles);
 
   document.getElementById('eeScheduleRows').innerHTML='';
   var scheds=(ev._schedules||[]).slice().sort(function(a,b){return a.seq-b.seq;});
@@ -11190,6 +11239,7 @@ function eeRenderEventList(){
   eeFilterMonth=document.getElementById('eeFilterMonth').value||'';
   if(!eeEventsCache.length){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">등록된 교육·회의가 없습니다</div>'; return; }
   var filtered=eeEventsCache.filter(function(e){
+    if(!eeCanViewByTarget(e)) return false;
     if(eeFilterCat&&e.category!==eeFilterCat) return false;
     if(!eeFilterYear&&!eeFilterMonth) return true;
     return (e._schedules||[]).some(function(s){
