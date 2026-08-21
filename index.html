@@ -3622,6 +3622,48 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     </div>
     <div id="eeNotAdmin" style="display:none;text-align:center;padding:30px;color:var(--g3);font-size:14px">조장 이상만 등록할 수 있습니다</div>
   </div>
+
+  <!-- 탭2: 신청하기 (목록에서 진입, 탭바에는 노출 안 함) -->
+  <div id="eeP2" style="display:none;padding:13px">
+    <button onclick="eeTab(0)" style="margin-bottom:11px;padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 목록으로</button>
+    <div class="card"><div class="cb">
+      <div style="font-size:11px;color:var(--g4)" id="eeApplyCat"></div>
+      <div style="font-size:17px;font-weight:800;color:var(--g7);margin-bottom:10px" id="eeApplyTitle"></div>
+
+      <div style="display:flex;gap:8px;margin-bottom:11px">
+        <div style="flex:1">
+          <div class="f-lbl">팀 (자동)</div>
+          <input type="text" id="eeApplyTeam" class="ri" readonly style="background:var(--g1);color:var(--g5)">
+        </div>
+        <div style="flex:1">
+          <div class="f-lbl">조 (자동)</div>
+          <input type="text" id="eeApplyGroup" class="ri" readonly style="background:var(--g1);color:var(--g5)">
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;margin-bottom:11px">
+        <div style="flex:1">
+          <div class="f-lbl">사번</div>
+          <input type="text" id="eeApplyEmpId" class="ri" placeholder="사번 입력" oninput="eeApplyLookupDebounce()">
+        </div>
+        <div style="flex:1">
+          <div class="f-lbl">성명</div>
+          <input type="text" id="eeApplyName" class="ri" placeholder="성명 입력">
+        </div>
+      </div>
+      <div id="eeApplyLookupNote" style="display:none;font-size:12px;color:var(--teal2);background:var(--teal-bg);padding:8px 10px;border-radius:8px;margin-bottom:11px"></div>
+
+      <div class="f-lbl">참석 가능한 날짜를 선택하세요</div>
+      <div id="eeApplyDateList" style="display:flex;flex-direction:column;gap:7px;margin-bottom:13px"></div>
+
+      <button class="btn-prim" onclick="eeSubmitApply()">📝 신청하기</button>
+    </div></div>
+  </div>
+
+  <!-- 탭3: 관리자 신청현황 (목록에서 진입, 탭바에는 노출 안 함) -->
+  <div id="eeP3" style="display:none;padding:13px">
+    <button onclick="eeTab(0)" style="margin-bottom:11px;padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 목록으로</button>
+    <div id="eeStatsWrap"></div>
+  </div>
 </div>
 
 
@@ -10676,6 +10718,7 @@ var eeEventsCache=[];
 
 function eeTab(n){
   tabSwitch('ee',n,2);
+  ['eeP2','eeP3'].forEach(function(id){ var el=document.getElementById(id); if(el) el.style.display='none'; });
   var admBlk=document.getElementById('eeAdminOnly'), notAdm=document.getElementById('eeNotAdmin');
   if(n===0){ loadEduEvents(); }
   else if(n===1){
@@ -10684,6 +10727,10 @@ function eeTab(n){
     if(notAdm) notAdm.style.display=can?'none':'block';
     if(can&&document.getElementById('eeScheduleRows').children.length===0){ eeAddScheduleRow(); }
   }
+}
+// 목록에서 진입하는 서브 화면(신청하기/신청현황) 전용 — 탭바(목록/등록)는 그대로 두고 P0/P1만 감춤
+function eeShowSubPanel(id){
+  ['eeP0','eeP1','eeP2','eeP3'].forEach(function(pid){ var el=document.getElementById(pid); if(el) el.style.display=(pid===id)?'block':'none'; });
 }
 function eeSetCat(el,val){
   document.querySelectorAll('#eeCatG .rp').forEach(function(p){p.classList.remove('on');});
@@ -10819,8 +10866,140 @@ async function loadEduEvents(){
   }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger)">오류: '+e.message+'</div>'; }
 }
 // (2단계에서 구현 예정: 직원 신청 화면 / 관리자 신청현황)
-function eeOpenApply(eventId){ toast('신청 화면은 다음 단계에서 만들 예정입니다'); }
-function eeOpenAdminView(eventId){ toast('신청현황 화면은 다음 단계에서 만들 예정입니다'); }
+// ═══ 직원 신청 화면 ═══
+var eeApplyCurEventId=null;
+var eeApplyLookupTimer=null;
+function eeOpenApply(eventId){
+  var ev=(eeEventsCache||[]).find(function(e){ return e.id===eventId; });
+  if(!ev){ toast('교육/회의 정보를 찾을 수 없습니다'); return; }
+  eeApplyCurEventId=eventId;
+  var catLabel=ev.category==='기타'?(ev.category_custom||'기타'):ev.category;
+  document.getElementById('eeApplyCat').textContent=catLabel;
+  document.getElementById('eeApplyTitle').textContent=ev.title;
+  // 팀/조 자동입력 — 조별공용계정의 소속(me.team, 예: "1팀 A조")에서 파싱
+  var teamRaw=(me&&me.team)?me.team.trim():'';
+  var tm=teamRaw.match(/^(\d+\s*팀)\s*([A-Za-z가-힣]?조)?/);
+  document.getElementById('eeApplyTeam').value=tm?tm[1]:teamRaw;
+  document.getElementById('eeApplyGroup').value=tm&&tm[2]?tm[2]:'';
+  document.getElementById('eeApplyEmpId').value='';
+  document.getElementById('eeApplyName').value='';
+  document.getElementById('eeApplyLookupNote').style.display='none';
+  // 회차별 체크박스 렌더링
+  var scheds=(ev._schedules||[]).slice().sort(function(a,b){return a.seq-b.seq;});
+  document.getElementById('eeApplyDateList').innerHTML=scheds.map(function(s){
+    var timeStr=(s.start_time||'')+(s.end_time?('~'+s.end_time):'');
+    return '<label style="display:flex;align-items:center;gap:9px;padding:11px;border:1px solid var(--g2);border-radius:var(--r2);cursor:pointer" id="eeDateRow_'+s.id+'">'
+      +'<input type="checkbox" class="eeDateChk" value="'+s.id+'" style="width:19px;height:19px;flex-shrink:0">'
+      +'<div><div style="font-size:14px;font-weight:700;color:var(--g7)">'+s.event_date+' '+timeStr+'</div>'
+      +(s.location?'<div style="font-size:12px;color:var(--g4)">📍 '+eeEsc(s.location)+'</div>':'')
+      +'</div></label>';
+  }).join('')||'<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">등록된 일정이 없습니다</div>';
+  eeShowSubPanel('eeP2');
+}
+function eeApplyLookupDebounce(){
+  clearTimeout(eeApplyLookupTimer);
+  eeApplyLookupTimer=setTimeout(eeApplyLookup, 500);
+}
+async function eeApplyLookup(){
+  var empId=(document.getElementById('eeApplyEmpId').value||'').trim();
+  var noteEl=document.getElementById('eeApplyLookupNote');
+  document.querySelectorAll('.eeDateChk').forEach(function(c){c.checked=false;});
+  if(!empId||!eeApplyCurEventId){ noteEl.style.display='none'; return; }
+  try{
+    var res=await sb.from('edu_applications').select('*').eq('event_id',eeApplyCurEventId).eq('employee_id',empId);
+    if(res.error) return;
+    var rows=res.data||[];
+    if(rows.length){
+      rows.forEach(function(r){
+        var chk=document.querySelector('.eeDateChk[value="'+r.schedule_id+'"]');
+        if(chk) chk.checked=true;
+      });
+      if(rows[0].name) document.getElementById('eeApplyName').value=rows[0].name;
+      noteEl.textContent='ℹ️ 기존 신청내역을 불러왔습니다 ('+rows.length+'건) — 체크를 바꾸면 신청내역이 수정됩니다';
+      noteEl.style.display='block';
+    }else{
+      noteEl.style.display='none';
+    }
+  }catch(e){}
+}
+async function eeSubmitApply(){
+  try{
+    var eventId=eeApplyCurEventId;
+    if(!eventId) return;
+    var team=document.getElementById('eeApplyTeam').value||'';
+    var group=document.getElementById('eeApplyGroup').value||'';
+    var empId=(document.getElementById('eeApplyEmpId').value||'').trim();
+    var name=(document.getElementById('eeApplyName').value||'').trim();
+    if(!empId){ toast('⚠️ 사번을 입력하세요'); return; }
+    if(!name){ toast('⚠️ 성명을 입력하세요'); return; }
+    var checked=Array.from(document.querySelectorAll('.eeDateChk:checked')).map(function(c){return c.value;});
+    if(!checked.length){ toast('⚠️ 참석 가능한 날짜를 최소 1개 선택하세요'); return; }
+
+    var existRes=await sb.from('edu_applications').select('id,schedule_id').eq('event_id',eventId).eq('employee_id',empId);
+    if(existRes.error){ toast('조회 실패: '+existRes.error.message); return; }
+    var existRows=existRes.data||[];
+    var existScheduleIds=existRows.map(function(r){return r.schedule_id;});
+    var toInsert=checked.filter(function(sid){ return existScheduleIds.indexOf(sid)===-1; });
+    var toDelete=existRows.filter(function(r){ return checked.indexOf(r.schedule_id)===-1; });
+
+    for(var i=0;i<toInsert.length;i++){
+      var insRes=await sb.from('edu_applications').insert({
+        id:eeGenToken(), event_id:eventId, schedule_id:toInsert[i], team:team, team_group:group,
+        employee_id:empId, name:name, applied_by:me?me.name:''
+      });
+      if(insRes.error){ toast('⚠️ 일부 신청 실패: '+insRes.error.message); }
+    }
+    for(var j=0;j<toDelete.length;j++){
+      await sb.from('edu_applications').delete().eq('id',toDelete[j].id);
+    }
+    toast('✅ 신청 완료 ('+checked.length+'개 일정)');
+    eeTab(0);
+  }catch(err){
+    console.error('[eeSubmitApply 오류]', err);
+    toast('⚠️ 신청 중 오류가 발생했습니다: '+String(err&&err.message||err));
+  }
+}
+
+// ═══ 관리자 신청현황 ═══
+async function eeOpenAdminView(eventId){
+  if(!eeCanAdmin()){ toast('⚠️ 조장 이상만 볼 수 있습니다'); return; }
+  var ev=(eeEventsCache||[]).find(function(e){ return e.id===eventId; });
+  if(!ev){ toast('정보를 찾을 수 없습니다'); return; }
+  eeShowSubPanel('eeP3');
+  var wrap=document.getElementById('eeStatsWrap');
+  wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div>';
+  try{
+    var appRes=await sb.from('edu_applications').select('*').eq('event_id',eventId);
+    if(appRes.error){ wrap.innerHTML='오류: '+appRes.error.message; return; }
+    var apps=appRes.data||[];
+    var scheds=(ev._schedules||[]).slice().sort(function(a,b){return a.seq-b.seq;});
+    var byShed={};
+    apps.forEach(function(a){ (byShed[a.schedule_id]=byShed[a.schedule_id]||[]).push(a); });
+    var h='<div class="card"><div class="cb">';
+    h+='<div style="font-size:16px;font-weight:800;color:var(--g7);margin-bottom:2px">'+eeEsc(ev.title)+'</div>';
+    h+='<div style="font-size:13px;color:var(--g5);margin-bottom:13px">총 신청 '+apps.length+'건 (연인원, 중복회차 포함)</div>';
+    h+='<table style="width:100%;border-collapse:separate;border-spacing:0;font-size:13px">';
+    h+='<thead><tr><th style="text-align:left;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">일정</th><th style="text-align:right;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">신청인원</th></tr></thead><tbody>';
+    scheds.forEach(function(s){
+      var list=byShed[s.id]||[];
+      h+='<tr style="cursor:pointer" onclick="eeToggleSchedList(\''+s.id+'\')">'
+        +'<td style="padding:9px 4px;border-bottom:1px solid var(--g1)">'+s.event_date+' '+(s.start_time||'')+'</td>'
+        +'<td style="padding:9px 4px;text-align:right;border-bottom:1px solid var(--g1);color:var(--teal2);font-weight:800">'+list.length+'명 ▾</td>'
+        +'</tr>';
+      h+='<tr id="eeSchedList_'+s.id+'" style="display:none"><td colspan="2" style="padding:9px 4px 13px;background:var(--g0)">'
+        +(list.length?('<div style="display:flex;flex-direction:column;gap:5px">'+list.map(function(a){
+            return '<div style="font-size:12.5px;color:var(--g6)">'+eeEsc(a.team||'')+' '+eeEsc(a.team_group||'')+' · '+eeEsc(a.employee_id)+' · '+eeEsc(a.name)+'</div>';
+          }).join('')+'</div>'):'<div style="font-size:12.5px;color:var(--g3)">신청자 없음</div>')
+        +'</td></tr>';
+    });
+    h+='</tbody></table></div></div>';
+    wrap.innerHTML=h;
+  }catch(e){ wrap.innerHTML='오류: '+e.message; }
+}
+function eeToggleSchedList(sid){
+  var el=document.getElementById('eeSchedList_'+sid);
+  if(el) el.style.display=(el.style.display==='none')?'table-row':'none';
+}
 
 var jwScheduleData=[];
 async function loadJointWorkSchedule(){
