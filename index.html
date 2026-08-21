@@ -8253,7 +8253,7 @@ var vehData=[];
 var indPrevYear=0;
 var ZONES=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
 // ═══ 층별/구역별 평균 근무인력 (전달 전체 데이터 기준, 오전만 입력됐는지·오전+오후까지 입력됐는지에 맞춰 비교) ═══
-var mpAvgAM=null, mpAvgAMPM=null, mpAvgLoading=false; // 4(구역) x 7(층) 평균 매트릭스 — null이면 아직 미로드
+var mpAvgAM=null, mpAvgAMPM=null, mpAvgLoading=false, mpAvgMonthNum=0; // 4(구역) x 7(층) 평균 매트릭스 — null이면 아직 미로드. mpAvgMonthNum=평균 기준월(예:7)
 function mpAvgColor(actual, avg){
   if(!avg||avg<=0) return null;
   if(actual<avg) return 'var(--danger)';
@@ -8315,6 +8315,7 @@ async function loadMpAverages(){
     var zeroM=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
     mpAvgAM=avg?avg.am:zeroM;
     mpAvgAMPM=avg?avg.ampm:zeroM;
+    mpAvgMonthNum=pm;
     updateFloorChart();
   }catch(e){ console.log('평균 근무인력 로드 오류:',e); }
   mpAvgLoading=false;
@@ -8769,7 +8770,8 @@ function updateFloorChart(){
   // 층별 패널 — 현재까지 입력된 시프트(오전만 / 오전+오후)에 맞는 평균과 비교해 색상 표시
   var shiftState=mpDataByShift['오후']?'ampm':'am';
   var avgM=(shiftState==='ampm')?mpAvgAMPM:mpAvgAM;
-  var avgWord=(shiftState==='ampm')?'전달 오전+오후평균':'전달 오전평균';
+  var avgMonthWord=mpAvgMonthNum?(mpAvgMonthNum+'월'):'전달';
+  var avgWord=(shiftState==='ampm')?(avgMonthWord+' 오전+오후평균'):(avgMonthWord+' 오전평균');
   var fps=[{id:'B2F',ci:0},{id:'B1F',ci:[1,6],merged:true},{id:'1F',ci:2},{id:'2F',ci:3},{id:'3F',ci:4},{id:'4F',ci:5}];
   var flAllTot=0, flAllAvgTot=0, flAllAvgHasData=false;
   fps.forEach(function(fp){
@@ -21661,8 +21663,6 @@ async function loadMonthlyStats(){
     var banner=document.getElementById('msErrBanner');
     if(banner) banner.style.display=anyErr?'flex':'none';
     msStats={ cur:msCalc(q,curKey), prev:msCalc(q,prevKey) };
-    msStats.rawMp=(q[0]&&q[0].data)||[];
-    msStats.curKey=curKey;
     msRenderCards();
     if(msOpenKey) msRenderDetail(msOpenKey);
     var up=document.getElementById('msUpdated');
@@ -22569,16 +22569,14 @@ function msRenderDetail(key){
   var pw=msPrevWord(), pl=msPeriodLabel();
   if(key==='mp'){
     h=msTitle('👥 인력현황 · '+pl);
-    if(msMode!=='day'&&msStats.rawMp){
-      var mpPeriodAvg=mpShiftAvgForPeriod(msStats.rawMp, msStats.curKey);
-      if(mpPeriodAvg){
-        var mpShiftSt=mpDataByShift['오후']?'ampm':'am';
-        var mpAvgM3=mpPeriodAvg[mpShiftSt];
-        var mpTodayTot=0; for(var mzi=0;mzi<4;mzi++) for(var mci=0;mci<7;mci++) mpTodayTot+=(mpData[mzi]&&mpData[mzi][mci])||0;
-        var mpAvgTot3=0; for(var mzi2=0;mzi2<4;mzi2++) for(var mci2=0;mci2<7;mci2++) mpAvgTot3+=mpAvgM3[mzi2][mci2];
-        var mpCmpCol=mpAvgColor(mpTodayTot,mpAvgTot3)||'var(--g6)';
-        h+=msRow('금일 현장인력('+(mpShiftSt==='ampm'?'오전+오후':'오전')+')', '<span style="color:'+mpCmpCol+';font-weight:800">'+mpTodayTot+'명</span> <span style="font-size:10px;font-weight:600;color:var(--g4)">('+pl+' 평균 '+mpAvgTot3+'명)</span>');
-      }
+    if(mpAvgAM){
+      var mpShiftSt=mpDataByShift['오후']?'ampm':'am';
+      var mpAvgM3=mpShiftSt==='ampm'?mpAvgAMPM:mpAvgAM;
+      var mpTodayTot=0; for(var mzi=0;mzi<4;mzi++) for(var mci=0;mci<7;mci++) mpTodayTot+=(mpData[mzi]&&mpData[mzi][mci])||0;
+      var mpAvgTot3=0; for(var mzi2=0;mzi2<4;mzi2++) for(var mci2=0;mci2<7;mci2++) mpAvgTot3+=mpAvgM3[mzi2][mci2];
+      var mpCmpCol=mpAvgColor(mpTodayTot,mpAvgTot3)||'var(--g6)';
+      var mpAvgMonthWord=mpAvgMonthNum?(mpAvgMonthNum+'월'):'전달';
+      h+=msRow('금일 현장인력('+(mpShiftSt==='ampm'?'오전+오후':'오전')+')', '<span style="color:'+mpCmpCol+';font-weight:800">'+mpTodayTot+'명</span> <span style="font-size:10px;font-weight:600;color:var(--g4)">('+mpAvgMonthWord+' 평균 '+mpAvgTot3+'명)</span>');
     }
     h+=msRow('전체 일평균', msMpAvg(c.mp)+'명 <span style="font-size:10px;font-weight:600;color:var(--g4)">('+pw+' '+msMpAvg(p.mp)+'명)</span>');
     h+=msRow('오전 일평균', msShiftAvg(c.mp,'오전')+'명');
