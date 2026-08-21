@@ -3650,6 +3650,15 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
           <input type="text" id="eeApplyName" class="ri" placeholder="성명 입력">
         </div>
       </div>
+      <div class="f-lbl">직책/급</div>
+      <div class="rg" id="eeApplyPosG" style="flex-wrap:wrap;gap:6px;margin-bottom:11px">
+        <div class="rp" onclick="eeSetPos(this,'사원')">사원</div>
+        <div class="rp" onclick="eeSetPos(this,'대리')">대리</div>
+        <div class="rp" onclick="eeSetPos(this,'조장')">조장</div>
+        <div class="rp" onclick="eeSetPos(this,'팀장')">팀장</div>
+        <div class="rp" onclick="eeSetPos(this,'총괄팀장')">총괄팀장</div>
+        <div class="rp" onclick="eeSetPos(this,'사업부장')">사업부장</div>
+      </div>
       <div id="eeApplyLookupNote" style="display:none;font-size:12px;color:var(--teal2);background:var(--teal-bg);padding:8px 10px;border-radius:8px;margin-bottom:11px"></div>
 
       <div class="f-lbl">참석 가능한 날짜를 선택하세요</div>
@@ -10739,6 +10748,20 @@ function eeSetCat(el,val){
   var custom=document.getElementById('eeCatCustom');
   if(custom) custom.style.display=(val==='기타')?'block':'none';
 }
+var eeSelectedPos='';
+function eeSetPos(el,val){
+  document.querySelectorAll('#eeApplyPosG .rp').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  eeSelectedPos=val;
+}
+// 로그인 역할 기준 직책 기본값 추정 (직접 변경 가능)
+function eeDefaultPosByRole(){
+  if(!me) return '사원';
+  if(me.role==='leader'||me.role==='acting_leader') return '조장';
+  if(me.role==='manager') return '팀장';
+  if(me.role==='admin'||me.role==='master') return '총괄팀장';
+  return '사원';
+}
 function eeAddScheduleRow(){
   eeScheduleSeq++;
   var wrap=document.getElementById('eeScheduleRows');
@@ -10891,6 +10914,9 @@ function eeOpenApply(eventId){
   document.getElementById('eeApplyGroup').value=groupOut;
   document.getElementById('eeApplyEmpId').value='';
   document.getElementById('eeApplyName').value='';
+  var defPos=eeDefaultPosByRole();
+  document.querySelectorAll('#eeApplyPosG .rp').forEach(function(p){ p.classList.toggle('on', p.textContent===defPos); });
+  eeSelectedPos=defPos;
   document.getElementById('eeApplyLookupNote').style.display='none';
   // 회차별 체크박스 렌더링
   var scheds=(ev._schedules||[]).slice().sort(function(a,b){return a.seq-b.seq;});
@@ -10923,6 +10949,7 @@ async function eeApplyLookup(){
         if(chk) chk.checked=true;
       });
       if(rows[0].name) document.getElementById('eeApplyName').value=rows[0].name;
+      if(rows[0].position){ eeSelectedPos=rows[0].position; document.querySelectorAll('#eeApplyPosG .rp').forEach(function(p){ p.classList.toggle('on', p.textContent===rows[0].position); }); }
       noteEl.textContent='ℹ️ 기존 신청내역을 불러왔습니다 ('+rows.length+'건) — 체크를 바꾸면 신청내역이 수정됩니다';
       noteEl.style.display='block';
     }else{
@@ -10938,8 +10965,10 @@ async function eeSubmitApply(){
     var group=document.getElementById('eeApplyGroup').value||'';
     var empId=(document.getElementById('eeApplyEmpId').value||'').trim();
     var name=(document.getElementById('eeApplyName').value||'').trim();
+    var position=eeSelectedPos||'';
     if(!empId){ toast('⚠️ 사번을 입력하세요'); return; }
     if(!name){ toast('⚠️ 성명을 입력하세요'); return; }
+    if(!position){ toast('⚠️ 직책/급을 선택하세요'); return; }
     var checked=Array.from(document.querySelectorAll('.eeDateChk:checked')).map(function(c){return c.value;});
     if(!checked.length){ toast('⚠️ 참석 가능한 날짜를 최소 1개 선택하세요'); return; }
 
@@ -10952,10 +10981,16 @@ async function eeSubmitApply(){
 
     for(var i=0;i<toInsert.length;i++){
       var insRes=await sb.from('edu_applications').insert({
-        id:eeGenToken(), event_id:eventId, schedule_id:toInsert[i], team:team, team_group:group,
+        id:eeGenToken(), event_id:eventId, schedule_id:toInsert[i], team:team, team_group:group, position:position,
         employee_id:empId, name:name, applied_by:me?me.name:''
       });
       if(insRes.error){ toast('⚠️ 일부 신청 실패: '+insRes.error.message); }
+    }
+    // 이미 신청된 회차도 직책/팀/조/이름이 바뀌었을 수 있으니 최신값으로 갱신
+    for(var k=0;k<existRows.length;k++){
+      if(checked.indexOf(existRows[k].schedule_id)!==-1){
+        await sb.from('edu_applications').update({team:team, team_group:group, position:position, name:name, edited_by:me?me.name:'', edited_at:new Date().toISOString()}).eq('id',existRows[k].id);
+      }
     }
     for(var j=0;j<toDelete.length;j++){
       await sb.from('edu_applications').delete().eq('id',toDelete[j].id);
@@ -10995,9 +11030,26 @@ async function eeOpenAdminView(eventId){
         +'<td style="padding:9px 4px;text-align:right;border-bottom:1px solid var(--g1);color:var(--teal2);font-weight:800">'+list.length+'명 ▾</td>'
         +'</tr>';
       h+='<tr id="eeSchedList_'+s.id+'" style="display:none"><td colspan="2" style="padding:9px 4px 13px;background:var(--g0)">'
-        +(list.length?('<div style="display:flex;flex-direction:column;gap:5px">'+list.map(function(a){
-            return '<div style="font-size:12.5px;color:var(--g6)">'+eeEsc(a.team||'')+' '+eeEsc(a.team_group||'')+' · '+eeEsc(a.employee_id)+' · '+eeEsc(a.name)+'</div>';
-          }).join('')+'</div>'):'<div style="font-size:12.5px;color:var(--g3)">신청자 없음</div>')
+        +(list.length?(
+          '<table style="width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;background:white;border-radius:8px;overflow:hidden;border:1px solid var(--g2)">'
+          +'<thead><tr style="background:var(--g1)">'
+            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">팀</th>'
+            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">조</th>'
+            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">직책</th>'
+            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">사번</th>'
+            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">성명</th>'
+          +'</tr></thead><tbody>'
+          +list.map(function(a,i){
+            return '<tr style="'+(i%2?'background:var(--g0)':'')+'">'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.team||'-')+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.team_group||'-')+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.position||'-')+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.employee_id)+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);font-weight:700">'+eeEsc(a.name)+'</td>'
+              +'</tr>';
+          }).join('')
+          +'</tbody></table>'
+        ):'<div style="font-size:12.5px;color:var(--g3)">신청자 없음</div>')
         +'</td></tr>';
     });
     h+='</tbody></table></div></div>';
