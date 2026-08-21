@@ -20,6 +20,7 @@
   --g0:#FAFBFC;--g1:#F3F5F7;--g2:#E8EAED;--g3:#CDD1D6;--g4:#7C8894;--g5:#525E6C;--g6:#3A4250;--g7:#1E2530;
   --danger:#D94040;--danger-bg:#FDF0F0;
   --success:#1A9E75;--success-bg:#E8F7F1;
+  --avg-blue:#2F6FE0;--avg-blue-bg:#EAF2FE;
   --warn:#C57C00;--warn-bg:#FEF6E0;
   --r:14px;--r2:10px;
   --font:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;
@@ -1091,6 +1092,16 @@ html{overflow-x:hidden}
           <tr class="tot"><td class="lbl">전체 총계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
         </tbody>
       </table></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px" id="flAllAvgWrap">
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2)">
+          <div style="font-size:12px;color:var(--g4);margin-bottom:4px" id="flAllAvgLbl">평균현장인원</div>
+          <div style="font-size:22px;font-weight:900;color:var(--g6)" id="flAllAvgNum">-</div>
+        </div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2)">
+          <div style="font-size:12px;color:var(--g4);margin-bottom:4px">금일현장인원</div>
+          <div style="font-size:22px;font-weight:900" id="flAllTodayNum">0명</div>
+        </div>
+      </div>
       <div class="card ns-summary-card" style="display:none;margin-top:0">
         <div class="cb">
           <div style="font-size:14px;font-weight:700;color:#6B21A8;margin-bottom:8px">🌙 야간특별작업 인력현황 (금일)</div>
@@ -1108,43 +1119,39 @@ html{overflow-x:hidden}
 
     <!-- B2F 패널 -->
     <div id="flP_B2F" style="display:none">
-      <!-- 층 합계 강조 -->
       <div style="background:linear-gradient(135deg,var(--navy),var(--teal2));border-radius:var(--r);margin:0 13px 11px;padding:16px;display:flex;align-items:center;justify-content:space-between">
-        <span style="color:rgba(255,255,255,.85);font-size:16px;font-weight:700">B2F 전체 합계</span>
-        <div style="display:flex;align-items:baseline;gap:4px"><span style="color:white;font-size:39px;font-weight:900;line-height:1">16</span><span style="color:rgba(255,255,255,.7);font-size:16px">명</span></div>
+        <div>
+          <span style="color:rgba(255,255,255,.85);font-size:16px;font-weight:700">B2F 전체 합계</span>
+          <div style="color:rgba(255,255,255,.55);font-size:11px;margin-top:3px" id="flAvgLbl_B2F"></div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:4px"><span style="color:white;font-size:39px;font-weight:900;line-height:1" id="flTotNum_B2F">0</span><span style="color:rgba(255,255,255,.7);font-size:16px">명</span></div>
       </div>
-      <!-- 구역별 합계 4칸 -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">L/S 동편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--navy);line-height:1">5</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">L/S 동편<br><span id="flZoneAvg_B2F_0" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_B2F_0">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">L/S 서편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--navy);line-height:1">4</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">L/S 서편<br><span id="flZoneAvg_B2F_1" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_B2F_1">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">A/S 동편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--teal2);line-height:1">4</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">A/S 동편<br><span id="flZoneAvg_B2F_2" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_B2F_2">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">A/S 서편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--teal2);line-height:1">3</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">A/S 서편<br><span id="flZoneAvg_B2F_3" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_B2F_3">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
       </div>
-      <!-- L/S·A/S 소계 -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
         <div style="background:var(--navy-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(27,58,107,.1);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--navy)">L/S 소계</span>
-          <span style="font-size:23px;font-weight:900;color:var(--navy)">9<span style="font-size:12px;color:var(--g4)">명</span></span>
+          <span style="font-size:23px;font-weight:900;color:var(--navy)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
         </div>
         <div style="background:var(--teal-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(0,169,157,.15);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--teal2)">A/S 소계</span>
-          <span style="font-size:23px;font-weight:900;color:var(--teal2)">7<span style="font-size:12px;color:var(--g4)">명</span></span>
+          <span style="font-size:23px;font-weight:900;color:var(--teal2)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
         </div>
       </div>
     </div>
@@ -1153,200 +1160,184 @@ html{overflow-x:hidden}
         <div>
           <span style="color:rgba(255,255,255,.85);font-size:16px;font-weight:700">B1F 전체 합계</span>
           <div style="color:rgba(255,255,255,.6);font-size:12px;margin-top:3px">B1F + 집하장 합산</div>
+          <div style="color:rgba(255,255,255,.55);font-size:11px;margin-top:3px" id="flAvgLbl_B1F"></div>
         </div>
-        <div style="display:flex;align-items:baseline;gap:4px"><span style="color:white;font-size:39px;font-weight:900;line-height:1">53</span><span style="color:rgba(255,255,255,.7);font-size:16px">명</span></div>
+        <div style="display:flex;align-items:baseline;gap:4px"><span style="color:white;font-size:39px;font-weight:900;line-height:1" id="flTotNum_B1F">0</span><span style="color:rgba(255,255,255,.7);font-size:16px">명</span></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">L/S 동편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--navy);line-height:1">16</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">L/S 동편<br><span id="flZoneAvg_B1F_0" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_B1F_0">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">L/S 서편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--navy);line-height:1">13</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">L/S 서편<br><span id="flZoneAvg_B1F_1" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_B1F_1">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">A/S 동편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--teal2);line-height:1">13</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">A/S 동편<br><span id="flZoneAvg_B1F_2" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_B1F_2">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">A/S 서편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--teal2);line-height:1">11</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">A/S 서편<br><span id="flZoneAvg_B1F_3" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_B1F_3">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
         <div style="background:var(--navy-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(27,58,107,.1);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--navy)">L/S 소계</span>
-          <span style="font-size:23px;font-weight:900;color:var(--navy)">29<span style="font-size:12px;color:var(--g4)">명</span></span>
+          <span style="font-size:23px;font-weight:900;color:var(--navy)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
         </div>
         <div style="background:var(--teal-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(0,169,157,.15);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--teal2)">A/S 소계</span>
-          <span style="font-size:23px;font-weight:900;color:var(--teal2)">24<span style="font-size:12px;color:var(--g4)">명</span></span>
+          <span style="font-size:23px;font-weight:900;color:var(--teal2)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
         </div>
       </div>
     </div>
     <div id="flP_1F" style="display:none">
-      <!-- 층 합계 강조 -->
       <div style="background:linear-gradient(135deg,var(--navy),var(--teal2));border-radius:var(--r);margin:0 13px 11px;padding:16px;display:flex;align-items:center;justify-content:space-between">
-        <span style="color:rgba(255,255,255,.85);font-size:16px;font-weight:700">1F 전체 합계</span>
-        <div style="display:flex;align-items:baseline;gap:4px"><span style="color:white;font-size:39px;font-weight:900;line-height:1">61</span><span style="color:rgba(255,255,255,.7);font-size:16px">명</span></div>
+        <div>
+          <span style="color:rgba(255,255,255,.85);font-size:16px;font-weight:700">1F 전체 합계</span>
+          <div style="color:rgba(255,255,255,.55);font-size:11px;margin-top:3px" id="flAvgLbl_1F"></div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:4px"><span style="color:white;font-size:39px;font-weight:900;line-height:1" id="flTotNum_1F">0</span><span style="color:rgba(255,255,255,.7);font-size:16px">명</span></div>
       </div>
-      <!-- 구역별 합계 4칸 -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">L/S 동편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--navy);line-height:1">18</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">L/S 동편<br><span id="flZoneAvg_1F_0" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_1F_0">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">L/S 서편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--navy);line-height:1">16</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">L/S 서편<br><span id="flZoneAvg_1F_1" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_1F_1">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">A/S 동편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--teal2);line-height:1">14</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">A/S 동편<br><span id="flZoneAvg_1F_2" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_1F_2">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">A/S 서편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--teal2);line-height:1">13</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">A/S 서편<br><span id="flZoneAvg_1F_3" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_1F_3">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
       </div>
-      <!-- L/S·A/S 소계 -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
         <div style="background:var(--navy-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(27,58,107,.1);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--navy)">L/S 소계</span>
-          <span style="font-size:23px;font-weight:900;color:var(--navy)">34<span style="font-size:12px;color:var(--g4)">명</span></span>
+          <span style="font-size:23px;font-weight:900;color:var(--navy)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
         </div>
         <div style="background:var(--teal-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(0,169,157,.15);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--teal2)">A/S 소계</span>
-          <span style="font-size:23px;font-weight:900;color:var(--teal2)">27<span style="font-size:12px;color:var(--g4)">명</span></span>
+          <span style="font-size:23px;font-weight:900;color:var(--teal2)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
         </div>
       </div>
     </div>
     <div id="flP_2F" style="display:none">
-      <!-- 층 합계 강조 -->
       <div style="background:linear-gradient(135deg,var(--navy),var(--teal2));border-radius:var(--r);margin:0 13px 11px;padding:16px;display:flex;align-items:center;justify-content:space-between">
-        <span style="color:rgba(255,255,255,.85);font-size:16px;font-weight:700">2F 전체 합계</span>
-        <div style="display:flex;align-items:baseline;gap:4px"><span style="color:white;font-size:39px;font-weight:900;line-height:1">51</span><span style="color:rgba(255,255,255,.7);font-size:16px">명</span></div>
+        <div>
+          <span style="color:rgba(255,255,255,.85);font-size:16px;font-weight:700">2F 전체 합계</span>
+          <div style="color:rgba(255,255,255,.55);font-size:11px;margin-top:3px" id="flAvgLbl_2F"></div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:4px"><span style="color:white;font-size:39px;font-weight:900;line-height:1" id="flTotNum_2F">0</span><span style="color:rgba(255,255,255,.7);font-size:16px">명</span></div>
       </div>
-      <!-- 구역별 합계 4칸 -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">L/S 동편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--navy);line-height:1">15</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">L/S 동편<br><span id="flZoneAvg_2F_0" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_2F_0">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">L/S 서편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--navy);line-height:1">13</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">L/S 서편<br><span id="flZoneAvg_2F_1" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_2F_1">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">A/S 동편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--teal2);line-height:1">12</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">A/S 동편<br><span id="flZoneAvg_2F_2" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_2F_2">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">A/S 서편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--teal2);line-height:1">11</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">A/S 서편<br><span id="flZoneAvg_2F_3" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_2F_3">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
       </div>
-      <!-- L/S·A/S 소계 -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
         <div style="background:var(--navy-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(27,58,107,.1);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--navy)">L/S 소계</span>
-          <span style="font-size:23px;font-weight:900;color:var(--navy)">28<span style="font-size:12px;color:var(--g4)">명</span></span>
+          <span style="font-size:23px;font-weight:900;color:var(--navy)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
         </div>
         <div style="background:var(--teal-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(0,169,157,.15);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--teal2)">A/S 소계</span>
-          <span style="font-size:23px;font-weight:900;color:var(--teal2)">23<span style="font-size:12px;color:var(--g4)">명</span></span>
+          <span style="font-size:23px;font-weight:900;color:var(--teal2)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
         </div>
       </div>
     </div>
     <div id="flP_3F" style="display:none">
-      <!-- 층 합계 강조 -->
       <div style="background:linear-gradient(135deg,var(--navy),var(--teal2));border-radius:var(--r);margin:0 13px 11px;padding:16px;display:flex;align-items:center;justify-content:space-between">
-        <span style="color:rgba(255,255,255,.85);font-size:16px;font-weight:700">3F 전체 합계</span>
-        <div style="display:flex;align-items:baseline;gap:4px"><span style="color:white;font-size:39px;font-weight:900;line-height:1">47</span><span style="color:rgba(255,255,255,.7);font-size:16px">명</span></div>
+        <div>
+          <span style="color:rgba(255,255,255,.85);font-size:16px;font-weight:700">3F 전체 합계</span>
+          <div style="color:rgba(255,255,255,.55);font-size:11px;margin-top:3px" id="flAvgLbl_3F"></div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:4px"><span style="color:white;font-size:39px;font-weight:900;line-height:1" id="flTotNum_3F">0</span><span style="color:rgba(255,255,255,.7);font-size:16px">명</span></div>
       </div>
-      <!-- 구역별 합계 4칸 -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">L/S 동편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--navy);line-height:1">14</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">L/S 동편<br><span id="flZoneAvg_3F_0" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_3F_0">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">L/S 서편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--navy);line-height:1">12</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">L/S 서편<br><span id="flZoneAvg_3F_1" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_3F_1">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">A/S 동편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--teal2);line-height:1">11</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">A/S 동편<br><span id="flZoneAvg_3F_2" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_3F_2">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">A/S 서편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--teal2);line-height:1">10</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">A/S 서편<br><span id="flZoneAvg_3F_3" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_3F_3">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
       </div>
-      <!-- L/S·A/S 소계 -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
         <div style="background:var(--navy-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(27,58,107,.1);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--navy)">L/S 소계</span>
-          <span style="font-size:23px;font-weight:900;color:var(--navy)">26<span style="font-size:12px;color:var(--g4)">명</span></span>
+          <span style="font-size:23px;font-weight:900;color:var(--navy)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
         </div>
         <div style="background:var(--teal-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(0,169,157,.15);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--teal2)">A/S 소계</span>
-          <span style="font-size:23px;font-weight:900;color:var(--teal2)">21<span style="font-size:12px;color:var(--g4)">명</span></span>
+          <span style="font-size:23px;font-weight:900;color:var(--teal2)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
         </div>
       </div>
     </div>
     <div id="flP_4F" style="display:none">
       <div style="background:linear-gradient(135deg,var(--navy),var(--teal2));border-radius:var(--r);margin:0 13px 11px;padding:16px;display:flex;align-items:center;justify-content:space-between">
-        <span style="color:rgba(255,255,255,.85);font-size:16px;font-weight:700">4F 전체 합계</span>
-        <div style="display:flex;align-items:baseline;gap:4px"><span style="color:white;font-size:39px;font-weight:900;line-height:1">34</span><span style="color:rgba(255,255,255,.7);font-size:16px">명</span></div>
+        <div>
+          <span style="color:rgba(255,255,255,.85);font-size:16px;font-weight:700">4F 전체 합계</span>
+          <div style="color:rgba(255,255,255,.55);font-size:11px;margin-top:3px" id="flAvgLbl_4F"></div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:4px"><span style="color:white;font-size:39px;font-weight:900;line-height:1" id="flTotNum_4F">0</span><span style="color:rgba(255,255,255,.7);font-size:16px">명</span></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">L/S 동편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--navy);line-height:1">10</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">L/S 동편<br><span id="flZoneAvg_4F_0" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_4F_0">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">L/S 서편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--navy);line-height:1">9</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">L/S 서편<br><span id="flZoneAvg_4F_1" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_4F_1">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">A/S 동편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--teal2);line-height:1">8</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">A/S 동편<br><span id="flZoneAvg_4F_2" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_4F_2">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
-        <div style="background:white;border-radius:var(--r2);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">
-          <div style="font-size:12px;font-weight:600;color:var(--g4);margin-bottom:6px">A/S 서편</div>
-          <div style="font-size:30px;font-weight:900;color:var(--teal2);line-height:1">7</div>
-          <div style="font-size:12px;color:var(--g4);margin-top:3px">명</div>
+        <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
+          <span style="font-size:12px;color:var(--g4);line-height:1.5">A/S 서편<br><span id="flZoneAvg_4F_3" style="font-size:11px;color:var(--g3)"></span></span>
+          <span style="font-size:25px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_4F_3">0<span style="font-size:12px;font-weight:600">명</span></span>
         </div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
         <div style="background:var(--navy-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(27,58,107,.1);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--navy)">L/S 소계</span>
-          <span style="font-size:23px;font-weight:900;color:var(--navy)">19<span style="font-size:12px;color:var(--g4)">명</span></span>
+          <span style="font-size:23px;font-weight:900;color:var(--navy)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
         </div>
         <div style="background:var(--teal-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(0,169,157,.15);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--teal2)">A/S 소계</span>
-          <span style="font-size:23px;font-weight:900;color:var(--teal2)">15<span style="font-size:12px;color:var(--g4)">명</span></span>
+          <span style="font-size:23px;font-weight:900;color:var(--teal2)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
         </div>
       </div>
     </div>
@@ -5220,8 +5211,8 @@ function edMove(dir){
 }
 
 function edKpiCard(icon, label, value, unit, level){
-  var colMap={ok:'var(--success)',warn:'var(--warn)',danger:'var(--danger)',neutral:'var(--navy)'};
-  var bgMap={ok:'var(--success-bg)',warn:'var(--warn-bg)',danger:'var(--danger-bg)',neutral:'var(--navy-bg)'};
+  var colMap={ok:'var(--success)',warn:'var(--warn)',danger:'var(--danger)',info:'var(--avg-blue)',neutral:'var(--navy)'};
+  var bgMap={ok:'var(--success-bg)',warn:'var(--warn-bg)',danger:'var(--danger-bg)',info:'var(--avg-blue-bg)',neutral:'var(--navy-bg)'};
   var col=colMap[level]||colMap.neutral, bg=bgMap[level]||bgMap.neutral;
   return '<div style="background:white;border-radius:var(--r2);padding:9px 10px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">'
     +'<div style="display:flex;align-items:center;gap:5px;margin-bottom:5px">'
@@ -5347,10 +5338,19 @@ async function loadExecDashboard(){
     var staffLabel=isAvg?(periodLabel+' 일평균 근무인원'):(periodLabel+' 근무인원');
     var jwTotal=jwRows.length;
     var jwHeadSum=jwSumHeadcount(jwRows);
+    // 실시간(오늘) 보기일 때만 현장인력(오전+오후)을 최근 30일 평균과 비교해 카드 레벨(파랑 초과/초록 충족/빨강 미달) 결정
+    var staffLevel='neutral';
+    if(isLiveToday&&mpAvgAM){
+      var fieldNow=shiftShow['오전']+shiftShow['오후'];
+      var avgM2=shiftShow['오후']>0?mpAvgAMPM:mpAvgAM;
+      var fieldAvg=0;
+      if(avgM2) for(var azi=0;azi<4;azi++) for(var aci=0;aci<7;aci++) fieldAvg+=avgM2[azi][aci];
+      if(fieldAvg>0) staffLevel=fieldNow<fieldAvg?'danger':(fieldNow>fieldAvg?'info':'ok');
+    }
 
     // ── KPI 카드
     var kpiHtml='';
-    kpiHtml+=edKpiCard('👥',staffLabel, totalStaffShow, '명','neutral');
+    kpiHtml+=edKpiCard('👥',staffLabel, totalStaffShow, '명',staffLevel);
     kpiHtml+=edKpiCard('📊',periodLabel+' 근무율'+(isLiveToday?' (정원'+staffQuota+')':''), attendRate, '%', attendRate>=80?'ok':(attendRate>=60?'warn':'danger'));
     kpiHtml+=edKpiCard('🔄',periodLabel+' 인수인계 완료율', hoRate, '%', hoRate>=90?'ok':(hoRate>=70?'warn':'danger'));
     kpiHtml+=edKpiCard('📞',periodLabel+' VOC 접수건수', vocTotal, '건','neutral');
@@ -8251,6 +8251,66 @@ var _mpPending={shKey:'', myTeam:'', newVals:null};
 var vehData=[];
 var indPrevYear=0;
 var ZONES=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
+// ═══ 층별/구역별 평균 근무인력 (최근 30일, 오전만 입력됐는지·오전+오후까지 입력됐는지에 맞춰 비교) ═══
+var mpAvgAM=null, mpAvgAMPM=null, mpAvgLoading=false; // 4(구역) x 7(층) 평균 매트릭스 — null이면 아직 미로드
+function mpAvgColor(actual, avg){
+  if(!avg||avg<=0) return null;
+  if(actual<avg) return 'var(--danger)';
+  if(actual>avg) return 'var(--avg-blue)';
+  return 'var(--success)';
+}
+// 통계대시보드 선택 기간(일/월/년)에 맞춰 오전만/오전+오후 평균을 각각 계산 (rows는 mp_data raw rows, keyPrefix는 'YYYY-MM-DD'|'YYYY-MM'|'YYYY-')
+function mpShiftAvgForPeriod(rows, keyPrefix){
+  var byDate={};
+  (rows||[]).forEach(function(r){
+    if(!r.date||r.date.indexOf(keyPrefix)!==0) return;
+    if(!r.team_code||r.team_code.indexOf('_')===0) return;
+    var sh=r.shift; if(sh!=='오전'&&sh!=='오후') return;
+    var vals=r.values;
+    if(typeof vals==='string'){ try{ vals=JSON.parse(vals); }catch(e){ return; } }
+    if(!Array.isArray(vals)) return;
+    if(!byDate[r.date]) byDate[r.date]={오전:null,오후:null};
+    if(!byDate[r.date][sh]) byDate[r.date][sh]=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+    var m=byDate[r.date][sh];
+    for(var ri=0;ri<4;ri++){
+      if(!vals[ri]) continue;
+      for(var ci=0;ci<7;ci++){ m[ri][ci]+=Number(vals[ri][ci])||0; }
+    }
+  });
+  var amSum=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]], amDays=0;
+  var ampmSum=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]], ampmDays=0;
+  Object.keys(byDate).forEach(function(d){
+    var am=byDate[d]['오전'], pm=byDate[d]['오후'];
+    if(am){ amDays++; for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) amSum[ri][ci]+=am[ri][ci]; }
+    if(am&&pm){ ampmDays++; for(var ri2=0;ri2<4;ri2++) for(var ci2=0;ci2<7;ci2++) ampmSum[ri2][ci2]+=am[ri2][ci2]+pm[ri2][ci2]; }
+  });
+  if(!amDays&&!ampmDays) return null;
+  return {
+    am:amSum.map(function(row){ return row.map(function(v){ return amDays?Math.round(v/amDays):0; }); }),
+    ampm:ampmSum.map(function(row){ return row.map(function(v){ return ampmDays?Math.round(v/ampmDays):0; }); })
+  };
+}
+async function loadMpAverages(){
+  if(mpAvgLoading||mpAvgAM) return;
+  mpAvgLoading=true;
+  try{
+    var nowKst=new Date(Date.now()+9*3600000);
+    var y=nowKst.getUTCFullYear(), m=nowKst.getUTCMonth()+1; // 1-12, 이번달
+    var py=y, pm=m-1; if(pm<1){ pm=12; py--; } // 전달
+    var prevMonthKeyPrefix=py+'-'+(pm<10?'0':'')+pm;
+    var fromStr=prevMonthKeyPrefix+'-01';
+    var lastDay=new Date(Date.UTC(py, pm, 0)).getUTCDate(); // 전달의 마지막 날
+    var toStr=prevMonthKeyPrefix+'-'+(lastDay<10?'0':'')+lastDay;
+    var res=await sb.from('mp_data').select('date,shift,team_code,values').gte('date',fromStr).lte('date',toStr);
+    var rows=(res&&res.data)||[];
+    var avg=mpShiftAvgForPeriod(rows, prevMonthKeyPrefix);
+    var zeroM=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+    mpAvgAM=avg?avg.am:zeroM;
+    mpAvgAMPM=avg?avg.ampm:zeroM;
+    updateFloorChart();
+  }catch(e){ console.log('평균 근무인력 로드 오류:',e); }
+  mpAvgLoading=false;
+}
 
 // ═══ tabSwitch (인덱스 기반 탭 전환) ═══
 function tabSwitch(prefix,n,count){
@@ -8698,20 +8758,45 @@ function updateFloorChart(){
     var trs3=mpTbl.querySelectorAll('tr');
     allRows.forEach(function(rowData,ri){if(!trs3[ri])return;var tds=trs3[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
   }
-  // 층별 패널
+  // 층별 패널 — 현재까지 입력된 시프트(오전만 / 오전+오후)에 맞는 평균과 비교해 색상 표시
+  var shiftState=mpDataByShift['오후']?'ampm':'am';
+  var avgM=(shiftState==='ampm')?mpAvgAMPM:mpAvgAM;
+  var avgWord=(shiftState==='ampm')?'전달 오전+오후평균':'전달 오전평균';
   var fps=[{id:'B2F',ci:0},{id:'B1F',ci:[1,6],merged:true},{id:'1F',ci:2},{id:'2F',ci:3},{id:'3F',ci:4},{id:'4F',ci:5}];
+  var flAllTot=0, flAllAvgTot=0, flAllAvgHasData=false;
   fps.forEach(function(fp){
     var panel=document.getElementById('flP_'+fp.id);if(!panel)return;
     var vals=fp.merged?[mpData[0][fp.ci[0]]+mpData[0][fp.ci[1]],mpData[1][fp.ci[0]]+mpData[1][fp.ci[1]],mpData[2][fp.ci[0]]+mpData[2][fp.ci[1]],mpData[3][fp.ci[0]]+mpData[3][fp.ci[1]]]:[mpData[0][fp.ci],mpData[1][fp.ci],mpData[2][fp.ci],mpData[3][fp.ci]];
     var flTot=vals.reduce(function(a,b){return a+b;},0);
     var lsS=vals[0]+vals[1],asS=vals[2]+vals[3];
-    var bigNum=panel.querySelector('span[style*="font-size:39px"]');if(bigNum)bigNum.textContent=flTot;
-    var cards=panel.querySelectorAll('div[style*="font-size:30px"]');vals.forEach(function(v,i){if(cards[i])cards[i].textContent=v;});
+    var avgVals=[0,0,0,0], avgHasData=false;
+    if(avgM){
+      avgHasData=true;
+      avgVals=fp.merged?[avgM[0][fp.ci[0]]+avgM[0][fp.ci[1]],avgM[1][fp.ci[0]]+avgM[1][fp.ci[1]],avgM[2][fp.ci[0]]+avgM[2][fp.ci[1]],avgM[3][fp.ci[0]]+avgM[3][fp.ci[1]]]:[avgM[0][fp.ci],avgM[1][fp.ci],avgM[2][fp.ci],avgM[3][fp.ci]];
+    }
+    var flAvgTot=avgVals.reduce(function(a,b){return a+b;},0);
+    flAllTot+=flTot;
+    if(avgHasData){ flAllAvgTot+=flAvgTot; flAllAvgHasData=true; }
+    var bigNum=document.getElementById('flTotNum_'+fp.id);
+    if(bigNum){ bigNum.textContent=flTot; bigNum.style.color=avgHasData?mpAvgColor(flTot,flAvgTot):'white'; }
+    var avgLbl=document.getElementById('flAvgLbl_'+fp.id);
+    if(avgLbl) avgLbl.textContent=avgHasData?(avgWord+' '+flAvgTot+'명'):'';
+    vals.forEach(function(v,zi){
+      var numEl=document.getElementById('flZoneNum_'+fp.id+'_'+zi);
+      if(numEl){ numEl.innerHTML=v+'<span style="font-size:12px;font-weight:600">명</span>'; numEl.style.color=avgHasData?mpAvgColor(v,avgVals[zi]):(zi<2?'var(--navy)':'var(--teal2)'); }
+      var avgEl=document.getElementById('flZoneAvg_'+fp.id+'_'+zi);
+      if(avgEl) avgEl.textContent=avgHasData?(avgWord+' '+avgVals[zi]+'명'):'';
+    });
     // L/S 소계, A/S 소계 각각 정확히 찾기
     var subDivs=panel.querySelectorAll('div[style*="--navy-bg"] span[style*="23px"], div[style*="--teal-bg"] span[style*="23px"]');
     if(subDivs[0]) subDivs[0].textContent=lsS;
     if(subDivs[1]) subDivs[1].textContent=asS;
   });
+  // 전체 탭 — 평균현장인원 / 금일현장인원
+  var allAvgNumEl=document.getElementById('flAllAvgNum'), allTodayNumEl=document.getElementById('flAllTodayNum'), allAvgLblEl=document.getElementById('flAllAvgLbl');
+  if(allTodayNumEl){ allTodayNumEl.textContent=flAllTot+'명'; allTodayNumEl.style.color=flAllAvgHasData?mpAvgColor(flAllTot,flAllAvgTot):'var(--g6)'; }
+  if(allAvgNumEl) allAvgNumEl.textContent=flAllAvgHasData?(flAllAvgTot+'명'):'-';
+  if(allAvgLblEl) allAvgLblEl.textContent=flAllAvgHasData?(avgWord+' 현장인원'):'평균현장인원';
   // 대시보드 카드
   var dashTot=document.getElementById('dashTotStaff');if(dashTot&&grandTotal>0)dashTot.textContent=grandTotal;
   var curEl=document.getElementById('curStaff');var unitEl=document.getElementById('curUnit');
@@ -17859,7 +17944,7 @@ async function refreshMpDataLight(){
       mpDataByLeader={오전:{},오후:{},야간:{}};
       mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
       go('main');
-      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); }, 500);
+      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); loadMpAverages(); }, 500);
       setTimeout(function(){ tryAutoCheckin(); checkHeatAlert(); }, 2000);
       return;
     }
@@ -21562,6 +21647,8 @@ async function loadMonthlyStats(){
     var banner=document.getElementById('msErrBanner');
     if(banner) banner.style.display=anyErr?'flex':'none';
     msStats={ cur:msCalc(q,curKey), prev:msCalc(q,prevKey) };
+    msStats.rawMp=(q[0]&&q[0].data)||[];
+    msStats.curKey=curKey;
     msRenderCards();
     if(msOpenKey) msRenderDetail(msOpenKey);
     var up=document.getElementById('msUpdated');
@@ -22468,6 +22555,17 @@ function msRenderDetail(key){
   var pw=msPrevWord(), pl=msPeriodLabel();
   if(key==='mp'){
     h=msTitle('👥 인력현황 · '+pl);
+    if(msMode!=='day'&&msStats.rawMp){
+      var mpPeriodAvg=mpShiftAvgForPeriod(msStats.rawMp, msStats.curKey);
+      if(mpPeriodAvg){
+        var mpShiftSt=mpDataByShift['오후']?'ampm':'am';
+        var mpAvgM3=mpPeriodAvg[mpShiftSt];
+        var mpTodayTot=0; for(var mzi=0;mzi<4;mzi++) for(var mci=0;mci<7;mci++) mpTodayTot+=(mpData[mzi]&&mpData[mzi][mci])||0;
+        var mpAvgTot3=0; for(var mzi2=0;mzi2<4;mzi2++) for(var mci2=0;mci2<7;mci2++) mpAvgTot3+=mpAvgM3[mzi2][mci2];
+        var mpCmpCol=mpAvgColor(mpTodayTot,mpAvgTot3)||'var(--g6)';
+        h+=msRow('금일 현장인력('+(mpShiftSt==='ampm'?'오전+오후':'오전')+')', '<span style="color:'+mpCmpCol+';font-weight:800">'+mpTodayTot+'명</span> <span style="font-size:10px;font-weight:600;color:var(--g4)">('+pl+' 평균 '+mpAvgTot3+'명)</span>');
+      }
+    }
     h+=msRow('전체 일평균', msMpAvg(c.mp)+'명 <span style="font-size:10px;font-weight:600;color:var(--g4)">('+pw+' '+msMpAvg(p.mp)+'명)</span>');
     h+=msRow('오전 일평균', msShiftAvg(c.mp,'오전')+'명');
     h+=msRow('오후 일평균', msShiftAvg(c.mp,'오후')+'명');
