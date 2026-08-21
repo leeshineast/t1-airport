@@ -618,7 +618,7 @@ html{overflow-x:hidden}
   </div>
   <div class="mh-scroller" id="mhScroller">
     <div class="mh-panel" id="mhPanelMenu">
-  <div style="padding:14px 13px 6px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:var(--apphd-h, 62px);z-index:40;background:var(--g1)">
+  <div style="padding:14px 13px 6px;display:flex;align-items:center;justify-content:space-between">
     <p style="font-size:13px;color:var(--g4);margin:0" class="dashDateMirror"></p>
     <div style="display:flex;align-items:center;gap:8px">
       <div class="weatherIconBadgeMirror" style="display:none;text-align:center;flex-shrink:0;padding:0 4px">
@@ -914,7 +914,7 @@ html{overflow-x:hidden}
   <div style="height:20px"></div>
     </div>
     <div class="mh-panel" id="mhPanelDash">
-  <div id="dashStickyBar" style="padding:14px 13px 6px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:var(--apphd-h, 62px);z-index:40;background:var(--g1)">
+  <div style="padding:14px 13px 6px;display:flex;align-items:center;justify-content:space-between">
     <div>
       <h1 style="font-size:21px;font-weight:800;color:var(--g7)">운영현황</h1>
       <p style="font-size:13px;color:var(--g4);margin-top:2px" id="dashDate"></p>
@@ -1415,7 +1415,7 @@ html{overflow-x:hidden}
 
     </div>
     <div class="mh-panel" id="mhPanelNotice">
-  <div style="padding:14px 13px 6px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:var(--apphd-h, 62px);z-index:40;background:var(--g1)">
+  <div style="padding:14px 13px 6px;display:flex;align-items:center;justify-content:space-between">
     <p style="font-size:13px;color:var(--g4);margin:0" class="dashDateMirror"></p>
     <div style="display:flex;align-items:center;gap:8px">
       <div class="weatherIconBadgeMirror" style="display:none;text-align:center;flex-shrink:0;padding:0 4px">
@@ -5780,13 +5780,6 @@ function go(name){
 // ─ 로그인 ─
 
 // ── 역할별 UI 적용 (로그인/세션복구 공통) ──
-// 상단 고정바(.app-hd) 실제 높이를 측정해서 CSS 변수로 반영 — 운영현황 요약바 틀고정이 상단바에 가리지 않도록
-function syncAppHdHeight(){
-  var hd=document.querySelector('#sMain .app-hd');
-  if(!hd) return;
-  document.documentElement.style.setProperty('--apphd-h', hd.offsetHeight+'px');
-}
-window.addEventListener('resize', syncAppHdHeight);
 function applyRoleUI(){
   if(!me) return;
   // 헤더
@@ -6044,7 +6037,6 @@ async function doLogin(){
 
 function finishLogin(){
   applyRoleUI();
-  syncAppHdHeight();
   applyFontScale();
   setTimeout(function(){ if(typeof fetchChatLastRead==='function') fetchChatLastRead().then(function(){ if(typeof pollGroupChatBadge==='function') pollGroupChatBadge(); }); }, 800);
   var gt=document.getElementById('globalTabbar'); if(gt) gt.style.display='flex';
@@ -18008,7 +18000,7 @@ async function refreshMpDataLight(){
       mpDataByLeader={오전:{},오후:{},야간:{}};
       mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
       go('main');
-      setTimeout(function(){ applyRoleUI(); syncAppHdHeight(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); loadMpAverages(); }, 500);
+      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); loadMpAverages(); }, 500);
       setTimeout(function(){ tryAutoCheckin(); checkHeatAlert(); }, 2000);
       return;
     }
