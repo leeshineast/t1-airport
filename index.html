@@ -10959,6 +10959,17 @@ function eeSetVenueGps(rid){
 }
 function eeGenToken(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,10); }
 function eeEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+// onclick="..." 속성 안, 작은따옴표로 감싼 JS 문자열 인자로 안전하게 넣기 위한 이스케이프
+// (HTML 속성은 렌더링 시 먼저 엔티티 디코딩된 후 JS로 파싱되므로, eeEsc만 쓰면 따옴표가 다시 살아나 코드가 깨짐)
+function eeJsAttrEsc(s){
+  return String(s==null?'':s)
+    .replace(/\\/g,'\\\\')
+    .replace(/'/g,"\\'")
+    .replace(/&/g,'&amp;')
+    .replace(/"/g,'&quot;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;');
+}
 // 팀/조를 숫자 기준으로 정확히 정렬 ("10팀"이 "2팀"보다 앞으로 오는 문자열정렬 오류 방지)
 function eeTeamSortCmp(a,b){
   var an=parseInt((a.team||'').match(/\d+/))||9999, bn=parseInt((b.team||'').match(/\d+/))||9999;
@@ -10968,8 +10979,9 @@ function eeTeamSortCmp(a,b){
 }
 
 var eeEditingEventId=null; // null이면 신규등록, 값이 있으면 그 교육/회의를 수정하는 중
-// 교육·회의 신규 등록 시 주요수행실적에 회차(1차,2차,3차...)마다 각각 자동 기록
-async function eeLogToPerf(category, title, scheds){
+// 교육·회의 등록/수정 시 주요수행실적에 회차(1차,2차,3차...)마다 각각 자동 기록·동기화
+// eventId를 함께 저장해두면, 나중에 수정·삭제 시 이 이벤트에 연결된 실적 기록을 정확히 찾아 갱신/삭제할 수 있음
+async function eeLogToPerf(eventId, category, title, scheds){
   try{
     var list=scheds||[];
     for(var i=0;i<list.length;i++){
@@ -10983,12 +10995,20 @@ async function eeLogToPerf(category, title, scheds){
       var timeStr=s.start_time?(s.start_time+(s.end_time?('~'+s.end_time):'')):'';
       var content=seqLabel+title+(timeStr?(' ('+s.event_date+' '+timeStr+')'):(s.event_date?(' ('+s.event_date+')'):''));
       await sb.from('performance_records').insert({
-        occurred_at:occurredAtUtc, category:category, location_main:s.location||'-', location_detail:null,
+        id:eeGenToken(), occurred_at:occurredAtUtc, category:category, location_main:s.location||'-', location_detail:null,
         content:content, writer:me?me.name:'', team:me?(me.team||''):'',
-        updated_by:me?me.name:'', updated_at:new Date().toISOString()
+        updated_by:me?me.name:'', updated_at:new Date().toISOString(),
+        edu_event_id:eventId, edu_schedule_id:s.origId||s.id||null
       });
     }
   }catch(e){ console.log('주요수행실적 자동기록 오류:',e); } // 실패해도 교육/회의 등록 자체는 이미 완료된 상태라 조용히 무시
+}
+// 교육·회의를 수정할 때, 이 이벤트에 연결된 기존 실적 기록을 지우고 최신 내용으로 다시 기록 (회차 추가/삭제/변경 전부 반영)
+async function eeSyncPerfForEvent(eventId, category, title, scheds){
+  try{
+    await sb.from('performance_records').delete().eq('edu_event_id',eventId);
+  }catch(e){ console.log('주요수행실적 동기화(삭제) 오류:',e); }
+  await eeLogToPerf(eventId, category, title, scheds);
 }
 async function eeSubmitEvent(){
   try{
@@ -11040,6 +11060,7 @@ async function eeSubmitEvent(){
         payload.id=eeGenToken(); payload.event_id=eventId; payload.qr_token=eeGenToken();
         var insRes=await sb.from('edu_schedules').insert(payload);
         if(insRes.error){ toast('⚠️ '+s.seq+'차 일정 추가 실패: '+insRes.error.message); }
+        s.origId=payload.id; // 새로 생긴 회차의 id를 기억해둬서 주요수행실적 연결에 사용
       }
     }
     if(removedIds.length){
@@ -11050,7 +11071,8 @@ async function eeSubmitEvent(){
         for(var k=0;k<removedIds.length;k++){ await sb.from('edu_schedules').delete().eq('id',removedIds[k]); }
       }
     }
-    toast('✅ "'+title+'" 수정 완료');
+    await eeSyncPerfForEvent(eventId, category, title, scheds); // 주요수행실적도 최신 내용으로 동기화
+    toast('✅ "'+title+'" 수정 완료 (주요수행실적도 반영됨)');
     eeEditingEventId=null;
     var submitBtnEe=document.querySelector('#eeAdminOnly .btn-prim');
     if(submitBtnEe) submitBtnEe.textContent='✅ 교육·회의 등록';
@@ -11062,11 +11084,12 @@ async function eeSubmitEvent(){
       apply_deadline:deadline, note:note, created_by:me?me.name:''
     });
     if(evRes.error){ toast('등록 실패: '+evRes.error.message); return; }
-    var schedRows=scheds.map(function(s){ return {id:eeGenToken(), event_id:evId, seq:s.seq, event_date:s.event_date, start_time:s.start_time, end_time:s.end_time, location:s.location, qr_token:eeGenToken(), venue_lat:s.venue_lat, venue_lng:s.venue_lng}; });
+    scheds.forEach(function(s){ s.origId=eeGenToken(); }); // 회차별 id를 미리 정해서 실적 기록과 연결
+    var schedRows=scheds.map(function(s){ return {id:s.origId, event_id:evId, seq:s.seq, event_date:s.event_date, start_time:s.start_time, end_time:s.end_time, location:s.location, qr_token:eeGenToken(), venue_lat:s.venue_lat, venue_lng:s.venue_lng}; });
     var schedRes=await sb.from('edu_schedules').insert(schedRows);
     if(schedRes.error){ toast('일정 등록 실패: '+schedRes.error.message); return; }
     toast('✅ "'+title+'" 등록 완료 ('+scheds.length+'개 일정)');
-    eeLogToPerf(category, title, scheds); // 주요수행실적에 자동 기록
+    eeLogToPerf(evId, category, title, scheds); // 주요수행실적에 자동 기록
   }
 
   // 폼 초기화
@@ -11110,6 +11133,18 @@ async function eeEditEvent(eventId){
 
   var submitBtnEe2=document.querySelector('#eeAdminOnly .btn-prim');
   if(submitBtnEe2) submitBtnEe2.textContent='✏️ 수정 저장';
+}
+// 교육/회의 삭제 (최고관리자 전용) — 일정·신청내역·참석기록·연결된 주요수행실적까지 함께 삭제
+async function eeDeleteEvent(eventId, title){
+  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
+  if(!confirm('"'+title+'"을(를) 삭제할까요?\n신청내역·참석기록·연결된 주요수행실적까지 모두 함께 삭제되며 되돌릴 수 없습니다.')) return;
+  try{
+    await sb.from('performance_records').delete().eq('edu_event_id',eventId);
+    var res=await sb.from('edu_events').delete().eq('id',eventId); // edu_schedules/edu_applications/edu_attendance는 FK CASCADE로 함께 삭제됨
+    if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    toast('✅ 삭제되었습니다');
+    loadEduEvents();
+  }catch(err){ toast('⚠️ 오류: '+String(err&&err.message||err)); }
 }
 
 var eeFilterYear='', eeFilterMonth='', eeFilterCat='';
@@ -11185,6 +11220,7 @@ function eeRenderEventList(){
         +'<button onclick="eeOpenApply(\''+e.id+'\')" style="flex:1;padding:9px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer" '+(closed?'disabled':'')+'>'+(closed?'마감됨':'📝 신청하기')+'</button>'
         +(eeCanAdmin()?('<button onclick="eeOpenAdminView(\''+e.id+'\')" style="flex:1;padding:9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">📊 신청현황</button>'):'')
         +(eeCanAdmin()?('<button onclick="eeEditEvent(\''+e.id+'\')" style="padding:9px 12px;background:var(--g1);color:var(--g6);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">✏️ 수정</button>'):'')
+        +((me&&me.role==='master')?('<button onclick="eeDeleteEvent(\''+e.id+'\',\''+eeJsAttrEsc(e.title)+'\')" style="padding:9px 12px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">🗑️ 삭제</button>'):'')
       +'</div>'
     +'</div></div>';
   }).join('');
