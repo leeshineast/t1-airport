@@ -1133,6 +1133,7 @@ html{overflow-x:hidden}
             <thead><tr><th>ES</th><th>화장실<br><span style="font-size:10px;font-weight:500">(일상)</span></th><th>공용구역</th><th>수거</th><th style="background:#6B21A8;color:white">계</th></tr></thead>
             <tbody><tr><td data-ns="es">0</td><td data-ns="toilet_daily">0</td><td data-ns="common_area">0</td><td data-ns="collection">0</td><td data-ns="total" style="font-weight:800;color:#6B21A8">0</td></tr></tbody>
           </table>
+          <div style="text-align:right;font-size:11px;color:#8B5CF6;margin-top:5px" data-ns="avglbl"></div>
         </div>
       </div>
     </div>
@@ -2413,6 +2414,15 @@ html{overflow-x:hidden}
   #listReportModal.on .modal{ display:block !important; position:static !important; max-width:none !important; max-height:none !important; overflow:visible !important; box-shadow:none !important; border-radius:0 !important; margin:0 !important; }
   #listReportModal.on > div > div:first-child ~ div{ padding:0 !important; }
   #listReportPrintArea{ display:block !important; position:static !important; width:100% !important; margin:0 !important; padding:0 !important; border:none !important; box-shadow:none !important; }
+  #eeReportModal.on{ display:block !important; visibility:visible !important; position:static !important; }
+  #eeReportModal.on *{ visibility:visible !important; }
+  #eeReportModal.on .m-hd, #eeReportModal.on .no-print{ display:none !important; }
+  #eeReportModal.on .modal{ display:block !important; position:static !important; max-width:none !important; max-height:none !important; overflow:visible !important; box-shadow:none !important; border-radius:0 !important; margin:0 !important; }
+  #eeReportModal.on > div > div:first-child ~ div{ padding:0 !important; }
+  #eeReportPrintArea{ display:block !important; position:static !important; width:100% !important; margin:0 !important; padding:0 !important; border:none !important; box-shadow:none !important; }
+  .ee-rpt-table{ width:100%; border-collapse:collapse; font-size:12px; page-break-inside:auto; }
+  .ee-rpt-table th, .ee-rpt-table td{ border:1px solid #999; padding:6px 5px; page-break-inside:avoid; }
+  .ee-rpt-table thead{ display:table-header-group; }
   .lrpt-table{ page-break-inside:auto; }
   .lrpt-table tr{ page-break-inside:avoid !important; }
   .lrpt-page-table{ page-break-inside:avoid !important; }
@@ -2517,6 +2527,50 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     </div>
   </div>
 </div>
+
+<!-- 교육·회의 A4 출력 (참석대장/서명지/참석희망자조사표) -->
+<div id="eeReportModal" class="modal-bg">
+  <div class="modal" style="max-width:640px;max-height:92vh;overflow-y:auto">
+    <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3 id="eeReportModalTitle">📄 출력</h3><button class="m-x" onclick="hideM('eeReportModal')">×</button></div>
+    <div style="padding:15px 17px">
+      <div id="eeReportPrintArea" style="background:white;padding:18px;border:1px solid #ccc">
+        <div id="eeReportBigTitle" style="text-align:center;font-size:18px;font-weight:800;margin-bottom:10px"></div>
+        <div id="eeReportMeta" style="font-size:13px;color:#333;line-height:1.9;margin-bottom:12px"></div>
+        <div id="eeReportBody"></div>
+      </div>
+      <div class="no-print" style="display:flex;gap:8px;margin-top:14px">
+        <button onclick="window.print()" style="flex:1;padding:12px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🖨️ 인쇄 / PDF저장</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 교육·회의 신청내역 관리자 수정 -->
+<div id="eeAppEditModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>✏️ 신청내역 수정</h3><button class="m-x" onclick="hideM('eeAppEditModal')">×</button></div><div style="padding:15px 17px">
+  <input type="hidden" id="eeAppEditId">
+  <div style="display:flex;gap:8px;margin-bottom:11px">
+    <div style="flex:1"><div class="f-lbl">팀</div><input type="text" id="eeAppEditTeam" class="ri" style="margin-bottom:0"></div>
+    <div style="flex:1"><div class="f-lbl">조</div><input type="text" id="eeAppEditGroup" class="ri" style="margin-bottom:0"></div>
+  </div>
+  <div class="f-lbl">직책/급</div>
+  <div class="rg" id="eeAppEditPosG" style="flex-wrap:wrap;gap:6px;margin-bottom:11px">
+    <div class="rp" onclick="eeAppEditSetPos(this,'사원')">사원</div>
+    <div class="rp" onclick="eeAppEditSetPos(this,'대리')">대리</div>
+    <div class="rp" onclick="eeAppEditSetPos(this,'조장')">조장</div>
+    <div class="rp" onclick="eeAppEditSetPos(this,'팀장')">팀장</div>
+    <div class="rp" onclick="eeAppEditSetPos(this,'총괄팀장')">총괄팀장</div>
+    <div class="rp" onclick="eeAppEditSetPos(this,'사업부장')">사업부장</div>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:13px">
+    <div style="flex:1"><div class="f-lbl">사번</div><input type="text" id="eeAppEditEmpId" class="ri" style="margin-bottom:0"></div>
+    <div style="flex:1"><div class="f-lbl">성명</div><input type="text" id="eeAppEditName" class="ri" style="margin-bottom:0"></div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <button onclick="hideM('eeAppEditModal')" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">취소</button>
+    <button onclick="eeSaveApplicationEdit()" style="flex:1;padding:11px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">저장</button>
+  </div>
+</div></div></div>
+
 
 <div id="lostCompleteModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--teal),var(--teal2))"><h3>✅ 처리 완료</h3><button class="m-x" onclick="hideM('lostCompleteModal')">×</button></div><div style="padding:15px 17px">
   <input type="hidden" id="lostCompleteId">
@@ -3672,6 +3726,17 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div id="eeP3" style="display:none;padding:13px">
     <button onclick="eeTab(0)" style="margin-bottom:11px;padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 목록으로</button>
     <div id="eeStatsWrap"></div>
+  </div>
+</div>
+
+<!-- ══ QR 참석확인 (QR 스캔으로 진입, 메뉴에는 없음) ══ -->
+<div id="sEduAttend" class="scr">
+  <div class="pg-hd">
+    <div><h1>✅ 참석확인</h1><small>QR 인증</small></div>
+    <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 메인</button>
+  </div>
+  <div style="padding:13px">
+    <div id="eeAttendWrap"><div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">확인 중...</div></div>
   </div>
 </div>
 
@@ -5323,7 +5388,7 @@ window.addEventListener('popstate', function(e){
 });
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sRisk','sTraining','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sActiveUsers','sPerf','sDeleteLogs','sAdc','sEduEvent'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sRisk','sTraining','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sActiveUsers','sPerf','sDeleteLogs','sAdc','sEduEvent','sEduAttend'];
 function goStatsDash(){
   go('statsdash');
   loadMonthlyStats();
@@ -5777,7 +5842,7 @@ function go(name){
   }
   _curScreenName=name;
   updateIosBackBtn();
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs',admconfirm:'sAdc',eduevent:'sEduEvent'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs',admconfirm:'sAdc',eduevent:'sEduEvent',eduattend:'sEduAttend'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -6193,7 +6258,14 @@ function finishLogin(){
   // 메모리 초기화 먼저 (어제 데이터 화면 노출 방지)
   mpDataByLeader={오전:{},오후:{},야간:{}};
   mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-  go('main'); setTimeout(function(){ initAppData(); tryAutoCheckin(); checkHeatAlert(); }, 100);
+  var qrParamsFl=new URLSearchParams(window.location.search);
+  if(qrParamsFl.get('qrattend')){
+    go('eduattend');
+    eeRenderAttendScreen(qrParamsFl.get('qrattend'), qrParamsFl.get('t'));
+  }else{
+    go('main');
+  }
+  setTimeout(function(){ initAppData(); tryAutoCheckin(); checkHeatAlert(); eeCheckAutoAttendance(); }, 100);
   updateStaff();
   updateFloorChart();
   updateMpSummary();
@@ -10734,6 +10806,10 @@ function eeTab(n){
     var can=eeCanAdmin();
     if(admBlk) admBlk.style.display=can?'block':'none';
     if(notAdm) notAdm.style.display=can?'none':'block';
+    // 탭을 직접 눌러 들어온 경우(수정화면에서 넘어온 게 아님) → 새 등록 모드로 초기화
+    eeEditingEventId=null;
+    var submitBtnEeTab=document.querySelector('#eeAdminOnly .btn-prim');
+    if(submitBtnEeTab) submitBtnEeTab.textContent='✅ 교육·회의 등록';
     if(can&&document.getElementById('eeScheduleRows').children.length===0){ eeAddScheduleRow(); }
   }
 }
@@ -10749,6 +10825,7 @@ function eeSetCat(el,val){
   if(custom) custom.style.display=(val==='기타')?'block':'none';
 }
 var eeSelectedPos='';
+var eeAppsCache=[]; // 관리자 신청현황에서 마지막으로 불러온 신청자 목록 (수정/삭제용 참조)
 function eeSetPos(el,val){
   document.querySelectorAll('#eeApplyPosG .rp').forEach(function(p){p.classList.remove('on');});
   el.classList.add('on');
@@ -10762,25 +10839,32 @@ function eeDefaultPosByRole(){
   if(me.role==='admin'||me.role==='master') return '총괄팀장';
   return '사원';
 }
-function eeAddScheduleRow(){
+function eeAddScheduleRow(existing){
   eeScheduleSeq++;
   var wrap=document.getElementById('eeScheduleRows');
   var rid='eeSchedRow'+eeScheduleSeq;
   var div=document.createElement('div');
   div.id=rid;
+  if(existing&&existing.id) div.dataset.origId=existing.id; // 수정모드: 기존 회차면 원래 id를 기억 (UPDATE 대상, 없으면 신규 INSERT 대상)
   div.style.cssText='border:1px solid var(--g2);border-radius:var(--r2);padding:11px;margin-bottom:9px;background:var(--g0)';
   div.innerHTML=
     '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'
       +'<span style="font-size:13px;font-weight:800;color:var(--teal2)" class="eeSchedLabel"></span>'
       +'<span onclick="eeRemoveScheduleRow(\''+rid+'\')" style="font-size:12px;color:var(--danger);cursor:pointer;font-weight:700">✕ 삭제</span>'
     +'</div>'
-    +'<input type="date" class="ri eeSchedDate" style="margin-bottom:7px">'
+    +'<input type="date" class="ri eeSchedDate" value="'+(existing?existing.event_date:'')+'" style="margin-bottom:7px">'
     +'<div style="display:flex;gap:7px;margin-bottom:7px">'
-      +'<input type="time" class="ri eeSchedStart" style="flex:1;margin-bottom:0">'
+      +'<input type="time" class="ri eeSchedStart" value="'+(existing&&existing.start_time?existing.start_time:'')+'" style="flex:1;margin-bottom:0">'
       +'<span style="align-self:center;color:var(--g4)">~</span>'
-      +'<input type="time" class="ri eeSchedEnd" style="flex:1;margin-bottom:0">'
+      +'<input type="time" class="ri eeSchedEnd" value="'+(existing&&existing.end_time?existing.end_time:'')+'" style="flex:1;margin-bottom:0">'
     +'</div>'
-    +'<input type="text" class="ri eeSchedLoc" placeholder="장소" style="margin-bottom:0">';
+    +'<input type="text" class="ri eeSchedLoc" placeholder="장소" value="'+(existing&&existing.location?eeEsc(existing.location):'')+'" style="margin-bottom:7px">'
+    +'<div style="display:flex;align-items:center;gap:8px">'
+      +'<button type="button" onclick="eeSetVenueGps(\''+rid+'\')" style="padding:7px 11px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap">📍 현재 위치를 교육장 좌표로 저장</button>'
+      +'<span class="eeSchedGpsStatus" style="font-size:11px;color:var(--g4)">'+((existing&&existing.venue_lat)?'✅ 좌표 저장됨':'미설정 (선택사항 — QR참석확인 시 GPS 보조인증용)')+'</span>'
+      +'<input type="hidden" class="eeSchedLat" value="'+((existing&&existing.venue_lat)?existing.venue_lat:'')+'">'
+      +'<input type="hidden" class="eeSchedLng" value="'+((existing&&existing.venue_lng)?existing.venue_lng:'')+'">'
+    +'</div>';
   wrap.appendChild(div);
   eeRenumberScheduleRows();
 }
@@ -10796,9 +10880,23 @@ function eeRenumberScheduleRows(){
     if(lbl) lbl.textContent=(i+1)+'차';
   });
 }
+function eeSetVenueGps(rid){
+  var row=document.getElementById(rid);
+  if(!row||!navigator.geolocation){ toast('⚠️ 이 기기에서는 위치 확인이 지원되지 않습니다'); return; }
+  var statusEl=row.querySelector('.eeSchedGpsStatus');
+  if(statusEl) statusEl.textContent='위치 확인 중...';
+  navigator.geolocation.getCurrentPosition(function(pos){
+    row.querySelector('.eeSchedLat').value=pos.coords.latitude;
+    row.querySelector('.eeSchedLng').value=pos.coords.longitude;
+    if(statusEl) statusEl.textContent='✅ 현재 위치로 저장됨';
+  }, function(err){
+    if(statusEl) statusEl.textContent='⚠️ 위치 확인 실패 ('+err.message+')';
+  }, {enableHighAccuracy:true, timeout:10000});
+}
 function eeGenToken(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,10); }
 function eeEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
+var eeEditingEventId=null; // null이면 신규등록, 값이 있으면 그 교육/회의를 수정하는 중
 async function eeSubmitEvent(){
   try{
   if(!eeCanAdmin()){ toast('⚠️ 조장 이상만 등록할 수 있습니다'); return; }
@@ -10820,22 +10918,63 @@ async function eeSubmitEvent(){
     var st=r.querySelector('.eeSchedStart').value;
     var et=r.querySelector('.eeSchedEnd').value;
     var loc=(r.querySelector('.eeSchedLoc').value||'').trim();
+    var latV=r.querySelector('.eeSchedLat').value;
+    var lngV=r.querySelector('.eeSchedLng').value;
     if(!d){ toast('⚠️ '+(i+1)+'차 일정의 날짜를 입력하세요'); return; }
-    scheds.push({seq:i+1, event_date:d, start_time:st||null, end_time:et||null, location:loc||null, qr_token:eeGenToken()});
+    scheds.push({origId:r.dataset.origId||null, seq:i+1, event_date:d, start_time:st||null, end_time:et||null, location:loc||null, venue_lat:latV?parseFloat(latV):null, venue_lng:lngV?parseFloat(lngV):null});
   }
 
-  var evId=eeGenToken();
-  var evRes=await sb.from('edu_events').insert({
-    id:evId, category:category, category_custom:categoryCustom, title:title, content:content,
-    apply_deadline:deadline, note:note, created_by:me?me.name:''
-  });
-  if(evRes.error){ toast('등록 실패: '+evRes.error.message); return; }
-  var eventId=evId;
-  var schedRows=scheds.map(function(s){ return Object.assign({id:eeGenToken(), event_id:eventId}, s); });
-  var schedRes=await sb.from('edu_schedules').insert(schedRows);
-  if(schedRes.error){ toast('일정 등록 실패: '+schedRes.error.message); return; }
+  if(eeEditingEventId){
+    // ── 수정 모드 ──
+    var eventId=eeEditingEventId;
+    var updRes=await sb.from('edu_events').update({
+      category:category, category_custom:categoryCustom, title:title, content:content, apply_deadline:deadline, note:note
+    }).eq('id',eventId);
+    if(updRes.error){ toast('수정 실패: '+updRes.error.message); return; }
 
-  toast('✅ "'+title+'" 등록 완료 ('+scheds.length+'개 일정)');
+    var origEv=(eeEventsCache||[]).find(function(e){ return e.id===eventId; });
+    var origIds=(origEv&&origEv._schedules||[]).map(function(s){return s.id;});
+    var keptIds=scheds.filter(function(s){return s.origId;}).map(function(s){return s.origId;});
+    var removedIds=origIds.filter(function(id){ return keptIds.indexOf(id)===-1; });
+
+    for(var j=0;j<scheds.length;j++){
+      var s=scheds[j];
+      var payload={seq:s.seq, event_date:s.event_date, start_time:s.start_time, end_time:s.end_time, location:s.location, venue_lat:s.venue_lat, venue_lng:s.venue_lng};
+      if(s.origId){
+        var upRes=await sb.from('edu_schedules').update(payload).eq('id',s.origId);
+        if(upRes.error){ toast('⚠️ '+s.seq+'차 일정 수정 실패: '+upRes.error.message); }
+      }else{
+        payload.id=eeGenToken(); payload.event_id=eventId; payload.qr_token=eeGenToken();
+        var insRes=await sb.from('edu_schedules').insert(payload);
+        if(insRes.error){ toast('⚠️ '+s.seq+'차 일정 추가 실패: '+insRes.error.message); }
+      }
+    }
+    if(removedIds.length){
+      var hasAppsRes=await sb.from('edu_applications').select('id').in('schedule_id',removedIds);
+      if((hasAppsRes.data||[]).length){
+        toast('⚠️ 삭제하려는 회차에 이미 신청자가 있어 삭제하지 않고 그대로 두었습니다');
+      }else{
+        for(var k=0;k<removedIds.length;k++){ await sb.from('edu_schedules').delete().eq('id',removedIds[k]); }
+      }
+    }
+    toast('✅ "'+title+'" 수정 완료');
+    eeEditingEventId=null;
+    var submitBtnEe=document.querySelector('#eeAdminOnly .btn-prim');
+    if(submitBtnEe) submitBtnEe.textContent='✅ 교육·회의 등록';
+  }else{
+    // ── 신규 등록 모드 ──
+    var evId=eeGenToken();
+    var evRes=await sb.from('edu_events').insert({
+      id:evId, category:category, category_custom:categoryCustom, title:title, content:content,
+      apply_deadline:deadline, note:note, created_by:me?me.name:''
+    });
+    if(evRes.error){ toast('등록 실패: '+evRes.error.message); return; }
+    var schedRows=scheds.map(function(s){ return {id:eeGenToken(), event_id:evId, seq:s.seq, event_date:s.event_date, start_time:s.start_time, end_time:s.end_time, location:s.location, qr_token:eeGenToken(), venue_lat:s.venue_lat, venue_lng:s.venue_lng}; });
+    var schedRes=await sb.from('edu_schedules').insert(schedRows);
+    if(schedRes.error){ toast('일정 등록 실패: '+schedRes.error.message); return; }
+    toast('✅ "'+title+'" 등록 완료 ('+scheds.length+'개 일정)');
+  }
+
   // 폼 초기화
   document.getElementById('eeTitle').value='';
   document.getElementById('eeContent').value='';
@@ -10848,8 +10987,35 @@ async function eeSubmitEvent(){
   eeTab(0);
   }catch(err){
     console.error('[eeSubmitEvent 오류]', err);
-    toast('⚠️ 등록 중 오류가 발생했습니다: '+String(err&&err.message||err));
+    toast('⚠️ 처리 중 오류가 발생했습니다: '+String(err&&err.message||err));
   }
+}
+// 등록된 교육/회의 수정 화면 열기 (관리자 전용)
+async function eeEditEvent(eventId){
+  if(!eeCanAdmin()){ toast('⚠️ 조장 이상만 수정할 수 있습니다'); return; }
+  var ev=(eeEventsCache||[]).find(function(e){ return e.id===eventId; });
+  if(!ev){ toast('정보를 찾을 수 없습니다'); return; }
+  eeEditingEventId=eventId;
+  tabSwitch('ee',1,2);
+  var admBlk=document.getElementById('eeAdminOnly'), notAdm=document.getElementById('eeNotAdmin');
+  if(admBlk) admBlk.style.display='block';
+  if(notAdm) notAdm.style.display='none';
+
+  document.getElementById('eeTitle').value=ev.title||'';
+  document.getElementById('eeContent').value=ev.content||'';
+  document.getElementById('eeDeadline').value=ev.apply_deadline||'';
+  document.getElementById('eeNote').value=ev.note||'';
+  var catBtn=Array.from(document.querySelectorAll('#eeCatG .rp')).find(function(p){ return p.textContent===ev.category; })||document.querySelector('#eeCatG .rp');
+  eeSetCat(catBtn, ev.category==='기타'?'기타':catBtn.textContent);
+  if(ev.category==='기타') document.getElementById('eeCatCustom').value=ev.category_custom||'';
+
+  document.getElementById('eeScheduleRows').innerHTML='';
+  var scheds=(ev._schedules||[]).slice().sort(function(a,b){return a.seq-b.seq;});
+  if(scheds.length){ scheds.forEach(function(s){ eeAddScheduleRow(s); }); }
+  else{ eeAddScheduleRow(); }
+
+  var submitBtnEe2=document.querySelector('#eeAdminOnly .btn-prim');
+  if(submitBtnEe2) submitBtnEe2.textContent='✏️ 수정 저장';
 }
 
 async function loadEduEvents(){
@@ -10883,6 +11049,7 @@ async function loadEduEvents(){
         +'<div style="display:flex;gap:7px">'
           +'<button onclick="eeOpenApply(\''+e.id+'\')" style="flex:1;padding:9px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer" '+(closed?'disabled':'')+'>'+(closed?'마감됨':'📝 신청하기')+'</button>'
           +(eeCanAdmin()?('<button onclick="eeOpenAdminView(\''+e.id+'\')" style="flex:1;padding:9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">📊 신청현황</button>'):'')
+          +(eeCanAdmin()?('<button onclick="eeEditEvent(\''+e.id+'\')" style="padding:9px 12px;background:var(--g1);color:var(--g6);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">✏️ 수정</button>'):'')
         +'</div>'
       +'</div></div>';
     }).join('');
@@ -11016,20 +11183,42 @@ async function eeOpenAdminView(eventId){
     if(appRes.error){ wrap.innerHTML='오류: '+appRes.error.message; return; }
     var apps=appRes.data||[];
     var scheds=(ev._schedules||[]).slice().sort(function(a,b){return a.seq-b.seq;});
+    var attRes=await sb.from('edu_attendance').select('schedule_id,employee_id').in('schedule_id',scheds.map(function(s){return s.id;}));
+    var attBySched={};
+    (attRes.data||[]).forEach(function(a){ (attBySched[a.schedule_id]=attBySched[a.schedule_id]||[]).push(a.employee_id); });
     var byShed={};
     apps.forEach(function(a){ (byShed[a.schedule_id]=byShed[a.schedule_id]||[]).push(a); });
+
     var h='<div class="card"><div class="cb">';
     h+='<div style="font-size:16px;font-weight:800;color:var(--g7);margin-bottom:2px">'+eeEsc(ev.title)+'</div>';
-    h+='<div style="font-size:13px;color:var(--g5);margin-bottom:13px">총 신청 '+apps.length+'건 (연인원, 중복회차 포함)</div>';
+    h+='<div style="font-size:13px;color:var(--g5);margin-bottom:11px">총 신청 '+apps.length+'건 (연인원, 중복회차 포함)</div>';
+    h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:13px">'
+      +'<button onclick="eeOpenWishSurvey(\''+eventId+'\')" style="padding:7px 12px;background:var(--g1);color:var(--g6);border:1px solid var(--g2);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">📋 참석희망자 조사표</button>'
+      +'<button onclick="eeExportExcel(\''+eventId+'\')" style="padding:7px 12px;background:var(--success-bg);color:var(--success);border:1px solid var(--success);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">📥 엑셀 다운로드</button>'
+      +'</div>';
     h+='<table style="width:100%;border-collapse:separate;border-spacing:0;font-size:13px">';
-    h+='<thead><tr><th style="text-align:left;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">일정</th><th style="text-align:right;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">신청인원</th></tr></thead><tbody>';
+    h+='<thead><tr><th style="text-align:left;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">일정</th><th style="text-align:right;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">신청/참석</th></tr></thead><tbody>';
     scheds.forEach(function(s){
       var list=byShed[s.id]||[];
+      var attCount=(attBySched[s.id]||[]).length;
+      var qrUrl=eeAttendUrl(s.id, s.qr_token);
       h+='<tr style="cursor:pointer" onclick="eeToggleSchedList(\''+s.id+'\')">'
         +'<td style="padding:9px 4px;border-bottom:1px solid var(--g1)">'+s.event_date+' '+(s.start_time||'')+'</td>'
-        +'<td style="padding:9px 4px;text-align:right;border-bottom:1px solid var(--g1);color:var(--teal2);font-weight:800">'+list.length+'명 ▾</td>'
+        +'<td style="padding:9px 4px;text-align:right;border-bottom:1px solid var(--g1);color:var(--teal2);font-weight:800">'+list.length+'명 / <span style="color:var(--avg-blue)">'+attCount+'명 참석</span> ▾</td>'
         +'</tr>';
       h+='<tr id="eeSchedList_'+s.id+'" style="display:none"><td colspan="2" style="padding:9px 4px 13px;background:var(--g0)">'
+        +'<div style="display:flex;gap:13px;align-items:flex-start;margin-bottom:11px;flex-wrap:wrap">'
+          +'<div style="text-align:center">'
+            +'<img src="https://api.qrserver.com/v1/create-qr-code/?size=140x140&data='+encodeURIComponent(qrUrl)+'" alt="QR" style="width:140px;height:140px;border:1px solid var(--g2);border-radius:8px;background:white">'
+            +'<div style="font-size:11px;color:var(--g4);margin-top:4px">참석확인 QR</div>'
+          +'</div>'
+          +'<div style="flex:1;min-width:140px">'
+            +'<div style="font-size:12px;color:var(--g5);margin-bottom:6px">교육장에 이 QR을 인쇄해서 게시하세요. 직원이 폰 카메라로 스캔하면 자동으로 참석확인 화면이 열립니다.</div>'
+            +'<button onclick="event.stopPropagation();navigator.clipboard&&navigator.clipboard.writeText(\''+qrUrl+'\');toast(\'✅ 링크 복사됨\')" style="padding:6px 11px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔗 링크 복사</button>'
+            +'<button onclick="event.stopPropagation();eeOpenSignSheet(\''+eventId+'\',\''+s.id+'\')" style="padding:6px 11px;margin-left:6px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">✍️ 서명지</button>'
+            +'<button onclick="event.stopPropagation();eeOpenAttendLog(\''+eventId+'\',\''+s.id+'\')" style="padding:6px 11px;margin-left:6px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">📒 참석대장</button>'
+          +'</div>'
+        +'</div>'
         +(list.length?(
           '<table style="width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;background:white;border-radius:8px;overflow:hidden;border:1px solid var(--g2)">'
           +'<thead><tr style="background:var(--g1)">'
@@ -11038,14 +11227,22 @@ async function eeOpenAdminView(eventId){
             +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">직책</th>'
             +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">사번</th>'
             +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">성명</th>'
+            +'<th style="text-align:center;padding:7px 8px;color:var(--g5);font-weight:700">참석</th>'
+            +'<th style="text-align:center;padding:7px 8px;color:var(--g5);font-weight:700">관리</th>'
           +'</tr></thead><tbody>'
           +list.map(function(a,i){
-            return '<tr style="'+(i%2?'background:var(--g0)':'')+'">'
+            var attended=(attBySched[s.id]||[]).indexOf(a.employee_id)!==-1;
+            return '<tr id="eeAppRow_'+a.id+'" style="'+(i%2?'background:var(--g0)':'')+'">'
               +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.team||'-')+'</td>'
               +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.team_group||'-')+'</td>'
               +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.position||'-')+'</td>'
               +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.employee_id)+'</td>'
               +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);font-weight:700">'+eeEsc(a.name)+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);text-align:center">'+(attended?'<span style="color:var(--avg-blue);font-weight:800">✓</span>':'<span style="color:var(--g3)">-</span>')+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);text-align:center;white-space:nowrap">'
+                +'<span onclick="eeEditApplication(\''+a.id+'\')" style="cursor:pointer;margin-right:8px" title="수정">✏️</span>'
+                +'<span onclick="eeDeleteApplication(\''+a.id+'\',\''+eventId+'\')" style="cursor:pointer;color:var(--danger)" title="삭제">🗑️</span>'
+              +'</td>'
               +'</tr>';
           }).join('')
           +'</tbody></table>'
@@ -11053,12 +11250,337 @@ async function eeOpenAdminView(eventId){
         +'</td></tr>';
     });
     h+='</tbody></table></div></div>';
+    eeAppsCache=apps; // 관리자 수정/삭제 시 참조용
+
+    // 팀별 신청현황
+    var byTeam={};
+    apps.forEach(function(a){
+      var t=a.team||'미지정';
+      if(!byTeam[t]) byTeam[t]={total:0, byGroup:{}};
+      byTeam[t].total++;
+      var g=a.team_group||'-';
+      byTeam[t].byGroup[g]=(byTeam[t].byGroup[g]||0)+1;
+    });
+    var teamKeys=Object.keys(byTeam).sort();
+    if(teamKeys.length){
+      h+='<div class="card" style="margin-top:11px"><div class="cb">';
+      h+='<div style="font-size:15px;font-weight:800;color:var(--g7);margin-bottom:11px">📊 팀별 신청현황 (연인원)</div>';
+      h+='<table style="width:100%;border-collapse:separate;border-spacing:0;font-size:13px">';
+      h+='<thead><tr><th style="text-align:left;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">팀</th><th style="text-align:left;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">조별</th><th style="text-align:right;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">합계</th></tr></thead><tbody>';
+      teamKeys.forEach(function(t,i){
+        var groupStr=Object.keys(byTeam[t].byGroup).sort().map(function(g){ return g+' '+byTeam[t].byGroup[g]+'명'; }).join(', ');
+        h+='<tr style="'+(i%2?'background:var(--g0)':'')+'">'
+          +'<td style="padding:8px 4px;border-top:1px solid var(--g1);font-weight:700;color:var(--g7)">'+eeEsc(t)+'</td>'
+          +'<td style="padding:8px 4px;border-top:1px solid var(--g1);color:var(--g5)">'+eeEsc(groupStr||'-')+'</td>'
+          +'<td style="padding:8px 4px;border-top:1px solid var(--g1);text-align:right;font-weight:800;color:var(--teal2)">'+byTeam[t].total+'명</td>'
+          +'</tr>';
+      });
+      h+='</tbody></table></div></div>';
+    }
     wrap.innerHTML=h;
   }catch(e){ wrap.innerHTML='오류: '+e.message; }
+}
+// 관리자용 신청내역 직접 수정/삭제 (매니저·리더 이상은 신청자 본인이 아니어도 수정 가능 — 요청서 8번)
+var eeAppEditSelectedPos='';
+function eeAppEditSetPos(el,val){
+  document.querySelectorAll('#eeAppEditPosG .rp').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  eeAppEditSelectedPos=val;
+}
+function eeEditApplication(appId){
+  var a=(eeAppsCache||[]).find(function(x){ return x.id===appId; });
+  if(!a){ toast('신청 정보를 찾을 수 없습니다'); return; }
+  document.getElementById('eeAppEditId').value=a.id;
+  document.getElementById('eeAppEditTeam').value=a.team||'';
+  document.getElementById('eeAppEditGroup').value=a.team_group||'';
+  document.getElementById('eeAppEditEmpId').value=a.employee_id||'';
+  document.getElementById('eeAppEditName').value=a.name||'';
+  eeAppEditSelectedPos=a.position||'';
+  document.querySelectorAll('#eeAppEditPosG .rp').forEach(function(p){ p.classList.toggle('on', p.textContent===a.position); });
+  showM('eeAppEditModal');
+}
+async function eeSaveApplicationEdit(){
+  var id=document.getElementById('eeAppEditId').value;
+  var team=(document.getElementById('eeAppEditTeam').value||'').trim();
+  var group=(document.getElementById('eeAppEditGroup').value||'').trim();
+  var empId=(document.getElementById('eeAppEditEmpId').value||'').trim();
+  var name=(document.getElementById('eeAppEditName').value||'').trim();
+  if(!empId||!name){ toast('⚠️ 사번·성명을 입력하세요'); return; }
+  try{
+    var res=await sb.from('edu_applications').update({
+      team:team, team_group:group, position:eeAppEditSelectedPos, employee_id:empId, name:name,
+      edited_by:me?me.name:'', edited_at:new Date().toISOString()
+    }).eq('id',id);
+    if(res.error){ toast('수정 실패: '+res.error.message); return; }
+    toast('✅ 수정 완료 (수정자: '+(me?me.name:'')+')');
+    hideM('eeAppEditModal');
+    var a=(eeAppsCache||[]).find(function(x){ return x.id===id; });
+    if(a){ eeOpenAdminView(a.event_id); }
+  }catch(err){ toast('⚠️ 오류: '+String(err&&err.message||err)); }
+}
+async function eeDeleteApplication(appId, eventId){
+  if(!confirm('이 신청내역을 삭제할까요?')) return;
+  try{
+    var res=await sb.from('edu_applications').delete().eq('id',appId);
+    if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    toast('✅ 삭제되었습니다');
+    eeOpenAdminView(eventId);
+  }catch(err){ toast('⚠️ 오류: '+String(err&&err.message||err)); }
+}
+
+function eeAttendUrl(scheduleId, token){
+  var base=window.location.origin+window.location.pathname;
+  return base+'?qrattend='+encodeURIComponent(scheduleId)+'&t='+encodeURIComponent(token);
 }
 function eeToggleSchedList(sid){
   var el=document.getElementById('eeSchedList_'+sid);
   if(el) el.style.display=(el.style.display==='none')?'table-row':'none';
+}
+
+// ═══ A4 출력물 (참석대장 / 서명지 / 참석희망자 조사표) ═══
+function eeReportRowsTable(rows, cols){
+  // cols: [{key, label, width}] — key===null이면 빈 칸(서명란 등)
+  var h='<table class="ee-rpt-table"><thead><tr>'
+    +'<th style="width:34px">No</th>'
+    +cols.map(function(c){ return '<th'+(c.width?(' style="width:'+c.width+'"'):'')+'>'+c.label+'</th>'; }).join('')
+    +'</tr></thead><tbody>';
+  rows.forEach(function(r,i){
+    h+='<tr><td style="text-align:center">'+(i+1)+'</td>'
+      +cols.map(function(c){
+        if(c.key===null) return '<td style="height:30px"></td>'; // 서명란 등 빈 칸
+        return '<td>'+eeEsc(r[c.key]==null?'':r[c.key])+'</td>';
+      }).join('')
+      +'</tr>';
+  });
+  if(!rows.length) h+='<tr><td colspan="'+(cols.length+1)+'" style="text-align:center;color:#999;padding:14px">대상자 없음</td></tr>';
+  h+='</tbody></table>';
+  return h;
+}
+function eeOpenSignSheet(eventId, scheduleId){
+  eeOpenScheduleReport(eventId, scheduleId, 'sign');
+}
+function eeOpenAttendLog(eventId, scheduleId){
+  eeOpenScheduleReport(eventId, scheduleId, 'log');
+}
+async function eeOpenScheduleReport(eventId, scheduleId, kind){
+  var ev=(eeEventsCache||[]).find(function(e){ return e.id===eventId; });
+  if(!ev){ toast('정보를 찾을 수 없습니다'); return; }
+  var sched=(ev._schedules||[]).find(function(s){ return s.id===scheduleId; });
+  if(!sched){ toast('일정 정보를 찾을 수 없습니다'); return; }
+  try{
+    var appRes=await sb.from('edu_applications').select('*').eq('schedule_id',scheduleId);
+    var apps=(appRes.data||[]).slice().sort(function(a,b){ return (a.team||'').localeCompare(b.team||'')||(a.team_group||'').localeCompare(b.team_group||''); });
+    var rows=apps;
+    var cols, title,담당자=me?me.name:'';
+    if(kind==='sign'){
+      title='교육 참석자 서명부';
+      cols=[{key:'team',label:'팀',width:'60px'},{key:'team_group',label:'조',width:'55px'},{key:'position',label:'직책',width:'60px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:null,label:'서명'}];
+    }else{ // log — 실제 참석확인된 사람 기준
+      title='교육 참석대장';
+      var attRes=await sb.from('edu_attendance').select('*').eq('schedule_id',scheduleId);
+      var attList=(attRes.data||[]).slice().sort(function(a,b){ return (a.team||'').localeCompare(b.team||''); });
+      rows=attList.map(function(a){
+        return {team:a.team, team_group:a.team_group, employee_id:a.employee_id, name:a.name,
+          attend_time:a.verified_at?new Date(a.verified_at).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'}):''};
+      });
+      cols=[{key:'team',label:'팀',width:'60px'},{key:'team_group',label:'조',width:'55px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'attend_time',label:'참석시간',width:'70px'},{key:null,label:'서명'}];
+    }
+    document.getElementById('eeReportModalTitle').textContent='📄 '+title;
+    document.getElementById('eeReportBigTitle').textContent=title;
+    document.getElementById('eeReportMeta').innerHTML=
+      '교육명: '+eeEsc(ev.title)+'<br>교육일시: '+sched.event_date+' '+(sched.start_time||'')+'~'+(sched.end_time||'')
+      +'<br>교육장소: '+eeEsc(sched.location||'-')+(kind==='sign'?('<br>교육담당자: '+eeEsc(담당자)):'');
+    document.getElementById('eeReportBody').innerHTML=eeReportRowsTable(rows, cols);
+    showM('eeReportModal');
+  }catch(e){ toast('오류: '+e.message); }
+}
+async function eeOpenWishSurvey(eventId){
+  var ev=(eeEventsCache||[]).find(function(e){ return e.id===eventId; });
+  if(!ev){ toast('정보를 찾을 수 없습니다'); return; }
+  try{
+    var appRes=await sb.from('edu_applications').select('*').eq('event_id',eventId);
+    var apps=appRes.data||[];
+    var schedById={}; (ev._schedules||[]).forEach(function(s){ schedById[s.id]=s; });
+    var rows=apps.slice().sort(function(a,b){ return (a.team||'').localeCompare(b.team||''); }).map(function(a){
+      var s=schedById[a.schedule_id];
+      return {team:a.team, team_group:a.team_group, employee_id:a.employee_id, name:a.name,
+        wish_date: s?(s.event_date+' '+(s.start_time||'')):''};
+    });
+    document.getElementById('eeReportModalTitle').textContent='📄 참석희망자 조사표';
+    document.getElementById('eeReportBigTitle').textContent='교육 참석희망자 조사표';
+    document.getElementById('eeReportMeta').innerHTML='교육명: '+eeEsc(ev.title)+(ev.apply_deadline?('<br>신청기간~'+ev.apply_deadline):'');
+    document.getElementById('eeReportBody').innerHTML=eeReportRowsTable(rows, [
+      {key:'team',label:'팀',width:'60px'},{key:'team_group',label:'조',width:'55px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'wish_date',label:'참석희망일'}
+    ]);
+    showM('eeReportModal');
+  }catch(e){ toast('오류: '+e.message); }
+}
+
+// ═══ 엑셀 다운로드 ═══
+async function eeExportExcel(eventId){
+  var ev=(eeEventsCache||[]).find(function(e){ return e.id===eventId; });
+  if(!ev){ toast('정보를 찾을 수 없습니다'); return; }
+  try{
+    var appRes=await sb.from('edu_applications').select('*').eq('event_id',eventId);
+    var apps=appRes.data||[];
+    var schedIds=(ev._schedules||[]).map(function(s){return s.id;});
+    var attRes=await sb.from('edu_attendance').select('*').in('schedule_id',schedIds.length?schedIds:['']);
+    var attByKey={}; (attRes.data||[]).forEach(function(a){ attByKey[a.schedule_id+'|'+a.employee_id]=a; });
+    var schedById={}; (ev._schedules||[]).forEach(function(s){ schedById[s.id]=s; });
+
+    var header=['교육/회의명','일시','장소','팀','조','사번','성명','신청일','참석희망일','실제참석여부','참석시간','QR인증여부','위치확인여부','비고'];
+    var rows=[header];
+    apps.forEach(function(a){
+      var s=schedById[a.schedule_id]||{};
+      var att=attByKey[a.schedule_id+'|'+a.employee_id];
+      rows.push([
+        ev.title,
+        s.event_date?(s.event_date+' '+(s.start_time||'')+'~'+(s.end_time||'')):'',
+        s.location||'',
+        a.team||'', a.team_group||'',
+        a.employee_id||'', a.name||'',
+        a.applied_at?new Date(a.applied_at).toLocaleDateString('ko-KR'):'',
+        s.event_date||'',
+        att?'참석':'미참석',
+        att&&att.verified_at?new Date(att.verified_at).toLocaleString('ko-KR'):'',
+        att?(att.qr_verified?'O':'X'):'',
+        att?(att.gps_verified?'O':'X'):'',
+        ev.note||''
+      ]);
+    });
+    var wb=XLSX.utils.book_new();
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=header.map(function(){ return {wch:14}; });
+    XLSX.utils.book_append_sheet(wb, ws, '신청현황');
+    var fname=(ev.title||'교육회의').replace(/[\\/:*?"<>|]/g,'_')+'_신청현황.xlsx';
+    if(typeof dlSaveWorkbook==='function'){ await dlSaveWorkbook(wb, fname); }
+    else{ XLSX.writeFile(wb, fname); }
+    toast('✅ 엑셀 다운로드 완료');
+  }catch(e){
+    console.error('[eeExportExcel 오류]', e);
+    toast('⚠️ 엑셀 다운로드 실패: '+String(e&&e.message||e));
+  }
+}
+
+// ═══ QR 참석확인 화면 ═══
+var eeAttendCurSchedId=null, eeAttendCurToken=null;
+async function eeRenderAttendScreen(scheduleId, token){
+  eeAttendCurSchedId=scheduleId; eeAttendCurToken=token;
+  var wrap=document.getElementById('eeAttendWrap');
+  if(!wrap) return;
+  wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">확인 중...</div>';
+  try{
+    var schedRes=await sb.from('edu_schedules').select('*').eq('id',scheduleId).maybeSingle();
+    if(schedRes.error||!schedRes.data){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">일정 정보를 찾을 수 없습니다</div>'; return; }
+    var sched=schedRes.data;
+    if(token&&sched.qr_token&&token!==sched.qr_token){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">유효하지 않은 QR입니다</div>'; return; }
+    var evRes=await sb.from('edu_events').select('*').eq('id',sched.event_id).maybeSingle();
+    var ev=evRes.data||{};
+
+    // 이미 신청된 사번이면 자동조회를 위해 사번 입력 유도, 팀/조는 로그인 소속 자동
+    var teamRaw=(me&&me.team)?me.team.trim():'';
+    var tm=teamRaw.match(/^(\d+\s*팀)\s*([A-Za-z가-힣]조)?/);
+    var teamOut=tm?tm[1]:teamRaw;
+    var groupOut=tm&&tm[2]?tm[2]:'';
+    if(!groupOut&&me&&me.name){
+      var gNm=me.name.match(/([A-Za-z가-힣])조(?:$|[^가-힣A-Za-z])/);
+      if(gNm) groupOut=gNm[1]+'조';
+    }
+
+    wrap.innerHTML=
+      '<div class="card"><div class="cb">'
+      +'<div style="font-size:12px;color:var(--g4)">'+eeEsc(ev.category==='기타'?(ev.category_custom||'기타'):(ev.category||''))+'</div>'
+      +'<div style="font-size:17px;font-weight:800;color:var(--g7);margin-bottom:4px">'+eeEsc(ev.title||'')+'</div>'
+      +'<div style="font-size:13px;color:var(--g5);margin-bottom:13px">📅 '+sched.event_date+' '+(sched.start_time||'')+'~'+(sched.end_time||'')+(sched.location?(' · 📍 '+eeEsc(sched.location)):'')+'</div>'
+      +'<div style="display:flex;gap:8px;margin-bottom:11px">'
+        +'<div style="flex:1"><div class="f-lbl">팀</div><input type="text" id="eeAtTeam" class="ri" value="'+eeEsc(teamOut)+'"></div>'
+        +'<div style="flex:1"><div class="f-lbl">조</div><input type="text" id="eeAtGroup" class="ri" value="'+eeEsc(groupOut)+'"></div>'
+      +'</div>'
+      +'<div style="display:flex;gap:8px;margin-bottom:13px">'
+        +'<div style="flex:1"><div class="f-lbl">사번</div><input type="text" id="eeAtEmpId" class="ri" placeholder="사번 입력"></div>'
+        +'<div style="flex:1"><div class="f-lbl">성명</div><input type="text" id="eeAtName" class="ri" placeholder="성명 입력"></div>'
+      +'</div>'
+      +'<div id="eeAtStatus" style="font-size:12.5px;color:var(--g4);margin-bottom:11px">📷 QR 인증 완료 — 아래 버튼을 눌러 위치까지 확인하면 참석 처리됩니다</div>'
+      +'<button class="btn-prim" onclick="eeConfirmAttendance()">✅ 참석 확인</button>'
+      +'</div></div>';
+  }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">오류: '+e.message+'</div>'; }
+}
+async function eeConfirmAttendance(){
+  var empId=(document.getElementById('eeAtEmpId').value||'').trim();
+  var name=(document.getElementById('eeAtName').value||'').trim();
+  var team=(document.getElementById('eeAtTeam').value||'').trim();
+  var group=(document.getElementById('eeAtGroup').value||'').trim();
+  if(!empId){ toast('⚠️ 사번을 입력하세요'); return; }
+  if(!name){ toast('⚠️ 성명을 입력하세요'); return; }
+  var statusEl=document.getElementById('eeAtStatus');
+  if(statusEl) statusEl.textContent='📍 위치 확인 중...';
+
+  var distM=null, gpsOk=false;
+  try{
+    var schedRes=await sb.from('edu_schedules').select('venue_lat,venue_lng').eq('id',eeAttendCurSchedId).maybeSingle();
+    var sched=schedRes.data;
+    if(sched&&sched.venue_lat&&sched.venue_lng&&navigator.geolocation){
+      var pos=await new Promise(function(resolve,reject){
+        navigator.geolocation.getCurrentPosition(resolve, reject, {enableHighAccuracy:true, timeout:8000});
+      }).catch(function(){ return null; });
+      if(pos){
+        distM=haversineM(pos.coords.latitude,pos.coords.longitude,sched.venue_lat,sched.venue_lng);
+        gpsOk=distM<=300; // 교육장 반경 300m — QR이 기본 인증이라 GPS는 참고용, 통과 못해도 막지 않음
+      }
+    }
+  }catch(e){}
+
+  try{
+    var res=await sb.from('edu_attendance').upsert({
+      id:eeGenToken(), schedule_id:eeAttendCurSchedId, employee_id:empId, name:name, team:team, team_group:group,
+      qr_verified:true, gps_verified:gpsOk, distance_m:distM, verify_method:'qr', verified_at:new Date().toISOString()
+    }, {onConflict:'schedule_id,employee_id'});
+    if(res.error){ toast('⚠️ 참석확인 실패: '+res.error.message); return; }
+    var wrap=document.getElementById('eeAttendWrap');
+    wrap.innerHTML='<div class="card"><div class="cb" style="text-align:center;padding:20px 13px">'
+      +'<div style="font-size:40px;margin-bottom:9px">✅</div>'
+      +'<div style="font-size:17px;font-weight:800;color:var(--g7);margin-bottom:6px">참석 확인 완료</div>'
+      +'<div style="font-size:13px;color:var(--g5)">'+eeEsc(name)+'님 참석 처리되었습니다'+(distM!==null?('<br><span style="font-size:11px;color:var(--g4)">위치 확인: '+(gpsOk?'✓ 교육장 인근':'⚠️ 위치가 다소 떨어져 있으나 QR인증으로 처리됨')+'</span>'):'')+'</div>'
+      +'</div></div>';
+  }catch(err){
+    toast('⚠️ 오류: '+String(err&&err.message||err));
+  }
+}
+
+// 관리자/팀장/조장 자동 참석확인 — 별도 QR 없이, 교육장 근처에서 앱을 열면 자동으로 참석 처리
+async function eeCheckAutoAttendance(){
+  try{
+    if(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role))) return;
+    if(!navigator.geolocation) return;
+    var today=kstDate();
+    var schedRes=await sb.from('edu_schedules').select('*').eq('event_date',today);
+    if(schedRes.error) return;
+    var scheds=(schedRes.data||[]).filter(function(s){ return s.venue_lat&&s.venue_lng; });
+    if(!scheds.length) return;
+    var nowMin=(function(){ var d=new Date(Date.now()+9*3600000); return d.getUTCHours()*60+d.getUTCMinutes(); })();
+    function toMin(t){ if(!t) return null; var p=t.split(':'); return parseInt(p[0])*60+parseInt(p[1]); }
+    var activeScheds=scheds.filter(function(s){
+      var st=toMin(s.start_time), et=toMin(s.end_time);
+      if(st===null) return false;
+      return nowMin>=(st-15) && nowMin<=((et||st+60)+15); // 시작 15분 전 ~ 종료 15분 후까지 인정
+    });
+    if(!activeScheds.length) return;
+    navigator.geolocation.getCurrentPosition(async function(pos){
+      var empId=me.name; // 관리자는 개인 로그인이라 이름으로 식별 (사번 필요 시 별도 입력 유도 가능)
+      for(var i=0;i<activeScheds.length;i++){
+        var s=activeScheds[i];
+        var dist=haversineM(pos.coords.latitude,pos.coords.longitude,s.venue_lat,s.venue_lng);
+        if(dist<=300){
+          try{
+            await sb.from('edu_attendance').upsert({
+              id:eeGenToken(), schedule_id:s.id, employee_id:empId, name:me.name, team:me.team||'', team_group:'',
+              qr_verified:false, gps_verified:true, distance_m:dist, verify_method:'auto_manager', verified_at:new Date().toISOString()
+            }, {onConflict:'schedule_id,employee_id'});
+          }catch(e){}
+        }
+      }
+    }, function(){}, {enableHighAccuracy:true, timeout:8000});
+  }catch(e){}
 }
 
 var jwScheduleData=[];
@@ -12056,6 +12578,8 @@ function renderNightSpecialSummary(){
     any=true;
   });
   var total=getNightSpecialTotal();
+  var avgColor=nsAvgTotal?mpAvgColor(total,nsAvgTotal):null;
+  var avgMonthWord=mpAvgMonthNum?(mpAvgMonthNum+'월'):'전달';
   cards.forEach(function(card){
     card.style.display=any?'block':'none';
     if(!any) return;
@@ -12064,8 +12588,40 @@ function renderNightSpecialSummary(){
       if(cell) cell.textContent=sums[k];
     });
     var totCell=card.querySelector('[data-ns="total"]');
-    if(totCell) totCell.textContent=total;
+    if(totCell){ totCell.textContent=total; totCell.style.color=avgColor||'#6B21A8'; }
+    var avgLblEl=card.querySelector('[data-ns="avglbl"]');
+    if(avgLblEl) avgLblEl.textContent=nsAvgTotal?(avgMonthWord+' 야간평균 '+nsAvgTotal+'명'):'';
   });
+}
+
+// ─ 야간특별작업 전달(지난달) 평균 — 층별 인력현황과 같은 기준으로 통일 ─
+var nsAvgTotal=null;
+async function loadNsAverage(){
+  try{
+    var nowKst=new Date(Date.now()+9*3600000);
+    var y=nowKst.getUTCFullYear(), m=nowKst.getUTCMonth()+1;
+    var py=y, pm=m-1; if(pm<1){ pm=12; py--; }
+    var prevMonthKeyPrefix=py+'-'+(pm<10?'0':'')+pm;
+    var fromStr=prevMonthKeyPrefix+'-01';
+    var lastDay=new Date(Date.UTC(py, pm, 0)).getUTCDate();
+    var toStr=prevMonthKeyPrefix+'-'+(lastDay<10?'0':'')+lastDay;
+    var res=await sb.from('night_special_data').select('date,carpet,wax,stone,wood,restroom,pbb,es,toilet_daily,common_area,collection').gte('date',fromStr).lte('date',toStr);
+    var rows=(res&&res.data)||[];
+    var byDate={};
+    var fields=['carpet','wax','stone','wood','restroom','pbb','es','toilet_daily','common_area','collection'];
+    rows.forEach(function(r){
+      if(!byDate[r.date]) byDate[r.date]=0;
+      fields.forEach(function(f){ byDate[r.date]+=Number(r[f])||0; });
+    });
+    var dates=Object.keys(byDate);
+    if(dates.length){
+      var sum=dates.reduce(function(s,d){ return s+byDate[d]; },0);
+      nsAvgTotal=Math.round(sum/dates.length);
+    }else{
+      nsAvgTotal=0;
+    }
+    renderNightSpecialSummary();
+  }catch(e){ console.log('야간특별작업 평균 로드 오류:',e); }
 }
 
 
@@ -18738,9 +19294,16 @@ async function refreshMpDataLight(){
       // 메모리 초기화 먼저 (어제 데이터 화면 노출 방지)
       mpDataByLeader={오전:{},오후:{},야간:{}};
       mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-      go('main');
-      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); loadMpAverages(); }, 500);
-      setTimeout(function(){ tryAutoCheckin(); checkHeatAlert(); }, 2000);
+      // QR 스캔으로 들어온 경우(?qrattend=...) 홈 대신 참석확인 화면으로 바로 연결
+      var qrParams=new URLSearchParams(window.location.search);
+      if(qrParams.get('qrattend')){
+        go('eduattend');
+        eeRenderAttendScreen(qrParams.get('qrattend'), qrParams.get('t'));
+      }else{
+        go('main');
+      }
+      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); loadMpAverages(); loadNsAverage(); }, 500);
+      setTimeout(function(){ tryAutoCheckin(); checkHeatAlert(); eeCheckAutoAttendance(); }, 2000);
       return;
     }
   }catch(e){}
