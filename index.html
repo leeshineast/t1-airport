@@ -15317,13 +15317,13 @@ function renderEquipment(){
   var mgmtColIdx=headers.findIndex(function(h){ return String(h).indexOf('관리번호')!==-1; });
   var nameColIdx=headers.findIndex(function(h){ return String(h).indexOf('장비명')!==-1; });
   var canEdit=canDeleteWorkItem();
-  var h='<table style="width:100%;border-collapse:collapse;font-size:14px;min-width:500px">';
+  var h='<table style="width:100%;border-collapse:separate;border-spacing:0;font-size:14px;min-width:500px">';
   h+='<thead><tr>';
   headers.forEach(function(hd,hi){
     var w=hi===0?'width:1%;text-align:center;':''; // 순번 컬럼: 내용 크기에 맞춤
-    h+='<th style="'+w+'padding:8px 10px;background:var(--navy);color:white;text-align:left;white-space:nowrap;font-size:13px">'+hd+'</th>';
+    h+='<th style="'+w+'position:sticky;top:0;padding:8px 10px;background:var(--navy);color:white;text-align:left;white-space:nowrap;font-size:13px;z-index:2">'+hd+'</th>';
   });
-  if(canEdit) h+='<th style="width:1%;padding:8px 10px;background:var(--navy);color:white;text-align:center;white-space:nowrap;font-size:13px">관리</th>';
+  if(canEdit) h+='<th style="width:1%;position:sticky;top:0;padding:8px 10px;background:var(--navy);color:white;text-align:center;white-space:nowrap;font-size:13px;z-index:2">관리</th>';
   h+='</tr></thead><tbody>';
   filtered.forEach(function(r,i){
     h+='<tr style="background:'+(i%2===0?'white':'var(--g1)')+';">';
