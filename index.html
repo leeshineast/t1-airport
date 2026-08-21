@@ -6781,7 +6781,12 @@ function subHO(){
   if(!selEls.length){document.getElementById('hoW').style.display='block';toast('⚠️ 인계 팀을 먼저 선택해주세요');return;}
   // 팀번호 → 근무조 매핑
   var shiftMap={1:'오전팀',2:'오전팀',3:'오전팀',4:'오전팀',5:'야간팀',6:'오후팀',7:'오후팀',8:'오후팀',9:'오후팀',10:'야간팀'};
-  const toMap={'오전팀':'오후팀','오후팀':'야간팀','야간팀':'오전팀'};
+  // 작성자(나) 소속팀 기준 근무조 라벨 — "인계 팀 선택"은 받는 팀을 고르는 것이므로 작성자 정보와 절대 섞으면 안 됨
+  var myTeamRaw=(me&&me.team)?me.team.trim():'';
+  var myTeamNumMatch=myTeamRaw.match(/(\d+)\s*팀/);
+  var myTeamNum=myTeamNumMatch?parseInt(myTeamNumMatch[1]):null;
+  var myShiftLabel=myTeamNum?(shiftMap[myTeamNum]||'오전팀'):'';
+  var myShiftDisplay=myTeamRaw?(myTeamRaw+(myShiftLabel?(' ('+myShiftLabel+')'):'')):(me?me.name:'작성자');
   const fWrap=document.getElementById('hFWrap');
   const dE=document.getElementById('hD'),eE=document.getElementById('hE');
   var fT='없음';
@@ -6814,6 +6819,17 @@ function subHO(){
   // 폼 초기화
   document.querySelectorAll('#hoSG .rp').forEach(p=>p.classList.remove('on'));
   document.getElementById('hoW').style.display='none';
+  // 다음 작성을 위해 정해진 인계체인 다시 기본 선택
+  if(me&&me.team){
+    var myNumMatch2=me.team.match(/(\d+)\s*팀/);
+    var myNum2=myNumMatch2?parseInt(myNumMatch2[1]):null;
+    var suggested2=myNum2?(HO_TEAM_CHAIN[myNum2]||[]):[];
+    if(suggested2.length){
+      document.querySelectorAll('#hoSG .rp').forEach(function(p){
+        if(suggested2.indexOf(parseInt(p.textContent))!==-1) p.classList.add('on');
+      });
+    }
+  }
   ['hD','hE'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';e.classList.remove('show');}});
   var fWrapEl=document.getElementById('hFWrap');if(fWrapEl)fWrapEl.style.display='none';
   ['hFLoc','hFDesc','hFEtc','hFRcv','hFReporter'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});
@@ -6833,13 +6849,12 @@ function subHO(){
   if(editId){
     var rawE=selEls[0].textContent.trim();
     var teamNumE=parseInt(rawE.replace('팀',''));
-    var sNmE=shiftMap[teamNumE]||'오전팀';
-    var toNmE=toMap[sNmE];
+    var toShiftE=shiftMap[teamNumE]||'오전팀'; // 받는 팀 고유의 근무조
     var zoneChainE=([1,2,5,6,7].indexOf(teamNumE)>=0)?'LS':(([3,4,8,9,10].indexOf(teamNumE)>=0)?'AS':null);
     var resEditEl=document.getElementById('hoResultEdit');
     var updatePayload={
-      shift: rawE+' ('+sNmE+')',
-      to_shift: toNmE,
+      shift: myShiftDisplay,
+      to_shift: toShiftE,
       facility: fT!=='없음'?fT:null,
       complaint: submitBtn&&submitBtn._origComplaint!==undefined?submitBtn._origComplaint:null,
       danger: dT!=='없음'?dT:null,
@@ -6886,12 +6901,11 @@ function subHO(){
     var rowsToInsert=selEls.map(function(elx){
       var rawX=elx.textContent.trim();
       var teamNumX=parseInt(rawX.replace('팀',''));
-      var sNmX=shiftMap[teamNumX]||'오전팀';
-      var toNmX=toMap[sNmX];
+      var toShiftX=shiftMap[teamNumX]||'오전팀'; // 받는 팀 고유의 근무조
       var zoneChainX=([1,2,5,6,7].indexOf(teamNumX)>=0)?'LS':(([3,4,8,9,10].indexOf(teamNumX)>=0)?'AS':null);
       return {
-        shift: rawX+' ('+sNmX+')',
-        to_shift: toNmX,
+        shift: myShiftDisplay,
+        to_shift: toShiftX,
         author: me?me.name:'작성자',
         team: me?me.team:'',
         facility: fT!=='없음'?fT:null,
@@ -8439,6 +8453,8 @@ function mpTab(n){tabSwitch('mp',n,5);if(n===1){
   if(t2.length){t2.forEach(function(b){b.classList.remove('on');});t2[0].classList.add('on');}
   loadMgrAttendance();
 }}
+// 인수인계 팀별 정해진 인계체인 (구역별) — 1(오전)→6(오후)→5(야간)→1... / 2→7→5→2 / 3→8→10→3 / 4→9→10→4
+var HO_TEAM_CHAIN={1:[6],6:[5],5:[1,2],2:[7],7:[5],3:[8],8:[10],10:[3,4],4:[9],9:[10]};
 function hoTab(n){
   tabSwitch('ho',n,5);
   if(n===4){ var rw=document.getElementById('hoResultEditWrap'); if(rw) rw.style.display='none'; }
@@ -8454,6 +8470,22 @@ function hoTab(n){
       dEl.value=kst.toISOString().slice(0,16);
     }
     loadHEtcRecent();
+    // 신규 작성(수정 모드 아님)일 때만 내 팀 기준으로 정해진 인계체인을 기본 선택 — 직접 바꿔도 됨(복수선택 유지)
+    var submitBtnHo=document.querySelector('#hoP4 .btn-prim');
+    var isEditMode=submitBtnHo&&submitBtnHo._editId;
+    if(!isEditMode){
+      var alreadyPicked=document.querySelectorAll('#hoSG .rp.on').length>0;
+      if(!alreadyPicked&&me&&me.team){
+        var myNumMatch=me.team.match(/(\d+)\s*팀/);
+        var myNum=myNumMatch?parseInt(myNumMatch[1]):null;
+        var suggested=myNum?(HO_TEAM_CHAIN[myNum]||[]):[];
+        if(suggested.length){
+          document.querySelectorAll('#hoSG .rp').forEach(function(p){
+            if(suggested.indexOf(parseInt(p.textContent))!==-1) p.classList.add('on');
+          });
+        }
+      }
+    }
   }
 }
 
