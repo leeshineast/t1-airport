@@ -10730,6 +10730,7 @@ function eeGenToken(){ return Date.now().toString(36)+Math.random().toString(36)
 function eeEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
 async function eeSubmitEvent(){
+  try{
   if(!eeCanAdmin()){ toast('⚠️ 조장 이상만 등록할 수 있습니다'); return; }
   var title=(document.getElementById('eeTitle').value||'').trim();
   if(!title){ toast('⚠️ 제목을 입력하세요'); return; }
@@ -10753,13 +10754,14 @@ async function eeSubmitEvent(){
     scheds.push({seq:i+1, event_date:d, start_time:st||null, end_time:et||null, location:loc||null, qr_token:eeGenToken()});
   }
 
+  var evId=eeGenToken();
   var evRes=await sb.from('edu_events').insert({
-    category:category, category_custom:categoryCustom, title:title, content:content,
+    id:evId, category:category, category_custom:categoryCustom, title:title, content:content,
     apply_deadline:deadline, note:note, created_by:me?me.name:''
-  }).select().maybeSingle();
+  });
   if(evRes.error){ toast('등록 실패: '+evRes.error.message); return; }
-  var eventId=evRes.data.id;
-  var schedRows=scheds.map(function(s){ return Object.assign({event_id:eventId}, s); });
+  var eventId=evId;
+  var schedRows=scheds.map(function(s){ return Object.assign({id:eeGenToken(), event_id:eventId}, s); });
   var schedRes=await sb.from('edu_schedules').insert(schedRows);
   if(schedRes.error){ toast('일정 등록 실패: '+schedRes.error.message); return; }
 
@@ -10774,6 +10776,10 @@ async function eeSubmitEvent(){
   eeSetCat(document.querySelector('#eeCatG .rp'),'교육');
   eeAddScheduleRow();
   eeTab(0);
+  }catch(err){
+    console.error('[eeSubmitEvent 오류]', err);
+    toast('⚠️ 등록 중 오류가 발생했습니다: '+String(err&&err.message||err));
+  }
 }
 
 async function loadEduEvents(){
