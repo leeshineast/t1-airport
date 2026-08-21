@@ -998,7 +998,10 @@ html{overflow-x:hidden}
         </div>
       </div>
       <div style="flex:1;border-left:1px solid var(--g1);padding-left:14px;display:flex;flex-direction:column;justify-content:center">
-        <div style="font-size:12px;color:var(--g4);margin-bottom:3px">작업내역</div>
+        <div style="font-size:12px;color:var(--g4);margin-bottom:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span>작업내역</span>
+          <span id="jwHomeTeamBadges" style="display:flex;gap:4px;flex-wrap:wrap"></span>
+        </div>
         <div style="font-size:12px;color:var(--g5);line-height:1.5" id="dJWDetail">등록된 공동작업이 없습니다</div>
         <div style="font-size:11.5px;color:#E65100;line-height:1.5;margin-top:4px;display:none" id="dJWReplace"></div>
       </div>
@@ -4109,6 +4112,19 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
       <div id="jwSchedAdminList" style="display:flex;flex-direction:column;gap:6px;margin-bottom:10px"></div>
       <button class="btn-prim" style="background:var(--danger)" onclick="jwSchedClearAll()">🗑️ 전체 스케줄 삭제</button>
+    </div></div>
+
+    <!-- 연도별 담당팀 설정 (관리자 전용) -->
+    <div class="card" id="jwYearTeamAdminCard" style="display:none;margin-top:13px"><div class="cb">
+      <h3 style="font-size:15px;margin-bottom:6px">📆 연도별 공동작업 담당팀 설정</h3>
+      <p style="font-size:13px;color:var(--g5);line-height:1.7;margin-bottom:10px">해당 연도에 공동작업을 담당하는 팀을 지정합니다. 홈 화면 공동작업 카드에 이 팀들의 오늘 작성 현황(A조·B조)이 표시됩니다.</p>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <label class="f-lbl" style="margin:0">연도</label>
+        <select id="jwYearTeamYear" class="ri" style="margin-bottom:0;width:auto;flex:none;padding:8px 10px" onchange="jwYearTeamLoadForYear()"></select>
+      </div>
+      <div class="rg" id="jwYearTeamG" style="flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+      <button class="btn-prim" onclick="jwYearTeamSave()">💾 이 연도 담당팀 저장</button>
+      <div style="margin-top:10px;font-size:12px;color:var(--g4)" id="jwYearTeamCurrent"></div>
     </div></div>
     <div style="height:20px"></div>
   </div>
@@ -9987,6 +10003,11 @@ function jwTab(n){
       schedCard.style.display=(me&&(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))?'block':'none';
       if(schedCard.style.display==='block'){ jwSchedFillTeamSelect(); jwRenderScheduleAdminList(); }
     }
+    var yearTeamCard=document.getElementById('jwYearTeamAdminCard');
+    if(yearTeamCard){
+      yearTeamCard.style.display=(me&&(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))?'block':'none';
+      if(yearTeamCard.style.display==='block') jwYearTeamAdminInit();
+    }
   }
 }
 function setJwRange(el,range){
@@ -10483,6 +10504,69 @@ async function jwSchedClearAll(){
   await loadJointWorkSchedule();
   jwRenderScheduleAdminList();
 }
+
+// ═══ 연도별 공동작업 담당팀 ═══
+var jwYearTeamsCache={}; // { 2026:[1,2,3,4], ... }
+var jwYearTeamsLoaded=false;
+async function loadJwYearTeams(){
+  try{
+    var res=await sb.from('jw_year_teams').select('year,teams');
+    if(res.error) return;
+    jwYearTeamsCache={};
+    (res.data||[]).forEach(function(r){ jwYearTeamsCache[r.year]=r.teams||[]; });
+    jwYearTeamsLoaded=true;
+  }catch(e){}
+}
+function jwYearTeamAdminInit(){
+  var sel=document.getElementById('jwYearTeamYear');
+  var teamG=document.getElementById('jwYearTeamG');
+  if(!sel||!teamG) return;
+  var thisYear=new Date(Date.now()+9*3600000).getUTCFullYear();
+  if(!sel.options.length){
+    for(var y=thisYear-1;y<=thisYear+3;y++){
+      var opt=document.createElement('option'); opt.value=y; opt.textContent=y+'년';
+      if(y===thisYear) opt.selected=true;
+      sel.appendChild(opt);
+    }
+  }
+  if(!teamG.children.length){
+    for(var t=1;t<=10;t++){
+      var btn=document.createElement('div');
+      btn.className='rp'; btn.textContent=t+'팀'; btn.dataset.team=t;
+      btn.onclick=function(){ this.classList.toggle('on'); };
+      teamG.appendChild(btn);
+    }
+  }
+  (async function(){
+    await loadJwYearTeams();
+    jwYearTeamLoadForYear();
+  })();
+}
+function jwYearTeamLoadForYear(){
+  var sel=document.getElementById('jwYearTeamYear');
+  var teamG=document.getElementById('jwYearTeamG');
+  var curEl=document.getElementById('jwYearTeamCurrent');
+  if(!sel||!teamG) return;
+  var y=parseInt(sel.value);
+  var teams=jwYearTeamsCache[y]||[];
+  Array.from(teamG.children).forEach(function(b){ b.classList.toggle('on', teams.indexOf(parseInt(b.dataset.team))!==-1); });
+  if(curEl) curEl.textContent=teams.length?('현재 '+y+'년 담당팀: '+teams.map(function(t){return t+'팀';}).join(', ')):('현재 '+y+'년은 담당팀이 설정되어 있지 않습니다');
+}
+async function jwYearTeamSave(){
+  if(!me||!(me.role==='admin'||me.role==='manager'||isExecRole(me.role))){ toast('⚠️ 관리자만 설정할 수 있습니다'); return; }
+  var sel=document.getElementById('jwYearTeamYear');
+  var teamG=document.getElementById('jwYearTeamG');
+  if(!sel||!teamG) return;
+  var y=parseInt(sel.value);
+  var teams=Array.from(teamG.children).filter(function(b){return b.classList.contains('on');}).map(function(b){return parseInt(b.dataset.team);});
+  var res=await sb.from('jw_year_teams').upsert({year:y, teams:teams, updated_by:me?me.name:'', updated_at:new Date().toISOString()},{onConflict:'year'});
+  if(res.error){ toast('저장 실패: '+res.error.message); return; }
+  jwYearTeamsCache[y]=teams;
+  toast('✅ '+y+'년 담당팀이 저장되었습니다');
+  jwYearTeamLoadForYear();
+  loadJointWorkTodayFromDB(); // 홈 화면 뱃지 즉시 갱신
+}
+
 var jwScheduleData=[];
 async function loadJointWorkSchedule(){
   try{
@@ -10573,7 +10657,27 @@ async function loadJointWorkTodayFromDB(){
     var rows=all.filter(function(r){ return r.record_type!=='replace'; }); // 작업대체는 통계와 마찬가지로 정상작업 요약에서 제외
     var replaceRows=all.filter(function(r){ return r.record_type==='replace'; });
     renderJointWorkTodayCard(rows, replaceRows);
+    renderJwHomeTeamBadges(all); // 대체·연계팀대체 포함 전체로 팀별 작성현황 판정
   }catch(e){}
+}
+// 홈 화면 공동작업 카드 - 올해 담당팀별 A조·B조 작성 현황 뱃지 (파랑=둘다 작성, 빨강=하나라도 미작성)
+async function renderJwHomeTeamBadges(allRowsToday){
+  var wrap=document.getElementById('jwHomeTeamBadges');
+  if(!wrap) return;
+  if(!jwYearTeamsLoaded) await loadJwYearTeams();
+  var thisYear=new Date(Date.now()+9*3600000).getUTCFullYear();
+  var teams=jwYearTeamsCache[thisYear]||[];
+  if(!teams.length){ wrap.innerHTML=''; return; }
+  var writtenCodes={}; // "1팀A" 등 → true
+  (allRowsToday||[]).forEach(function(r){ (r.teams||[]).forEach(function(t){ writtenCodes[t]=true; }); });
+  var subGroupsByTeam={1:['A','B','C'],2:['A','B'],3:['A','B'],4:['A','B'],5:['A','B'],6:['A','B','C'],7:['A','B'],8:['A','B'],9:['A','B'],10:['A','B']};
+  wrap.innerHTML=teams.map(function(t){
+    var subs=subGroupsByTeam[t]||['A','B'];
+    var ok=subs.every(function(s){ return !!writtenCodes[t+'팀'+s]; });
+    var color=ok?'var(--avg-blue)':'var(--danger)';
+    var bg=ok?'var(--avg-blue-bg)':'var(--danger-bg)';
+    return '<span style="display:inline-flex;align-items:center;gap:3px;background:'+bg+';color:'+color+';font-size:10px;font-weight:800;padding:2px 6px;border-radius:10px"><span style="width:6px;height:6px;border-radius:50%;background:'+color+'"></span>'+t+'팀</span>';
+  }).join('');
 }
 function renderJointWorkTodayCard(rows, replaceRows){
   var cntEl=document.getElementById('dJW'), detailEl=document.getElementById('dJWDetail');
