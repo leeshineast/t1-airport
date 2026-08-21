@@ -101,7 +101,7 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
 /* 관리대장 — 한 화면에 다 보이도록 압축한 표 레이아웃 */
 .ledger-table-wrap{overflow-x:auto;border:1px solid var(--g2);border-radius:12px;background:#fff;-webkit-overflow-scrolling:touch}
 .ledger-table{width:100%;table-layout:fixed;border-collapse:collapse;font-size:12px}
-.ledger-table thead th{position:sticky;top:0;background:var(--g1);color:var(--g5);font-size:10px;font-weight:800;padding:7px 2px;text-align:center;border-bottom:1px solid var(--g2);z-index:1}
+.ledger-table thead th{position:sticky;top:var(--hdr-h, 78px);background:var(--g1);color:var(--g5);font-size:10px;font-weight:800;padding:7px 2px;text-align:center;border-bottom:1px solid var(--g2);z-index:5}
 .ledger-table th.col-nm{text-align:left;width:30%}
 .ledger-table th.col-act{width:15%}
 .ledger-table td{padding:5px 2px;border-bottom:1px solid var(--g1);vertical-align:middle}
@@ -572,6 +572,7 @@ function go(id, _fromPop){
   if(id==='scrPrint'){ renderPrintPreview(); }
   if(id==='scrHome'){ loadHomeSummary(); }
   window.scrollTo(0,0);
+  setTimeout(syncHdrHeight, 50); // 화면 전환 시 제목 줄바꿈 등으로 헤더 높이가 바뀔 수 있어 재측정
   // 폰 뒤로가기(스와이프/버튼)로 창고 화면 안에서 단계별로 돌아갈 수 있도록 히스토리 기록
   // (popstate 처리 중에 다시 push하면 무한루프/중복이 생기므로, 뒤로가기로 호출된 경우는 push하지 않음)
   if(!_fromPop){
@@ -579,6 +580,13 @@ function go(id, _fromPop){
     history.pushState({whScreen:id}, '', '#'+id);
   }
 }
+// 상단 고정바(.hdr) 실제 높이를 측정해서 CSS 변수로 반영 — 표 헤더 틀고정이 상단바에 가리지 않도록
+function syncHdrHeight(){
+  var hdr=document.querySelector('.hdr');
+  if(!hdr) return;
+  document.documentElement.style.setProperty('--hdr-h', hdr.offsetHeight+'px');
+}
+window.addEventListener('resize', syncHdrHeight);
 window.addEventListener('popstate', function(e){
   var target=(e.state && e.state.whScreen) ? e.state.whScreen : 'scrHome';
   go(target, true);
@@ -1932,6 +1940,7 @@ function uploadItemMasterExcel(ev){
   document.getElementById('uRole').textContent=roleLabel(me.role);
   document.getElementById('itemMasterBtn').style.display=isAdmin()?'flex':'none';
   loadMasters();
+  syncHdrHeight();
 })();
 </script>
 </body>
