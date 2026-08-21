@@ -10968,24 +10968,26 @@ function eeTeamSortCmp(a,b){
 }
 
 var eeEditingEventId=null; // null이면 신규등록, 값이 있으면 그 교육/회의를 수정하는 중
-// 교육·회의 신규 등록 시 주요수행실적에 자동 기록
+// 교육·회의 신규 등록 시 주요수행실적에 회차(1차,2차,3차...)마다 각각 자동 기록
 async function eeLogToPerf(category, title, scheds){
   try{
-    var first=scheds&&scheds[0];
-    var occurredAtUtc=new Date().toISOString();
-    if(first&&first.event_date){
-      var timePart=first.start_time?(first.start_time+':00'):'09:00:00';
-      occurredAtUtc=new Date(new Date(first.event_date+'T'+timePart+'Z').getTime()-9*3600000).toISOString();
+    var list=scheds||[];
+    for(var i=0;i<list.length;i++){
+      var s=list[i];
+      var occurredAtUtc=new Date().toISOString();
+      if(s.event_date){
+        var timePart=s.start_time?(s.start_time+':00'):'09:00:00';
+        occurredAtUtc=new Date(new Date(s.event_date+'T'+timePart+'Z').getTime()-9*3600000).toISOString();
+      }
+      var seqLabel=list.length>1?(s.seq+'차 · '):'';
+      var timeStr=s.start_time?(s.start_time+(s.end_time?('~'+s.end_time):'')):'';
+      var content=seqLabel+title+(timeStr?(' ('+s.event_date+' '+timeStr+')'):(s.event_date?(' ('+s.event_date+')'):''));
+      await sb.from('performance_records').insert({
+        occurred_at:occurredAtUtc, category:category, location_main:s.location||'-', location_detail:null,
+        content:content, writer:me?me.name:'', team:me?(me.team||''):'',
+        updated_by:me?me.name:'', updated_at:new Date().toISOString()
+      });
     }
-    var dateRange=(scheds||[]).map(function(s){return s.event_date;}).filter(Boolean).sort();
-    var rangeStr=dateRange.length?(dateRange[0]===dateRange[dateRange.length-1]?dateRange[0]:(dateRange[0]+'~'+dateRange[dateRange.length-1])):'';
-    var locStr=first&&first.location?first.location:'';
-    var content=title+(rangeStr?(' ('+rangeStr+')'):'')+(scheds&&scheds.length>1?(' · 총 '+scheds.length+'회차'):'');
-    await sb.from('performance_records').insert({
-      occurred_at:occurredAtUtc, category:category, location_main:locStr||'-', location_detail:null,
-      content:content, writer:me?me.name:'', team:me?(me.team||''):'',
-      updated_by:me?me.name:'', updated_at:new Date().toISOString()
-    });
   }catch(e){ console.log('주요수행실적 자동기록 오류:',e); } // 실패해도 교육/회의 등록 자체는 이미 완료된 상태라 조용히 무시
 }
 async function eeSubmitEvent(){
