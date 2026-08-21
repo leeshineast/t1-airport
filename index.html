@@ -8281,7 +8281,6 @@ function canDownloadOriginal(){
   return true;
 }
 var mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-var mpDataByShift={'오전':null,'오후':null,'야간':null};
 // 조장별 개별 저장: {오전:{1팀A:[[4][7]]}, ...}
 var mpDataByLeader={오전:{},오후:{},야간:{}};
 // subMp → confirmMp 데이터 전달용 임시 저장
@@ -8291,6 +8290,11 @@ var indPrevYear=0;
 var ZONES=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
 // ═══ 층별/구역별 평균 근무인력 (전달 전체 데이터 기준, 오전만 입력됐는지·오전+오후까지 입력됐는지에 맞춰 비교) ═══
 var mpAvgAM=null, mpAvgAMPM=null, mpAvgLoading=false, mpAvgMonthNum=0; // 4(구역) x 7(층) 평균 매트릭스 — null이면 아직 미로드. mpAvgMonthNum=평균 기준월(예:7)
+// 특정 시프트('오전'/'오후')에 실제 입력된 데이터(팀)가 있는지 확인 — mpDataByLeader 기준
+function mpShiftPresent(shift){
+  var leaderData=mpDataByLeader[shift]||{};
+  return Object.keys(leaderData).some(function(k){ return k.indexOf('_')!==0; });
+}
 function mpAvgColor(actual, avg){
   if(!avg||avg<=0) return null;
   if(actual<avg) return 'var(--danger)';
@@ -8805,7 +8809,7 @@ function updateFloorChart(){
     allRows.forEach(function(rowData,ri){if(!trs3[ri])return;var tds=trs3[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
   }
   // 층별 패널 — 현재까지 입력된 시프트(오전만 / 오전+오후)에 맞는 평균과 비교해 색상 표시
-  var shiftState=mpDataByShift['오후']?'ampm':'am';
+  var shiftState=mpShiftPresent('오후')?'ampm':'am';
   var avgM=(shiftState==='ampm')?mpAvgAMPM:mpAvgAM;
   var avgMonthWord=mpAvgMonthNum?(mpAvgMonthNum+'월'):'전달';
   var avgWord=(shiftState==='ampm')?(avgMonthWord+' 오전+오후평균'):(avgMonthWord+' 오전평균');
@@ -8855,7 +8859,7 @@ function updateFloorChart(){
   var curEl=document.getElementById('curStaff');var unitEl=document.getElementById('curUnit');
   if(curEl&&grandTotal>0){
     curEl.textContent=grandTotal;
-    if(unitEl){var labels=[];if(mpDataByShift['오전'])labels.push('오전');if(mpDataByShift['오후'])labels.push('오후');if(mpDataByShift['야간'])labels.push('야간');unitEl.textContent='명 ('+(labels.length>0?labels.join('+')+'합계':'입력됨')+')';}
+    if(unitEl){var labels=[];if(mpShiftPresent('오전'))labels.push('오전');if(mpShiftPresent('오후'))labels.push('오후');if(mpShiftPresent('야간'))labels.push('야간');unitEl.textContent='명 ('+(labels.length>0?labels.join('+')+'합계':'입력됨')+')';}
   }
 }
 
@@ -12291,7 +12295,6 @@ async function executeDataReset(){
       await sb.from('night_special_data').delete().eq('date',todayKst);
     }catch(e){}
     mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-    mpDataByShift={오전:null,오후:null,야간:null};
     mpDataByLeader={오전:{},오후:{},야간:{}};
     mpInputLog={};
     nightSpecialByLeader={};
@@ -22611,7 +22614,7 @@ function msRenderDetail(key){
   if(key==='mp'){
     h=msTitle('👥 인력현황 · '+pl);
     if(mpAvgAM){
-      var mpShiftSt=mpDataByShift['오후']?'ampm':'am';
+      var mpShiftSt=mpShiftPresent('오후')?'ampm':'am';
       var mpAvgM3=mpShiftSt==='ampm'?mpAvgAMPM:mpAvgAM;
       var mpTodayTot=0; for(var mzi=0;mzi<4;mzi++) for(var mci=0;mci<7;mci++) mpTodayTot+=(mpData[mzi]&&mpData[mzi][mci])||0;
       var mpAvgTot3=0; for(var mzi2=0;mzi2<4;mzi2++) for(var mci2=0;mci2<7;mci2++) mpAvgTot3+=mpAvgM3[mzi2][mci2];
