@@ -10858,8 +10858,8 @@ async function loadEduEvents(){
         +(dateRange?'<div style="font-size:13px;color:var(--g5);margin-bottom:2px">📅 '+dateRange+'</div>':'')
         +(e.apply_deadline?'<div style="font-size:12px;color:var(--g4);margin-bottom:8px">신청기간~'+e.apply_deadline+'</div>':'<div style="margin-bottom:8px"></div>')
         +'<div style="display:flex;gap:7px">'
-          +'<button onclick="eeOpenApply('+e.id+')" style="flex:1;padding:9px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer" '+(closed?'disabled':'')+'>'+(closed?'마감됨':'📝 신청하기')+'</button>'
-          +(eeCanAdmin()?('<button onclick="eeOpenAdminView('+e.id+')" style="flex:1;padding:9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">📊 신청현황</button>'):'')
+          +'<button onclick="eeOpenApply(\''+e.id+'\')" style="flex:1;padding:9px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer" '+(closed?'disabled':'')+'>'+(closed?'마감됨':'📝 신청하기')+'</button>'
+          +(eeCanAdmin()?('<button onclick="eeOpenAdminView(\''+e.id+'\')" style="flex:1;padding:9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">📊 신청현황</button>'):'')
         +'</div>'
       +'</div></div>';
     }).join('');
