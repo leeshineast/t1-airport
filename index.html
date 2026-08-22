@@ -2545,7 +2545,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
 </div>
 
-<!-- 교육·회의 A4 출력 (참석대장/서명지/참석희망자조사표) -->
+<!-- 교육·회의 A4 출력 (참석 서명지/참석자 명단/참석희망자조사표) -->
 <div id="eeReportModal" class="modal-bg">
   <div class="modal" style="max-width:640px;max-height:92vh;overflow-y:auto">
     <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3 id="eeReportModalTitle">📄 출력</h3><button class="m-x" onclick="hideM('eeReportModal')">×</button></div>
@@ -11512,8 +11512,8 @@ async function eeOpenAdminView(eventId){
               '<div style="font-size:12px;color:var(--g5);margin-bottom:6px">교육장에 이 QR을 인쇄해서 게시하세요. 직원이 폰 카메라로 스캔하면 자동으로 참석확인 화면이 열립니다.</div>'
               +'<button onclick="event.stopPropagation();navigator.clipboard&&navigator.clipboard.writeText(\''+qrUrl+'\');toast(\'✅ 링크 복사됨\')" style="padding:6px 11px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔗 링크 복사</button>'
             ):'')
-            +'<button onclick="event.stopPropagation();eeOpenSignSheet(\''+eventId+'\',\''+s.id+'\')" style="padding:6px 11px;margin-left:6px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">✍️ 서명지</button>'
-            +'<button onclick="event.stopPropagation();eeOpenAttendLog(\''+eventId+'\',\''+s.id+'\')" style="padding:6px 11px;margin-left:6px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">📒 참석대장</button>'
+            +'<button onclick="event.stopPropagation();eeOpenSignSheet(\''+eventId+'\',\''+s.id+'\')" style="padding:6px 11px;margin-left:6px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">📋 참석자 명단</button>'
+            +'<button onclick="event.stopPropagation();eeOpenAttendLog(\''+eventId+'\',\''+s.id+'\')" style="padding:6px 11px;margin-left:6px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">✍️ 참석 서명지</button>'
           +'</div>'
         +'</div>'
         +((list.length+walkins.length)?(
@@ -11675,7 +11675,7 @@ function eeToggleSchedList(sid){
   if(el) el.style.display=(el.style.display==='none')?'table-row':'none';
 }
 
-// ═══ A4 출력물 (참석대장 / 서명지 / 참석희망자 조사표) ═══
+// ═══ A4 출력물 (참석 서명지 / 참석자 명단 / 참석희망자 조사표) ═══
 function eeReportRowsTable(rows, cols){
   // cols: [{key, label, width}] — key===null이면 빈 칸(서명란 등), key==='_sig'면 등록된 전자서명 이미지가 있으면 표시, 없으면 빈 칸(직접서명용)
   var h='<table class="ee-rpt-table"><thead><tr>'
@@ -11731,10 +11731,10 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
     var rows=apps;
     var cols, title,담당자=me?me.name:'';
     if(kind==='sign'){
-      title='교육 참석자 서명부';
-      cols=[{key:'team',label:'팀',width:'60px'},{key:'team_group',label:'조',width:'55px'},{key:'position',label:'직책',width:'60px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'_sig',label:'서명'}];
+      title='교육 참석자 명단';
+      cols=[{key:'team',label:'팀',width:'60px'},{key:'team_group',label:'조',width:'55px'},{key:'position',label:'직책',width:'60px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:null,label:'비고'}];
     }else{ // log — 실제 참석확인된 사람 기준 (신청여부 무관, 워크인 포함)
-      title='교육 참석대장';
+      title='교육 참석 서명지';
       var attRes=await sb.from('edu_attendance').select('*').eq('schedule_id',scheduleId);
       var attList=(attRes.data||[]).slice().sort(eeTeamSortCmp);
       rows=attList.map(function(a){
@@ -11744,7 +11744,7 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
       });
       cols=[{key:'team',label:'팀',width:'60px'},{key:'team_group',label:'조',width:'55px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'attend_time',label:'참석시간',width:'70px'},{key:'_sig',label:'서명'}];
     }
-    await eeAttachSignatures(rows); // QR참석확인 시 직접 서명한 게 있으면 그걸 우선 사용, 없으면 등록된 전자서명(개인계정)으로 보완, 그래도 없으면 빈 칸
+    if(kind==='log') await eeAttachSignatures(rows); // QR참석확인 시 직접 서명한 게 있으면 그걸 우선 사용, 없으면 등록된 전자서명(개인계정)으로 보완, 그래도 없으면 빈 칸
     document.getElementById('eeReportModalTitle').textContent='📄 '+title;
     document.getElementById('eeReportBigTitle').textContent=title;
     document.getElementById('eeReportMeta').innerHTML=
@@ -11885,18 +11885,48 @@ async function eeRenderAttendScreen(scheduleId, token){
         +'<div style="flex:1"><div class="f-lbl">사번</div><input type="text" id="eeAtEmpId" class="ri" value="'+eeEsc(autoEmpId)+'" placeholder="사번 입력"></div>'
         +'<div style="flex:1"><div class="f-lbl">성명</div><input type="text" id="eeAtName" class="ri" value="'+eeEsc(autoName)+'" placeholder="성명 입력"></div>'
       +'</div>'
-      +'<div class="f-lbl">서명 <span style="color:var(--danger);font-size:12px">* 필수 — 손가락으로 아래에 서명해주세요</span></div>'
+      +'<div id="eeAtSigWrap"></div>'
+      +'<div id="eeAtStatus" style="font-size:12.5px;color:var(--g4);margin-bottom:11px">📷 QR 인증 완료 — 서명 후 아래 버튼을 눌러 위치까지 확인하면 참석 처리됩니다</div>'
+      +'<button class="btn-prim" onclick="eeConfirmAttendance()">✅ 참석 확인</button>'
+      +'</div></div>';
+    var empIdEl0=document.getElementById('eeAtEmpId');
+    if(empIdEl0){ empIdEl0.oninput=function(){ clearTimeout(eeAtSigCheckTimer); eeAtSigCheckTimer=setTimeout(eeAtCheckRegisteredSig,400); }; }
+    eeAtCheckRegisteredSig();
+  }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">오류: '+e.message+'</div>'; }
+}
+// ─ 사번 입력/변경 시 관리자확인사항에 등록된 서명이 있는지 확인 — 있으면 캔버스 서명 생략 가능 ─
+var eeAtSigCheckTimer=null, eeAtRegisteredSigUrl=null;
+async function eeAtCheckRegisteredSig(){
+  var empIdEl=document.getElementById('eeAtEmpId');
+  var empId=empIdEl?empIdEl.value.trim():'';
+  eeAtRegisteredSigUrl=null;
+  if(empId){
+    try{
+      var res=await sb.from('user_signatures').select('signature_path').eq('employee_id',empId).maybeSingle();
+      if(res.data&&res.data.signature_path) eeAtRegisteredSigUrl=SUPABASE_URL+'/storage/v1/object/public/adminconfirm/'+encodeURIComponent(res.data.signature_path);
+    }catch(e){}
+  }
+  eeAtRenderSigBlock();
+}
+function eeAtRenderSigBlock(){
+  var wrap=document.getElementById('eeAtSigWrap');
+  if(!wrap) return;
+  if(eeAtRegisteredSigUrl){
+    wrap.innerHTML='<div class="f-lbl">서명</div>'
+      +'<div style="display:flex;align-items:center;gap:10px;border:1.5px solid var(--success);background:var(--success-bg);border-radius:var(--r2);padding:10px 13px;margin-bottom:13px">'
+      +'<img src="'+eeAtRegisteredSigUrl+'" alt="등록된 서명" style="height:32px;max-width:110px;background:white;border-radius:4px;padding:2px">'
+      +'<div style="font-size:12.5px;color:var(--success);font-weight:700">✅ 관리자확인사항에 등록된 서명을 사용합니다 — 별도 서명 없이 참석 확인 가능</div>'
+      +'</div>';
+  }else{
+    wrap.innerHTML='<div class="f-lbl">서명 <span style="color:var(--danger);font-size:12px">* 필수 — 손가락으로 아래에 서명해주세요</span></div>'
       +'<div style="border:1.5px solid var(--g2);border-radius:var(--r2);background:white;margin-bottom:6px;touch-action:none">'
         +'<canvas id="eeAtSigCanvas" width="320" height="140" style="width:100%;height:140px;display:block;touch-action:none"></canvas>'
       +'</div>'
       +'<div style="display:flex;justify-content:flex-end;margin-bottom:13px">'
         +'<button type="button" onclick="eeAtSigClear()" style="padding:5px 11px;background:var(--g1);color:var(--g6);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🧹 서명 지우기</button>'
-      +'</div>'
-      +'<div id="eeAtStatus" style="font-size:12.5px;color:var(--g4);margin-bottom:11px">📷 QR 인증 완료 — 서명 후 아래 버튼을 눌러 위치까지 확인하면 참석 처리됩니다</div>'
-      +'<button class="btn-prim" onclick="eeConfirmAttendance()">✅ 참석 확인</button>'
-      +'</div></div>';
+      +'</div>';
     setTimeout(eeAtSigInit, 0);
-  }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">오류: '+e.message+'</div>'; }
+  }
 }
 // ─ QR 참석확인 화면의 서명 캔버스 (손가락/마우스로 직접 서명) ─
 var eeAtSigCtx=null, eeAtSigDrawing=false, eeAtSigHasStroke=false;
@@ -11934,12 +11964,16 @@ async function eeConfirmAttendance(){
   var group=(document.getElementById('eeAtGroup').value||'').trim();
   if(!empId){ toast('⚠️ 사번을 입력하세요'); return; }
   if(!name){ toast('⚠️ 성명을 입력하세요'); return; }
-  if(!eeAtSigHasStroke){ toast('⚠️ 서명을 해주세요'); return; }
   var sigDataUrl=null;
-  try{
-    var sigCv=document.getElementById('eeAtSigCanvas');
-    if(sigCv) sigDataUrl=sigCv.toDataURL('image/png');
-  }catch(e){}
+  if(eeAtRegisteredSigUrl){
+    sigDataUrl=eeAtRegisteredSigUrl; // 관리자확인사항에 등록된 서명 재사용
+  }else{
+    if(!eeAtSigHasStroke){ toast('⚠️ 서명을 해주세요'); return; }
+    try{
+      var sigCv=document.getElementById('eeAtSigCanvas');
+      if(sigCv) sigDataUrl=sigCv.toDataURL('image/png');
+    }catch(e){}
+  }
   var statusEl=document.getElementById('eeAtStatus');
   if(statusEl) statusEl.textContent='📍 위치 확인 중...';
 
