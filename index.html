@@ -14931,7 +14931,17 @@ async function editUserEmpId(id,name,curEmpId){
   try{
     var res=await sb.from('users').update({employee_id:v||null}).eq('id',id);
     if(res.error){ toast('저장 실패: '+res.error.message); return; }
-    toast(v?('✅ '+name+'님 사번 저장됨'):('✅ '+name+'님 사번 삭제됨'));
+    // 서명 프로필(user_signatures)에도 사번 동기화 — 이미 서명 등록한 사용자면 사번만 갱신,
+    // 아직 서명 미등록이면 사번만 미리 저장해두고 나머지(소속/직책/서명이미지)는 본인이 "내 서명 등록"에서 채우게 함
+    try{
+      var sigRes=await sb.from('user_signatures').select('username').eq('username',id).maybeSingle();
+      if(sigRes.data){
+        await sb.from('user_signatures').update({employee_id:v||null, updated_at:new Date().toISOString()}).eq('username',id);
+      }else if(v){
+        await sb.from('user_signatures').upsert({username:id, employee_id:v, dept:'T1환경미화사업부', updated_at:new Date().toISOString()},{onConflict:'username'});
+      }
+    }catch(syncErr){ console.error('사번→서명프로필 동기화 실패:', syncErr); }
+    toast(v?('✅ '+name+'님 사번 저장됨 (서명 프로필에도 반영됨)'):('✅ '+name+'님 사번 삭제됨'));
     loadUserList();
   }catch(e){ toast('⚠️ 오류: '+String(e&&e.message||e)); }
 }
