@@ -2408,7 +2408,11 @@ html{overflow-x:hidden}
 <style>
 .ee-rpt-table{ width:100%; border-collapse:collapse; font-size:12px; }
 .ee-rpt-table th, .ee-rpt-table td{ border:1px solid #999; padding:6px 5px; text-align:center; }
-.ee-rpt-table th{ background:#f0f0f0; font-weight:700; }
+.ee-rpt-table th{ background:#efe3f5; font-weight:700; }
+.ee-rpt-meta-table{ width:100%; border-collapse:collapse; font-size:13px; margin-bottom:12px; }
+.ee-rpt-meta-table th, .ee-rpt-meta-table td{ border:1px solid #999; padding:7px 9px; }
+.ee-rpt-meta-table th{ background:#efe3f5; font-weight:700; text-align:center; width:100px; white-space:nowrap; }
+.ee-rpt-meta-table td{ text-align:left; }
 @media print{
   @page{ margin:14mm 12mm 10mm 12mm; }
   html, body{ height:auto !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
@@ -11676,6 +11680,13 @@ function eeToggleSchedList(sid){
 }
 
 // ═══ A4 출력물 (참석 서명지 / 참석자 명단 / 참석희망자 조사표) ═══
+function eeReportMetaTable(pairs){
+  // pairs: [[라벨, 값], ...] — 라벤더색 라벨 칸 + 값 칸으로 된 정보박스 표
+  var h='<table class="ee-rpt-meta-table"><tbody>';
+  pairs.forEach(function(p){ h+='<tr><th>'+p[0]+'</th><td>'+p[1]+'</td></tr>'; });
+  h+='</tbody></table>';
+  return h;
+}
 function eeReportRowsTable(rows, cols){
   // cols: [{key, label, width}] — key===null이면 빈 칸(서명란 등), key==='_sig'면 등록된 전자서명 이미지가 있으면 표시, 없으면 빈 칸(직접서명용)
   var h='<table class="ee-rpt-table"><thead><tr>'
@@ -11732,24 +11743,28 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
     var cols, title,담당자=me?me.name:'';
     if(kind==='sign'){
       title='교육 참석자 명단';
-      cols=[{key:'team',label:'팀',width:'60px'},{key:'team_group',label:'조',width:'55px'},{key:'position',label:'직책',width:'60px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:null,label:'비고'}];
+      rows=apps.map(function(a){ return Object.assign({}, a, {소속:((a.team||'')+' '+(a.team_group||'')).trim()}); });
+      cols=[{key:'소속',label:'소속',width:'90px'},{key:'position',label:'직책',width:'55px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:null,label:'비고'}];
     }else{ // log — 실제 참석확인된 사람 기준 (신청여부 무관, 워크인 포함)
       title='교육 참석 서명지';
       var attRes=await sb.from('edu_attendance').select('*').eq('schedule_id',scheduleId);
       var attList=(attRes.data||[]).slice().sort(eeTeamSortCmp);
       rows=attList.map(function(a){
-        return {team:a.team, team_group:a.team_group, employee_id:a.employee_id, name:a.name,
+        return {소속:((a.team||'')+' '+(a.team_group||'')).trim(), team:a.team, team_group:a.team_group, employee_id:a.employee_id, name:a.name,
           attend_time:a.verified_at?new Date(a.verified_at).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'',
           _sigUrl:a.signature_data||null};
       });
-      cols=[{key:'team',label:'팀',width:'60px'},{key:'team_group',label:'조',width:'55px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'attend_time',label:'참석시간',width:'70px'},{key:'_sig',label:'서명'}];
+      cols=[{key:'소속',label:'소속',width:'90px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'attend_time',label:'참석시간',width:'70px'},{key:'_sig',label:'서명'},{key:null,label:'비고'}];
     }
     if(kind==='log') await eeAttachSignatures(rows); // QR참석확인 시 직접 서명한 게 있으면 그걸 우선 사용, 없으면 등록된 전자서명(개인계정)으로 보완, 그래도 없으면 빈 칸
     document.getElementById('eeReportModalTitle').textContent='📄 '+title;
     document.getElementById('eeReportBigTitle').textContent=title;
-    document.getElementById('eeReportMeta').innerHTML=
-      '교육명: '+eeEsc(ev.title)+'<br>교육일시: '+sched.event_date+' '+(sched.start_time||'')+'~'+(sched.end_time||'')
-      +'<br>교육장소: '+eeEsc(sched.location||'-')+(kind==='sign'?('<br>교육담당자: '+eeEsc(담당자)):'');
+    document.getElementById('eeReportMeta').innerHTML=eeReportMetaTable([
+      ['교육명', eeEsc(ev.title)],
+      ['교육일시', sched.event_date+' '+(sched.start_time||'')+'~'+(sched.end_time||'')],
+      ['장소', eeEsc(sched.location||'-')],
+      ['참석인원', rows.length+'명']
+    ]);
     document.getElementById('eeReportBody').innerHTML=eeReportRowsTable(rows, cols);
     showM('eeReportModal');
   }catch(e){ toast('오류: '+e.message); }
@@ -11763,14 +11778,17 @@ async function eeOpenWishSurvey(eventId){
     var schedById={}; (ev._schedules||[]).forEach(function(s){ schedById[s.id]=s; });
     var rows=apps.slice().sort(eeTeamSortCmp).map(function(a){
       var s=schedById[a.schedule_id];
-      return {team:a.team, team_group:a.team_group, employee_id:a.employee_id, name:a.name,
+      return {소속:((a.team||'')+' '+(a.team_group||'')).trim(), employee_id:a.employee_id, name:a.name,
         wish_date: s?(s.event_date+' '+(s.start_time||'')):''};
     });
     document.getElementById('eeReportModalTitle').textContent='📄 참석희망자 조사표';
     document.getElementById('eeReportBigTitle').textContent='교육 참석희망자 조사표';
-    document.getElementById('eeReportMeta').innerHTML='교육명: '+eeEsc(ev.title)+(ev.apply_deadline?('<br>신청기간~'+ev.apply_deadline):'');
+    var metaPairs=[['교육명', eeEsc(ev.title)]];
+    if(ev.apply_deadline) metaPairs.push(['신청기간', '~'+ev.apply_deadline]);
+    metaPairs.push(['신청인원', rows.length+'명']);
+    document.getElementById('eeReportMeta').innerHTML=eeReportMetaTable(metaPairs);
     document.getElementById('eeReportBody').innerHTML=eeReportRowsTable(rows, [
-      {key:'team',label:'팀',width:'60px'},{key:'team_group',label:'조',width:'55px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'wish_date',label:'참석희망일'}
+      {key:'소속',label:'소속',width:'90px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'wish_date',label:'참석희망일'}
     ]);
     showM('eeReportModal');
   }catch(e){ toast('오류: '+e.message); }
