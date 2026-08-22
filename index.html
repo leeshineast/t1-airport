@@ -2089,25 +2089,24 @@ html{overflow-x:hidden}
       <input type="datetime-local" id="hoDateInput" class="ri" style="margin-bottom:0">
     </div></div>
 
-    <!-- 1. 자동 인계팀 선택 -->
+    <!-- 1. 인계 대상 지정 방식 -->
     <div class="card" style="margin-bottom:10px"><div class="cb">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
         <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">1</div>
-        <span style="font-size:15px;font-weight:800;color:var(--g7)">자동 인계팀 선택</span>
+        <span style="font-size:15px;font-weight:800;color:var(--g7)">인계 대상 지정</span>
       </div>
-      <div id="hoAutoTargetInfo" style="font-size:14px;font-weight:800;color:var(--teal2);background:var(--teal-bg);padding:11px 13px;border-radius:var(--r2)">-</div>
-      <div id="hoW" style="display:none;font-size:13px;color:var(--danger);margin-top:6px;font-weight:600">⚠️ 소속팀 정보를 확인할 수 없어 인계 대상을 정할 수 없습니다. 관리자에게 문의하세요.</div>
-      <div style="font-size:11.5px;color:var(--g4);margin-top:7px;line-height:1.5">💡 소속팀 기준으로 정해진 연계팀에게 자동으로 인계됩니다. 별도 조작이 필요 없습니다.</div>
-    </div></div>
+      <div class="rg" id="hoModeG" style="gap:7px;margin-bottom:11px">
+        <div class="rp on" onclick="hoSetMode('auto')" style="flex:1;text-align:center">🔗 자동 (연계팀)</div>
+        <div class="rp" onclick="hoSetMode('manual')" style="flex:1;text-align:center">✋ 직접 선택</div>
+      </div>
 
-    <!-- 2. 추가 인계팀 선택 -->
-    <div class="card" style="margin-bottom:10px"><div class="cb">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
-        <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">2</div>
-        <span style="font-size:15px;font-weight:800;color:var(--g7)">추가 인계팀 선택 <span style="color:var(--g4);font-size:12px;font-weight:600">(선택사항)</span></span>
+      <div id="hoAutoBlock">
+        <div id="hoAutoTargetInfo" style="font-size:14px;font-weight:800;color:var(--teal2);background:var(--teal-bg);padding:11px 13px;border-radius:var(--r2)">-</div>
+        <div style="font-size:11.5px;color:var(--g4);margin-top:7px;line-height:1.5">💡 소속팀 기준으로 정해진 연계팀에게 자동으로 인계됩니다. 별도 조작이 필요 없습니다.</div>
       </div>
-      <div id="hoExtraSGWrap">
-        <div style="font-size:13px;font-weight:700;color:var(--g5);margin-bottom:8px">정해진 연계팀 외에 별도로 전달할 팀이 있으면 직접 선택하세요</div>
+
+      <div id="hoManualBlock" style="display:none">
+        <div style="font-size:13px;font-weight:700;color:var(--g5);margin-bottom:8px">인계할 팀을 직접 선택하세요 (복수선택 가능)</div>
         <div class="rg" id="hoExtraSG" style="flex-wrap:wrap;gap:7px">
           <div class="rp" onclick="pickHS(this)">1팀</div>
           <div class="rp" onclick="pickHS(this)">2팀</div>
@@ -2120,14 +2119,16 @@ html{overflow-x:hidden}
           <div class="rp" onclick="pickHS(this)">9팀</div>
           <div class="rp" onclick="pickHS(this)">10팀</div>
         </div>
+        <div style="font-size:11.5px;color:var(--g4);margin-top:7px;line-height:1.5">💡 여러 팀을 선택하면, 아래 작성한 내용이 각 팀에게 개별 카드로 전달되어 팀마다 따로 인수 확인할 수 있습니다.</div>
       </div>
-      <div style="font-size:11.5px;color:var(--g4);margin-top:7px;line-height:1.5">💡 여러 팀을 추가로 선택하면, 아래 작성한 내용이 각 팀에게 개별 카드로 전달되어 팀마다 따로 인수 확인할 수 있습니다.</div>
+
+      <div id="hoW" style="display:none;font-size:13px;color:var(--danger);margin-top:6px;font-weight:600">⚠️ 인계 대상을 확인해주세요.</div>
     </div></div>
 
-    <!-- 3. 시설물 고장 -->
+    <!-- 2. 시설물 고장 -->
     <div class="card" style="margin-bottom:10px"><div class="cb">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
-        <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">3</div>
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">2</div>
         <span style="font-size:15px;font-weight:800;color:var(--g7)">🔧 EVENT</span>
       </div>
       <div class="rg" style="margin-bottom:8px">
@@ -2193,7 +2194,7 @@ html{overflow-x:hidden}
     <!-- 3. 업무 진행 사항 및 특이사항 -->
     <div class="card" style="margin-bottom:10px"><div class="cb">
       <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
-        <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">4</div>
+        <div style="width:24px;height:24px;border-radius:50%;background:var(--teal);color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">3</div>
         <span style="font-size:15px;font-weight:800;color:var(--g7)">업무 진행 사항 및 특이사항</span>
       </div>
       <div id="hEtcRecent" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
@@ -7017,14 +7018,21 @@ function subHO(){
   var myTeamNum=hoParseTeamNum(myTeamRaw);
   var myShiftLabel=myTeamNum?(shiftMap[myTeamNum]||'오전팀'):'';
   var myShiftDisplay=myTeamRaw?(myTeamRaw+(myShiftLabel?(' ('+myShiftLabel+')'):'')):(me?me.name:'작성자');
-  var autoTg=hoComputeTargets(myTeamNum);
-  var autoLabels=autoTg?autoTg.labels:[];
-  var extraLabels=Array.from(document.querySelectorAll('#hoExtraSG .rp.on')).map(function(p){return p.textContent.trim();});
-  var mergedLabels=autoLabels.concat(extraLabels.filter(function(l){return autoLabels.indexOf(l)===-1;}));
-  const selEls=mergedLabels.map(function(lb){return {textContent:lb};});
   var _preSubmitBtn=document.querySelector('#hoP4 .btn-prim');
   var _preIsEdit=_preSubmitBtn&&_preSubmitBtn._editId;
-  if(!selEls.length&&!_preIsEdit){document.getElementById('hoW').style.display='block';toast('⚠️ 소속팀 정보를 확인할 수 없어 인계 대상을 정할 수 없습니다. 관리자에게 문의하세요');return;}
+  var mergedLabels=[];
+  if(_preIsEdit){
+    // 수정 모드: 대상 재계산 안 함(아래 editId 분기에서 원본값 그대로 사용) — 여기서는 길이 체크만 통과시킴
+    mergedLabels=['(수정)'];
+  }else if(hoCurMode==='manual'){
+    mergedLabels=Array.from(document.querySelectorAll('#hoExtraSG .rp.on')).map(function(p){return p.textContent.trim();});
+    if(!mergedLabels.length){document.getElementById('hoW').style.display='block';toast('⚠️ 인계할 팀을 선택해주세요');return;}
+  }else{
+    var autoTg=hoGetMyAutoTargets();
+    mergedLabels=autoTg?autoTg.labels:[];
+    if(!mergedLabels.length){document.getElementById('hoW').style.display='block';toast('⚠️ 소속팀 정보를 확인할 수 없어 인계 대상을 정할 수 없습니다. 관리자에게 문의하세요');return;}
+  }
+  const selEls=mergedLabels.map(function(lb){return {textContent:lb};});
   const fWrap=document.getElementById('hFWrap');
   const dE=document.getElementById('hD'),eE=document.getElementById('hE');
   var fT='없음';
@@ -7057,7 +7065,7 @@ function subHO(){
   // 폼 초기화
   document.getElementById('hoW').style.display='none';
   document.querySelectorAll('#hoExtraSG .rp').forEach(function(p){p.classList.remove('on');});
-  hoRefreshAutoTargetInfo();
+  hoSetMode('auto');
   ['hD','hE'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';e.classList.remove('show');}});
   var fWrapEl=document.getElementById('hFWrap');if(fWrapEl)fWrapEl.style.display='none';
   ['hFLoc','hFDesc','hFEtc','hFRcv','hFReporter'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});
@@ -8696,28 +8704,44 @@ function hoComputeTargets(teamNum){
   if(!targets||!targets.length) return null;
   return {teamNums:targets, labels:targets.map(function(t){return t+'팀';}), shiftLabel:HO_SHIFT_MAP[targets[0]]||''};
 }
-// 작성 화면 진입 시 "인계 대상" 자동표시 갱신 (신규 작성일 때만; 수정모드는 editHo에서 별도 표시) — 추가선택된 팀도 함께 반영
-function hoRefreshAutoTargetInfo(){
-  var infoEl=document.getElementById('hoAutoTargetInfo'), warnEl=document.getElementById('hoW');
-  if(!infoEl) return;
+// 운영팀 계정 여부 (1~10팀 소속이 아니라 me.team이 '운영'을 포함하는 경우)
+function hoIsOpsTeam(){
+  return !!(me&&me.team&&me.team.indexOf('운영')!==-1);
+}
+// 현재 로그인 계정 기준 자동 인계대상 계산 — 운영팀은 인계체인이 없으므로 전체 1~10팀이 자동대상
+function hoGetMyAutoTargets(){
   var myNum=me&&me.team?hoParseTeamNum(me.team):null;
   var tg=hoComputeTargets(myNum);
-  var extraLabels=Array.from(document.querySelectorAll('#hoExtraSG .rp.on')).map(function(p){return p.textContent.trim();});
-  var autoLabels=tg?tg.labels:[];
-  var allLabels=autoLabels.concat(extraLabels.filter(function(l){return autoLabels.indexOf(l)===-1;}));
-  if(!allLabels.length){
-    infoEl.textContent='-';
-    if(warnEl) warnEl.style.display='block';
-  }else{
-    var shiftLabel=tg?tg.shiftLabel:'';
-    var txt=autoLabels.length?(autoLabels.join(', ')+(shiftLabel?(' ('+shiftLabel+')'):'')+' 자동 인계'):'';
-    if(extraLabels.filter(function(l){return autoLabels.indexOf(l)===-1;}).length){
-      var extraOnly=extraLabels.filter(function(l){return autoLabels.indexOf(l)===-1;});
-      txt+=(txt?' + ':'')+extraOnly.join(', ')+' 추가 인계';
-    }
-    infoEl.textContent=txt||'-';
-    if(warnEl) warnEl.style.display='none';
+  if(tg) return tg;
+  if(hoIsOpsTeam()){
+    var allNums=[1,2,3,4,5,6,7,8,9,10];
+    return {teamNums:allNums, labels:allNums.map(function(t){return t+'팀';}), shiftLabel:'전체'};
   }
+  return null;
+}
+// 작성 화면 진입 시 "인계 대상(자동)" 표시 갱신 — 자동 모드일 때만 사용
+function hoRefreshAutoTargetInfo(){
+  var infoEl=document.getElementById('hoAutoTargetInfo');
+  if(!infoEl) return;
+  var tg=hoGetMyAutoTargets();
+  if(!tg||!tg.labels.length){
+    infoEl.textContent='소속팀 정보를 확인할 수 없습니다';
+  }else{
+    infoEl.textContent=tg.labels.join(', ')+(tg.shiftLabel?(' ('+tg.shiftLabel+')'):'')+'로 자동 인계됩니다';
+  }
+}
+// 인계 대상 지정 방식(자동/직접선택) 전환
+var hoCurMode='auto';
+function hoSetMode(mode){
+  hoCurMode=mode;
+  document.querySelectorAll('#hoModeG .rp').forEach(function(p){p.classList.remove('on');});
+  var btn=Array.from(document.querySelectorAll('#hoModeG .rp')).find(function(p){return p.getAttribute('onclick').indexOf("'"+mode+"'")!==-1;});
+  if(btn) btn.classList.add('on');
+  var autoBlk=document.getElementById('hoAutoBlock'), manBlk=document.getElementById('hoManualBlock'), warnEl=document.getElementById('hoW');
+  if(autoBlk) autoBlk.style.display=(mode==='auto')?'block':'none';
+  if(manBlk) manBlk.style.display=(mode==='manual')?'block':'none';
+  if(warnEl) warnEl.style.display='none';
+  if(mode==='auto') hoRefreshAutoTargetInfo();
 }
 function hoTab(n){
   tabSwitch('ho',n,5);
@@ -8734,10 +8758,13 @@ function hoTab(n){
       dEl.value=kst.toISOString().slice(0,16);
     }
     loadHEtcRecent();
-    // 신규 작성(수정 모드 아님)일 때만 자동 인계대상 표시 갱신
+    // 신규 작성(수정 모드 아님)일 때만 인계대상 모드/표시 초기화 (기본: 자동)
     var submitBtnHo=document.querySelector('#hoP4 .btn-prim');
     var isEditMode=submitBtnHo&&submitBtnHo._editId;
-    if(!isEditMode) hoRefreshAutoTargetInfo();
+    if(!isEditMode){
+      var modeWrap=document.getElementById('hoModeG'); if(modeWrap) modeWrap.style.display='flex';
+      hoSetMode('auto');
+    }
   }
 }
 
@@ -15392,14 +15419,17 @@ function editHo(btn){
   // 작성 탭으로 이동 후 값 채우기
   hoTab(4);
   setTimeout(function(){
-    // 인계 대상 표시 — 수정 시에는 원래 저장된 to_team을 그대로 보여주고 유지(재계산하지 않음)
+    // 인계 대상 표시 — 수정 시에는 원래 저장된 to_team을 그대로 보여주고 유지(재계산하지 않음), 모드 전환 UI는 숨김
+    var modeWrapEdit=document.getElementById('hoModeG'); if(modeWrapEdit) modeWrapEdit.style.display='none';
+    var autoBlkEdit=document.getElementById('hoAutoBlock'), manBlkEdit=document.getElementById('hoManualBlock');
+    if(autoBlkEdit) autoBlkEdit.style.display='block';
+    if(manBlkEdit) manBlkEdit.style.display='none';
     var infoEl=document.getElementById('hoAutoTargetInfo'), warnEl=document.getElementById('hoW');
     if(infoEl){
       var toTeamDisp=r.to_team||hoNextTeamLabel(hoParseTeamNum(r.shift))||'';
       infoEl.textContent=toTeamDisp?(toTeamDisp+' ('+(r.to_shift||'')+')로 인계됨 — 대상은 변경되지 않습니다'):'인계 대상 정보 없음';
     }
     if(warnEl) warnEl.style.display='none';
-    var extraWrapEdit=document.getElementById('hoExtraSGWrap'); if(extraWrapEdit) extraWrapEdit.style.display='none'; // 수정 시에는 대상 변경 불가(원본 유지) → 추가선택 UI 숨김
 
     // 시설물 고장 — 저장된 문자열을 4개 필드로 역파싱해 복원
     var fWrap=document.getElementById('hFWrap');
