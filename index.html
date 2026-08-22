@@ -6297,11 +6297,12 @@ async function doLogin(){
     var rows=res.data;
     if(!rows||!rows.length){toast('아이디 또는 비밀번호를 확인해주세요');return;}
     var u=rows[0];
-    me={name:u.name,role:u.role,team:u.team,initial:u.name[0],email:u.email,permissions:u.permissions,id:u.id,font_scale:100,favorite_menus:[]};
+    me={name:u.name,role:u.role,team:u.team,initial:u.name[0],email:u.email,permissions:u.permissions,id:u.id,font_scale:100,favorite_menus:[],employee_id:''};
     try{
-      var fsRes=await sb.from('users').select('font_scale,favorite_menus').eq('id',u.id).maybeSingle();
+      var fsRes=await sb.from('users').select('font_scale,favorite_menus,employee_id').eq('id',u.id).maybeSingle();
       if(fsRes.data&&fsRes.data.font_scale) me.font_scale=fsRes.data.font_scale;
       if(fsRes.data&&Array.isArray(fsRes.data.favorite_menus)) me.favorite_menus=fsRes.data.favorite_menus;
+      if(fsRes.data&&fsRes.data.employee_id) me.employee_id=fsRes.data.employee_id;
     }catch(e){}
     finishLogin();
   }catch(e){toast('오류: '+e.message);}
@@ -11343,8 +11344,10 @@ function eeOpenApply(eventId){
   }
   document.getElementById('eeApplyTeam').value=teamOut;
   document.getElementById('eeApplyGroup').value=groupOut;
-  document.getElementById('eeApplyEmpId').value='';
-  document.getElementById('eeApplyName').value='';
+  // 사번/성명 자동입력 — 개인계정(관리자/팀장/조장/액팅리더)만 해당. 조별공용계정·member 등은 사람마다 달라서 직접입력 유지
+  var isPersonalAcct=!!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'));
+  document.getElementById('eeApplyEmpId').value=(isPersonalAcct&&me.employee_id)?me.employee_id:'';
+  document.getElementById('eeApplyName').value=isPersonalAcct?(me.name||''):'';
   var defPos=eeDefaultPosByRole();
   document.querySelectorAll('#eeApplyPosG .rp').forEach(function(p){ p.classList.toggle('on', p.textContent===defPos); });
   eeSelectedPos=defPos;
@@ -11457,12 +11460,21 @@ async function eeOpenAdminView(eventId){
     if(appRes.error){ wrap.innerHTML='오류: '+appRes.error.message; return; }
     var apps=appRes.data||[];
     var scheds=(ev._schedules||[]).slice().sort(function(a,b){return a.seq-b.seq;});
-    var attRes=await sb.from('edu_attendance').select('schedule_id,employee_id').in('schedule_id',scheds.map(function(s){return s.id;}));
-    var attBySched={};
-    (attRes.data||[]).forEach(function(a){ (attBySched[a.schedule_id]=attBySched[a.schedule_id]||[]).push(a.employee_id); });
+    var attRes=await sb.from('edu_attendance').select('id,schedule_id,employee_id,name,team,team_group,verified_at').in('schedule_id',scheds.map(function(s){return s.id;}));
+    var attBySched={}, attFullBySched={};
+    (attRes.data||[]).forEach(function(a){
+      (attBySched[a.schedule_id]=attBySched[a.schedule_id]||[]).push(a.employee_id);
+      (attFullBySched[a.schedule_id]=attFullBySched[a.schedule_id]||[]).push(a);
+    });
     var byShed={};
     apps.forEach(function(a){ (byShed[a.schedule_id]=byShed[a.schedule_id]||[]).push(a); });
     Object.keys(byShed).forEach(function(k){ byShed[k].sort(eeTeamSortCmp); });
+    // 미신청 참석자(워크인) — 참석기록은 있는데 신청내역엔 없는 사람. eeAppsCache에서 신청여부 판단용으로도 씀
+    var walkinBySched={};
+    Object.keys(attFullBySched).forEach(function(k){
+      var appliedIds=(byShed[k]||[]).map(function(a){return a.employee_id;});
+      walkinBySched[k]=attFullBySched[k].filter(function(a){ return appliedIds.indexOf(a.employee_id)===-1; });
+    });
 
     var h='<div class="card"><div class="cb">';
     h+='<div style="font-size:16px;font-weight:800;color:var(--g7);margin-bottom:2px">'+eeEsc(ev.title)+'</div>';
@@ -11476,6 +11488,7 @@ async function eeOpenAdminView(eventId){
     var canSeeQR=!!(me&&(me.role==='master'||me.role==='admin'||(ev.created_by&&me.name&&ev.created_by===me.name)));
     scheds.forEach(function(s){
       var list=byShed[s.id]||[];
+      var walkins=walkinBySched[s.id]||[];
       var attCount=(attBySched[s.id]||[]).length;
       var qrUrl=eeAttendUrl(s.id, s.qr_token);
       h+='<tr style="cursor:pointer" onclick="eeToggleSchedList(\''+s.id+'\')">'
@@ -11503,7 +11516,7 @@ async function eeOpenAdminView(eventId){
             +'<button onclick="event.stopPropagation();eeOpenAttendLog(\''+eventId+'\',\''+s.id+'\')" style="padding:6px 11px;margin-left:6px;background:var(--g2);color:var(--g6);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">📒 참석대장</button>'
           +'</div>'
         +'</div>'
-        +(list.length?(
+        +((list.length+walkins.length)?(
           '<table style="width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;background:white;border-radius:8px;overflow:hidden;border:1px solid var(--g2)">'
           +'<thead><tr style="background:var(--g1)">'
             +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">팀</th>'
@@ -11526,6 +11539,19 @@ async function eeOpenAdminView(eventId){
               +'<td style="padding:7px 8px;border-top:1px solid var(--g1);text-align:center;white-space:nowrap">'
                 +'<span onclick="eeEditApplication(\''+a.id+'\')" style="cursor:pointer;margin-right:8px" title="수정">✏️</span>'
                 +'<span onclick="eeDeleteApplication(\''+a.id+'\',\''+eventId+'\')" style="cursor:pointer;color:var(--danger)" title="삭제">🗑️</span>'
+              +'</td>'
+              +'</tr>';
+          }).join('')
+          +walkins.map(function(a,i){
+            return '<tr id="eeWalkinRow_'+a.id+'" style="background:var(--warn-bg,#FFF7E0)">'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.team||'-')+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.team_group||'-')+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">-</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.employee_id)+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);font-weight:700">'+eeEsc(a.name)+' <span style="font-size:10.5px;font-weight:800;color:var(--warn,#B45309);background:white;border:1px solid var(--warn,#B45309);border-radius:10px;padding:1px 6px">미신청</span></td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);text-align:center"><span style="color:var(--avg-blue);font-weight:800">✓</span></td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);text-align:center;white-space:nowrap">'
+                +'<span onclick="eeDeleteAttendanceRow(\''+a.id+'\',\''+eventId+'\')" style="cursor:pointer;color:var(--danger)" title="출석취소">🗑️</span>'
               +'</td>'
               +'</tr>';
           }).join('')
@@ -11628,6 +11654,17 @@ async function eeDeleteApplication(appId, eventId){
     eeOpenAdminView(eventId);
   }catch(err){ toast('⚠️ 오류: '+String(err&&err.message||err)); }
 }
+// 미신청 참석자(워크인)의 QR 출석기록 삭제 — 신청내역이 없으므로 attendance 레코드만 지움
+async function eeDeleteAttendanceRow(attId, eventId){
+  if(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role))){ toast('⚠️ 조장 이상만 삭제할 수 있습니다'); return; }
+  if(!confirm('이 출석기록을 취소할까요? (신청내역은 원래 없던 사람입니다)')) return;
+  try{
+    var res=await sb.from('edu_attendance').delete().eq('id',attId);
+    if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    toast('✅ 출석기록이 취소되었습니다');
+    eeOpenAdminView(eventId);
+  }catch(err){ toast('⚠️ 오류: '+String(err&&err.message||err)); }
+}
 
 function eeAttendUrl(scheduleId, token){
   var base=window.location.origin+window.location.pathname;
@@ -11640,7 +11677,7 @@ function eeToggleSchedList(sid){
 
 // ═══ A4 출력물 (참석대장 / 서명지 / 참석희망자 조사표) ═══
 function eeReportRowsTable(rows, cols){
-  // cols: [{key, label, width}] — key===null이면 빈 칸(서명란 등)
+  // cols: [{key, label, width}] — key===null이면 빈 칸(서명란 등), key==='_sig'면 등록된 전자서명 이미지가 있으면 표시, 없으면 빈 칸(직접서명용)
   var h='<table class="ee-rpt-table"><thead><tr>'
     +'<th style="width:34px">No</th>'
     +cols.map(function(c){ return '<th'+(c.width?(' style="width:'+c.width+'"'):'')+'>'+c.label+'</th>'; }).join('')
@@ -11648,6 +11685,10 @@ function eeReportRowsTable(rows, cols){
   rows.forEach(function(r,i){
     h+='<tr><td style="text-align:center">'+(i+1)+'</td>'
       +cols.map(function(c){
+        if(c.key==='_sig'){
+          if(r._sigUrl) return '<td style="height:30px;text-align:center;padding:2px"><img src="'+r._sigUrl+'" alt="서명" style="max-height:26px;max-width:90px;vertical-align:middle"></td>';
+          return '<td style="height:30px"></td>'; // 등록된 전자서명 없음 → 직접 서명란
+        }
         if(c.key===null) return '<td style="height:30px"></td>'; // 서명란 등 빈 칸
         return '<td>'+eeEsc(r[c.key]==null?'':r[c.key])+'</td>';
       }).join('')
@@ -11656,6 +11697,22 @@ function eeReportRowsTable(rows, cols){
   if(!rows.length) h+='<tr><td colspan="'+(cols.length+1)+'" style="text-align:center;color:#999;padding:14px">대상자 없음</td></tr>';
   h+='</tbody></table>';
   return h;
+}
+// rows(각 row에 employee_id 필요)에 등록된 전자서명(user_signatures, employee_id 매칭) URL을 채워넣음 — 이미 _sigUrl(QR참석확인 시 직접 서명)이 있는 row는 건드리지 않음
+async function eeAttachSignatures(rows){
+  var empIds=Array.from(new Set(rows.filter(function(r){return !r._sigUrl;}).map(function(r){return r.employee_id;}).filter(Boolean)));
+  if(!empIds.length) return rows;
+  try{
+    var sigRes=await sb.from('user_signatures').select('employee_id,signature_path').in('employee_id',empIds);
+    var sigByEmp={};
+    (sigRes.data||[]).forEach(function(s){ if(s.employee_id&&s.signature_path) sigByEmp[s.employee_id]=s.signature_path; });
+    rows.forEach(function(r){
+      if(r._sigUrl) return;
+      var path=sigByEmp[r.employee_id];
+      if(path) r._sigUrl=SUPABASE_URL+'/storage/v1/object/public/adminconfirm/'+encodeURIComponent(path);
+    });
+  }catch(e){}
+  return rows;
 }
 function eeOpenSignSheet(eventId, scheduleId){
   eeOpenScheduleReport(eventId, scheduleId, 'sign');
@@ -11675,17 +11732,19 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
     var cols, title,담당자=me?me.name:'';
     if(kind==='sign'){
       title='교육 참석자 서명부';
-      cols=[{key:'team',label:'팀',width:'60px'},{key:'team_group',label:'조',width:'55px'},{key:'position',label:'직책',width:'60px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:null,label:'서명'}];
-    }else{ // log — 실제 참석확인된 사람 기준
+      cols=[{key:'team',label:'팀',width:'60px'},{key:'team_group',label:'조',width:'55px'},{key:'position',label:'직책',width:'60px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'_sig',label:'서명'}];
+    }else{ // log — 실제 참석확인된 사람 기준 (신청여부 무관, 워크인 포함)
       title='교육 참석대장';
       var attRes=await sb.from('edu_attendance').select('*').eq('schedule_id',scheduleId);
       var attList=(attRes.data||[]).slice().sort(eeTeamSortCmp);
       rows=attList.map(function(a){
         return {team:a.team, team_group:a.team_group, employee_id:a.employee_id, name:a.name,
-          attend_time:a.verified_at?new Date(a.verified_at).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'}):''};
+          attend_time:a.verified_at?new Date(a.verified_at).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'',
+          _sigUrl:a.signature_data||null};
       });
-      cols=[{key:'team',label:'팀',width:'60px'},{key:'team_group',label:'조',width:'55px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'attend_time',label:'참석시간',width:'70px'},{key:null,label:'서명'}];
+      cols=[{key:'team',label:'팀',width:'60px'},{key:'team_group',label:'조',width:'55px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'attend_time',label:'참석시간',width:'70px'},{key:'_sig',label:'서명'}];
     }
+    await eeAttachSignatures(rows); // QR참석확인 시 직접 서명한 게 있으면 그걸 우선 사용, 없으면 등록된 전자서명(개인계정)으로 보완, 그래도 없으면 빈 칸
     document.getElementById('eeReportModalTitle').textContent='📄 '+title;
     document.getElementById('eeReportBigTitle').textContent=title;
     document.getElementById('eeReportMeta').innerHTML=
@@ -11731,9 +11790,11 @@ async function eeExportExcel(eventId){
 
     var header=['교육/회의명','일시','장소','팀','조','사번','성명','신청일','참석희망일','실제참석여부','참석시간','QR인증여부','위치확인여부','비고'];
     var rows=[header];
+    var appliedKeySet={}; // schedule_id|employee_id — 워크인 판별용
     apps.forEach(function(a){
       var s=schedById[a.schedule_id]||{};
       var att=attByKey[a.schedule_id+'|'+a.employee_id];
+      appliedKeySet[a.schedule_id+'|'+a.employee_id]=true;
       rows.push([
         ev.title,
         s.event_date?(s.event_date+' '+(s.start_time||'')+'~'+(s.end_time||'')):'',
@@ -11746,6 +11807,25 @@ async function eeExportExcel(eventId){
         att&&att.verified_at?new Date(att.verified_at).toLocaleString('ko-KR'):'',
         att?(att.qr_verified?'O':'X'):'',
         att?(att.gps_verified?'O':'X'):'',
+        ev.note||''
+      ]);
+    });
+    // 미신청 참석자(워크인) — 신청 없이 QR로 참석한 사람도 함께 포함
+    (attRes.data||[]).forEach(function(att){
+      var key=att.schedule_id+'|'+att.employee_id;
+      if(appliedKeySet[key]) return;
+      var s=schedById[att.schedule_id]||{};
+      rows.push([
+        ev.title,
+        s.event_date?(s.event_date+' '+(s.start_time||'')+'~'+(s.end_time||'')):'',
+        s.location||'',
+        att.team||'', att.team_group||'',
+        att.employee_id||'', att.name||'',
+        '', s.event_date||'',
+        '참석 (미신청)',
+        att.verified_at?new Date(att.verified_at).toLocaleString('ko-KR'):'',
+        att.qr_verified?'O':'X',
+        att.gps_verified?'O':'X',
         ev.note||''
       ]);
     });
@@ -11787,6 +11867,10 @@ async function eeRenderAttendScreen(scheduleId, token){
       var gNm=me.name.match(/([A-Za-z가-힣])조(?:$|[^가-힣A-Za-z])/);
       if(gNm) groupOut=gNm[1]+'조';
     }
+    // 사번/성명 자동입력 — 개인계정(관리자/팀장/조장/액팅리더)만 해당
+    var isPersonalAcctAt=!!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'));
+    var autoEmpId=(isPersonalAcctAt&&me.employee_id)?me.employee_id:'';
+    var autoName=isPersonalAcctAt?(me.name||''):'';
 
     wrap.innerHTML=
       '<div class="card"><div class="cb">'
@@ -11798,13 +11882,50 @@ async function eeRenderAttendScreen(scheduleId, token){
         +'<div style="flex:1"><div class="f-lbl">조</div><input type="text" id="eeAtGroup" class="ri" value="'+eeEsc(groupOut)+'"></div>'
       +'</div>'
       +'<div style="display:flex;gap:8px;margin-bottom:13px">'
-        +'<div style="flex:1"><div class="f-lbl">사번</div><input type="text" id="eeAtEmpId" class="ri" placeholder="사번 입력"></div>'
-        +'<div style="flex:1"><div class="f-lbl">성명</div><input type="text" id="eeAtName" class="ri" placeholder="성명 입력"></div>'
+        +'<div style="flex:1"><div class="f-lbl">사번</div><input type="text" id="eeAtEmpId" class="ri" value="'+eeEsc(autoEmpId)+'" placeholder="사번 입력"></div>'
+        +'<div style="flex:1"><div class="f-lbl">성명</div><input type="text" id="eeAtName" class="ri" value="'+eeEsc(autoName)+'" placeholder="성명 입력"></div>'
       +'</div>'
-      +'<div id="eeAtStatus" style="font-size:12.5px;color:var(--g4);margin-bottom:11px">📷 QR 인증 완료 — 아래 버튼을 눌러 위치까지 확인하면 참석 처리됩니다</div>'
+      +'<div class="f-lbl">서명 <span style="color:var(--danger);font-size:12px">* 필수 — 손가락으로 아래에 서명해주세요</span></div>'
+      +'<div style="border:1.5px solid var(--g2);border-radius:var(--r2);background:white;margin-bottom:6px;touch-action:none">'
+        +'<canvas id="eeAtSigCanvas" width="320" height="140" style="width:100%;height:140px;display:block;touch-action:none"></canvas>'
+      +'</div>'
+      +'<div style="display:flex;justify-content:flex-end;margin-bottom:13px">'
+        +'<button type="button" onclick="eeAtSigClear()" style="padding:5px 11px;background:var(--g1);color:var(--g6);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🧹 서명 지우기</button>'
+      +'</div>'
+      +'<div id="eeAtStatus" style="font-size:12.5px;color:var(--g4);margin-bottom:11px">📷 QR 인증 완료 — 서명 후 아래 버튼을 눌러 위치까지 확인하면 참석 처리됩니다</div>'
       +'<button class="btn-prim" onclick="eeConfirmAttendance()">✅ 참석 확인</button>'
       +'</div></div>';
+    setTimeout(eeAtSigInit, 0);
   }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">오류: '+e.message+'</div>'; }
+}
+// ─ QR 참석확인 화면의 서명 캔버스 (손가락/마우스로 직접 서명) ─
+var eeAtSigCtx=null, eeAtSigDrawing=false, eeAtSigHasStroke=false;
+function eeAtSigInit(){
+  var cv=document.getElementById('eeAtSigCanvas');
+  if(!cv) return;
+  var dpr=window.devicePixelRatio||1;
+  var rect=cv.getBoundingClientRect();
+  cv.width=rect.width*dpr; cv.height=rect.height*dpr;
+  var ctx=cv.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.lineWidth=2.4; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#1a1a2e';
+  eeAtSigCtx=ctx; eeAtSigHasStroke=false;
+  function pos(e){
+    var r=cv.getBoundingClientRect();
+    var p=(e.touches&&e.touches[0])?e.touches[0]:e;
+    return {x:p.clientX-r.left, y:p.clientY-r.top};
+  }
+  function start(e){ e.preventDefault(); eeAtSigDrawing=true; var p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); }
+  function move(e){ if(!eeAtSigDrawing) return; e.preventDefault(); var p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); eeAtSigHasStroke=true; }
+  function end(e){ eeAtSigDrawing=false; }
+  cv.onmousedown=start; cv.onmousemove=move; window.addEventListener('mouseup',end);
+  cv.ontouchstart=start; cv.ontouchmove=move; cv.ontouchend=end;
+}
+function eeAtSigClear(){
+  var cv=document.getElementById('eeAtSigCanvas');
+  if(!cv||!eeAtSigCtx) return;
+  eeAtSigCtx.clearRect(0,0,cv.width,cv.height);
+  eeAtSigHasStroke=false;
 }
 async function eeConfirmAttendance(){
   var empId=(document.getElementById('eeAtEmpId').value||'').trim();
@@ -11813,6 +11934,12 @@ async function eeConfirmAttendance(){
   var group=(document.getElementById('eeAtGroup').value||'').trim();
   if(!empId){ toast('⚠️ 사번을 입력하세요'); return; }
   if(!name){ toast('⚠️ 성명을 입력하세요'); return; }
+  if(!eeAtSigHasStroke){ toast('⚠️ 서명을 해주세요'); return; }
+  var sigDataUrl=null;
+  try{
+    var sigCv=document.getElementById('eeAtSigCanvas');
+    if(sigCv) sigDataUrl=sigCv.toDataURL('image/png');
+  }catch(e){}
   var statusEl=document.getElementById('eeAtStatus');
   if(statusEl) statusEl.textContent='📍 위치 확인 중...';
 
@@ -11834,7 +11961,7 @@ async function eeConfirmAttendance(){
   try{
     var res=await sb.from('edu_attendance').upsert({
       id:eeGenToken(), schedule_id:eeAttendCurSchedId, employee_id:empId, name:name, team:team, team_group:group,
-      qr_verified:true, gps_verified:gpsOk, distance_m:distM, verify_method:'qr', verified_at:new Date().toISOString()
+      qr_verified:true, gps_verified:gpsOk, distance_m:distM, verify_method:'qr', verified_at:new Date().toISOString(), signature_data:sigDataUrl
     }, {onConflict:'schedule_id,employee_id'});
     if(res.error){ toast('⚠️ 참석확인 실패: '+res.error.message); return; }
     var wrap=document.getElementById('eeAttendWrap');
@@ -14694,7 +14821,7 @@ async function loadUserList(){
   if(!el) return;
   var canMoveTeam=(me&&me.role==='master');
   try{
-    var res=await sb.from('users').select('id,name,email,role,team,permissions,status,created_at,prev_role').eq('status','active').order('created_at');
+    var res=await sb.from('users').select('id,name,email,role,team,permissions,status,created_at,prev_role,employee_id').eq('status','active').order('created_at');
     if(res.error){
       el.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:13px">⚠️ 사용자 목록을 불러오지 못했습니다: '+res.error.message+'<br><button onclick="loadUserList()" style="margin-top:8px;padding:6px 14px;background:var(--g1);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔄 다시 시도</button></div>';
       return;
@@ -14730,14 +14857,17 @@ async function loadUserList(){
         return '<span style="font-size:12px;padding:2px 8px;border-radius:20px;font-weight:600;background:'+(p[k]?'var(--success-bg)':'var(--g1)')+';color:'+(p[k]?'var(--success)':'var(--g3)')+'">'+labels[k]+'</span>';
       }).join('');
       var moveBtn=canMoveTeam?('<button class="move-btn" data-id="'+u.id+'" data-name="'+u.name+'" data-team="'+u.team+'" style="padding:4px 9px;background:var(--warn-bg,#FFF7E0);color:var(--warn);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔄 이동</button>'):'';
+      var empIdBtn=(me&&me.role==='master')?('<button class="empid-btn" data-id="'+u.id+'" data-name="'+u.name+'" data-empid="'+(u.employee_id||'')+'" style="padding:4px 9px;background:'+(u.employee_id?'var(--success-bg)':'var(--g1)')+';color:'+(u.employee_id?'var(--success)':'var(--g5)')+';border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🪪 사번'+(u.employee_id?(' '+u.employee_id):' 입력')+'</button>'):'';
       var isMemberRole=(u.role==='member');
       var memberBtn=(me&&(me.role==='admin'||isExecRole(me.role)))?('<button class="member-btn" data-id="'+u.id+'" data-name="'+u.name+'" data-cur="'+(isMemberRole?'1':'0')+'" data-role="'+u.role+'" data-prevrole="'+(u.prev_role||'')+'" style="padding:4px 9px;background:'+(isMemberRole?'var(--success-bg)':'var(--g1)')+';color:'+(isMemberRole?'var(--success)':'var(--g5)')+';border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">'+(isMemberRole?'📖 열람전용 해제':'📖 열람전용 전환')+'</button>'):'';
-      row.innerHTML='<div style="display:flex;flex-direction:column;width:100%;gap:5px"><div style="display:flex;align-items:center;justify-content:space-between"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' · '+u.role+'</div></div></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="chip chip-ok">활성</span>'+moveBtn+memberBtn+'<button class="perm-btn" data-name="'+u.name+'" data-id="'+u.id+'" style="padding:4px 9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔐 권한</button><button class="withdraw-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:5px 9px;background:var(--danger-bg);color:var(--danger);border:1.5px solid rgba(217,64,64,.2);border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">🗑️ 완전삭제</button></div></div><div id="perm-'+u.id+'" style="display:flex;flex-wrap:wrap;gap:4px">'+permChips+'</div></div>';
+      row.innerHTML='<div style="display:flex;flex-direction:column;width:100%;gap:5px"><div style="display:flex;align-items:center;justify-content:space-between"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' · '+u.role+'</div></div></div><div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="chip chip-ok">활성</span>'+moveBtn+empIdBtn+memberBtn+'<button class="perm-btn" data-name="'+u.name+'" data-id="'+u.id+'" style="padding:4px 9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔐 권한</button><button class="withdraw-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:5px 9px;background:var(--danger-bg);color:var(--danger);border:1.5px solid rgba(217,64,64,.2);border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">🗑️ 완전삭제</button></div></div><div id="perm-'+u.id+'" style="display:flex;flex-wrap:wrap;gap:4px">'+permChips+'</div></div>';
       var memberBtnEl=row.querySelector('.member-btn');
       if(memberBtnEl) memberBtnEl.onclick=function(){ toggleMemberRole(this); };
       row.querySelector('.perm-btn').onclick=function(){openPermEdit(this,this.dataset.name,this.dataset.id);};
       row.querySelector('.withdraw-btn').onclick=function(){withdrawUserDB(this.dataset.id,this.dataset.name);};
       if(canMoveTeam){ row.querySelector('.move-btn').onclick=function(){openTeamMove(this.dataset.id,this.dataset.name,this.dataset.team);}; }
+      var empIdBtnEl=row.querySelector('.empid-btn');
+      if(empIdBtnEl) empIdBtnEl.onclick=function(){ editUserEmpId(this.dataset.id,this.dataset.name,this.dataset.empid); };
       return row;
     }
     ROLE_GROUPS.forEach(function(g){
@@ -14758,7 +14888,20 @@ async function loadUserList(){
   }
 }
 
-// ─ 열람전용(member) 역할 전환/해제 (admin 전용, 원래 직급은 prev_role에 백업 후 해제시 복원) ─
+// ─ 사번 등록/수정 (master 전용) — 개인계정(관리자/팀장/조장/액팅리더) 신청서·QR참석 자동입력용 ─
+async function editUserEmpId(id,name,curEmpId){
+  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 사번을 등록할 수 있습니다'); return; }
+  var v=prompt(name+'님의 사번을 입력해주세요 (비워두면 삭제)', curEmpId||'');
+  if(v===null) return; // 취소
+  v=v.trim();
+  try{
+    var res=await sb.from('users').update({employee_id:v||null}).eq('id',id);
+    if(res.error){ toast('저장 실패: '+res.error.message); return; }
+    toast(v?('✅ '+name+'님 사번 저장됨'):('✅ '+name+'님 사번 삭제됨'));
+    loadUserList();
+  }catch(e){ toast('⚠️ 오류: '+String(e&&e.message||e)); }
+}
+
 async function toggleMemberRole(el){
   if(!me||!(me.role==='admin'||me.role==='master')){ toast('권한이 없습니다'); return; }
   var id=el.dataset.id, name=el.dataset.name, isCur=el.dataset.cur==='1', curRole=el.dataset.role, prevRole=el.dataset.prevrole;
