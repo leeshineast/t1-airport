@@ -11741,12 +11741,13 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
     var apps=(appRes.data||[]).slice().sort(eeTeamSortCmp);
     var rows=apps;
     var cols, title,담당자=me?me.name:'';
+    var catLabel=(ev.category==='기타'?(ev.category_custom||'기타'):ev.category)||'교육';
     if(kind==='sign'){
-      title='교육 참석자 명단';
+      title=catLabel+' 참석자 명단';
       rows=apps.map(function(a){ return Object.assign({}, a, {소속:((a.team||'')+' '+(a.team_group||'')).trim()}); });
       cols=[{key:'소속',label:'소속',width:'90px'},{key:'position',label:'직책',width:'55px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:null,label:'비고'}];
     }else{ // log — 실제 참석확인된 사람 기준 (신청여부 무관, 워크인 포함)
-      title='교육 참석 서명지';
+      title=catLabel+' 참석 서명지';
       var attRes=await sb.from('edu_attendance').select('*').eq('schedule_id',scheduleId);
       var attList=(attRes.data||[]).slice().sort(eeTeamSortCmp);
       rows=attList.map(function(a){
@@ -11760,8 +11761,8 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
     document.getElementById('eeReportModalTitle').textContent='📄 '+title;
     document.getElementById('eeReportBigTitle').textContent=title;
     document.getElementById('eeReportMeta').innerHTML=eeReportMetaTable([
-      ['교육명', eeEsc(ev.title)],
-      ['교육일시', sched.event_date+' '+(sched.start_time||'')+'~'+(sched.end_time||'')],
+      [catLabel+'명', eeEsc(ev.title)],
+      [catLabel+'일시', sched.event_date+' '+(sched.start_time||'')+'~'+(sched.end_time||'')],
       ['장소', eeEsc(sched.location||'-')],
       ['참석인원', rows.length+'명']
     ]);
@@ -11781,9 +11782,10 @@ async function eeOpenWishSurvey(eventId){
       return {소속:((a.team||'')+' '+(a.team_group||'')).trim(), employee_id:a.employee_id, name:a.name,
         wish_date: s?(s.event_date+' '+(s.start_time||'')):''};
     });
+    var catLabel=(ev.category==='기타'?(ev.category_custom||'기타'):ev.category)||'교육';
     document.getElementById('eeReportModalTitle').textContent='📄 참석희망자 조사표';
-    document.getElementById('eeReportBigTitle').textContent='교육 참석희망자 조사표';
-    var metaPairs=[['교육명', eeEsc(ev.title)]];
+    document.getElementById('eeReportBigTitle').textContent=catLabel+' 참석희망자 조사표';
+    var metaPairs=[[catLabel+'명', eeEsc(ev.title)]];
     if(ev.apply_deadline) metaPairs.push(['신청기간', '~'+ev.apply_deadline]);
     metaPairs.push(['신청인원', rows.length+'명']);
     document.getElementById('eeReportMeta').innerHTML=eeReportMetaTable(metaPairs);
