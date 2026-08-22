@@ -12171,7 +12171,9 @@ async function renderJwHomeTeamBadges(allRowsToday){
   var subGroupsByTeam={1:['A','B','C'],2:['A','B'],3:['A','B'],4:['A','B'],5:['A','B'],6:['A','B','C'],7:['A','B'],8:['A','B'],9:['A','B'],10:['A','B']};
   wrap.innerHTML=teams.map(function(t){
     var subs=subGroupsByTeam[t]||['A','B'];
-    var ok=subs.every(function(s){ return !!writtenCodes[t+'팀'+s]; });
+    // 오전/오후 조가 겹치는 시간대 작업이라 실제로는 한 조만 수행함 → 조 중 하나라도 입력되면 완료 처리
+    // (5,10팀 야간팀은 jw_year_teams에 애초에 없어 여기 안 나오고, 담당팀은 연도별로 자동 반영됨)
+    var ok=subs.some(function(s){ return !!writtenCodes[t+'팀'+s]; });
     var color=ok?'var(--avg-blue)':'var(--danger)';
     var bg=ok?'var(--avg-blue-bg)':'var(--danger-bg)';
     return '<span style="display:inline-flex;align-items:center;gap:3px;background:'+bg+';color:'+color+';font-size:10px;font-weight:800;padding:2px 6px;border-radius:10px"><span style="width:6px;height:6px;border-radius:50%;background:'+color+'"></span>'+t+'팀</span>';
