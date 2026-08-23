@@ -23289,14 +23289,14 @@ function haversineM(lat1,lng1,lat2,lng2){
 // 운영팀(T1운영) 계정별 직책 매핑 — mgr_attendance엔 이 직책명으로 저장됨
 var OPS_TEAM_ROLE_MAP={'유준영':'사업부장','양민석':'총괄1팀장','조준희':'총괄2팀장','이동환':'행정1','한지원':'행정2'};
 function myMgrAttSlot(){
-  if(!me||!me.team) return null;
-  var raw=me.team.trim();
-  if(raw.indexOf('T1운영')===0 || raw==='운영'){
-    if(!(me.role==='admin'||me.role==='master')) return null; // 운영팀 5명 전원 admin 계정만 해당
-    var opsLabel=OPS_TEAM_ROLE_MAP[me.name];
-    if(!opsLabel) return null;
-    return {team:'운영', name:opsLabel};
+  if(!me) return null;
+  // 운영팀 5명(사업부장/총괄팀장/행정)은 team 표기와 무관하게 이름으로 직접 판정
+  // (team 값이 '운영'/'T1운영'/'운영팀'/'총괄1팀' 등으로 바뀌어도 안정적으로 동작)
+  if(OPS_TEAM_ROLE_MAP[me.name] && (me.role==='admin'||me.role==='master')){
+    return {team:'운영', name:OPS_TEAM_ROLE_MAP[me.name]};
   }
+  if(!me.team) return null;
+  var raw=me.team.trim();
   var m=raw.match(/^(\d+)팀/);
   if(!m) return null;
   var teamNum=m[1]+'팀';
@@ -23310,6 +23310,7 @@ function myMgrAttSlot(){
 }
 // 팀번호로 근무조(오전/오후/야간) 판별
 function myShiftForCheckin(){
+  if(me && OPS_TEAM_ROLE_MAP[me.name] && (me.role==='admin'||me.role==='master')) return '운영팀';
   var raw=(me&&me.team||'').trim();
   if(raw.indexOf('T1운영')===0 || raw.indexOf('운영')===0) return '운영팀';
   var m=raw.match(/^(\d+)팀/);
@@ -23362,7 +23363,20 @@ async function tryAutoCheckin(){
         toast('📍 제1여객터미널 도착 확인 — 자동 출근 처리되었습니다');
       });
     }
-  }, function(err){ /* 권한거부·오류 시 조용히 무시, 수동 출근으로 대체 가능 */ }, {enableHighAccuracy:true, timeout:10000, maximumAge:60000});
+  }, function(err){
+    // 고정밀 GPS 실패(실내 등) 시 네트워크 기반 위치로 재시도
+    navigator.geolocation.getCurrentPosition(function(pos2){
+      var dist2=haversineM(pos2.coords.latitude,pos2.coords.longitude,T1_LAT,T1_LNG);
+      if(dist2<=AUTO_CHECKIN_RADIUS_M){
+        mgrAttPickTarget=slot;
+        setMgrAtt('출근').then(function(){
+          toast('📍 제1여객터미널 도착 확인 — 자동 출근 처리되었습니다');
+        });
+      }
+    }, function(err2){
+      toast('⚠️ 위치를 확인하지 못했습니다. 관리자 출근 화면에서 수동으로 체크해주세요');
+    }, {enableHighAccuracy:false, timeout:15000, maximumAge:300000});
+  }, {enableHighAccuracy:true, timeout:20000, maximumAge:60000});
 }
 function openMgrAttPicker(team, name){
   mgrAttPickTarget = {team:team, name:name};
