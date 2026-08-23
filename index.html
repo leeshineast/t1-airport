@@ -11486,6 +11486,8 @@ async function eeOpenAdminView(eventId){
     h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:13px">'
       +'<button onclick="eeOpenWishSurvey(\''+eventId+'\')" style="padding:7px 12px;background:var(--g1);color:var(--g6);border:1px solid var(--g2);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">📋 참석희망자 조사표</button>'
       +'<button onclick="eeExportExcel(\''+eventId+'\')" style="padding:7px 12px;background:var(--success-bg);color:var(--success);border:1px solid var(--success);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">📥 엑셀 다운로드</button>'
+      +'<button onclick="eeDownloadApplyTemplate(\''+eventId+'\')" style="padding:7px 12px;background:var(--g1);color:var(--g6);border:1px solid var(--g2);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">📄 참석자 양식 다운로드</button>'
+      +'<label style="padding:7px 12px;background:var(--navy-bg);color:var(--navy);border:1px solid var(--navy);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">📤 엑셀로 참석자 업로드<input type="file" accept=".xlsx,.xls" style="display:none" onchange="eeUploadApplyExcel(this,\''+eventId+'\')"></label>'
       +'</div>';
     h+='<table style="width:100%;border-collapse:separate;border-spacing:0;font-size:13px">';
     h+='<thead><tr><th style="text-align:left;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">일정</th><th style="text-align:right;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">신청/참석</th></tr></thead><tbody>';
@@ -11861,6 +11863,101 @@ async function eeExportExcel(eventId){
     console.error('[eeExportExcel 오류]', e);
     toast('⚠️ 엑셀 다운로드 실패: '+String(e&&e.message||e));
   }
+}
+
+// ═══ 관리자 - 참석자 엑셀 업로드/양식 ═══
+function eeSchedLabel(s){ return s.event_date?(s.event_date+' '+(s.start_time||'')+'~'+(s.end_time||'')):''; }
+async function eeDownloadApplyTemplate(eventId){
+  if(!eeCanAdmin()){ toast('⚠️ 조장 이상만 사용할 수 있습니다'); return; }
+  var ev=(eeEventsCache||[]).find(function(e){ return e.id===eventId; });
+  if(!ev){ toast('정보를 찾을 수 없습니다'); return; }
+  try{
+    var scheds=(ev._schedules||[]).slice().sort(function(a,b){return a.seq-b.seq;});
+    if(!scheds.length){ toast('등록된 일정이 없습니다'); return; }
+    var header=['사번','성명','팀','조','직책/급','참석일정'];
+    var rows=[header];
+    rows.push(['','','','','',eeSchedLabel(scheds[0])]);
+    var ws=XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:10},{wch:10},{wch:10},{wch:8},{wch:12},{wch:28}];
+    var wb=XLSX.utils.book_new();
+    if(typeof dlFinalizeSheet==='function') dlFinalizeSheet(ws);
+    XLSX.utils.book_append_sheet(wb, ws, '참석자업로드');
+    var guideRows=[['※ 참석일정 컬럼에는 아래 문구를 정확히 복사해서 붙여넣으세요']];
+    scheds.forEach(function(s){ guideRows.push([eeSchedLabel(s)]); });
+    var ws2=XLSX.utils.aoa_to_sheet(guideRows);
+    ws2['!cols']=[{wch:34}];
+    XLSX.utils.book_append_sheet(wb, ws2, '일정목록(참고)');
+    var fname=(ev.title||'교육회의').replace(/[\\/:*?"<>|]/g,'_')+'_참석자양식.xlsx';
+    if(typeof dlSaveWorkbook==='function'){ await dlSaveWorkbook(wb, fname); }
+    else{ XLSX.writeFile(wb, fname); }
+    toast('📥 양식 다운로드 완료');
+  }catch(e){
+    console.error('[eeDownloadApplyTemplate 오류]', e);
+    toast('⚠️ 양식 다운로드 실패: '+String(e&&e.message||e));
+  }
+}
+function eeUploadApplyExcel(inputEl, eventId){
+  if(!eeCanAdmin()){ toast('⚠️ 조장 이상만 사용할 수 있습니다'); inputEl.value=''; return; }
+  var file=inputEl.files[0]; if(!file) return;
+  var ev=(eeEventsCache||[]).find(function(e){ return e.id===eventId; });
+  if(!ev){ toast('정보를 찾을 수 없습니다'); inputEl.value=''; return; }
+  var reader=new FileReader();
+  reader.onload=async function(e){
+    try{
+      var scheds=(ev._schedules||[]);
+      var schedByLabel={}; scheds.forEach(function(s){ schedByLabel[eeSchedLabel(s)]=s.id; });
+      var wb=XLSX.read(e.target.result,{type:'binary'});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(!rows.length){ toast('엑셀에 데이터가 없습니다'); inputEl.value=''; return; }
+      var toInsert=[], skipped=0, badSched=0;
+      rows.forEach(function(r){
+        var empId=String(r['사번']||'').trim();
+        var name=String(r['성명']||'').trim();
+        var team=String(r['팀']||'').trim();
+        var group=String(r['조']||'').trim();
+        var position=String(r['직책/급']||'').trim();
+        var schedLabel=String(r['참석일정']||'').trim();
+        if(!empId||!name||!schedLabel){ skipped++; return; }
+        var schedId=schedByLabel[schedLabel];
+        if(!schedId){ badSched++; return; }
+        toInsert.push({empId:empId,name:name,team:team,group:group,position:position,schedId:schedId});
+      });
+      if(!toInsert.length){ toast('⚠️ 유효한 행이 없습니다. 양식/참석일정 문구를 확인해주세요'); inputEl.value=''; return; }
+      var okCount=0, failCount=0;
+      for(var i=0;i<toInsert.length;i++){
+        var it=toInsert[i];
+        var existRes=await sb.from('edu_applications').select('id').eq('event_id',eventId).eq('schedule_id',it.schedId).eq('employee_id',it.empId);
+        if(existRes.error){ failCount++; continue; }
+        var exist=(existRes.data||[])[0];
+        if(exist){
+          var upRes=await sb.from('edu_applications').update({
+            team:it.team, team_group:it.group, position:it.position, name:it.name,
+            edited_by:me?me.name:'', edited_at:new Date().toISOString()
+          }).eq('id',exist.id);
+          if(upRes.error){ failCount++; } else { okCount++; }
+        }else{
+          var insRes=await sb.from('edu_applications').insert({
+            id:eeGenToken(), event_id:eventId, schedule_id:it.schedId, team:it.team, team_group:it.group,
+            position:it.position, employee_id:it.empId, name:it.name, applied_by:me?me.name:''
+          });
+          if(insRes.error){ failCount++; } else { okCount++; }
+        }
+      }
+      var msg='✅ 업로드 완료 ('+okCount+'건)';
+      if(skipped) msg+=' · 필수값 누락 '+skipped+'건 제외';
+      if(badSched) msg+=' · 일정 불일치 '+badSched+'건 제외';
+      if(failCount) msg+=' · 저장실패 '+failCount+'건';
+      toast(msg);
+      inputEl.value='';
+      eeOpenAdminView(eventId);
+    }catch(err){
+      console.error('[eeUploadApplyExcel 오류]', err);
+      toast('⚠️ 엑셀 처리 오류: '+String(err&&err.message||err));
+      inputEl.value='';
+    }
+  };
+  reader.readAsBinaryString(file);
 }
 
 // ═══ QR 참석확인 화면 ═══
