@@ -5083,6 +5083,9 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
   <div style="padding:17px;max-height:50vh;overflow-y:auto" id="missingLeaderModalBody"></div>
   <div style="padding:11px 17px 17px;border-top:1px solid var(--g2)">
+    <label style="display:flex;align-items:center;gap:6px;margin-bottom:10px;font-size:13px;color:var(--g5);cursor:pointer">
+      <input type="checkbox" id="mlNoSkip" style="width:16px;height:16px">오늘 하루 다시 보지 않기
+    </label>
     <button onclick="closeMissingLeaderModal()" style="width:100%;padding:11px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">확인</button>
   </div>
 </div></div>
@@ -19924,11 +19927,25 @@ loadKpiData();
 
 // ─ 당일/전일 미입력 조장 안내 팝업 ─
 function closeMissingLeaderModal(){
+  try{
+    var cb=document.getElementById('mlNoSkip');
+    if(cb&&cb.checked){
+      var kst=new Date(Date.now()+9*3600000);
+      var todayStr=kst.toISOString().slice(0,10);
+      localStorage.setItem('t1_ml_nsk_'+(me?me.name:''), todayStr);
+    }
+  }catch(e){}
   var m=document.getElementById('missingLeaderModal'); if(m) m.style.display='none';
 }
 async function checkAndShowMissingLeaderPopup(){
   // 열람전용 계정은 인력현황 입력 자체를 안 하므로 이 안내가 필요 없음
   if(me&&me.role==='member') return;
+  // '오늘 하루 다시 보지 않기'를 오늘 이미 눌렀으면 스킵
+  try{
+    var kst0=new Date(Date.now()+9*3600000);
+    var todayStr0=kst0.toISOString().slice(0,10);
+    if(localStorage.getItem('t1_ml_nsk_'+(me?me.name:''))===todayStr0) return;
+  }catch(e){}
   // 출근 시간대(자동출근과 동일한 시간대)에만 노출 — 그 외 시간엔 굳이 안 띄움
   if(!isAnyCheckinWindowNow()) return;
   try{
@@ -20006,6 +20023,8 @@ async function checkAndShowMissingLeaderPopup(){
     }
     var body=document.getElementById('missingLeaderModalBody');
     if(body) body.innerHTML=html;
+    var noSkipCb=document.getElementById('mlNoSkip');
+    if(noSkipCb) noSkipCb.checked=false;
     var modal=document.getElementById('missingLeaderModal');
     if(modal) modal.style.display='flex';
   }catch(e){ console.error(e); }
