@@ -11355,6 +11355,18 @@ function eeOpenApply(eventId){
   var isPersonalAcct=!!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'));
   document.getElementById('eeApplyEmpId').value=(isPersonalAcct&&me.employee_id)?me.employee_id:'';
   document.getElementById('eeApplyName').value=isPersonalAcct?(me.name||''):'';
+  // 캐시된 me.employee_id가 최신이 아닐 수 있어, 폼을 열 때마다 서버에서 직접 재확인해 덮어씀
+  if(isPersonalAcct && me && me.id){
+    sb.from('users').select('employee_id').eq('id',me.id).maybeSingle().then(function(r){
+      if(r&&r.data&&r.data.employee_id){
+        me.employee_id=r.data.employee_id;
+        try{ localStorage.setItem('t1_me', JSON.stringify(me)); }catch(e){}
+        var empEl=document.getElementById('eeApplyEmpId');
+        // 신청화면이 그 사이 닫히지 않았고, 아직 값이 비어있을 때만 채움(사용자가 직접 입력 중이면 덮어쓰지 않음)
+        if(empEl && eeApplyCurEventId===eventId && !empEl.value) empEl.value=r.data.employee_id;
+      }
+    }).catch(function(){});
+  }
   var defPos=eeDefaultPosByRole();
   document.querySelectorAll('#eeApplyPosG .rp').forEach(function(p){ p.classList.toggle('on', p.textContent===defPos); });
   eeSelectedPos=defPos;
