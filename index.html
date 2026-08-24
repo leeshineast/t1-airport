@@ -3287,12 +3287,9 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
 <!-- 특별근무 셀 입력 모달 -->
 <div id="wfSpCellModal" class="modal-bg">
-  <div class="modal" style="max-width:320px"><div style="padding:17px">
+  <div class="modal" style="max-width:340px"><div style="padding:17px">
     <h3 id="wfSpCellTitle" style="margin:0 0 12px">인원 입력</h3>
-    <label style="font-size:12.5px;font-weight:700;color:var(--g6)">관리자 이름</label>
-    <input id="wfSpCellMgr" placeholder="예: 홍길동" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box">
-    <label style="font-size:12.5px;font-weight:700;color:var(--g6)">총 인원수</label>
-    <input id="wfSpCellCnt" type="number" min="1" placeholder="예: 6" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 14px;box-sizing:border-box">
+    <div id="wfSpCellBody"></div>
     <div style="display:flex;gap:8px">
       <button onclick="wfSpDeleteCell()" style="padding:11px 14px;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;font-weight:700;cursor:pointer">삭제</button>
       <button onclick="hideM('wfSpCellModal')" style="flex:1;padding:11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-weight:700;cursor:pointer">취소</button>
@@ -24055,7 +24052,25 @@ async function wfDownloadErp(){
 /* ═══════════════════════════════════════════════════════════
    인력관리 > 특별근무
    ═══════════════════════════════════════════════════════════ */
-var WF_SP_TEAMS=['운영팀','1팀','2팀','3팀','4팀','5팀','6팀','7팀','8팀','9팀','10팀'];
+// 팀 행 구조: [소속그룹, 표시라벨, team_no코드, 타입]  타입: 'names'(이름목록) | 'team'(팀장/조장/사원)
+var WF_SP_ROW_DEFS=[
+  {grp:'운영팀', label:'행정', code:'ADMIN', type:'names'},
+  {grp:'운영팀', label:'총괄팀', code:'HQ', type:'names'},
+  {grp:'오전', label:'1팀', code:'1팀', type:'team'},
+  {grp:'오전', label:'2팀', code:'2팀', type:'team'},
+  {grp:'오전', label:'3팀', code:'3팀', type:'team'},
+  {grp:'오전', label:'4팀', code:'4팀', type:'team'},
+  {grp:'오전', label:'오전소계', code:'SUM_AM', type:'sum', members:['1팀','2팀','3팀','4팀']},
+  {grp:'오후', label:'6팀', code:'6팀', type:'team'},
+  {grp:'오후', label:'7팀', code:'7팀', type:'team'},
+  {grp:'오후', label:'8팀', code:'8팀', type:'team'},
+  {grp:'오후', label:'9팀', code:'9팀', type:'team'},
+  {grp:'오후', label:'오후소계', code:'SUM_PM', type:'sum', members:['6팀','7팀','8팀','9팀']},
+  {grp:'야간', label:'5팀', code:'5팀', type:'team'},
+  {grp:'야간', label:'10팀', code:'10팀', type:'team'},
+  {grp:'야간', label:'야간소계', code:'SUM_NT', type:'sum', members:['5팀','10팀']},
+  {grp:'', label:'전체 근무 인원', code:'SUM_ALL', type:'sum', members:['1팀','2팀','3팀','4팀','6팀','7팀','8팀','9팀','5팀','10팀']}
+];
 var wfSpEvents=[], wfSpCurEvent=null, wfSpAssignments=[];
 var wfSpCellCtx=null;
 
@@ -24126,30 +24141,74 @@ function wfSpDateRange(ev){
   return dates;
 }
 function wfSpFmtDate(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function wfSpFindAssign(team, date){
-  return wfSpAssignments.find(function(a){ return a.team_no===team && a.work_date===date; });
+function wfSpFindAssign(teamCode, date){
+  return wfSpAssignments.find(function(a){ return a.team_no===teamCode && a.work_date===date; });
+}
+function wfSpTeamHeadcount(a){
+  if(!a) return 0;
+  var leader=a.leader_name?1:0;
+  var sub=(a.subleader_names||'').split(',').map(function(s){return s.trim();}).filter(Boolean).length;
+  var staff=parseInt(a.staff_count,10)||0;
+  return leader+sub+staff;
+}
+function wfSpCellLabel(row, a){
+  if(row.type==='names'){
+    return a&&a.names_text ? a.names_text : '';
+  }
+  if(!a) return '';
+  var parts=[];
+  if(a.leader_name) parts.push('팀장 '+a.leader_name);
+  var subs=(a.subleader_names||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  if(subs.length) parts.push('조장 '+subs.join(','));
+  var staff=parseInt(a.staff_count,10)||0;
+  if(staff) parts.push('사원 '+staff+'명');
+  var total=wfSpTeamHeadcount(a);
+  return parts.join(' / ')+(parts.length?(' = '+total+'명'):'');
 }
 function wfSpRenderTable(){
   var ev=wfSpCurEvent; if(!ev) return;
   var dates=wfSpDateRange(ev);
   var weekMap=['일','월','화','수','목','금','토'];
-  var h='<table style="border-collapse:collapse;font-size:12.5px;white-space:nowrap">';
-  h+='<thead><tr style="background:var(--navy);color:#fff"><th style="padding:8px 10px;position:sticky;left:0;background:var(--navy)">팀/조</th>';
+  var h='<table style="border-collapse:collapse;font-size:12px;white-space:nowrap">';
+  h+='<thead><tr style="background:var(--navy);color:#fff">'+
+     '<th style="padding:8px 8px;position:sticky;left:0;background:var(--navy);z-index:2">구분</th>'+
+     '<th style="padding:8px 10px;position:sticky;left:52px;background:var(--navy);z-index:2">팀/조</th>';
   dates.forEach(function(dt){
     var dobj=new Date(dt+'T00:00:00');
     h+='<th style="padding:8px 12px">'+(dobj.getMonth()+1)+'/'+dobj.getDate()+'('+weekMap[dobj.getDay()]+')</th>';
   });
   h+='</tr></thead><tbody>';
-  WF_SP_TEAMS.forEach(function(team,ti){
-    h+='<tr style="background:'+(ti%2===0?'#fff':'var(--g1)')+';border-bottom:1px solid var(--g2)">';
-    h+='<td style="padding:8px 10px;font-weight:800;position:sticky;left:0;background:'+(ti%2===0?'#fff':'var(--g1)')+'">'+team+'</td>';
+
+  // 그룹 병합 계산 (연속 동일 grp)
+  var grpSpans=[]; var i=0;
+  while(i<WF_SP_ROW_DEFS.length){
+    var g=WF_SP_ROW_DEFS[i].grp; var span=1;
+    while(i+span<WF_SP_ROW_DEFS.length && WF_SP_ROW_DEFS[i+span].grp===g && g!=='') span++;
+    if(g==='') span=1;
+    grpSpans.push({start:i, span:span, label:g});
+    i+=span;
+  }
+  var grpRendered={};
+
+  WF_SP_ROW_DEFS.forEach(function(row, ri){
+    var isSum=row.type==='sum';
+    var rowBg=isSum?'#dbeafe':(ri%2===0?'#fff':'var(--g1)');
+    h+='<tr style="background:'+rowBg+';border-bottom:1px solid var(--g2)">';
+    // 구분 병합 셀
+    var spanInfo=grpSpans.find(function(s){return s.start===ri;});
+    if(spanInfo){
+      h+='<td rowspan="'+spanInfo.span+'" style="padding:8px;font-weight:800;text-align:center;position:sticky;left:0;background:var(--g2);color:var(--navy)">'+(spanInfo.label||'')+'</td>';
+    }
+    h+='<td style="padding:8px 10px;font-weight:'+(isSum?'800':'700')+';position:sticky;left:52px;background:'+rowBg+'">'+row.label+'</td>';
     dates.forEach(function(dt){
-      var a=wfSpFindAssign(team, dt);
-      if(a){
-        h+='<td onclick="wfSpOpenCell(\''+team+'\',\''+dt+'\')" style="padding:8px 10px;cursor:pointer;color:var(--navy)">'+
-           (a.manager_name||'')+' 외 '+Math.max((a.headcount||1)-1,0)+'명 (총 '+(a.headcount||0)+'명)</td>';
+      if(isSum){
+        var sum=0;
+        row.members.forEach(function(mc){ sum+=wfSpTeamHeadcount(wfSpFindAssign(mc,dt)); });
+        h+='<td style="padding:8px 12px;text-align:center;font-weight:800;color:var(--navy)">'+sum+'명</td>';
       }else{
-        h+='<td onclick="wfSpOpenCell(\''+team+'\',\''+dt+'\')" style="padding:8px 10px;cursor:pointer;color:var(--g3);text-align:center">+ 등록</td>';
+        var a=wfSpFindAssign(row.code, dt);
+        var label=wfSpCellLabel(row, a);
+        h+='<td onclick="wfSpOpenCell(\''+row.code+'\',\''+dt+'\')" style="padding:8px 10px;cursor:pointer;'+(label?'color:var(--navy)':'color:var(--g3);text-align:center')+'">'+(label||'+ 등록')+'</td>';
       }
     });
     h+='</tr>';
@@ -24157,25 +24216,52 @@ function wfSpRenderTable(){
   h+='</tbody></table>';
   document.getElementById('wfSpTableWrap').innerHTML=h;
 }
-function wfSpOpenCell(team, date){
-  wfSpCellCtx={team:team, date:date};
-  var a=wfSpFindAssign(team, date);
-  document.getElementById('wfSpCellTitle').textContent=team+' · '+date;
-  document.getElementById('wfSpCellMgr').value=a?(a.manager_name||''):'';
-  document.getElementById('wfSpCellCnt').value=a?(a.headcount||''):'';
+function wfSpRowDef(code){ return WF_SP_ROW_DEFS.find(function(r){return r.code===code;}); }
+function wfSpOpenCell(code, date){
+  wfSpCellCtx={code:code, date:date};
+  var row=wfSpRowDef(code);
+  var a=wfSpFindAssign(code, date);
+  document.getElementById('wfSpCellTitle').textContent=row.label+' · '+date;
+  var body=document.getElementById('wfSpCellBody');
+  if(row.type==='names'){
+    body.innerHTML=
+      '<label style="font-size:12.5px;font-weight:700;color:var(--g6)">이름 목록 (콤마로 구분)</label>'+
+      '<input id="wfSpNamesInput" placeholder="예: 유준영, 이동환, 한지원" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 14px;box-sizing:border-box" value="'+((a&&a.names_text)||'')+'">';
+  }else{
+    var subs=(a&&a.subleader_names)||'';
+    body.innerHTML=
+      '<label style="font-size:12.5px;font-weight:700;color:var(--g6)">팀장 (1명, 없으면 비워두기)</label>'+
+      '<input id="wfSpLeaderInput" placeholder="예: 홍길동" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box" value="'+((a&&a.leader_name)||'')+'">'+
+      '<label style="font-size:12.5px;font-weight:700;color:var(--g6)">조장 (콤마로 구분, 여러명 가능)</label>'+
+      '<input id="wfSpSubleaderInput" placeholder="예: 홍이동, 홍삼동" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box" value="'+subs+'">'+
+      '<label style="font-size:12.5px;font-weight:700;color:var(--g6)">사원수</label>'+
+      '<input id="wfSpStaffInput" type="number" min="0" placeholder="예: 20" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 14px;box-sizing:border-box" value="'+((a&&a.staff_count)!=null?a.staff_count:'')+'">';
+  }
   showM('wfSpCellModal');
 }
 async function wfSpSaveCell(){
   if(!wfSpCellCtx||!wfSpCurEvent) return;
-  var mgr=(document.getElementById('wfSpCellMgr').value||'').trim();
-  var cnt=parseInt(document.getElementById('wfSpCellCnt').value,10);
-  if(!mgr||!cnt||cnt<1){ toast('⚠️ 관리자 이름과 인원수를 입력해주세요'); return; }
-  var existing=wfSpFindAssign(wfSpCellCtx.team, wfSpCellCtx.date);
+  var row=wfSpRowDef(wfSpCellCtx.code);
+  var existing=wfSpFindAssign(wfSpCellCtx.code, wfSpCellCtx.date);
   var body={
     id: existing?existing.id:('spa_'+Date.now()+'_'+Math.floor(Math.random()*1000)),
-    event_id: wfSpCurEvent.id, work_date: wfSpCellCtx.date, team_no: wfSpCellCtx.team,
-    manager_name: mgr, headcount: cnt, updated_by: me?me.name:''
+    event_id: wfSpCurEvent.id, work_date: wfSpCellCtx.date, team_no: wfSpCellCtx.code,
+    updated_by: me?me.name:''
   };
+  if(row.type==='names'){
+    var names=(document.getElementById('wfSpNamesInput').value||'').trim();
+    if(!names){ toast('⚠️ 이름을 입력해주세요'); return; }
+    body.names_text=names;
+  }else{
+    var leader=(document.getElementById('wfSpLeaderInput').value||'').trim();
+    var subs=(document.getElementById('wfSpSubleaderInput').value||'').trim();
+    var staffRaw=document.getElementById('wfSpStaffInput').value;
+    var staff=staffRaw===''?0:parseInt(staffRaw,10);
+    if(!leader&&!subs&&!staff){ toast('⚠️ 팀장·조장·사원수 중 하나 이상 입력해주세요'); return; }
+    body.leader_name=leader||null;
+    body.subleader_names=subs||null;
+    body.staff_count=isNaN(staff)?0:staff;
+  }
   var res=await sb.from('wf_special_assignments').upsert(body,{onConflict:'event_id,work_date,team_no'});
   if(res.error){ toast('저장 오류: '+res.error.message); return; }
   toast('✓ 저장되었습니다');
@@ -24186,7 +24272,7 @@ async function wfSpSaveCell(){
 }
 async function wfSpDeleteCell(){
   if(!wfSpCellCtx||!wfSpCurEvent) return;
-  var existing=wfSpFindAssign(wfSpCellCtx.team, wfSpCellCtx.date);
+  var existing=wfSpFindAssign(wfSpCellCtx.code, wfSpCellCtx.date);
   if(!existing){ hideM('wfSpCellModal'); return; }
   var res=await sb.from('wf_special_assignments').delete().eq('id', existing.id);
   if(res.error){ toast('삭제 오류: '+res.error.message); return; }
@@ -24207,16 +24293,20 @@ function wfSpDownloadReport(){
   var ev=wfSpCurEvent; if(!ev) return;
   var dates=wfSpDateRange(ev);
   var weekMap=['일','월','화','수','목','금','토'];
-  var aoa=[[ev.title], ['기간: '+ev.start_date+' ~ '+ev.end_date], [], ['팀/조'].concat(dates.map(function(dt){
+  var aoa=[[ev.title], ['기간: '+ev.start_date+' ~ '+ev.end_date], [], ['구분','팀/조'].concat(dates.map(function(dt){
     var d=new Date(dt+'T00:00:00'); return (d.getMonth()+1)+'/'+d.getDate()+'('+weekMap[d.getDay()]+')';
   }))];
-  WF_SP_TEAMS.forEach(function(team){
-    var row=[team];
+  WF_SP_ROW_DEFS.forEach(function(row){
+    var rowArr=[row.grp, row.label];
     dates.forEach(function(dt){
-      var a=wfSpFindAssign(team, dt);
-      row.push(a?((a.manager_name||'')+' 외 '+Math.max((a.headcount||1)-1,0)+'명 (총 '+(a.headcount||0)+'명)'):'');
+      if(row.type==='sum'){
+        var sum=0; row.members.forEach(function(mc){ sum+=wfSpTeamHeadcount(wfSpFindAssign(mc,dt)); });
+        rowArr.push(sum+'명');
+      }else{
+        rowArr.push(wfSpCellLabel(row, wfSpFindAssign(row.code, dt)));
+      }
     });
-    aoa.push(row);
+    aoa.push(rowArr);
   });
   var wb=XLSX.utils.book_new();
   var ws=XLSX.utils.aoa_to_sheet(aoa);
