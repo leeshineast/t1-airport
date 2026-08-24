@@ -442,8 +442,10 @@ html{overflow-x:hidden}
             return obj;
           },
           maybeSingle: async function(){
-            _params['limit']=1;
-            var r = await run('GET', table, _params, null, null);
+            var qp = Object.assign({}, _params);
+            qp['limit']=1;
+            if(_select) qp['select'] = _select;
+            var r = await run('GET', table, qp, null, null);
             if(r.error) return r;
             return { data: Array.isArray(r.data)?(r.data[0]||null):r.data, error: null };
           },
