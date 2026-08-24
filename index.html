@@ -19899,6 +19899,19 @@ async function refreshMpDataLight(){
       me = JSON.parse(saved);
       applyRoleUI();
       applyFontScale();
+      // 세션 복원 시 사번 등 관리자가 나중에 채워넣었을 수 있는 값 재확인(로그아웃 없이도 반영)
+      (async function(){
+        try{
+          var fsRes=await sb.from('users').select('employee_id,font_scale,favorite_menus').eq('id',me.id).maybeSingle();
+          if(fsRes.data){
+            var changed=false;
+            if(fsRes.data.employee_id && fsRes.data.employee_id!==me.employee_id){ me.employee_id=fsRes.data.employee_id; changed=true; }
+            if(fsRes.data.font_scale && fsRes.data.font_scale!==me.font_scale){ me.font_scale=fsRes.data.font_scale; changed=true; applyFontScale(); }
+            if(Array.isArray(fsRes.data.favorite_menus)){ me.favorite_menus=fsRes.data.favorite_menus; }
+            if(changed){ try{ localStorage.setItem('t1_me', JSON.stringify(me)); }catch(e){} }
+          }
+        }catch(e){}
+      })();
       setTimeout(function(){ if(typeof fetchChatLastRead==='function') fetchChatLastRead().then(function(){ if(typeof pollGroupChatBadge==='function') pollGroupChatBadge(); }); }, 800);
       var gt0=document.getElementById('globalTabbar'); if(gt0) gt0.style.display='flex';
       // 메모리 초기화 먼저 (어제 데이터 화면 노출 방지)
