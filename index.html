@@ -873,8 +873,8 @@ html{overflow-x:hidden}
       </button>
       <button class="menu-btn" onclick="go('campaign')">
         <span class="menu-icon">🏆</span>
-        <div class="menu-title">공모전</div>
-        <div class="menu-desc">슬로건 공모 등 참여형 이벤트</div>
+        <div class="menu-title">사업부 행사</div>
+        <div class="menu-desc">슬로건 공모 등 참여형 행사</div>
         <span class="menu-arrow">참여하기 →</span>
       </button>
       <button class="menu-btn" id="groupChatMenuBtn" onclick="go('groupchat')" style="position:relative">
@@ -3386,22 +3386,22 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
 </div>
 
-<!-- ══ 공모전 (재사용 가능한 공모/설문 모듈) ══ -->
+<!-- ══ 사업부 행사 (재사용 가능한 공모/설문 모듈) ══ -->
 <div id="sCampaign" class="scr">
   <div class="pg-hd">
-    <div><h1>🏆 공모전</h1><small>슬로건 공모 등 참여형 이벤트</small></div>
+    <div><h1>🏆 사업부 행사</h1><small>슬로건 공모 등 참여형 행사</small></div>
     <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 메인</button>
   </div>
   <div style="padding:13px">
-    <button id="cpCreateBtn" onclick="cpOpenCreate()" style="display:none;width:100%;padding:12px;background:var(--teal);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px">＋ 공모전 만들기</button>
+    <button id="cpCreateBtn" onclick="cpOpenCreate()" style="display:none;width:100%;padding:12px;background:var(--teal);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px">＋ 행사 만들기</button>
     <div id="cpListWrap"><div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div></div>
   </div>
 </div>
 
-<!-- 공모전 상세/참여 화면 -->
+<!-- 사업부 행사 상세/참여 화면 -->
 <div id="sCampaignDetail" class="scr">
   <div class="pg-hd">
-    <div><h1 id="cpDetTitle">🏆 공모전</h1><small id="cpDetSub"></small></div>
+    <div><h1 id="cpDetTitle">🏆 사업부 행사</h1><small id="cpDetSub"></small></div>
     <button onclick="go('campaign')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 목록</button>
   </div>
   <div style="padding:13px">
@@ -3429,14 +3429,14 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
 </div>
 
-<!-- 공모전 만들기 모달 -->
+<!-- 행사 만들기 모달 -->
 <div id="cpCreateModal" class="modal-bg">
   <div class="modal" style="max-width:380px;max-height:90vh;overflow-y:auto"><div style="padding:17px">
-    <h3 id="cpCreateModalTitle" style="margin:0 0 12px">공모전 만들기</h3>
+    <h3 id="cpCreateModalTitle" style="margin:0 0 12px">행사 만들기</h3>
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">제목</label>
     <input id="cpNewTitle" placeholder="예: 습득물(유실물) 근절 슬로건 공모" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box">
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">설명</label>
-    <textarea id="cpNewDesc" rows="3" placeholder="공모 취지 등" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box;resize:vertical"></textarea>
+    <textarea id="cpNewDesc" rows="3" placeholder="행사 취지 등" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box;resize:vertical"></textarea>
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">응모 기간</label>
     <div style="display:flex;gap:6px;margin:6px 0 12px">
       <input type="date" id="cpNewStart" style="flex:1;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
@@ -25079,7 +25079,7 @@ function wfSpDownloadReport(){
 }
 
 /* ═══════════════════════════════════════════════════════════
-   공모전 (재사용 가능한 공모/설문 모듈)
+   사업부 행사 (재사용 가능한 공모/설문 모듈)
    ═══════════════════════════════════════════════════════════ */
 var cpCampaigns=[], cpCurCampaign=null, cpMyEntries=[], cpAllEntriesCache=[];
 function cpIsAdmin(){ return !!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader')); }
@@ -25103,7 +25103,7 @@ async function cpLoadList(){
   var res=await sb.from('campaigns').select('*').order('created_at',{ascending:false});
   if(res.error){ wrap.innerHTML='<div style="color:#dc2626;padding:20px;text-align:center">불러오기 실패</div>'; return; }
   cpCampaigns=res.data||[];
-  if(!cpCampaigns.length){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">등록된 공모전이 없습니다</div>'; return; }
+  if(!cpCampaigns.length){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">등록된 행사가 없습니다</div>'; return; }
   var cntRes=await msFetchAll(function(){ return sb.from('campaign_entries').select('campaign_id'); });
   var cntMap={};
   (cntRes.data||[]).forEach(function(e){ cntMap[e.campaign_id]=(cntMap[e.campaign_id]||0)+1; });
@@ -25124,7 +25124,7 @@ async function cpLoadList(){
   wrap.innerHTML=h;
 }
 function cpOpenCreate(){
-  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 공모전을 만들 수 있습니다'); return; }
+  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 행사를 만들 수 있습니다'); return; }
   document.getElementById('cpNewTitle').value='';
   document.getElementById('cpNewDesc').value='';
   document.getElementById('cpNewStart').value='';
@@ -25136,7 +25136,7 @@ function cpOpenCreate(){
   showM('cpCreateModal');
 }
 async function cpCreateCampaign(){
-  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 공모전을 만들 수 있습니다'); return; }
+  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 행사를 만들 수 있습니다'); return; }
   var title=(document.getElementById('cpNewTitle').value||'').trim();
   var desc=(document.getElementById('cpNewDesc').value||'').trim();
   var startDate=document.getElementById('cpNewStart').value||null;
@@ -25153,21 +25153,21 @@ async function cpCreateCampaign(){
     start_date:startDate, end_date:endDate, target:target||null, condition_text:condition||null, schedule_note:schedule||null
   });
   if(res.error){ toast('등록 오류: '+res.error.message); return; }
-  toast('✓ 공모전이 등록되었습니다');
+  toast('✓ 행사가 등록되었습니다');
   hideM('cpCreateModal');
   cpLoadList();
 }
 async function cpOpenDetail(id){
   var c=cpCampaigns.find(function(x){return x.id===id;});
   if(!c){ var r=await sb.from('campaigns').select('*').eq('id',id).maybeSingle(); c=r.data; }
-  if(!c){ toast('공모전 정보를 찾을 수 없습니다'); return; }
+  if(!c){ toast('행사 정보를 찾을 수 없습니다'); return; }
   cpCurCampaign=c;
   document.getElementById('cpDetTitle').textContent='🏆 '+c.title;
   document.getElementById('cpDetSub').textContent=c.description||'';
   document.getElementById('cpAdminBtns').style.display=cpIsAdmin()?'block':'none';
   document.getElementById('cpWinnerBtn').style.display=cpIsAdmin()?'block':'none';
 
-  // 공모전 상세 정보(기간/대상/조건/일정) 카드
+  // 사업부 행사 상세 정보(기간/대상/조건/일정) 카드
   var infoWrap=document.getElementById('cpInfoWrap');
   var period=cpFmtPeriod(c);
   var infoRows=[];
@@ -25253,7 +25253,7 @@ async function cpSubmitEntry(){
   var errEl=document.getElementById('cpFormErr');
   if(!empNo||!name||!content){ errEl.textContent='사번·이름·내용을 모두 입력해주세요'; errEl.style.display='block'; return; }
   if(!cpEditingId && !cpCurCampaign.allow_multiple && cpMyEntries.length){
-    errEl.textContent='이 공모전은 1인 1회만 제출 가능합니다. 기존 내용을 수정해주세요';
+    errEl.textContent='이 행사는 1인 1회만 제출 가능합니다. 기존 내용을 수정해주세요';
     errEl.style.display='block';
     return;
   }
@@ -25308,100 +25308,132 @@ async function cpDeleteWinner(){
   hideM('cpWinnerModal');
   cpRenderWinner();
 }
+var cpVotesCache=[];
+function cpVoterKey(){ return me?(me.employee_id||me.name):''; }
+var CP_RANK_SCORE={1:3,2:2,3:1};
+var CP_RANK_LABEL={1:'🥇 1위',2:'🥈 2위',3:'🥉 3위'};
 async function cpOpenAllEntries(){
   if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
   document.getElementById('cpAllSearch').value='';
   var res=await msFetchAll(function(){ return sb.from('campaign_entries').select('*').eq('campaign_id',cpCurCampaign.id).order('created_at',{ascending:false}); });
   cpAllEntriesCache=res.data||[];
+  var vRes=await msFetchAll(function(){ return sb.from('campaign_votes').select('*').eq('campaign_id',cpCurCampaign.id); });
+  cpVotesCache=vRes.data||[];
   cpRenderAllEntries();
   showM('cpAllEntriesModal');
 }
-var CP_RANK_LABEL={1:'🥇 1순위',2:'🥈 2순위',3:'🥉 3순위'};
-var CP_RANK_COLOR={1:'#fef3c7',2:'#e5e7eb',3:'#fed7aa'};
+function cpEntryScore(entryId){
+  return cpVotesCache.filter(function(v){return v.entry_id===entryId;}).reduce(function(s,v){ return s+(CP_RANK_SCORE[v.rank]||0); },0);
+}
+function cpEntryVoteCount(entryId){
+  return cpVotesCache.filter(function(v){return v.entry_id===entryId;}).length;
+}
+function cpMyVoteFor(entryId){
+  var key=cpVoterKey();
+  var v=cpVotesCache.find(function(x){return x.entry_id===entryId && x.voter_key===key;});
+  return v?v.rank:null;
+}
 function cpRenderAllEntries(){
   var q=(document.getElementById('cpAllSearch').value||'').trim().toLowerCase();
   var rows=cpAllEntriesCache.filter(function(e){
     if(!q) return true;
     return (e.emp_no||'').toLowerCase().indexOf(q)!==-1 || (e.name||'').toLowerCase().indexOf(q)!==-1 || (e.content||'').toLowerCase().indexOf(q)!==-1;
   });
-  // 순위 지정된 항목을 위로, 그 안에서는 1→2→3순위 순
+  // 전체 점수 합산 기준 내림차순 정렬 (동점이면 최신순)
   rows=rows.slice().sort(function(a,b){
-    var ra=a.shortlist_rank||99, rb=b.shortlist_rank||99;
-    if(ra!==rb) return ra-rb;
+    var sa=cpEntryScore(a.id), sb2=cpEntryScore(b.id);
+    if(sa!==sb2) return sb2-sa;
     return new Date(b.created_at)-new Date(a.created_at);
   });
   var wrap=document.getElementById('cpAllEntriesWrap');
   if(!rows.length){ wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">제출된 내역이 없습니다</div>'; return; }
 
-  var shortlisted=cpAllEntriesCache.filter(function(e){return e.shortlist_rank;}).sort(function(a,b){return a.shortlist_rank-b.shortlist_rank;});
+  var top3=rows.filter(function(e){return cpEntryScore(e.id)>0;}).slice(0,3);
   var h='';
-  if(shortlisted.length){
+  if(top3.length){
+    var medals=['🥇','🥈','🥉'];
     h+='<div style="background:linear-gradient(135deg,#fff7ed,#fef3c7);border:1.5px solid #fdba74;border-radius:10px;padding:11px;margin-bottom:12px">'+
-       '<div style="font-size:12.5px;font-weight:800;color:#c2410c;margin-bottom:6px">🏅 최종 후보</div>'+
-       shortlisted.map(function(e){ return '<div style="font-size:12.5px;color:#7c2d12;padding:2px 0">'+(CP_RANK_LABEL[e.shortlist_rank]||'')+' — '+eeEsc(e.name||'')+' ('+eeEsc(e.emp_no||'')+')</div>'; }).join('')+
+       '<div style="font-size:12.5px;font-weight:800;color:#c2410c;margin-bottom:6px">🏅 전체 순위 (관리자 투표 점수 합산)</div>'+
+       top3.map(function(e,i){ return '<div style="font-size:12.5px;color:#7c2d12;padding:2px 0">'+medals[i]+' '+eeEsc(e.name||'')+' ('+eeEsc(e.emp_no||'')+') — '+cpEntryScore(e.id)+'점 · 투표 '+cpEntryVoteCount(e.id)+'명</div>'; }).join('')+
        '</div>';
   }
+  h+='<div style="font-size:11.5px;color:var(--g4);margin-bottom:8px">※ 관리자별로 1위(3점)/2위(2점)/3위(1점)를 각각 1건씩 투표할 수 있고, 전체 합산 점수로 순위가 매겨집니다. 아래 버튼은 내 투표만 표시됩니다.</div>';
   h+='<div style="font-size:12.5px;color:var(--g5);margin-bottom:8px;font-weight:700">전체 '+rows.length+'건</div>';
   rows.forEach(function(e){
-    var rankBg=e.shortlist_rank?CP_RANK_COLOR[e.shortlist_rank]:'white';
-    h+='<div style="background:'+rankBg+';border:1.5px solid '+(e.shortlist_rank?'#fdba74':'var(--g2)')+';border-radius:10px;padding:11px;margin-bottom:8px">'+
+    var score=cpEntryScore(e.id), voteCnt=cpEntryVoteCount(e.id);
+    var myRank=cpMyVoteFor(e.id);
+    var hasScore=score>0;
+    h+='<div style="background:'+(hasScore?'#fffbeb':'white')+';border:1.5px solid '+(hasScore?'#fde68a':'var(--g2)')+';border-radius:10px;padding:11px;margin-bottom:8px">'+
        '<div style="display:flex;justify-content:space-between;gap:8px">'+
        '<span style="font-size:13px;font-weight:700;color:var(--g7)">'+eeEsc(e.name||'')+' ('+eeEsc(e.emp_no||'')+') '+(e.team?('· '+eeEsc(e.team)):'')+'</span>'+
        '<button onclick="cpAdminDeleteEntry(\''+e.id+'\')" style="padding:3px 9px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>'+
        '</div>'+
        '<div style="font-size:13px;color:var(--g6);white-space:pre-wrap;margin-top:6px;line-height:1.6">'+eeEsc(e.content)+'</div>'+
-       '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px">'+
-       '<span style="font-size:11px;color:var(--g4)">'+new Date(e.created_at).toLocaleString('ko-KR')+'</span>'+
+       '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap">'+
+       '<span style="font-size:11px;color:var(--g4)">'+new Date(e.created_at).toLocaleString('ko-KR')+(hasScore?(' · <b style="color:#c2410c">'+score+'점</b> (투표 '+voteCnt+'명)'):'')+'</span>'+
        '<span style="display:flex;gap:5px">'+
        [1,2,3].map(function(r){
-         var active=e.shortlist_rank===r;
-         return '<button onclick="cpSetRank(\''+e.id+'\','+r+')" style="padding:3px 9px;border-radius:6px;border:1.5px solid '+(active?'#f97316':'var(--g2)')+';background:'+(active?'#f97316':'white')+';color:'+(active?'white':'var(--g6)')+';font-size:11px;font-weight:700;cursor:pointer">'+r+'순위</button>';
+         var active=myRank===r;
+         return '<button onclick="cpCastVote(\''+e.id+'\','+r+')" style="padding:3px 9px;border-radius:6px;border:1.5px solid '+(active?'#f97316':'var(--g2)')+';background:'+(active?'#f97316':'white')+';color:'+(active?'white':'var(--g6)')+';font-size:11px;font-weight:700;cursor:pointer">내 '+r+'위</button>';
        }).join('')+
        '</span></div>'+
        '</div>';
   });
   wrap.innerHTML=h;
 }
-async function cpSetRank(id, rank){
+async function cpCastVote(entryId, rank){
   if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
-  var entry=cpAllEntriesCache.find(function(x){return x.id===id;}); if(!entry) return;
-  var newRank = entry.shortlist_rank===rank ? null : rank; // 같은 순위 다시 누르면 해제
-  // 같은 순위를 이미 가진 다른 항목이 있으면 해제
-  if(newRank){
-    cpAllEntriesCache.forEach(function(x){
-      if(x.id!==id && x.shortlist_rank===newRank) x.shortlist_rank=null;
-    });
-    var clearRes=await sb.from('campaign_entries').update({shortlist_rank:null}).eq('campaign_id',cpCurCampaign.id).eq('shortlist_rank',newRank);
-    if(clearRes.error){ toast('오류: '+clearRes.error.message); return; }
+  var key=cpVoterKey();
+  if(!key){ toast('⚠️ 계정 정보를 확인할 수 없습니다'); return; }
+  var existing=cpVotesCache.find(function(v){return v.entry_id===entryId && v.voter_key===key;});
+  // 같은 응모작에 이미 내 투표가 있는 경우: 같은 순위 다시 누르면 해제, 다른 순위 누르면 변경
+  if(existing && existing.rank===rank){
+    var delRes=await sb.from('campaign_votes').delete().eq('id',existing.id);
+    if(delRes.error){ toast('오류: '+delRes.error.message); return; }
+    cpVotesCache=cpVotesCache.filter(function(v){return v.id!==existing.id;});
+    cpRenderAllEntries();
+    return;
   }
-  var res=await sb.from('campaign_entries').update({shortlist_rank:newRank}).eq('id',id);
+  // 이 관리자가 이미 다른 응모작에 같은 순위를 준 게 있으면 그 표를 지워야 함(순위당 1건)
+  var sameRankElsewhere=cpVotesCache.find(function(v){return v.voter_key===key && v.rank===rank && v.entry_id!==entryId;});
+  if(sameRankElsewhere){
+    var delRes2=await sb.from('campaign_votes').delete().eq('id',sameRankElsewhere.id);
+    if(delRes2.error){ toast('오류: '+delRes2.error.message); return; }
+    cpVotesCache=cpVotesCache.filter(function(v){return v.id!==sameRankElsewhere.id;});
+  }
+  var body={
+    id: existing?existing.id:('cpv_'+Date.now()+'_'+Math.floor(Math.random()*1000)),
+    campaign_id: cpCurCampaign.id, entry_id: entryId, voter_key: key, voter_name: me?me.name:'', rank: rank
+  };
+  var res=await sb.from('campaign_votes').upsert(body,{onConflict:'id'});
   if(res.error){ toast('오류: '+res.error.message); return; }
-  entry.shortlist_rank=newRank;
+  if(existing){ existing.rank=rank; } else { cpVotesCache.push(body); }
   cpRenderAllEntries();
 }
 async function cpAdminDeleteEntry(id){
   if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
-  if(!confirm('이 제출내역을 삭제하시겠습니까?')) return;
+  if(!confirm('이 제출내역을 삭제하시겠습니까? (투표 기록도 함께 삭제됩니다)')) return;
   var res=await sb.from('campaign_entries').delete().eq('id',id);
   if(res.error){ toast('삭제 오류: '+res.error.message); return; }
   toast('🗑 삭제되었습니다');
   cpAllEntriesCache=cpAllEntriesCache.filter(function(e){return e.id!==id;});
+  cpVotesCache=cpVotesCache.filter(function(v){return v.entry_id!==id;});
   cpRenderAllEntries();
   cpRenderMyEntries();
   cpLoadList();
 }
 function cpDownloadEntries(){
   if(!cpAllEntriesCache.length){ toast('다운로드할 데이터가 없습니다'); return; }
-  var aoa=[['순위','사번','이름','팀','내용','제출일시']];
-  var rows=cpAllEntriesCache.slice().sort(function(a,b){ return (a.shortlist_rank||99)-(b.shortlist_rank||99); });
+  var aoa=[['총점','투표수','사번','이름','팀','내용','제출일시']];
+  var rows=cpAllEntriesCache.slice().sort(function(a,b){ return cpEntryScore(b.id)-cpEntryScore(a.id); });
   rows.forEach(function(e){
-    aoa.push([e.shortlist_rank?(e.shortlist_rank+'순위'):'', e.emp_no||'', e.name||'', e.team||'', e.content||'', new Date(e.created_at).toLocaleString('ko-KR')]);
+    aoa.push([cpEntryScore(e.id), cpEntryVoteCount(e.id), e.emp_no||'', e.name||'', e.team||'', e.content||'', new Date(e.created_at).toLocaleString('ko-KR')]);
   });
   var wb=XLSX.utils.book_new();
   var ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols']=[{wch:8},{wch:10},{wch:10},{wch:14},{wch:50},{wch:18}];
+  ws['!cols']=[{wch:8},{wch:8},{wch:10},{wch:10},{wch:14},{wch:50},{wch:18}];
   XLSX.utils.book_append_sheet(wb, ws, '제출목록');
-  XLSX.writeFile(wb, '공모전_'+(cpCurCampaign?cpCurCampaign.title.replace(/[\\/:*?"<>|]/g,''):'제출목록')+'.xlsx');
+  XLSX.writeFile(wb, '사업부행사_'+(cpCurCampaign?cpCurCampaign.title.replace(/[\\/:*?"<>|]/g,''):'제출목록')+'.xlsx');
   toast('📥 다운로드 완료');
 }
 
