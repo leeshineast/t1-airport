@@ -666,10 +666,30 @@ function todayStr(){var n=new Date();return n.getFullYear()+'-'+String(n.getMont
 
 function sbFetch(path, opt){
   opt = opt || {};
-  var headers = {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json'};
+  var authToken = SUPABASE_KEY;
+  try{
+    var authRaw = localStorage.getItem('t1_auth');
+    if(authRaw){
+      var authObj = JSON.parse(authRaw);
+      if(authObj && authObj.access_token) authToken = authObj.access_token;
+    }
+  }catch(e){}
+  var headers = {'apikey':SUPABASE_KEY,'Authorization':'Bearer '+authToken,'Content-Type':'application/json'};
   if(opt.headers){for(var k in opt.headers)headers[k]=opt.headers[k];}
   return fetch(SUPABASE_URL+'/rest/v1'+path,{method:opt.method||'GET',headers:headers,body:opt.body?JSON.stringify(opt.body):undefined});
 }
+
+// 로그인 토큰이 없거나 만료됐으면 메인 앱(index.html)으로 돌려보내 로그인부터 하게 함
+(function requireAuthOrRedirect(){
+  try{
+    var authRaw = localStorage.getItem('t1_auth');
+    if(!authRaw){ location.href='index.html'; return; }
+    var authObj = JSON.parse(authRaw);
+    if(!authObj || !authObj.access_token || !authObj.expires_at || (authObj.expires_at*1000) < Date.now()){
+      location.href='index.html';
+    }
+  }catch(e){ location.href='index.html'; }
+})();
 
 // ─ 세션 ─
 function loadSession(){
