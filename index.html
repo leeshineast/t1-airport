@@ -11884,24 +11884,24 @@ async function eeOpenAdminView(eventId){
           +'</div>'
         +'</div>'
         +((list.length+walkins.length)?(
-          '<table style="width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;background:white;border-radius:8px;overflow:hidden;border:1px solid var(--g2)">'
+          '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:8px;border:1px solid var(--g2)">'
+          +'<table style="width:100%;min-width:480px;border-collapse:separate;border-spacing:0;font-size:12.5px;background:white">'
           +'<thead><tr style="background:var(--g1)">'
-            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">팀</th>'
-            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">조</th>'
-            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">직책</th>'
-            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">사번</th>'
-            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">성명</th>'
-            +'<th style="text-align:center;padding:7px 8px;color:var(--g5);font-weight:700">참석</th>'
-            +'<th style="text-align:center;padding:7px 8px;color:var(--g5);font-weight:700">관리</th>'
+            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">소속</th>'
+            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">직책</th>'
+            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">직책</th>'
+            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">사번</th>'
+            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">성명</th>'
+            +'<th style="text-align:center;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">참석</th>'
+            +'<th style="text-align:center;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">관리</th>'
           +'</tr></thead><tbody>'
           +list.map(function(a,i){
             var attended=(attBySched[s.id]||[]).indexOf(a.employee_id)!==-1;
             return '<tr id="eeAppRow_'+a.id+'" style="'+(i%2?'background:var(--g0)':'')+'">'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.team||'-')+'</td>'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.team_group||'-')+'</td>'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.position||'-')+'</td>'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.employee_id)+'</td>'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);font-weight:700">'+eeEsc(a.name)+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);white-space:nowrap">'+eeEsc(((a.team||'')+' '+(a.team_group||'')).trim()||'-')+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);white-space:nowrap">'+eeEsc(a.position||'-')+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);white-space:nowrap">'+eeEsc(a.employee_id)+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);font-weight:700;white-space:nowrap">'+eeEsc(a.name)+'</td>'
               +'<td style="padding:7px 8px;border-top:1px solid var(--g1);text-align:center">'+(attended?'<span style="color:var(--avg-blue);font-weight:800">✓</span>':'<span style="color:var(--g3)">-</span>')+'</td>'
               +'<td style="padding:7px 8px;border-top:1px solid var(--g1);text-align:center;white-space:nowrap">'
                 +'<span onclick="eeEditApplication(\''+a.id+'\')" style="cursor:pointer;margin-right:8px" title="수정">✏️</span>'
@@ -11911,18 +11911,17 @@ async function eeOpenAdminView(eventId){
           }).join('')
           +walkins.map(function(a,i){
             return '<tr id="eeWalkinRow_'+a.id+'" style="background:var(--warn-bg,#FFF7E0)">'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.team||'-')+'</td>'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.team_group||'-')+'</td>'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">-</td>'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.employee_id)+'</td>'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);font-weight:700">'+eeEsc(a.name)+' <span style="font-size:10.5px;font-weight:800;color:var(--warn,#B45309);background:white;border:1px solid var(--warn,#B45309);border-radius:10px;padding:1px 6px">미신청</span></td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);white-space:nowrap">'+eeEsc(((a.team||'')+' '+(a.team_group||'')).trim()||'-')+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);white-space:nowrap">-</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);white-space:nowrap">'+eeEsc(a.employee_id)+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);font-weight:700;white-space:nowrap">'+eeEsc(a.name)+' <span style="font-size:10.5px;font-weight:800;color:var(--warn,#B45309);background:white;border:1px solid var(--warn,#B45309);border-radius:10px;padding:1px 6px;white-space:nowrap">미신청</span></td>'
               +'<td style="padding:7px 8px;border-top:1px solid var(--g1);text-align:center"><span style="color:var(--avg-blue);font-weight:800">✓</span></td>'
               +'<td style="padding:7px 8px;border-top:1px solid var(--g1);text-align:center;white-space:nowrap">'
                 +'<span onclick="eeDeleteAttendanceRow(\''+a.id+'\',\''+eventId+'\')" style="cursor:pointer;color:var(--danger)" title="출석취소">🗑️</span>'
               +'</td>'
               +'</tr>';
           }).join('')
-          +'</tbody></table>'
+          +'</tbody></table></div>'
         ):'<div style="font-size:12.5px;color:var(--g3)">신청자 없음</div>')
         +'</td></tr>';
     });
