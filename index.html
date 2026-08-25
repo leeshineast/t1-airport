@@ -2426,8 +2426,8 @@ html{overflow-x:hidden}
 <!-- 습득물 처리완료 모달 -->
 <!-- 상황발생보고서 (습득물/인수인계/민원/안전사고 공용) -->
 <style>
-.ee-rpt-table{ width:100%; border-collapse:collapse; font-size:12px; }
-.ee-rpt-table th, .ee-rpt-table td{ border:1px solid #999; padding:6px 5px; text-align:center; }
+.ee-rpt-table{ width:100%; table-layout:fixed; border-collapse:collapse; font-size:11px; }
+.ee-rpt-table th, .ee-rpt-table td{ border:1px solid #999; padding:4px 3px; text-align:center; word-break:keep-all; }
 .ee-rpt-table th{ background:#efe3f5; font-weight:700; }
 .ee-rpt-meta-table{ width:100%; border-collapse:collapse; font-size:13px; margin-bottom:12px; }
 .ee-rpt-meta-table th, .ee-rpt-meta-table td{ border:1px solid #999; padding:7px 9px; }
@@ -12052,17 +12052,17 @@ function eeReportMetaTable(pairs){
 function eeReportRowsTable(rows, cols){
   // cols: [{key, label, width}] — key===null이면 빈 칸(서명란 등), key==='_sig'면 등록된 전자서명 이미지가 있으면 표시, 없으면 빈 칸(직접서명용)
   var h='<table class="ee-rpt-table"><thead><tr>'
-    +'<th style="width:34px">No</th>'
+    +'<th style="width:24px;white-space:nowrap">No</th>'
     +cols.map(function(c){ return '<th'+(c.width?(' style="width:'+c.width+'"'):'')+'>'+c.label+'</th>'; }).join('')
     +'</tr></thead><tbody>';
   rows.forEach(function(r,i){
     h+='<tr><td style="text-align:center">'+(i+1)+'</td>'
       +cols.map(function(c){
         if(c.key==='_sig'){
-          if(r._sigUrl) return '<td style="height:30px;text-align:center;padding:2px"><img src="'+r._sigUrl+'" alt="서명" style="max-height:26px;max-width:90px;vertical-align:middle"></td>';
-          return '<td style="height:30px"></td>'; // 등록된 전자서명 없음 → 직접 서명란
+          if(r._sigUrl) return '<td style="height:22px;text-align:center;padding:1px"><img src="'+r._sigUrl+'" alt="서명" style="max-height:19px;max-width:56px;vertical-align:middle"></td>';
+          return '<td style="height:22px"></td>'; // 등록된 전자서명 없음 → 직접 서명란
         }
-        if(c.key===null) return '<td style="height:30px"></td>'; // 서명란 등 빈 칸
+        if(c.key===null) return '<td style="height:22px"></td>'; // 서명란 등 빈 칸
         return '<td>'+eeEsc(r[c.key]==null?'':r[c.key])+'</td>';
       }).join('')
       +'</tr>';
@@ -12117,7 +12117,7 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
           attend_time:a.verified_at?new Date(a.verified_at).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'',
           _sigUrl:a.signature_data||null};
       });
-      cols=[{key:'소속',label:'소속',width:'90px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'attend_time',label:'참석시간',width:'65px'},{key:'_sig',label:'서명',width:'100px'},{key:null,label:'비고',width:'110px'}];
+      cols=[{key:'소속',label:'소속',width:'80px'},{key:'employee_id',label:'사번',width:'56px'},{key:'name',label:'성명',width:'56px'},{key:'attend_time',label:'참석시간',width:'72px'},{key:'_sig',label:'서명',width:'62px'},{key:null,label:'비고',width:'52px'}];
     }
     if(kind==='log') await eeAttachSignatures(rows); // QR참석확인 시 직접 서명한 게 있으면 그걸 우선 사용, 없으면 등록된 전자서명(개인계정)으로 보완, 그래도 없으면 빈 칸
     document.getElementById('eeReportModalTitle').textContent='📄 '+title;
