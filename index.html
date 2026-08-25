@@ -3415,7 +3415,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <div style="flex:1"><div class="f-lbl">이름</div><input type="text" id="cpName" class="ri" placeholder="이름" style="margin-bottom:0"></div>
       </div>
       <div class="f-lbl">슬로건 / 응모 내용</div>
-      <textarea id="cpContent" rows="3" placeholder="응모하실 내용을 작성해주세요" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:15px;margin-bottom:10px;resize:vertical"></textarea>
+      <textarea id="cpContent" oninput="cpUpdateCharCount()" rows="3" placeholder="응모하실 내용을 작성해주세요" style="width:100%;box-sizing:border-box;padding:10px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:15px;margin-bottom:4px;resize:vertical"></textarea>
+      <div id="cpCharCount" style="text-align:right;font-size:12px;color:var(--g4);margin-bottom:10px">0자 (공백 포함)</div>
       <div id="cpFormErr" style="color:var(--danger);font-size:13px;margin-bottom:8px;display:none"></div>
       <button class="btn-prim" onclick="cpSubmitEntry()">📩 제출하기</button>
     </div></div>
@@ -25082,6 +25083,11 @@ function wfSpDownloadReport(){
    ═══════════════════════════════════════════════════════════ */
 var cpCampaigns=[], cpCurCampaign=null, cpMyEntries=[], cpAllEntriesCache=[];
 function cpIsAdmin(){ return !!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader')); }
+function cpUpdateCharCount(){
+  var el=document.getElementById('cpContent'); var cEl=document.getElementById('cpCharCount');
+  if(!el||!cEl) return;
+  cEl.textContent=(el.value||'').length+'자 (공백 포함)';
+}
 function cpIsPersonalAcct(){ return !!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader')); }
 
 function cpFmtPeriod(c){
@@ -25185,6 +25191,7 @@ async function cpOpenDetail(id){
     nameEl.value=''; nameEl.readOnly=false; nameEl.style.background='white';
   }
   document.getElementById('cpContent').value='';
+  cpUpdateCharCount();
   document.getElementById('cpFormErr').style.display='none';
 
   go('campaigndetail');
@@ -25227,6 +25234,7 @@ function cpEditEntry(id){
   var e=cpMyEntries.find(function(x){return x.id===id;}); if(!e) return;
   cpEditingId=id;
   document.getElementById('cpContent').value=e.content;
+  cpUpdateCharCount();
   document.getElementById('cpContent').scrollIntoView({behavior:'smooth',block:'center'});
   toast('내용을 수정하고 [제출하기]를 눌러주세요');
 }
@@ -25265,6 +25273,7 @@ async function cpSubmitEntry(){
   toast(cpEditingId?'✓ 수정되었습니다':'✓ 제출되었습니다');
   cpEditingId=null;
   document.getElementById('cpContent').value='';
+  cpUpdateCharCount();
   cpRenderMyEntries();
   cpLoadList();
 }
