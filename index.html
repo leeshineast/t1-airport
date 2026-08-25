@@ -25082,7 +25082,7 @@ function wfSpDownloadReport(){
    공모전 (재사용 가능한 공모/설문 모듈)
    ═══════════════════════════════════════════════════════════ */
 var cpCampaigns=[], cpCurCampaign=null, cpMyEntries=[], cpAllEntriesCache=[];
-function cpIsAdmin(){ return !!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader')); }
+function cpIsAdmin(){ return !!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader')); }
 function cpUpdateCharCount(){
   var el=document.getElementById('cpContent'); var cEl=document.getElementById('cpCharCount');
   if(!el||!cEl) return;
