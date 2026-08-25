@@ -3274,7 +3274,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     </div>
     <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;font-size:11.5px;color:var(--g5)">
       <span><span style="display:inline-block;width:10px;height:10px;background:#dcfce7;border-radius:3px;margin-right:4px;vertical-align:middle"></span>실적 자동표시(계획 미입력)</span>
-      <span><span style="display:inline-block;width:10px;height:10px;background:#fef3c7;border-radius:3px;margin-right:4px;vertical-align:middle"></span>계획과 실적이 다름 ⚠️</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#fef3c7;border-radius:3px;margin-right:4px;vertical-align:middle"></span>계획과 실적이 다름 ⚠️ (실적 내용 셀 안에 바로 표시)</span>
       <span><span style="display:inline-block;width:10px;height:10px;background:#fff;border:1px solid var(--g3);border-radius:3px;margin-right:4px;vertical-align:middle"></span>계획=실적 일치</span>
     </div>
     <div id="wfSpTableWrap" style="overflow-x:auto;border:1.5px solid var(--g2);border-radius:10px"></div>
@@ -24484,27 +24484,27 @@ function wfSpRenderTable(){
         var a=wfSpFindAssign(row.code, dt);
         var act=wfSpActualFor(row.code, dt);
         var status=wfSpCellStatus(a, act);
-        var label, cellBg='', cellColor='color:var(--g3);text-align:center', badge='';
+        var label, cellBg='', cellColor='color:var(--g3);text-align:center', subline='';
         if(status==='none'){
           label='+ 등록';
         }else if(status==='auto'){
           label=wfSpActualSummary(act);
           cellBg='background:#dcfce7';
           cellColor='color:#15803d';
-          badge=' <span style="font-size:10px;opacity:.75">(실적자동)</span>';
+          subline='<div style="font-size:10px;opacity:.75;margin-top:2px">(실적자동)</div>';
         }else if(status==='match'){
           label=wfSpCellLabel(row, a);
           cellColor='color:var(--navy)';
         }else if(status==='diff'){
-          label=wfSpCellLabel(row, a);
+          label='⚠️ '+wfSpCellLabel(row, a);
           cellBg='background:#fef3c7';
           cellColor='color:#b45309';
-          badge=' <span title="실적: '+wfSpActualSummary(act).replace(/"/g,'')+'" style="font-size:11px">⚠️</span>';
+          subline='<div style="font-size:10.5px;color:#92400e;margin-top:2px">실적: '+wfSpActualSummary(act)+'</div>';
         }else{ // planonly
           label=wfSpCellLabel(row, a);
           cellColor='color:var(--navy)';
         }
-        h+='<td onclick="wfSpOpenCell(\''+row.code+'\',\''+dt+'\')" style="padding:8px 10px;cursor:pointer;'+cellBg+';'+cellColor+'">'+(label||'+ 등록')+badge+'</td>';
+        h+='<td onclick="wfSpOpenCell(\''+row.code+'\',\''+dt+'\')" style="padding:8px 10px;cursor:pointer;'+cellBg+';'+cellColor+'"><div>'+(label||'+ 등록')+'</div>'+subline+'</td>';
       }
     });
     h+='</tr>';
