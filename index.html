@@ -6845,8 +6845,9 @@ async function savePwChange(){
   if(!res.data){err.textContent='현재 비밀번호가 올바르지 않습니다';err.style.display='block';return;}
   if(nw.length<6){err.textContent='새 비밀번호는 6자 이상이어야 합니다';err.style.display='block';return;}
   if(nw!==nw2){err.textContent='새 비밀번호가 일치하지 않습니다';err.style.display='block';return;}
-  var upd=await sb.from('users').update({password:nw}).eq('id',me.id);
+  var upd=await sb.rpc('change_own_password', {p_user_id: me.id, p_old_password: old, p_new_password: nw});
   if(upd.error){err.textContent='변경 오류: '+upd.error.message;err.style.display='block';return;}
+  if(upd.data===false){err.textContent='현재 비밀번호가 올바르지 않습니다';err.style.display='block';return;}
   closePwChange();
   toast('✅ 비밀번호가 변경되었습니다');
 }
