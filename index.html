@@ -3278,7 +3278,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 <!-- 특별근무 등록 모달 -->
 <div id="wfSpCreateModal" class="modal-bg">
   <div class="modal" style="max-width:360px"><div style="padding:17px">
-    <h3 style="margin:0 0 12px">특별근무 등록</h3>
+    <h3 id="wfSpModalTitle" style="margin:0 0 12px">특별근무 등록</h3>
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">제목</label>
     <input id="wfSpTitle" placeholder="예: 2026 추석 연휴 특별근무" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box">
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">구분</label>
@@ -3292,7 +3292,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     </div>
     <div style="display:flex;gap:8px">
       <button onclick="hideM('wfSpCreateModal')" style="flex:1;padding:11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-weight:700;cursor:pointer">취소</button>
-      <button onclick="wfSpCreateEvent()" style="flex:1;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">등록</button>
+      <button id="wfSpSaveBtn" onclick="wfSpCreateEvent()" style="flex:1;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">등록</button>
     </div>
   </div></div>
 </div>
@@ -24173,19 +24173,40 @@ async function wfSpLoadEvents(){
     var cnt=countMap[ev.id]||0;
     var badgeColor=cnt>0?'#dbeafe':'#fee2e2', badgeText=cnt>0?'#1e40af':'#dc2626';
     var badgeLabel=cnt>0?(cnt+'건 편성'):'미편성';
-    h+='<div onclick="wfSpOpenEvent(\''+ev.id+'\')" style="padding:14px;border:1.5px solid var(--g2);border-radius:12px;margin-bottom:10px;cursor:pointer;background:white">'+
+    h+='<div style="padding:14px;border:1.5px solid var(--g2);border-radius:12px;margin-bottom:10px;background:white">'+
+       '<div onclick="wfSpOpenEvent(\''+ev.id+'\')" style="cursor:pointer">'+
        '<div style="font-weight:800;font-size:15px;color:var(--g7)">'+ev.title+'</div>'+
        '<div style="font-size:13px;color:var(--g4);margin-top:4px">'+ev.start_date+' ~ '+ev.end_date+'</div>'+
        '<span style="display:inline-block;margin-top:8px;padding:3px 10px;border-radius:10px;background:'+badgeColor+';color:'+badgeText+';font-size:12px;font-weight:700">'+badgeLabel+'</span>'+
+       '</div>'+
+       '<div style="display:flex;gap:6px;margin-top:10px">'+
+       '<button onclick="event.stopPropagation();wfSpOpenEdit(\''+ev.id+'\')" style="flex:1;padding:7px;background:#dbeafe;color:#1e40af;border:none;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer">✎ 수정</button>'+
+       '<button onclick="event.stopPropagation();wfSpDeleteEventById(\''+ev.id+'\',\''+ev.title.replace(/'/g,"\\'")+'\')" style="flex:1;padding:7px;background:#fee2e2;color:#dc2626;border:none;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer">🗑 삭제</button>'+
+       '</div>'+
        '</div>';
   });
   wrap.innerHTML=h;
 }
+var wfSpEditId=null;
 function wfSpOpenCreate(){
+  wfSpEditId=null;
+  document.getElementById('wfSpModalTitle').textContent='특별근무 등록';
+  document.getElementById('wfSpSaveBtn').textContent='등록';
   document.getElementById('wfSpTitle').value='';
   document.getElementById('wfSpType').value='성수기';
   document.getElementById('wfSpStart').value='';
   document.getElementById('wfSpEnd').value='';
+  showM('wfSpCreateModal');
+}
+function wfSpOpenEdit(id){
+  var ev=wfSpEvents.find(function(x){return x.id===id;}); if(!ev) return;
+  wfSpEditId=id;
+  document.getElementById('wfSpModalTitle').textContent='특별근무 수정';
+  document.getElementById('wfSpSaveBtn').textContent='저장';
+  document.getElementById('wfSpTitle').value=ev.title||'';
+  document.getElementById('wfSpType').value=ev.period_type||'성수기';
+  document.getElementById('wfSpStart').value=ev.start_date||'';
+  document.getElementById('wfSpEnd').value=ev.end_date||'';
   showM('wfSpCreateModal');
 }
 async function wfSpCreateEvent(){
@@ -24195,11 +24216,24 @@ async function wfSpCreateEvent(){
   var en=document.getElementById('wfSpEnd').value;
   if(!title||!s||!en){ toast('⚠️ 제목·기간을 모두 입력해주세요'); return; }
   if(s>en){ toast('⚠️ 종료일이 시작일보다 빠릅니다'); return; }
-  var id='sp_'+Date.now();
-  var res=await sb.from('wf_special_events').insert({id:id, title:title, period_type:type, start_date:s, end_date:en, created_by: me?me.name:''});
-  if(res.error){ toast('등록 오류: '+res.error.message); return; }
-  toast('✓ 등록되었습니다');
+  if(wfSpEditId){
+    var res2=await sb.from('wf_special_events').update({title:title, period_type:type, start_date:s, end_date:en}).eq('id', wfSpEditId);
+    if(res2.error){ toast('수정 오류: '+res2.error.message); return; }
+    toast('✓ 수정되었습니다');
+  }else{
+    var id='sp_'+Date.now();
+    var res=await sb.from('wf_special_events').insert({id:id, title:title, period_type:type, start_date:s, end_date:en, created_by: me?me.name:''});
+    if(res.error){ toast('등록 오류: '+res.error.message); return; }
+    toast('✓ 등록되었습니다');
+  }
   hideM('wfSpCreateModal');
+  wfSpLoadEvents();
+}
+async function wfSpDeleteEventById(id, title){
+  if(!confirm(title+'을(를) 삭제하시겠습니까? 편성 데이터도 함께 삭제됩니다.')) return;
+  var res=await sb.from('wf_special_events').delete().eq('id', id);
+  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  toast('🗑 삭제되었습니다');
   wfSpLoadEvents();
 }
 async function wfSpOpenEvent(id){
