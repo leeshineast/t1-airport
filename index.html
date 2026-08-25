@@ -3268,8 +3268,14 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <button onclick="wfSpBackToList()" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;margin-bottom:10px">← 목록</button>
     <div id="wfSpDetailHead" style="margin-bottom:10px"></div>
     <div style="display:flex;gap:6px;margin-bottom:10px">
+      <button onclick="wfSpRefreshActuals()" style="padding:8px 14px;background:white;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🔄 실적 새로고침</button>
       <button onclick="wfSpOpenReportPreview()" style="padding:8px 14px;background:white;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📄 보고서 미리보기</button>
       <button onclick="wfSpDeleteEvent()" style="padding:8px 14px;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🗑 삭제</button>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;font-size:11.5px;color:var(--g5)">
+      <span><span style="display:inline-block;width:10px;height:10px;background:#dcfce7;border-radius:3px;margin-right:4px;vertical-align:middle"></span>실적 자동표시(계획 미입력)</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#fef3c7;border-radius:3px;margin-right:4px;vertical-align:middle"></span>계획과 실적이 다름 ⚠️</span>
+      <span><span style="display:inline-block;width:10px;height:10px;background:#fff;border:1px solid var(--g3);border-radius:3px;margin-right:4px;vertical-align:middle"></span>계획=실적 일치</span>
     </div>
     <div id="wfSpTableWrap" style="overflow-x:auto;border:1.5px solid var(--g2);border-radius:10px"></div>
   </div>
@@ -24332,9 +24338,16 @@ async function wfSpOpenEvent(id){
     '<div style="font-size:13px;color:var(--g4);margin-top:2px">기간: '+ev.start_date+' ~ '+ev.end_date+'</div>';
   var res=await sb.from('wf_special_assignments').select('*').eq('event_id', ev.id);
   wfSpAssignments=res.data||[];
+  await wfSpFetchActuals();
   wfSpRenderTable();
 }
 function wfSpBackToList(){ wfSpCurEvent=null; wfSpLoadEvents(); }
+async function wfSpRefreshActuals(){
+  toast('🔄 실적 불러오는 중...');
+  await wfSpFetchActuals();
+  wfSpRenderTable();
+  toast('✓ 실적 반영 완료');
+}
 function wfSpDateRange(ev){
   var dates=[]; var d=new Date(ev.start_date+'T00:00:00'); var end=new Date(ev.end_date+'T00:00:00');
   while(d<=end){ dates.push(wfSpFmtDate(d)); d.setDate(d.getDate()+1); }
@@ -24364,6 +24377,68 @@ function wfSpCellLabel(row, a){
   if(staff) parts.push('사원 '+staff+'명');
   var total=wfSpTeamHeadcount(a);
   return parts.join(' / ')+(parts.length?(' = '+total+'명'):'');
+}
+
+// ── 실제 출근/인력현황 데이터 연동 (관리자 출퇴근 mgr_attendance + 조별 인력현황 mp_data) ──
+var wfSpActuals={}; // date -> '1팀'..'10팀' -> {leader, subs:[], staff}
+async function wfSpFetchActuals(){
+  var ev=wfSpCurEvent; if(!ev){ wfSpActuals={}; return; }
+  var dates=wfSpDateRange(ev);
+  var dFrom=dates[0], dTo=dates[dates.length-1];
+  var actuals={};
+  dates.forEach(function(dt){ actuals[dt]={}; });
+  try{
+    var mgrRes=await msFetchAll(function(){ return sb.from('mgr_attendance').select('date,team,role,checked,checked_by').gte('date',dFrom).lte('date',dTo).eq('checked',true); });
+    (mgrRes.data||[]).forEach(function(r){
+      var m=r.team && String(r.team).match(/^(\d+)팀$/);
+      if(!m || !actuals[r.date]) return;
+      var code=m[1]+'팀';
+      if(!actuals[r.date][code]) actuals[r.date][code]={leader:null, subs:[], staff:0};
+      if(r.role==='팀장') actuals[r.date][code].leader=r.checked_by||null;
+      else if(r.role==='조장' && r.checked_by) actuals[r.date][code].subs.push(r.checked_by);
+    });
+    var mpRes=await msFetchAll(function(){ return sb.from('mp_data').select('date,team_code,values').gte('date',dFrom).lte('date',dTo); });
+    (mpRes.data||[]).forEach(function(r){
+      var m=r.team_code && String(r.team_code).match(/^(\d+)팀/);
+      if(!m || !actuals[r.date]) return;
+      var code=m[1]+'팀';
+      if(!actuals[r.date][code]) actuals[r.date][code]={leader:null, subs:[], staff:0};
+      var sum=0;
+      (r.values||[]).forEach(function(row){ (row||[]).forEach(function(v){ sum+=parseInt(v,10)||0; }); });
+      actuals[r.date][code].staff += sum;
+    });
+  }catch(e){ /* 실적 연동 실패해도 계획표는 정상 표시 */ }
+  wfSpActuals=actuals;
+}
+function wfSpActualFor(code, date){
+  return (wfSpActuals[date] && wfSpActuals[date][code]) || null;
+}
+function wfSpActualHeadcount(act){
+  if(!act) return 0;
+  return (act.leader?1:0) + (act.subs||[]).length + (act.staff||0);
+}
+function wfSpActualSummary(act){
+  if(!act) return '';
+  var parts=[];
+  if(act.leader) parts.push('팀장 '+act.leader);
+  if(act.subs&&act.subs.length) parts.push('조장 '+act.subs.join(','));
+  if(act.staff) parts.push('사원 '+act.staff+'명');
+  var total=wfSpActualHeadcount(act);
+  return parts.join(' / ')+(parts.length?(' = '+total+'명'):'');
+}
+// 상태: 'none'(계획/실적 둘다없음), 'auto'(계획없음, 실적있음), 'match'(계획=실적), 'diff'(계획≠실적)
+function wfSpCellStatus(a, act){
+  var hasPlan = a && (a.leader_name || a.subleader_names || a.staff_count);
+  var hasAct = act && (act.leader || (act.subs&&act.subs.length) || act.staff);
+  if(!hasPlan && !hasAct) return 'none';
+  if(!hasPlan && hasAct) return 'auto';
+  if(hasPlan && !hasAct) return 'planonly';
+  var planLeader=a.leader_name||null;
+  var planSubs=(a.subleader_names||'').split(',').map(function(s){return s.trim();}).filter(Boolean).sort();
+  var planStaff=parseInt(a.staff_count,10)||0;
+  var actSubs=(act.subs||[]).slice().sort();
+  var same = planLeader===(act.leader||null) && JSON.stringify(planSubs)===JSON.stringify(actSubs) && planStaff===(act.staff||0);
+  return same?'match':'diff';
 }
 function wfSpRenderTable(){
   var ev=wfSpCurEvent; if(!ev) return;
@@ -24407,8 +24482,29 @@ function wfSpRenderTable(){
         h+='<td style="padding:8px 12px;text-align:center;font-weight:800;color:var(--navy)">'+sum+'명</td>';
       }else{
         var a=wfSpFindAssign(row.code, dt);
-        var label=wfSpCellLabel(row, a);
-        h+='<td onclick="wfSpOpenCell(\''+row.code+'\',\''+dt+'\')" style="padding:8px 10px;cursor:pointer;'+(label?'color:var(--navy)':'color:var(--g3);text-align:center')+'">'+(label||'+ 등록')+'</td>';
+        var act=wfSpActualFor(row.code, dt);
+        var status=wfSpCellStatus(a, act);
+        var label, cellBg='', cellColor='color:var(--g3);text-align:center', badge='';
+        if(status==='none'){
+          label='+ 등록';
+        }else if(status==='auto'){
+          label=wfSpActualSummary(act);
+          cellBg='background:#dcfce7';
+          cellColor='color:#15803d';
+          badge=' <span style="font-size:10px;opacity:.75">(실적자동)</span>';
+        }else if(status==='match'){
+          label=wfSpCellLabel(row, a);
+          cellColor='color:var(--navy)';
+        }else if(status==='diff'){
+          label=wfSpCellLabel(row, a);
+          cellBg='background:#fef3c7';
+          cellColor='color:#b45309';
+          badge=' <span title="실적: '+wfSpActualSummary(act).replace(/"/g,'')+'" style="font-size:11px">⚠️</span>';
+        }else{ // planonly
+          label=wfSpCellLabel(row, a);
+          cellColor='color:var(--navy)';
+        }
+        h+='<td onclick="wfSpOpenCell(\''+row.code+'\',\''+dt+'\')" style="padding:8px 10px;cursor:pointer;'+cellBg+';'+cellColor+'">'+(label||'+ 등록')+badge+'</td>';
       }
     });
     h+='</tr>';
@@ -24460,9 +24556,20 @@ async function wfSpOpenCell(code, date){
     wfSpRenderNamesCandidates();
     wfSpRenderNamesSelected();
   }else{
-    wfSpPick.leader=(a&&a.leader_name)||null;
-    wfSpPick.subs=(a&&a.subleader_names)?a.subleader_names.split(',').map(function(s){return s.trim();}).filter(Boolean):[];
+    var act=wfSpActualFor(code, date);
+    var hasPlan = a && (a.leader_name || a.subleader_names || a.staff_count);
+    // 계획이 아직 없고 실제 출근실적이 있으면 실적값을 기본값으로 미리 채워줌
+    if(!hasPlan && act){
+      wfSpPick.leader=act.leader||null;
+      wfSpPick.subs=(act.subs||[]).slice();
+    }else{
+      wfSpPick.leader=(a&&a.leader_name)||null;
+      wfSpPick.subs=(a&&a.subleader_names)?a.subleader_names.split(',').map(function(s){return s.trim();}).filter(Boolean):[];
+    }
+    var staffDefault = hasPlan ? ((a&&a.staff_count)!=null?a.staff_count:'') : (act?(act.staff||''):'');
+    var actualHintHtml = act ? ('<div style="font-size:11.5px;color:#15803d;background:#dcfce7;padding:6px 8px;border-radius:6px;margin-bottom:10px">📊 실제 출근실적: '+(wfSpActualSummary(act)||'-')+'</div>') : '';
     body.innerHTML=
+      actualHintHtml+
       '<label style="font-size:12.5px;font-weight:700;color:var(--g6)">팀장 선택 (1명, 검색으로 다른사람 추가 가능)</label>'+
       '<input id="wfSpSearchLeader" oninput="wfSpRenderLeaderCandidates()" placeholder="다른 사람 이름 검색" style="width:100%;padding:9px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;margin:6px 0 8px;box-sizing:border-box">'+
       '<div id="wfSpLeaderCandidates" style="display:flex;flex-wrap:wrap;max-height:130px;overflow-y:auto;margin-bottom:6px"></div>'+
@@ -24472,7 +24579,7 @@ async function wfSpOpenCell(code, date){
       '<div id="wfSpSubCandidates" style="display:flex;flex-wrap:wrap;max-height:130px;overflow-y:auto;margin-bottom:6px"></div>'+
       '<div id="wfSpSubSelected" style="display:flex;flex-wrap:wrap;margin-bottom:12px;min-height:26px"></div>'+
       '<label style="font-size:12.5px;font-weight:700;color:var(--g6)">사원수</label>'+
-      '<input id="wfSpStaffInput" type="number" min="0" placeholder="예: 20" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 14px;box-sizing:border-box" value="'+((a&&a.staff_count)!=null?a.staff_count:'')+'">';
+      '<input id="wfSpStaffInput" type="number" min="0" placeholder="예: 20" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 14px;box-sizing:border-box" value="'+staffDefault+'">';
     wfSp_leaderDefaultCandidates=wfSpUsersList.filter(function(u){return wfSpUserMatch(code,u,'leader');});
     wfSp_subDefaultCandidates=wfSpUsersList.filter(function(u){return wfSpUserMatch(code,u,'sub');});
     wfSpRenderLeaderCandidates(); wfSpRenderLeaderSelected();
