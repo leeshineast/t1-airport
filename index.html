@@ -23997,7 +23997,7 @@ function wfEmpUpload(inputEl){
   var reader=new FileReader();
   reader.onload=async function(e){
     try{
-      var wb=XLSX.read(e.target.result,{type:'binary'});
+      var wb=XLSX.read(e.target.result,{type:'binary', cellDates:true});
       var sheetName=wb.SheetNames.find(function(n){return n.indexOf('인원현황')!==-1||n.indexOf('휴변')!==-1||n.indexOf('휴무')!==-1;})||wb.SheetNames[0];
       var ws=wb.Sheets[sheetName];
       // 원본 AOA로 읽어서 실제 헤더 행(사번 컬럼이 있는 행)을 자동 탐지 — 상단에 병합된 제목행이 있어도 대응
@@ -24037,7 +24037,7 @@ function wfEmpUpload(inputEl){
       // 팀 번호별 오전/오후/야간 기본 매핑 (근무구역 정보가 없는 파일 대응)
       var TEAM_SHIFT_MAP={'1':'오전','2':'오전','3':'오전','4':'오전','6':'오후','7':'오후','8':'오후','9':'오후','5':'야간','10':'야간'};
 
-      var empPayload=[], offPayload=[];
+      var empPayload=[], offPayload=[], leavePayload=[];
       rows.forEach(function(r){
         var empNo=String(r['사번']||'').trim();
         if(!empNo) return;
@@ -24056,6 +24056,7 @@ function wfEmpUpload(inputEl){
         if(area.indexOf('오전')!==-1) shift='오전';
         else if(area.indexOf('오후')!==-1) shift='오후';
         else if(area.indexOf('야간')!==-1) shift='야간';
+        else if(team==='행정') shift='일근';
         else if(pos.indexOf('총괄')!==-1 || hq.indexOf('총괄')!==-1 || team.indexOf('총괄')!==-1) shift='일근';
         else{
           var teamNumMatch=team.match(/(\d+)/);
@@ -24074,6 +24075,21 @@ function wfEmpUpload(inputEl){
             });
           }
         }
+        // 휴직 컬럼 + 시작일자/종료일자 → wf_leave 저장용
+        var leaveVal=String(r['휴직']||'').trim();
+        var sRaw=r['시작일자'], eRaw=r['종료일자'];
+        if(leaveVal && sRaw && eRaw){
+          var sDate=(sRaw instanceof Date)?sRaw:new Date(sRaw);
+          var eDate=(eRaw instanceof Date)?eRaw:new Date(eRaw);
+          if(!isNaN(sDate) && !isNaN(eDate)){
+            leavePayload.push({
+              emp_no:empNo, leave_type:leaveVal,
+              start_date:wfYmd(sDate).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3'),
+              end_date:wfYmd(eDate).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3'),
+              note:String(r['비고']||'')||null, updated_by: me?me.name:''
+            });
+          }
+        }
       });
       if(!empPayload.length){ toast('⚠️ 유효한 사번 데이터가 없습니다. 양식을 확인해주세요'); inputEl.value=''; return; }
       var r1=await sb.from('wf_employees').upsert(empPayload,{onConflict:'emp_no'});
@@ -24082,7 +24098,11 @@ function wfEmpUpload(inputEl){
         var r2=await sb.from('wf_fixed_off').upsert(offPayload,{onConflict:'emp_no,quarter'});
         if(r2.error){ toast('휴무요일 저장 오류: '+r2.error.message); return; }
       }
-      toast('✓ '+empPayload.length+'명 등록/갱신 완료'+(offPayload.length?(' ('+(wfCurQuarter||wfNowQuarter())+' 휴무요일 '+offPayload.length+'건 포함)'):''));
+      if(leavePayload.length){
+        var r3=await sb.from('wf_leave').upsert(leavePayload,{onConflict:'emp_no,start_date'});
+        if(r3.error){ toast('휴직정보 저장 오류: '+r3.error.message); return; }
+      }
+      toast('✓ '+empPayload.length+'명 등록/갱신 완료'+(offPayload.length?(' ('+(wfCurQuarter||wfNowQuarter())+' 휴무요일 '+offPayload.length+'건 포함)'):'')+(leavePayload.length?(' · 휴직 '+leavePayload.length+'건'):''));
       inputEl.value='';
       loadWfEmployees();
     }catch(err){ toast('엑셀 처리 오류: '+String(err.message||err)); inputEl.value=''; }
@@ -24103,6 +24123,7 @@ function wfCalcDayGubun(dateObj, holidaySet){
 function wfYmd(d){ return d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0'); }
 function wfTkgCode(e){
   if(e.tkg_code) return e.tkg_code;
+  if(e.team==='행정') return 'B0008';
   if(e.shift_type==='오전') return 'B0010';
   if(e.shift_type==='오후') return 'B0011';
   if(e.shift_type==='야간') return 'B0012';
@@ -24110,6 +24131,7 @@ function wfTkgCode(e){
 }
 function wfBaseTmCode(e){
   if(e.tm_code_base) return e.tm_code_base;
+  if(e.team==='행정') return 'P01';
   if(WF_HQ_TIME_CODE[e.team]) return WF_HQ_TIME_CODE[e.team];
   if(e.shift_type==='오전') return 'S01';
   if(e.shift_type==='오후') return 'S06';
@@ -24126,6 +24148,16 @@ async function wfDownloadErp(){
     var holidaySet={};
     (holRes.data||[]).forEach(function(h){ holidaySet[h.holiday_date.replace(/-/g,'')]=true; });
 
+    // 이 달과 겹치는 휴직기간 조회 → 사번별 [시작,종료] 목록
+    var monthStartStr=monthVal+'-01', monthEndStr=wfYmd(end).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3');
+    var leaveRes=await msFetchAll(function(){ return sb.from('wf_leave').select('emp_no,start_date,end_date').lte('start_date', monthEndStr).gte('end_date', monthStartStr); });
+    var leaveMap={};
+    (leaveRes.data||[]).forEach(function(l){ (leaveMap[l.emp_no]=leaveMap[l.emp_no]||[]).push({s:l.start_date, e:l.end_date}); });
+    function wfIsOnLeave(empNo, dateStr){
+      var ranges=leaveMap[empNo]; if(!ranges) return false;
+      return ranges.some(function(r){ return dateStr>=r.s && dateStr<=r.e; });
+    }
+
     var aoa=[['회사코드','사업장코드','사원번호','일구분코드','시작일','근무조코드','시간코드']];
     var weekMap=['일','월','화','수','목','금','토'];
     wfEmployees.forEach(function(e){
@@ -24135,8 +24167,13 @@ async function wfDownloadErp(){
       while(d<=end){
         var wdKr=weekMap[d.getDay()];
         var dg=wfCalcDayGubun(d, holidaySet);
-        var isOff=offDays.indexOf(wdKr)!==-1;
-        var tm=isOff?'P26':baseTm;
+        var ymdDash=wfYmd(d).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3');
+        var tm;
+        if(wfIsOnLeave(e.emp_no, ymdDash)) tm='P27';
+        else{
+          var isOff=offDays.indexOf(wdKr)!==-1;
+          tm=isOff?'P26':baseTm;
+        }
         aoa.push(['IAOS','1000',e.emp_no,dg,wfYmd(d),tkg,tm]);
         d.setDate(d.getDate()+1);
       }
