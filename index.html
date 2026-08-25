@@ -2953,10 +2953,15 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <select id="tlStatGender" onchange="renderToiletStats()" style="flex:1;min-width:90px;padding:8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white">
         <option value="">전체 성별</option><option value="남자 화장실">남자</option><option value="여자 화장실">여자</option><option value="공용 화장실">공용</option>
       </select>
+      <select id="tlStatCategory" onchange="renderToiletStats()" style="flex:1;min-width:90px;padding:8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white">
+        <option value="">전체 일반/상주</option>
+      </select>
     </div>
     <div id="tlStatCards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px"></div>
     <div style="font-size:14px;font-weight:800;color:var(--g6);margin-bottom:8px">성별 · 구분별 세부 내역</div>
     <div id="tlStatGenderTable" style="overflow-x:auto;margin-bottom:16px"></div>
+    <div style="font-size:14px;font-weight:800;color:var(--g6);margin-bottom:8px">일반/상주 구분별 내역</div>
+    <div id="tlStatCategoryTable" style="overflow-x:auto;margin-bottom:16px"></div>
     <div style="font-size:14px;font-weight:800;color:var(--g6);margin-bottom:8px">층별 내역</div>
     <div id="tlStatFloorTable" style="overflow-x:auto"></div>
   </div>
@@ -18300,10 +18305,20 @@ function renderToiletStats(){
   var fZone=document.getElementById('tlStatZone').value;
   var fFloor=document.getElementById('tlStatFloor').value;
   var fGender=document.getElementById('tlStatGender').value;
+  var fCategory=document.getElementById('tlStatCategory').value;
+  // 구분(일반/상주 + 직접입력값) 필터 옵션을 실제 데이터 기준으로 동적 구성
+  var catSel=document.getElementById('tlStatCategory');
+  if(catSel && catSel.options.length<=1){
+    var cats=Array.from(new Set((toiletData||[]).map(function(r){return r.category;}).filter(Boolean)));
+    var order=['일반','상주'];
+    cats.sort(function(a,b){ var ia=order.indexOf(a), ib=order.indexOf(b); if(ia===-1)ia=99; if(ib===-1)ib=99; return ia!==ib?ia-ib:a.localeCompare(b); });
+    cats.forEach(function(c){ var o=document.createElement('option'); o.value=c; o.textContent=c; catSel.appendChild(o); });
+  }
   var filtered=(toiletData||[]).filter(function(r){
     if(fZone && r.zone!==fZone) return false;
     if(fFloor && r.floor!==fFloor) return false;
     if(fGender && r.gender!==fGender) return false;
+    if(fCategory && r.category!==fCategory) return false;
     return true;
   });
   function sum(rows,key){ return rows.reduce(function(a,r){ return a+(parseInt(r[key],10)||0); },0); }
@@ -18334,6 +18349,29 @@ function renderToiletStats(){
   });
   gh+='</tbody></table>';
   document.getElementById('tlStatGenderTable').innerHTML=anyGenderRow?gh:'<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">데이터가 없습니다</div>';
+
+  // 일반/상주 구분별 내역
+  var catOrder=['일반','상주'];
+  var catList=Array.from(new Set(filtered.map(function(r){return r.category;}).filter(Boolean)));
+  catList.sort(function(a,b){ var ia=catOrder.indexOf(a), ib=catOrder.indexOf(b); if(ia===-1)ia=99; if(ib===-1)ib=99; return ia!==ib?ia-ib:a.localeCompare(b); });
+  var ch='<table style="width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap"><thead><tr style="background:var(--navy);color:#fff">'+
+    ['구분','개소','양변기','소변기','세면대'].map(function(c){return '<th style="padding:8px 6px;text-align:center">'+c+'</th>';}).join('')+
+    '</tr></thead><tbody>';
+  var anyCatRow=false;
+  catList.forEach(function(cat,i){
+    var rows=filtered.filter(function(r){ return r.category===cat; });
+    if(!rows.length) return;
+    anyCatRow=true;
+    ch+='<tr style="background:'+(i%2===0?'#fff':'var(--g1)')+';border-bottom:1px solid var(--g2)">'+
+      '<td style="padding:7px 6px;text-align:center;font-weight:700">'+eeEsc(cat)+'</td>'+
+      '<td style="padding:7px 6px;text-align:center">'+rows.length+'개소</td>'+
+      '<td style="padding:7px 6px;text-align:center">'+sum(rows,'toilet_cnt')+'개</td>'+
+      '<td style="padding:7px 6px;text-align:center">'+(sum(rows,'urinal_cnt')||'-')+(sum(rows,'urinal_cnt')?'개':'')+'</td>'+
+      '<td style="padding:7px 6px;text-align:center">'+sum(rows,'sink_cnt')+'개</td>'+
+      '</tr>';
+  });
+  ch+='</tbody></table>';
+  document.getElementById('tlStatCategoryTable').innerHTML=anyCatRow?ch:'<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">데이터가 없습니다</div>';
 
   // 층별 내역
   var floorOrder=['지하2층','지하1층','1층','2층','3층','4층'];
