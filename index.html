@@ -2846,7 +2846,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div style="display:flex;border-bottom:2px solid var(--g2)">
     <div id="tlT0" onclick="tlTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:15px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">작성</div>
     <div id="tlT1" onclick="tlTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">현황</div>
-    <div id="tlT2" onclick="tlTab(2)" style="flex:1;text-align:center;padding:10px 0;font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">다운로드</div>
+    <div id="tlT2" onclick="tlTab(2)" style="flex:1;text-align:center;padding:10px 0;font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">통계</div>
+    <div id="tlT3" onclick="tlTab(3)" style="flex:1;text-align:center;padding:10px 0;font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">다운로드</div>
   </div>
 
   <!-- 작성 탭 -->
@@ -2934,8 +2935,28 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <div id="tlList"></div>
   </div>
 
-  <!-- 다운로드 탭 -->
+  <!-- 통계 탭 -->
   <div id="tlP2" style="display:none;padding:13px">
+    <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
+      <select id="tlStatZone" onchange="renderToiletStats()" style="flex:1;min-width:90px;padding:8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white">
+        <option value="">전체 구역</option><option value="Airside">A/S</option><option value="Landside">L/S</option>
+      </select>
+      <select id="tlStatFloor" onchange="renderToiletStats()" style="flex:1;min-width:90px;padding:8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white">
+        <option value="">전체 층</option><option value="지하2층">지하2층</option><option value="지하1층">지하1층</option><option value="1층">1층</option><option value="2층">2층</option><option value="3층">3층</option><option value="4층">4층</option>
+      </select>
+      <select id="tlStatGender" onchange="renderToiletStats()" style="flex:1;min-width:90px;padding:8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white">
+        <option value="">전체 성별</option><option value="남자 화장실">남자</option><option value="여자 화장실">여자</option><option value="공용 화장실">공용</option>
+      </select>
+    </div>
+    <div id="tlStatCards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px"></div>
+    <div style="font-size:14px;font-weight:800;color:var(--g6);margin-bottom:8px">성별 · 구분별 세부 내역</div>
+    <div id="tlStatGenderTable" style="overflow-x:auto;margin-bottom:16px"></div>
+    <div style="font-size:14px;font-weight:800;color:var(--g6);margin-bottom:8px">층별 내역</div>
+    <div id="tlStatFloorTable" style="overflow-x:auto"></div>
+  </div>
+
+  <!-- 다운로드 탭 -->
+  <div id="tlP3" style="display:none;padding:13px">
     <div class="card" style="margin-bottom:12px"><div class="cb">
       <div style="font-size:14px;font-weight:700;color:var(--g6);margin-bottom:8px">📥 엑셀 다운로드</div>
       <div style="font-size:13px;color:var(--g4);margin-bottom:12px">현재 등록된 화장실 전체 현황을 엑셀로 받습니다.</div>
@@ -18079,9 +18100,10 @@ var toiletData=[];
 var tlEditId=null;
 
 function tlTab(n){
-  tabSwitch('tl',n,3);
+  tabSwitch('tl',n,4);
   if(n===0) tlResetForm();
   if(n===1) renderToiletList();
+  if(n===2) renderToiletStats();
 }
 function loadToiletScreen(){
   tlResetForm();
@@ -18177,6 +18199,67 @@ async function subToiletNew(){
     await loadToiletFromDB();
     tlTab(1);
   }catch(e){ toast('저장 오류: '+String(e.message||e)); }
+}
+function renderToiletStats(){
+  var cardsEl=document.getElementById('tlStatCards'); if(!cardsEl) return;
+  var fZone=document.getElementById('tlStatZone').value;
+  var fFloor=document.getElementById('tlStatFloor').value;
+  var fGender=document.getElementById('tlStatGender').value;
+  var filtered=(toiletData||[]).filter(function(r){
+    if(fZone && r.zone!==fZone) return false;
+    if(fFloor && r.floor!==fFloor) return false;
+    if(fGender && r.gender!==fGender) return false;
+    return true;
+  });
+  function sum(rows,key){ return rows.reduce(function(a,r){ return a+(parseInt(r[key],10)||0); },0); }
+  var totalToilet=sum(filtered,'toilet_cnt'), totalUrinal=sum(filtered,'urinal_cnt'), totalSink=sum(filtered,'sink_cnt');
+  cardsEl.innerHTML=
+    '<div style="background:#dbeafe;border-radius:12px;padding:14px 8px;text-align:center"><div style="font-size:13px;font-weight:700;color:#1e40af">양변기</div><div style="font-size:20px;font-weight:900;color:#1e40af;margin-top:6px">'+totalToilet.toLocaleString()+'개</div></div>'
+    +'<div style="background:#fce7f3;border-radius:12px;padding:14px 8px;text-align:center"><div style="font-size:13px;font-weight:700;color:#be185d">소변기</div><div style="font-size:20px;font-weight:900;color:#be185d;margin-top:6px">'+totalUrinal.toLocaleString()+'개</div></div>'
+    +'<div style="background:#dcfce7;border-radius:12px;padding:14px 8px;text-align:center"><div style="font-size:13px;font-weight:700;color:#15803d">세면대</div><div style="font-size:20px;font-weight:900;color:#15803d;margin-top:6px">'+totalSink.toLocaleString()+'개</div></div>';
+
+  // 성별 · 구분별 세부 내역
+  var genderOrder=['남자 화장실','여자 화장실','공용 화장실'];
+  var genderLabel={'남자 화장실':'남자화장실','여자 화장실':'여자화장실','공용 화장실':'공용화장실'};
+  var gh='<table style="width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap"><thead><tr style="background:var(--navy);color:#fff">'+
+    ['구분','개소','양변기','소변기','세면대'].map(function(c){return '<th style="padding:8px 6px;text-align:center">'+c+'</th>';}).join('')+
+    '</tr></thead><tbody>';
+  var anyGenderRow=false;
+  genderOrder.forEach(function(g,i){
+    var rows=filtered.filter(function(r){ return r.gender===g; });
+    if(!rows.length) return;
+    anyGenderRow=true;
+    gh+='<tr style="background:'+(i%2===0?'#fff':'var(--g1)')+';border-bottom:1px solid var(--g2)">'+
+      '<td style="padding:7px 6px;text-align:center;font-weight:700">'+(genderLabel[g]||g)+'</td>'+
+      '<td style="padding:7px 6px;text-align:center">'+rows.length+'개소</td>'+
+      '<td style="padding:7px 6px;text-align:center">'+sum(rows,'toilet_cnt')+'개</td>'+
+      '<td style="padding:7px 6px;text-align:center">'+(sum(rows,'urinal_cnt')||'-')+(sum(rows,'urinal_cnt')?'개':'')+'</td>'+
+      '<td style="padding:7px 6px;text-align:center">'+sum(rows,'sink_cnt')+'개</td>'+
+      '</tr>';
+  });
+  gh+='</tbody></table>';
+  document.getElementById('tlStatGenderTable').innerHTML=anyGenderRow?gh:'<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">데이터가 없습니다</div>';
+
+  // 층별 내역
+  var floorOrder=['지하2층','지하1층','1층','2층','3층','4층'];
+  var fh='<table style="width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap"><thead><tr style="background:var(--navy);color:#fff">'+
+    ['층','개소','양변기','소변기','세면대'].map(function(c){return '<th style="padding:8px 6px;text-align:center">'+c+'</th>';}).join('')+
+    '</tr></thead><tbody>';
+  var anyFloorRow=false;
+  floorOrder.forEach(function(fl,i){
+    var rows=filtered.filter(function(r){ return r.floor===fl; });
+    if(!rows.length) return;
+    anyFloorRow=true;
+    fh+='<tr style="background:'+(i%2===0?'#fff':'var(--g1)')+';border-bottom:1px solid var(--g2)">'+
+      '<td style="padding:7px 6px;text-align:center;font-weight:700">'+fl+'</td>'+
+      '<td style="padding:7px 6px;text-align:center">'+rows.length+'개소</td>'+
+      '<td style="padding:7px 6px;text-align:center">'+sum(rows,'toilet_cnt')+'개</td>'+
+      '<td style="padding:7px 6px;text-align:center">'+(sum(rows,'urinal_cnt')||'-')+(sum(rows,'urinal_cnt')?'개':'')+'</td>'+
+      '<td style="padding:7px 6px;text-align:center">'+sum(rows,'sink_cnt')+'개</td>'+
+      '</tr>';
+  });
+  fh+='</tbody></table>';
+  document.getElementById('tlStatFloorTable').innerHTML=anyFloorRow?fh:'<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">데이터가 없습니다</div>';
 }
 function renderToiletList(){
   var listEl=document.getElementById('tlList'); if(!listEl) return;
@@ -18460,7 +18543,7 @@ async function uploadToiletData(){
   if(!canWrite()) return;
   if(!window._tlPendingData||!window._tlPendingData.length){ toast('파일을 먼저 선택해주세요'); return; }
   if(!confirm('기존 화장실 데이터 '+toiletData.length+'건을 전부 삭제하고,\n새 파일의 '+window._tlPendingData.length+'건으로 교체합니다.\n계속할까요?')) return;
-  var btn=document.querySelector('#tlP2 button[onclick="uploadToiletData()"]');
+  var btn=document.querySelector('#tlP3 button[onclick="uploadToiletData()"]');
   if(btn){btn.disabled=true;btn.textContent='업로드 중...';}
   try{
     await sb.from('toilet_master').delete().neq('id',0);
