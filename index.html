@@ -23889,11 +23889,17 @@ async function loadWfEmployees(){
 function wfFillFilterOptions(){
   var teamSel=document.getElementById('wfFTeam'), grpSel=document.getElementById('wfFGroup');
   var teams=Array.from(new Set(wfEmployees.map(function(e){return e.team;}).filter(Boolean))).sort();
-  var groups=Array.from(new Set(wfEmployees.map(function(e){return e.group_name;}).filter(Boolean))).sort();
+  var groups=['A조','B조','C조']; // 조는 A/B/C만 존재
   var curTeam=teamSel.value, curGrp=grpSel.value;
   teamSel.innerHTML='<option value="">팀 전체</option>'+teams.map(function(t){return '<option value="'+t+'">'+t+'</option>';}).join('');
   grpSel.innerHTML='<option value="">조 전체</option>'+groups.map(function(g){return '<option value="'+g+'">'+g+'</option>';}).join('');
   teamSel.value=curTeam; grpSel.value=curGrp;
+}
+function wfTeamSortKey(team){
+  // "환경미화1팀" → 1 처럼 팀 번호 기준 자연정렬, 총괄/운영팀 등은 뒤로
+  if(!team) return 9999;
+  var m=team.match(/(\d+)/);
+  return m?parseInt(m[1],10):8888;
 }
 function wfRenderTable(){
   var wrap=document.getElementById('wfTableWrap');
@@ -23909,6 +23915,18 @@ function wfRenderTable(){
     if(fDay && e.off1!==fDay && e.off2!==fDay) return false;
     if(fSearch && e.emp_no.indexOf(fSearch)===-1 && (e.name||'').indexOf(fSearch)===-1) return false;
     return true;
+  });
+  // 정렬: 팀 → 조 → 고정휴무요일(첫번째 요일)
+  var WD_ORDER={'월':0,'화':1,'수':2,'목':3,'금':4,'토':5,'일':6};
+  rows.sort(function(a,b){
+    var tA=wfTeamSortKey(a.team), tB=wfTeamSortKey(b.team);
+    if(tA!==tB) return tA-tB;
+    if((a.team||'')!==(b.team||'')) return (a.team||'').localeCompare(b.team||'');
+    var gA=a.group_name||'', gB=b.group_name||'';
+    if(gA!==gB) return gA.localeCompare(gB);
+    var dA=WD_ORDER[a.off1]!=null?WD_ORDER[a.off1]:99, dB=WD_ORDER[b.off1]!=null?WD_ORDER[b.off1]:99;
+    if(dA!==dB) return dA-dB;
+    return (a.name||'').localeCompare(b.name||'');
   });
   if(!rows.length){
     wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">해당 조건의 직원이 없습니다. (엑셀 업로드로 인원현황을 등록해주세요)</div>';
@@ -24030,7 +24048,9 @@ function wfEmpUpload(inputEl){
         var team=String(r['근무팀']||'').trim();
         // "환경1팀" 같은 축약형을 "환경미화1팀"으로 정규화 (특별근무 등 다른 화면과 매칭 일관성 유지)
         if(/^환경\d/.test(team)) team=team.replace(/^환경/, '환경미화');
-        var grp=String(r['근무조']||'').trim(); if(grp==='-'||grp===team) grp='';
+        var grpRaw=String(r['근무조']||'').trim();
+        var grpM=grpRaw.match(/([A-Ca-c])조$/);
+        var grp=grpM ? (grpM[1].toUpperCase()+'조') : ''; // A조/B조/C조만 인정, 그 외(팀명 등)는 무시
         var area=String(r['근무구역']||'').trim();
         var shift='';
         if(area.indexOf('오전')!==-1) shift='오전';
@@ -24125,6 +24145,30 @@ async function wfDownloadErp(){
     var ws=XLSX.utils.aoa_to_sheet(aoa);
     ws['!cols']=[{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:10}];
     XLSX.utils.book_append_sheet(wb, ws, '근무계획업로드');
+
+    // 요일조(고정휴무요일 페어)별 시트 추가: 월화/화수/수목/목금/금토/토일/일월
+    var PAIR_ORDER=['월화','화수','수목','목금','금토','토일','일월'];
+    PAIR_ORDER.forEach(function(pair){
+      var d1=pair[0], d2=pair[1];
+      var members=wfEmployees.filter(function(e){
+        var o1=e.off1||'', o2=e.off2||'';
+        return (o1===d1&&o2===d2)||(o1===d2&&o2===d1);
+      });
+      if(!members.length) return;
+      members.sort(function(a,b){
+        var tA=wfTeamSortKey(a.team), tB=wfTeamSortKey(b.team);
+        if(tA!==tB) return tA-tB;
+        return (a.group_name||'').localeCompare(b.group_name||'');
+      });
+      var pAoa=[['사번','성명','팀','조','오전/오후/야간','고정휴무요일']];
+      members.forEach(function(e){
+        pAoa.push([e.emp_no, e.name||'', e.team||'', e.group_name||'', e.shift_type||'', pair]);
+      });
+      var pws=XLSX.utils.aoa_to_sheet(pAoa);
+      pws['!cols']=[{wch:10},{wch:10},{wch:16},{wch:8},{wch:12},{wch:10}];
+      XLSX.utils.book_append_sheet(wb, pws, pair+'조('+members.length+'명)');
+    });
+
     XLSX.writeFile(wb, '근무계획_더존ERP_'+monthVal+'.xlsx');
     await sb.from('wf_export_log').insert({target_month:monthVal, row_count:aoa.length-1, exported_by: me?me.name:''});
     toast('📥 다운로드 완료 ('+(aoa.length-1)+'행)');
