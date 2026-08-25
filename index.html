@@ -679,7 +679,7 @@ html{overflow-x:hidden}
     <div class="mh-tab-item" onclick="go('lost')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="mh-tab-lb">습득물관리</span></div>
     <div class="mh-tab-item" onclick="go('accident')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span class="mh-tab-lb">안전사고</span></div>
     <div class="mh-tab-item" onclick="go('workveh')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="7" width="15" height="11" rx="1"/><path d="M16 10h3l3 3v4a1 1 0 0 1-1 1h-1"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg></span><span class="mh-tab-lb">공사차량</span></div>
-    <div class="mh-tab-item" onclick="location.href='warehouse.html'"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21V12h6v9"/></svg></span><span class="mh-tab-lb">재고관리</span></div>
+    <div class="mh-tab-item" onclick="location.href='warehouse.html?v='+Date.now()"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21V12h6v9"/></svg></span><span class="mh-tab-lb">재고관리</span></div>
   </div>
 </div>
 <!-- ══ 미확인 인계 알림 배너 ══ -->
@@ -873,7 +873,7 @@ html{overflow-x:hidden}
         <div class="menu-desc">유아휴게실 현황 조회·작성·수정·다운로드</div>
         <span class="menu-arrow">관리하기 →</span>
       </button>
-      <button class="menu-btn" onclick="location.href='inspect.html'">
+      <button class="menu-btn" onclick="location.href='inspect.html?v='+Date.now()">
         <span class="menu-icon">📝</span>
         <div class="menu-title">현장점검</div>
         <div class="menu-desc">화장실·휴게시설·장비·PBB 점검</div>
@@ -885,7 +885,7 @@ html{overflow-x:hidden}
         <div class="menu-desc">소각·재활용 처리량 입력 및 이력</div>
         <span class="menu-arrow">입력하기 →</span>
       </button>
-      <button class="menu-btn" onclick="location.href='warehouse.html'">
+      <button class="menu-btn" onclick="location.href='warehouse.html?v='+Date.now()">
         <span class="menu-icon">📦</span>
         <div class="menu-title">창고 재고관리</div>
         <div class="menu-desc">서브창고 재고·입출고·적정재고 관리</div>
@@ -6627,9 +6627,9 @@ var ALL_MENU_ITEMS=[
   {key:'rest', icon:'😴', title:'휴게시설 관리', action:"go('rest')"},
   {key:'storage', icon:'📦', title:'창고 관리', action:"go('storage')"},
   {key:'baby', icon:'👶', title:'유아휴게실 관리', action:"go('baby')"},
-  {key:'inspect', icon:'📝', title:'현장점검', action:"location.href='inspect.html'"},
+  {key:'inspect', icon:'📝', title:'현장점검', action:"location.href='inspect.html?v='+Date.now()"},
   {key:'waste', icon:'♻️', title:'폐기물 처리현황', action:"go('waste')"},
-  {key:'warehouse', icon:'📦', title:'창고 재고관리', action:"location.href='warehouse.html'"},
+  {key:'warehouse', icon:'📦', title:'창고 재고관리', action:"location.href='warehouse.html?v='+Date.now()"},
   {key:'equipment', icon:'🔧', title:'장비현황', action:"go('equipment')"},
   {key:'notice', icon:'📢', title:'공지사항', action:"go('notice')"},
   {key:'chat', icon:'📋', title:'사규 열람', action:"go('chat')"},
