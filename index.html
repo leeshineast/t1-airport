@@ -3412,7 +3412,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <div id="cpFormCard" class="card" style="margin-bottom:14px"><div class="cb">
       <div style="font-size:15px;font-weight:800;color:var(--g7);margin-bottom:10px">✍️ 참여하기</div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
-        <div style="flex:1"><div class="f-lbl">사번</div><input type="text" id="cpEmpNo" class="ri" placeholder="사번" style="margin-bottom:0"></div>
+        <div style="flex:1"><div class="f-lbl">사번</div><input type="text" id="cpEmpNo" onblur="cpRenderMyEntries()" class="ri" placeholder="사번" style="margin-bottom:0"></div>
         <div style="flex:1"><div class="f-lbl">이름</div><input type="text" id="cpName" class="ri" placeholder="이름" style="margin-bottom:0"></div>
       </div>
       <div class="f-lbl">슬로건 / 응모 내용</div>
@@ -25114,19 +25114,26 @@ async function cpLoadList(){
     var cnt=cntMap[c.id]||0;
     var statusBadge=c.status==='closed'?'<span style="padding:3px 10px;border-radius:10px;background:#f1f5f9;color:#64748b;font-size:12px;font-weight:700">종료</span>':'<span style="padding:3px 10px;border-radius:10px;background:#dcfce7;color:#15803d;font-size:12px;font-weight:700">진행중</span>';
     var period=cpFmtPeriod(c);
-    h+='<div onclick="cpOpenDetail(\''+c.id+'\')" style="padding:14px;border:1.5px solid var(--g2);border-radius:12px;margin-bottom:10px;cursor:pointer;background:white">'+
+    h+='<div style="padding:14px;border:1.5px solid var(--g2);border-radius:12px;margin-bottom:10px;background:white">'+
+       '<div onclick="cpOpenDetail(\''+c.id+'\')" style="cursor:pointer">'+
        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'+
        '<div style="font-weight:800;font-size:15px;color:var(--g7)">🏆 '+eeEsc(c.title)+'</div>'+statusBadge+
        '</div>'+
        (c.description?('<div style="font-size:13px;color:var(--g4);margin-top:6px">'+eeEsc(c.description)+'</div>'):'')+
        (period?('<div style="font-size:12px;color:var(--g5);margin-top:6px">📅 '+period+'</div>'):'')+
        '<div style="font-size:12px;color:var(--g4);margin-top:6px">응모 '+cnt+'건'+(c.allow_multiple?' · 1인 복수제출 가능':' · 1인 1회 제출')+'</div>'+
+       '</div>'+
+       (cpIsAdmin()?('<button onclick="event.stopPropagation();cpOpenEditCampaign(\''+c.id+'\')" style="margin-top:10px;padding:6px 12px;background:#dbeafe;color:#1e40af;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">✎ 수정</button>'):'')+
        '</div>';
   });
   wrap.innerHTML=h;
 }
+var cpEditCampaignId=null;
 function cpOpenCreate(){
   if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 행사를 만들 수 있습니다'); return; }
+  cpEditCampaignId=null;
+  document.getElementById('cpCreateModalTitle').textContent='행사 만들기';
+  document.getElementById('cpCreateSaveBtn').textContent='만들기';
   document.getElementById('cpNewTitle').value='';
   document.getElementById('cpNewDesc').value='';
   document.getElementById('cpNewStart').value='';
@@ -25135,6 +25142,22 @@ function cpOpenCreate(){
   document.getElementById('cpNewCondition').value='';
   document.getElementById('cpNewSchedule').value='';
   document.getElementById('cpNewAllowMulti').checked=false;
+  showM('cpCreateModal');
+}
+function cpOpenEditCampaign(id){
+  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
+  var c=cpCampaigns.find(function(x){return x.id===id;}); if(!c) return;
+  cpEditCampaignId=id;
+  document.getElementById('cpCreateModalTitle').textContent='행사 수정';
+  document.getElementById('cpCreateSaveBtn').textContent='저장';
+  document.getElementById('cpNewTitle').value=c.title||'';
+  document.getElementById('cpNewDesc').value=c.description||'';
+  document.getElementById('cpNewStart').value=c.start_date||'';
+  document.getElementById('cpNewEnd').value=c.end_date||'';
+  document.getElementById('cpNewTarget').value=c.target||'';
+  document.getElementById('cpNewCondition').value=c.condition_text||'';
+  document.getElementById('cpNewSchedule').value=c.schedule_note||'';
+  document.getElementById('cpNewAllowMulti').checked=!!c.allow_multiple;
   showM('cpCreateModal');
 }
 async function cpCreateCampaign(){
@@ -25149,13 +25172,19 @@ async function cpCreateCampaign(){
   var allowMulti=document.getElementById('cpNewAllowMulti').checked;
   if(!title){ toast('⚠️ 제목을 입력해주세요'); return; }
   if(startDate&&endDate&&startDate>endDate){ toast('⚠️ 종료일이 시작일보다 빠릅니다'); return; }
-  var id='cp_'+Date.now();
-  var res=await sb.from('campaigns').insert({
-    id:id, title:title, description:desc||null, allow_multiple:allowMulti, status:'active', created_by: me?me.name:'',
+  var payload={
+    title:title, description:desc||null, allow_multiple:allowMulti,
     start_date:startDate, end_date:endDate, target:target||null, condition_text:condition||null, schedule_note:schedule||null
-  });
-  if(res.error){ toast('등록 오류: '+res.error.message); return; }
-  toast('✓ 행사가 등록되었습니다');
+  };
+  var res;
+  if(cpEditCampaignId){
+    res=await sb.from('campaigns').update(payload).eq('id',cpEditCampaignId);
+  }else{
+    payload.id='cp_'+Date.now(); payload.status='active'; payload.created_by=me?me.name:'';
+    res=await sb.from('campaigns').insert(payload);
+  }
+  if(res.error){ toast('저장 오류: '+res.error.message); return; }
+  toast(cpEditCampaignId?'✓ 수정되었습니다':'✓ 행사가 등록되었습니다');
   hideM('cpCreateModal');
   cpLoadList();
 }
@@ -25232,8 +25261,15 @@ async function cpRenderWinner(){
 async function cpRenderMyEntries(){
   var wrap=document.getElementById('cpMyEntries');
   if(!me){ wrap.innerHTML=''; return; }
-  var q=sb.from('campaign_entries').select('*').eq('campaign_id',cpCurCampaign.id);
-  var res = me.employee_id ? await sb.from('campaign_entries').select('*').eq('campaign_id',cpCurCampaign.id).eq('emp_no',me.employee_id) : await q.eq('created_by_login', me.name||'');
+  // 개인계정은 사번(employee_id) 기준, 공용계정은 로그인 계정이 아니라 "지금 입력한 사번" 기준으로 조회
+  // (공용계정은 여러 사람이 같은 로그인으로 서로 다른 사번을 입력하므로, 로그인 계정으로 묶으면 안 됨)
+  var lookupEmpNo = cpIsPersonalAcct() ? (me.employee_id||'') : (document.getElementById('cpEmpNo').value||'').trim();
+  if(!lookupEmpNo){
+    cpMyEntries=[];
+    wrap.innerHTML='<div style="text-align:center;padding:16px;color:var(--g3);font-size:13px;background:var(--g1);border-radius:10px">사번을 입력하면 내 제출내역이 표시됩니다</div>';
+    return;
+  }
+  var res = await sb.from('campaign_entries').select('*').eq('campaign_id',cpCurCampaign.id).eq('emp_no',lookupEmpNo);
   cpMyEntries=res.data||[];
   if(!cpMyEntries.length){ wrap.innerHTML='<div style="text-align:center;padding:16px;color:var(--g3);font-size:13px;background:var(--g1);border-radius:10px">아직 제출한 내역이 없습니다</div>'; return; }
   var h='';
@@ -25275,10 +25311,14 @@ async function cpSubmitEntry(){
   var content=(document.getElementById('cpContent').value||'').trim();
   var errEl=document.getElementById('cpFormErr');
   if(!empNo||!name||!content){ errEl.textContent='사번·이름·내용을 모두 입력해주세요'; errEl.style.display='block'; return; }
-  if(!cpEditingId && !cpCurCampaign.allow_multiple && cpMyEntries.length){
-    errEl.textContent='이 행사는 1인 1회만 제출 가능합니다. 기존 내용을 수정해주세요';
-    errEl.style.display='block';
-    return;
+  if(!cpEditingId && !cpCurCampaign.allow_multiple){
+    // 캐시가 아닌 실시간 조회로 재확인 (공용계정에서 사번이 방금 바뀐 경우 대비)
+    var dupRes=await sb.from('campaign_entries').select('id').eq('campaign_id',cpCurCampaign.id).eq('emp_no',empNo);
+    if(dupRes.data && dupRes.data.length){
+      errEl.textContent='이미 이 사번('+empNo+')으로 제출된 내역이 있습니다. 1인 1회만 제출 가능합니다';
+      errEl.style.display='block';
+      return;
+    }
   }
   errEl.style.display='none';
   var body={
