@@ -24229,27 +24229,120 @@ function wfSpRenderTable(){
   document.getElementById('wfSpTableWrap').innerHTML=h;
 }
 function wfSpRowDef(code){ return WF_SP_ROW_DEFS.find(function(r){return r.code===code;}); }
-function wfSpOpenCell(code, date){
+var wfSpPick={leader:null, subs:[], names:[]};
+async function wfSpEnsureEmployees(){
+  if(wfEmployees && wfEmployees.length) return;
+  var res=await msFetchAll(function(){ return sb.from('wf_employees').select('*').order('emp_no'); });
+  wfEmployees=res.data||[];
+}
+function wfSpTeamFieldMatch(code, emp){
+  if(code==='HQ') return emp.position==='총괄팀장';
+  if(code==='ADMIN') return false; // 행정은 팀 매칭 없음 → 검색으로 선택
+  return emp.team===('환경미화'+code);
+}
+function wfSpEmpChip(emp, selected, onclick){
+  return '<button onclick="'+onclick+'" style="padding:7px 12px;border-radius:20px;border:1.5px solid '+(selected?'var(--teal)':'var(--g2)')+';background:'+(selected?'var(--teal-bg)':'white')+';color:'+(selected?'var(--teal)':'var(--g6)')+';font-size:12.5px;font-weight:700;cursor:pointer;margin:3px 4px 0 0">'+(selected?'✓ ':'')+emp.name+' <span style="opacity:.6;font-weight:500">('+(emp.team||emp.hq_team||'')+')</span></button>';
+}
+function wfSpEmpSearch(query, limit){
+  var q=(query||'').trim();
+  if(!q) return [];
+  return wfEmployees.filter(function(e){ return (e.name||'').indexOf(q)!==-1 || (e.emp_no||'').indexOf(q)!==-1; }).slice(0, limit||8);
+}
+async function wfSpOpenCell(code, date){
   wfSpCellCtx={code:code, date:date};
   var row=wfSpRowDef(code);
   var a=wfSpFindAssign(code, date);
   document.getElementById('wfSpCellTitle').textContent=row.label+' · '+date;
+  await wfSpEnsureEmployees();
   var body=document.getElementById('wfSpCellBody');
   if(row.type==='names'){
+    wfSpPick.names=(a&&a.names_text)?a.names_text.split(',').map(function(s){return s.trim();}).filter(Boolean):[];
+    var candidates=wfEmployees.filter(function(e){return wfSpTeamFieldMatch(code,e);}).slice(0,20);
     body.innerHTML=
-      '<label style="font-size:12.5px;font-weight:700;color:var(--g6)">이름 목록 (콤마로 구분)</label>'+
-      '<input id="wfSpNamesInput" placeholder="예: 유준영, 이동환, 한지원" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 14px;box-sizing:border-box" value="'+((a&&a.names_text)||'')+'">';
+      '<label style="font-size:12.5px;font-weight:700;color:var(--g6)">이름 검색 후 선택 (여러명 가능)</label>'+
+      '<input id="wfSpSearchNames" oninput="wfSpRenderNamesCandidates()" placeholder="이름/사번 검색" style="width:100%;padding:9px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;margin:6px 0 8px;box-sizing:border-box">'+
+      '<div id="wfSpNamesCandidates" style="display:flex;flex-wrap:wrap;max-height:160px;overflow-y:auto;margin-bottom:10px"></div>'+
+      '<label style="font-size:12.5px;font-weight:700;color:var(--g6)">선택됨</label>'+
+      '<div id="wfSpNamesSelected" style="display:flex;flex-wrap:wrap;margin:6px 0 4px;min-height:30px"></div>';
+    wfSp_namesDefaultCandidates=candidates;
+    wfSpRenderNamesCandidates();
+    wfSpRenderNamesSelected();
   }else{
-    var subs=(a&&a.subleader_names)||'';
+    wfSpPick.leader=(a&&a.leader_name)||null;
+    wfSpPick.subs=(a&&a.subleader_names)?a.subleader_names.split(',').map(function(s){return s.trim();}).filter(Boolean):[];
+    var teamStaffCount=wfEmployees.filter(function(e){return e.team===('환경미화'+code)&&e.position==='사원';}).length;
     body.innerHTML=
-      '<label style="font-size:12.5px;font-weight:700;color:var(--g6)">팀장 (1명, 없으면 비워두기)</label>'+
-      '<input id="wfSpLeaderInput" placeholder="예: 홍길동" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box" value="'+((a&&a.leader_name)||'')+'">'+
-      '<label style="font-size:12.5px;font-weight:700;color:var(--g6)">조장 (콤마로 구분, 여러명 가능)</label>'+
-      '<input id="wfSpSubleaderInput" placeholder="예: 홍이동, 홍삼동" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box" value="'+subs+'">'+
+      '<label style="font-size:12.5px;font-weight:700;color:var(--g6)">팀장 검색 후 선택 (1명)</label>'+
+      '<input id="wfSpSearchLeader" oninput="wfSpRenderLeaderCandidates()" placeholder="이름/사번 검색" style="width:100%;padding:9px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;margin:6px 0 8px;box-sizing:border-box">'+
+      '<div id="wfSpLeaderCandidates" style="display:flex;flex-wrap:wrap;max-height:110px;overflow-y:auto;margin-bottom:6px"></div>'+
+      '<div id="wfSpLeaderSelected" style="display:flex;flex-wrap:wrap;margin-bottom:12px;min-height:26px"></div>'+
+      '<label style="font-size:12.5px;font-weight:700;color:var(--g6)">조장 검색 후 선택 (여러명 가능)</label>'+
+      '<input id="wfSpSearchSub" oninput="wfSpRenderSubCandidates()" placeholder="이름/사번 검색" style="width:100%;padding:9px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;margin:6px 0 8px;box-sizing:border-box">'+
+      '<div id="wfSpSubCandidates" style="display:flex;flex-wrap:wrap;max-height:110px;overflow-y:auto;margin-bottom:6px"></div>'+
+      '<div id="wfSpSubSelected" style="display:flex;flex-wrap:wrap;margin-bottom:12px;min-height:26px"></div>'+
       '<label style="font-size:12.5px;font-weight:700;color:var(--g6)">사원수</label>'+
-      '<input id="wfSpStaffInput" type="number" min="0" placeholder="예: 20" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 14px;box-sizing:border-box" value="'+((a&&a.staff_count)!=null?a.staff_count:'')+'">';
+      '<div style="display:flex;gap:6px;margin:6px 0 14px">'+
+      '<input id="wfSpStaffInput" type="number" min="0" placeholder="예: 20" style="flex:1;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;box-sizing:border-box" value="'+((a&&a.staff_count)!=null?a.staff_count:'')+'">'+
+      '<button onclick="document.getElementById(\'wfSpStaffInput\').value='+teamStaffCount+'" style="padding:0 12px;background:var(--g1);border:1.5px solid var(--g2);border-radius:8px;font-size:12.5px;font-weight:700;color:var(--g6);cursor:pointer;white-space:nowrap">전체 '+teamStaffCount+'명</button>'+
+      '</div>';
+    wfSp_leaderDefaultCandidates=wfEmployees.filter(function(e){return wfSpTeamFieldMatch(code,e)&&e.position==='팀장';}).slice(0,20);
+    wfSp_subDefaultCandidates=wfEmployees.filter(function(e){return wfSpTeamFieldMatch(code,e)&&e.position==='조장';}).slice(0,20);
+    wfSpRenderLeaderCandidates(); wfSpRenderLeaderSelected();
+    wfSpRenderSubCandidates(); wfSpRenderSubSelected();
   }
   showM('wfSpCellModal');
+}
+var wfSp_namesDefaultCandidates=[], wfSp_leaderDefaultCandidates=[], wfSp_subDefaultCandidates=[];
+function wfSpRenderNamesCandidates(){
+  var q=(document.getElementById('wfSpSearchNames').value||'').trim();
+  var list=q?wfSpEmpSearch(q,12):wfSp_namesDefaultCandidates;
+  document.getElementById('wfSpNamesCandidates').innerHTML=list.map(function(e){
+    var sel=wfSpPick.names.indexOf(e.name)!==-1;
+    return wfSpEmpChip(e, sel, "wfSpToggleName('"+e.name.replace(/'/g,"\\'")+"')");
+  }).join('')||'<div style="font-size:12px;color:var(--g3);padding:6px">검색해서 선택하세요</div>';
+}
+function wfSpToggleName(name){
+  var idx=wfSpPick.names.indexOf(name);
+  if(idx>=0) wfSpPick.names.splice(idx,1); else wfSpPick.names.push(name);
+  wfSpRenderNamesCandidates(); wfSpRenderNamesSelected();
+}
+function wfSpRenderNamesSelected(){
+  document.getElementById('wfSpNamesSelected').innerHTML=wfSpPick.names.map(function(n){
+    return '<span style="padding:6px 10px;background:var(--teal-bg);color:var(--teal);border-radius:16px;font-size:12.5px;font-weight:700;margin:2px 4px 0 0;display:inline-block">'+n+' <span onclick="wfSpToggleName(\''+n.replace(/'/g,"\\'")+'\')" style="cursor:pointer;margin-left:4px">✕</span></span>';
+  }).join('')||'<div style="font-size:12px;color:var(--g3)">선택된 사람이 없습니다</div>';
+}
+function wfSpRenderLeaderCandidates(){
+  var q=(document.getElementById('wfSpSearchLeader').value||'').trim();
+  var list=q?wfSpEmpSearch(q,10):wfSp_leaderDefaultCandidates;
+  document.getElementById('wfSpLeaderCandidates').innerHTML=list.map(function(e){
+    return wfSpEmpChip(e, wfSpPick.leader===e.name, "wfSpSetLeader('"+e.name.replace(/'/g,"\\'")+"')");
+  }).join('')||'<div style="font-size:12px;color:var(--g3);padding:6px">검색해서 선택하세요</div>';
+}
+function wfSpSetLeader(name){
+  wfSpPick.leader=(wfSpPick.leader===name)?null:name;
+  wfSpRenderLeaderCandidates(); wfSpRenderLeaderSelected();
+}
+function wfSpRenderLeaderSelected(){
+  document.getElementById('wfSpLeaderSelected').innerHTML=wfSpPick.leader?
+    ('<span style="padding:6px 10px;background:var(--teal-bg);color:var(--teal);border-radius:16px;font-size:12.5px;font-weight:700;display:inline-block">'+wfSpPick.leader+' <span onclick="wfSpSetLeader(\''+wfSpPick.leader.replace(/'/g,"\\'")+'\')" style="cursor:pointer;margin-left:4px">✕</span></span>')
+    : '<div style="font-size:12px;color:var(--g3)">선택된 팀장이 없습니다</div>';
+}
+function wfSpRenderSubCandidates(){
+  var q=(document.getElementById('wfSpSearchSub').value||'').trim();
+  var list=q?wfSpEmpSearch(q,10):wfSp_subDefaultCandidates;
+  document.getElementById('wfSpSubCandidates').innerHTML=list.map(function(e){
+    return wfSpEmpChip(e, wfSpPick.subs.indexOf(e.name)!==-1, "wfSpToggleSub('"+e.name.replace(/'/g,"\\'")+"')");
+  }).join('')||'<div style="font-size:12px;color:var(--g3);padding:6px">검색해서 선택하세요</div>';
+}
+function wfSpToggleSub(name){
+  var idx=wfSpPick.subs.indexOf(name);
+  if(idx>=0) wfSpPick.subs.splice(idx,1); else wfSpPick.subs.push(name);
+  wfSpRenderSubCandidates(); wfSpRenderSubSelected();
+}
+function wfSpRenderSubSelected(){
+  document.getElementById('wfSpSubSelected').innerHTML=wfSpPick.subs.map(function(n){
+    return '<span style="padding:6px 10px;background:var(--teal-bg);color:var(--teal);border-radius:16px;font-size:12.5px;font-weight:700;margin:2px 4px 0 0;display:inline-block">'+n+' <span onclick="wfSpToggleSub(\''+n.replace(/'/g,"\\'")+'\')" style="cursor:pointer;margin-left:4px">✕</span></span>';
+  }).join('')||'<div style="font-size:12px;color:var(--g3)">선택된 조장이 없습니다</div>';
 }
 async function wfSpSaveCell(){
   if(!wfSpCellCtx||!wfSpCurEvent) return;
@@ -24261,17 +24354,14 @@ async function wfSpSaveCell(){
     updated_by: me?me.name:''
   };
   if(row.type==='names'){
-    var names=(document.getElementById('wfSpNamesInput').value||'').trim();
-    if(!names){ toast('⚠️ 이름을 입력해주세요'); return; }
-    body.names_text=names;
+    if(!wfSpPick.names.length){ toast('⚠️ 최소 1명 이상 선택해주세요'); return; }
+    body.names_text=wfSpPick.names.join(', ');
   }else{
-    var leader=(document.getElementById('wfSpLeaderInput').value||'').trim();
-    var subs=(document.getElementById('wfSpSubleaderInput').value||'').trim();
     var staffRaw=document.getElementById('wfSpStaffInput').value;
     var staff=staffRaw===''?0:parseInt(staffRaw,10);
-    if(!leader&&!subs&&!staff){ toast('⚠️ 팀장·조장·사원수 중 하나 이상 입력해주세요'); return; }
-    body.leader_name=leader||null;
-    body.subleader_names=subs||null;
+    if(!wfSpPick.leader&&!wfSpPick.subs.length&&!staff){ toast('⚠️ 팀장·조장·사원수 중 하나 이상 선택/입력해주세요'); return; }
+    body.leader_name=wfSpPick.leader||null;
+    body.subleader_names=wfSpPick.subs.join(', ')||null;
     body.staff_count=isNaN(staff)?0:staff;
   }
   var res=await sb.from('wf_special_assignments').upsert(body,{onConflict:'event_id,work_date,team_no'});
