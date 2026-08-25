@@ -3223,6 +3223,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <select id="wfFDay" onchange="wfRenderTable()" style="padding:8px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
         <option value="">휴무요일 전체</option><option value="월">월요일 휴무</option><option value="화">화요일 휴무</option><option value="수">수요일 휴무</option><option value="목">목요일 휴무</option><option value="금">금요일 휴무</option><option value="토">토요일 휴무</option><option value="일">일요일 휴무</option>
       </select>
+      <select id="wfFPosition" onchange="wfRenderTable()" style="padding:8px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px"><option value="">직책 전체</option></select>
       <input id="wfFSearch" oninput="wfRenderTable()" placeholder="🔍 사번/성명 검색" style="flex:1;min-width:140px;padding:8px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
     </div>
     <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
@@ -3230,6 +3231,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <label style="padding:8px 12px;background:white;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">
         ⬆️ 엑셀 업로드<input type="file" accept=".xlsx,.xls" style="display:none" onchange="wfEmpUpload(this)">
       </label>
+      <button onclick="wfDownloadEmpTemplate()" style="padding:9px 12px;background:white;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;font-weight:700;color:var(--g6);cursor:pointer">📄 양식 다운로드</button>
+      <button onclick="wfConfirmDeleteAll()" style="padding:9px 12px;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🗑 전체삭제</button>
       <span style="flex:1"></span>
       <select id="wfErpMonth" style="padding:8px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px"></select>
       <button onclick="wfDownloadErp()" style="padding:9px 14px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📥 ERP 다운로드</button>
@@ -23896,13 +23899,29 @@ async function loadWfEmployees(){
   }
 }
 function wfFillFilterOptions(){
-  var teamSel=document.getElementById('wfFTeam'), grpSel=document.getElementById('wfFGroup');
+  var teamSel=document.getElementById('wfFTeam'), grpSel=document.getElementById('wfFGroup'), posSel=document.getElementById('wfFPosition');
   var teams=Array.from(new Set(wfEmployees.map(function(e){return e.team;}).filter(Boolean))).sort();
   var groups=['A조','B조','C조']; // 조는 A/B/C만 존재
-  var curTeam=teamSel.value, curGrp=grpSel.value;
+  var positions=Array.from(new Set(wfEmployees.map(function(e){return e.position;}).filter(Boolean))).sort();
+  var curTeam=teamSel.value, curGrp=grpSel.value, curPos=posSel.value;
   teamSel.innerHTML='<option value="">팀 전체</option>'+teams.map(function(t){return '<option value="'+t+'">'+t+'</option>';}).join('');
   grpSel.innerHTML='<option value="">조 전체</option>'+groups.map(function(g){return '<option value="'+g+'">'+g+'</option>';}).join('');
-  teamSel.value=curTeam; grpSel.value=curGrp;
+  posSel.innerHTML='<option value="">직책 전체</option>'+positions.map(function(p){return '<option value="'+p+'">'+p+'</option>';}).join('');
+  teamSel.value=curTeam; grpSel.value=curGrp; posSel.value=curPos;
+}
+// 휴무요일조합(월화/화수/수목/목금/금토/토일/일월)별 배지 색상
+var WF_DAY_PAIR_COLORS={
+  '월화':{bg:'#dbeafe',fg:'#1e40af'}, '화수':{bg:'#ede9fe',fg:'#6d28d9'}, '수목':{bg:'#fce7f3',fg:'#be185d'},
+  '목금':{bg:'#ffedd5',fg:'#c2410c'}, '금토':{bg:'#fee2e2',fg:'#dc2626'}, '토일':{bg:'#ccfbf1',fg:'#0f766e'},
+  '일월':{bg:'#fef9c3',fg:'#a16207'}
+};
+function wfDayPairColor(off1, off2){
+  if(!off1||!off2) return {bg:'#f1f5f9',fg:'#64748b'};
+  var key=off1+off2;
+  if(WF_DAY_PAIR_COLORS[key]) return WF_DAY_PAIR_COLORS[key];
+  var rev=off2+off1;
+  if(WF_DAY_PAIR_COLORS[rev]) return WF_DAY_PAIR_COLORS[rev];
+  return {bg:'#f1f5f9',fg:'#64748b'};
 }
 function wfTeamSortKey(team){
   // "환경미화1팀" → 1 처럼 팀 번호 기준 자연정렬, 총괄/운영팀 등은 뒤로
@@ -23916,12 +23935,14 @@ function wfRenderTable(){
   var fGroup=document.getElementById('wfFGroup').value;
   var fShift=document.getElementById('wfFShift').value;
   var fDay=document.getElementById('wfFDay').value;
+  var fPosition=document.getElementById('wfFPosition').value;
   var fSearch=(document.getElementById('wfFSearch').value||'').trim();
   var rows=wfEmployees.filter(function(e){
     if(fTeam && e.team!==fTeam) return false;
     if(fGroup && e.group_name!==fGroup) return false;
     if(fShift && e.shift_type!==fShift) return false;
     if(fDay && e.off1!==fDay && e.off2!==fDay) return false;
+    if(fPosition && e.position!==fPosition) return false;
     if(fSearch && e.emp_no.indexOf(fSearch)===-1 && (e.name||'').indexOf(fSearch)===-1) return false;
     return true;
   });
@@ -23943,17 +23964,19 @@ function wfRenderTable(){
   }
   var h='<table style="width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap">';
   h+='<thead><tr style="background:var(--navy);color:#fff">'+
-     ['사번','성명','팀','조','오전/오후/야간','고정휴무요일','수정'].map(function(c){return '<th style="padding:9px 8px;text-align:center">'+c+'</th>';}).join('')+
+     ['사번','성명','직책','팀','조','오전/오후/야간','고정휴무요일','수정'].map(function(c){return '<th style="padding:9px 8px;text-align:center">'+c+'</th>';}).join('')+
      '</tr></thead><tbody>';
   rows.forEach(function(e,i){
     var offTxt=[e.off1,e.off2].filter(Boolean).join('·')||'-';
+    var pc=wfDayPairColor(e.off1, e.off2);
     h+='<tr style="background:'+(i%2===0?'#fff':'var(--g1)')+';border-bottom:1px solid var(--g2)">'+
        '<td style="padding:8px;text-align:center">'+e.emp_no+'</td>'+
        '<td style="padding:8px;text-align:center;font-weight:700">'+(e.name||'')+'</td>'+
+       '<td style="padding:8px;text-align:center">'+(e.position||'-')+'</td>'+
        '<td style="padding:8px;text-align:center">'+(e.team||'-')+'</td>'+
        '<td style="padding:8px;text-align:center">'+(e.group_name||'-')+'</td>'+
        '<td style="padding:8px;text-align:center">'+(e.shift_type||'-')+'</td>'+
-       '<td style="padding:8px;text-align:center"><span style="padding:3px 10px;border-radius:10px;background:#fee2e2;color:#dc2626;font-weight:700">'+offTxt+'</span></td>'+
+       '<td style="padding:8px;text-align:center"><span style="padding:3px 10px;border-radius:10px;background:'+pc.bg+';color:'+pc.fg+';font-weight:700">'+offTxt+'</span></td>'+
        '<td style="padding:8px;text-align:center"><button onclick="wfOpenEditEmp(\''+e.emp_no+'\')" style="padding:4px 10px;background:#dbeafe;color:#1e40af;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">수정</button></td>'+
        '</tr>';
   });
@@ -24001,6 +24024,35 @@ async function wfSaveEditEmp(){
 }
 
 // ── 엑셀 업로드: 인원현황 시트 파싱 (사번, 한글이름, 직책/직위, 총괄, 근무팀, 근무조, 근무구역, 1분기 등 요일컬럼) ──
+function wfDownloadEmpTemplate(){
+  var aoa=[
+    ['2026년 O분기 정기 휴무변경(적용일 기입)'],
+    ['사번','성명','직책','근무팀','근무조','성별','변경전','변경후','비고','휴직','시작일자','종료일자'],
+    [140000,'홍길동','팀장','환경미화1팀','-','남','월화','월화','예시행 - 지우고 사용하세요','', '', ''],
+    [140001,'홍이동','조장','환경미화1팀','A조','여','금토','금토','','', '', ''],
+    [140002,'홍삼동','','환경미화1팀','A조','남','화수','수목','업무조정','', '', ''],
+    [140003,'홍사동','','행정','-','여','토일','토일','','휴직', new Date(2026,2,1), new Date(2027,1,28)]
+  ];
+  var wb=XLSX.utils.book_new();
+  var ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=[{wch:9},{wch:9},{wch:8},{wch:14},{wch:8},{wch:7},{wch:8},{wch:8},{wch:22},{wch:8},{wch:12},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws, '근무계획업로드양식');
+  XLSX.writeFile(wb, '근무계획_업로드양식.xlsx');
+  toast('📄 양식 다운로드 완료');
+}
+function wfConfirmDeleteAll(){
+  if(!wfEmployees.length){ toast('삭제할 데이터가 없습니다'); return; }
+  var input=prompt('전체 '+wfEmployees.length+'명의 근무계획 데이터(고정휴무요일·휴직정보 포함)를 삭제합니다.\n되돌릴 수 없습니다. 계속하려면 "삭제"를 입력하세요.');
+  if(input!=='삭제'){ toast('취소되었습니다'); return; }
+  wfDeleteAllEmployees();
+}
+async function wfDeleteAllEmployees(){
+  toast('🗑 삭제 중...');
+  var res=await sb.from('wf_employees').delete().neq('emp_no','__none__');
+  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  toast('✓ 전체 삭제되었습니다. 새 엑셀을 업로드해주세요');
+  loadWfEmployees();
+}
 function wfEmpUpload(inputEl){
   var file=inputEl.files[0]; if(!file) return;
   var reader=new FileReader();
