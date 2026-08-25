@@ -25316,26 +25316,68 @@ async function cpOpenAllEntries(){
   cpRenderAllEntries();
   showM('cpAllEntriesModal');
 }
+var CP_RANK_LABEL={1:'🥇 1순위',2:'🥈 2순위',3:'🥉 3순위'};
+var CP_RANK_COLOR={1:'#fef3c7',2:'#e5e7eb',3:'#fed7aa'};
 function cpRenderAllEntries(){
   var q=(document.getElementById('cpAllSearch').value||'').trim().toLowerCase();
   var rows=cpAllEntriesCache.filter(function(e){
     if(!q) return true;
     return (e.emp_no||'').toLowerCase().indexOf(q)!==-1 || (e.name||'').toLowerCase().indexOf(q)!==-1 || (e.content||'').toLowerCase().indexOf(q)!==-1;
   });
+  // 순위 지정된 항목을 위로, 그 안에서는 1→2→3순위 순
+  rows=rows.slice().sort(function(a,b){
+    var ra=a.shortlist_rank||99, rb=b.shortlist_rank||99;
+    if(ra!==rb) return ra-rb;
+    return new Date(b.created_at)-new Date(a.created_at);
+  });
   var wrap=document.getElementById('cpAllEntriesWrap');
   if(!rows.length){ wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">제출된 내역이 없습니다</div>'; return; }
-  var h='<div style="font-size:12.5px;color:var(--g5);margin-bottom:8px;font-weight:700">전체 '+rows.length+'건</div>';
+
+  var shortlisted=cpAllEntriesCache.filter(function(e){return e.shortlist_rank;}).sort(function(a,b){return a.shortlist_rank-b.shortlist_rank;});
+  var h='';
+  if(shortlisted.length){
+    h+='<div style="background:linear-gradient(135deg,#fff7ed,#fef3c7);border:1.5px solid #fdba74;border-radius:10px;padding:11px;margin-bottom:12px">'+
+       '<div style="font-size:12.5px;font-weight:800;color:#c2410c;margin-bottom:6px">🏅 최종 후보</div>'+
+       shortlisted.map(function(e){ return '<div style="font-size:12.5px;color:#7c2d12;padding:2px 0">'+(CP_RANK_LABEL[e.shortlist_rank]||'')+' — '+eeEsc(e.name||'')+' ('+eeEsc(e.emp_no||'')+')</div>'; }).join('')+
+       '</div>';
+  }
+  h+='<div style="font-size:12.5px;color:var(--g5);margin-bottom:8px;font-weight:700">전체 '+rows.length+'건</div>';
   rows.forEach(function(e){
-    h+='<div style="background:white;border:1.5px solid var(--g2);border-radius:10px;padding:11px;margin-bottom:8px">'+
+    var rankBg=e.shortlist_rank?CP_RANK_COLOR[e.shortlist_rank]:'white';
+    h+='<div style="background:'+rankBg+';border:1.5px solid '+(e.shortlist_rank?'#fdba74':'var(--g2)')+';border-radius:10px;padding:11px;margin-bottom:8px">'+
        '<div style="display:flex;justify-content:space-between;gap:8px">'+
        '<span style="font-size:13px;font-weight:700;color:var(--g7)">'+eeEsc(e.name||'')+' ('+eeEsc(e.emp_no||'')+') '+(e.team?('· '+eeEsc(e.team)):'')+'</span>'+
        '<button onclick="cpAdminDeleteEntry(\''+e.id+'\')" style="padding:3px 9px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>'+
        '</div>'+
        '<div style="font-size:13px;color:var(--g6);white-space:pre-wrap;margin-top:6px;line-height:1.6">'+eeEsc(e.content)+'</div>'+
-       '<div style="font-size:11px;color:var(--g4);margin-top:6px">'+new Date(e.created_at).toLocaleString('ko-KR')+'</div>'+
+       '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px">'+
+       '<span style="font-size:11px;color:var(--g4)">'+new Date(e.created_at).toLocaleString('ko-KR')+'</span>'+
+       '<span style="display:flex;gap:5px">'+
+       [1,2,3].map(function(r){
+         var active=e.shortlist_rank===r;
+         return '<button onclick="cpSetRank(\''+e.id+'\','+r+')" style="padding:3px 9px;border-radius:6px;border:1.5px solid '+(active?'#f97316':'var(--g2)')+';background:'+(active?'#f97316':'white')+';color:'+(active?'white':'var(--g6)')+';font-size:11px;font-weight:700;cursor:pointer">'+r+'순위</button>';
+       }).join('')+
+       '</span></div>'+
        '</div>';
   });
   wrap.innerHTML=h;
+}
+async function cpSetRank(id, rank){
+  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
+  var entry=cpAllEntriesCache.find(function(x){return x.id===id;}); if(!entry) return;
+  var newRank = entry.shortlist_rank===rank ? null : rank; // 같은 순위 다시 누르면 해제
+  // 같은 순위를 이미 가진 다른 항목이 있으면 해제
+  if(newRank){
+    cpAllEntriesCache.forEach(function(x){
+      if(x.id!==id && x.shortlist_rank===newRank) x.shortlist_rank=null;
+    });
+    var clearRes=await sb.from('campaign_entries').update({shortlist_rank:null}).eq('campaign_id',cpCurCampaign.id).eq('shortlist_rank',newRank);
+    if(clearRes.error){ toast('오류: '+clearRes.error.message); return; }
+  }
+  var res=await sb.from('campaign_entries').update({shortlist_rank:newRank}).eq('id',id);
+  if(res.error){ toast('오류: '+res.error.message); return; }
+  entry.shortlist_rank=newRank;
+  cpRenderAllEntries();
 }
 async function cpAdminDeleteEntry(id){
   if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
@@ -25350,13 +25392,14 @@ async function cpAdminDeleteEntry(id){
 }
 function cpDownloadEntries(){
   if(!cpAllEntriesCache.length){ toast('다운로드할 데이터가 없습니다'); return; }
-  var aoa=[['사번','이름','팀','내용','제출일시']];
-  cpAllEntriesCache.forEach(function(e){
-    aoa.push([e.emp_no||'', e.name||'', e.team||'', e.content||'', new Date(e.created_at).toLocaleString('ko-KR')]);
+  var aoa=[['순위','사번','이름','팀','내용','제출일시']];
+  var rows=cpAllEntriesCache.slice().sort(function(a,b){ return (a.shortlist_rank||99)-(b.shortlist_rank||99); });
+  rows.forEach(function(e){
+    aoa.push([e.shortlist_rank?(e.shortlist_rank+'순위'):'', e.emp_no||'', e.name||'', e.team||'', e.content||'', new Date(e.created_at).toLocaleString('ko-KR')]);
   });
   var wb=XLSX.utils.book_new();
   var ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols']=[{wch:10},{wch:10},{wch:14},{wch:50},{wch:18}];
+  ws['!cols']=[{wch:8},{wch:10},{wch:10},{wch:14},{wch:50},{wch:18}];
   XLSX.utils.book_append_sheet(wb, ws, '제출목록');
   XLSX.writeFile(wb, '공모전_'+(cpCurCampaign?cpCurCampaign.title.replace(/[\\/:*?"<>|]/g,''):'제출목록')+'.xlsx');
   toast('📥 다운로드 완료');
