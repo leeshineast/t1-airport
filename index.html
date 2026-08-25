@@ -24205,7 +24205,9 @@ async function wfDownloadErp(){
   var parts=monthVal.split('-'); var yy=parseInt(parts[0],10), mm=parseInt(parts[1],10);
   var start=new Date(yy, mm-1, 1), end=new Date(yy, mm, 0);
   try{
-    var holRes=await sb.from('wf_holidays').select('holiday_date').gte('holiday_date', monthVal+'-01').lte('holiday_date', monthVal+'-31');
+    var monthEndDash=wfYmd(end).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3'); // 실제 말일(예:09-30)로 조회 — '-31' 하드코딩시 30일짜리 달에서 쿼리 자체가 오류남
+    var holRes=await sb.from('wf_holidays').select('holiday_date').gte('holiday_date', monthVal+'-01').lte('holiday_date', monthEndDash);
+    if(holRes.error){ toast('⚠️ 공휴일 조회 오류: '+holRes.error.message); }
     var holidaySet={};
     (holRes.data||[]).forEach(function(h){ holidaySet[h.holiday_date.replace(/-/g,'')]=true; });
 
