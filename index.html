@@ -3480,8 +3480,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div class="modal" style="max-width:700px;max-height:88vh"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📋 전체 제출목록</h3><button class="m-x" onclick="hideM('cpAllEntriesModal')">×</button></div>
     <div style="padding:15px 17px;overflow-y:auto">
       <div style="display:flex;gap:6px;margin-bottom:12px">
-        <input id="cpAllSearch" oninput="cpRenderAllEntries()" placeholder="🔍 사번/이름/내용 검색" style="flex:1;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
-        <button onclick="cpDownloadEntries()" style="padding:9px 14px;background:var(--teal2);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📥 다운로드</button>
+        <input id="cpAllSearch" oninput="cpRenderAllEntries()" placeholder="🔍 내용 검색" style="flex:1;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
+        <button id="cpDownloadBtn" onclick="cpDownloadEntries()" style="display:none;padding:9px 14px;background:var(--teal2);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📥 다운로드</button>
       </div>
       <div id="cpAllEntriesWrap"></div>
     </div>
@@ -25084,6 +25084,7 @@ function wfSpDownloadReport(){
    ═══════════════════════════════════════════════════════════ */
 var cpCampaigns=[], cpCurCampaign=null, cpMyEntries=[], cpAllEntriesCache=[];
 function cpIsAdmin(){ return !!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader')); }
+function cpCanSeeIdentity(){ return !!(me&&(me.role==='master'||me.role==='admin')); } // 작성자 정보·총점은 master/admin만
 function cpUpdateCharCount(){
   var el=document.getElementById('cpContent'); var cEl=document.getElementById('cpCharCount');
   if(!el||!cEl) return;
@@ -25337,6 +25338,7 @@ var CP_RANK_LABEL={1:'🥇 1위',2:'🥈 2위',3:'🥉 3위'};
 async function cpOpenAllEntries(){
   if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
   document.getElementById('cpAllSearch').value='';
+  document.getElementById('cpDownloadBtn').style.display=cpCanSeeIdentity()?'block':'none';
   var res=await msFetchAll(function(){ return sb.from('campaign_entries').select('*').eq('campaign_id',cpCurCampaign.id).order('created_at',{ascending:false}); });
   cpAllEntriesCache=res.data||[];
   var vRes=await msFetchAll(function(){ return sb.from('campaign_votes').select('*').eq('campaign_id',cpCurCampaign.id); });
@@ -25356,43 +25358,57 @@ function cpMyVoteFor(entryId){
   return v?v.rank:null;
 }
 function cpRenderAllEntries(){
+  var canSee=cpCanSeeIdentity();
   var q=(document.getElementById('cpAllSearch').value||'').trim().toLowerCase();
+  // 팀장/조장은 작성자를 모르므로 검색은 master/admin만 허용 (내용 검색은 가능)
   var rows=cpAllEntriesCache.filter(function(e){
     if(!q) return true;
-    return (e.emp_no||'').toLowerCase().indexOf(q)!==-1 || (e.name||'').toLowerCase().indexOf(q)!==-1 || (e.content||'').toLowerCase().indexOf(q)!==-1;
+    if(canSee && ((e.emp_no||'').toLowerCase().indexOf(q)!==-1 || (e.name||'').toLowerCase().indexOf(q)!==-1)) return true;
+    return (e.content||'').toLowerCase().indexOf(q)!==-1;
   });
-  // 전체 점수 합산 기준 내림차순 정렬 (동점이면 최신순)
+  // 익명 번호 부여는 원본 등록순(생성일 오름차순) 기준으로 고정 — 정렬이 바뀌어도 "응모작 3" 이 같은 항목을 가리키게
+  var orderedAll=cpAllEntriesCache.slice().sort(function(a,b){ return new Date(a.created_at)-new Date(b.created_at); });
+  var anonNo={}; orderedAll.forEach(function(e,i){ anonNo[e.id]=i+1; });
+
+  // 정렬: master/admin은 총점순, 팀장/조장은 점수를 볼 수 없으므로 등록순
   rows=rows.slice().sort(function(a,b){
-    var sa=cpEntryScore(a.id), sb2=cpEntryScore(b.id);
-    if(sa!==sb2) return sb2-sa;
+    if(canSee){
+      var sa=cpEntryScore(a.id), sb2=cpEntryScore(b.id);
+      if(sa!==sb2) return sb2-sa;
+    }
     return new Date(b.created_at)-new Date(a.created_at);
   });
   var wrap=document.getElementById('cpAllEntriesWrap');
   if(!rows.length){ wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">제출된 내역이 없습니다</div>'; return; }
 
-  var top3=rows.filter(function(e){return cpEntryScore(e.id)>0;}).slice(0,3);
   var h='';
-  if(top3.length){
-    var medals=['🥇','🥈','🥉'];
-    h+='<div style="background:linear-gradient(135deg,#fff7ed,#fef3c7);border:1.5px solid #fdba74;border-radius:10px;padding:11px;margin-bottom:12px">'+
-       '<div style="font-size:12.5px;font-weight:800;color:#c2410c;margin-bottom:6px">🏅 전체 순위 (관리자 투표 점수 합산)</div>'+
-       top3.map(function(e,i){ return '<div style="font-size:12.5px;color:#7c2d12;padding:2px 0">'+medals[i]+' '+eeEsc(e.name||'')+' ('+eeEsc(e.emp_no||'')+') — '+cpEntryScore(e.id)+'점 · 투표 '+cpEntryVoteCount(e.id)+'명</div>'; }).join('')+
-       '</div>';
+  if(canSee){
+    var top3=rows.filter(function(e){return cpEntryScore(e.id)>0;}).slice(0,3);
+    if(top3.length){
+      var medals=['🥇','🥈','🥉'];
+      h+='<div style="background:linear-gradient(135deg,#fff7ed,#fef3c7);border:1.5px solid #fdba74;border-radius:10px;padding:11px;margin-bottom:12px">'+
+         '<div style="font-size:12.5px;font-weight:800;color:#c2410c;margin-bottom:6px">🏅 전체 순위 (관리자 투표 점수 합산)</div>'+
+         top3.map(function(e,i){ return '<div style="font-size:12.5px;color:#7c2d12;padding:2px 0">'+medals[i]+' '+eeEsc(e.name||'')+' ('+eeEsc(e.emp_no||'')+') — '+cpEntryScore(e.id)+'점 · 투표 '+cpEntryVoteCount(e.id)+'명</div>'; }).join('')+
+         '</div>';
+    }
+  }else{
+    h+='<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#1e40af">👁️ 공정한 심사를 위해 작성자 정보와 전체 점수는 master·admin만 볼 수 있어요. 내용만 보고 투표해주세요.</div>';
   }
-  h+='<div style="font-size:11.5px;color:var(--g4);margin-bottom:8px">※ 관리자별로 1위(3점)/2위(2점)/3위(1점)를 각각 1건씩 투표할 수 있고, 전체 합산 점수로 순위가 매겨집니다. 아래 버튼은 내 투표만 표시됩니다.</div>';
+  h+='<div style="font-size:11.5px;color:var(--g4);margin-bottom:8px">※ 관리자별로 1위(3점)/2위(2점)/3위(1점)를 각각 1건씩 투표할 수 있습니다. 아래 버튼은 내 투표만 표시됩니다.</div>';
   h+='<div style="font-size:12.5px;color:var(--g5);margin-bottom:8px;font-weight:700">전체 '+rows.length+'건</div>';
   rows.forEach(function(e){
     var score=cpEntryScore(e.id), voteCnt=cpEntryVoteCount(e.id);
     var myRank=cpMyVoteFor(e.id);
     var hasScore=score>0;
-    h+='<div style="background:'+(hasScore?'#fffbeb':'white')+';border:1.5px solid '+(hasScore?'#fde68a':'var(--g2)')+';border-radius:10px;padding:11px;margin-bottom:8px">'+
+    var headerLabel=canSee?(eeEsc(e.name||'')+' ('+eeEsc(e.emp_no||'')+') '+(e.team?('· '+eeEsc(e.team)):'')):('응모작 #'+anonNo[e.id]);
+    h+='<div style="background:'+(canSee&&hasScore?'#fffbeb':'white')+';border:1.5px solid '+(canSee&&hasScore?'#fde68a':'var(--g2)')+';border-radius:10px;padding:11px;margin-bottom:8px">'+
        '<div style="display:flex;justify-content:space-between;gap:8px">'+
-       '<span style="font-size:13px;font-weight:700;color:var(--g7)">'+eeEsc(e.name||'')+' ('+eeEsc(e.emp_no||'')+') '+(e.team?('· '+eeEsc(e.team)):'')+'</span>'+
-       '<button onclick="cpAdminDeleteEntry(\''+e.id+'\')" style="padding:3px 9px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>'+
+       '<span style="font-size:13px;font-weight:700;color:var(--g7)">'+headerLabel+'</span>'+
+       (canSee?('<button onclick="cpAdminDeleteEntry(\''+e.id+'\')" style="padding:3px 9px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>'):'')+
        '</div>'+
        '<div style="font-size:13px;color:var(--g6);white-space:pre-wrap;margin-top:6px;line-height:1.6">'+eeEsc(e.content)+'</div>'+
        '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap">'+
-       '<span style="font-size:11px;color:var(--g4)">'+new Date(e.created_at).toLocaleString('ko-KR')+(hasScore?(' · <b style="color:#c2410c">'+score+'점</b> (투표 '+voteCnt+'명)'):'')+'</span>'+
+       '<span style="font-size:11px;color:var(--g4)">'+new Date(e.created_at).toLocaleString('ko-KR')+(canSee&&hasScore?(' · <b style="color:#c2410c">'+score+'점</b> (투표 '+voteCnt+'명)'):'')+'</span>'+
        '<span style="display:flex;gap:5px">'+
        [1,2,3].map(function(r){
          var active=myRank===r;
@@ -25433,7 +25449,7 @@ async function cpCastVote(entryId, rank){
   cpRenderAllEntries();
 }
 async function cpAdminDeleteEntry(id){
-  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
+  if(!cpCanSeeIdentity()){ toast('⚠️ master·admin만 가능합니다'); return; }
   if(!confirm('이 제출내역을 삭제하시겠습니까? (투표 기록도 함께 삭제됩니다)')) return;
   var res=await sb.from('campaign_entries').delete().eq('id',id);
   if(res.error){ toast('삭제 오류: '+res.error.message); return; }
@@ -25445,6 +25461,7 @@ async function cpAdminDeleteEntry(id){
   cpLoadList();
 }
 function cpDownloadEntries(){
+  if(!cpCanSeeIdentity()){ toast('⚠️ master·admin만 다운로드할 수 있습니다'); return; }
   if(!cpAllEntriesCache.length){ toast('다운로드할 데이터가 없습니다'); return; }
   var aoa=[['총점','투표수','사번','이름','팀','내용','제출일시']];
   var rows=cpAllEntriesCache.slice().sort(function(a,b){ return cpEntryScore(b.id)-cpEntryScore(a.id); });
