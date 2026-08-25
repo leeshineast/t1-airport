@@ -11970,7 +11970,7 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
           attend_time:a.verified_at?new Date(a.verified_at).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'',
           _sigUrl:a.signature_data||null};
       });
-      cols=[{key:'소속',label:'소속',width:'90px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'attend_time',label:'참석시간',width:'70px'},{key:'_sig',label:'서명'},{key:null,label:'비고'}];
+      cols=[{key:'소속',label:'소속',width:'90px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'attend_time',label:'참석시간',width:'65px'},{key:'_sig',label:'서명',width:'100px'},{key:null,label:'비고',width:'110px'}];
     }
     if(kind==='log') await eeAttachSignatures(rows); // QR참석확인 시 직접 서명한 게 있으면 그걸 우선 사용, 없으면 등록된 전자서명(개인계정)으로 보완, 그래도 없으면 빈 칸
     document.getElementById('eeReportModalTitle').textContent='📄 '+title;
