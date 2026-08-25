@@ -14497,7 +14497,10 @@ async function executeDataReset(){
   }
   // 가입 사용자
   if(document.getElementById('rst_users')&&document.getElementById('rst_users').checked){
-    try{ await sb.from('users').delete().neq('role','admin'); }catch(e){}
+    try{
+      var myPw=prompt('본인 확인을 위해 내 비밀번호를 입력해주세요');
+      if(myPw){ await sb.rpc('admin_bulk_reset_users', {p_admin_id: me.id, p_admin_password: myPw}); }
+    }catch(e){}
     var uList=document.getElementById('uList');
     if(uList){
       var rows=uList.querySelectorAll('.u-row');
@@ -15031,14 +15034,8 @@ async function subReg(){
     err.style.display='block';
     err.style.color='var(--g4)';
 
-    var res=await sb.from('users').insert({
-      name:nm,
-      email:em,
-      password:pw,
-      team:fullTeam||team,
-      role:finalRole,
-      status:finalStatus
-    }).select();
+    var signupRes=await sb.rpc('public_signup', {p_name:nm, p_email:em, p_password:pw, p_team:fullTeam||team, p_role:finalRole});
+    var res = signupRes.error ? signupRes : {data:[{id:signupRes.data}], error:null};
 
     err.style.color='';
 
@@ -15343,7 +15340,10 @@ async function loadPendingUsers(){
 async function approveUser(id, name){
   if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 처리할 수 있습니다'); return; }
   if(!confirm(name+'님을 승인하시겠습니까?')) return;
-  var res=await sb.from('users').update({status:'active'}).eq('id',id);
+  if(!me||!me.id){ toast('로그인 정보를 확인할 수 없습니다'); return; }
+  var myPw=prompt('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
+  var res=await sb.rpc('admin_approve_user', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: id});
+  if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
   if(res.error){toast('오류: '+res.error.message);return;}
   toast('✅ '+name+'님 승인 완료');
   loadPendingUsers();
@@ -15354,7 +15354,9 @@ async function approveUser(id, name){
 async function rejectUser(id, name){
   if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 처리할 수 있습니다'); return; }
   if(!confirm(name+'님을 거부하시겠습니까?')) return;
-  var res=await sb.from('users').delete().eq('id',id);
+  var myPw=prompt('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
+  var res=await sb.rpc('admin_delete_user', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: id});
+  if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
   if(res.error){toast('오류: '+res.error.message);return;}
   toast('✅ '+name+'님 신청 거부');
   loadPendingUsers();
@@ -15441,7 +15443,9 @@ async function editUserEmpId(id,name,curEmpId){
   if(v===null) return; // 취소
   v=v.trim();
   try{
-    var res=await sb.from('users').update({employee_id:v||null}).eq('id',id);
+    var myPw=prompt('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
+    var res=await sb.rpc('admin_set_employee_id', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: id, p_employee_id: v||null});
+    if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
     if(res.error){ toast('저장 실패: '+res.error.message); return; }
     // 서명 프로필(user_signatures)에도 사번 동기화 — 이미 서명 등록한 사용자면 사번만 갱신,
     // 아직 서명 미등록이면 사번만 미리 저장해두고 나머지(소속/직책/서명이미지)는 본인이 "내 서명 등록"에서 채우게 함
@@ -15473,7 +15477,9 @@ async function toggleMemberRole(el){
       if(!confirm(name+'님을 열람전용 계정으로 전환할까요?\n(홈화면과 열람·자료 메뉴만 보이게 됩니다. 원래 직급은 자동 저장되어 나중에 복원할 수 있습니다)')) return;
       payload={role:'member', prev_role:curRole};
     }
-    var res=await sb.from('users').update(payload).eq('id',id);
+    var myPw=prompt('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
+    var res=await sb.rpc('admin_set_role', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: id, p_role: payload.role, p_prev_role: payload.prev_role});
+    if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
     if(res.error){ toast('오류: '+res.error.message); return; }
     toast('✅ '+name+'님 '+(isCur?'열람전용 해제 완료':'열람전용 전환 완료'));
     loadUserList();
@@ -15549,7 +15555,9 @@ async function saveTeamMove(){
   var isExecSelectTM=(tmSelectedRole==='그룹장'||tmSelectedRole==='본부장');
   var finalRole = isExecSelectTM ? TM_ROLE_MAP[tmSelectedRole] : (isT1 ? 'admin' : (isIAOS ? 'guest' : (TM_ROLE_MAP[tmSelectedRole]||'staff')));
   try{
-    var res=await sb.from('users').update({team:fullTeam, role:finalRole}).eq('id',tmTarget.id);
+    var myPw=prompt('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
+    var res=await sb.rpc('admin_move_team', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: tmTarget.id, p_team: fullTeam, p_role: finalRole});
+    if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
     if(res.error){ toast('오류: '+res.error.message); return; }
     toast('✅ '+tmTarget.name+'님 → '+fullTeam+' · '+tmSelectedRole+' 이동 완료');
     closeTeamMove();
@@ -15560,7 +15568,9 @@ async function saveTeamMove(){
 async function withdrawUserDB(id, name){
   if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 처리할 수 있습니다'); return; }
   if(!confirm('⚠️ '+name+'님을 완전삭제 하시겠습니까?\n\n계정 정보가 영구적으로 삭제되며 되돌릴 수 없습니다.\n(재가입은 새 아이디로 바로 가능합니다)')) return;
-  var res=await sb.from('users').delete().eq('id',id);
+  var myPw=prompt('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
+  var res=await sb.rpc('admin_delete_user', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: id});
+  if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
   if(res.error){toast('오류: '+res.error.message);return;}
   toast('✅ '+name+'님 계정이 완전삭제되었습니다');
   loadUserList();
@@ -15597,14 +15607,18 @@ async function savePermEdit(){
   });
   if(currentPermUserId) userPerms[currentPermUserId]=perms;
   try{ localStorage.setItem('t1_perms',JSON.stringify(userPerms)); }catch(e){}
-  // DB 저장: id로 찾아서 permissions를 JSON 문자열로 저장
+  // DB 저장: SECURITY DEFINER 함수로 저장 (관리자 본인 인증 필요)
   var permRes;
+  var myPw=prompt('본인 확인을 위해 내 비밀번호를 입력해주세요');
+  if(!myPw){ return; }
   try{
-    if(currentPermUserId){
-      permRes=await sb.from('users').update({permissions:JSON.stringify(perms)}).eq('id',currentPermUserId);
-    } else {
-      permRes=await sb.from('users').update({permissions:JSON.stringify(perms)}).eq('name',currentPermUser);
-    }
+    permRes=await sb.rpc('admin_set_permissions', {
+      p_admin_id: me.id, p_admin_password: myPw,
+      p_target_id: currentPermUserId || null,
+      p_target_name: currentPermUserId ? null : currentPermUser,
+      p_permissions: perms
+    });
+    if(!permRes.error && permRes.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
   }catch(e){ permRes={error:{message:String(e.message||e)}}; }
   if(permRes&&permRes.error){
     toast('⚠️ 권한 저장 실패: '+permRes.error.message+' — 다시 시도해주세요');
