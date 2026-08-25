@@ -24219,32 +24219,37 @@ async function wfDownloadErp(){
       return ranges.some(function(r){ return dateStr>=r.s && dateStr<=r.e; });
     }
 
+    function wfBuildErpRow(e, d){
+      var wdKr=weekMap[d.getDay()];
+      var dg=wfCalcDayGubun(d, holidaySet);
+      var ymdDash=wfYmd(d).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3');
+      var tkg=wfTkgCode(e), baseTm=wfBaseTmCode(e);
+      var tm;
+      if(wfIsOnLeave(e.emp_no, ymdDash)) tm='P27';
+      else{
+        var offDays=[e.off1,e.off2].filter(Boolean);
+        var isOff=offDays.indexOf(wdKr)!==-1;
+        tm=isOff?'P26':baseTm;
+      }
+      return ['IAOS','1000',e.emp_no,dg,wfYmd(d),tkg,tm];
+    }
+
     var aoa=[['회사코드','사업장코드','사원번호','일구분코드','시작일','근무조코드','시간코드']];
     var weekMap=['일','월','화','수','목','금','토'];
     wfEmployees.forEach(function(e){
-      var tkg=wfTkgCode(e), baseTm=wfBaseTmCode(e);
-      var offDays=[e.off1,e.off2].filter(Boolean);
       var d=new Date(start);
       while(d<=end){
-        var wdKr=weekMap[d.getDay()];
-        var dg=wfCalcDayGubun(d, holidaySet);
-        var ymdDash=wfYmd(d).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3');
-        var tm;
-        if(wfIsOnLeave(e.emp_no, ymdDash)) tm='P27';
-        else{
-          var isOff=offDays.indexOf(wdKr)!==-1;
-          tm=isOff?'P26':baseTm;
-        }
-        aoa.push(['IAOS','1000',e.emp_no,dg,wfYmd(d),tkg,tm]);
+        aoa.push(wfBuildErpRow(e, d));
         d.setDate(d.getDate()+1);
       }
     });
     var wb=XLSX.utils.book_new();
     var ws=XLSX.utils.aoa_to_sheet(aoa);
     ws['!cols']=[{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:10}];
-    XLSX.utils.book_append_sheet(wb, ws, '근무계획업로드');
+    XLSX.utils.book_append_sheet(wb, ws, '근무계획업로드(전체)');
 
-    // 요일조(고정휴무요일 페어)별 시트 추가: 월화/화수/수목/목금/금토/토일/일월
+    // 요일조(고정휴무요일 페어)별 ERP 업로드용 시트 추가: 월화/화수/수목/목금/금토/토일/일월
+    // 각 시트는 해당 요일조 소속 인원만 모아 1일~말일까지 동일한 더존ERP 업로드 형식으로 생성
     var PAIR_ORDER=['월화','화수','수목','목금','금토','토일','일월'];
     PAIR_ORDER.forEach(function(pair){
       var d1=pair[0], d2=pair[1];
@@ -24258,12 +24263,16 @@ async function wfDownloadErp(){
         if(tA!==tB) return tA-tB;
         return (a.group_name||'').localeCompare(b.group_name||'');
       });
-      var pAoa=[['사번','성명','팀','조','오전/오후/야간','고정휴무요일']];
+      var pAoa=[['회사코드','사업장코드','사원번호','일구분코드','시작일','근무조코드','시간코드']];
       members.forEach(function(e){
-        pAoa.push([e.emp_no, e.name||'', e.team||'', e.group_name||'', e.shift_type||'', pair]);
+        var d=new Date(start);
+        while(d<=end){
+          pAoa.push(wfBuildErpRow(e, d));
+          d.setDate(d.getDate()+1);
+        }
       });
       var pws=XLSX.utils.aoa_to_sheet(pAoa);
-      pws['!cols']=[{wch:10},{wch:10},{wch:16},{wch:8},{wch:12},{wch:10}];
+      pws['!cols']=[{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:10}];
       XLSX.utils.book_append_sheet(wb, pws, pair+'조('+members.length+'명)');
     });
 
@@ -24532,6 +24541,10 @@ function wfSpRenderTable(){
         var sum=0;
         row.members.forEach(function(mc){ sum+=wfSpTeamHeadcount(wfSpFindAssign(mc,dt)); });
         h+='<td style="padding:8px 12px;text-align:center;font-weight:800;color:var(--navy)">'+sum+'명</td>';
+      }else if(row.type==='names'){
+        var an=wfSpFindAssign(row.code, dt);
+        var labelN=wfSpCellLabel(row, an);
+        h+='<td onclick="wfSpOpenCell(\''+row.code+'\',\''+dt+'\')" style="padding:8px 10px;cursor:pointer;'+(labelN?'color:var(--navy)':'color:var(--g3);text-align:center')+'">'+(labelN||'+ 등록')+'</td>';
       }else{
         var a=wfSpFindAssign(row.code, dt);
         var act=wfSpActualFor(row.code, dt);
