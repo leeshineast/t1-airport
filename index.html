@@ -23980,35 +23980,70 @@ function wfEmpUpload(inputEl){
   reader.onload=async function(e){
     try{
       var wb=XLSX.read(e.target.result,{type:'binary'});
-      var sheetName=wb.SheetNames.find(function(n){return n.indexOf('인원현황')!==-1;})||wb.SheetNames[wb.SheetNames.length-1];
+      var sheetName=wb.SheetNames.find(function(n){return n.indexOf('인원현황')!==-1||n.indexOf('휴변')!==-1||n.indexOf('휴무')!==-1;})||wb.SheetNames[0];
       var ws=wb.Sheets[sheetName];
-      var rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      // 원본 AOA로 읽어서 실제 헤더 행(사번 컬럼이 있는 행)을 자동 탐지 — 상단에 병합된 제목행이 있어도 대응
+      var aoa=XLSX.utils.sheet_to_json(ws,{header:1, defval:''});
+      var headerRowIdx=aoa.findIndex(function(row){ return row.some(function(c){return String(c).trim()==='사번';}); });
+      if(headerRowIdx===-1){ toast('⚠️ "사번" 컬럼을 찾을 수 없습니다. 양식을 확인해주세요'); inputEl.value=''; return; }
+      var headers=aoa[headerRowIdx].map(function(h){return String(h).trim();});
+      var dataRows=aoa.slice(headerRowIdx+1);
+      var rows=dataRows.map(function(arr){
+        var o={};
+        headers.forEach(function(h,i){ if(h) o[h]=arr[i]!==undefined?arr[i]:''; });
+        return o;
+      }).filter(function(o){ return Object.values(o).some(function(v){return String(v).trim()!=='';}); });
       if(!rows.length){ toast('엑셀에 데이터가 없습니다'); inputEl.value=''; return; }
-      // 요일 패턴(2글자, 월~일 조합) 컬럼을 자동 탐지 (예: "1분기","2분기" 등)
-      var sample=rows[0];
-      var dayColKey=Object.keys(sample).find(function(k){
-        var v=String(sample[k]||'');
-        return /^[월화수목금토일]{2}$/.test(v);
-      });
+
+      // 상단 제목에서 "20xx년 n분기" 자동 탐지 → 분기 선택값 자동 설정
+      var titleText=aoa.slice(0,headerRowIdx).map(function(r){return r.join(' ');}).join(' ');
+      var qMatch=titleText.match(/(20\d\d)년\s*([1-4])\s*분기/);
+      if(qMatch){
+        var detectedQ=qMatch[1]+'-Q'+qMatch[2];
+        var qs=document.getElementById('wfQuarterSel');
+        if(qs && Array.from(qs.options).some(function(o){return o.value===detectedQ;})){
+          qs.value=detectedQ; wfCurQuarter=detectedQ;
+        }
+      }
+
+      // 요일 패턴(2글자) 컬럼 탐지: "변경후" 우선, 없으면 "변경전", 없으면 분기 패턴 컬럼(예:"1분기") 자동탐지
+      var dayColKey=null;
+      if(headers.indexOf('변경후')!==-1) dayColKey='변경후';
+      else if(headers.indexOf('변경전')!==-1) dayColKey='변경전';
+      else{
+        dayColKey=headers.find(function(h){
+          return rows.some(function(r){ return /^[월화수목금토일]{2}$/.test(String(r[h]||'').trim()); });
+        });
+      }
+
+      // 팀 번호별 오전/오후/야간 기본 매핑 (근무구역 정보가 없는 파일 대응)
+      var TEAM_SHIFT_MAP={'1':'오전','2':'오전','3':'오전','4':'오전','6':'오후','7':'오후','8':'오후','9':'오후','5':'야간','10':'야간'};
+
       var empPayload=[], offPayload=[];
       rows.forEach(function(r){
         var empNo=String(r['사번']||'').trim();
         if(!empNo) return;
         var name=String(r['한글\n이름']||r['한글이름']||r['성명']||'').trim();
         var pos=String(r['직책\n직위']||r['직책']||'').trim();
+        if(pos==='-'||!pos) pos='사원';
         var hq=String(r['총괄']||'').trim();
         var team=String(r['근무팀']||'').trim();
-        var grp=String(r['근무조']||'').trim(); if(grp==='-') grp='';
+        // "환경1팀" 같은 축약형을 "환경미화1팀"으로 정규화 (특별근무 등 다른 화면과 매칭 일관성 유지)
+        if(/^환경\d/.test(team)) team=team.replace(/^환경/, '환경미화');
+        var grp=String(r['근무조']||'').trim(); if(grp==='-'||grp===team) grp='';
         var area=String(r['근무구역']||'').trim();
-        var tkg=String(r['B0010']||'').trim(); // 자리표시, 아래에서 area로 추정
         var shift='';
         if(area.indexOf('오전')!==-1) shift='오전';
         else if(area.indexOf('오후')!==-1) shift='오후';
         else if(area.indexOf('야간')!==-1) shift='야간';
-        else if(pos.indexOf('총괄')!==-1 || area.indexOf('제1여객터미널')!==-1 || area.indexOf('행정')!==-1) shift='일근';
+        else if(pos.indexOf('총괄')!==-1 || hq.indexOf('총괄')!==-1 || team.indexOf('총괄')!==-1) shift='일근';
+        else{
+          var teamNumMatch=team.match(/(\d+)/);
+          if(teamNumMatch && TEAM_SHIFT_MAP[teamNumMatch[1]]) shift=TEAM_SHIFT_MAP[teamNumMatch[1]];
+        }
         empPayload.push({
-          emp_no:empNo, name:name, position:pos, hq_team:hq, team:team, group_name:grp||null,
-          shift_type:shift||null, work_area:area, updated_at:new Date().toISOString()
+          emp_no:empNo, name:name, position:pos, hq_team:hq||null, team:team||null, group_name:grp||null,
+          shift_type:shift||null, work_area:area||null, updated_at:new Date().toISOString()
         });
         if(dayColKey){
           var dv=String(r[dayColKey]||'').trim();
@@ -24020,14 +24055,14 @@ function wfEmpUpload(inputEl){
           }
         }
       });
-      if(!empPayload.length){ toast('⚠️ 사번 컬럼을 찾을 수 없습니다. 양식을 확인해주세요'); inputEl.value=''; return; }
+      if(!empPayload.length){ toast('⚠️ 유효한 사번 데이터가 없습니다. 양식을 확인해주세요'); inputEl.value=''; return; }
       var r1=await sb.from('wf_employees').upsert(empPayload,{onConflict:'emp_no'});
       if(r1.error){ toast('직원정보 저장 오류: '+r1.error.message); return; }
       if(offPayload.length){
         var r2=await sb.from('wf_fixed_off').upsert(offPayload,{onConflict:'emp_no,quarter'});
         if(r2.error){ toast('휴무요일 저장 오류: '+r2.error.message); return; }
       }
-      toast('✓ '+empPayload.length+'명 등록/갱신 완료'+(offPayload.length?(' (휴무요일 '+offPayload.length+'건 포함)'):''));
+      toast('✓ '+empPayload.length+'명 등록/갱신 완료'+(offPayload.length?(' ('+(wfCurQuarter||wfNowQuarter())+' 휴무요일 '+offPayload.length+'건 포함)'):''));
       inputEl.value='';
       loadWfEmployees();
     }catch(err){ toast('엑셀 처리 오류: '+String(err.message||err)); inputEl.value=''; }
