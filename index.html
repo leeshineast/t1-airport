@@ -6066,7 +6066,7 @@ function goHomePanel(){
 function go(name){
   if(me&&me.role==='vehicle_guest'&&name!=='veh'&&name!=='login'){ return; }
   if(me&&me.role==='work_vehicle'&&name!=='workveh'&&name!=='login'){ return; }
-  if(me&&me.role==='member'&&name!=='main'&&name!=='login'){
+  if(me&&me.role==='member'&&name!=='main'&&name!=='login'&&name!=='eduattend'){
     if(!window._memberAllowedScreens){
       window._memberAllowedScreens={};
       document.querySelectorAll('#menuCat_ref .menu-btn').forEach(function(el){
