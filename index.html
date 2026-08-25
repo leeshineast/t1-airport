@@ -11889,7 +11889,6 @@ async function eeOpenAdminView(eventId){
           +'<thead><tr style="background:var(--g1)">'
             +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">소속</th>'
             +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">직책</th>'
-            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">직책</th>'
             +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">사번</th>'
             +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">성명</th>'
             +'<th style="text-align:center;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">참석</th>'
@@ -11928,19 +11927,22 @@ async function eeOpenAdminView(eventId){
     h+='</tbody></table></div></div>';
     eeAppsCache=apps; // 관리자 수정/삭제 시 참조용
 
-    // 팀별 신청현황
-    var byTeam={};
-    apps.forEach(function(a){
-      var t=a.team||'미지정';
-      if(!byTeam[t]) byTeam[t]={total:0, byGroup:{}};
-      byTeam[t].total++;
-      var g=a.team_group||'-';
-      byTeam[t].byGroup[g]=(byTeam[t].byGroup[g]||0)+1;
-    });
-    var teamKeys=Object.keys(byTeam).sort();
-    if(teamKeys.length){
+    // 팀별 신청현황 — 회차(일정)별로 구분해서 표시
+    scheds.forEach(function(s){
+      var schedApps=byShed[s.id]||[];
+      if(!schedApps.length) return;
+      var byTeam={};
+      schedApps.forEach(function(a){
+        var t=a.team||'미지정';
+        if(!byTeam[t]) byTeam[t]={total:0, byGroup:{}};
+        byTeam[t].total++;
+        var g=a.team_group||'-';
+        byTeam[t].byGroup[g]=(byTeam[t].byGroup[g]||0)+1;
+      });
+      var teamKeys=Object.keys(byTeam).sort();
       h+='<div class="card" style="margin-top:11px"><div class="cb">';
-      h+='<div style="font-size:15px;font-weight:800;color:var(--g7);margin-bottom:11px">📊 팀별 신청현황 (연인원)</div>';
+      h+='<div style="font-size:15px;font-weight:800;color:var(--g7);margin-bottom:2px">📊 팀별 신청현황</div>';
+      h+='<div style="font-size:12.5px;color:var(--g5);margin-bottom:11px">'+s.event_date+' '+(s.start_time||'')+'</div>';
       h+='<table style="width:100%;border-collapse:separate;border-spacing:0;font-size:13px">';
       h+='<thead><tr><th style="text-align:left;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">팀</th><th style="text-align:left;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">조별</th><th style="text-align:right;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">합계</th></tr></thead><tbody>';
       teamKeys.forEach(function(t,i){
@@ -11952,7 +11954,7 @@ async function eeOpenAdminView(eventId){
           +'</tr>';
       });
       h+='</tbody></table></div></div>';
-    }
+    });
     wrap.innerHTML=h;
   }catch(e){ wrap.innerHTML='오류: '+e.message; }
 }
