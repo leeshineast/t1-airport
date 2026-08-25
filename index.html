@@ -24304,7 +24304,7 @@ var WF_SP_ROW_DEFS=[
   {grp:'야간', label:'5팀', code:'5팀', type:'team'},
   {grp:'야간', label:'10팀', code:'10팀', type:'team'},
   {grp:'야간', label:'야간소계', code:'SUM_NT', type:'sum', members:['5팀','10팀']},
-  {grp:'', label:'전체 근무 인원', code:'SUM_ALL', type:'sum', members:['1팀','2팀','3팀','4팀','6팀','7팀','8팀','9팀','5팀','10팀']}
+  {grp:'', label:'전체 근무 인원', code:'SUM_ALL', type:'sum', members:['ADMIN','HQ','1팀','2팀','3팀','4팀','6팀','7팀','8팀','9팀','5팀','10팀']}
 ];
 var wfSpEvents=[], wfSpCurEvent=null, wfSpAssignments=[];
 var wfSpCellCtx=null;
@@ -24422,6 +24422,7 @@ function wfSpFindAssign(teamCode, date){
 }
 function wfSpTeamHeadcount(a){
   if(!a) return 0;
+  if(a.names_text) return a.names_text.split(',').map(function(s){return s.trim();}).filter(Boolean).length;
   var leader=a.leader_name?1:0;
   var sub=(a.subleader_names||'').split(',').map(function(s){return s.trim();}).filter(Boolean).length;
   var staff=parseInt(a.staff_count,10)||0;
