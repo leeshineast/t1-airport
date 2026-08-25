@@ -3407,8 +3407,9 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div style="padding:13px">
     <div id="cpInfoWrap"></div>
     <div id="cpWinnerWrap"></div>
+    <div id="cpPeriodNotice"></div>
 
-    <div class="card" style="margin-bottom:14px"><div class="cb">
+    <div id="cpFormCard" class="card" style="margin-bottom:14px"><div class="cb">
       <div style="font-size:15px;font-weight:800;color:var(--g7);margin-bottom:10px">✍️ 참여하기</div>
       <div style="display:flex;gap:8px;margin-bottom:10px">
         <div style="flex:1"><div class="f-lbl">사번</div><input type="text" id="cpEmpNo" class="ri" placeholder="사번" style="margin-bottom:0"></div>
@@ -25181,6 +25182,24 @@ async function cpOpenDetail(id){
       '</div></div>'):'';
   }
 
+  // 응모 기간 체크 — 기간 밖이면 참여폼 숨기고 안내만 표시
+  var today=kstDate();
+  var periodStatus='open';
+  if(c.start_date && today<c.start_date) periodStatus='before';
+  else if(c.end_date && today>c.end_date) periodStatus='after';
+  var noticeEl=document.getElementById('cpPeriodNotice');
+  var formCardEl=document.getElementById('cpFormCard');
+  if(periodStatus==='before'){
+    noticeEl.innerHTML='<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:14px;margin-bottom:14px;text-align:center;color:#1e40af;font-size:13.5px;font-weight:700">📅 아직 응모 시작 전입니다 ('+c.start_date+'부터 시작)</div>';
+    formCardEl.style.display='none';
+  }else if(periodStatus==='after'){
+    noticeEl.innerHTML='<div style="background:#f1f5f9;border:1.5px solid #cbd5e1;border-radius:10px;padding:14px;margin-bottom:14px;text-align:center;color:#475569;font-size:13.5px;font-weight:700">🔒 응모가 마감되었습니다 ('+c.end_date+' 종료)</div>';
+    formCardEl.style.display='none';
+  }else{
+    noticeEl.innerHTML='';
+    formCardEl.style.display='block';
+  }
+
   // 참여폼 사번/이름 — 개인계정은 자동입력(잠금), 공용계정은 직접입력
   var empEl=document.getElementById('cpEmpNo'), nameEl=document.getElementById('cpName');
   if(cpIsPersonalAcct()){
@@ -25247,6 +25266,9 @@ async function cpDeleteEntry(id){
   cpLoadList();
 }
 async function cpSubmitEntry(){
+  var today=kstDate();
+  if(cpCurCampaign.start_date && today<cpCurCampaign.start_date){ toast('⚠️ 아직 응모 기간이 아닙니다'); return; }
+  if(cpCurCampaign.end_date && today>cpCurCampaign.end_date){ toast('⚠️ 응모가 마감되었습니다'); return; }
   var empNo=(document.getElementById('cpEmpNo').value||'').trim();
   var name=(document.getElementById('cpName').value||'').trim();
   var content=(document.getElementById('cpContent').value||'').trim();
