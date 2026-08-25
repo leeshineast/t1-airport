@@ -2426,8 +2426,9 @@ html{overflow-x:hidden}
 <!-- 습득물 처리완료 모달 -->
 <!-- 상황발생보고서 (습득물/인수인계/민원/안전사고 공용) -->
 <style>
-.ee-rpt-table{ width:100%; table-layout:fixed; border-collapse:collapse; font-size:11px; }
+.ee-rpt-table{ width:100%; table-layout:fixed; border-collapse:separate; border-spacing:0; font-size:11px; }
 .ee-rpt-table th, .ee-rpt-table td{ border:1px solid #999; padding:4px 3px; text-align:center; word-break:keep-all; }
+.ee-rpt-table thead{ display:table-header-group; }
 .ee-rpt-table th{ background:#efe3f5; font-weight:700; }
 .ee-rpt-meta-table{ width:100%; border-collapse:collapse; font-size:13px; margin-bottom:12px; }
 .ee-rpt-meta-table th, .ee-rpt-meta-table td{ border:1px solid #999; padding:7px 9px; }
@@ -12049,14 +12050,24 @@ function eeReportMetaTable(pairs){
   h+='</tbody></table>';
   return h;
 }
-function eeReportRowsTable(rows, cols){
+function eeReportRowsTable(rows, cols, titleText, metaPairs){
   // cols: [{key, label, width}] — key===null이면 빈 칸(서명란 등), key==='_sig'면 등록된 전자서명 이미지가 있으면 표시, 없으면 빈 칸(직접서명용)
-  var h='<table class="ee-rpt-table"><thead><tr>'
-    +'<th style="width:24px;white-space:nowrap">No</th>'
-    +cols.map(function(c){ return '<th'+(c.width?(' style="width:'+c.width+'"'):'')+'>'+c.label+'</th>'; }).join('')
-    +'</tr></thead><tbody>';
-  rows.forEach(function(r,i){
-    h+='<tr><td style="text-align:center">'+(i+1)+'</td>'
+  // titleText/metaPairs를 주면 인쇄 시 페이지마다 제목+메타정보+컬럼헤더가 반복되도록 페이지 단위로 표를 나눠서 생성함
+  // (브라우저의 thead 자동반복(display:table-header-group)이 iOS Safari 인쇄에서 동작하지 않아 수동 분할 방식 사용)
+  var totalCols=cols.length+1;
+  function theadHtml(){
+    var t='<thead>';
+    if(titleText) t+='<tr><th colspan="'+totalCols+'" style="border:none;font-size:18px;font-weight:800;padding:2px 0 10px;background:#fff">'+titleText+'</th></tr>';
+    if(metaPairs) metaPairs.forEach(function(p){ t+='<tr><th style="width:100px;white-space:nowrap">'+p[0]+'</th><td colspan="'+(totalCols-1)+'" style="text-align:left">'+p[1]+'</td></tr>'; });
+    if(titleText||metaPairs) t+='<tr><td colspan="'+totalCols+'" style="border:none;height:8px;padding:0"></td></tr>';
+    t+='<tr>'
+      +'<th style="width:24px;white-space:nowrap">No</th>'
+      +cols.map(function(c){ return '<th'+(c.width?(' style="width:'+c.width+'"'):'')+'>'+c.label+'</th>'; }).join('')
+      +'</tr></thead>';
+    return t;
+  }
+  function rowHtml(r,i){
+    return '<tr><td style="text-align:center">'+(i+1)+'</td>'
       +cols.map(function(c){
         if(c.key==='_sig'){
           if(r._sigUrl) return '<td style="height:22px;text-align:center;padding:1px"><img src="'+r._sigUrl+'" alt="서명" style="max-height:19px;max-width:56px;vertical-align:middle"></td>';
@@ -12066,9 +12077,18 @@ function eeReportRowsTable(rows, cols){
         return '<td>'+eeEsc(r[c.key]==null?'':r[c.key])+'</td>';
       }).join('')
       +'</tr>';
-  });
-  if(!rows.length) h+='<tr><td colspan="'+(cols.length+1)+'" style="text-align:center;color:#999;padding:14px">대상자 없음</td></tr>';
-  h+='</tbody></table>';
+  }
+  if(!rows.length){
+    return '<table class="ee-rpt-table">'+theadHtml()+'<tbody><tr><td colspan="'+totalCols+'" style="text-align:center;color:#999;padding:14px">대상자 없음</td></tr></tbody></table>';
+  }
+  var PER_PAGE=32; // A4 한 페이지(제목+메타+헤더 포함)에 안전하게 들어가는 행 수
+  var h='';
+  for(var p=0;p<rows.length;p+=PER_PAGE){
+    var chunk=rows.slice(p, p+PER_PAGE);
+    h+='<table class="ee-rpt-table"'+(p>0?' style="page-break-before:always;margin-top:0"':'')+'>'+theadHtml()+'<tbody>';
+    chunk.forEach(function(r,ci){ h+=rowHtml(r, p+ci); });
+    h+='</tbody></table>';
+  }
   return h;
 }
 // rows(각 row에 employee_id 필요)에 등록된 전자서명(user_signatures, employee_id 매칭) URL을 채워넣음 — 이미 _sigUrl(QR참석확인 시 직접 서명)이 있는 row는 건드리지 않음
@@ -12121,14 +12141,14 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
     }
     if(kind==='log') await eeAttachSignatures(rows); // QR참석확인 시 직접 서명한 게 있으면 그걸 우선 사용, 없으면 등록된 전자서명(개인계정)으로 보완, 그래도 없으면 빈 칸
     document.getElementById('eeReportModalTitle').textContent='📄 '+title;
-    document.getElementById('eeReportBigTitle').textContent=title;
-    document.getElementById('eeReportMeta').innerHTML=eeReportMetaTable([
+    document.getElementById('eeReportBigTitle').textContent='';
+    document.getElementById('eeReportMeta').innerHTML='';
+    document.getElementById('eeReportBody').innerHTML=eeReportRowsTable(rows, cols, title, [
       [catLabel+'명', eeEsc(ev.title)],
       [catLabel+'일시', sched.event_date+' '+(sched.start_time||'')+'~'+(sched.end_time||'')],
       ['장소', eeEsc(sched.location||'-')],
       ['참석인원', rows.length+'명']
     ]);
-    document.getElementById('eeReportBody').innerHTML=eeReportRowsTable(rows, cols);
     showM('eeReportModal');
   }catch(e){ toast('오류: '+e.message); }
 }
@@ -12146,14 +12166,14 @@ async function eeOpenWishSurvey(eventId){
     });
     var catLabel=(ev.category==='기타'?(ev.category_custom||'기타'):ev.category)||'교육';
     document.getElementById('eeReportModalTitle').textContent='📄 참석희망자 조사표';
-    document.getElementById('eeReportBigTitle').textContent=catLabel+' 참석희망자 조사표';
+    document.getElementById('eeReportBigTitle').textContent='';
     var metaPairs=[[catLabel+'명', eeEsc(ev.title)]];
     if(ev.apply_deadline) metaPairs.push(['신청기간', '~'+ev.apply_deadline]);
     metaPairs.push(['신청인원', rows.length+'명']);
-    document.getElementById('eeReportMeta').innerHTML=eeReportMetaTable(metaPairs);
+    document.getElementById('eeReportMeta').innerHTML='';
     document.getElementById('eeReportBody').innerHTML=eeReportRowsTable(rows, [
       {key:'소속',label:'소속',width:'90px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'wish_date',label:'참석희망일'}
-    ]);
+    ], catLabel+' 참석희망자 조사표', metaPairs);
     showM('eeReportModal');
   }catch(e){ toast('오류: '+e.message); }
 }
