@@ -3405,6 +3405,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <button onclick="go('campaign')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 목록</button>
   </div>
   <div style="padding:13px">
+    <div id="cpInfoWrap"></div>
     <div id="cpWinnerWrap"></div>
 
     <div class="card" style="margin-bottom:14px"><div class="cb">
@@ -3429,18 +3430,29 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
 <!-- 공모전 만들기 모달 -->
 <div id="cpCreateModal" class="modal-bg">
-  <div class="modal" style="max-width:360px"><div style="padding:17px">
-    <h3 style="margin:0 0 12px">공모전 만들기</h3>
+  <div class="modal" style="max-width:380px;max-height:90vh;overflow-y:auto"><div style="padding:17px">
+    <h3 id="cpCreateModalTitle" style="margin:0 0 12px">공모전 만들기</h3>
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">제목</label>
     <input id="cpNewTitle" placeholder="예: 습득물(유실물) 근절 슬로건 공모" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box">
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">설명</label>
-    <textarea id="cpNewDesc" rows="3" placeholder="공모 취지, 참여 방법, 기간 등" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box;resize:vertical"></textarea>
+    <textarea id="cpNewDesc" rows="3" placeholder="공모 취지 등" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box;resize:vertical"></textarea>
+    <label style="font-size:12.5px;font-weight:700;color:var(--g6)">응모 기간</label>
+    <div style="display:flex;gap:6px;margin:6px 0 12px">
+      <input type="date" id="cpNewStart" style="flex:1;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
+      <input type="date" id="cpNewEnd" style="flex:1;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
+    </div>
+    <label style="font-size:12.5px;font-weight:700;color:var(--g6)">참여 대상</label>
+    <input id="cpNewTarget" placeholder="예: 전 직원 (공용계정 포함)" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box">
+    <label style="font-size:12.5px;font-weight:700;color:var(--g6)">참여 조건</label>
+    <textarea id="cpNewCondition" rows="2" placeholder="예: 1인 1건, 표절/유사문구 제외 등" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box;resize:vertical"></textarea>
+    <label style="font-size:12.5px;font-weight:700;color:var(--g6)">세부 일정 (심사·발표일 등)</label>
+    <textarea id="cpNewSchedule" rows="2" placeholder="예: 9/1~9/30 응모 → 10/5 심사 → 10/8 발표" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box;resize:vertical"></textarea>
     <label style="font-size:12.5px;font-weight:700;color:var(--g6);display:flex;align-items:center;gap:8px;cursor:pointer">
       <input type="checkbox" id="cpNewAllowMulti" style="width:16px;height:16px"> 한 사람이 여러 개 제출 가능하게 허용
     </label>
     <div style="display:flex;gap:8px;margin-top:16px">
       <button onclick="hideM('cpCreateModal')" style="flex:1;padding:11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-weight:700;cursor:pointer">취소</button>
-      <button onclick="cpCreateCampaign()" style="flex:1;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">만들기</button>
+      <button id="cpCreateSaveBtn" onclick="cpCreateCampaign()" style="flex:1;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">만들기</button>
     </div>
   </div></div>
 </div>
@@ -25072,6 +25084,12 @@ var cpCampaigns=[], cpCurCampaign=null, cpMyEntries=[], cpAllEntriesCache=[];
 function cpIsAdmin(){ return !!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader')); }
 function cpIsPersonalAcct(){ return !!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader')); }
 
+function cpFmtPeriod(c){
+  if(c.start_date&&c.end_date) return c.start_date+' ~ '+c.end_date;
+  if(c.start_date) return c.start_date+' ~';
+  if(c.end_date) return '~ '+c.end_date;
+  return '';
+}
 async function cpLoadList(){
   document.getElementById('cpCreateBtn').style.display=cpIsAdmin()?'block':'none';
   var wrap=document.getElementById('cpListWrap');
@@ -25087,29 +25105,47 @@ async function cpLoadList(){
   cpCampaigns.forEach(function(c){
     var cnt=cntMap[c.id]||0;
     var statusBadge=c.status==='closed'?'<span style="padding:3px 10px;border-radius:10px;background:#f1f5f9;color:#64748b;font-size:12px;font-weight:700">종료</span>':'<span style="padding:3px 10px;border-radius:10px;background:#dcfce7;color:#15803d;font-size:12px;font-weight:700">진행중</span>';
+    var period=cpFmtPeriod(c);
     h+='<div onclick="cpOpenDetail(\''+c.id+'\')" style="padding:14px;border:1.5px solid var(--g2);border-radius:12px;margin-bottom:10px;cursor:pointer;background:white">'+
        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'+
        '<div style="font-weight:800;font-size:15px;color:var(--g7)">🏆 '+eeEsc(c.title)+'</div>'+statusBadge+
        '</div>'+
        (c.description?('<div style="font-size:13px;color:var(--g4);margin-top:6px">'+eeEsc(c.description)+'</div>'):'')+
-       '<div style="font-size:12px;color:var(--g4);margin-top:8px">응모 '+cnt+'건'+(c.allow_multiple?' · 1인 복수제출 가능':' · 1인 1회 제출')+'</div>'+
+       (period?('<div style="font-size:12px;color:var(--g5);margin-top:6px">📅 '+period+'</div>'):'')+
+       '<div style="font-size:12px;color:var(--g4);margin-top:6px">응모 '+cnt+'건'+(c.allow_multiple?' · 1인 복수제출 가능':' · 1인 1회 제출')+'</div>'+
        '</div>';
   });
   wrap.innerHTML=h;
 }
 function cpOpenCreate(){
+  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 공모전을 만들 수 있습니다'); return; }
   document.getElementById('cpNewTitle').value='';
   document.getElementById('cpNewDesc').value='';
+  document.getElementById('cpNewStart').value='';
+  document.getElementById('cpNewEnd').value='';
+  document.getElementById('cpNewTarget').value='';
+  document.getElementById('cpNewCondition').value='';
+  document.getElementById('cpNewSchedule').value='';
   document.getElementById('cpNewAllowMulti').checked=false;
   showM('cpCreateModal');
 }
 async function cpCreateCampaign(){
+  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 공모전을 만들 수 있습니다'); return; }
   var title=(document.getElementById('cpNewTitle').value||'').trim();
   var desc=(document.getElementById('cpNewDesc').value||'').trim();
+  var startDate=document.getElementById('cpNewStart').value||null;
+  var endDate=document.getElementById('cpNewEnd').value||null;
+  var target=(document.getElementById('cpNewTarget').value||'').trim();
+  var condition=(document.getElementById('cpNewCondition').value||'').trim();
+  var schedule=(document.getElementById('cpNewSchedule').value||'').trim();
   var allowMulti=document.getElementById('cpNewAllowMulti').checked;
   if(!title){ toast('⚠️ 제목을 입력해주세요'); return; }
+  if(startDate&&endDate&&startDate>endDate){ toast('⚠️ 종료일이 시작일보다 빠릅니다'); return; }
   var id='cp_'+Date.now();
-  var res=await sb.from('campaigns').insert({id:id, title:title, description:desc||null, allow_multiple:allowMulti, status:'active', created_by: me?me.name:''});
+  var res=await sb.from('campaigns').insert({
+    id:id, title:title, description:desc||null, allow_multiple:allowMulti, status:'active', created_by: me?me.name:'',
+    start_date:startDate, end_date:endDate, target:target||null, condition_text:condition||null, schedule_note:schedule||null
+  });
   if(res.error){ toast('등록 오류: '+res.error.message); return; }
   toast('✓ 공모전이 등록되었습니다');
   hideM('cpCreateModal');
@@ -25124,6 +25160,20 @@ async function cpOpenDetail(id){
   document.getElementById('cpDetSub').textContent=c.description||'';
   document.getElementById('cpAdminBtns').style.display=cpIsAdmin()?'block':'none';
   document.getElementById('cpWinnerBtn').style.display=cpIsAdmin()?'block':'none';
+
+  // 공모전 상세 정보(기간/대상/조건/일정) 카드
+  var infoWrap=document.getElementById('cpInfoWrap');
+  var period=cpFmtPeriod(c);
+  var infoRows=[];
+  if(period) infoRows.push(['📅 응모기간', period]);
+  if(c.target) infoRows.push(['👥 참여대상', c.target]);
+  if(c.condition_text) infoRows.push(['📌 참여조건', c.condition_text]);
+  if(c.schedule_note) infoRows.push(['🗓 세부일정', c.schedule_note]);
+  if(infoWrap){
+    infoWrap.innerHTML=infoRows.length?('<div class="card" style="margin-bottom:14px"><div class="cb">'+
+      infoRows.map(function(r){ return '<div style="display:flex;gap:8px;font-size:13px;padding:4px 0"><span style="color:var(--g5);font-weight:700;flex-shrink:0;width:78px">'+r[0]+'</span><span style="color:var(--g7);white-space:pre-wrap">'+eeEsc(r[1])+'</span></div>'; }).join('')+
+      '</div></div>'):'';
+  }
 
   // 참여폼 사번/이름 — 개인계정은 자동입력(잠금), 공용계정은 직접입력
   var empEl=document.getElementById('cpEmpNo'), nameEl=document.getElementById('cpName');
@@ -25219,6 +25269,7 @@ async function cpSubmitEntry(){
   cpLoadList();
 }
 async function cpOpenWinnerEdit(){
+  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
   var w=cpCurCampaign._winner;
   document.getElementById('cpWinTitle').value=w?w.title:(cpCurCampaign.title+' 당선작 발표');
   document.getElementById('cpWinBody').value=w?w.body:'';
@@ -25226,6 +25277,7 @@ async function cpOpenWinnerEdit(){
   showM('cpWinnerModal');
 }
 async function cpSaveWinner(){
+  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
   var title=(document.getElementById('cpWinTitle').value||'').trim();
   var body=(document.getElementById('cpWinBody').value||'').trim();
   if(!title||!body){ toast('⚠️ 제목과 내용을 입력해주세요'); return; }
@@ -25238,6 +25290,7 @@ async function cpSaveWinner(){
   cpRenderWinner();
 }
 async function cpDeleteWinner(){
+  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
   var w=cpCurCampaign._winner; if(!w) return;
   if(!confirm('당선작 공지를 삭제하시겠습니까?')) return;
   var res=await sb.from('campaign_winners').delete().eq('id',w.id);
@@ -25247,6 +25300,7 @@ async function cpDeleteWinner(){
   cpRenderWinner();
 }
 async function cpOpenAllEntries(){
+  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
   document.getElementById('cpAllSearch').value='';
   var res=await msFetchAll(function(){ return sb.from('campaign_entries').select('*').eq('campaign_id',cpCurCampaign.id).order('created_at',{ascending:false}); });
   cpAllEntriesCache=res.data||[];
@@ -25275,6 +25329,7 @@ function cpRenderAllEntries(){
   wrap.innerHTML=h;
 }
 async function cpAdminDeleteEntry(id){
+  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
   if(!confirm('이 제출내역을 삭제하시겠습니까?')) return;
   var res=await sb.from('campaign_entries').delete().eq('id',id);
   if(res.error){ toast('삭제 오류: '+res.error.message); return; }
