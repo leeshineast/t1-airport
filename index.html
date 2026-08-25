@@ -3268,7 +3268,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <button onclick="wfSpBackToList()" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer;margin-bottom:10px">← 목록</button>
     <div id="wfSpDetailHead" style="margin-bottom:10px"></div>
     <div style="display:flex;gap:6px;margin-bottom:10px">
-      <button onclick="wfSpDownloadReport()" style="padding:8px 14px;background:white;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📥 보고서 다운로드</button>
+      <button onclick="wfSpOpenReportPreview()" style="padding:8px 14px;background:white;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📄 보고서 미리보기</button>
       <button onclick="wfSpDeleteEvent()" style="padding:8px 14px;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🗑 삭제</button>
     </div>
     <div id="wfSpTableWrap" style="overflow-x:auto;border:1.5px solid var(--g2);border-radius:10px"></div>
@@ -3308,6 +3308,41 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <button onclick="wfSpSaveCell()" style="flex:1;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">저장</button>
     </div>
   </div></div>
+</div>
+
+<!-- 특별근무 보고서 인쇄 미리보기 -->
+<style>
+.spr-table{width:100%;border-collapse:collapse;font-size:12px}
+.spr-table th,.spr-table td{border:1px solid #333;padding:6px 8px;text-align:center;vertical-align:middle}
+.spr-table thead th{background:#1E293B;color:#fff;font-weight:700}
+.spr-grp{background:#F1F5F9;font-weight:800;white-space:nowrap}
+.spr-sum{background:#DBEAFE;font-weight:800}
+.spr-total{background:#FEE2E2;font-weight:800}
+@media print{
+  @page{ size:A4 landscape; margin:12mm 10mm; }
+  html, body{ height:auto !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
+  body > *{ display:none !important; }
+  #wfSpReportModal.on{ display:block !important; visibility:visible !important; position:static !important; }
+  #wfSpReportModal.on *{ visibility:visible !important; }
+  #wfSpReportModal.on .m-hd, #wfSpReportModal.on .no-print{ display:none !important; }
+  #wfSpReportModal.on .modal{ display:block !important; position:static !important; max-width:none !important; max-height:none !important; overflow:visible !important; box-shadow:none !important; border-radius:0 !important; margin:0 !important; }
+  #wfSpReportModal.on > div > div:first-child ~ div{ padding:0 !important; }
+  #wfSpReportPrintArea{ display:block !important; position:static !important; width:100% !important; margin:0 !important; padding:0 !important; border:none !important; box-shadow:none !important; }
+  .spr-table{ font-size:13px !important; }
+  .spr-table tr, .spr-table td, .spr-table th{ page-break-inside:avoid !important; }
+}
+</style>
+<div id="wfSpReportModal" class="modal-bg">
+  <div class="modal" style="max-width:820px;max-height:92vh;overflow-y:auto">
+    <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📄 특별근무 보고서</h3><button class="m-x" onclick="hideM('wfSpReportModal')">×</button></div>
+    <div style="padding:15px 17px">
+      <div id="wfSpReportPrintArea" style="background:white;padding:14px;border:1px solid #ccc;overflow-x:auto"></div>
+      <div class="no-print" style="display:flex;gap:8px;margin-top:14px">
+        <button onclick="window.print()" style="flex:1;padding:12px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🖨️ 인쇄 / PDF저장</button>
+        <button onclick="wfSpDownloadReport()" style="flex:1;padding:12px;background:var(--teal2);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">📥 엑셀 다운로드</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <div id="sNotice" class="scr">
@@ -24391,6 +24426,63 @@ async function wfSpDeleteEvent(){
   toast('🗑 삭제되었습니다');
   wfSpBackToList();
 }
+function wfSpRepName(a){
+  if(!a) return null;
+  if(a.leader_name) return a.leader_name;
+  var subs=(a.subleader_names||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  if(subs.length) return subs[0];
+  return null;
+}
+function wfSpCellReportSummary(row, a){
+  if(row.type==='names') return a&&a.names_text ? a.names_text : '';
+  if(!a) return '';
+  var total=wfSpTeamHeadcount(a);
+  var rep=wfSpRepName(a);
+  if(!rep) return total?(total+'명'):'';
+  var others=total-1;
+  return rep+(others>0?(' 외 '+others+'명'):'')+' ('+total+'명)';
+}
+function wfSpOpenReportPreview(){
+  var ev=wfSpCurEvent; if(!ev) return;
+  var dates=wfSpDateRange(ev);
+  var weekMap=['일','월','화','수','목','금','토'];
+  var h='<div style="text-align:center;font-size:19px;font-weight:800;letter-spacing:4px;margin-bottom:4px">특 별 근 무 편 성 표</div>';
+  h+='<div style="text-align:center;font-size:13px;color:#555;margin-bottom:14px">'+ev.title+' · 기간: '+ev.start_date+' ~ '+ev.end_date+'</div>';
+  h+='<table class="spr-table"><thead><tr><th style="width:70px">구분</th><th style="width:90px">팀/조</th>';
+  dates.forEach(function(dt){
+    var d=new Date(dt+'T00:00:00');
+    h+='<th>'+(d.getMonth()+1)+'/'+d.getDate()+'('+weekMap[d.getDay()]+')</th>';
+  });
+  h+='</tr></thead><tbody>';
+  var grpSpans=[]; var i=0;
+  while(i<WF_SP_ROW_DEFS.length){
+    var g=WF_SP_ROW_DEFS[i].grp; var span=1;
+    while(i+span<WF_SP_ROW_DEFS.length && WF_SP_ROW_DEFS[i+span].grp===g && g!=='') span++;
+    if(g==='') span=1;
+    grpSpans.push({start:i, span:span, label:g});
+    i+=span;
+  }
+  WF_SP_ROW_DEFS.forEach(function(row, ri){
+    var isSum=row.type==='sum';
+    h+='<tr>';
+    var spanInfo=grpSpans.find(function(s){return s.start===ri;});
+    if(spanInfo){ h+='<td class="spr-grp" rowspan="'+spanInfo.span+'">'+(spanInfo.label||'')+'</td>'; }
+    h+='<td style="font-weight:700">'+row.label+'</td>';
+    dates.forEach(function(dt){
+      if(isSum){
+        var sum=0; row.members.forEach(function(mc){ sum+=wfSpTeamHeadcount(wfSpFindAssign(mc,dt)); });
+        h+='<td class="'+(row.code==='SUM_ALL'?'spr-total':'spr-sum')+'">'+sum+'명</td>';
+      }else{
+        h+='<td>'+(wfSpCellReportSummary(row, wfSpFindAssign(row.code, dt))||'-')+'</td>';
+      }
+    });
+    h+='</tr>';
+  });
+  h+='</tbody></table>';
+  h+='<div style="margin-top:16px;font-size:12px;color:#666">작성일: '+new Date().toISOString().slice(0,10)+(me?('  ·  작성자: '+me.name):'')+'</div>';
+  document.getElementById('wfSpReportPrintArea').innerHTML=h;
+  showM('wfSpReportModal');
+}
 function wfSpDownloadReport(){
   var ev=wfSpCurEvent; if(!ev) return;
   var dates=wfSpDateRange(ev);
@@ -24405,7 +24497,7 @@ function wfSpDownloadReport(){
         var sum=0; row.members.forEach(function(mc){ sum+=wfSpTeamHeadcount(wfSpFindAssign(mc,dt)); });
         rowArr.push(sum+'명');
       }else{
-        rowArr.push(wfSpCellLabel(row, wfSpFindAssign(row.code, dt)));
+        rowArr.push(wfSpCellReportSummary(row, wfSpFindAssign(row.code, dt)));
       }
     });
     aoa.push(rowArr);
