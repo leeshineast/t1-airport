@@ -6209,6 +6209,7 @@ function go(name){
   if(name==='toilet'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='perf'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if((name==='workforce'||name==='workschedule'||name==='specialwork')&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
+  if(['이상욱','강석원'].indexOf(me&&me.name)!==-1 && ['workforce','workschedule','specialwork','admin','activeUsers','deleteLogs','admconfirm','downloadcenter'].indexOf(name)!==-1){ toast('⚠️ 접근 권한이 없습니다'); return; }
   if(['shower','smoking','rest','storage','baby'].indexOf(name)!==-1&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='downloadcenter'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(name==='groupchat'&&me&&me.role==='guest'){ toast('⚠️ 게스트 계정은 이용할 수 없는 기능입니다'); return; }
@@ -6388,6 +6389,8 @@ function applyRoleUI(){
   var isAdmin=me.role==='admin'||isExecRole(me.role);
   var isMaster=me.role==='master';
   var isMgr=me.role==='manager'||me.role==='admin'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role);
+  var BLOCKED_MENU_NAMES=['이상욱','강석원']; // 개별 계정 단위로 인력관리·관리자 메뉴 접근 차단
+  var isBlockedUser=BLOCKED_MENU_NAMES.indexOf(me.name)!==-1;
   var ab=document.getElementById('adminBtn');
   if(ab) ab.style.display=isMaster?'block':'none';
   var aub=document.getElementById('activeUsersBtn');
@@ -6412,6 +6415,15 @@ function applyRoleUI(){
   if(dcb) dcb.style.display=isMgr?'flex':'none';
   var wvb=document.getElementById('workVehMenuBtn');
   if(wvb) wvb.style.display=isExecView?'flex':'none';
+  // 개별 차단 계정: 인력관리 섹션 + 관리자 섹션 전체 숨김 (역할상 권한이 있어도 강제 차단)
+  if(isBlockedUser){
+    var wfCat=document.getElementById('menuCat_workforce'); if(wfCat) wfCat.style.display='none';
+    if(ab) ab.style.display='none';
+    if(aub) aub.style.display='none';
+    if(dlb) dlb.style.display='none';
+    if(adcb) adcb.style.display='none';
+    if(dcb) dcb.style.display='none';
+  }
   // 열람자료(사규/ISO9001/회사소식/안전작업절차서/운영매뉴얼/위험성평가/교육자료) "원본으로" 버튼 — master/admin만 보임
   var canOrigDl=(me.role==='master'||me.role==='admin');
   ['reg','iso','news','safety','manual','risk','training'].forEach(function(t){
