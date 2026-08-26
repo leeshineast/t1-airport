@@ -5381,6 +5381,17 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
 </div>
 <div id="regOk" class="modal-bg"><div class="modal"><div style="padding:26px 20px;text-align:center"><div style="font-size:53px;margin-bottom:11px">✅</div><div style="font-size:19px;font-weight:800;color:var(--g7);margin-bottom:7px">신청 완료!</div><div style="font-size:15px;color:var(--g4);line-height:1.65;margin-bottom:20px">관리자 승인 후 로그인하실 수 있습니다.</div><button onclick="closeRegOk()" class="btn-prim">로그인으로 돌아가기</button></div></div></div>
+<div id="selfAuthModal" class="modal-bg"><div class="modal" style="max-width:320px">
+  <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>본인 확인</h3><button class="m-x" onclick="cancelSelfAuth()">×</button></div>
+  <div style="padding:20px">
+    <div id="selfAuthMsg" style="font-size:14px;color:var(--g5);margin-bottom:14px;line-height:1.5">본인 확인을 위해 내 비밀번호를 입력해주세요</div>
+    <input type="password" id="selfAuthPw" class="ri" placeholder="내 비밀번호" autocomplete="off" style="width:100%;box-sizing:border-box;margin-bottom:14px" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmSelfAuth();}">
+    <div style="display:flex;gap:8px">
+      <button onclick="cancelSelfAuth()" class="btn-sec" style="flex:1">취소</button>
+      <button onclick="confirmSelfAuth()" class="btn-prim" style="flex:1">확인</button>
+    </div>
+  </div>
+</div></div>
 <div id="mgrAttPickModal" class="modal-bg"><div class="modal" style="max-width:300px">
   <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3 id="mgrAttPickTitle">상태 선택</h3><button class="m-x" onclick="closeMgrAttPick()">×</button></div>
   <div style="padding:17px">
@@ -5836,6 +5847,31 @@ function hideM(id){
       history.back();
     }
   }
+}
+
+// iOS 홈화면 설치(PWA standalone) 모드에서는 window.prompt()가 동작하지 않음.
+// 대신 모달 입력창으로 비밀번호를 받아 Promise로 반환.
+var _selfAuthResolve=null;
+function askSelfPassword(message){
+  return new Promise(function(resolve){
+    var msgEl=document.getElementById('selfAuthMsg');
+    var pwEl=document.getElementById('selfAuthPw');
+    if(msgEl && message) msgEl.textContent=message;
+    if(pwEl) pwEl.value='';
+    _selfAuthResolve=resolve;
+    showM('selfAuthModal');
+    setTimeout(function(){ if(pwEl) pwEl.focus(); }, 100);
+  });
+}
+function confirmSelfAuth(){
+  var pwEl=document.getElementById('selfAuthPw');
+  var val=pwEl?pwEl.value:'';
+  hideM('selfAuthModal');
+  if(_selfAuthResolve){ _selfAuthResolve(val||null); _selfAuthResolve=null; }
+}
+function cancelSelfAuth(){
+  hideM('selfAuthModal');
+  if(_selfAuthResolve){ _selfAuthResolve(null); _selfAuthResolve=null; }
 }
 window.addEventListener('popstate', function(e){
   if(_consumeNextPop){ _consumeNextPop=false; return; }
@@ -14596,7 +14632,7 @@ async function executeDataReset(){
   // 가입 사용자
   if(document.getElementById('rst_users')&&document.getElementById('rst_users').checked){
     try{
-      var myPw=prompt('본인 확인을 위해 내 비밀번호를 입력해주세요');
+      var myPw=await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요');
       if(myPw){ await sb.rpc('admin_bulk_reset_users', {p_admin_id: me.id, p_admin_password: myPw}); }
     }catch(e){}
     var uList=document.getElementById('uList');
@@ -15389,7 +15425,7 @@ async function resolvePwReq(reqId, claimedId, newPw, name){
   if(!newPw || newPw.length<6){ toast('임시 비밀번호는 6자 이상 입력해주세요'); return; }
   if(!confirm(claimedId+' 계정의 비밀번호를 새로 발급하시겠습니까?\n(본인 확인 후 진행해주세요)')) return;
   if(!me || !me.id){ toast('로그인 정보를 확인할 수 없습니다'); return; }
-  var myPw = prompt('본인 확인을 위해 내 비밀번호를 입력해주세요');
+  var myPw = await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요');
   if(!myPw){ return; }
   try{
     // claimedId(로그인 아이디)로 대상 계정의 실제 id를 먼저 찾음
@@ -15447,7 +15483,7 @@ async function approveUser(id, name){
   if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 처리할 수 있습니다'); return; }
   if(!confirm(name+'님을 승인하시겠습니까?')) return;
   if(!me||!me.id){ toast('로그인 정보를 확인할 수 없습니다'); return; }
-  var myPw=prompt('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
+  var myPw=await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
   var res=await sb.rpc('admin_approve_user', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: id});
   if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
   if(res.error){toast('오류: '+res.error.message);return;}
@@ -15460,7 +15496,7 @@ async function approveUser(id, name){
 async function rejectUser(id, name){
   if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 처리할 수 있습니다'); return; }
   if(!confirm(name+'님을 거부하시겠습니까?')) return;
-  var myPw=prompt('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
+  var myPw=await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
   var res=await sb.rpc('admin_delete_user', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: id});
   if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
   if(res.error){toast('오류: '+res.error.message);return;}
@@ -15549,7 +15585,7 @@ async function editUserEmpId(id,name,curEmpId){
   if(v===null) return; // 취소
   v=v.trim();
   try{
-    var myPw=prompt('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
+    var myPw=await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
     var res=await sb.rpc('admin_set_employee_id', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: id, p_employee_id: v||null});
     if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
     if(res.error){ toast('저장 실패: '+res.error.message); return; }
@@ -15583,7 +15619,7 @@ async function toggleMemberRole(el){
       if(!confirm(name+'님을 열람전용 계정으로 전환할까요?\n(홈화면과 열람·자료 메뉴만 보이게 됩니다. 원래 직급은 자동 저장되어 나중에 복원할 수 있습니다)')) return;
       payload={role:'member', prev_role:curRole};
     }
-    var myPw=prompt('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
+    var myPw=await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
     var res=await sb.rpc('admin_set_role', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: id, p_role: payload.role, p_prev_role: payload.prev_role});
     if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
     if(res.error){ toast('오류: '+res.error.message); return; }
@@ -15661,7 +15697,7 @@ async function saveTeamMove(){
   var isExecSelectTM=(tmSelectedRole==='그룹장'||tmSelectedRole==='본부장');
   var finalRole = isExecSelectTM ? TM_ROLE_MAP[tmSelectedRole] : (isT1 ? 'admin' : (isIAOS ? 'guest' : (TM_ROLE_MAP[tmSelectedRole]||'staff')));
   try{
-    var myPw=prompt('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
+    var myPw=await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
     var res=await sb.rpc('admin_move_team', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: tmTarget.id, p_team: fullTeam, p_role: finalRole});
     if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
     if(res.error){ toast('오류: '+res.error.message); return; }
@@ -15674,7 +15710,7 @@ async function saveTeamMove(){
 async function withdrawUserDB(id, name){
   if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 처리할 수 있습니다'); return; }
   if(!confirm('⚠️ '+name+'님을 완전삭제 하시겠습니까?\n\n계정 정보가 영구적으로 삭제되며 되돌릴 수 없습니다.\n(재가입은 새 아이디로 바로 가능합니다)')) return;
-  var myPw=prompt('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
+  var myPw=await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
   var res=await sb.rpc('admin_delete_user', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: id});
   if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
   if(res.error){toast('오류: '+res.error.message);return;}
@@ -15715,7 +15751,7 @@ async function savePermEdit(){
   try{ localStorage.setItem('t1_perms',JSON.stringify(userPerms)); }catch(e){}
   // DB 저장: SECURITY DEFINER 함수로 저장 (관리자 본인 인증 필요)
   var permRes;
-  var myPw=prompt('본인 확인을 위해 내 비밀번호를 입력해주세요');
+  var myPw=await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요');
   if(!myPw){ return; }
   try{
     permRes=await sb.rpc('admin_set_permissions', {
