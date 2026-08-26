@@ -25548,7 +25548,7 @@ async function cpOpenDetail(id){
   document.getElementById('cpDetTitle').textContent='🏆 '+c.title;
   document.getElementById('cpDetSub').textContent=c.description||'';
   document.getElementById('cpAdminBtns').style.display=cpIsAdmin()?'block':'none';
-  document.getElementById('cpWinnerBtn').style.display=cpIsAdmin()?'block':'none';
+  document.getElementById('cpWinnerBtn').style.display=cpCanSeeIdentity()?'block':'none';
   document.getElementById('cpResultBtn').style.display=cpIsAdmin()?'block':'none';
   // 최종 후보(TOP16)가 하나라도 선정돼 있으면 전직원 투표 버튼 노출
   var finRes=await sb.from('campaign_finalists').select('id').eq('campaign_id',c.id).limit(1);
@@ -25698,7 +25698,7 @@ async function cpSubmitEntry(){
   cpLoadList();
 }
 async function cpOpenWinnerEdit(){
-  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
+  if(!cpCanSeeIdentity()){ toast('⚠️ master·admin만 가능합니다'); return; }
   var w=cpCurCampaign._winner;
   document.getElementById('cpWinTitle').value=w?w.title:(cpCurCampaign.title+' 당선작 발표');
   document.getElementById('cpWinBody').value=w?w.body:'';
@@ -25706,23 +25706,23 @@ async function cpOpenWinnerEdit(){
   showM('cpWinnerModal');
 }
 async function cpSaveWinner(){
-  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
+  if(!cpCanSeeIdentity()){ toast('⚠️ master·admin만 가능합니다'); return; }
   var title=(document.getElementById('cpWinTitle').value||'').trim();
   var body=(document.getElementById('cpWinBody').value||'').trim();
   if(!title||!body){ toast('⚠️ 제목과 내용을 입력해주세요'); return; }
-  var w=cpCurCampaign._winner;
-  var payload={ id: w?w.id:('cpw_'+Date.now()), campaign_id: cpCurCampaign.id, title:title, body:body, created_by: me?me.name:'', updated_at:new Date().toISOString() };
-  var res=await sb.from('campaign_winners').upsert(payload,{onConflict:'id'});
+  // ★ 공모전당 공지는 항상 1건만 유지 — campaign_id 기준으로 upsert(있으면 갱신, 없으면 생성)
+  var payload={ id:'cpw_'+Date.now(), campaign_id: cpCurCampaign.id, title:title, body:body, created_by: me?me.name:'', updated_at:new Date().toISOString() };
+  var res=await sb.from('campaign_winners').upsert(payload,{onConflict:'campaign_id'});
   if(res.error){ toast('저장 오류: '+res.error.message); return; }
   toast('✓ 당선작 공지가 게시되었습니다');
   hideM('cpWinnerModal');
   cpRenderWinner();
 }
 async function cpDeleteWinner(){
-  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
+  if(!cpCanSeeIdentity()){ toast('⚠️ master·admin만 가능합니다'); return; }
   var w=cpCurCampaign._winner; if(!w) return;
   if(!confirm('당선작 공지를 삭제하시겠습니까?')) return;
-  var res=await sb.from('campaign_winners').delete().eq('id',w.id);
+  var res=await sb.from('campaign_winners').delete().eq('campaign_id',cpCurCampaign.id);
   if(res.error){ toast('삭제 오류: '+res.error.message); return; }
   toast('🗑 삭제되었습니다');
   hideM('cpWinnerModal');
