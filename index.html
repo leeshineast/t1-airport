@@ -2484,7 +2484,7 @@ html{overflow-x:hidden}
 <!-- 습득물 처리완료 모달 -->
 <!-- 상황발생보고서 (습득물/인수인계/민원/안전사고 공용) -->
 <style>
-.ee-rpt-table{ width:100%; border-collapse:collapse; font-size:12px; }
+.ee-rpt-table{ width:100%; border-collapse:collapse; font-size:12px; table-layout:fixed; }
 .ee-rpt-table th, .ee-rpt-table td{ border:1px solid #999; padding:6px 5px; text-align:center; }
 .ee-rpt-table th{ background:#efe3f5; font-weight:700; }
 .ee-rpt-meta-table{ width:100%; border-collapse:collapse; font-size:13px; margin-bottom:12px; }
@@ -2492,7 +2492,7 @@ html{overflow-x:hidden}
 .ee-rpt-meta-table th{ background:#efe3f5; font-weight:700; text-align:center; width:100px; white-space:nowrap; }
 .ee-rpt-meta-table td{ text-align:left; }
 @media print{
-  @page{ margin:14mm 12mm 10mm 12mm; }
+  @page{ size:A4 portrait; margin:14mm 12mm 10mm 12mm; }
   html, body{ height:auto !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
   body > *{ display:none !important; }
   #reportModal.on{ display:block !important; visibility:visible !important; position:static !important; }
@@ -2877,7 +2877,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 <!-- 인쇄용 확인서 -->
 <style>
 @media print{
-  @page{ margin:14mm 12mm 10mm 12mm; }
+  @page{ size:A4 portrait; margin:14mm 12mm 10mm 12mm; }
   html, body{ height:auto !important; overflow:visible !important; margin:0 !important; padding:0 !important; }
   body > *{ display:none !important; }
   #adcPrintModal.on{ display:block !important; visibility:visible !important; position:static !important; }
