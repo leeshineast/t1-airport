@@ -6795,9 +6795,16 @@ async function doLogin(){
     if(btn){btn.textContent='로그인';btn.disabled=false;}
     if(authRes.error){toast('아이디 또는 비밀번호를 확인해주세요');return;}
     // 인증된 세션으로 내 프로필(users) 행 조회
-    var uRes=await sb.from('users').select('id,name,role,team,email,permissions,font_scale,favorite_menus,employee_id').eq('email', id).maybeSingle();
+    var uRes=await sb.from('users').select('id,name,role,team,email,permissions,font_scale,favorite_menus,employee_id,status').eq('email', id).maybeSingle();
     if(uRes.error||!uRes.data){ toast('로그인 오류: 사용자 정보를 불러오지 못했습니다'); _sbClearAuth(); return; }
     var u=uRes.data;
+    // ★ 가입 승인(status='active') 안 된 계정은 인증만 통과했어도 앱 사용을 막아야 함
+    if(u.status!=='active'){
+      _sbClearAuth();
+      if(u.status==='rejected'){ toast('⚠️ 가입이 거부된 계정입니다. 관리자에게 문의해주세요'); }
+      else{ toast('⚠️ 아직 관리자 승인 대기중인 계정입니다'); }
+      return;
+    }
     me={name:u.name,role:u.role,team:u.team,initial:u.name[0],email:u.email,permissions:u.permissions,id:u.id,font_scale:u.font_scale||100,favorite_menus:Array.isArray(u.favorite_menus)?u.favorite_menus:[],employee_id:u.employee_id||''};
     finishLogin();
   }catch(e){toast('오류: '+e.message);}
@@ -20609,6 +20616,18 @@ async function refreshMpDataLight(){
       me = JSON.parse(saved);
       applyRoleUI();
       applyFontScale();
+      // ★ 승인 취소/거부된 계정이 캐시된 세션으로 계속 들어오는 것 방지 — status 재확인
+      try{
+        var stRes=await sb.from('users').select('status').eq('id',me.id).maybeSingle();
+        if(!stRes.error && stRes.data && stRes.data.status!=='active'){
+          try{ localStorage.removeItem('t1_me'); }catch(e){}
+          _sbClearAuth();
+          me=null;
+          go('login');
+          toast('⚠️ 계정이 승인 대기중이거나 접근이 제한되었습니다');
+          return;
+        }
+      }catch(e){}
       // 세션 복원 시 사번 등 관리자가 나중에 채워넣었을 수 있는 값 재확인(로그아웃 없이도 반영)
       (async function(){
         try{
