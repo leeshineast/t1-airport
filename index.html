@@ -925,7 +925,7 @@ html{overflow-x:hidden}
       </button>
       <button class="menu-btn" onclick="go('eduevent')">
         <span class="menu-icon">📚</span>
-        <div class="menu-title">교육·회의</div>
+        <div class="menu-title">교육·회의·출장</div>
         <div class="menu-desc">신청 및 참석관리</div>
         <span class="menu-arrow">신청하기 →</span>
       </button>
@@ -4113,7 +4113,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 <!-- ══ 교육·회의 신청 및 참석관리 ══ -->
 <div id="sEduEvent" class="scr">
   <div class="pg-hd">
-    <div><h1>📚 교육·회의</h1><small>신청 및 참석관리</small></div>
+    <div><h1>📚 교육·회의·출장</h1><small>신청 및 참석관리</small></div>
     <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 메인</button>
   </div>
 
@@ -11822,6 +11822,7 @@ function eeRenderEventList(){
         +(closed?'<span style="background:var(--danger-bg);color:var(--danger);font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">신청마감</span>':'<span style="background:var(--success-bg);color:var(--success);font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">신청가능</span>')
       +'</div>'
       +'<div style="font-size:16px;font-weight:800;color:var(--g7);margin-bottom:4px">'+eeEsc(e.title)+'</div>'
+      +(e.content?('<div style="font-size:13px;color:var(--g6);margin-bottom:6px;white-space:pre-wrap;line-height:1.5">'+eeEsc(e.content)+'</div>'):'')
       +(dateRange?'<div style="font-size:13px;color:var(--g5);margin-bottom:2px">📅 '+dateRange+'</div>':'')
       +(e.apply_deadline?'<div style="font-size:12px;color:var(--g4);margin-bottom:8px">신청기간~'+e.apply_deadline+'</div>':'<div style="margin-bottom:8px"></div>')
       +'<div style="display:flex;gap:7px">'
@@ -12026,9 +12027,10 @@ async function eeOpenAdminView(eventId){
       var walkins=walkinBySched[s.id]||[];
       var attCount=(attBySched[s.id]||[]).length;
       var qrUrl=eeAttendUrl(s.id, s.qr_token);
+      var attColor = attCount<list.length ? 'var(--danger)' : (attCount===list.length ? 'var(--g6)' : 'var(--avg-blue)');
       h+='<tr style="cursor:pointer" onclick="eeToggleSchedList(\''+s.id+'\')">'
         +'<td style="padding:9px 4px;border-bottom:1px solid var(--g1)">'+s.event_date+' '+(s.start_time||'')+'</td>'
-        +'<td style="padding:9px 4px;text-align:right;border-bottom:1px solid var(--g1);color:var(--teal2);font-weight:800">'+list.length+'명 / <span style="color:var(--avg-blue)">'+attCount+'명 참석</span> ▾</td>'
+        +'<td style="padding:9px 4px;text-align:right;border-bottom:1px solid var(--g1);color:var(--teal2);font-weight:800">'+list.length+'명 / <span style="color:'+attColor+'">'+attCount+'명 참석</span> ▾</td>'
         +'</tr>';
       h+='<tr id="eeSchedList_'+s.id+'" style="display:none"><td colspan="2" style="padding:9px 4px 13px;background:var(--g0)">'
         +'<div style="display:flex;gap:13px;align-items:flex-start;margin-bottom:11px;flex-wrap:wrap">'
@@ -20046,18 +20048,22 @@ function prfUpdateHomeSummary(){
   if(!bodyEl) return;
   var html='';
   if(todays.length){
-    var cats=[]; todays.forEach(function(r){ if(r.category&&cats.indexOf(r.category)===-1) cats.push(r.category); });
-    var first=todays[0];
-    var more=todays.length>1?(' 외 '+(todays.length-1)+'건'):'';
-    html+='<div style="font-size:12.5px;color:var(--teal2);font-weight:700;margin-bottom:3px">'+cats.join(' · ')+'</div>'
-      +'<div style="font-size:13px;color:var(--g6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+String(first.content||'').replace(/</g,'&lt;')+more+'</div>';
+    html+='<div style="font-size:12.5px;color:var(--teal2);font-weight:700;margin-bottom:4px">오늘 '+todays.length+'건</div>';
+    todays.forEach(function(r,i){
+      html+='<div style="font-size:13px;color:var(--g6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis'+(i>0?';margin-top:2px':'')+'">'
+        +(r.category?('<span style="color:var(--teal2);font-weight:700">['+r.category+']</span> '):'')
+        +String(r.content||'').replace(/</g,'&lt;')+'</div>';
+    });
   }else{
     html+='<div style="color:var(--g4);font-size:13px">등록된 수행실적이 없습니다</div>';
   }
   if(tomorrows.length){
-    var tFirst=tomorrows[0];
-    var tMore=tomorrows.length>1?(' 외 '+(tomorrows.length-1)+'건'):'';
-    html+='<div style="font-size:12px;color:var(--navy);font-weight:700;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">🔜 내일 '+tomorrows.length+'건: '+String(tFirst.content||'').replace(/</g,'&lt;')+tMore+'</div>';
+    html+='<div style="font-size:12px;color:var(--navy);font-weight:700;margin-top:8px;margin-bottom:3px">🔜 내일 '+tomorrows.length+'건</div>';
+    tomorrows.forEach(function(r,i){
+      html+='<div style="font-size:12.5px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis'+(i>0?';margin-top:2px':'')+'">'
+        +(r.category?('['+r.category+'] '):'')
+        +String(r.content||'').replace(/</g,'&lt;')+'</div>';
+    });
   }
   bodyEl.innerHTML=html;
 }
