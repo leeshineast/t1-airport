@@ -24397,6 +24397,12 @@ function wfQuarterOptions(){
   }
   return opts;
 }
+function wfQuarterLabel(q){
+  // 'YYYY-Qn' → 'YY년 n분기 기준' (예: 2026-Q1 → 26년 1분기 기준)
+  var m=q.match(/^(\d{4})-Q(\d)$/);
+  if(!m) return q+' 기준';
+  return m[1].slice(2)+'년 '+m[2]+'분기 기준';
+}
 function wfMonthOptions(){
   var now=new Date(); var opts=[];
   for(var i=-1;i<=3;i++){
@@ -24410,7 +24416,7 @@ function wfInitSelectors(){
   if(qs && !qs.options.length){
     var cur=wfNowQuarter();
     wfQuarterOptions().forEach(function(q){
-      var o=document.createElement('option'); o.value=q; o.textContent=q+' 기준'; if(q===cur) o.selected=true;
+      var o=document.createElement('option'); o.value=q; o.textContent=wfQuarterLabel(q); if(q===cur) o.selected=true;
       qs.appendChild(o);
     });
     wfCurQuarter=cur;
@@ -24541,7 +24547,7 @@ function wfOpenEditEmp(empNo){
   wfEditEmpNo=empNo;
   wfEditPicked=[e.off1,e.off2].filter(Boolean);
   document.getElementById('wfEditTitle').textContent=e.name+' ('+e.emp_no+')';
-  document.getElementById('wfEditSub').textContent=(e.team||'')+' · '+(e.group_name||'')+' · '+(e.shift_type||'')+' · '+wfCurQuarter+' 기준';
+  document.getElementById('wfEditSub').textContent=(e.team||'')+' · '+(e.group_name||'')+' · '+(e.shift_type||'')+' · '+wfQuarterLabel(wfCurQuarter);
   wfRenderDayPicker();
   showM('wfEditModal');
 }
