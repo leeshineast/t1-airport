@@ -6336,7 +6336,7 @@ function goHomePanel(){
 function go(name){
   if(me&&me.role==='vehicle_guest'&&name!=='veh'&&name!=='login'){ return; }
   if(me&&me.role==='work_vehicle'&&name!=='workveh'&&name!=='login'){ return; }
-  if(me&&me.role==='member'&&name!=='main'&&name!=='login'&&name!=='eduattend'&&name!=='campaigndetail'&&['toilet','shower','smoking','rest','baby'].indexOf(name)===-1){
+  if(me&&me.role==='member'&&name!=='main'&&name!=='login'&&name!=='eduattend'&&name!=='campaigndetail'&&['toilet','shower','smoking','rest','baby','waste'].indexOf(name)===-1){
     if(!window._memberAllowedScreens){
       window._memberAllowedScreens={};
       document.querySelectorAll('#menuCat_ref .menu-btn').forEach(function(el){
@@ -6356,11 +6356,11 @@ function go(name){
   if(name==='activeUsers'&&(!me||!(me.role==='admin'||me.role==='master'))){ toast('⚠️ 관리자 이상만 접근할 수 있습니다'); return; }
   if(name==='deleteLogs'&&(!me||me.role!=='master')){ toast('⚠️ 최고관리자만 접근할 수 있습니다'); return; }
   if(name==='admconfirm'&&(!me||!canAdcManage())){ toast('⚠️ master·admin·manager만 접근할 수 있습니다'); return; }
-  if(name==='toilet'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='member'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
+  if(name==='toilet'&&!me){ toast('⚠️ 로그인이 필요합니다'); return; }
   if(name==='perf'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if((name==='workforce'||name==='workschedule'||name==='specialwork')&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(['이상욱','강석원'].indexOf(me&&me.name)!==-1 && ['workforce','workschedule','specialwork','admin','activeUsers','deleteLogs','admconfirm','downloadcenter'].indexOf(name)!==-1){ toast('⚠️ 접근 권한이 없습니다'); return; }
-  if(['shower','smoking','rest','storage','baby'].indexOf(name)!==-1&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='member'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
+  if(['shower','smoking','rest','storage','baby'].indexOf(name)!==-1&&!me){ toast('⚠️ 로그인이 필요합니다'); return; }
   if(name==='downloadcenter'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(name==='groupchat'&&me&&me.role==='guest'){ toast('⚠️ 게스트 계정은 이용할 수 없는 기능입니다'); return; }
   if(!_skipPush&&name!=='login'&&name!=='reg'&&name!==_curScreenName){
@@ -6492,6 +6492,8 @@ function go(name){
   }
   if(name==='waste'){
     loadWasteFromDB();
+    var wT1=document.getElementById('wasteT1');
+    if(wT1) wT1.style.display=facilityCanEdit()?'':'none';
   }
   if(name==='admconfirm'){
     adcTab(0);
@@ -9057,6 +9059,10 @@ function renderLeaderStatus(viewDate){
 // ═══ 전역 변수 ═══
 // 사용자 권한 (userId → {read,write,edit,download})
 var userPerms={};
+// ★ 시설(화장실/샤워실/흡연실/휴게시설/유아휴게실/폐기물처리현황) 권한 통일 기준
+// 조회: 전체(로그인만 하면) / 수정(작성·수정): master·admin·manager·leader·acting_leader / 삭제: master·admin·manager·leader (acting_leader 제외)
+function facilityCanEdit(){ return !!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader')); }
+function facilityCanDelete(){ return !!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader')); }
 function canWrite(){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return false;}
   var p=me?userPerms[me.id]:null;
@@ -18443,7 +18449,7 @@ function loadToiletScreen(){
   tlResetForm();
   loadToiletFromDB();
   tlTab(1);
-  var isViewOnly=!!(me&&me.role==='member');
+  var isViewOnly=!facilityCanEdit();
   var t0=document.getElementById('tlT0'), t3=document.getElementById('tlT3');
   if(t0) t0.style.display=isViewOnly?'none':'';
   if(t3) t3.style.display=isViewOnly?'none':'';
@@ -18504,7 +18510,7 @@ function tlResetForm(){
   }
 }
 async function subToiletNew(){
-  if(!canWrite()) return;
+  if(!facilityCanEdit()){ toast('⚠️ 작성 권한이 없습니다'); return; }
   var zone=tlGetVal('tlZoneG'), gender=tlGetVal('tlGenderG');
   var category=tlGetVal('tlCategoryG')||document.getElementById('tlCategoryEtc').value.trim();
   var floor=tlGetVal('tlFloorG');
@@ -18760,11 +18766,11 @@ function openToiletDetail(id){
   document.getElementById('tlDNightTeam').value=r.night_team||'';
   tlSetVal('tlDActiveG', r.status||'사용중');
   var delBtn=document.getElementById('tlDeleteBtn');
-  if(delBtn) delBtn.style.display=(me&&me.role==='master')?'block':'none';
+  if(delBtn) delBtn.style.display=facilityCanDelete()?'block':'none';
   showM('toiletDetailModal');
 }
 async function saveToiletDetail(){
-  if(!canWrite()) return;
+  if(!facilityCanEdit()){ toast('⚠️ 수정 권한이 없습니다'); return; }
   if(!tlEditId) return;
   var zone=tlGetVal('tlDZoneG'), gender=tlGetVal('tlDGenderG'), floor=tlGetVal('tlDFloorG');
   var number=document.getElementById('tlDNumber').value.trim();
@@ -18794,7 +18800,7 @@ async function saveToiletDetail(){
   }catch(e){ toast('수정 오류: '+String(e.message||e)); }
 }
 async function deleteToiletConfirm(){
-  if(!me||me.role!=='master'){ toast('⚠️ 삭제는 관리자만 가능합니다'); return; }
+  if(!facilityCanDelete()){ toast('⚠️ 삭제 권한이 없습니다'); return; }
   if(!tlEditId) return;
   if(!confirm('이 화장실 정보를 삭제하시겠습니까?\n삭제 후에는 되돌릴 수 없습니다.')) return;
   try{
@@ -19043,7 +19049,7 @@ function loadFacScreen(type){
   facResetForm(type);
   facLoadFromDB(type);
   facTab(type,1);
-  var isViewOnly=!!(me&&me.role==='member');
+  var isViewOnly=!facilityCanEdit();
   var t0=document.getElementById(cfg.pfx+'T0'), t2=document.getElementById(cfg.pfx+'T2');
   if(t0) t0.style.display=isViewOnly?'none':'';
   if(t2) t2.style.display=isViewOnly?'none':'';
@@ -19188,7 +19194,7 @@ function facValidateAndBuildPayload(type,prefix){
   return {payload:payload, missing:missing};
 }
 async function facSubmitNew(type){
-  if(!canWrite()) return;
+  if(!facilityCanEdit()){ toast('⚠️ 작성 권한이 없습니다'); return; }
   var cfg=FAC_CONFIGS[type];
   var r=facValidateAndBuildPayload(type,'');
   var err=document.getElementById(cfg.pfx+'FormErr');
@@ -19342,11 +19348,11 @@ function facOpenDetail(type,id){
     else facSetVal(fid, r[f.key]!=null?r[f.key]:'', false);
   });
   var delBtn=document.getElementById(p+'DeleteBtn');
-  if(delBtn) delBtn.style.display=(me&&me.role==='master')?'block':'none';
+  if(delBtn) delBtn.style.display=facilityCanDelete()?'block':'none';
   showM('facDetailModal2');
 }
 async function facSaveDetail(type){
-  if(!canWrite()) return;
+  if(!facilityCanEdit()){ toast('⚠️ 수정 권한이 없습니다'); return; }
   var cfg=FAC_CONFIGS[type];
   var id=facEditId[type];
   if(!id) return;
@@ -19362,7 +19368,7 @@ async function facSaveDetail(type){
   }catch(e){ toast('수정 오류: '+String(e.message||e)); }
 }
 async function facDeleteConfirm(type){
-  if(!me||me.role!=='master'){ toast('⚠️ 삭제는 관리자만 가능합니다'); return; }
+  if(!facilityCanDelete()){ toast('⚠️ 삭제 권한이 없습니다'); return; }
   var cfg=FAC_CONFIGS[type];
   var id=facEditId[type];
   if(!id) return;
@@ -19508,6 +19514,7 @@ var wasteSelectedShift='오전';
 var wasteSelectedTeam='';
 
 function wasteNewInput(){
+  if(!facilityCanEdit()){ toast('⚠️ 작성 권한이 없습니다'); return; }
   wasteEditId=null;
   document.querySelectorAll('#wasteTeamGrp .rp').forEach(function(b){b.classList.remove('on');});
   wasteSelectedTeam=null;
@@ -19605,6 +19612,7 @@ function saveWaste(){
 }
 
 async function confirmSaveWaste(){
+  if(!facilityCanEdit()){ toast('⚠️ 작성·수정 권한이 없습니다'); return; }
   var date=document.getElementById('wasteDate').value;
   var getV=function(id){ return parseFloat(document.getElementById(id).value)||0; };
   var data={
@@ -20244,8 +20252,7 @@ function renderWasteList(){
 }
 
 async function deleteWaste(id){
-  if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
-    if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
+  if(!facilityCanDelete()){toast('⚠️ 삭제 권한이 없습니다');return;}
   if(!confirm('이 기록을 삭제하시겠습니까?')) return;
   try{
     await sb.from('waste_data').delete().eq('id',parseInt(id));
