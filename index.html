@@ -6524,7 +6524,7 @@ function applyRoleUI(){
   var wrNm=document.getElementById('wrNm');if(wrNm)wrNm.textContent=me.name+' ('+(me.team||'')+')';
   // 날짜
   var now=new Date();
-  var ds=new Date(Date.now()+9*3600000).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  var ds=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
   var dd=document.getElementById('dashDate');if(dd)dd.textContent=ds;
   document.querySelectorAll('.dashDateMirror').forEach(function(el){ el.textContent=ds; });
   var md=document.getElementById('mpDate');if(md)md.textContent=ds;
@@ -15401,7 +15401,7 @@ async function loadPwResetRequests(){
       var div=document.createElement('div');
       div.className='u-row';
       div.style.cssText='flex-direction:column;align-items:flex-start;gap:8px';
-      var when=new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleString('ko-KR');
+      var when=new Date(r.created_at).toLocaleString('ko-KR');
       var statusPill = r.status==='pending'
         ? '<span style="padding:3px 9px;background:var(--warn-bg);color:var(--warn);border-radius:20px;font-size:12px;font-weight:700">대기중</span>'
         : '<span style="padding:3px 9px;background:var(--teal-bg);color:var(--teal2);border-radius:20px;font-size:12px;font-weight:700">처리완료</span>';
@@ -15471,7 +15471,7 @@ async function loadPendingUsers(){
       var div=document.createElement('div');
       div.className='u-row';
       div.style.cssText='flex-direction:column;align-items:flex-start;gap:8px';
-      div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' &middot; '+u.role+'</div></div></div><div style="display:flex;gap:6px"><button class="pend-approve-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--success-bg);color:var(--success);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✓ 승인</button><button class="pend-reject-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✕ 거부</button></div></div><div style="font-size:12px;color:var(--g4)">'+u.email+' &middot; '+new Date(new Date(u.created_at).getTime()+9*3600000).toLocaleDateString('ko-KR')+'</div>';
+      div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' &middot; '+u.role+'</div></div></div><div style="display:flex;gap:6px"><button class="pend-approve-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--success-bg);color:var(--success);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✓ 승인</button><button class="pend-reject-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✕ 거부</button></div></div><div style="font-size:12px;color:var(--g4)">'+u.email+' &middot; '+new Date(u.created_at).toLocaleDateString('ko-KR')+'</div>';
       div.querySelector('.pend-approve-btn').onclick=function(){approveUser(this.dataset.id,this.dataset.name);};
       div.querySelector('.pend-reject-btn').onclick=function(){rejectUser(this.dataset.id,this.dataset.name);};
       el.appendChild(div);
@@ -23282,7 +23282,7 @@ function renderNotifList(){
   var h='';
   notifList.forEach(function(n){
     var diff=Math.floor((Date.now()-new Date(n.time).getTime())/1000);
-    var timeStr=diff<60?'방금 전':diff<3600?Math.floor(diff/60)+'분 전':diff<86400?Math.floor(diff/3600)+'시간 전':new Date(new Date(n.time).getTime()+9*3600000).toLocaleDateString('ko-KR');
+    var timeStr=diff<60?'방금 전':diff<3600?Math.floor(diff/60)+'분 전':diff<86400?Math.floor(diff/3600)+'시간 전':new Date(n.time).toLocaleDateString('ko-KR');
     h+='<div style="padding:12px 14px;border-bottom:1px solid var(--g1);display:flex;gap:10px;align-items:flex-start;background:'+(n.read?'white':'#F0FDF9')+'">';
     h+='<div style="width:36px;height:36px;border-radius:50%;background:'+(bgs[n.type]||'var(--g1)')+';display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">'+n.icon+'</div>';
     h+='<div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--g7);margin-bottom:2px">'+n.title+'</div>';
