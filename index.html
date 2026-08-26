@@ -6627,7 +6627,9 @@ function applyRoleUI(){
       var oc=el.getAttribute('onclick')||'';
       var inRefMenu=!!(el.closest && el.closest('#menuCat_ref'));
       var isExcluded=(oc.indexOf("'notice'")!==-1||oc.indexOf("'groupchat'")!==-1||oc.indexOf("'training'")!==-1);
-      el.style.display=(inRefMenu&&!isExcluded)?'':'none';
+      // 화장실·샤워실·흡연실·유아휴게실 관리는 열람전용 계정도 조회(현황탭)만 가능하게 허용
+      var isFacilityView=(oc.indexOf("go('toilet')")!==-1||oc.indexOf("go('shower')")!==-1||oc.indexOf("go('smoking')")!==-1||oc.indexOf("go('baby')")!==-1);
+      el.style.display=((inRefMenu&&!isExcluded)||isFacilityView)?'':'none';
     });
     document.querySelectorAll('#globalTabbar .mh-tab-item').forEach(function(el){
       var oc=el.getAttribute('onclick')||'';
