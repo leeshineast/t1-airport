@@ -18749,6 +18749,7 @@ function renderToiletList(){
   listEl.innerHTML=h;
 }
 function openToiletDetail(id){
+  if(!facilityCanEdit()){ toast('⚠️ 조회 전용 계정입니다'); return; }
   var r=toiletData.find(function(x){return x.id===id;});
   if(!r) return;
   tlEditId=id;
@@ -19336,6 +19337,7 @@ function facRenderList(type){
   listEl.innerHTML=h;
 }
 function facOpenDetail(type,id){
+  if(!facilityCanEdit()){ toast('⚠️ 조회 전용 계정입니다'); return; }
   var cfg=FAC_CONFIGS[type];
   var r=(facData[type]||[]).find(function(x){return x.id===id;});
   if(!r) return;
