@@ -5821,7 +5821,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
 <script>
 let me=null,wdT=null,indData=[],indEditId=null;
-function isExecRole(r){return r==='group_leader'||r==='division_head'||r==='master';} // 그룹장/본부장/최고관리자: admin과 동일 이상 권한
+function isExecRole(r){return r==='master';} // ★ 그룹장/본부장은 관리자급 권한(쓰기/관리기능) 제외 — 조회만 가능. master만 유지
 function canAdcManage(){ return !!(me && (me.role==='master'||me.role==='admin'||me.role==='manager')); } // 관리자 확인사항: master/admin/manager만 (그 외 전원 불가)
 function canDeleteWorkItem(){
   return !!(me && (me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)));
@@ -6358,7 +6358,7 @@ function go(name){
     }
     if(!window._memberAllowedScreens[name]) return;
   }
-  if(name==='execdash'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
+  if(name==='execdash'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='group_leader'||me.role==='division_head'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='training'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(name==='admin'&&(!me||me.role!=='master')){ toast('⚠️ 최고관리자만 접근할 수 있습니다'); return; }
   if(name==='activeUsers'&&(!me||!(me.role==='admin'||me.role==='master'))){ toast('⚠️ 관리자 이상만 접근할 수 있습니다'); return; }
