@@ -4210,7 +4210,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         </div>
         <div style="flex:1">
           <div class="f-lbl">조 (자동)</div>
-          <input type="text" id="eeApplyGroup" class="ri" readonly style="background:var(--g1);color:var(--g5)">
+          <input type="text" id="eeApplyGroup" class="ri" placeholder="예: A조 (없으면 비워두세요)">
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:11px">
@@ -11860,6 +11860,8 @@ async function eeOpenApply(eventId){
     var gNm=me.name.match(/([A-Za-z가-힣])조(?:$|[^가-힣A-Za-z])/); // 이름 끝쪽의 "○조" 추출 (예: "환경미화 1팀 B조")
     if(gNm) groupOut=gNm[1]+'조';
   }
+  // master·admin은 조 개념이 없으므로 "운영"으로 자동 채움 (manager는 공란 유지)
+  if(!groupOut&&me&&(me.role==='master'||me.role==='admin')) groupOut='운영';
   document.getElementById('eeApplyTeam').value=teamOut;
   document.getElementById('eeApplyGroup').value=groupOut;
   // 사번/성명 자동입력 — 개인계정(관리자/팀장/조장/액팅리더)만 해당. 조별공용계정·member 등은 사람마다 달라서 직접입력 유지
