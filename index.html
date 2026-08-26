@@ -921,10 +921,10 @@ html{overflow-x:hidden}
         <div class="menu-desc">사내 규정 및 지침서 열람</div>
         <span class="menu-arrow">열람하기 →</span>
       </button>
-      <button class="menu-btn" onclick="go('iso9001')">
+      <button class="menu-btn" onclick="go('isohub')">
         <span class="menu-icon">📘</span>
-        <div class="menu-title">ISO9001</div>
-        <div class="menu-desc">ISO9001 문서 열람</div>
+        <div class="menu-title">ISO</div>
+        <div class="menu-desc">ISO 인증서별 문서 열람</div>
         <span class="menu-arrow">열람하기 →</span>
       </button>
       <button class="menu-btn" onclick="go('news')">
@@ -3596,11 +3596,30 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
 </div>
 
+<!-- ══ ISO 허브 (인증서 종류 선택) ══ -->
+<div id="sIsoHub" class="scr">
+  <div class="pg-hd">
+    <div><h1>📘 ISO</h1><small>인증서를 선택하세요</small></div>
+    <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 메인</button>
+  </div>
+  <div style="padding:13px">
+    <div id="isoHubAddWrap" style="display:none;margin-bottom:13px">
+      <div style="display:flex;gap:8px">
+        <input type="text" id="isoHubAddInput" placeholder="새 인증종류 이름 (예: ISO14001)" style="flex:1;padding:10px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px" onkeydown="if(event.key==='Enter'){addIsoCertType()}">
+        <button onclick="addIsoCertType()" style="padding:10px 16px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0">추가</button>
+      </div>
+    </div>
+    <div id="isoHubWrap">
+      <div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div>
+    </div>
+  </div>
+</div>
+
 <!-- ══ ISO9001 ══ -->
 <div id="sIso9001" class="scr">
   <div class="pg-hd">
-    <div><h1>📘 ISO9001</h1><small>ISO9001 문서 열람</small></div>
-    <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 메인</button>
+    <div><h1 id="isoScreenTitle">📘 ISO9001</h1><small id="isoScreenDesc">ISO9001 문서 열람</small></div>
+    <button onclick="go('isohub')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 인증서 목록</button>
   </div>
 
   <!-- 탭: 목록 / 뷰어 / 업로드 -->
@@ -3639,7 +3658,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <!-- 탭2: 업로드 (관리자만) -->
   <div id="isoP2" style="display:none;padding:13px">
     <div id="isoUploadWrap" class="card"><div class="cb">
-      <div style="font-size:15px;font-weight:700;color:var(--g7);margin-bottom:13px">📎 ISO9001 PDF 업로드</div>
+      <div style="font-size:15px;font-weight:700;color:var(--g7);margin-bottom:13px" id="isoUploadTitle">📎 ISO9001 PDF 업로드</div>
       <div id="isoAdminOnly" style="display:none">
         <label for="isoFileInput" style="display:block;width:100%;padding:18px;background:var(--teal-bg);border:2px dashed var(--teal);border-radius:var(--r2);text-align:center;cursor:pointer;font-size:15px;color:var(--teal2);font-weight:700;margin-bottom:11px">
           📄 PDF 파일 선택 (여러 개 가능)
@@ -5905,7 +5924,7 @@ window.addEventListener('popstate', function(e){
 });
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sRisk','sTraining','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sActiveUsers','sPerf','sDeleteLogs','sAdc','sEduEvent','sEduAttend','sWorkforce','sWorkSchedule','sSpecialWork','sCampaign','sCampaignDetail'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIsoHub','sIso9001','sNews','sSafety','sManual','sRisk','sTraining','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sActiveUsers','sPerf','sDeleteLogs','sAdc','sEduEvent','sEduAttend','sWorkforce','sWorkSchedule','sSpecialWork','sCampaign','sCampaignDetail'];
 function goStatsDash(){
   go('statsdash');
   loadMonthlyStats();
@@ -6361,7 +6380,7 @@ function go(name){
   }
   _curScreenName=name;
   updateIosBackBtn();
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs',admconfirm:'sAdc',eduevent:'sEduEvent',eduattend:'sEduAttend',workforce:'sWorkforce',workschedule:'sWorkSchedule',specialwork:'sSpecialWork',campaign:'sCampaign',campaigndetail:'sCampaignDetail'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',isohub:'sIsoHub',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs',admconfirm:'sAdc',eduevent:'sEduEvent',eduattend:'sEduAttend',workforce:'sWorkforce',workschedule:'sWorkSchedule',specialwork:'sSpecialWork',campaign:'sCampaign',campaigndetail:'sCampaignDetail'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -6437,6 +6456,9 @@ function go(name){
   if(name==='chat'){
     regTab(0);
     loadRegList();
+  }
+  if(name==='isohub'){
+    loadIsoHub();
   }
   if(name==='iso9001'){
     isoTab(0);
@@ -6669,7 +6691,7 @@ var ALL_MENU_ITEMS=[
   {key:'equipment', icon:'🔧', title:'장비현황', action:"go('equipment')"},
   {key:'notice', icon:'📢', title:'공지사항', action:"go('notice')"},
   {key:'chat', icon:'📋', title:'사규 열람', action:"go('chat')"},
-  {key:'iso9001', icon:'📘', title:'ISO9001', action:"go('iso9001')"},
+  {key:'iso9001', icon:'📘', title:'ISO', action:"go('isohub')"},
   {key:'news', icon:'📰', title:'회사소식', action:"go('news')"},
   {key:'safety', icon:'⛑️', title:'안전작업절차서', action:"go('safety')"},
   {key:'manual', icon:'📗', title:'운영매뉴얼', action:"go('manual')"},
@@ -20729,6 +20751,60 @@ var _regUploadFiles = [];
 
 // ══ ISO9001 ══
 var isoFiles=[];
+var curIsoCertType='ISO9001';
+var isoCertTypes=[];
+
+async function loadIsoHub(){
+  var wrap=document.getElementById('isoHubWrap'); if(!wrap) return;
+  var addWrap=document.getElementById('isoHubAddWrap');
+  if(addWrap) addWrap.style.display=(me&&(me.role==='admin'||me.role==='master'))?'block':'none';
+  try{
+    var res=await sb.from('iso_cert_types').select('*').order('sort_order',{ascending:true}).order('name',{ascending:true});
+    if(res.error||!res.data||!res.data.length){
+      wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">📭 등록된 인증서가 없습니다</div>';
+      return;
+    }
+    isoCertTypes=res.data;
+    var html='';
+    isoCertTypes.forEach(function(c){
+      var escapedName=c.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+      html+='<div onclick="openIsoCertType(\''+escapedName+'\')" style="display:flex;align-items:center;gap:11px;padding:14px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
+      html+='<div style="width:40px;height:40px;background:var(--navy-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📘</div>';
+      html+='<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:var(--g7)">'+c.name+'</div><div style="font-size:12px;color:var(--g4);margin-top:2px">문서 열람</div></div>';
+      html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
+      html+='</div>';
+    });
+    wrap.innerHTML=html;
+  }catch(e){
+    wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:14px">불러오기 실패: '+e.message+'</div>';
+  }
+}
+
+function openIsoCertType(certType){
+  curIsoCertType=certType;
+  var t=document.getElementById('isoScreenTitle'); if(t) t.textContent='📘 '+certType;
+  var d=document.getElementById('isoScreenDesc'); if(d) d.textContent=certType+' 문서 열람';
+  var u=document.getElementById('isoUploadTitle'); if(u) u.textContent='📎 '+certType+' PDF 업로드';
+  go('iso9001');
+}
+
+async function addIsoCertType(){
+  if(!me||(me.role!=='admin'&&me.role!=='master')){toast('⚠️ 관리자만 추가할 수 있습니다');return;}
+  var input=document.getElementById('isoHubAddInput');
+  var v=input?input.value.trim():'';
+  if(!v){ toast('인증종류 이름을 입력해주세요'); return; }
+  try{
+    var res=await sb.from('iso_cert_types').insert({name:v, sort_order:(isoCertTypes.length||0), created_by:me.name});
+    if(res.error){
+      if(res.error.code==='23505') toast('⚠️ 이미 있는 인증종류입니다');
+      else toast('⚠️ 추가 실패: '+res.error.message);
+      return;
+    }
+    if(input) input.value='';
+    toast('✅ '+v+' 추가됨');
+    loadIsoHub();
+  }catch(e){ toast('오류: '+e.message); }
+}
 var _isoUploadFiles=[];
 
 function isoTab(idx){
@@ -20773,9 +20849,9 @@ function bumpViewCount(table,id){
 async function loadIsoList(){
   var wrap=document.getElementById('isoListWrap'); if(!wrap) return;
   try{
-    var res=await sb.from('iso9001_files').select('*').order('name',{ascending:true});
+    var res=await sb.from('iso9001_files').select('*').eq('cert_type',curIsoCertType).order('name',{ascending:true});
     if(res.error||!res.data||!res.data.length){
-      wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">📭 등록된 ISO9001 문서가 없습니다<br><small>관리자에게 업로드 요청하세요</small></div>';
+      wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">📭 등록된 '+curIsoCertType+' 문서가 없습니다<br><small>관리자에게 업로드 요청하세요</small></div>';
       return;
     }
     isoFiles=res.data;
@@ -20836,11 +20912,11 @@ async function uploadIsoFiles(){
     if(progBar) progBar.style.width=Math.round(i/_isoUploadFiles.length*100)+'%';
     try{
       // 같은 제목(name)으로 이미 등록된 파일이 있으면, 나중에 그 파일을 지우기 위해 기존 경로를 먼저 조회
-      var existingRes=await sb.from('iso9001_files').select('*').eq('name',file.name);
+      var existingRes=await sb.from('iso9001_files').select('*').eq('name',file.name).eq('cert_type',curIsoCertType);
       var existingPath=existingRes&&existingRes.data&&existingRes.data[0]&&existingRes.data[0].path;
       var ts=Date.now()+i;
       var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
-      var safePath='pdfs/iso9001_'+ts+ext;
+      var safePath='pdfs/iso9001_'+curIsoCertType+'_'+ts+ext;
       var uploadUrl=SUPABASE_URL+'/storage/v1/object/iso9001/'+encodeURIComponent(safePath);
       var r=await fetch(uploadUrl,{
         method:'POST',
@@ -20856,9 +20932,10 @@ async function uploadIsoFiles(){
         await sb.from('iso9001_files').upsert({
           name:file.name,
           path:safePath,
+          cert_type:curIsoCertType,
           uploaded_at:new Date().toISOString(),
           uploaded_by:me?me.name:'관리자'
-        },{onConflict:'name'});
+        },{onConflict:'name,cert_type'});
         // 같은 제목의 옛날 파일이 있었으면 저장공간에서 삭제 (유령파일 방지)
         if(existingPath && existingPath!==safePath){
           try{
@@ -20878,7 +20955,7 @@ async function uploadIsoFiles(){
   if(progText) progText.textContent='완료! '+done+'개 업로드됨';
   setTimeout(function(){ if(prog) prog.style.display='none'; },1500);
   if(done>0){
-    toast('✅ '+done+'개 ISO9001 문서 업로드 완료');
+    toast('✅ '+done+'개 '+curIsoCertType+' 문서 업로드 완료');
     _isoUploadFiles=[];
     var fi=document.getElementById('isoFileInput'); if(fi) fi.value='';
     var fl=document.getElementById('isoFileList'); if(fl) fl.style.display='none';
@@ -20891,7 +20968,7 @@ async function uploadIsoFiles(){
 async function loadIsoManage(){
   var wrap=document.getElementById('isoManageWrap'); if(!wrap) return;
   try{
-    var res=await sb.from('iso9001_files').select('*').order('name',{ascending:true});
+    var res=await sb.from('iso9001_files').select('*').eq('cert_type',curIsoCertType).order('name',{ascending:true});
     if(res.error||!res.data||!res.data.length){ wrap.innerHTML=''; return; }
     var html='<div class="card"><div class="cb"><div style="font-size:14px;font-weight:800;color:var(--g7);margin-bottom:11px">등록된 문서 관리 ('+res.data.length+'개)</div>';
     res.data.forEach(function(f){
