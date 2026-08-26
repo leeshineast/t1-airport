@@ -24587,9 +24587,14 @@ async function wfSpLoadEvents(){
   if(res.error){ wrap.innerHTML='<div style="color:#dc2626;padding:20px;text-align:center">불러오기 실패</div>'; return; }
   wfSpEvents=res.data||[];
   if(!wfSpEvents.length){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">등록된 특별근무가 없습니다</div>'; return; }
-  var assignRes=await msFetchAll(function(){ return sb.from('wf_special_assignments').select('event_id,team_no'); });
+  var assignRes=await msFetchAll(function(){ return sb.from('wf_special_assignments').select('event_id,team_no,work_date'); });
   var countMap={};
-  (assignRes.data||[]).forEach(function(a){ countMap[a.event_id]=(countMap[a.event_id]||0)+1; });
+  (assignRes.data||[]).forEach(function(a){
+    var ev=wfSpEvents.find(function(e){return e.id===a.event_id;});
+    if(ev && a.work_date>=ev.start_date && a.work_date<=ev.end_date){
+      countMap[a.event_id]=(countMap[a.event_id]||0)+1;
+    }
+  });
   var h='';
   wfSpEvents.forEach(function(ev){
     var cnt=countMap[ev.id]||0;
@@ -24642,6 +24647,16 @@ async function wfSpCreateEvent(){
     var res2=await sb.from('wf_special_events').update({title:title, period_type:type, start_date:s, end_date:en}).eq('id', wfSpEditId);
     if(res2.error){ toast('수정 오류: '+res2.error.message); return; }
     toast('✓ 수정되었습니다');
+    // 기간이 줄어들어 범위 밖에 남는 기존 편성 데이터가 있으면 정리할지 확인
+    var offRes=await sb.from('wf_special_assignments').select('id,work_date').eq('event_id', wfSpEditId);
+    var orphan=(offRes.data||[]).filter(function(a){ return a.work_date<s || a.work_date>en; });
+    if(orphan.length){
+      if(confirm('변경된 기간('+s+'~'+en+') 밖에 남아있는 기존 편성 데이터가 '+orphan.length+'건 있습니다.\n삭제하시겠습니까? (취소하면 화면엔 안 보이지만 데이터는 그대로 남습니다)')){
+        var delRes=await sb.from('wf_special_assignments').delete().in('id', orphan.map(function(o){return o.id;}));
+        if(delRes.error){ toast('정리 오류: '+delRes.error.message); }
+        else{ toast('🗑 범위 밖 데이터 '+orphan.length+'건 정리 완료'); }
+      }
+    }
   }else{
     var id='sp_'+Date.now();
     var res=await sb.from('wf_special_events').insert({id:id, title:title, period_type:type, start_date:s, end_date:en, created_by: me?me.name:''});
