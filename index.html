@@ -25660,31 +25660,42 @@ async function cpOpenVoteResults(){
   var votes=vRes.data||[];
   var countMap={};
   votes.forEach(function(v){ countMap[v.finalist_entry_id]=(countMap[v.finalist_entry_id]||0)+1; });
-  var ranked=finalists.map(function(f){ return { entry:entryMap[f.entry_id], count:countMap[f.entry_id]||0 }; })
+  cpResultRanked=finalists.map(function(f){ return { finalistId:f.id, entry:entryMap[f.entry_id], count:countMap[f.entry_id]||0, awardLabel:f.award_label||null }; })
     .filter(function(x){return x.entry;})
     .sort(function(a,b){ return b.count-a.count; });
 
-  function awardFor(rank){
-    if(rank===1) return {label:'🥇 최우수상', color:'#c2410c', bg:'#fff7ed'};
-    if(rank<=6) return {label:'🥈 우수상', color:'#1d4ed8', bg:'#eff6ff'};
-    return {label:'🎗 장려상', color:'#15803d', bg:'#f0fdf4'};
-  }
   var totalVotes=votes.length;
-  var h='<div style="font-size:12.5px;color:var(--g5);margin-bottom:12px;font-weight:700">총 투표수: '+totalVotes+'표</div>';
-  ranked.forEach(function(x,i){
+  var h='<div style="font-size:12.5px;color:var(--g5);margin-bottom:6px;font-weight:700">총 투표수: '+totalVotes+'표</div>';
+  h+='<div style="font-size:11.5px;color:var(--g4);margin-bottom:12px">각 항목의 상 이름을 직접 입력하고 저장하세요 (예: 대상, 최우수상, 우수상, 장려상 등 자유롭게).</div>';
+  cpResultRanked.forEach(function(x,i){
     var rank=i+1;
-    var award=awardFor(rank);
-    h+='<div style="background:'+award.bg+';border:1.5px solid var(--g2);border-radius:10px;padding:11px;margin-bottom:8px">'+
-       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'+
+    var suggested = rank===1?'최우수상':(rank<=6?'우수상':'장려상');
+    var val = x.awardLabel!=null ? x.awardLabel : '';
+    h+='<div style="background:white;border:1.5px solid var(--g2);border-radius:10px;padding:11px;margin-bottom:8px">'+
+       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'+
        '<span style="font-size:13px;font-weight:800;color:var(--g7)">'+rank+'위 · '+eeEsc(x.entry.name||'')+' ('+eeEsc(x.entry.emp_no||'')+')'+(x.entry.team?(' · '+eeEsc(x.entry.team)):'')+'</span>'+
-       '<span style="font-size:12px;font-weight:800;color:'+award.color+'">'+award.label+'</span>'+
-       '</div>'+
+       '<span style="display:flex;gap:5px;align-items:center">'+
+       '<input id="cpAwardInput_'+x.finalistId+'" value="'+eeEsc(val)+'" placeholder="'+suggested+'" style="width:110px;padding:5px 8px;border:1.5px solid var(--g2);border-radius:6px;font-size:12px">'+
+       '<button onclick="cpSaveAwardLabel(\''+x.finalistId+'\')" style="padding:5px 10px;background:#0e7490;color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">저장</button>'+
+       '</span></div>'+
        '<div style="font-size:13px;color:var(--g6);white-space:pre-wrap;margin-top:6px;line-height:1.6">'+eeEsc(x.entry.content)+'</div>'+
-       '<div style="font-size:12px;color:var(--g4);margin-top:6px">득표수: <b style="color:var(--navy)">'+x.count+'표</b></div>'+
+       '<div style="font-size:12px;color:var(--g4);margin-top:6px">득표수: <b style="color:var(--navy)">'+x.count+'표</b>'+(x.awardLabel?(' · 현재 지정: <b style="color:#c2410c">'+eeEsc(x.awardLabel)+'</b>'):'')+'</div>'+
        '</div>';
   });
   document.getElementById('cpResultWrap').innerHTML=h;
   showM('cpResultModal');
+}
+var cpResultRanked=[];
+async function cpSaveAwardLabel(finalistId){
+  if(!cpCanSeeIdentity()){ toast('⚠️ master·admin만 가능합니다'); return; }
+  var input=document.getElementById('cpAwardInput_'+finalistId);
+  var label=(input.value||'').trim();
+  var res=await sb.from('campaign_finalists').update({award_label:label||null}).eq('id',finalistId);
+  if(res.error){ toast('저장 오류: '+res.error.message); return; }
+  var item=cpResultRanked.find(function(x){return x.finalistId===finalistId;});
+  if(item) item.awardLabel=label||null;
+  toast('✓ 저장되었습니다');
+  cpOpenVoteResults();
 }
 
 
