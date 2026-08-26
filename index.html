@@ -3533,6 +3533,21 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 </div>
 
 <!-- 전체 제출목록 모달(관리자) -->
+<!-- 관리자 본인 비밀번호 확인 모달 (iOS PWA에서 prompt() 미지원 대응) -->
+<div id="pwReqAdminConfirmModal" class="modal-bg">
+  <div class="modal" style="max-width:340px"><div style="padding:17px">
+    <h3 style="margin:0 0 10px">본인 확인</h3>
+    <div id="pwReqAdminTargetLabel" style="font-size:13px;color:var(--g5);margin-bottom:12px"></div>
+    <label style="font-size:12.5px;font-weight:700;color:var(--g6)">내 비밀번호</label>
+    <input type="password" id="pwReqAdminPwInput" placeholder="본인 계정 비밀번호" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box">
+    <div id="pwReqAdminErr" style="color:var(--danger);font-size:12.5px;margin-bottom:8px;display:none"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="hideM('pwReqAdminConfirmModal')" style="flex:1;padding:11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-weight:700;cursor:pointer">취소</button>
+      <button onclick="confirmResolvePwReq()" style="flex:1;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">발급·완료처리</button>
+    </div>
+  </div></div>
+</div>
+
 <div id="cpAllEntriesModal" class="modal-bg">
   <div class="modal" style="max-width:700px;max-height:88vh"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📋 전체 제출목록</h3><button class="m-x" onclick="hideM('cpAllEntriesModal')">×</button></div>
     <div style="padding:15px 17px;overflow-y:auto">
@@ -6916,16 +6931,29 @@ async function savePwChange(){
   err.style.display='none';
   if(!old){err.textContent='현재 비밀번호를 입력해주세요';err.style.display='block';return;}
   if(!me){err.textContent='로그인 정보가 없습니다';err.style.display='block';return;}
-  // 현재 비밀번호 확인 (서버 함수로만 대조, 비밀번호 자체는 클라이언트로 노출 안 됨)
-  var res=await sb.rpc('verify_current_password', {p_user_id:me.id, p_password:old});
-  if(res.error){err.textContent='확인 중 오류: '+res.error.message;err.style.display='block';return;}
-  if(!res.data){err.textContent='현재 비밀번호가 올바르지 않습니다';err.style.display='block';return;}
   if(nw.length<6){err.textContent='새 비밀번호는 6자 이상이어야 합니다';err.style.display='block';return;}
   if(nw!==nw2){err.textContent='새 비밀번호가 일치하지 않습니다';err.style.display='block';return;}
-  var upd=await sb.from('users').update({password:nw}).eq('id',me.id);
-  if(upd.error){err.textContent='변경 오류: '+upd.error.message;err.style.display='block';return;}
-  closePwChange();
-  toast('✅ 비밀번호가 변경되었습니다');
+  // ★ public.users.password와 실제 Supabase Auth 비밀번호를 함께 바꿔야 하므로
+  // update-password Edge Function 사용 (직접 update 시 Auth와 어긋나서 로그인 불가해짐)
+  try{
+    var resp=await fetch(SUPABASE_URL+'/functions/v1/update-password', {
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({mode:'self', requesterId:me.id, requesterPassword:old, targetId:me.id, oldPassword:old, newPassword:nw})
+    });
+    var data=null;
+    try{ data=await resp.json(); }catch(e){}
+    if(!resp.ok || !data || data.ok===false){
+      err.textContent=(data&&data.error)||'변경 오류: 요청이 실패했습니다';
+      err.style.display='block';
+      return;
+    }
+    closePwChange();
+    toast('✅ 비밀번호가 변경되었습니다');
+  }catch(e){
+    err.textContent='연결 오류: '+String(e.message||e);
+    err.style.display='block';
+  }
 }
 
 // ── 로그아웃 ──
@@ -15088,26 +15116,21 @@ async function subReg(){
     err.style.display='block';
     err.style.color='var(--g4)';
 
-    var res=await sb.from('users').insert({
-      name:nm,
-      email:em,
-      password:pw,
-      team:fullTeam||team,
-      role:finalRole,
-      status:finalStatus
-    }).select();
+    // ★ 회원가입은 Supabase 정식 Auth 계정과 public.users 행을 함께 만들어야 하므로
+    // 반드시 signup Edge Function을 통해 처리 (직접 insert 불가 — auth 미연동시 로그인 불가)
+    var resp=await fetch(SUPABASE_URL+'/functions/v1/signup', {
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({name:nm, loginId:em, password:pw, team:fullTeam||team, role:finalRole})
+    });
+    var regData=null;
+    try{ regData=await resp.json(); }catch(e){}
 
     err.style.color='';
 
-    // DataCloneError 방지: res에서 직렬화 가능한 값만 추출
-    var resError=res&&res.error?{code:String(res.error.code||''),message:String(res.error.message||'')}:null;
-
-    if(resError){
-      if(resError.code==='23505'){
-        err.textContent='⚠️ 이미 사용중인 아이디입니다';
-      } else {
-        err.textContent='⚠️ 오류코드: '+resError.code+' / '+resError.message;
-      }
+    if(!resp.ok){
+      var regMsg=(regData&&regData.error)||('오류 '+resp.status);
+      err.textContent='⚠️ '+regMsg;
       err.style.display='block';
       return;
     }
@@ -15342,29 +15365,59 @@ async function loadPwResetRequests(){
   }catch(e){console.error(e);}
 }
 
+var _pwReqPending=null;
 async function resolvePwReq(reqId, claimedId, newPw, name){
   if(!newPw || newPw.length<6){ toast('임시 비밀번호는 6자 이상 입력해주세요'); return; }
-  if(!confirm(claimedId+' 계정의 비밀번호를 새로 발급하시겠습니까?\n(본인 확인 후 진행해주세요)')) return;
+  // ★ iOS PWA(홈화면 추가)는 prompt()를 지원하지 않아 조용히 멈추므로, 반드시 인앱 모달로 본인 확인
+  _pwReqPending={reqId:reqId, claimedId:claimedId, newPw:newPw, name:name};
+  var pwInput=document.getElementById('pwReqAdminPwInput'); if(pwInput) pwInput.value='';
+  var errEl=document.getElementById('pwReqAdminErr'); if(errEl) errEl.style.display='none';
+  var labelEl=document.getElementById('pwReqAdminTargetLabel'); if(labelEl) labelEl.textContent=name+' ('+claimedId+') 계정의 비밀번호를 재발급합니다';
+  showM('pwReqAdminConfirmModal');
+}
+async function confirmResolvePwReq(){
+  if(!_pwReqPending || !me){ hideM('pwReqAdminConfirmModal'); return; }
+  var myPw=(document.getElementById('pwReqAdminPwInput').value||'').trim();
+  var errEl=document.getElementById('pwReqAdminErr');
+  if(!myPw){ errEl.textContent='본인 비밀번호를 입력해주세요'; errEl.style.display='block'; return; }
+  var p=_pwReqPending;
   try{
-    var res = await sb.rpc('admin_reset_user_password', {p_target_email: claimedId, p_new_password: newPw});
-    if(res.error) throw res.error;
-    if(res.data===false){
-      // 입력한 아이디로 못 찾았을 때 — 이름으로 실제 계정(로그인 아이디)을 찾아서 안내
+    // 대상 계정의 실제 id(uuid) 조회 — Edge Function은 이메일이 아닌 id로 대상을 찾음
+    var tRes=await sb.from('users').select('id,status').eq('email', p.claimedId).maybeSingle();
+    if(!tRes.data){
       var hint='';
       try{
-        var nameRes=await sb.from('users').select('email,team,role').eq('name',name).eq('status','active');
+        var nameRes=await sb.from('users').select('email,team,role').eq('name',p.name).eq('status','active');
         if(nameRes.data&&nameRes.data.length){
-          hint='\n\n"'+name+'" 이름으로 등록된 실제 아이디: '+nameRes.data.map(function(u){return u.email+'('+(u.team||'')+')';}).join(', ');
+          hint='\n\n"'+p.name+'" 이름으로 등록된 실제 아이디: '+nameRes.data.map(function(u){return u.email+'('+(u.team||'')+')';}).join(', ');
         }
       }catch(e2){}
-      alert('⚠️ "'+claimedId+'"는 활성 계정 아이디가 아닙니다. (사번을 아이디로 착각했을 수 있어요)'+hint);
+      errEl.textContent='⚠️ "'+p.claimedId+'"는 활성 계정 아이디가 아닙니다.'+hint;
+      errEl.style.display='block';
       return;
     }
-    await sb.from('pw_reset_requests').update({status:'resolved', resolved_at:new Date().toISOString(), resolved_by: me?me.name:''}).eq('id', reqId);
-    toast('✅ '+name+'님 비밀번호가 재설정되었습니다');
+    var resp=await fetch(SUPABASE_URL+'/functions/v1/update-password', {
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({mode:'admin', requesterId:me.id, requesterPassword:myPw, targetId:tRes.data.id, newPassword:p.newPw})
+    });
+    var data=null;
+    try{ data=await resp.json(); }catch(e){}
+    if(!resp.ok || !data || data.ok===false){
+      errEl.textContent='⚠️ '+((data&&data.error)||'재발급 실패');
+      errEl.style.display='block';
+      return;
+    }
+    await sb.from('pw_reset_requests').update({status:'resolved', resolved_at:new Date().toISOString(), resolved_by: me?me.name:''}).eq('id', p.reqId);
+    hideM('pwReqAdminConfirmModal');
+    toast('✅ '+p.name+'님 비밀번호가 재설정되었습니다');
+    _pwReqPending=null;
     loadPwResetRequests();
     loadPwReqBadge();
-  }catch(e){ toast('오류: '+String(e.message||e)); }
+  }catch(e){
+    errEl.textContent='연결 오류: '+String(e.message||e);
+    errEl.style.display='block';
+  }
 }
 
 async function loadPendingUsers(){
