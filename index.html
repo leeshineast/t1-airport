@@ -347,16 +347,19 @@ html{overflow-x:hidden}
     // ★ 2026-08-25 백엔드 인증 구조 변경(Supabase 정식 Auth 전환) 대응
     // 이제 모든 테이블 RLS가 "로그인한(authenticated) 사용자"만 허용하므로,
     // anon 키만으로는 어떤 데이터도 읽고 쓸 수 없음 — 로그인 시 발급받은 access_token을 실어보내야 함.
+    // ★ inspect.html 등 다른 파일들이 이미 localStorage.t1_auth를
+    //   {access_token, refresh_token, expires_at(초단위 유닉스타임)} 형태로 읽고 있으므로 반드시 이 스키마에 맞춤.
     var _sbAccessToken=null, _sbRefreshToken=null, _sbTokenExpiresAt=0;
     function _sbSaveAuth(data){
       _sbAccessToken=data.access_token; _sbRefreshToken=data.refresh_token;
-      _sbTokenExpiresAt=Date.now()+((data.expires_in||3600)*1000);
-      try{ localStorage.setItem('t1_auth', JSON.stringify({at:_sbAccessToken, rt:_sbRefreshToken, exp:_sbTokenExpiresAt})); }catch(e){}
+      var expiresAtSec = data.expires_at || Math.floor(Date.now()/1000)+(data.expires_in||3600);
+      _sbTokenExpiresAt = expiresAtSec*1000; // 내부 비교용은 ms
+      try{ localStorage.setItem('t1_auth', JSON.stringify({access_token:_sbAccessToken, refresh_token:_sbRefreshToken, expires_at:expiresAtSec})); }catch(e){}
     }
     function _sbLoadAuth(){
       try{
         var s=JSON.parse(localStorage.getItem('t1_auth')||'null');
-        if(s&&s.at){ _sbAccessToken=s.at; _sbRefreshToken=s.rt; _sbTokenExpiresAt=s.exp||0; return true; }
+        if(s&&s.access_token){ _sbAccessToken=s.access_token; _sbRefreshToken=s.refresh_token; _sbTokenExpiresAt=(s.expires_at||0)*1000; return true; }
       }catch(e){}
       return false;
     }
@@ -3533,17 +3536,17 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 </div>
 
 <!-- 전체 제출목록 모달(관리자) -->
-<!-- 관리자 본인 비밀번호 확인 모달 (iOS PWA에서 prompt() 미지원 대응) -->
-<div id="pwReqAdminConfirmModal" class="modal-bg">
+<!-- 관리자 본인 비밀번호 확인 모달 (iOS PWA에서 prompt() 미지원 대응, 모든 관리자 작업 공용) -->
+<div id="adminAuthModal" class="modal-bg">
   <div class="modal" style="max-width:340px"><div style="padding:17px">
     <h3 style="margin:0 0 10px">본인 확인</h3>
-    <div id="pwReqAdminTargetLabel" style="font-size:13px;color:var(--g5);margin-bottom:12px"></div>
+    <div id="adminAuthLabel" style="font-size:13px;color:var(--g5);margin-bottom:12px"></div>
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">내 비밀번호</label>
-    <input type="password" id="pwReqAdminPwInput" placeholder="본인 계정 비밀번호" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box">
-    <div id="pwReqAdminErr" style="color:var(--danger);font-size:12.5px;margin-bottom:8px;display:none"></div>
+    <input type="password" id="adminAuthPwInput" placeholder="본인 계정 비밀번호" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box">
+    <div id="adminAuthErr" style="color:var(--danger);font-size:12.5px;margin-bottom:8px;display:none"></div>
     <div style="display:flex;gap:8px">
-      <button onclick="hideM('pwReqAdminConfirmModal')" style="flex:1;padding:11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-weight:700;cursor:pointer">취소</button>
-      <button onclick="confirmResolvePwReq()" style="flex:1;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">발급·완료처리</button>
+      <button onclick="hideM('adminAuthModal')" style="flex:1;padding:11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-weight:700;cursor:pointer">취소</button>
+      <button onclick="_adminAuthConfirm()" style="flex:1;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">확인</button>
     </div>
   </div></div>
 </div>
@@ -6712,7 +6715,7 @@ async function saveFavMenus(){
   renderFavMenus();
   closeFavPicker();
   toast('✓ 즐겨찾기가 저장되었습니다');
-  try{ await sb.from('users').update({favorite_menus:picked}).eq('id',me.id); }catch(e){}
+  try{ await sb.rpc('self_update_prefs', {p_favorite_menus: picked}); }catch(e){}
 }
 // 카테고리 안의 메뉴 버튼이 전부 숨겨져 있으면(권한 없음) 카테고리 제목도 같이 숨김
 function updateMenuCatVisibility(){
@@ -6853,7 +6856,7 @@ async function setFontScale(pct){
   applyFontScale();
   renderFontScaleBtns();
   try{ localStorage.setItem('t1_me', JSON.stringify(me)); }catch(e){}
-  try{ await sb.from('users').update({font_scale:pct}).eq('id',me.id); }catch(e){}
+  try{ await sb.rpc('self_update_prefs', {p_font_scale: pct}); }catch(e){}
   toast('✓ 글씨 크기가 '+(pct===100?'기본값':pct+'%')+'으로 저장되었습니다');
 }
 function applyFontScale(){
@@ -15365,59 +15368,59 @@ async function loadPwResetRequests(){
   }catch(e){console.error(e);}
 }
 
-var _pwReqPending=null;
+// ★ 관리자 작업 공용 — 본인 비밀번호 확인 후 콜백 실행 (iOS PWA는 prompt() 미지원이라 모달 사용)
+var _adminAuthCallback=null;
+function requireAdminAuth(label, callback){
+  _adminAuthCallback=callback;
+  document.getElementById('adminAuthLabel').textContent=label;
+  document.getElementById('adminAuthPwInput').value='';
+  document.getElementById('adminAuthErr').style.display='none';
+  showM('adminAuthModal');
+}
+async function _adminAuthConfirm(){
+  var pw=(document.getElementById('adminAuthPwInput').value||'').trim();
+  var errEl=document.getElementById('adminAuthErr');
+  if(!pw){ errEl.textContent='비밀번호를 입력해주세요'; errEl.style.display='block'; return; }
+  if(!me){ errEl.textContent='로그인 정보가 없습니다'; errEl.style.display='block'; return; }
+  var cb=_adminAuthCallback;
+  if(!cb){ hideM('adminAuthModal'); return; }
+  try{ await cb(pw, errEl); }
+  catch(e){ errEl.textContent='오류: '+String(e.message||e); errEl.style.display='block'; }
+}
+
 async function resolvePwReq(reqId, claimedId, newPw, name){
   if(!newPw || newPw.length<6){ toast('임시 비밀번호는 6자 이상 입력해주세요'); return; }
-  // ★ iOS PWA(홈화면 추가)는 prompt()를 지원하지 않아 조용히 멈추므로, 반드시 인앱 모달로 본인 확인
-  _pwReqPending={reqId:reqId, claimedId:claimedId, newPw:newPw, name:name};
-  var pwInput=document.getElementById('pwReqAdminPwInput'); if(pwInput) pwInput.value='';
-  var errEl=document.getElementById('pwReqAdminErr'); if(errEl) errEl.style.display='none';
-  var labelEl=document.getElementById('pwReqAdminTargetLabel'); if(labelEl) labelEl.textContent=name+' ('+claimedId+') 계정의 비밀번호를 재발급합니다';
-  showM('pwReqAdminConfirmModal');
-}
-async function confirmResolvePwReq(){
-  if(!_pwReqPending || !me){ hideM('pwReqAdminConfirmModal'); return; }
-  var myPw=(document.getElementById('pwReqAdminPwInput').value||'').trim();
-  var errEl=document.getElementById('pwReqAdminErr');
-  if(!myPw){ errEl.textContent='본인 비밀번호를 입력해주세요'; errEl.style.display='block'; return; }
-  var p=_pwReqPending;
-  try{
-    // 대상 계정의 실제 id(uuid) 조회 — Edge Function은 이메일이 아닌 id로 대상을 찾음
-    var tRes=await sb.from('users').select('id,status').eq('email', p.claimedId).maybeSingle();
+  requireAdminAuth(name+' ('+claimedId+') 계정의 비밀번호를 재발급합니다', async function(pw, errEl){
+    var tRes=await sb.from('users').select('id,status').eq('email', claimedId).maybeSingle();
     if(!tRes.data){
       var hint='';
       try{
-        var nameRes=await sb.from('users').select('email,team,role').eq('name',p.name).eq('status','active');
+        var nameRes=await sb.from('users').select('email,team,role').eq('name',name).eq('status','active');
         if(nameRes.data&&nameRes.data.length){
-          hint='\n\n"'+p.name+'" 이름으로 등록된 실제 아이디: '+nameRes.data.map(function(u){return u.email+'('+(u.team||'')+')';}).join(', ');
+          hint='\n\n"'+name+'" 이름으로 등록된 실제 아이디: '+nameRes.data.map(function(u){return u.email+'('+(u.team||'')+')';}).join(', ');
         }
       }catch(e2){}
-      errEl.textContent='⚠️ "'+p.claimedId+'"는 활성 계정 아이디가 아닙니다.'+hint;
+      errEl.textContent='⚠️ "'+claimedId+'"는 활성 계정 아이디가 아닙니다.'+hint;
       errEl.style.display='block';
       return;
     }
     var resp=await fetch(SUPABASE_URL+'/functions/v1/update-password', {
-      method:'POST',
-      headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
-      body: JSON.stringify({mode:'admin', requesterId:me.id, requesterPassword:myPw, targetId:tRes.data.id, newPassword:p.newPw})
+      method:'POST', headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+      body: JSON.stringify({mode:'admin', requesterId:me.id, requesterPassword:pw, targetId:tRes.data.id, newPassword:newPw})
     });
     var data=null;
     try{ data=await resp.json(); }catch(e){}
     if(!resp.ok || !data || data.ok===false){
-      errEl.textContent='⚠️ '+((data&&data.error)||'재발급 실패');
+      errEl.textContent='⚠️ '+((data&&data.error)||'재발급 실패 (비밀번호 확인)');
       errEl.style.display='block';
       return;
     }
-    await sb.from('pw_reset_requests').update({status:'resolved', resolved_at:new Date().toISOString(), resolved_by: me?me.name:''}).eq('id', p.reqId);
-    hideM('pwReqAdminConfirmModal');
-    toast('✅ '+p.name+'님 비밀번호가 재설정되었습니다');
-    _pwReqPending=null;
+    await sb.from('pw_reset_requests').update({status:'resolved', resolved_at:new Date().toISOString(), resolved_by: me?me.name:''}).eq('id', reqId);
+    hideM('adminAuthModal');
+    toast('✅ '+name+'님 비밀번호가 재설정되었습니다');
     loadPwResetRequests();
     loadPwReqBadge();
-  }catch(e){
-    errEl.textContent='연결 오류: '+String(e.message||e);
-    errEl.style.display='block';
-  }
+  });
 }
 
 async function loadPendingUsers(){
@@ -15444,23 +15447,27 @@ async function loadPendingUsers(){
 
 async function approveUser(id, name){
   if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 처리할 수 있습니다'); return; }
-  if(!confirm(name+'님을 승인하시겠습니까?')) return;
-  var res=await sb.from('users').update({status:'active'}).eq('id',id);
-  if(res.error){toast('오류: '+res.error.message);return;}
-  toast('✅ '+name+'님 승인 완료');
-  loadPendingUsers();
-  loadUserList();
-  loadPendingBadge();
+  requireAdminAuth(name+'님을 승인합니다', async function(pw, errEl){
+    var res=await sb.rpc('admin_approve_user', {p_admin_id:me.id, p_admin_password:pw, p_target_id:id});
+    if(res.error || res.data===false){ errEl.textContent='⚠️ '+(res.error?res.error.message:'승인 실패 (비밀번호 확인)'); errEl.style.display='block'; return; }
+    hideM('adminAuthModal');
+    toast('✅ '+name+'님 승인 완료');
+    loadPendingUsers();
+    loadUserList();
+    loadPendingBadge();
+  });
 }
 
 async function rejectUser(id, name){
   if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 처리할 수 있습니다'); return; }
-  if(!confirm(name+'님을 거부하시겠습니까?')) return;
-  var res=await sb.from('users').delete().eq('id',id);
-  if(res.error){toast('오류: '+res.error.message);return;}
-  toast('✅ '+name+'님 신청 거부');
-  loadPendingUsers();
-  loadPendingBadge();
+  requireAdminAuth(name+'님의 가입 신청을 거부(삭제)합니다', async function(pw, errEl){
+    var res=await sb.rpc('admin_delete_user', {p_admin_id:me.id, p_admin_password:pw, p_target_id:id});
+    if(res.error || res.data===false){ errEl.textContent='⚠️ '+(res.error?res.error.message:'거부 실패 (비밀번호 확인)'); errEl.style.display='block'; return; }
+    hideM('adminAuthModal');
+    toast('✅ '+name+'님 신청 거부');
+    loadPendingUsers();
+    loadPendingBadge();
+  });
 }
 
 // ── 사용자 목록 로드 ──
@@ -15542,11 +15549,9 @@ async function editUserEmpId(id,name,curEmpId){
   var v=prompt(name+'님의 사번을 입력해주세요 (비워두면 삭제)', curEmpId||'');
   if(v===null) return; // 취소
   v=v.trim();
-  try{
-    var res=await sb.from('users').update({employee_id:v||null}).eq('id',id);
-    if(res.error){ toast('저장 실패: '+res.error.message); return; }
-    // 서명 프로필(user_signatures)에도 사번 동기화 — 이미 서명 등록한 사용자면 사번만 갱신,
-    // 아직 서명 미등록이면 사번만 미리 저장해두고 나머지(소속/직책/서명이미지)는 본인이 "내 서명 등록"에서 채우게 함
+  requireAdminAuth(name+'님 사번 저장', async function(pw, errEl){
+    var res=await sb.rpc('admin_set_employee_id', {p_admin_id:me.id, p_admin_password:pw, p_target_id:id, p_employee_id:v||null});
+    if(res.error || res.data===false){ errEl.textContent='⚠️ '+(res.error?res.error.message:'저장 실패 (비밀번호 확인)'); errEl.style.display='block'; return; }
     try{
       var sigRes=await sb.from('user_signatures').select('username').eq('username',id).maybeSingle();
       if(sigRes.data){
@@ -15555,31 +15560,33 @@ async function editUserEmpId(id,name,curEmpId){
         await sb.from('user_signatures').upsert({username:id, employee_id:v, dept:'T1환경미화사업부', updated_at:new Date().toISOString()},{onConflict:'username'});
       }
     }catch(syncErr){ console.error('사번→서명프로필 동기화 실패:', syncErr); }
+    hideM('adminAuthModal');
     toast(v?('✅ '+name+'님 사번 저장됨 (서명 프로필에도 반영됨)'):('✅ '+name+'님 사번 삭제됨'));
     loadUserList();
-  }catch(e){ toast('⚠️ 오류: '+String(e&&e.message||e)); }
+  });
 }
 
 async function toggleMemberRole(el){
   if(!me||!(me.role==='admin'||me.role==='master')){ toast('권한이 없습니다'); return; }
   var id=el.dataset.id, name=el.dataset.name, isCur=el.dataset.cur==='1', curRole=el.dataset.role, prevRole=el.dataset.prevrole;
-  try{
-    var payload;
-    if(isCur){
-      // 해제: 백업해둔 원래 역할로 복원
-      var restoreRole=prevRole||'staff';
-      if(!confirm(name+'님을 열람전용에서 해제하고, 원래 직급("'+restoreRole+'")으로 되돌릴까요?')) return;
-      payload={role:restoreRole, prev_role:null};
-    }else{
-      // 전환: 현재 역할을 prev_role에 백업 후 member로 변경
-      if(!confirm(name+'님을 열람전용 계정으로 전환할까요?\n(홈화면과 열람·자료 메뉴만 보이게 됩니다. 원래 직급은 자동 저장되어 나중에 복원할 수 있습니다)')) return;
-      payload={role:'member', prev_role:curRole};
-    }
-    var res=await sb.from('users').update(payload).eq('id',id);
-    if(res.error){ toast('오류: '+res.error.message); return; }
+  var payload;
+  if(isCur){
+    // 해제: 백업해둔 원래 역할로 복원
+    var restoreRole=prevRole||'staff';
+    if(!confirm(name+'님을 열람전용에서 해제하고, 원래 직급("'+restoreRole+'")으로 되돌릴까요?')) return;
+    payload={role:restoreRole, prev_role:null};
+  }else{
+    // 전환: 현재 역할을 prev_role에 백업 후 member로 변경
+    if(!confirm(name+'님을 열람전용 계정으로 전환할까요?\n(홈화면과 열람·자료 메뉴만 보이게 됩니다. 원래 직급은 자동 저장되어 나중에 복원할 수 있습니다)')) return;
+    payload={role:'member', prev_role:curRole};
+  }
+  requireAdminAuth(name+'님 권한 변경', async function(pw, errEl){
+    var res=await sb.rpc('admin_set_role', {p_admin_id:me.id, p_admin_password:pw, p_target_id:id, p_role:payload.role, p_prev_role:payload.prev_role});
+    if(res.error || res.data===false){ errEl.textContent='⚠️ '+(res.error?res.error.message:'변경 실패 (비밀번호 확인)'); errEl.style.display='block'; return; }
+    hideM('adminAuthModal');
     toast('✅ '+name+'님 '+(isCur?'열람전용 해제 완료':'열람전용 전환 완료'));
     loadUserList();
-  }catch(e){ toast('오류: '+String(e.message||e)); }
+  });
 }
 var tmTarget=null, tmSelectedTeam='', tmSelectedRole='';
 var TM_JO_MAP={
@@ -15650,22 +15657,26 @@ async function saveTeamMove(){
   var isIAOS=(tmSelectedTeam==='IAOS');
   var isExecSelectTM=(tmSelectedRole==='그룹장'||tmSelectedRole==='본부장');
   var finalRole = isExecSelectTM ? TM_ROLE_MAP[tmSelectedRole] : (isT1 ? 'admin' : (isIAOS ? 'guest' : (TM_ROLE_MAP[tmSelectedRole]||'staff')));
-  try{
-    var res=await sb.from('users').update({team:fullTeam, role:finalRole}).eq('id',tmTarget.id);
-    if(res.error){ toast('오류: '+res.error.message); return; }
+  requireAdminAuth(tmTarget.name+'님 팀 이동', async function(pw, errEl){
+    var res=await sb.rpc('admin_move_team', {p_admin_id:me.id, p_admin_password:pw, p_target_id:tmTarget.id, p_team:fullTeam, p_role:finalRole});
+    if(res.error || res.data===false){ errEl.textContent='⚠️ '+(res.error?res.error.message:'이동 실패 (비밀번호 확인)'); errEl.style.display='block'; return; }
+    hideM('adminAuthModal');
     toast('✅ '+tmTarget.name+'님 → '+fullTeam+' · '+tmSelectedRole+' 이동 완료');
     closeTeamMove();
     loadUserList();
-  }catch(e){ toast('오류: '+String(e.message||e)); }
+  });
 }
 
 async function withdrawUserDB(id, name){
   if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 처리할 수 있습니다'); return; }
   if(!confirm('⚠️ '+name+'님을 완전삭제 하시겠습니까?\n\n계정 정보가 영구적으로 삭제되며 되돌릴 수 없습니다.\n(재가입은 새 아이디로 바로 가능합니다)')) return;
-  var res=await sb.from('users').delete().eq('id',id);
-  if(res.error){toast('오류: '+res.error.message);return;}
-  toast('✅ '+name+'님 계정이 완전삭제되었습니다');
-  loadUserList();
+  requireAdminAuth(name+'님 계정 완전삭제', async function(pw, errEl){
+    var res=await sb.rpc('admin_delete_user', {p_admin_id:me.id, p_admin_password:pw, p_target_id:id});
+    if(res.error || res.data===false){ errEl.textContent='⚠️ '+(res.error?res.error.message:'삭제 실패 (비밀번호 확인)'); errEl.style.display='block'; return; }
+    hideM('adminAuthModal');
+    toast('✅ '+name+'님 계정이 완전삭제되었습니다');
+    loadUserList();
+  });
 }
 
 // 권한 저장 (DB)
@@ -15692,29 +15703,26 @@ function closePermEdit(){ hideM('permModal'); }
 
 async function savePermEdit(){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
-    var perms={};
+  if(!me||!(me.role==='admin'||me.role==='master')){ toast('⚠️ 관리자만 권한을 변경할 수 있습니다'); return; }
+  var perms={};
   ['read','write','edit','download'].forEach(function(p){
     var el=document.getElementById('perm-'+p);
     perms[p]=el?el.checked:false;
   });
-  if(currentPermUserId) userPerms[currentPermUserId]=perms;
-  try{ localStorage.setItem('t1_perms',JSON.stringify(userPerms)); }catch(e){}
-  // DB 저장: id로 찾아서 permissions를 JSON 문자열로 저장
-  var permRes;
-  try{
-    if(currentPermUserId){
-      permRes=await sb.from('users').update({permissions:JSON.stringify(perms)}).eq('id',currentPermUserId);
-    } else {
-      permRes=await sb.from('users').update({permissions:JSON.stringify(perms)}).eq('name',currentPermUser);
-    }
-  }catch(e){ permRes={error:{message:String(e.message||e)}}; }
-  if(permRes&&permRes.error){
-    toast('⚠️ 권한 저장 실패: '+permRes.error.message+' — 다시 시도해주세요');
-    return; // ★ 저장 실패 시 성공 표시·모달 닫기를 하지 않음
-  }
-  updatePermChips(currentPermUser,perms);
-  closePermEdit();
-  toast('✅ '+currentPermUser+' 권한 저장');
+  requireAdminAuth(currentPermUser+' 권한 저장', async function(pw, errEl){
+    var res=await sb.rpc('admin_set_permissions', {
+      p_admin_id:me.id, p_admin_password:pw,
+      p_target_id: currentPermUserId||null, p_target_name: currentPermUserId?null:currentPermUser,
+      p_permissions: JSON.stringify(perms)
+    });
+    if(res.error || res.data===false){ errEl.textContent='⚠️ '+(res.error?res.error.message:'저장 실패 (비밀번호 확인)'); errEl.style.display='block'; return; }
+    if(currentPermUserId) userPerms[currentPermUserId]=perms;
+    try{ localStorage.setItem('t1_perms',JSON.stringify(userPerms)); }catch(e){}
+    hideM('adminAuthModal');
+    updatePermChips(currentPermUser,perms);
+    closePermEdit();
+    toast('✅ '+currentPermUser+' 권한 저장');
+  });
 }
 
 // ── 공지사항 ──
@@ -22400,7 +22408,7 @@ function markGroupChatRead(){
   updateGcBadge();
   if(me&&me.id){
     (async function(){
-      try{ await sb.from('users').update({chat_last_read:nowIso}).eq('id',me.id); }catch(e){}
+      try{ await sb.rpc('self_update_prefs', {p_chat_last_read: nowIso}); }catch(e){}
     })();
   }
 }
@@ -23350,7 +23358,7 @@ checkShiftReset();
 async function sendHeartbeat(){
   if(!me || !me.id) return;
   if(document.visibilityState!=='visible') return;
-  try{ await sb.from('users').update({last_active:new Date().toISOString()}).eq('id', me.id); }catch(e){}
+  try{ await sb.rpc('self_update_prefs', {p_last_active: new Date().toISOString()}); }catch(e){}
 }
 setInterval(sendHeartbeat, 60000);
 document.addEventListener('visibilitychange', function(){ if(document.visibilityState==='visible') sendHeartbeat(); });
