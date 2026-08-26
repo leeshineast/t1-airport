@@ -6541,7 +6541,7 @@ function applyRoleUI(){
   var wrNm=document.getElementById('wrNm');if(wrNm)wrNm.textContent=me.name+' ('+(me.team||'')+')';
   // 날짜
   var now=new Date();
-  var ds=new Date(Date.now()+9*3600000).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  var ds=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short',timeZone:'Asia/Seoul'});
   var dd=document.getElementById('dashDate');if(dd)dd.textContent=ds;
   document.querySelectorAll('.dashDateMirror').forEach(function(el){ el.textContent=ds; });
   var md=document.getElementById('mpDate');if(md)md.textContent=ds;
@@ -6844,9 +6844,9 @@ function finishLogin(){
     loadPendingBadge();
     loadPwReqBadge();
   }
-  var now2=new Date(Date.now()+9*3600000);
-  var ldl=document.getElementById('leaderDateLbl');if(ldl)ldl.textContent=now2.toLocaleDateString('ko-KR');
-  var ldl2=document.getElementById('leaderDateLbl2');if(ldl2)ldl2.textContent=now2.toLocaleDateString('ko-KR');
+  var now2=new Date();
+  var ldl=document.getElementById('leaderDateLbl');if(ldl)ldl.textContent=now2.toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'});
+  var ldl2=document.getElementById('leaderDateLbl2');if(ldl2)ldl2.textContent=now2.toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'});
   var vn=document.getElementById('vhName');if(vn)vn.value=me?me.name:'';
   var vd=document.getElementById('vhDept');if(vd)vd.value=me?(me.team||''):'';
   if(!(me&&me.role==='member')){setTimeout(function(){try{showNotice();}catch(e){}},1500);}
@@ -8973,9 +8973,9 @@ function renderLeaderStatus(viewDate){
   viewDate=viewDate||'today';
   var ldl2=document.getElementById('leaderDateLbl2');
   if(ldl2){
-    var kst=new Date(Date.now()+9*3600000);
-    if(viewDate==='yesterday'){ kst=new Date(kst.getTime()-86400000); ldl2.textContent=kst.toLocaleDateString('ko-KR')+' (전일)'; }
-    else ldl2.textContent=kst.toLocaleDateString('ko-KR');
+    var kst=new Date();
+    if(viewDate==='yesterday'){ kst=new Date(kst.getTime()-86400000); ldl2.textContent=kst.toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'})+' (전일)'; }
+    else ldl2.textContent=kst.toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'});
   }
   var el=document.getElementById('leaderStatusWrap');
   if(!el) return;
@@ -12284,7 +12284,7 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
       var attList=(attRes.data||[]).slice().sort(eeTeamSortCmp);
       rows=attList.map(function(a){
         return {소속:((a.team||'')+' '+(a.team_group||'')).trim(), team:a.team, team_group:a.team_group, employee_id:a.employee_id, name:a.name,
-          attend_time:a.verified_at?new Date(a.verified_at).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'',
+          attend_time:a.verified_at?new Date(a.verified_at).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Seoul'}):'',
           _sigUrl:a.signature_data||null};
       });
       cols=[{key:'소속',label:'소속',width:'90px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'attend_time',label:'참석시간',width:'65px'},{key:'_sig',label:'서명',width:'100px'},{key:null,label:'비고',width:'110px'}];
@@ -12353,10 +12353,10 @@ async function eeExportExcel(eventId){
         s.location||'',
         a.team||'', a.team_group||'',
         a.employee_id||'', a.name||'',
-        a.applied_at?new Date(a.applied_at).toLocaleDateString('ko-KR'):'',
+        a.applied_at?new Date(a.applied_at).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'}):'',
         s.event_date||'',
         att?'참석':'미참석',
-        att&&att.verified_at?new Date(att.verified_at).toLocaleString('ko-KR'):'',
+        att&&att.verified_at?new Date(att.verified_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'',
         att?(att.qr_verified?'O':'X'):'',
         att?(att.gps_verified?'O':'X'):'',
         ev.note||''
@@ -12375,7 +12375,7 @@ async function eeExportExcel(eventId){
         att.employee_id||'', att.name||'',
         '', s.event_date||'',
         '참석 (미신청)',
-        att.verified_at?new Date(att.verified_at).toLocaleString('ko-KR'):'',
+        att.verified_at?new Date(att.verified_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'}):'',
         att.qr_verified?'O':'X',
         att.gps_verified?'O':'X',
         ev.note||''
@@ -15408,7 +15408,7 @@ async function loadPwResetRequests(){
       var div=document.createElement('div');
       div.className='u-row';
       div.style.cssText='flex-direction:column;align-items:flex-start;gap:8px';
-      var when=new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleString('ko-KR');
+      var when=new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'});
       var statusPill = r.status==='pending'
         ? '<span style="padding:3px 9px;background:var(--warn-bg);color:var(--warn);border-radius:20px;font-size:12px;font-weight:700">대기중</span>'
         : '<span style="padding:3px 9px;background:var(--teal-bg);color:var(--teal2);border-radius:20px;font-size:12px;font-weight:700">처리완료</span>';
@@ -15497,7 +15497,7 @@ async function loadPendingUsers(){
       var div=document.createElement('div');
       div.className='u-row';
       div.style.cssText='flex-direction:column;align-items:flex-start;gap:8px';
-      div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' &middot; '+u.role+'</div></div></div><div style="display:flex;gap:6px"><button class="pend-approve-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--success-bg);color:var(--success);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✓ 승인</button><button class="pend-reject-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✕ 거부</button></div></div><div style="font-size:12px;color:var(--g4)">'+u.email+' &middot; '+new Date(new Date(u.created_at).getTime()+9*3600000).toLocaleDateString('ko-KR')+'</div>';
+      div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' &middot; '+u.role+'</div></div></div><div style="display:flex;gap:6px"><button class="pend-approve-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--success-bg);color:var(--success);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✓ 승인</button><button class="pend-reject-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✕ 거부</button></div></div><div style="font-size:12px;color:var(--g4)">'+u.email+' &middot; '+new Date(u.created_at).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'})+'</div>';
       div.querySelector('.pend-approve-btn').onclick=function(){approveUser(this.dataset.id,this.dataset.name);};
       div.querySelector('.pend-reject-btn').onclick=function(){rejectUser(this.dataset.id,this.dataset.name);};
       el.appendChild(div);
@@ -23393,7 +23393,7 @@ function renderNotifList(){
   var h='';
   notifList.forEach(function(n){
     var diff=Math.floor((Date.now()-new Date(n.time).getTime())/1000);
-    var timeStr=diff<60?'방금 전':diff<3600?Math.floor(diff/60)+'분 전':diff<86400?Math.floor(diff/3600)+'시간 전':new Date(new Date(n.time).getTime()+9*3600000).toLocaleDateString('ko-KR');
+    var timeStr=diff<60?'방금 전':diff<3600?Math.floor(diff/60)+'분 전':diff<86400?Math.floor(diff/3600)+'시간 전':new Date(n.time).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'});
     h+='<div style="padding:12px 14px;border-bottom:1px solid var(--g1);display:flex;gap:10px;align-items:flex-start;background:'+(n.read?'white':'#F0FDF9')+'">';
     h+='<div style="width:36px;height:36px;border-radius:50%;background:'+(bgs[n.type]||'var(--g1)')+';display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">'+n.icon+'</div>';
     h+='<div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--g7);margin-bottom:2px">'+n.title+'</div>';
@@ -24607,7 +24607,7 @@ async function wfOpenEditLog(empNo, name){
   var body=rows.length ? rows.map(function(r){
     return '<div style="padding:9px 0;border-bottom:1px solid var(--g1)">'+
       '<div style="font-size:12.5px;color:var(--g7)"><b>'+eeEsc(r.field_name)+'</b>: '+eeEsc(r.old_value||'')+' → <b style="color:var(--teal)">'+eeEsc(r.new_value||'')+'</b></div>'+
-      '<div style="font-size:11px;color:var(--g4);margin-top:2px">'+(r.changed_by||'')+' · '+new Date(r.changed_at).toLocaleString('ko-KR')+'</div>'+
+      '<div style="font-size:11px;color:var(--g4);margin-top:2px">'+(r.changed_by||'')+' · '+new Date(r.changed_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})+'</div>'+
       '</div>';
   }).join('') : '<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">수정 이력이 없습니다</div>';
   document.getElementById('wfLogTitle').textContent=name+' ('+empNo+') 수정 이력';
@@ -25648,7 +25648,7 @@ async function cpRenderMyEntries(){
     h+='<div style="background:white;border:1.5px solid var(--g2);border-radius:10px;padding:12px;margin-bottom:8px">'+
        '<div style="font-size:13.5px;color:var(--g7);white-space:pre-wrap;line-height:1.6">'+eeEsc(e.content)+'</div>'+
        '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">'+
-       '<span style="font-size:11.5px;color:var(--g4)">'+(e.name||'')+'('+(e.emp_no||'')+') · '+new Date(e.created_at).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'})+'</span>'+
+       '<span style="font-size:11.5px;color:var(--g4)">'+(e.name||'')+'('+(e.emp_no||'')+') · '+new Date(e.created_at).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',timeZone:'Asia/Seoul'})+'</span>'+
        '<span style="display:flex;gap:6px">'+
        '<button onclick="cpEditEntry(\''+e.id+'\')" style="padding:4px 10px;background:#dbeafe;color:#1e40af;border:none;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer">수정</button>'+
        '<button onclick="cpDeleteEntry(\''+e.id+'\')" style="padding:4px 10px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer">삭제</button>'+
@@ -25842,7 +25842,7 @@ function cpRenderAllEntries(){
        '</div>'+
        '<div style="font-size:13px;color:var(--g6);white-space:pre-wrap;margin-top:6px;line-height:1.6">'+eeEsc(e.content)+'</div>'+
        '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap">'+
-       '<span style="font-size:11px;color:var(--g4)">'+new Date(e.created_at).toLocaleString('ko-KR')+(canSee&&hasScore?(' · <b style="color:#c2410c">'+score+'점</b> (투표 '+voteCnt+'명)'):'')+'</span>'+
+       '<span style="font-size:11px;color:var(--g4)">'+new Date(e.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})+(canSee&&hasScore?(' · <b style="color:#c2410c">'+score+'점</b> (투표 '+voteCnt+'명)'):'')+'</span>'+
        '<span style="display:flex;gap:5px">'+
        [1,2,3].map(function(r){
          var active=myRank===r;
@@ -25902,7 +25902,7 @@ function cpDownloadEntries(){
   var aoa=[['총점','투표수','사번','이름','팀','내용','제출일시']];
   var rows=cpAllEntriesCache.slice().sort(function(a,b){ return cpEntryScore(b.id)-cpEntryScore(a.id); });
   rows.forEach(function(e){
-    aoa.push([cpEntryScore(e.id), cpEntryVoteCount(e.id), e.emp_no||'', e.name||'', e.team||'', e.content||'', new Date(e.created_at).toLocaleString('ko-KR')]);
+    aoa.push([cpEntryScore(e.id), cpEntryVoteCount(e.id), e.emp_no||'', e.name||'', e.team||'', e.content||'', new Date(e.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})]);
   });
   var wb=XLSX.utils.book_new();
   var ws=XLSX.utils.aoa_to_sheet(aoa);
