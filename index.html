@@ -11970,7 +11970,7 @@ async function eeOpenAdminView(eventId){
       +'</div>';
     h+='<table style="width:100%;border-collapse:separate;border-spacing:0;font-size:13px">';
     h+='<thead><tr><th style="text-align:left;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">일정</th><th style="text-align:right;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">신청/참석</th></tr></thead><tbody>';
-    var canSeeQR=!!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||(ev.created_by&&me.name&&ev.created_by===me.name)));
+    var canSeeQR=!!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||(ev.created_by&&me.name&&ev.created_by===me.name)));
     scheds.forEach(function(s){
       var list=byShed[s.id]||[];
       var walkins=walkinBySched[s.id]||[];
