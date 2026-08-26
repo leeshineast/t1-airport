@@ -2080,7 +2080,7 @@ html{overflow-x:hidden}
     <button class="back-hd" onclick="go('main')">← 메인</button>
     <div class="user-chip"><div class="u-av">🗑️</div><span>삭제 기록</span></div>
   </div>
-  <div class="pg-hd"><div><h1>삭제 기록</h1><small>인수인계·공동작업·민원·습득물·안전사고·주요수행실적 삭제 이력</small></div>
+  <div class="pg-hd"><div><h1>삭제 기록</h1><small>앱 내 모든 삭제 기능의 이력을 모아봅니다</small></div>
     <button onclick="loadDeleteLogs()" style="padding:8px 14px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g6);cursor:pointer">🔄 새로고침</button>
   </div>
   <div style="padding:0 13px 13px">
@@ -2088,10 +2088,33 @@ html{overflow-x:hidden}
       <option value="">전체 항목</option>
       <option value="인수인계">인수인계</option>
       <option value="공동작업">공동작업</option>
+      <option value="공동작업 일정">공동작업 일정</option>
       <option value="민원">민원</option>
       <option value="습득물">습득물</option>
       <option value="안전사고">안전사고</option>
+      <option value="산업재해현황">산업재해현황</option>
       <option value="주요 수행실적">주요 수행실적</option>
+      <option value="장비현황">장비현황</option>
+      <option value="차량운행기록">차량운행기록</option>
+      <option value="공사차량운행일지">공사차량운행일지</option>
+      <option value="교육·회의">교육·회의</option>
+      <option value="교육·회의 신청내역">교육·회의 신청내역</option>
+      <option value="공지사항">공지사항</option>
+      <option value="화장실 관리">화장실 관리</option>
+      <option value="폐기물 처리현황">폐기물 처리현황</option>
+      <option value="회사소식">회사소식</option>
+      <option value="안전작업절차서">안전작업절차서</option>
+      <option value="운영매뉴얼">운영매뉴얼</option>
+      <option value="위험성평가">위험성평가</option>
+      <option value="교육자료">교육자료</option>
+      <option value="사규">사규</option>
+      <option value="근무계획">근무계획</option>
+      <option value="특별근무">특별근무</option>
+      <option value="사업부 행사">사업부 행사</option>
+      <option value="사업부 행사(관리자)">사업부 행사(관리자)</option>
+      <option value="관리자확인사항">관리자확인사항</option>
+      <option value="관리자확인사항(서명)">관리자확인사항(서명)</option>
+      <option value="관리자확인사항(PDF)">관리자확인사항(PDF)</option>
     </select>
     <div id="deleteLogsList"></div>
   </div>
@@ -7681,6 +7704,7 @@ async function deleteAccidentDB(id){
   if(!confirm('이 산업재해 기록을 삭제하시겠습니까?')) return;
   var res=await sb.from('industrial_accident').delete().eq('id',id);
   if(res.error){toast('삭제 오류: '+res.error.message);return;}
+  logDeletion('산업재해현황', 'id:'+id);
   toast('✅ 삭제되었습니다');
   loadAccidentsFromDB();
 }
@@ -9928,6 +9952,7 @@ async function deleteVeh(id){
   try{
     var res=await sb.from('vehicle_log').delete().eq('id',id);
     if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    logDeletion('차량운행기록', 'id:'+id);
     vehData=(vehData||[]).filter(function(r){ return r.id!==id; });
     renderVehList(vehData);
     toast('✅ 삭제되었습니다');
@@ -10413,6 +10438,7 @@ async function deleteWv(id){
   try{
     var res=await sb.from('work_vehicle_log').delete().eq('id',id);
     if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    logDeletion('공사차량운행일지', 'id:'+id);
     workVehData=(workVehData||[]).filter(function(r){ return r.id!==id; });
     renderWorkVehList(workVehData);
     toast('✅ 삭제되었습니다');
@@ -11267,6 +11293,7 @@ async function jwSchedDelete(id){
   if(!confirm('이 스케줄 항목을 삭제할까요?')) return;
   var res=await sb.from('joint_work_schedule').delete().eq('id',id);
   if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+  logDeletion('공동작업 일정', 'id:'+id);
   toast('✓ 삭제되었습니다');
   await loadJointWorkSchedule();
   jwRenderScheduleAdminList();
@@ -11701,6 +11728,7 @@ async function eeDeleteEvent(eventId, title){
     await sb.from('performance_records').delete().eq('edu_event_id',eventId);
     var res=await sb.from('edu_events').delete().eq('id',eventId); // edu_schedules/edu_applications/edu_attendance는 FK CASCADE로 함께 삭제됨
     if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    logDeletion('교육·회의', title);
     toast('✅ 삭제되었습니다');
     loadEduEvents();
   }catch(err){ toast('⚠️ 오류: '+String(err&&err.message||err)); }
@@ -12135,6 +12163,7 @@ async function eeDeleteApplication(appId, eventId){
   try{
     var res=await sb.from('edu_applications').delete().eq('id',appId);
     if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    logDeletion('교육·회의 신청내역', 'id:'+appId);
     toast('✅ 삭제되었습니다');
     eeOpenAdminView(eventId);
   }catch(err){ toast('⚠️ 오류: '+String(err&&err.message||err)); }
@@ -15849,6 +15878,7 @@ async function deleteNotice(btn){
   try{
     var res=await sb.from('notices').delete().eq('id',id);
     if(res&&res.error){ toast('삭제 오류: '+res.error.message); return; }
+    logDeletion('공지사항', 'id:'+id);
     toast('✅ 공지사항 삭제 완료');
     loadAdminNoticeList();
     loadNoticesFromDB();
@@ -18737,6 +18767,7 @@ async function deleteToiletConfirm(){
   try{
     var res=await sb.from('toilet_master').delete().eq('id',tlEditId);
     if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    logDeletion('화장실 관리', 'id:'+tlEditId);
     toast('🗑 삭제되었습니다');
     hideM('toiletDetailModal');
     await loadToiletFromDB();
@@ -20181,6 +20212,7 @@ async function deleteWaste(id){
   if(!confirm('이 기록을 삭제하시겠습니까?')) return;
   try{
     await sb.from('waste_data').delete().eq('id',parseInt(id));
+    logDeletion('폐기물 처리현황', 'id:'+id);
     toast('🗑️ 삭제되었습니다');
     loadWasteFromDB();
   }catch(e){ toast('⚠️ 삭제 실패'); }
@@ -21122,6 +21154,7 @@ async function deleteNewsPostFromDetail(id, imagePath){
     }
     var res=await sb.from('companynews_posts').delete().eq('id',id);
     if(res.error){ toast('⚠️ 삭제 실패: '+res.error.message); return; }
+    logDeletion('회사소식', 'id:'+id);
     toast('✅ 삭제되었습니다');
     closeNewsPostDetail();
     if(document.getElementById('newsP0').style.display!=='none') loadNewsList();
@@ -21481,6 +21514,7 @@ async function deleteSafety(id, path){
     var delUrl=SUPABASE_URL+'/storage/v1/object/safety-procedures/'+encodeURIComponent(path);
     await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
     await sb.from('safety_files').delete().eq('id',id);
+    logDeletion('안전작업절차서', 'id:'+id);
     toast('✅ 삭제 완료');
     loadSafetyManage();
     loadSafetyList();
@@ -21666,6 +21700,7 @@ async function deleteManual(id, path){
     var delUrl=SUPABASE_URL+'/storage/v1/object/operation-manuals/'+encodeURIComponent(path);
     await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
     await sb.from('operation_manual_files').delete().eq('id',id);
+    logDeletion('운영매뉴얼', 'id:'+id);
     toast('✅ 삭제 완료');
     loadManualManage();
     loadManualList();
@@ -21851,6 +21886,7 @@ async function deleteRisk(id, path){
     var delUrl=SUPABASE_URL+'/storage/v1/object/riskassessment/'+encodeURIComponent(path);
     await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
     await sb.from('risk_assessment_files').delete().eq('id',id);
+    logDeletion('위험성평가', 'id:'+id);
     toast('✅ 삭제 완료');
     loadRiskManage();
     loadRiskList();
@@ -22036,6 +22072,7 @@ async function deleteTraining(id, path){
     var delUrl=SUPABASE_URL+'/storage/v1/object/trainingmaterial/'+encodeURIComponent(path);
     await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
     await sb.from('training_material_files').delete().eq('id',id);
+    logDeletion('교육자료', 'id:'+id);
     toast('✅ 삭제 완료');
     loadTrainingManage();
     loadTrainingList();
@@ -23123,6 +23160,7 @@ async function deleteReg(id, path){
     var delUrl=SUPABASE_URL+'/storage/v1/object/regulations/'+encodeURIComponent(path);
     await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
     await sb.from('regulation_files').delete().eq('id',id);
+    logDeletion('사규', 'id:'+id);
     toast('✅ 삭제 완료');
     loadRegManage();
     loadRegList();
@@ -24446,6 +24484,7 @@ async function wfDeleteEmployee(empNo, name){
   if(!confirm(name+'('+empNo+') 님을 근무계획에서 삭제하시겠습니까?\n고정휴무요일·휴직정보도 함께 삭제됩니다.')) return;
   var res=await sb.from('wf_employees').delete().eq('emp_no', empNo);
   if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  logDeletion('근무계획', name+'('+empNo+')');
   toast('🗑 '+name+'님 삭제되었습니다');
   loadWfEmployees();
 }
@@ -24841,6 +24880,7 @@ async function wfSpDeleteEventById(id, title){
   if(!confirm(title+'을(를) 삭제하시겠습니까? 편성 데이터도 함께 삭제됩니다.')) return;
   var res=await sb.from('wf_special_events').delete().eq('id', id);
   if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  logDeletion('특별근무', title);
   toast('🗑 삭제되었습니다');
   wfSpLoadEvents();
 }
@@ -25206,6 +25246,7 @@ async function wfSpDeleteEvent(){
   if(!confirm(wfSpCurEvent.title+'을(를) 삭제하시겠습니까? 편성 데이터도 함께 삭제됩니다.')) return;
   var res=await sb.from('wf_special_events').delete().eq('id', wfSpCurEvent.id);
   if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  logDeletion('특별근무', wfSpCurEvent.title);
   toast('🗑 삭제되었습니다');
   wfSpBackToList();
 }
@@ -25515,6 +25556,7 @@ async function cpDeleteEntry(id){
   if(!confirm('이 제출내역을 삭제하시겠습니까?')) return;
   var res=await sb.from('campaign_entries').delete().eq('id',id);
   if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  logDeletion('사업부 행사', '본인 제출 삭제 id:'+id);
   toast('🗑 삭제되었습니다');
   cpRenderMyEntries();
   cpLoadList();
@@ -25732,6 +25774,7 @@ async function cpAdminDeleteEntry(id){
   if(!confirm('이 제출내역을 삭제하시겠습니까? (투표 기록도 함께 삭제됩니다)')) return;
   var res=await sb.from('campaign_entries').delete().eq('id',id);
   if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  logDeletion('사업부 행사(관리자)', 'id:'+id);
   toast('🗑 삭제되었습니다');
   cpAllEntriesCache=cpAllEntriesCache.filter(function(e){return e.id!==id;});
   cpVotesCache=cpVotesCache.filter(function(v){return v.entry_id!==id;});
