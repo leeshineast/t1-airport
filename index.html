@@ -3347,6 +3347,15 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div></div>
 </div>
 
+<!-- 근무계획 수정 이력 모달 -->
+<div id="wfLogModal" class="modal-bg">
+  <div class="modal" style="max-width:400px;max-height:80vh"><div style="padding:17px;overflow-y:auto">
+    <h3 id="wfLogTitle" style="margin:0 0 12px">수정 이력</h3>
+    <div id="wfLogBody"></div>
+    <button onclick="hideM('wfLogModal')" style="width:100%;margin-top:14px;padding:11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-weight:700;cursor:pointer">닫기</button>
+  </div></div>
+</div>
+
 <!-- ══ 인력관리 > 특별근무 ══ -->
 <div id="sSpecialWork" class="scr">
   <div class="pg-hd">
@@ -24357,11 +24366,12 @@ function wfRenderTable(){
   }
   var h='<table style="width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap">';
   h+='<thead><tr style="background:var(--navy);color:#fff">'+
-     ['사번','성명','직책','팀','조','오전/오후/야간','고정휴무요일','수정'].map(function(c){return '<th style="padding:9px 8px;text-align:center">'+c+'</th>';}).join('')+
+     ['사번','성명','직책','팀','조','오전/오후/야간','고정휴무요일','관리'].map(function(c){return '<th style="padding:9px 8px;text-align:center">'+c+'</th>';}).join('')+
      '</tr></thead><tbody>';
   rows.forEach(function(e,i){
     var offTxt=[e.off1,e.off2].filter(Boolean).join('·')||'-';
     var pc=wfDayPairColor(e.off1, e.off2);
+    var nameEsc=(e.name||'').replace(/'/g,"\\'");
     h+='<tr style="background:'+(i%2===0?'#fff':'var(--g1)')+';border-bottom:1px solid var(--g2)">'+
        '<td style="padding:8px;text-align:center">'+e.emp_no+'</td>'+
        '<td style="padding:8px;text-align:center;font-weight:700">'+(e.name||'')+'</td>'+
@@ -24370,7 +24380,11 @@ function wfRenderTable(){
        '<td style="padding:8px;text-align:center">'+(e.group_name||'-')+'</td>'+
        '<td style="padding:8px;text-align:center">'+(e.shift_type||'-')+'</td>'+
        '<td style="padding:8px;text-align:center"><span style="padding:3px 10px;border-radius:10px;background:'+pc.bg+';color:'+pc.fg+';font-weight:700">'+offTxt+'</span></td>'+
-       '<td style="padding:8px;text-align:center"><button onclick="wfOpenEditEmp(\''+e.emp_no+'\')" style="padding:4px 10px;background:#dbeafe;color:#1e40af;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">수정</button></td>'+
+       '<td style="padding:8px;text-align:center"><div style="display:flex;gap:4px;justify-content:center">'+
+       '<button onclick="wfOpenEditEmp(\''+e.emp_no+'\')" style="padding:4px 8px;background:#dbeafe;color:#1e40af;border:none;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer">수정</button>'+
+       '<button onclick="wfOpenEditLog(\''+e.emp_no+'\',\''+nameEsc+'\')" style="padding:4px 8px;background:#f1f5f9;color:#475569;border:none;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer">이력</button>'+
+       '<button onclick="wfDeleteEmployee(\''+e.emp_no+'\',\''+nameEsc+'\')" style="padding:4px 8px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer">삭제</button>'+
+       '</div></td>'+
        '</tr>';
   });
   h+='</tbody></table>';
@@ -24404,6 +24418,9 @@ function wfTogglePickDay(d){
 }
 async function wfSaveEditEmp(){
   if(!wfEditEmpNo) return;
+  var e=wfEmployees.find(function(x){return x.emp_no===wfEditEmpNo;});
+  var oldTxt=e?[e.off1,e.off2].filter(Boolean).join('·'):'';
+  var newTxt=wfEditPicked.join('·');
   var body={
     emp_no: wfEditEmpNo, quarter: wfCurQuarter,
     off_day1: wfEditPicked[0]||null, off_day2: wfEditPicked[1]||null,
@@ -24411,9 +24428,39 @@ async function wfSaveEditEmp(){
   };
   var res=await sb.from('wf_fixed_off').upsert(body,{onConflict:'emp_no,quarter'});
   if(res.error){ toast('저장 오류: '+res.error.message); return; }
+  // 수정 이력 기록 (값이 실제로 바뀐 경우만)
+  if(oldTxt!==newTxt){
+    try{
+      await sb.from('wf_employee_edit_log').insert({
+        emp_no: wfEditEmpNo, emp_name: e?e.name:'', quarter: wfCurQuarter,
+        field_name: '고정휴무요일', old_value: oldTxt||'(없음)', new_value: newTxt||'(없음)',
+        changed_by: me?me.name:''
+      });
+    }catch(logErr){ /* 이력 기록 실패해도 저장 자체는 유지 */ }
+  }
   toast('✓ 저장되었습니다');
   hideM('wfEditModal');
   loadWfEmployees();
+}
+async function wfDeleteEmployee(empNo, name){
+  if(!confirm(name+'('+empNo+') 님을 근무계획에서 삭제하시겠습니까?\n고정휴무요일·휴직정보도 함께 삭제됩니다.')) return;
+  var res=await sb.from('wf_employees').delete().eq('emp_no', empNo);
+  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  toast('🗑 '+name+'님 삭제되었습니다');
+  loadWfEmployees();
+}
+async function wfOpenEditLog(empNo, name){
+  var res=await sb.from('wf_employee_edit_log').select('*').eq('emp_no',empNo).order('changed_at',{ascending:false}).limit(30);
+  var rows=res.data||[];
+  var body=rows.length ? rows.map(function(r){
+    return '<div style="padding:9px 0;border-bottom:1px solid var(--g1)">'+
+      '<div style="font-size:12.5px;color:var(--g7)"><b>'+eeEsc(r.field_name)+'</b>: '+eeEsc(r.old_value||'')+' → <b style="color:var(--teal)">'+eeEsc(r.new_value||'')+'</b></div>'+
+      '<div style="font-size:11px;color:var(--g4);margin-top:2px">'+(r.changed_by||'')+' · '+new Date(r.changed_at).toLocaleString('ko-KR')+'</div>'+
+      '</div>';
+  }).join('') : '<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">수정 이력이 없습니다</div>';
+  document.getElementById('wfLogTitle').textContent=name+' ('+empNo+') 수정 이력';
+  document.getElementById('wfLogBody').innerHTML=body;
+  showM('wfLogModal');
 }
 
 // ── 엑셀 업로드: 인원현황 시트 파싱 (사번, 한글이름, 직책/직위, 총괄, 근무팀, 근무조, 근무구역, 1분기 등 요일컬럼) ──
