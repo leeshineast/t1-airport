@@ -889,8 +889,8 @@ html{overflow-x:hidden}
       </button>
       <button class="menu-btn" onclick="go('iso9001')">
         <span class="menu-icon">📘</span>
-        <div class="menu-title">ISO9001</div>
-        <div class="menu-desc">ISO9001 문서 열람</div>
+        <div class="menu-title">ISO</div>
+        <div class="menu-desc">ISO9001 · ISO37301 등 문서 열람</div>
         <span class="menu-arrow">열람하기 →</span>
       </button>
       <button class="menu-btn" onclick="go('news')">
@@ -3642,7 +3642,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 <!-- ══ ISO9001 ══ -->
 <div id="sIso9001" class="scr">
   <div class="pg-hd">
-    <div><h1>📘 ISO9001</h1><small>ISO9001 문서 열람</small></div>
+    <div><h1>📘 ISO</h1><small>ISO9001 · ISO37301 등 문서 열람</small></div>
     <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 메인</button>
   </div>
 
@@ -3655,6 +3655,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
   <!-- 탭0: 문서 목록 -->
   <div id="isoP0" style="padding:13px">
+    <div id="isoCatTabs" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
     <div id="isoListWrap">
       <div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">ISO9001 문서를 불러오는 중...</div>
     </div>
@@ -3684,6 +3685,13 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <div id="isoUploadWrap" class="card"><div class="cb">
       <div style="font-size:15px;font-weight:700;color:var(--g7);margin-bottom:13px">📎 ISO9001 PDF 업로드</div>
       <div id="isoAdminOnly" style="display:none">
+        <label style="display:block;font-size:13px;font-weight:700;color:var(--g6);margin-bottom:6px">분류</label>
+        <select id="isoUploadCatSel" onchange="isoUploadCatChange()" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;margin-bottom:8px;background:white">
+          <option value="ISO9001">ISO9001</option>
+          <option value="ISO37301">ISO37301</option>
+          <option value="__new__">+ 새 분류 직접입력</option>
+        </select>
+        <input type="text" id="isoUploadCatNew" placeholder="새 분류명 입력 (예: ISO14001)" style="display:none;width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;margin-bottom:11px;box-sizing:border-box">
         <label for="isoFileInput" style="display:block;width:100%;padding:18px;background:var(--teal-bg);border:2px dashed var(--teal);border-radius:var(--r2);text-align:center;cursor:pointer;font-size:15px;color:var(--teal2);font-weight:700;margin-bottom:11px">
           📄 PDF 파일 선택 (여러 개 가능)
         </label>
@@ -20781,6 +20789,21 @@ var _regUploadFiles = [];
 // ══ ISO9001 ══
 var isoFiles=[];
 var _isoUploadFiles=[];
+var isoCurCat=null;
+
+function isoUploadCatChange(){
+  var sel=document.getElementById('isoUploadCatSel');
+  var newInp=document.getElementById('isoUploadCatNew');
+  newInp.style.display=(sel.value==='__new__')?'block':'none';
+}
+function isoGetUploadCategory(){
+  var sel=document.getElementById('isoUploadCatSel');
+  if(sel.value==='__new__'){
+    var v=(document.getElementById('isoUploadCatNew').value||'').trim();
+    return v||'ISO9001';
+  }
+  return sel.value;
+}
 
 function isoTab(idx){
   ['isoP0','isoP1','isoP2'].forEach(function(id,i){
@@ -20826,12 +20849,31 @@ async function loadIsoList(){
   try{
     var res=await sb.from('iso9001_files').select('*').order('name',{ascending:true});
     if(res.error||!res.data||!res.data.length){
-      wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">📭 등록된 ISO9001 문서가 없습니다<br><small>관리자에게 업로드 요청하세요</small></div>';
+      document.getElementById('isoCatTabs').innerHTML='';
+      wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">📭 등록된 ISO 문서가 없습니다<br><small>관리자에게 업로드 요청하세요</small></div>';
       return;
     }
-    isoFiles=res.data;
-    var html='<div style="margin-bottom:11px;font-size:13px;color:var(--g4)">총 '+isoFiles.length+'개 문서 등록됨 · 탭하여 열기</div>';
-    isoFiles.forEach(function(f){
+    isoFiles=res.data.map(function(f){ return Object.assign({}, f, {iso_category: f.iso_category||'ISO9001'}); });
+
+    // 분류 탭 (데이터에 있는 분류를 자동 수집, ISO9001·ISO37301 우선 정렬)
+    var cats=Array.from(new Set(isoFiles.map(function(f){return f.iso_category;})));
+    var order=['ISO9001','ISO37301'];
+    cats.sort(function(a,b){ var ia=order.indexOf(a), ib=order.indexOf(b); if(ia===-1)ia=99; if(ib===-1)ib=99; return ia!==ib?ia-ib:a.localeCompare(b); });
+    if(!isoCurCat || cats.indexOf(isoCurCat)===-1) isoCurCat=cats[0];
+    var catTabsEl=document.getElementById('isoCatTabs');
+    catTabsEl.innerHTML=cats.map(function(c){
+      var on=c===isoCurCat;
+      var cnt=isoFiles.filter(function(f){return f.iso_category===c;}).length;
+      return '<button onclick="isoSwitchCat(\''+c.replace(/'/g,"\\'")+'\')" style="padding:7px 14px;border-radius:20px;border:1.5px solid '+(on?'var(--teal)':'var(--g2)')+';background:'+(on?'var(--teal)':'white')+';color:'+(on?'white':'var(--g6)')+';font-size:13px;font-weight:700;cursor:pointer">'+c+' ('+cnt+')</button>';
+    }).join('');
+
+    var filtered=isoFiles.filter(function(f){return f.iso_category===isoCurCat;});
+    if(!filtered.length){
+      wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">📭 이 분류에 등록된 문서가 없습니다</div>';
+      return;
+    }
+    var html='<div style="margin-bottom:11px;font-size:13px;color:var(--g4)">'+isoCurCat+' — 총 '+filtered.length+'개 문서 등록됨 · 탭하여 열기</div>';
+    filtered.forEach(function(f){
       var escapedPath=f.path.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       var escapedName=f.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       html+='<div onclick="viewIso(\''+escapedPath+'\',\''+escapedName+'\','+f.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
@@ -20848,6 +20890,7 @@ async function loadIsoList(){
     wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:14px">불러오기 실패: '+e.message+'</div>';
   }
 }
+function isoSwitchCat(cat){ isoCurCat=cat; loadIsoList(); }
 
 function viewIso(path, name, id){
   bumpViewCount('iso9001_files', id);
@@ -20874,6 +20917,7 @@ function handleIsoUpload(files){
 }
 
 async function uploadIsoFiles(){
+  var isoCategory=isoGetUploadCategory();
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
     if(!_isoUploadFiles.length){ toast('파일을 선택해 주세요'); return; }
   var prog=document.getElementById('isoUploadProgress');
@@ -20907,6 +20951,7 @@ async function uploadIsoFiles(){
         await sb.from('iso9001_files').upsert({
           name:file.name,
           path:safePath,
+          iso_category:isoCategory,
           uploaded_at:new Date().toISOString(),
           uploaded_by:me?me.name:'관리자'
         },{onConflict:'name'});
