@@ -344,109 +344,17 @@ html{overflow-x:hidden}
     const SUPABASE_URL = 'https://smfjrnhiodyjobclnwvd.supabase.co';
     const ADC_BANNER_B64 = 'data:image/png;base64,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'; // 관리자 확인사항 회람확인서 상단 배너 로고
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNtZmpybmhpb2R5am9iY2xud3ZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA5ODA1NDQsImV4cCI6MjA5NjU1NjU0NH0.TkrYpOXNQ0ICak6xWHbD6sOCzLqNOqAfr7FsnFY2Gns';
-    const H = {
-      'apikey': SUPABASE_KEY,
-      'Authorization': 'Bearer ' + SUPABASE_KEY,
-      'Content-Type': 'application/json',
-      'Prefer': 'return=representation'
-    };
 
     // Supabase JS 라이브러리 대체 - 순수 fetch 기반 경량 래퍼
     // DataCloneError 원인인 BroadcastChannel/postMessage 완전 제거
-    // ── 진짜 로그인 세션(Supabase Auth) 관리 ──
-    // public.users.email엔 실제 이메일이 아니라 로그인 아이디가 들어있어서,
-    // 내부적으로만 가짜 도메인을 붙여 Supabase Auth 계정과 매칭시킴 (사용자는 그대로 아이디/비번 입력)
-    const AUTH_FAKE_DOMAIN = 't1os.internal';
-    var authSession = null; // {access_token, refresh_token, expires_at}
-    var authRefreshTimer = null;
-
-    function authToEmail(loginId){ return String(loginId).trim().toLowerCase().replace(/[^a-z0-9._-]/g,'_') + '@' + AUTH_FAKE_DOMAIN; }
-
-    function applyAuthHeader(){
-      H['Authorization'] = 'Bearer ' + (authSession && authSession.access_token ? authSession.access_token : SUPABASE_KEY);
-    }
-
-    function saveAuthSession(sess){
-      authSession = sess;
-      try{ localStorage.setItem('t1_auth', JSON.stringify(sess)); }catch(e){}
-      applyAuthHeader();
-      scheduleAuthRefresh();
-    }
-
-    function clearAuthSession(){
-      authSession = null;
-      try{ localStorage.removeItem('t1_auth'); }catch(e){}
-      applyAuthHeader();
-      if(authRefreshTimer){ clearTimeout(authRefreshTimer); authRefreshTimer=null; }
-    }
-
-    function scheduleAuthRefresh(){
-      if(authRefreshTimer){ clearTimeout(authRefreshTimer); authRefreshTimer=null; }
-      if(!authSession||!authSession.expires_at) return;
-      // 만료 5분 전에 미리 갱신
-      var msUntil = (authSession.expires_at*1000) - Date.now() - (5*60*1000);
-      authRefreshTimer = setTimeout(authRefreshSession, Math.max(msUntil, 5000));
-    }
-
-    async function authRefreshSession(){
-      if(!authSession||!authSession.refresh_token) return false;
-      try{
-        var resp = await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=refresh_token', {
-          method:'POST',
-          headers:{ 'apikey':SUPABASE_KEY, 'Content-Type':'application/json' },
-          body: JSON.stringify({ refresh_token: authSession.refresh_token })
-        });
-        var data = await resp.json();
-        if(!resp.ok || !data.access_token){ clearAuthSession(); return false; }
-        saveAuthSession({ access_token:data.access_token, refresh_token:data.refresh_token, expires_at:data.expires_at });
-        return true;
-      }catch(e){ return false; }
-    }
-
-    // 로그인 화면에서 호출: 실제 Supabase Auth로 로그인 (아이디/비번은 그대로, 내부적으로만 가짜 이메일 사용)
-    async function authSignIn(loginId, password){
-      try{
-        var resp = await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=password', {
-          method:'POST',
-          headers:{ 'apikey':SUPABASE_KEY, 'Content-Type':'application/json' },
-          body: JSON.stringify({ email: authToEmail(loginId), password: password })
-        });
-        var data = await resp.json();
-        if(!resp.ok || !data.access_token){
-          return { error: { message: (data&&(data.error_description||data.msg||data.message)) || '아이디 또는 비밀번호를 확인해주세요' } };
-        }
-        saveAuthSession({ access_token:data.access_token, refresh_token:data.refresh_token, expires_at:data.expires_at });
-        return { error:null, authUserId: data.user && data.user.id };
-      }catch(e){ return { error:{ message:String(e.message||e) } }; }
-    }
-
-    async function authSignOut(){
-      try{
-        if(authSession&&authSession.access_token){
-          await fetch(SUPABASE_URL+'/auth/v1/logout', { method:'POST', headers:{ 'apikey':SUPABASE_KEY, 'Authorization':'Bearer '+authSession.access_token } });
-        }
-      }catch(e){}
-      clearAuthSession();
-    }
-
-    // 새로고침 시 저장된 세션 복원 + 만료 임박이면 미리 갱신
-    (function restoreAuthSession(){
-      try{
-        var saved = localStorage.getItem('t1_auth');
-        if(saved){
-          authSession = JSON.parse(saved);
-          applyAuthHeader();
-          if(authSession && authSession.expires_at && (authSession.expires_at*1000 - Date.now()) < 10*60*1000){
-            authRefreshSession();
-          } else {
-            scheduleAuthRefresh();
-          }
-        }
-      }catch(e){}
-    })();
-
     const sb = (function(){
       const BASE = SUPABASE_URL + '/rest/v1';
+      const H = {
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=representation'
+      };
 
       async function run(method, table, params, body, upsertCol){
         try{
@@ -679,7 +587,7 @@ html{overflow-x:hidden}
     <div class="mh-tab-item" onclick="go('lost')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="mh-tab-lb">습득물관리</span></div>
     <div class="mh-tab-item" onclick="go('accident')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span class="mh-tab-lb">안전사고</span></div>
     <div class="mh-tab-item" onclick="go('workveh')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="7" width="15" height="11" rx="1"/><path d="M16 10h3l3 3v4a1 1 0 0 1-1 1h-1"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg></span><span class="mh-tab-lb">공사차량</span></div>
-    <div class="mh-tab-item" onclick="location.href='warehouse.html?v='+Date.now()"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21V12h6v9"/></svg></span><span class="mh-tab-lb">재고관리</span></div>
+    <div class="mh-tab-item" onclick="location.href='warehouse.html'"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21V12h6v9"/></svg></span><span class="mh-tab-lb">재고관리</span></div>
   </div>
 </div>
 <!-- ══ 미확인 인계 알림 배너 ══ -->
@@ -873,7 +781,7 @@ html{overflow-x:hidden}
         <div class="menu-desc">유아휴게실 현황 조회·작성·수정·다운로드</div>
         <span class="menu-arrow">관리하기 →</span>
       </button>
-      <button class="menu-btn" onclick="location.href='inspect.html?v='+Date.now()">
+      <button class="menu-btn" onclick="location.href='inspect.html'">
         <span class="menu-icon">📝</span>
         <div class="menu-title">현장점검</div>
         <div class="menu-desc">화장실·휴게시설·장비·PBB 점검</div>
@@ -885,7 +793,7 @@ html{overflow-x:hidden}
         <div class="menu-desc">소각·재활용 처리량 입력 및 이력</div>
         <span class="menu-arrow">입력하기 →</span>
       </button>
-      <button class="menu-btn" onclick="location.href='warehouse.html?v='+Date.now()">
+      <button class="menu-btn" onclick="location.href='warehouse.html'">
         <span class="menu-icon">📦</span>
         <div class="menu-title">창고 재고관리</div>
         <div class="menu-desc">서브창고 재고·입출고·적정재고 관리</div>
@@ -921,10 +829,10 @@ html{overflow-x:hidden}
         <div class="menu-desc">사내 규정 및 지침서 열람</div>
         <span class="menu-arrow">열람하기 →</span>
       </button>
-      <button class="menu-btn" onclick="go('isohub')">
+      <button class="menu-btn" onclick="go('iso9001')">
         <span class="menu-icon">📘</span>
-        <div class="menu-title">ISO</div>
-        <div class="menu-desc">ISO 인증서별 문서 열람</div>
+        <div class="menu-title">ISO9001</div>
+        <div class="menu-desc">ISO9001 문서 열람</div>
         <span class="menu-arrow">열람하기 →</span>
       </button>
       <button class="menu-btn" onclick="go('news')">
@@ -2518,9 +2426,8 @@ html{overflow-x:hidden}
 <!-- 습득물 처리완료 모달 -->
 <!-- 상황발생보고서 (습득물/인수인계/민원/안전사고 공용) -->
 <style>
-.ee-rpt-table{ width:100%; table-layout:fixed; border-collapse:separate; border-spacing:0; font-size:11px; }
-.ee-rpt-table th, .ee-rpt-table td{ border:1px solid #999; padding:4px 3px; text-align:center; word-break:keep-all; }
-.ee-rpt-table thead{ display:table-header-group; }
+.ee-rpt-table{ width:100%; border-collapse:collapse; font-size:12px; }
+.ee-rpt-table th, .ee-rpt-table td{ border:1px solid #999; padding:6px 5px; text-align:center; }
 .ee-rpt-table th{ background:#efe3f5; font-weight:700; }
 .ee-rpt-meta-table{ width:100%; border-collapse:collapse; font-size:13px; margin-bottom:12px; }
 .ee-rpt-meta-table th, .ee-rpt-meta-table td{ border:1px solid #999; padding:7px 9px; }
@@ -3321,7 +3228,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <span style="color:var(--g4)">→</span>
     </button>
     <button class="menu-btn" onclick="go('specialwork')" style="display:flex;align-items:center;gap:14px;padding:18px;text-align:left">
-      <span style="font-size:28px">🏷️</span>
+      <span style="font-size:28px">🎌</span>
       <div style="flex:1">
         <div style="font-size:16px;font-weight:800;color:var(--g7)">특별근무</div>
         <div style="font-size:12.5px;color:var(--g4);margin-top:2px">성수기·명절 기간 팀/조별 근무 편성표 관리</div>
@@ -3385,7 +3292,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 <!-- ══ 인력관리 > 특별근무 ══ -->
 <div id="sSpecialWork" class="scr">
   <div class="pg-hd">
-    <div><h1>🏷️ 특별근무</h1><small>성수기·명절 기간 편성 관리</small></div>
+    <div><h1>🎌 특별근무</h1><small>성수기·명절 기간 편성 관리</small></div>
     <button onclick="go('workforce')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 인력관리</button>
   </div>
   <div id="wfSpListView" style="padding:13px">
@@ -3518,7 +3425,9 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <div style="font-size:15px;font-weight:800;color:var(--g7);margin-bottom:10px">📝 내 제출내역</div>
     <div id="cpMyEntries" style="margin-bottom:16px"></div>
 
-    <button id="cpAdminBtns" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenAllEntries()">📋 전체 제출목록 보기 (관리자)</button>
+    <button id="cpAdminBtns" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenAllEntries()">📋 전체 제출목록 보기 / TOP16 선정 (관리자)</button>
+    <button id="cpVoteBtn" style="display:none;width:100%;padding:11px;background:#ecfeff;border:1.5px solid #67e8f9;border-radius:10px;font-size:13.5px;font-weight:700;color:#0e7490;cursor:pointer;margin-bottom:8px" onclick="cpOpenPublicVote()">🗳️ 전직원 투표 참여</button>
+    <button id="cpResultBtn" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenVoteResults()">📊 전직원 투표 결과 (관리자)</button>
     <button id="cpWinnerBtn" style="display:none;width:100%;padding:11px;background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;font-size:13.5px;font-weight:700;color:#c2410c;cursor:pointer" onclick="cpOpenWinnerEdit()">📢 당선작 공지 작성/수정</button>
   </div>
 </div>
@@ -3581,6 +3490,31 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
 </div>
 
+<!-- 전직원 투표 참여 모달 -->
+<div id="cpVoteModal" class="modal-bg">
+  <div class="modal" style="max-width:600px;max-height:88vh"><div class="m-hd" style="background:linear-gradient(135deg,#0e7490,#06b6d4)"><h3>🗳️ 전직원 투표</h3><button class="m-x" onclick="hideM('cpVoteModal')">×</button></div>
+    <div style="padding:15px 17px;overflow-y:auto">
+      <div style="font-size:12.5px;color:var(--g5);margin-bottom:10px">최종 후보 중 1개를 선택해 투표하세요. 사번당 1표이며, 다시 투표하면 이전 선택이 변경됩니다.</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px">
+        <div style="flex:1"><div class="f-lbl">사번</div><input type="text" id="cpVoteEmpNo" class="ri" placeholder="사번" style="margin-bottom:0"></div>
+        <div style="flex:1"><div class="f-lbl">이름</div><input type="text" id="cpVoteName" class="ri" placeholder="이름" style="margin-bottom:0"></div>
+      </div>
+      <div id="cpVoteMyStatus" style="font-size:12.5px;color:var(--teal);margin-bottom:10px;display:none"></div>
+      <div id="cpVoteFinalistsWrap"></div>
+      <button class="btn-prim" onclick="cpSubmitPublicVote()" style="margin-top:10px">🗳️ 투표하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 전직원 투표 결과(관리자) 모달 -->
+<div id="cpResultModal" class="modal-bg">
+  <div class="modal" style="max-width:650px;max-height:88vh"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📊 전직원 투표 결과</h3><button class="m-x" onclick="hideM('cpResultModal')">×</button></div>
+    <div style="padding:15px 17px;overflow-y:auto">
+      <div id="cpResultWrap"></div>
+    </div>
+  </div>
+</div>
+
 <div id="sNotice" class="scr">
   <div class="pg-hd">
     <div><h1>📢 공지사항</h1><small>전체 공지사항 목록</small></div>
@@ -3596,30 +3530,11 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
 </div>
 
-<!-- ══ ISO 허브 (인증서 종류 선택) ══ -->
-<div id="sIsoHub" class="scr">
-  <div class="pg-hd">
-    <div><h1>📘 ISO</h1><small>인증서를 선택하세요</small></div>
-    <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 메인</button>
-  </div>
-  <div style="padding:13px">
-    <div id="isoHubAddWrap" style="display:none;margin-bottom:13px">
-      <div style="display:flex;gap:8px">
-        <input type="text" id="isoHubAddInput" placeholder="새 인증종류 이름 (예: ISO14001)" style="flex:1;padding:10px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px" onkeydown="if(event.key==='Enter'){addIsoCertType()}">
-        <button onclick="addIsoCertType()" style="padding:10px 16px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer;flex-shrink:0">추가</button>
-      </div>
-    </div>
-    <div id="isoHubWrap">
-      <div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div>
-    </div>
-  </div>
-</div>
-
 <!-- ══ ISO9001 ══ -->
 <div id="sIso9001" class="scr">
   <div class="pg-hd">
-    <div><h1 id="isoScreenTitle">📘 ISO9001</h1><small id="isoScreenDesc">ISO9001 문서 열람</small></div>
-    <button onclick="go('isohub')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 인증서 목록</button>
+    <div><h1>📘 ISO9001</h1><small>ISO9001 문서 열람</small></div>
+    <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 메인</button>
   </div>
 
   <!-- 탭: 목록 / 뷰어 / 업로드 -->
@@ -3658,7 +3573,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <!-- 탭2: 업로드 (관리자만) -->
   <div id="isoP2" style="display:none;padding:13px">
     <div id="isoUploadWrap" class="card"><div class="cb">
-      <div style="font-size:15px;font-weight:700;color:var(--g7);margin-bottom:13px" id="isoUploadTitle">📎 ISO9001 PDF 업로드</div>
+      <div style="font-size:15px;font-weight:700;color:var(--g7);margin-bottom:13px">📎 ISO9001 PDF 업로드</div>
       <div id="isoAdminOnly" style="display:none">
         <label for="isoFileInput" style="display:block;width:100%;padding:18px;background:var(--teal-bg);border:2px dashed var(--teal);border-radius:var(--r2);text-align:center;cursor:pointer;font-size:15px;color:var(--teal2);font-weight:700;margin-bottom:11px">
           📄 PDF 파일 선택 (여러 개 가능)
@@ -5400,17 +5315,6 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
 </div>
 <div id="regOk" class="modal-bg"><div class="modal"><div style="padding:26px 20px;text-align:center"><div style="font-size:53px;margin-bottom:11px">✅</div><div style="font-size:19px;font-weight:800;color:var(--g7);margin-bottom:7px">신청 완료!</div><div style="font-size:15px;color:var(--g4);line-height:1.65;margin-bottom:20px">관리자 승인 후 로그인하실 수 있습니다.</div><button onclick="closeRegOk()" class="btn-prim">로그인으로 돌아가기</button></div></div></div>
-<div id="selfAuthModal" class="modal-bg"><div class="modal" style="max-width:320px">
-  <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>본인 확인</h3><button class="m-x" onclick="cancelSelfAuth()">×</button></div>
-  <div style="padding:20px">
-    <div id="selfAuthMsg" style="font-size:14px;color:var(--g5);margin-bottom:14px;line-height:1.5">본인 확인을 위해 내 비밀번호를 입력해주세요</div>
-    <input type="password" id="selfAuthPw" class="ri" placeholder="내 비밀번호" autocomplete="off" style="width:100%;box-sizing:border-box;margin-bottom:14px" onkeydown="if(event.key==='Enter'){event.preventDefault();confirmSelfAuth();}">
-    <div style="display:flex;gap:8px">
-      <button onclick="cancelSelfAuth()" class="btn-sec" style="flex:1">취소</button>
-      <button onclick="confirmSelfAuth()" class="btn-prim" style="flex:1">확인</button>
-    </div>
-  </div>
-</div></div>
 <div id="mgrAttPickModal" class="modal-bg"><div class="modal" style="max-width:300px">
   <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3 id="mgrAttPickTitle">상태 선택</h3><button class="m-x" onclick="closeMgrAttPick()">×</button></div>
   <div style="padding:17px">
@@ -5867,31 +5771,6 @@ function hideM(id){
     }
   }
 }
-
-// iOS 홈화면 설치(PWA standalone) 모드에서는 window.prompt()가 동작하지 않음.
-// 대신 모달 입력창으로 비밀번호를 받아 Promise로 반환.
-var _selfAuthResolve=null;
-function askSelfPassword(message){
-  return new Promise(function(resolve){
-    var msgEl=document.getElementById('selfAuthMsg');
-    var pwEl=document.getElementById('selfAuthPw');
-    if(msgEl && message) msgEl.textContent=message;
-    if(pwEl) pwEl.value='';
-    _selfAuthResolve=resolve;
-    showM('selfAuthModal');
-    setTimeout(function(){ if(pwEl) pwEl.focus(); }, 100);
-  });
-}
-function confirmSelfAuth(){
-  var pwEl=document.getElementById('selfAuthPw');
-  var val=pwEl?pwEl.value:'';
-  hideM('selfAuthModal');
-  if(_selfAuthResolve){ _selfAuthResolve(val||null); _selfAuthResolve=null; }
-}
-function cancelSelfAuth(){
-  hideM('selfAuthModal');
-  if(_selfAuthResolve){ _selfAuthResolve(null); _selfAuthResolve=null; }
-}
 window.addEventListener('popstate', function(e){
   if(_consumeNextPop){ _consumeNextPop=false; return; }
   if(_eeConsumeNextPop){ _eeConsumeNextPop=false; return; }
@@ -5924,7 +5803,7 @@ window.addEventListener('popstate', function(e){
 });
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIsoHub','sIso9001','sNews','sSafety','sManual','sRisk','sTraining','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sActiveUsers','sPerf','sDeleteLogs','sAdc','sEduEvent','sEduAttend','sWorkforce','sWorkSchedule','sSpecialWork','sCampaign','sCampaignDetail'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sRisk','sTraining','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sActiveUsers','sPerf','sDeleteLogs','sAdc','sEduEvent','sEduAttend','sWorkforce','sWorkSchedule','sSpecialWork','sCampaign','sCampaignDetail'];
 function goStatsDash(){
   go('statsdash');
   loadMonthlyStats();
@@ -6380,7 +6259,7 @@ function go(name){
   }
   _curScreenName=name;
   updateIosBackBtn();
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',isohub:'sIsoHub',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs',admconfirm:'sAdc',eduevent:'sEduEvent',eduattend:'sEduAttend',workforce:'sWorkforce',workschedule:'sWorkSchedule',specialwork:'sSpecialWork',campaign:'sCampaign',campaigndetail:'sCampaignDetail'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs',admconfirm:'sAdc',eduevent:'sEduEvent',eduattend:'sEduAttend',workforce:'sWorkforce',workschedule:'sWorkSchedule',specialwork:'sSpecialWork',campaign:'sCampaign',campaigndetail:'sCampaignDetail'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -6456,9 +6335,6 @@ function go(name){
   if(name==='chat'){
     regTab(0);
     loadRegList();
-  }
-  if(name==='isohub'){
-    loadIsoHub();
   }
   if(name==='iso9001'){
     isoTab(0);
@@ -6546,7 +6422,7 @@ function applyRoleUI(){
   var wrNm=document.getElementById('wrNm');if(wrNm)wrNm.textContent=me.name+' ('+(me.team||'')+')';
   // 날짜
   var now=new Date();
-  var ds=new Date().toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
+  var ds=new Date(Date.now()+9*3600000).toLocaleDateString('ko-KR',{year:'numeric',month:'long',day:'numeric',weekday:'short'});
   var dd=document.getElementById('dashDate');if(dd)dd.textContent=ds;
   document.querySelectorAll('.dashDateMirror').forEach(function(el){ el.textContent=ds; });
   var md=document.getElementById('mpDate');if(md)md.textContent=ds;
@@ -6685,13 +6561,13 @@ var ALL_MENU_ITEMS=[
   {key:'rest', icon:'😴', title:'휴게시설 관리', action:"go('rest')"},
   {key:'storage', icon:'📦', title:'창고 관리', action:"go('storage')"},
   {key:'baby', icon:'👶', title:'유아휴게실 관리', action:"go('baby')"},
-  {key:'inspect', icon:'📝', title:'현장점검', action:"location.href='inspect.html?v='+Date.now()"},
+  {key:'inspect', icon:'📝', title:'현장점검', action:"location.href='inspect.html'"},
   {key:'waste', icon:'♻️', title:'폐기물 처리현황', action:"go('waste')"},
-  {key:'warehouse', icon:'📦', title:'창고 재고관리', action:"location.href='warehouse.html?v='+Date.now()"},
+  {key:'warehouse', icon:'📦', title:'창고 재고관리', action:"location.href='warehouse.html'"},
   {key:'equipment', icon:'🔧', title:'장비현황', action:"go('equipment')"},
   {key:'notice', icon:'📢', title:'공지사항', action:"go('notice')"},
   {key:'chat', icon:'📋', title:'사규 열람', action:"go('chat')"},
-  {key:'iso9001', icon:'📘', title:'ISO', action:"go('isohub')"},
+  {key:'iso9001', icon:'📘', title:'ISO9001', action:"go('iso9001')"},
   {key:'news', icon:'📰', title:'회사소식', action:"go('news')"},
   {key:'safety', icon:'⛑️', title:'안전작업절차서', action:"go('safety')"},
   {key:'manual', icon:'📗', title:'운영매뉴얼', action:"go('manual')"},
@@ -6784,26 +6660,23 @@ async function doLogin(){
   var pw=document.getElementById('lpw').value;
   if(!id||!pw){toast('아이디와 비밀번호를 입력해주세요');return;}
 
+  // Supabase 로그인 (비밀번호는 서버 함수 안에서만 대조, 클라이언트로 노출 안 됨)
   try{
     var btn=document.querySelector('.login-btn');
     if(btn){btn.textContent='로그인 중...';btn.disabled=true;}
-    var authRes = await authSignIn(id, pw);
-    if(authRes.error){
-      if(btn){btn.textContent='로그인';btn.disabled=false;}
-      toast('로그인 오류: '+authRes.error.message);
-      return;
-    }
-    // 실제 인증은 통과함. 프로필(권한/팀 등)은 public.users에서 조회
-    var res=await sb.from('users').select('id,name,role,team,email,permissions,status,font_scale,favorite_menus,employee_id').eq('email',id).maybeSingle();
+    var res=await sb.rpc('login_check', {p_email:id, p_password:pw});
     if(btn){btn.textContent='로그인';btn.disabled=false;}
-    if(res.error){ toast('로그인 오류: '+res.error.message); await authSignOut(); return; }
-    var u=res.data;
-    if(!u || u.status!=='active'){
-      toast(u&&u.status==='pending' ? '⚠️ 아직 관리자 승인 대기 중입니다' : '아이디 또는 비밀번호를 확인해주세요');
-      await authSignOut();
-      return;
-    }
-    me={name:u.name,role:u.role,team:u.team,initial:u.name[0],email:u.email,permissions:u.permissions,id:u.id,font_scale:u.font_scale||100,favorite_menus:Array.isArray(u.favorite_menus)?u.favorite_menus:[],employee_id:u.employee_id||''};
+    if(res.error){toast('로그인 오류: '+res.error.message);return;}
+    var rows=res.data;
+    if(!rows||!rows.length){toast('아이디 또는 비밀번호를 확인해주세요');return;}
+    var u=rows[0];
+    me={name:u.name,role:u.role,team:u.team,initial:u.name[0],email:u.email,permissions:u.permissions,id:u.id,font_scale:100,favorite_menus:[],employee_id:''};
+    try{
+      var fsRes=await sb.from('users').select('font_scale,favorite_menus,employee_id').eq('id',u.id).maybeSingle();
+      if(fsRes.data&&fsRes.data.font_scale) me.font_scale=fsRes.data.font_scale;
+      if(fsRes.data&&Array.isArray(fsRes.data.favorite_menus)) me.favorite_menus=fsRes.data.favorite_menus;
+      if(fsRes.data&&fsRes.data.employee_id) me.employee_id=fsRes.data.employee_id;
+    }catch(e){}
     finishLogin();
   }catch(e){toast('오류: '+e.message);}
 }
@@ -6992,17 +6865,14 @@ async function savePwChange(){
   err.style.display='none';
   if(!old){err.textContent='현재 비밀번호를 입력해주세요';err.style.display='block';return;}
   if(!me){err.textContent='로그인 정보가 없습니다';err.style.display='block';return;}
+  // 현재 비밀번호 확인 (서버 함수로만 대조, 비밀번호 자체는 클라이언트로 노출 안 됨)
+  var res=await sb.rpc('verify_current_password', {p_user_id:me.id, p_password:old});
+  if(res.error){err.textContent='확인 중 오류: '+res.error.message;err.style.display='block';return;}
+  if(!res.data){err.textContent='현재 비밀번호가 올바르지 않습니다';err.style.display='block';return;}
   if(nw.length<6){err.textContent='새 비밀번호는 6자 이상이어야 합니다';err.style.display='block';return;}
   if(nw!==nw2){err.textContent='새 비밀번호가 일치하지 않습니다';err.style.display='block';return;}
-  var updFetch,updJson;
-  try{
-    updFetch = await fetch(SUPABASE_URL+'/functions/v1/update-password', {
-      method:'POST', headers:{ 'apikey':SUPABASE_KEY, 'Content-Type':'application/json' },
-      body: JSON.stringify({ mode:'self', requesterId:me.id, requesterPassword:old, targetId:me.id, oldPassword:old, newPassword:nw })
-    });
-    updJson = await updFetch.json();
-  }catch(e){ err.textContent='변경 오류: '+String(e.message||e); err.style.display='block'; return; }
-  if(!updFetch.ok || !updJson.ok){ err.textContent=updJson.error||'현재 비밀번호가 올바르지 않습니다'; err.style.display='block'; return; }
+  var upd=await sb.from('users').update({password:nw}).eq('id',me.id);
+  if(upd.error){err.textContent='변경 오류: '+upd.error.message;err.style.display='block';return;}
   closePwChange();
   toast('✅ 비밀번호가 변경되었습니다');
 }
@@ -7011,7 +6881,6 @@ async function savePwChange(){
 function doLogout(){
   me=null;
   try{localStorage.removeItem('t1_me');}catch(e){}
-  authSignOut();
   var gt=document.getElementById('globalTabbar'); if(gt) gt.style.display='none';
   goLogin();
   toast('로그아웃되었습니다');
@@ -12007,7 +11876,7 @@ async function eeOpenAdminView(eventId){
       +'<button onclick="eeDownloadApplyTemplate(\''+eventId+'\')" style="padding:7px 12px;background:var(--g1);color:var(--g6);border:1px solid var(--g2);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">📄 참석자 양식 다운로드</button>'
       +'<label style="padding:7px 12px;background:var(--navy-bg);color:var(--navy);border:1px solid var(--navy);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">📤 엑셀로 참석자 업로드<input type="file" accept=".xlsx,.xls" style="display:none" onchange="eeUploadApplyExcel(this,\''+eventId+'\')"></label>'
       +'</div>';
-    h+='<table style="width:100%;table-layout:fixed;border-collapse:separate;border-spacing:0;font-size:13px">';
+    h+='<table style="width:100%;border-collapse:separate;border-spacing:0;font-size:13px">';
     h+='<thead><tr><th style="text-align:left;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">일정</th><th style="text-align:right;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">신청/참석</th></tr></thead><tbody>';
     var canSeeQR=!!(me&&(me.role==='master'||me.role==='admin'||(ev.created_by&&me.name&&ev.created_by===me.name)));
     scheds.forEach(function(s){
@@ -12041,23 +11910,24 @@ async function eeOpenAdminView(eventId){
           +'</div>'
         +'</div>'
         +((list.length+walkins.length)?(
-          '<div style="overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:8px;border:1px solid var(--g2)">'
-          +'<table style="width:100%;min-width:480px;border-collapse:separate;border-spacing:0;font-size:12.5px;background:white">'
+          '<table style="width:100%;border-collapse:separate;border-spacing:0;font-size:12.5px;background:white;border-radius:8px;overflow:hidden;border:1px solid var(--g2)">'
           +'<thead><tr style="background:var(--g1)">'
-            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">소속</th>'
-            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">직책</th>'
-            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">사번</th>'
-            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">성명</th>'
-            +'<th style="text-align:center;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">참석</th>'
-            +'<th style="text-align:center;padding:7px 8px;color:var(--g5);font-weight:700;white-space:nowrap">관리</th>'
+            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">팀</th>'
+            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">조</th>'
+            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">직책</th>'
+            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">사번</th>'
+            +'<th style="text-align:left;padding:7px 8px;color:var(--g5);font-weight:700">성명</th>'
+            +'<th style="text-align:center;padding:7px 8px;color:var(--g5);font-weight:700">참석</th>'
+            +'<th style="text-align:center;padding:7px 8px;color:var(--g5);font-weight:700">관리</th>'
           +'</tr></thead><tbody>'
           +list.map(function(a,i){
             var attended=(attBySched[s.id]||[]).indexOf(a.employee_id)!==-1;
             return '<tr id="eeAppRow_'+a.id+'" style="'+(i%2?'background:var(--g0)':'')+'">'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);white-space:nowrap">'+eeEsc(((a.team||'')+' '+(a.team_group||'')).trim()||'-')+'</td>'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);white-space:nowrap">'+eeEsc(a.position||'-')+'</td>'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);white-space:nowrap">'+eeEsc(a.employee_id)+'</td>'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);font-weight:700;white-space:nowrap">'+eeEsc(a.name)+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.team||'-')+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.team_group||'-')+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.position||'-')+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.employee_id)+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);font-weight:700">'+eeEsc(a.name)+'</td>'
               +'<td style="padding:7px 8px;border-top:1px solid var(--g1);text-align:center">'+(attended?'<span style="color:var(--avg-blue);font-weight:800">✓</span>':'<span style="color:var(--g3)">-</span>')+'</td>'
               +'<td style="padding:7px 8px;border-top:1px solid var(--g1);text-align:center;white-space:nowrap">'
                 +'<span onclick="eeEditApplication(\''+a.id+'\')" style="cursor:pointer;margin-right:8px" title="수정">✏️</span>'
@@ -12067,39 +11937,37 @@ async function eeOpenAdminView(eventId){
           }).join('')
           +walkins.map(function(a,i){
             return '<tr id="eeWalkinRow_'+a.id+'" style="background:var(--warn-bg,#FFF7E0)">'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);white-space:nowrap">'+eeEsc(((a.team||'')+' '+(a.team_group||'')).trim()||'-')+'</td>'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);white-space:nowrap">-</td>'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);white-space:nowrap">'+eeEsc(a.employee_id)+'</td>'
-              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);font-weight:700;white-space:nowrap">'+eeEsc(a.name)+' <span style="font-size:10.5px;font-weight:800;color:var(--warn,#B45309);background:white;border:1px solid var(--warn,#B45309);border-radius:10px;padding:1px 6px;white-space:nowrap">미신청</span></td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.team||'-')+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.team_group||'-')+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">-</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6)">'+eeEsc(a.employee_id)+'</td>'
+              +'<td style="padding:7px 8px;border-top:1px solid var(--g1);color:var(--g6);font-weight:700">'+eeEsc(a.name)+' <span style="font-size:10.5px;font-weight:800;color:var(--warn,#B45309);background:white;border:1px solid var(--warn,#B45309);border-radius:10px;padding:1px 6px">미신청</span></td>'
               +'<td style="padding:7px 8px;border-top:1px solid var(--g1);text-align:center"><span style="color:var(--avg-blue);font-weight:800">✓</span></td>'
               +'<td style="padding:7px 8px;border-top:1px solid var(--g1);text-align:center;white-space:nowrap">'
                 +'<span onclick="eeDeleteAttendanceRow(\''+a.id+'\',\''+eventId+'\')" style="cursor:pointer;color:var(--danger)" title="출석취소">🗑️</span>'
               +'</td>'
               +'</tr>';
           }).join('')
-          +'</tbody></table></div>'
+          +'</tbody></table>'
         ):'<div style="font-size:12.5px;color:var(--g3)">신청자 없음</div>')
         +'</td></tr>';
     });
     h+='</tbody></table></div></div>';
     eeAppsCache=apps; // 관리자 수정/삭제 시 참조용
 
-    // 팀별 신청현황 — 회차(일정)별로 구분해서 표시
-    scheds.forEach(function(s){
-      var schedApps=byShed[s.id]||[];
-      if(!schedApps.length) return;
-      var byTeam={};
-      schedApps.forEach(function(a){
-        var t=a.team||'미지정';
-        if(!byTeam[t]) byTeam[t]={total:0, byGroup:{}};
-        byTeam[t].total++;
-        var g=a.team_group||'-';
-        byTeam[t].byGroup[g]=(byTeam[t].byGroup[g]||0)+1;
-      });
-      var teamKeys=Object.keys(byTeam).sort();
+    // 팀별 신청현황
+    var byTeam={};
+    apps.forEach(function(a){
+      var t=a.team||'미지정';
+      if(!byTeam[t]) byTeam[t]={total:0, byGroup:{}};
+      byTeam[t].total++;
+      var g=a.team_group||'-';
+      byTeam[t].byGroup[g]=(byTeam[t].byGroup[g]||0)+1;
+    });
+    var teamKeys=Object.keys(byTeam).sort();
+    if(teamKeys.length){
       h+='<div class="card" style="margin-top:11px"><div class="cb">';
-      h+='<div style="font-size:15px;font-weight:800;color:var(--g7);margin-bottom:2px">📊 팀별 신청현황</div>';
-      h+='<div style="font-size:12.5px;color:var(--g5);margin-bottom:11px">'+s.event_date+' '+(s.start_time||'')+'</div>';
+      h+='<div style="font-size:15px;font-weight:800;color:var(--g7);margin-bottom:11px">📊 팀별 신청현황 (연인원)</div>';
       h+='<table style="width:100%;border-collapse:separate;border-spacing:0;font-size:13px">';
       h+='<thead><tr><th style="text-align:left;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">팀</th><th style="text-align:left;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">조별</th><th style="text-align:right;padding:7px 4px;color:var(--g5);border-bottom:1px solid var(--g2)">합계</th></tr></thead><tbody>';
       teamKeys.forEach(function(t,i){
@@ -12111,7 +11979,7 @@ async function eeOpenAdminView(eventId){
           +'</tr>';
       });
       h+='</tbody></table></div></div>';
-    });
+    }
     wrap.innerHTML=h;
   }catch(e){ wrap.innerHTML='오류: '+e.message; }
 }
@@ -12208,45 +12076,26 @@ function eeReportMetaTable(pairs){
   h+='</tbody></table>';
   return h;
 }
-function eeReportRowsTable(rows, cols, titleText, metaPairs){
+function eeReportRowsTable(rows, cols){
   // cols: [{key, label, width}] — key===null이면 빈 칸(서명란 등), key==='_sig'면 등록된 전자서명 이미지가 있으면 표시, 없으면 빈 칸(직접서명용)
-  // titleText/metaPairs를 주면 인쇄 시 페이지마다 제목+메타정보+컬럼헤더가 반복되도록 페이지 단위로 표를 나눠서 생성함
-  // (브라우저의 thead 자동반복(display:table-header-group)이 iOS Safari 인쇄에서 동작하지 않아 수동 분할 방식 사용)
-  var totalCols=cols.length+1;
-  function theadHtml(){
-    var t='<thead>';
-    if(titleText) t+='<tr><th colspan="'+totalCols+'" style="border:none;font-size:18px;font-weight:800;padding:2px 0 10px;background:#fff">'+titleText+'</th></tr>';
-    if(metaPairs) metaPairs.forEach(function(p){ t+='<tr><th style="width:100px;white-space:nowrap">'+p[0]+'</th><td colspan="'+(totalCols-1)+'" style="text-align:left">'+p[1]+'</td></tr>'; });
-    if(titleText||metaPairs) t+='<tr><td colspan="'+totalCols+'" style="border:none;height:8px;padding:0"></td></tr>';
-    t+='<tr>'
-      +'<th style="width:24px;white-space:nowrap">No</th>'
-      +cols.map(function(c){ return '<th'+(c.width?(' style="width:'+c.width+'"'):'')+'>'+c.label+'</th>'; }).join('')
-      +'</tr></thead>';
-    return t;
-  }
-  function rowHtml(r,i){
-    return '<tr><td style="text-align:center">'+(i+1)+'</td>'
+  var h='<table class="ee-rpt-table"><thead><tr>'
+    +'<th style="width:34px">No</th>'
+    +cols.map(function(c){ return '<th'+(c.width?(' style="width:'+c.width+'"'):'')+'>'+c.label+'</th>'; }).join('')
+    +'</tr></thead><tbody>';
+  rows.forEach(function(r,i){
+    h+='<tr><td style="text-align:center">'+(i+1)+'</td>'
       +cols.map(function(c){
         if(c.key==='_sig'){
-          if(r._sigUrl) return '<td style="height:22px;text-align:center;padding:1px"><img src="'+r._sigUrl+'" alt="서명" style="max-height:19px;max-width:56px;vertical-align:middle"></td>';
-          return '<td style="height:22px"></td>'; // 등록된 전자서명 없음 → 직접 서명란
+          if(r._sigUrl) return '<td style="height:30px;text-align:center;padding:2px"><img src="'+r._sigUrl+'" alt="서명" style="max-height:26px;max-width:90px;vertical-align:middle"></td>';
+          return '<td style="height:30px"></td>'; // 등록된 전자서명 없음 → 직접 서명란
         }
-        if(c.key===null) return '<td style="height:22px"></td>'; // 서명란 등 빈 칸
+        if(c.key===null) return '<td style="height:30px"></td>'; // 서명란 등 빈 칸
         return '<td>'+eeEsc(r[c.key]==null?'':r[c.key])+'</td>';
       }).join('')
       +'</tr>';
-  }
-  if(!rows.length){
-    return '<table class="ee-rpt-table">'+theadHtml()+'<tbody><tr><td colspan="'+totalCols+'" style="text-align:center;color:#999;padding:14px">대상자 없음</td></tr></tbody></table>';
-  }
-  var PER_PAGE=32; // A4 한 페이지(제목+메타+헤더 포함)에 안전하게 들어가는 행 수
-  var h='';
-  for(var p=0;p<rows.length;p+=PER_PAGE){
-    var chunk=rows.slice(p, p+PER_PAGE);
-    h+='<table class="ee-rpt-table"'+(p>0?' style="page-break-before:always;margin-top:0"':'')+'>'+theadHtml()+'<tbody>';
-    chunk.forEach(function(r,ci){ h+=rowHtml(r, p+ci); });
-    h+='</tbody></table>';
-  }
+  });
+  if(!rows.length) h+='<tr><td colspan="'+(cols.length+1)+'" style="text-align:center;color:#999;padding:14px">대상자 없음</td></tr>';
+  h+='</tbody></table>';
   return h;
 }
 // rows(각 row에 employee_id 필요)에 등록된 전자서명(user_signatures, employee_id 매칭) URL을 채워넣음 — 이미 _sigUrl(QR참석확인 시 직접 서명)이 있는 row는 건드리지 않음
@@ -12295,18 +12144,18 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
           attend_time:a.verified_at?new Date(a.verified_at).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit'}):'',
           _sigUrl:a.signature_data||null};
       });
-      cols=[{key:'소속',label:'소속',width:'80px'},{key:'employee_id',label:'사번',width:'56px'},{key:'name',label:'성명',width:'56px'},{key:'attend_time',label:'참석시간',width:'72px'},{key:'_sig',label:'서명',width:'62px'},{key:null,label:'비고',width:'52px'}];
+      cols=[{key:'소속',label:'소속',width:'90px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'attend_time',label:'참석시간',width:'65px'},{key:'_sig',label:'서명',width:'100px'},{key:null,label:'비고',width:'110px'}];
     }
     if(kind==='log') await eeAttachSignatures(rows); // QR참석확인 시 직접 서명한 게 있으면 그걸 우선 사용, 없으면 등록된 전자서명(개인계정)으로 보완, 그래도 없으면 빈 칸
     document.getElementById('eeReportModalTitle').textContent='📄 '+title;
-    document.getElementById('eeReportBigTitle').textContent='';
-    document.getElementById('eeReportMeta').innerHTML='';
-    document.getElementById('eeReportBody').innerHTML=eeReportRowsTable(rows, cols, title, [
+    document.getElementById('eeReportBigTitle').textContent=title;
+    document.getElementById('eeReportMeta').innerHTML=eeReportMetaTable([
       [catLabel+'명', eeEsc(ev.title)],
       [catLabel+'일시', sched.event_date+' '+(sched.start_time||'')+'~'+(sched.end_time||'')],
       ['장소', eeEsc(sched.location||'-')],
       ['참석인원', rows.length+'명']
     ]);
+    document.getElementById('eeReportBody').innerHTML=eeReportRowsTable(rows, cols);
     showM('eeReportModal');
   }catch(e){ toast('오류: '+e.message); }
 }
@@ -12324,14 +12173,14 @@ async function eeOpenWishSurvey(eventId){
     });
     var catLabel=(ev.category==='기타'?(ev.category_custom||'기타'):ev.category)||'교육';
     document.getElementById('eeReportModalTitle').textContent='📄 참석희망자 조사표';
-    document.getElementById('eeReportBigTitle').textContent='';
+    document.getElementById('eeReportBigTitle').textContent=catLabel+' 참석희망자 조사표';
     var metaPairs=[[catLabel+'명', eeEsc(ev.title)]];
     if(ev.apply_deadline) metaPairs.push(['신청기간', '~'+ev.apply_deadline]);
     metaPairs.push(['신청인원', rows.length+'명']);
-    document.getElementById('eeReportMeta').innerHTML='';
+    document.getElementById('eeReportMeta').innerHTML=eeReportMetaTable(metaPairs);
     document.getElementById('eeReportBody').innerHTML=eeReportRowsTable(rows, [
       {key:'소속',label:'소속',width:'90px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'wish_date',label:'참석희망일'}
-    ], catLabel+' 참석희망자 조사표', metaPairs);
+    ]);
     showM('eeReportModal');
   }catch(e){ toast('오류: '+e.message); }
 }
@@ -14653,10 +14502,7 @@ async function executeDataReset(){
   }
   // 가입 사용자
   if(document.getElementById('rst_users')&&document.getElementById('rst_users').checked){
-    try{
-      var myPw=await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요');
-      if(myPw){ await sb.rpc('admin_bulk_reset_users', {p_admin_id: me.id, p_admin_password: myPw}); }
-    }catch(e){}
+    try{ await sb.from('users').delete().neq('role','admin'); }catch(e){}
     var uList=document.getElementById('uList');
     if(uList){
       var rows=uList.querySelectorAll('.u-row');
@@ -15190,13 +15036,14 @@ async function subReg(){
     err.style.display='block';
     err.style.color='var(--g4)';
 
-    var signupFetch = await fetch(SUPABASE_URL+'/functions/v1/signup', {
-      method:'POST',
-      headers:{ 'apikey':SUPABASE_KEY, 'Content-Type':'application/json' },
-      body: JSON.stringify({ name:nm, loginId:em, password:pw, team:fullTeam||team, role:finalRole })
-    });
-    var signupJson = await signupFetch.json();
-    var res = signupFetch.ok ? {data:[{id:signupJson.id}], error:null} : {data:null, error:{message:signupJson.error||'가입 처리 중 오류'}};
+    var res=await sb.from('users').insert({
+      name:nm,
+      email:em,
+      password:pw,
+      team:fullTeam||team,
+      role:finalRole,
+      status:finalStatus
+    }).select();
 
     err.style.color='';
 
@@ -15423,7 +15270,7 @@ async function loadPwResetRequests(){
       var div=document.createElement('div');
       div.className='u-row';
       div.style.cssText='flex-direction:column;align-items:flex-start;gap:8px';
-      var when=new Date(r.created_at).toLocaleString('ko-KR');
+      var when=new Date(new Date(r.created_at).getTime()+9*3600000).toLocaleString('ko-KR');
       var statusPill = r.status==='pending'
         ? '<span style="padding:3px 9px;background:var(--warn-bg);color:var(--warn);border-radius:20px;font-size:12px;font-weight:700">대기중</span>'
         : '<span style="padding:3px 9px;background:var(--teal-bg);color:var(--teal2);border-radius:20px;font-size:12px;font-weight:700">처리완료</span>';
@@ -15446,13 +15293,11 @@ async function loadPwResetRequests(){
 async function resolvePwReq(reqId, claimedId, newPw, name){
   if(!newPw || newPw.length<6){ toast('임시 비밀번호는 6자 이상 입력해주세요'); return; }
   if(!confirm(claimedId+' 계정의 비밀번호를 새로 발급하시겠습니까?\n(본인 확인 후 진행해주세요)')) return;
-  if(!me || !me.id){ toast('로그인 정보를 확인할 수 없습니다'); return; }
-  var myPw = await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요');
-  if(!myPw){ return; }
   try{
-    // claimedId(로그인 아이디)로 대상 계정의 실제 id를 먼저 찾음
-    var targetRes = await sb.from('users').select('id,status').eq('email',claimedId).maybeSingle();
-    if(!targetRes.data){
+    var res = await sb.rpc('admin_reset_user_password', {p_target_email: claimedId, p_new_password: newPw});
+    if(res.error) throw res.error;
+    if(res.data===false){
+      // 입력한 아이디로 못 찾았을 때 — 이름으로 실제 계정(로그인 아이디)을 찾아서 안내
       var hint='';
       try{
         var nameRes=await sb.from('users').select('email,team,role').eq('name',name).eq('status','active');
@@ -15461,15 +15306,6 @@ async function resolvePwReq(reqId, claimedId, newPw, name){
         }
       }catch(e2){}
       alert('⚠️ "'+claimedId+'"는 활성 계정 아이디가 아닙니다. (사번을 아이디로 착각했을 수 있어요)'+hint);
-      return;
-    }
-    var pwFetch = await fetch(SUPABASE_URL+'/functions/v1/update-password', {
-      method:'POST', headers:{ 'apikey':SUPABASE_KEY, 'Content-Type':'application/json' },
-      body: JSON.stringify({ mode:'admin', requesterId:me.id, requesterPassword:myPw, targetId:targetRes.data.id, newPassword:newPw })
-    });
-    var pwJson = await pwFetch.json();
-    if(!pwFetch.ok || !pwJson.ok){
-      toast('⚠️ '+(pwJson.error||'비밀번호 재발급에 실패했습니다'));
       return;
     }
     await sb.from('pw_reset_requests').update({status:'resolved', resolved_at:new Date().toISOString(), resolved_by: me?me.name:''}).eq('id', reqId);
@@ -15493,7 +15329,7 @@ async function loadPendingUsers(){
       var div=document.createElement('div');
       div.className='u-row';
       div.style.cssText='flex-direction:column;align-items:flex-start;gap:8px';
-      div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' &middot; '+u.role+'</div></div></div><div style="display:flex;gap:6px"><button class="pend-approve-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--success-bg);color:var(--success);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✓ 승인</button><button class="pend-reject-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✕ 거부</button></div></div><div style="font-size:12px;color:var(--g4)">'+u.email+' &middot; '+new Date(u.created_at).toLocaleDateString('ko-KR')+'</div>';
+      div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' &middot; '+u.role+'</div></div></div><div style="display:flex;gap:6px"><button class="pend-approve-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--success-bg);color:var(--success);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✓ 승인</button><button class="pend-reject-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✕ 거부</button></div></div><div style="font-size:12px;color:var(--g4)">'+u.email+' &middot; '+new Date(new Date(u.created_at).getTime()+9*3600000).toLocaleDateString('ko-KR')+'</div>';
       div.querySelector('.pend-approve-btn').onclick=function(){approveUser(this.dataset.id,this.dataset.name);};
       div.querySelector('.pend-reject-btn').onclick=function(){rejectUser(this.dataset.id,this.dataset.name);};
       el.appendChild(div);
@@ -15504,10 +15340,7 @@ async function loadPendingUsers(){
 async function approveUser(id, name){
   if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 처리할 수 있습니다'); return; }
   if(!confirm(name+'님을 승인하시겠습니까?')) return;
-  if(!me||!me.id){ toast('로그인 정보를 확인할 수 없습니다'); return; }
-  var myPw=await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
-  var res=await sb.rpc('admin_approve_user', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: id});
-  if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
+  var res=await sb.from('users').update({status:'active'}).eq('id',id);
   if(res.error){toast('오류: '+res.error.message);return;}
   toast('✅ '+name+'님 승인 완료');
   loadPendingUsers();
@@ -15518,9 +15351,7 @@ async function approveUser(id, name){
 async function rejectUser(id, name){
   if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 처리할 수 있습니다'); return; }
   if(!confirm(name+'님을 거부하시겠습니까?')) return;
-  var myPw=await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
-  var res=await sb.rpc('admin_delete_user', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: id});
-  if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
+  var res=await sb.from('users').delete().eq('id',id);
   if(res.error){toast('오류: '+res.error.message);return;}
   toast('✅ '+name+'님 신청 거부');
   loadPendingUsers();
@@ -15607,9 +15438,7 @@ async function editUserEmpId(id,name,curEmpId){
   if(v===null) return; // 취소
   v=v.trim();
   try{
-    var myPw=await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
-    var res=await sb.rpc('admin_set_employee_id', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: id, p_employee_id: v||null});
-    if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
+    var res=await sb.from('users').update({employee_id:v||null}).eq('id',id);
     if(res.error){ toast('저장 실패: '+res.error.message); return; }
     // 서명 프로필(user_signatures)에도 사번 동기화 — 이미 서명 등록한 사용자면 사번만 갱신,
     // 아직 서명 미등록이면 사번만 미리 저장해두고 나머지(소속/직책/서명이미지)는 본인이 "내 서명 등록"에서 채우게 함
@@ -15641,9 +15470,7 @@ async function toggleMemberRole(el){
       if(!confirm(name+'님을 열람전용 계정으로 전환할까요?\n(홈화면과 열람·자료 메뉴만 보이게 됩니다. 원래 직급은 자동 저장되어 나중에 복원할 수 있습니다)')) return;
       payload={role:'member', prev_role:curRole};
     }
-    var myPw=await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
-    var res=await sb.rpc('admin_set_role', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: id, p_role: payload.role, p_prev_role: payload.prev_role});
-    if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
+    var res=await sb.from('users').update(payload).eq('id',id);
     if(res.error){ toast('오류: '+res.error.message); return; }
     toast('✅ '+name+'님 '+(isCur?'열람전용 해제 완료':'열람전용 전환 완료'));
     loadUserList();
@@ -15719,9 +15546,7 @@ async function saveTeamMove(){
   var isExecSelectTM=(tmSelectedRole==='그룹장'||tmSelectedRole==='본부장');
   var finalRole = isExecSelectTM ? TM_ROLE_MAP[tmSelectedRole] : (isT1 ? 'admin' : (isIAOS ? 'guest' : (TM_ROLE_MAP[tmSelectedRole]||'staff')));
   try{
-    var myPw=await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
-    var res=await sb.rpc('admin_move_team', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: tmTarget.id, p_team: fullTeam, p_role: finalRole});
-    if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
+    var res=await sb.from('users').update({team:fullTeam, role:finalRole}).eq('id',tmTarget.id);
     if(res.error){ toast('오류: '+res.error.message); return; }
     toast('✅ '+tmTarget.name+'님 → '+fullTeam+' · '+tmSelectedRole+' 이동 완료');
     closeTeamMove();
@@ -15732,9 +15557,7 @@ async function saveTeamMove(){
 async function withdrawUserDB(id, name){
   if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 처리할 수 있습니다'); return; }
   if(!confirm('⚠️ '+name+'님을 완전삭제 하시겠습니까?\n\n계정 정보가 영구적으로 삭제되며 되돌릴 수 없습니다.\n(재가입은 새 아이디로 바로 가능합니다)')) return;
-  var myPw=await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요'); if(!myPw) return;
-  var res=await sb.rpc('admin_delete_user', {p_admin_id: me.id, p_admin_password: myPw, p_target_id: id});
-  if(!res.error && res.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
+  var res=await sb.from('users').delete().eq('id',id);
   if(res.error){toast('오류: '+res.error.message);return;}
   toast('✅ '+name+'님 계정이 완전삭제되었습니다');
   loadUserList();
@@ -15771,18 +15594,14 @@ async function savePermEdit(){
   });
   if(currentPermUserId) userPerms[currentPermUserId]=perms;
   try{ localStorage.setItem('t1_perms',JSON.stringify(userPerms)); }catch(e){}
-  // DB 저장: SECURITY DEFINER 함수로 저장 (관리자 본인 인증 필요)
+  // DB 저장: id로 찾아서 permissions를 JSON 문자열로 저장
   var permRes;
-  var myPw=await askSelfPassword('본인 확인을 위해 내 비밀번호를 입력해주세요');
-  if(!myPw){ return; }
   try{
-    permRes=await sb.rpc('admin_set_permissions', {
-      p_admin_id: me.id, p_admin_password: myPw,
-      p_target_id: currentPermUserId || null,
-      p_target_name: currentPermUserId ? null : currentPermUser,
-      p_permissions: perms
-    });
-    if(!permRes.error && permRes.data===false){ toast('⚠️ 권한이 없거나 비밀번호가 일치하지 않습니다'); return; }
+    if(currentPermUserId){
+      permRes=await sb.from('users').update({permissions:JSON.stringify(perms)}).eq('id',currentPermUserId);
+    } else {
+      permRes=await sb.from('users').update({permissions:JSON.stringify(perms)}).eq('name',currentPermUser);
+    }
   }catch(e){ permRes={error:{message:String(e.message||e)}}; }
   if(permRes&&permRes.error){
     toast('⚠️ 권한 저장 실패: '+permRes.error.message+' — 다시 시도해주세요');
@@ -20558,11 +20377,6 @@ async function refreshMpDataLight(){
 (function(){
   try{
     var saved = localStorage.getItem('t1_me');
-    if(saved && !authSession){
-      // 프로필 캐시는 있는데 실제 인증 토큰이 없음(만료/삭제 등) → 자동로그인 하지 않고 다시 로그인하게 함
-      try{ localStorage.removeItem('t1_me'); }catch(e){}
-      saved = null;
-    }
     if(saved){
       me = JSON.parse(saved);
       applyRoleUI();
@@ -20599,15 +20413,12 @@ async function refreshMpDataLight(){
     }
   }catch(e){}
   go('login');
-  return; // 로그인 안 된 상태에선 아래 데이터 로딩을 하지 않음
 })();
-if(me){
-  loadIndPrev();
-  loadLeaders();
-  loadMpInputLog();
-  renderLeaderStatus();
-  loadKpiData();
-}
+loadIndPrev();
+loadLeaders();
+loadMpInputLog();
+renderLeaderStatus();
+loadKpiData();
 
 // ─ 당일/전일 미입력 조장 안내 팝업 ─
 function closeMissingLeaderModal(){
@@ -20751,60 +20562,6 @@ var _regUploadFiles = [];
 
 // ══ ISO9001 ══
 var isoFiles=[];
-var curIsoCertType='ISO9001';
-var isoCertTypes=[];
-
-async function loadIsoHub(){
-  var wrap=document.getElementById('isoHubWrap'); if(!wrap) return;
-  var addWrap=document.getElementById('isoHubAddWrap');
-  if(addWrap) addWrap.style.display=(me&&(me.role==='admin'||me.role==='master'))?'block':'none';
-  try{
-    var res=await sb.from('iso_cert_types').select('*').order('sort_order',{ascending:true}).order('name',{ascending:true});
-    if(res.error||!res.data||!res.data.length){
-      wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">📭 등록된 인증서가 없습니다</div>';
-      return;
-    }
-    isoCertTypes=res.data;
-    var html='';
-    isoCertTypes.forEach(function(c){
-      var escapedName=c.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      html+='<div onclick="openIsoCertType(\''+escapedName+'\')" style="display:flex;align-items:center;gap:11px;padding:14px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
-      html+='<div style="width:40px;height:40px;background:var(--navy-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0">📘</div>';
-      html+='<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700;color:var(--g7)">'+c.name+'</div><div style="font-size:12px;color:var(--g4);margin-top:2px">문서 열람</div></div>';
-      html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
-      html+='</div>';
-    });
-    wrap.innerHTML=html;
-  }catch(e){
-    wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:14px">불러오기 실패: '+e.message+'</div>';
-  }
-}
-
-function openIsoCertType(certType){
-  curIsoCertType=certType;
-  var t=document.getElementById('isoScreenTitle'); if(t) t.textContent='📘 '+certType;
-  var d=document.getElementById('isoScreenDesc'); if(d) d.textContent=certType+' 문서 열람';
-  var u=document.getElementById('isoUploadTitle'); if(u) u.textContent='📎 '+certType+' PDF 업로드';
-  go('iso9001');
-}
-
-async function addIsoCertType(){
-  if(!me||(me.role!=='admin'&&me.role!=='master')){toast('⚠️ 관리자만 추가할 수 있습니다');return;}
-  var input=document.getElementById('isoHubAddInput');
-  var v=input?input.value.trim():'';
-  if(!v){ toast('인증종류 이름을 입력해주세요'); return; }
-  try{
-    var res=await sb.from('iso_cert_types').insert({name:v, sort_order:(isoCertTypes.length||0), created_by:me.name});
-    if(res.error){
-      if(res.error.code==='23505') toast('⚠️ 이미 있는 인증종류입니다');
-      else toast('⚠️ 추가 실패: '+res.error.message);
-      return;
-    }
-    if(input) input.value='';
-    toast('✅ '+v+' 추가됨');
-    loadIsoHub();
-  }catch(e){ toast('오류: '+e.message); }
-}
 var _isoUploadFiles=[];
 
 function isoTab(idx){
@@ -20849,9 +20606,9 @@ function bumpViewCount(table,id){
 async function loadIsoList(){
   var wrap=document.getElementById('isoListWrap'); if(!wrap) return;
   try{
-    var res=await sb.from('iso9001_files').select('*').eq('cert_type',curIsoCertType).order('name',{ascending:true});
+    var res=await sb.from('iso9001_files').select('*').order('name',{ascending:true});
     if(res.error||!res.data||!res.data.length){
-      wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">📭 등록된 '+curIsoCertType+' 문서가 없습니다<br><small>관리자에게 업로드 요청하세요</small></div>';
+      wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">📭 등록된 ISO9001 문서가 없습니다<br><small>관리자에게 업로드 요청하세요</small></div>';
       return;
     }
     isoFiles=res.data;
@@ -20912,7 +20669,7 @@ async function uploadIsoFiles(){
     if(progBar) progBar.style.width=Math.round(i/_isoUploadFiles.length*100)+'%';
     try{
       // 같은 제목(name)으로 이미 등록된 파일이 있으면, 나중에 그 파일을 지우기 위해 기존 경로를 먼저 조회
-      var existingRes=await sb.from('iso9001_files').select('*').eq('name',file.name).eq('cert_type',curIsoCertType);
+      var existingRes=await sb.from('iso9001_files').select('*').eq('name',file.name);
       var existingPath=existingRes&&existingRes.data&&existingRes.data[0]&&existingRes.data[0].path;
       var ts=Date.now()+i;
       var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
@@ -20932,10 +20689,9 @@ async function uploadIsoFiles(){
         await sb.from('iso9001_files').upsert({
           name:file.name,
           path:safePath,
-          cert_type:curIsoCertType,
           uploaded_at:new Date().toISOString(),
           uploaded_by:me?me.name:'관리자'
-        },{onConflict:'name,cert_type'});
+        },{onConflict:'name'});
         // 같은 제목의 옛날 파일이 있었으면 저장공간에서 삭제 (유령파일 방지)
         if(existingPath && existingPath!==safePath){
           try{
@@ -20955,7 +20711,7 @@ async function uploadIsoFiles(){
   if(progText) progText.textContent='완료! '+done+'개 업로드됨';
   setTimeout(function(){ if(prog) prog.style.display='none'; },1500);
   if(done>0){
-    toast('✅ '+done+'개 '+curIsoCertType+' 문서 업로드 완료');
+    toast('✅ '+done+'개 ISO9001 문서 업로드 완료');
     _isoUploadFiles=[];
     var fi=document.getElementById('isoFileInput'); if(fi) fi.value='';
     var fl=document.getElementById('isoFileList'); if(fl) fl.style.display='none';
@@ -20968,7 +20724,7 @@ async function uploadIsoFiles(){
 async function loadIsoManage(){
   var wrap=document.getElementById('isoManageWrap'); if(!wrap) return;
   try{
-    var res=await sb.from('iso9001_files').select('*').eq('cert_type',curIsoCertType).order('name',{ascending:true});
+    var res=await sb.from('iso9001_files').select('*').order('name',{ascending:true});
     if(res.error||!res.data||!res.data.length){ wrap.innerHTML=''; return; }
     var html='<div class="card"><div class="cb"><div style="font-size:14px;font-weight:800;color:var(--g7);margin-bottom:11px">등록된 문서 관리 ('+res.data.length+'개)</div>';
     res.data.forEach(function(f){
@@ -23359,7 +23115,7 @@ function renderNotifList(){
   var h='';
   notifList.forEach(function(n){
     var diff=Math.floor((Date.now()-new Date(n.time).getTime())/1000);
-    var timeStr=diff<60?'방금 전':diff<3600?Math.floor(diff/60)+'분 전':diff<86400?Math.floor(diff/3600)+'시간 전':new Date(n.time).toLocaleDateString('ko-KR');
+    var timeStr=diff<60?'방금 전':diff<3600?Math.floor(diff/60)+'분 전':diff<86400?Math.floor(diff/3600)+'시간 전':new Date(new Date(n.time).getTime()+9*3600000).toLocaleDateString('ko-KR');
     h+='<div style="padding:12px 14px;border-bottom:1px solid var(--g1);display:flex;gap:10px;align-items:flex-start;background:'+(n.read?'white':'#F0FDF9')+'">';
     h+='<div style="width:36px;height:36px;border-radius:50%;background:'+(bgs[n.type]||'var(--g1)')+';display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">'+n.icon+'</div>';
     h+='<div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--g7);margin-bottom:2px">'+n.title+'</div>';
@@ -25468,6 +25224,10 @@ async function cpOpenDetail(id){
   document.getElementById('cpDetSub').textContent=c.description||'';
   document.getElementById('cpAdminBtns').style.display=cpIsAdmin()?'block':'none';
   document.getElementById('cpWinnerBtn').style.display=cpIsAdmin()?'block':'none';
+  document.getElementById('cpResultBtn').style.display=cpIsAdmin()?'block':'none';
+  // 최종 후보(TOP16)가 하나라도 선정돼 있으면 전직원 투표 버튼 노출
+  var finRes=await sb.from('campaign_finalists').select('id').eq('campaign_id',c.id).limit(1);
+  document.getElementById('cpVoteBtn').style.display=(finRes.data&&finRes.data.length)?'block':'none';
 
   // 사업부 행사 상세 정보(기간/대상/조건/일정) 카드
   var infoWrap=document.getElementById('cpInfoWrap');
@@ -25654,8 +25414,28 @@ async function cpOpenAllEntries(){
   cpAllEntriesCache=res.data||[];
   var vRes=await msFetchAll(function(){ return sb.from('campaign_votes').select('*').eq('campaign_id',cpCurCampaign.id); });
   cpVotesCache=vRes.data||[];
+  var fRes=await msFetchAll(function(){ return sb.from('campaign_finalists').select('*').eq('campaign_id',cpCurCampaign.id); });
+  cpFinalistsCache=fRes.data||[];
   cpRenderAllEntries();
   showM('cpAllEntriesModal');
+}
+var cpFinalistsCache=[];
+function cpIsFinalist(entryId){ return cpFinalistsCache.some(function(f){return f.entry_id===entryId;}); }
+async function cpToggleFinalist(entryId){
+  if(!cpCanSeeIdentity()){ toast('⚠️ master·admin만 TOP16을 선정할 수 있습니다'); return; }
+  var existing=cpFinalistsCache.find(function(f){return f.entry_id===entryId;});
+  if(existing){
+    var delRes=await sb.from('campaign_finalists').delete().eq('id',existing.id);
+    if(delRes.error){ toast('오류: '+delRes.error.message); return; }
+    cpFinalistsCache=cpFinalistsCache.filter(function(f){return f.id!==existing.id;});
+  }else{
+    if(cpFinalistsCache.length>=16){ toast('⚠️ TOP16은 최대 16개까지만 선정할 수 있습니다'); return; }
+    var body={ id:'cpf_'+Date.now()+'_'+Math.floor(Math.random()*1000), campaign_id:cpCurCampaign.id, entry_id:entryId, seed_rank:cpFinalistsCache.length+1, created_by: me?me.name:'' };
+    var insRes=await sb.from('campaign_finalists').insert(body);
+    if(insRes.error){ toast('오류: '+insRes.error.message); return; }
+    cpFinalistsCache.push(body);
+  }
+  cpRenderAllEntries();
 }
 function cpEntryScore(entryId){
   return cpVotesCache.filter(function(v){return v.entry_id===entryId;}).reduce(function(s,v){ return s+(CP_RANK_SCORE[v.rank]||0); },0);
@@ -25706,16 +25486,18 @@ function cpRenderAllEntries(){
     h+='<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#1e40af">👁️ 공정한 심사를 위해 작성자 정보와 전체 점수는 master·admin만 볼 수 있어요. 내용만 보고 투표해주세요.</div>';
   }
   h+='<div style="font-size:11.5px;color:var(--g4);margin-bottom:8px">※ 관리자별로 1위(3점)/2위(2점)/3위(1점)를 각각 1건씩 투표할 수 있습니다. 아래 버튼은 내 투표만 표시됩니다.</div>';
+  if(canSee) h+='<div style="font-size:11.5px;color:#0e7490;margin-bottom:8px">🏆 TOP16 선정: '+cpFinalistsCache.length+' / 16 — 각 항목의 "TOP16" 버튼으로 최종 후보를 선정하세요. 선정 후 [전직원 투표] 버튼이 활성화됩니다.</div>';
   h+='<div style="font-size:12.5px;color:var(--g5);margin-bottom:8px;font-weight:700">전체 '+rows.length+'건</div>';
   rows.forEach(function(e){
     var score=cpEntryScore(e.id), voteCnt=cpEntryVoteCount(e.id);
     var myRank=cpMyVoteFor(e.id);
     var hasScore=score>0;
+    var isFinal=cpIsFinalist(e.id);
     var headerLabel=canSee?(eeEsc(e.name||'')+' ('+eeEsc(e.emp_no||'')+') '+(e.team?('· '+eeEsc(e.team)):'')):('응모작 #'+anonNo[e.id]);
-    h+='<div style="background:'+(canSee&&hasScore?'#fffbeb':'white')+';border:1.5px solid '+(canSee&&hasScore?'#fde68a':'var(--g2)')+';border-radius:10px;padding:11px;margin-bottom:8px">'+
+    h+='<div style="background:'+(isFinal?'#ecfeff':(canSee&&hasScore?'#fffbeb':'white'))+';border:1.5px solid '+(isFinal?'#67e8f9':(canSee&&hasScore?'#fde68a':'var(--g2)'))+';border-radius:10px;padding:11px;margin-bottom:8px">'+
        '<div style="display:flex;justify-content:space-between;gap:8px">'+
-       '<span style="font-size:13px;font-weight:700;color:var(--g7)">'+headerLabel+'</span>'+
-       (canSee?('<button onclick="cpAdminDeleteEntry(\''+e.id+'\')" style="padding:3px 9px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>'):'')+
+       '<span style="font-size:13px;font-weight:700;color:var(--g7)">'+(isFinal?'🏆 ':'')+headerLabel+'</span>'+
+       (canSee?('<span style="display:flex;gap:5px;flex-shrink:0"><button onclick="cpToggleFinalist(\''+e.id+'\')" style="padding:3px 9px;border-radius:6px;border:1.5px solid '+(isFinal?'#0e7490':'var(--g2)')+';background:'+(isFinal?'#0e7490':'white')+';color:'+(isFinal?'white':'var(--g6)')+';font-size:11px;font-weight:700;cursor:pointer">'+(isFinal?'TOP16 해제':'TOP16 선정')+'</button><button onclick="cpAdminDeleteEntry(\''+e.id+'\')" style="padding:3px 9px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">삭제</button></span>'):'')+
        '</div>'+
        '<div style="font-size:13px;color:var(--g6);white-space:pre-wrap;margin-top:6px;line-height:1.6">'+eeEsc(e.content)+'</div>'+
        '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap">'+
@@ -25767,6 +25549,7 @@ async function cpAdminDeleteEntry(id){
   toast('🗑 삭제되었습니다');
   cpAllEntriesCache=cpAllEntriesCache.filter(function(e){return e.id!==id;});
   cpVotesCache=cpVotesCache.filter(function(v){return v.entry_id!==id;});
+  cpFinalistsCache=cpFinalistsCache.filter(function(f){return f.entry_id!==id;});
   cpRenderAllEntries();
   cpRenderMyEntries();
   cpLoadList();
@@ -25786,6 +25569,124 @@ function cpDownloadEntries(){
   XLSX.writeFile(wb, '사업부행사_'+(cpCurCampaign?cpCurCampaign.title.replace(/[\\/:*?"<>|]/g,''):'제출목록')+'.xlsx');
   toast('📥 다운로드 완료');
 }
+
+/* ── 전직원 투표 (TOP16 대상, 사번당 1표) ── */
+var cpPublicFinalistsCache=[]; // [{finalist, entry}]
+var cpPublicVotesCache=[];
+var cpMySelectedFinalistId=null;
+async function cpOpenPublicVote(){
+  var fRes=await sb.from('campaign_finalists').select('*').eq('campaign_id',cpCurCampaign.id).order('seed_rank',{ascending:true});
+  var finalists=fRes.data||[];
+  if(!finalists.length){ toast('아직 최종 후보가 선정되지 않았습니다'); return; }
+  var entryIds=finalists.map(function(f){return f.entry_id;});
+  var eRes=await sb.from('campaign_entries').select('*').in('id',entryIds);
+  var entryMap={}; (eRes.data||[]).forEach(function(e){ entryMap[e.id]=e; });
+  cpPublicFinalistsCache=finalists.map(function(f){ return { finalist:f, entry:entryMap[f.entry_id] }; }).filter(function(x){return x.entry;});
+
+  document.getElementById('cpVoteEmpNo').value = cpIsPersonalAcct() ? (me.employee_id||'') : '';
+  document.getElementById('cpVoteName').value = cpIsPersonalAcct() ? (me.name||'') : '';
+  if(cpIsPersonalAcct()){
+    document.getElementById('cpVoteEmpNo').readOnly=true; document.getElementById('cpVoteEmpNo').style.background='var(--g1)';
+    document.getElementById('cpVoteName').readOnly=true; document.getElementById('cpVoteName').style.background='var(--g1)';
+  }else{
+    document.getElementById('cpVoteEmpNo').readOnly=false; document.getElementById('cpVoteEmpNo').style.background='white';
+    document.getElementById('cpVoteName').readOnly=false; document.getElementById('cpVoteName').style.background='white';
+  }
+  document.getElementById('cpVoteEmpNo').onblur=cpCheckMyPublicVote;
+  cpMySelectedFinalistId=null;
+  document.getElementById('cpVoteMyStatus').style.display='none';
+  cpRenderPublicVoteList();
+  showM('cpVoteModal');
+  if(cpIsPersonalAcct()) cpCheckMyPublicVote();
+}
+async function cpCheckMyPublicVote(){
+  var empNo=(document.getElementById('cpVoteEmpNo').value||'').trim();
+  if(!empNo) return;
+  var res=await sb.from('campaign_public_votes').select('*').eq('campaign_id',cpCurCampaign.id).eq('voter_emp_no',empNo).maybeSingle();
+  var statusEl=document.getElementById('cpVoteMyStatus');
+  if(res.data){
+    cpMySelectedFinalistId=res.data.finalist_entry_id;
+    statusEl.textContent='✓ 이미 투표하셨습니다. 아래 강조된 항목이 현재 선택이며, 다른 후보를 누르면 투표가 변경됩니다.';
+    statusEl.style.display='block';
+  }else{
+    cpMySelectedFinalistId=null;
+    statusEl.style.display='none';
+  }
+  cpRenderPublicVoteList();
+}
+function cpRenderPublicVoteList(){
+  var wrap=document.getElementById('cpVoteFinalistsWrap');
+  wrap.innerHTML=cpPublicFinalistsCache.map(function(x){
+    var sel=cpMySelectedFinalistId===x.entry.id;
+    return '<div onclick="cpSelectFinalist(\''+x.entry.id+'\')" style="cursor:pointer;padding:12px;border:1.5px solid '+(sel?'#0e7490':'var(--g2)')+';background:'+(sel?'#ecfeff':'white')+';border-radius:10px;margin-bottom:8px">'+
+      '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">'+
+      '<span style="font-size:13px;font-weight:700;color:var(--g7)">'+(sel?'✅ ':'⬜ ')+eeEsc(x.entry.name||'')+' ('+eeEsc(x.entry.emp_no||'')+')'+(x.entry.team?(' · '+eeEsc(x.entry.team)):'')+'</span>'+
+      '</div>'+
+      '<div style="font-size:13px;color:var(--g6);white-space:pre-wrap;margin-top:6px;line-height:1.6">'+eeEsc(x.entry.content)+'</div>'+
+      '</div>';
+  }).join('');
+}
+function cpSelectFinalist(entryId){
+  cpMySelectedFinalistId=entryId;
+  cpRenderPublicVoteList();
+}
+async function cpSubmitPublicVote(){
+  var empNo=(document.getElementById('cpVoteEmpNo').value||'').trim();
+  var name=(document.getElementById('cpVoteName').value||'').trim();
+  if(!empNo||!name){ toast('⚠️ 사번과 이름을 입력해주세요'); return; }
+  if(!cpMySelectedFinalistId){ toast('⚠️ 후보를 한 명 선택해주세요'); return; }
+  var existing=await sb.from('campaign_public_votes').select('id').eq('campaign_id',cpCurCampaign.id).eq('voter_emp_no',empNo).maybeSingle();
+  var body={
+    id: existing.data?existing.data.id:('cppv_'+Date.now()+'_'+Math.floor(Math.random()*1000)),
+    campaign_id: cpCurCampaign.id, finalist_entry_id: cpMySelectedFinalistId,
+    voter_emp_no: empNo, voter_name: name, updated_at: new Date().toISOString()
+  };
+  var res=await sb.from('campaign_public_votes').upsert(body,{onConflict:'campaign_id,voter_emp_no'});
+  if(res.error){ toast('투표 오류: '+res.error.message); return; }
+  toast(existing.data?'✓ 투표가 변경되었습니다':'✓ 투표해주셔서 감사합니다');
+  hideM('cpVoteModal');
+}
+
+/* ── 전직원 투표 결과 (관리자) ── */
+async function cpOpenVoteResults(){
+  if(!cpCanSeeIdentity()){ toast('⚠️ master·admin만 볼 수 있습니다'); return; }
+  var fRes=await sb.from('campaign_finalists').select('*').eq('campaign_id',cpCurCampaign.id);
+  var finalists=fRes.data||[];
+  if(!finalists.length){ document.getElementById('cpResultWrap').innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">아직 TOP16이 선정되지 않았습니다</div>'; showM('cpResultModal'); return; }
+  var entryIds=finalists.map(function(f){return f.entry_id;});
+  var eRes=await sb.from('campaign_entries').select('*').in('id',entryIds);
+  var entryMap={}; (eRes.data||[]).forEach(function(e){ entryMap[e.id]=e; });
+  var vRes=await msFetchAll(function(){ return sb.from('campaign_public_votes').select('*').eq('campaign_id',cpCurCampaign.id); });
+  var votes=vRes.data||[];
+  var countMap={};
+  votes.forEach(function(v){ countMap[v.finalist_entry_id]=(countMap[v.finalist_entry_id]||0)+1; });
+  var ranked=finalists.map(function(f){ return { entry:entryMap[f.entry_id], count:countMap[f.entry_id]||0 }; })
+    .filter(function(x){return x.entry;})
+    .sort(function(a,b){ return b.count-a.count; });
+
+  function awardFor(rank){
+    if(rank===1) return {label:'🥇 최우수상', color:'#c2410c', bg:'#fff7ed'};
+    if(rank<=6) return {label:'🥈 우수상', color:'#1d4ed8', bg:'#eff6ff'};
+    return {label:'🎗 장려상', color:'#15803d', bg:'#f0fdf4'};
+  }
+  var totalVotes=votes.length;
+  var h='<div style="font-size:12.5px;color:var(--g5);margin-bottom:12px;font-weight:700">총 투표수: '+totalVotes+'표</div>';
+  ranked.forEach(function(x,i){
+    var rank=i+1;
+    var award=awardFor(rank);
+    h+='<div style="background:'+award.bg+';border:1.5px solid var(--g2);border-radius:10px;padding:11px;margin-bottom:8px">'+
+       '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">'+
+       '<span style="font-size:13px;font-weight:800;color:var(--g7)">'+rank+'위 · '+eeEsc(x.entry.name||'')+' ('+eeEsc(x.entry.emp_no||'')+')'+(x.entry.team?(' · '+eeEsc(x.entry.team)):'')+'</span>'+
+       '<span style="font-size:12px;font-weight:800;color:'+award.color+'">'+award.label+'</span>'+
+       '</div>'+
+       '<div style="font-size:13px;color:var(--g6);white-space:pre-wrap;margin-top:6px;line-height:1.6">'+eeEsc(x.entry.content)+'</div>'+
+       '<div style="font-size:12px;color:var(--g4);margin-top:6px">득표수: <b style="color:var(--navy)">'+x.count+'표</b></div>'+
+       '</div>';
+  });
+  document.getElementById('cpResultWrap').innerHTML=h;
+  showM('cpResultModal');
+}
+
 
 async function loadMonthlyStats(){
   var lbl=document.getElementById('msMonthLbl');
