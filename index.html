@@ -20916,7 +20916,7 @@ async function uploadIsoFiles(){
       var existingPath=existingRes&&existingRes.data&&existingRes.data[0]&&existingRes.data[0].path;
       var ts=Date.now()+i;
       var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
-      var safePath='pdfs/iso9001_'+curIsoCertType+'_'+ts+ext;
+      var safePath='pdfs/iso9001_'+ts+ext;
       var uploadUrl=SUPABASE_URL+'/storage/v1/object/iso9001/'+encodeURIComponent(safePath);
       var r=await fetch(uploadUrl,{
         method:'POST',
