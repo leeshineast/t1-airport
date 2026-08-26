@@ -1951,6 +1951,10 @@ function uploadItemMasterExcel(ev){
 (function init(){
   me=loadSession();
   if(!me){ toast('로그인이 필요합니다'); setTimeout(function(){location.href='index.html';},900); return; }
+  // ★ 창고 재고관리는 master/admin/manager/leader/acting_leader만 접근 가능 — 그 외 역할은 메인으로 돌려보냄
+  if(!['master','admin','manager','leader','acting_leader'].includes(me.role)){
+    toast('⚠️ 접근 권한이 없습니다'); setTimeout(function(){location.href='index.html';},900); return;
+  }
   document.getElementById('uName').textContent=me.name||'-';
   document.getElementById('uTeam').textContent=me.team||'';
   document.getElementById('uRole').textContent=roleLabel(me.role);
