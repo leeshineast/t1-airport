@@ -2327,6 +2327,22 @@ html{overflow-x:hidden}
       <textarea class="f-ta show" id="hEtc" rows="3" placeholder="업무 진행 내용, 특이사항 등 자유롭게 작성" style="display:block"></textarea>
     </div></div>
 
+    <!-- 4. 임시패스 -->
+    <div class="card" style="margin-bottom:10px"><div class="cb">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
+        <div style="width:24px;height:24px;border-radius:50%;background:#7C3AED;color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">4</div>
+        <span style="font-size:17px;font-weight:800;color:var(--g7)"><span style="font-size:24px;vertical-align:middle">🪪</span> 임시패스</span>
+      </div>
+      <div class="rg" style="margin-bottom:8px">
+        <div class="rp on" onclick="togHoPass(false)">없음</div>
+        <div class="rp" onclick="togHoPass(true)">있음</div>
+      </div>
+      <div id="hoPassWrap" style="display:none">
+        <div id="hoPassCards" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:6px"></div>
+        <div id="hoPassEmpty" style="font-size:12.5px;color:var(--g4);padding:8px 2px">💡 위 "1) 인계 대상 지정"에서 "✋ 직접 선택"으로 팀을 먼저 골라주세요. 여기에 그 팀들이 카드로 나타납니다.</div>
+      </div>
+    </div></div>
+
     <!-- DB 호환용 hidden -->
     <textarea id="hN" style="display:none"></textarea>
     <textarea id="hD" style="display:none"></textarea>
@@ -7519,6 +7535,56 @@ function pickHS(el){
   el.classList.toggle('on');
   document.getElementById('hoW').style.display='none';
   if(el.closest('#hoExtraSG')) hoRefreshAutoTargetInfo();
+  renderHoPassCards();
+}
+// ★ 4) 임시패스 — 1)에서 직접 선택한 팀들을 카드로 보여주고, 인원수 입력 시 업무진행사항에 자동 반영
+var hoPassOn=false;
+function togHoPass(on){
+  hoPassOn=on;
+  var wrap=document.getElementById('hoPassWrap');
+  wrap.style.display=on?'block':'none';
+  var toggleGroup=wrap.parentElement.querySelector('.rg');
+  if(toggleGroup){
+    toggleGroup.querySelectorAll('.rp').forEach(function(b,i){ b.classList.toggle('on', (i===1)===on); });
+  }
+  if(on) renderHoPassCards();
+  else applyHoPassToEtc();
+}
+function renderHoPassCards(){
+  if(!hoPassOn) return;
+  var cardsWrap=document.getElementById('hoPassCards');
+  var emptyMsg=document.getElementById('hoPassEmpty');
+  var selectedTeams=Array.from(document.querySelectorAll('#hoExtraSG .rp.on')).map(function(el){ return el.textContent.trim(); });
+  if(!selectedTeams.length){
+    cardsWrap.innerHTML='';
+    emptyMsg.style.display='block';
+    return;
+  }
+  emptyMsg.style.display='none';
+  // 기존 입력값 보존
+  var prevVals={};
+  cardsWrap.querySelectorAll('.hopass-input').forEach(function(inp){ prevVals[inp.dataset.team]=inp.value; });
+  cardsWrap.innerHTML=selectedTeams.map(function(t){
+    var v=prevVals[t]||'';
+    return '<div style="background:#F5F3FF;border:1.5px solid #DDD6FE;border-radius:12px;padding:9px 11px;min-width:100px">'
+      +'<div style="font-size:13px;font-weight:800;color:#6D28D9;margin-bottom:5px">'+t+'</div>'
+      +'<div style="display:flex;align-items:center;gap:4px"><input type="number" min="0" class="hopass-input" data-team="'+t+'" value="'+v+'" placeholder="0" style="width:52px;padding:5px 6px;border:1.5px solid #DDD6FE;border-radius:7px;font-size:14px;text-align:center" oninput="applyHoPassToEtc()"><span style="font-size:12.5px;color:#6D28D9;font-weight:700">명</span></div>'
+      +'</div>';
+  }).join('');
+}
+function applyHoPassToEtc(){
+  var etc=document.getElementById('hEtc');
+  var lines=(etc.value||'').split('\n').filter(function(l){ return l.indexOf('🪪 C임시패스 수령 요청')!==0; });
+  if(hoPassOn){
+    var parts=Array.from(document.querySelectorAll('.hopass-input')).map(function(inp){
+      var n=parseInt(inp.value)||0;
+      return n>0 ? (inp.dataset.team+n+'명') : null;
+    }).filter(Boolean);
+    if(parts.length){
+      lines.push('🪪 C임시패스 수령 요청 - '+parts.join(', '));
+    }
+  }
+  etc.value=lines.join('\n').replace(/^\n+/,'');
 }
 
 function selFType(el,etcId){
@@ -9285,6 +9351,7 @@ function hoSetMode(mode){
   if(manBlk) manBlk.style.display=(mode==='manual')?'block':'none';
   if(warnEl) warnEl.style.display='none';
   if(mode==='auto') hoRefreshAutoTargetInfo();
+  if(typeof renderHoPassCards==='function') renderHoPassCards();
 }
 function hoTab(n){
   tabSwitch('ho',n,5);
