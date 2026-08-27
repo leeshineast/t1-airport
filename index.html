@@ -15542,24 +15542,25 @@ async function resolvePwReq(reqId, claimedId, newPw, name){
 
 async function loadPendingUsers(){
   var el=document.getElementById('pendList');
-  if(!el) return;
-  try{
-    var res=await sb.from('users').select('id,name,email,role,team,permissions,status,created_at').eq('status','pending').order('created_at');
-    if(res.error||!res.data||!res.data.length){
-      el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">대기 중인 신청이 없습니다</div>';
-      return;
-    }
-    el.innerHTML='';
-    res.data.forEach(function(u){
-      var div=document.createElement('div');
-      div.className='u-row';
-      div.style.cssText='flex-direction:column;align-items:flex-start;gap:8px';
-      div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' &middot; '+u.role+'</div></div></div><div style="display:flex;gap:6px"><button class="pend-approve-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--success-bg);color:var(--success);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✓ 승인</button><button class="pend-reject-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✕ 거부</button></div></div><div style="font-size:12px;color:var(--g4)">'+u.email+' &middot; '+new Date(u.created_at).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'})+'</div>';
-      div.querySelector('.pend-approve-btn').onclick=function(){approveUser(this.dataset.id,this.dataset.name);};
-      div.querySelector('.pend-reject-btn').onclick=function(){rejectUser(this.dataset.id,this.dataset.name);};
-      el.appendChild(div);
-    });
-  }catch(e){console.error(e);}
+  if(el){
+    try{
+      var res=await sb.from('users').select('id,name,email,role,team,permissions,status,created_at').eq('status','pending').order('created_at');
+      if(res.error||!res.data||!res.data.length){
+        el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">대기 중인 신청이 없습니다</div>';
+      }else{
+        el.innerHTML='';
+        res.data.forEach(function(u){
+          var div=document.createElement('div');
+          div.className='u-row';
+          div.style.cssText='flex-direction:column;align-items:flex-start;gap:8px';
+          div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' &middot; '+u.role+'</div></div></div><div style="display:flex;gap:6px"><button class="pend-approve-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--success-bg);color:var(--success);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✓ 승인</button><button class="pend-reject-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✕ 거부</button></div></div><div style="font-size:12px;color:var(--g4)">'+u.email+' &middot; '+new Date(u.created_at).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'})+'</div>';
+          div.querySelector('.pend-approve-btn').onclick=function(){approveUser(this.dataset.id,this.dataset.name);};
+          div.querySelector('.pend-reject-btn').onclick=function(){rejectUser(this.dataset.id,this.dataset.name);};
+          el.appendChild(div);
+        });
+      }
+    }catch(e){console.error(e);}
+  }
   var rgaEl=document.getElementById('regGateAdminOnly');
   if(rgaEl){
     rgaEl.style.display=(me&&me.role==='master')?'block':'none';
