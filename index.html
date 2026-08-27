@@ -16093,7 +16093,7 @@ async function loadNoticesFromDB(){
     if(t) t.textContent=n.title||'공지사항';
     if(b) b.innerHTML=(n.content||'').replace(/\n/g,'<br>');
     if(d) d.textContent=n.created_at?toKSTDate(n.created_at)+' 등록':'';
-    showNotice(n.content);
+    if(!(me&&me.role==='member')) showNotice(n.content);
     // 누적 목록 렌더링
     renderNoticeList(res.data);
   }catch(e){}
