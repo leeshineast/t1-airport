@@ -15483,9 +15483,16 @@ async function loadPwResetRequests(){
         ? '<span style="padding:3px 9px;background:var(--warn-bg);color:var(--warn);border-radius:20px;font-size:12px;font-weight:700">대기중</span>'
         : '<span style="padding:3px 9px;background:var(--teal-bg);color:var(--teal2);border-radius:20px;font-size:12px;font-weight:700">처리완료</span>';
       var actionHtml = r.status==='pending'
-        ? '<div style="display:flex;gap:6px;margin-top:8px;width:100%"><input type="password" class="pwreq-newpw" placeholder="임시 비밀번호(6자 이상)" style="flex:1;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px"><button class="pwreq-resolve-btn" data-id="'+r.id+'" data-claimed="'+r.claimed_id+'" style="padding:8px 14px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">발급·완료처리</button></div>'
+        ? '<div style="display:flex;gap:6px;margin-top:8px;width:100%;flex-wrap:wrap"><input type="password" class="pwreq-newpw" placeholder="임시 비밀번호(6자 이상)" style="flex:1;min-width:120px;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px"><button class="pwreq-reset-btn" style="padding:8px 12px;background:var(--g1);color:var(--g6);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">🔁 123456으로 초기화</button><button class="pwreq-resolve-btn" data-id="'+r.id+'" data-claimed="'+r.claimed_id+'" style="padding:8px 14px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">발급·완료처리</button></div>'
         : '';
       div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="u-info"><div class="u-ico">'+r.name[0]+'</div><div><div class="u-name">'+r.name+' <span style="font-weight:400;color:var(--g4);font-size:13px">('+r.claimed_id+')</span></div><div class="u-sub">'+(r.note?r.note:'비고 없음')+'</div></div></div>'+statusPill+'</div><div style="font-size:12px;color:var(--g4)">'+when+'</div>'+actionHtml;
+      var resetBtn = div.querySelector('.pwreq-reset-btn');
+      if(resetBtn){
+        resetBtn.onclick=function(){
+          var pwInput = div.querySelector('.pwreq-newpw');
+          pwInput.value='123456';
+        };
+      }
       var btn = div.querySelector('.pwreq-resolve-btn');
       if(btn){
         btn.onclick=function(){
