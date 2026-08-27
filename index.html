@@ -608,6 +608,8 @@ html{overflow-x:hidden}
     <p style="text-align:center;font-size:13px;color:var(--g3);margin-top:11px">등록된 사번만 가입 신청이 가능합니다</p>
   </div>
   <div class="reg-body" id="regFormBody" style="display:none">
+    <div style="font-size:13px;font-weight:700;color:var(--g4);margin-bottom:5px">사번</div>
+    <div id="regConfirmedEmpNo" style="padding:11px 13px;background:var(--teal-bg);color:var(--teal2);font-weight:700;border-radius:8px;margin-bottom:14px;font-size:15px"></div>
     <div style="font-size:13px;font-weight:700;color:var(--g4);margin-bottom:5px">이름 *</div>
     <input type="text" id="rNm" class="ri" placeholder="홍길동">
     <div style="font-size:13px;font-weight:700;color:var(--g4);margin-bottom:5px">아이디 * <span style="font-size:12px;font-weight:400;color:var(--g4)">(영문·숫자, 4~20자)</span></div>
@@ -7036,7 +7038,7 @@ function doLogout(){
   goLogin();
   toast('로그아웃되었습니다');
 }
-function goLogin(){go('login');document.querySelectorAll('.t-btn,.r-btn').forEach(b=>b.classList.remove('on'));['rNm','rEm','rPw','rPw2'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});document.getElementById('rErr').style.display='none';regGatePassedEmpNo=null;var gs=document.getElementById('regGateStep');if(gs)gs.style.display='block';var fb=document.getElementById('regFormBody');if(fb)fb.style.display='none';var ge=document.getElementById('regGateEmpNo');if(ge)ge.value='';var gerr=document.getElementById('regGateErr');if(gerr)gerr.style.display='none';}
+function goLogin(){go('login');document.querySelectorAll('.t-btn,.r-btn').forEach(b=>b.classList.remove('on'));['rNm','rEm','rPw','rPw2'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});document.getElementById('rErr').style.display='none';regGatePassedEmpNo=null;var gs=document.getElementById('regGateStep');if(gs)gs.style.display='block';var fb=document.getElementById('regFormBody');if(fb)fb.style.display='none';var ge=document.getElementById('regGateEmpNo');if(ge)ge.value='';var gerr=document.getElementById('regGateErr');if(gerr)gerr.style.display='none';var gce=document.getElementById('regConfirmedEmpNo');if(gce)gce.textContent='';}
 function pickT(el){
   document.querySelectorAll('.t-btn').forEach(function(b){b.classList.remove('on');});
   el.classList.add('on');
@@ -15174,6 +15176,7 @@ async function checkRegGate(){
     regGatePassedEmpNo=v;
     document.getElementById('regGateStep').style.display='none';
     document.getElementById('regFormBody').style.display='block';
+    document.getElementById('regConfirmedEmpNo').textContent=v;
     if(res.data.name){ document.getElementById('rNm').value=res.data.name; }
   }catch(e){
     err.textContent='확인 중 오류가 발생했습니다: '+String(e.message||e);
