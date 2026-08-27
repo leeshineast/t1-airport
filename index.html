@@ -15829,7 +15829,8 @@ async function loadUserList(){
     }
     el.innerHTML='';
     var ROLE_GROUPS=[
-      {role:'admin', label:'👑 admin (최고관리자)'},
+      {role:'master', label:'👑 최고관리자'},
+      {role:'admin', label:'🛡️ 관리자'},
       {role:'manager', label:'📋 팀장'},
       {role:'leader', label:'🏷️ 조장'},
       {role:'acting_leader', label:'🔄 액팅리더'},
@@ -15887,14 +15888,8 @@ async function loadUserList(){
     }
     ROLE_GROUPS.forEach(function(g){
       var list = g.role==='__etc__' ? etcUsers : users.filter(function(u){return u.role===g.role;});
-      var extraTop = (g.role==='admin') ? 1 : 0; // 최고관리자 고정계정 포함
-      if(!list.length && !extraTop) return;
-      el.appendChild(sectionHeader(g.label, list.length+extraTop));
-      if(extraTop){
-        var top=document.createElement('div'); top.className='u-row';
-        top.innerHTML='<div class="u-info"><div class="u-ico" style="background:var(--navy-bg);color:var(--navy)">최</div><div><div class="u-name">최고관리자</div><div class="u-sub">T1환경미화사업부 · 관리자 · 전체권한</div></div></div><span class="chip chip-ok">활성</span>';
-        el.appendChild(top);
-      }
+      if(!list.length) return;
+      el.appendChild(sectionHeader(g.label, list.length));
       list.forEach(function(u){ el.appendChild(renderRow(u)); });
     });
   }catch(e){
