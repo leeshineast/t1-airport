@@ -599,7 +599,15 @@ html{overflow-x:hidden}
     <button class="back" onclick="goLogin()">←</button>
     <div class="reg-hd-t"><h2>가입 신청</h2><p>관리자 승인 후 사용 가능합니다</p></div>
   </div>
-  <div class="reg-body">
+  <!-- 1단계: 사번 확인 (관리자가 미리 등록해둔 사번만 통과) -->
+  <div id="regGateStep" class="reg-body">
+    <div style="font-size:13px;font-weight:700;color:var(--g4);margin-bottom:5px">사번 *</div>
+    <input type="text" id="regGateEmpNo" class="ri" placeholder="사번을 입력해주세요" inputmode="numeric">
+    <div class="err" id="regGateErr"></div>
+    <button class="btn-prim" onclick="checkRegGate()">확인</button>
+    <p style="text-align:center;font-size:13px;color:var(--g3);margin-top:11px">등록된 사번만 가입 신청이 가능합니다</p>
+  </div>
+  <div class="reg-body" id="regFormBody" style="display:none">
     <div style="font-size:13px;font-weight:700;color:var(--g4);margin-bottom:5px">이름 *</div>
     <input type="text" id="rNm" class="ri" placeholder="홍길동">
     <div style="font-size:13px;font-weight:700;color:var(--g4);margin-bottom:5px">아이디 * <span style="font-size:12px;font-weight:400;color:var(--g4)">(영문·숫자, 4~20자)</span></div>
@@ -5207,6 +5215,18 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">불러오는 중...</div>
     </div></div>
     <div style="height:20px"></div>
+    <div id="regGateAdminOnly" style="display:none">
+      <div class="pg-hd" style="margin-top:6px"><div><h1 style="font-size:17px">🔑 가입 허용 사번</h1><small>여기 등록된 사번만 가입 신청이 가능합니다</small></div></div>
+      <div class="card"><div class="cb">
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <input type="text" id="regGateNewEmpNo" placeholder="사번" inputmode="numeric" style="flex:1;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px">
+          <input type="text" id="regGateNewName" placeholder="이름(선택)" style="flex:1;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px">
+          <button onclick="addRegGateEmpNo()" style="padding:10px 16px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer;white-space:nowrap">추가</button>
+        </div>
+        <div id="regGateList"><div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">불러오는 중...</div></div>
+      </div></div>
+      <div style="height:20px"></div>
+    </div>
   </div>
   <div id="adP1" style="display:none">
     <div class="pg-hd"><div><h1>사용자 목록</h1></div></div>
@@ -7016,7 +7036,7 @@ function doLogout(){
   goLogin();
   toast('로그아웃되었습니다');
 }
-function goLogin(){go('login');document.querySelectorAll('.t-btn,.r-btn').forEach(b=>b.classList.remove('on'));['rNm','rEm','rPw','rPw2'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});document.getElementById('rErr').style.display='none';}
+function goLogin(){go('login');document.querySelectorAll('.t-btn,.r-btn').forEach(b=>b.classList.remove('on'));['rNm','rEm','rPw','rPw2'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});document.getElementById('rErr').style.display='none';regGatePassedEmpNo=null;var gs=document.getElementById('regGateStep');if(gs)gs.style.display='block';var fb=document.getElementById('regFormBody');if(fb)fb.style.display='none';var ge=document.getElementById('regGateEmpNo');if(ge)ge.value='';var gerr=document.getElementById('regGateErr');if(gerr)gerr.style.display='none';}
 function pickT(el){
   document.querySelectorAll('.t-btn').forEach(function(b){b.classList.remove('on');});
   el.classList.add('on');
@@ -15133,8 +15153,36 @@ function loadFacilityData(){
 // ═══════════════════════════════════════════
 
 // ── 가입 신청 ──
+var regGatePassedEmpNo=null;
+async function checkRegGate(){
+  var v=(document.getElementById('regGateEmpNo').value||'').trim();
+  var err=document.getElementById('regGateErr');
+  err.style.display='none';
+  if(!v){ err.textContent='사번을 입력해주세요'; err.style.display='block'; return; }
+  try{
+    var res=await sb.from('signup_allowed_empnos').select('emp_no,name,used').eq('emp_no',v).maybeSingle();
+    if(res.error||!res.data){
+      err.textContent='⚠️ 등록되지 않은 사번입니다. 관리자에게 문의해주세요';
+      err.style.display='block';
+      return;
+    }
+    if(res.data.used){
+      err.textContent='⚠️ 이미 가입 신청에 사용된 사번입니다. 관리자에게 문의해주세요';
+      err.style.display='block';
+      return;
+    }
+    regGatePassedEmpNo=v;
+    document.getElementById('regGateStep').style.display='none';
+    document.getElementById('regFormBody').style.display='block';
+    if(res.data.name){ document.getElementById('rNm').value=res.data.name; }
+  }catch(e){
+    err.textContent='확인 중 오류가 발생했습니다: '+String(e.message||e);
+    err.style.display='block';
+  }
+}
 async function subReg(){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
+  if(!regGatePassedEmpNo){ toast('⚠️ 먼저 사번을 확인해주세요'); goLogin(); go('reg'); return; }
     var nm=document.getElementById('rNm').value.trim();
   var em=document.getElementById('rEm').value.trim();
   var pw=document.getElementById('rPw').value.trim();
@@ -15201,6 +15249,10 @@ async function subReg(){
     }
 
     err.style.display='none';
+    try{
+      await sb.from('signup_allowed_empnos').update({used:true, used_at:new Date().toISOString()}).eq('emp_no', regGatePassedEmpNo);
+    }catch(markErr){ /* 사용표시 실패해도 가입 자체는 이미 완료된 상태라 조용히 무시 */ }
+    regGatePassedEmpNo=null;
     showM('regOk');
 
   }catch(e){
@@ -15505,6 +15557,47 @@ async function loadPendingUsers(){
       el.appendChild(div);
     });
   }catch(e){console.error(e);}
+  var rgaEl=document.getElementById('regGateAdminOnly');
+  if(rgaEl){
+    rgaEl.style.display=(me&&me.role==='master')?'block':'none';
+    if(me&&me.role==='master') loadRegGateList();
+  }
+}
+
+async function loadRegGateList(){
+  var el=document.getElementById('regGateList'); if(!el) return;
+  try{
+    var res=await sb.from('signup_allowed_empnos').select('*').order('added_at',{ascending:false});
+    if(res.error||!res.data||!res.data.length){
+      el.innerHTML='<div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">등록된 사번이 없습니다</div>';
+      return;
+    }
+    el.innerHTML=res.data.map(function(r){
+      var statusBadge=r.used?'<span style="padding:2px 8px;background:var(--g1);color:var(--g5);border-radius:10px;font-size:11px;font-weight:700">사용됨</span>':'<span style="padding:2px 8px;background:var(--teal-bg);color:var(--teal2);border-radius:10px;font-size:11px;font-weight:700">대기중</span>';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 0;border-bottom:1px solid var(--g1)">'
+        +'<div><b style="font-size:14px">'+eeEsc(r.emp_no)+'</b>'+(r.name?(' <span style="color:var(--g5);font-size:13px">'+eeEsc(r.name)+'</span>'):'')+' '+statusBadge+'</div>'
+        +'<button onclick="delRegGateEmpNo(\''+r.emp_no+'\')" style="padding:4px 10px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>'
+        +'</div>';
+    }).join('');
+  }catch(e){ el.innerHTML='<div style="text-align:center;padding:14px;color:var(--danger);font-size:13px">불러오기 실패</div>'; }
+}
+async function addRegGateEmpNo(){
+  var empNo=(document.getElementById('regGateNewEmpNo').value||'').trim();
+  var name=(document.getElementById('regGateNewName').value||'').trim();
+  if(!empNo){ toast('사번을 입력해주세요'); return; }
+  var res=await sb.from('signup_allowed_empnos').upsert({emp_no:empNo, name:name||null, added_by:me?me.name:''},{onConflict:'emp_no'});
+  if(res.error){ toast('오류: '+res.error.message); return; }
+  document.getElementById('regGateNewEmpNo').value='';
+  document.getElementById('regGateNewName').value='';
+  toast('✅ 추가되었습니다');
+  loadRegGateList();
+}
+async function delRegGateEmpNo(empNo){
+  if(!confirm(empNo+' 사번을 목록에서 삭제하시겠습니까?')) return;
+  var res=await sb.from('signup_allowed_empnos').delete().eq('emp_no',empNo);
+  if(res.error){ toast('오류: '+res.error.message); return; }
+  toast('🗑 삭제되었습니다');
+  loadRegGateList();
 }
 
 async function approveUser(id, name){
