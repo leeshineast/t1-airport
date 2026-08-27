@@ -21021,7 +21021,7 @@ async function refreshMpDataLight(){
       }else{
         go('main');
       }
-      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); loadMpAverages(); loadNsAverage(); }, 500);
+      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); loadMpAverages(); loadNsAverage(); loadFacilityMenuViewCounts(); }, 500);
       setTimeout(function(){ tryAutoCheckin(); checkHeatAlert(); eeCheckAutoAttendance(); }, 2000);
       return;
     }
