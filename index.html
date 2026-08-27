@@ -1040,10 +1040,17 @@ html{overflow-x:hidden}
         <span style="font-size:13px;color:var(--g4)" id="prevUnit">미입력</span>
       </div>
     </div>
-    <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('ho')">
-      <div class="s-lbl">미확인 인계</div>
-      <div class="s-val c-warn" id="dHO">0</div>
-      <div class="s-unit" id="dHOUnit" style="font-size:10px">건 확인필요</div>
+    <div class="stat-box" style="flex:1;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px" onclick="go('ho')">
+      <div>
+        <div class="s-lbl">미확인 인계</div>
+        <div class="s-val c-warn" id="dHO">0</div>
+        <div class="s-unit" id="dHOUnit" style="font-size:10px">건 확인필요</div>
+      </div>
+      <div style="flex-shrink:0;padding:7px 10px;background:#EFF6FF;border-radius:10px;text-align:center;line-height:1.35">
+        <div style="font-size:10px;font-weight:700;color:#1D4ED8">오늘 전체</div>
+        <div style="font-size:19px;font-weight:900;color:#1D4ED8" id="dHOToday">0</div>
+        <div style="font-size:9.5px;font-weight:600;color:#1D4ED8">건 등록됨</div>
+      </div>
     </div>
   </div>
   <!-- 주요 수행실적 한 줄 -->
@@ -16258,6 +16265,9 @@ async function downloadHoExcel(){
 function updateHoPending(){
   var cnt=hoAll.filter(function(r){return !r.confirmed;}).length;
   var el=document.getElementById('dHO'); if(el) el.textContent=cnt;
+  var todayStr=kstDate();
+  var todayCnt=hoAll.filter(function(r){ return r.created_at && kstDate(r.created_at)===todayStr; }).length;
+  var elT=document.getElementById('dHOToday'); if(elT) elT.textContent=todayCnt;
 }
 
 function renderHoConfBlock(r, prefix){
