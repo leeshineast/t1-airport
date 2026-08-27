@@ -11753,7 +11753,7 @@ async function eeLogToPerf(eventId, category, title, scheds){
       var timeStr=s.start_time?(s.start_time+(s.end_time?('~'+s.end_time):'')):'';
       var content=seqLabel+title+(timeStr?(' ('+s.event_date+' '+timeStr+')'):(s.event_date?(' ('+s.event_date+')'):''));
       await sb.from('performance_records').insert({
-        id:eeGenToken(), occurred_at:occurredAtUtc, category:category, location_main:s.location||'-', location_detail:null,
+        occurred_at:occurredAtUtc, category:category, location_main:s.location||'-', location_detail:null,
         content:content, writer:me?me.name:'', team:me?(me.team||''):'',
         updated_by:me?me.name:'', updated_at:new Date().toISOString(),
         edu_event_id:eventId, edu_schedule_id:s.origId||s.id||null
