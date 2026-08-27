@@ -7898,13 +7898,31 @@ function setNoticeTargetChecks(arr){
   var vals=(arr&&arr.length)?arr:['all'];
   wrap.querySelectorAll('.nTargetChk').forEach(function(cb){ cb.checked=vals.indexOf(cb.value)!==-1; });
 }
+var ROLE_RANK={member:0, acting_leader:1, leader:2, manager:3, admin:4, master:5};
 function noticeVisibleFor(target_roles, role){
+  if(role==='master'||role==='admin') return true; // 관리자(admin·master)는 항상 전체 열람
   if(!target_roles||!target_roles.length) return true; // 과거 데이터(대상 미지정)는 전체 노출
   if(target_roles.indexOf('all')!==-1) return true;
+  if(ROLE_RANK.hasOwnProperty(role)){
+    var minRank=null;
+    target_roles.forEach(function(t){
+      if(ROLE_RANK.hasOwnProperty(t)){
+        if(minRank===null||ROLE_RANK[t]<minRank) minRank=ROLE_RANK[t];
+      }
+    });
+    if(minRank!==null) return ROLE_RANK[role]>=minRank; // 선택한 직급 "이상"에게 노출
+    return false;
+  }
   return target_roles.indexOf(role)!==-1;
 }
 function targetRolesLabel(target_roles){
   if(!target_roles||!target_roles.length||target_roles.indexOf('all')!==-1) return '전체공지';
+  var hierKeys=target_roles.filter(function(k){ return ROLE_RANK.hasOwnProperty(k); });
+  if(hierKeys.length){
+    var minKey=hierKeys.reduce(function(a,b){ return ROLE_RANK[b]<ROLE_RANK[a]?b:a; });
+    var d=TARGET_ROLE_DEFS.find(function(x){return x.key===minKey;});
+    return (d?d.label:minKey)+' 이상';
+  }
   return target_roles.map(function(k){ var d=TARGET_ROLE_DEFS.find(function(x){return x.key===k;}); return d?d.label:k; }).join(', ');
 }
 function showNotice(){try{const sk=localStorage.getItem('nsk_'+new Date().toDateString());if(!sk)showM('noticeM');}catch(e){showM('noticeM');}}
