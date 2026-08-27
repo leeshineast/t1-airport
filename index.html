@@ -19674,22 +19674,16 @@ async function confirmSaveWaste(){
 
 // ══════════ 주요 수행실적 ══════════
 var perfData=[];
-var prfEduData=[]; // 교육·회의·출장 일정에서 자동 연동된 항목 (신청/참석 인원 포함)
-async function loadPrfEduSync(){
+var prfScheduleCounts={}; // edu_schedule_id -> {applied, attended} — 교육·회의·출장 회차별 신청/참석 인원 (기존 자동기록 카드에 붙여서 보여줌)
+async function loadPrfScheduleCounts(){
   try{
-    var evRes=await sb.from('edu_events').select('id,title,category,category_custom');
-    var schRes=await sb.from('edu_schedules').select('id,event_id,event_date');
     var appRes=await msFetchAll(function(){ return sb.from('edu_applications').select('schedule_id'); });
     var attRes=await msFetchAll(function(){ return sb.from('edu_attendance').select('schedule_id'); });
-    var evMap={}; (evRes.data||[]).forEach(function(e){ evMap[e.id]=e; });
-    var appCount={}; (appRes.data||[]).forEach(function(a){ appCount[a.schedule_id]=(appCount[a.schedule_id]||0)+1; });
-    var attCount={}; (attRes.data||[]).forEach(function(a){ attCount[a.schedule_id]=(attCount[a.schedule_id]||0)+1; });
-    prfEduData=(schRes.data||[]).map(function(s){
-      var ev=evMap[s.event_id]||{};
-      var cat=ev.category==='기타'?(ev.category_custom||'기타'):(ev.category||'교육·회의·출장');
-      return { occurred_at:s.event_date, category:cat, content:ev.title||'', applied:appCount[s.id]||0, attended:attCount[s.id]||0 };
-    });
-  }catch(e){ prfEduData=[]; }
+    var m={};
+    (appRes.data||[]).forEach(function(a){ if(!a.schedule_id) return; m[a.schedule_id]=m[a.schedule_id]||{applied:0,attended:0}; m[a.schedule_id].applied++; });
+    (attRes.data||[]).forEach(function(a){ if(!a.schedule_id) return; m[a.schedule_id]=m[a.schedule_id]||{applied:0,attended:0}; m[a.schedule_id].attended++; });
+    prfScheduleCounts=m;
+  }catch(e){ prfScheduleCounts={}; }
 }
 var prfMode='month'; // 'day' | 'month' | 'year'
 var prfAnchor=null; // null=오늘, Date객체=이동한 시점
@@ -19702,7 +19696,7 @@ async function loadPerfFromDB(){
     var res=await sb.from('performance_records').select('*').order('occurred_at',{ascending:false});
     if(res.error){ console.error(res.error); return; }
     perfData=res.data||[];
-    await loadPrfEduSync(); // 교육·회의·출장 일정 자동 연동 (신청/참석 인원 포함)
+    await loadPrfScheduleCounts(); // 교육·회의·출장 회차별 신청/참석 인원 (기존 edu_schedule_id 연결 카드에 표시)
     prfRenderCurrent();
     prfUpdateHomeSummary();
   }catch(e){}
@@ -19762,10 +19756,6 @@ function prfCountByDate(){
     var ds=kstDate(r.occurred_at);
     m[ds]=(m[ds]||0)+1;
   });
-  (prfEduData||[]).forEach(function(r){
-    if(!r.occurred_at) return;
-    m[r.occurred_at]=(m[r.occurred_at]||0)+1;
-  });
   return m;
 }
 
@@ -19806,12 +19796,6 @@ function prfRenderYearGrid(y){
     var mk=ds.slice(0,7);
     counts[mk]=(counts[mk]||0)+1;
   });
-  (prfEduData||[]).forEach(function(r){
-    if(!r.occurred_at) return;
-    if(r.occurred_at.slice(0,4)!==String(y)) return;
-    var mk=r.occurred_at.slice(0,7);
-    counts[mk]=(counts[mk]||0)+1;
-  });
   var curMonthStr=kstDate().slice(0,7);
   var h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';
   for(var mi=1;mi<=12;mi++){
@@ -19840,28 +19824,27 @@ function prfRenderDayList(ds){
   }
   var list=perfData.filter(function(r){ return r.occurred_at&&kstDate(r.occurred_at)===ds; });
   list.sort(function(a,b){ return new Date(b.occurred_at)-new Date(a.occurred_at); });
-  var eduList=(prfEduData||[]).filter(function(r){ return r.occurred_at===ds; });
   var dObj=new Date(ds+'T00:00:00Z');
   var dispDate=dObj.getUTCFullYear()+'년 '+(dObj.getUTCMonth()+1)+'월 '+dObj.getUTCDate()+'일';
-  var h='<div style="font-size:14px;font-weight:800;color:var(--g7);margin-bottom:8px">'+dispDate+' · 주요 수행실적 '+(list.length+eduList.length)+'건</div>';
-  if(!list.length && !eduList.length){
+  var h='<div style="font-size:14px;font-weight:800;color:var(--g7);margin-bottom:8px">'+dispDate+' · 주요 수행실적 '+list.length+'건</div>';
+  if(!list.length){
     h+='<div style="text-align:center;padding:24px;color:var(--g3);font-size:13px;background:white;border-radius:12px">등록된 수행실적이 없습니다</div>';
   }else{
     list.forEach(function(r){
       var loc=[r.location_main,r.location_detail].filter(Boolean).join(' · ');
       var meta=[loc,r.team,r.writer,kstTime(r.occurred_at)].filter(Boolean).join(' · ');
+      // 교육·회의·출장에서 자동기록된 카드(edu_schedule_id 연결)는 신청/참석 인원을 같은 카드에 이어서 표시
+      var cnt=r.edu_schedule_id?prfScheduleCounts[r.edu_schedule_id]:null;
+      var cntHtml='';
+      if(cnt){
+        var attColor = cnt.attended<cnt.applied ? 'var(--danger)' : (cnt.attended===cnt.applied ? 'var(--g6)' : 'var(--avg-blue)');
+        cntHtml='<div style="font-size:11px;color:var(--g5);margin-top:6px;font-weight:700">신청 '+cnt.applied+'명 / <span style="color:'+attColor+'">참석 '+cnt.attended+'명</span></div>';
+      }
       h+='<div onclick="prfOpenEdit('+r.id+')" style="background:white;border-radius:12px;padding:13px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.05);cursor:pointer">'
         +'<span style="display:inline-block;background:var(--navy-bg);color:var(--navy);font-size:11px;font-weight:800;padding:3px 9px;border-radius:7px;margin-bottom:5px">'+(r.category||'')+'</span>'
         +'<div style="font-size:14px;color:var(--g6);line-height:1.5">'+String(r.content||'').replace(/</g,'&lt;')+'</div>'
         +'<div style="font-size:11px;color:var(--g4);margin-top:6px">'+meta+'</div>'
-        +'</div>';
-    });
-    eduList.forEach(function(r){
-      var attColor = r.attended<r.applied ? 'var(--danger)' : (r.attended===r.applied ? 'var(--g6)' : 'var(--avg-blue)');
-      h+='<div onclick="go(\'eduevent\')" style="background:#EFF6FF;border:1.5px solid #93C5FD;border-radius:12px;padding:13px;margin-bottom:8px;cursor:pointer">'
-        +'<span style="display:inline-block;background:#DBEAFE;color:#1E40AF;font-size:11px;font-weight:800;padding:3px 9px;border-radius:7px;margin-bottom:5px">📚 '+String(r.category||'').replace(/</g,'&lt;')+'</span>'
-        +'<div style="font-size:14px;color:var(--g6);line-height:1.5">'+String(r.content||'').replace(/</g,'&lt;')+'</div>'
-        +'<div style="font-size:12px;color:var(--g5);margin-top:6px;font-weight:700">신청 '+r.applied+'명 / <span style="color:'+attColor+'">참석 '+r.attended+'명</span></div>'
+        +cntHtml
         +'</div>';
     });
   }
@@ -20073,45 +20056,39 @@ function prfUpdateHomeSummary(){
   var tomorrowStr=kstDate(new Date(Date.now()+24*3600000));
   var todays=perfData.filter(function(r){ return r.occurred_at&&kstDate(r.occurred_at)===todayStr; });
   var tomorrows=perfData.filter(function(r){ return r.occurred_at&&kstDate(r.occurred_at)===tomorrowStr; });
-  var eduTodays=(prfEduData||[]).filter(function(r){ return r.occurred_at===todayStr; });
-  var eduTomorrows=(prfEduData||[]).filter(function(r){ return r.occurred_at===tomorrowStr; });
   todays.sort(function(a,b){ return new Date(a.occurred_at)-new Date(b.occurred_at); });
   tomorrows.sort(function(a,b){ return new Date(a.occurred_at)-new Date(b.occurred_at); });
-  if(!todays.length && !tomorrows.length && !eduTodays.length && !eduTomorrows.length){
+  if(!todays.length && !tomorrows.length){
     rowEl.style.display='none';
     return;
   }
   rowEl.style.display='';
-  cntEl.textContent='금일 '+(todays.length+eduTodays.length)+'건';
+  cntEl.textContent='금일 '+todays.length+'건';
   var bodyEl=document.getElementById('prfHomeBody');
   if(!bodyEl) return;
+  function cntSuffix(r){
+    var cnt=r.edu_schedule_id?prfScheduleCounts[r.edu_schedule_id]:null;
+    if(!cnt) return '';
+    var attColor = cnt.attended<cnt.applied ? 'var(--danger)' : (cnt.attended===cnt.applied ? 'var(--g6)' : 'var(--avg-blue)');
+    return ' <span style="font-size:11px;color:var(--g5)">(신청'+cnt.applied+'/<span style="color:'+attColor+'">참석'+cnt.attended+'</span>)</span>';
+  }
   var html='';
-  if(todays.length || eduTodays.length){
-    html+='<div style="font-size:12.5px;color:var(--teal2);font-weight:700;margin-bottom:4px">오늘 '+(todays.length+eduTodays.length)+'건</div>';
+  if(todays.length){
+    html+='<div style="font-size:12.5px;color:var(--teal2);font-weight:700;margin-bottom:4px">오늘 '+todays.length+'건</div>';
     todays.forEach(function(r,i){
       html+='<div style="font-size:13px;color:var(--g6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis'+(i>0?';margin-top:2px':'')+'">'
         +(r.category?('<span style="color:var(--teal2);font-weight:700">['+r.category+']</span> '):'')
-        +String(r.content||'').replace(/</g,'&lt;')+'</div>';
-    });
-    eduTodays.forEach(function(r){
-      var attColor = r.attended<r.applied ? 'var(--danger)' : (r.attended===r.applied ? 'var(--g6)' : 'var(--avg-blue)');
-      html+='<div style="font-size:13px;color:var(--g6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">'
-        +'<span style="color:#1E40AF;font-weight:700">📚 ['+String(r.category||'').replace(/</g,'&lt;')+']</span> '
-        +String(r.content||'').replace(/</g,'&lt;')
-        +' <span style="font-size:11px;color:var(--g5)">(신청'+r.applied+'/<span style="color:'+attColor+'">참석'+r.attended+'</span>)</span></div>';
+        +String(r.content||'').replace(/</g,'&lt;')+cntSuffix(r)+'</div>';
     });
   }else{
     html+='<div style="color:var(--g4);font-size:13px">등록된 수행실적이 없습니다</div>';
   }
-  if(tomorrows.length || eduTomorrows.length){
-    html+='<div style="font-size:12px;color:var(--navy);font-weight:700;margin-top:8px;margin-bottom:3px">🔜 내일 '+(tomorrows.length+eduTomorrows.length)+'건</div>';
+  if(tomorrows.length){
+    html+='<div style="font-size:12px;color:var(--navy);font-weight:700;margin-top:8px;margin-bottom:3px">🔜 내일 '+tomorrows.length+'건</div>';
     tomorrows.forEach(function(r,i){
       html+='<div style="font-size:12.5px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis'+(i>0?';margin-top:2px':'')+'">'
         +(r.category?('['+r.category+'] '):'')
-        +String(r.content||'').replace(/</g,'&lt;')+'</div>';
-    });
-    eduTomorrows.forEach(function(r){
-      html+='<div style="font-size:12.5px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">📚 ['+String(r.category||'').replace(/</g,'&lt;')+'] '+String(r.content||'').replace(/</g,'&lt;')+'</div>';
+        +String(r.content||'').replace(/</g,'&lt;')+cntSuffix(r)+'</div>';
     });
   }
   bodyEl.innerHTML=html;
