@@ -2329,9 +2329,12 @@ html{overflow-x:hidden}
 
     <!-- 4. 임시패스 -->
     <div class="card" style="margin-bottom:10px"><div class="cb">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:11px">
-        <div style="width:24px;height:24px;border-radius:50%;background:#7C3AED;color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">4</div>
-        <span style="font-size:17px;font-weight:800;color:var(--g7)"><span style="font-size:24px;vertical-align:middle">🪪</span> 임시패스</span>
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:11px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:24px;height:24px;border-radius:50%;background:#7C3AED;color:white;font-size:13px;font-weight:800;display:flex;align-items:center;justify-content:center">4</div>
+          <span style="font-size:17px;font-weight:800;color:var(--g7)"><span style="font-size:24px;vertical-align:middle">🪪</span> 임시패스</span>
+        </div>
+        <button onclick="openTempPassStatus()" style="padding:6px 11px;background:#F5F3FF;color:#6D28D9;border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">📊 미반납 현황</button>
       </div>
       <div class="rg" style="margin-bottom:8px">
         <div class="rp on" onclick="togHoPass(false)">없음</div>
@@ -3610,6 +3613,28 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
 <!-- 전체 제출목록 모달(관리자) -->
 <!-- 관리자 본인 비밀번호 확인 모달 (iOS PWA에서 prompt() 미지원 대응, 모든 관리자 작업 공용) -->
+<!-- 임시패스 미반납 현황 -->
+<div id="tempPassModal" class="modal-bg">
+  <div class="modal" style="max-width:420px;max-height:85vh"><div style="padding:17px;overflow-y:auto">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+      <h3 style="margin:0"><span style="font-size:22px;vertical-align:middle">🪪</span> 임시패스 미반납 현황</h3>
+      <button onclick="hideM('tempPassModal')" style="background:none;border:none;font-size:20px;color:var(--g4);cursor:pointer">×</button>
+    </div>
+    <div id="tempPassRespInfo" style="font-size:12.5px;color:var(--g5);margin-bottom:12px"></div>
+    <div id="tempPassMasterOnly" style="display:none;background:#F5F3FF;border-radius:10px;padding:10px;margin-bottom:12px">
+      <div style="font-size:12px;font-weight:700;color:#6D28D9;margin-bottom:6px">담당팀 설정 (master 전용, 매년 변경 가능)</div>
+      <div style="display:flex;gap:8px">
+        <select id="tempPassRespSel" style="flex:1;padding:8px;border:1.5px solid #DDD6FE;border-radius:8px;font-size:14px">
+          <option value="1팀">1팀</option><option value="2팀">2팀</option><option value="3팀">3팀</option><option value="4팀">4팀</option><option value="5팀">5팀</option>
+          <option value="6팀">6팀</option><option value="7팀">7팀</option><option value="8팀">8팀</option><option value="9팀">9팀</option><option value="10팀">10팀</option>
+        </select>
+        <button onclick="saveTempPassResponsible()" style="padding:8px 14px;background:#7C3AED;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">저장</button>
+      </div>
+    </div>
+    <div id="tempPassList"></div>
+  </div></div>
+</div>
+
 <div id="adminAuthModal" class="modal-bg" style="z-index:400">
   <div class="modal" style="max-width:340px"><div style="padding:17px">
     <h3 style="margin:0 0 10px">본인 확인</h3>
@@ -7587,6 +7612,65 @@ function applyHoPassToEtc(){
   etc.value=lines.join('\n').replace(/^\n+/,'');
 }
 
+// ★ 임시패스 미반납 현황 — 팀별 누적, 담당팀장(매년 master가 지정)+master+admin만 반납수량 수정 가능
+var tempPassRespTeam='2팀';
+async function openTempPassStatus(){
+  showM('tempPassModal');
+  await loadTempPassStatus();
+}
+async function loadTempPassStatus(){
+  var listEl=document.getElementById('tempPassList');
+  var infoEl=document.getElementById('tempPassRespInfo');
+  var masterOnlyEl=document.getElementById('tempPassMasterOnly');
+  try{
+    var settingsRes=await sb.from('temp_pass_settings').select('responsible_team').eq('id',1).maybeSingle();
+    tempPassRespTeam=(settingsRes.data&&settingsRes.data.responsible_team)||'2팀';
+    infoEl.textContent='담당팀: '+tempPassRespTeam+' 팀장 (반납 처리 담당)';
+    var isMaster=!!(me&&me.role==='master');
+    masterOnlyEl.style.display=isMaster?'block':'none';
+    if(isMaster){ document.getElementById('tempPassRespSel').value=tempPassRespTeam; }
+    var canEdit=!!(me&&(me.role==='master'||me.role==='admin'||(me.role==='manager'&&(me.team||'').trim()===tempPassRespTeam)));
+    var balRes=await sb.from('temp_pass_balance').select('*').order('team');
+    var rows=(balRes.data||[]).sort(function(a,b){
+      var na=parseInt(a.team)||99, nb=parseInt(b.team)||99; return na-nb;
+    });
+    listEl.innerHTML=rows.map(function(r){
+      var badgeColor=r.count>0?'#DC2626':'#16A34A';
+      var badgeBg=r.count>0?'#FEF2F2':'#F0FDF4';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 4px;border-bottom:1px solid var(--g1)">'
+        +'<div style="font-size:14px;font-weight:700;color:var(--g7)">'+r.team+'</div>'
+        +(canEdit
+          ? '<div style="display:flex;align-items:center;gap:6px"><input type="number" min="0" class="temppass-edit-input" data-team="'+r.team+'" value="'+r.count+'" style="width:56px;padding:5px 6px;border:1.5px solid var(--g2);border-radius:7px;font-size:14px;text-align:center"><span style="font-size:12px;color:var(--g4)">명 미반납</span><button onclick="saveTempPassBalance(\''+r.team+'\')" style="padding:5px 10px;background:var(--teal);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">저장</button></div>'
+          : '<div style="padding:4px 12px;background:'+badgeBg+';color:'+badgeColor+';border-radius:20px;font-size:13px;font-weight:800">'+r.count+'명 미반납</div>')
+        +'</div>';
+    }).join('');
+  }catch(e){
+    listEl.innerHTML='<div style="text-align:center;padding:14px;color:var(--danger);font-size:13px">불러오기 실패</div>';
+  }
+}
+async function saveTempPassBalance(team){
+  var inp=document.querySelector('.temppass-edit-input[data-team="'+team+'"]');
+  var n=parseInt(inp.value)||0;
+  requireAdminAuth(team+' 임시패스 반납 처리 (본인 비밀번호 확인)', async function(pw, errEl){
+    var res=await sb.rpc('set_temp_pass_balance', {p_user_id:me.id, p_password:pw, p_team:team, p_count:n});
+    if(res.error || res.data===false){ errEl.textContent='⚠️ '+(res.error?res.error.message:'저장 실패 (비밀번호 확인 또는 담당팀 아님)'); errEl.style.display='block'; return; }
+    hideM('adminAuthModal');
+    toast('✅ '+team+' 반납 처리 완료');
+    loadTempPassStatus();
+  });
+}
+async function saveTempPassResponsible(){
+  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 가능합니다'); return; }
+  var newTeam=document.getElementById('tempPassRespSel').value;
+  requireAdminAuth('임시패스 담당팀을 '+newTeam+'(으)로 변경', async function(pw, errEl){
+    var res=await sb.rpc('admin_set_temp_pass_responsible', {p_admin_id:me.id, p_admin_password:pw, p_team:newTeam});
+    if(res.error || res.data===false){ errEl.textContent='⚠️ '+(res.error?res.error.message:'변경 실패 (비밀번호 확인)'); errEl.style.display='block'; return; }
+    hideM('adminAuthModal');
+    toast('✅ 담당팀이 '+newTeam+'(으)로 변경되었습니다');
+    loadTempPassStatus();
+  });
+}
+
 function selFType(el,etcId){
   var g=document.getElementById('hFTypeG');
   g.querySelectorAll('.rp').forEach(p=>p.classList.remove('on'));
@@ -7665,11 +7749,19 @@ function subHO(){
   var _dateInputEl=document.getElementById('hoDateInput');
   var _dateLocal=(_dateInputEl&&_dateInputEl.value)?_dateInputEl.value:new Date(Date.now()+9*3600000).toISOString().slice(0,16);
   var _hoDateISO=new Date(_dateLocal+':00+09:00').toISOString();
+  // ★ 임시패스 수령분 반영 (팀별 미반납 수량 증가)
+  if(hoPassOn){
+    Array.from(document.querySelectorAll('.hopass-input')).forEach(function(inp){
+      var n=parseInt(inp.value)||0;
+      if(n>0) sb.rpc('increment_temp_pass_balance', {p_team:inp.dataset.team, p_delta:n}).catch(function(){});
+    });
+  }
   toast(selEls.length>1?('✓ '+selEls.length+'개 팀에 인수인계 제출 완료!'):'✓ 인수인계 제출 완료!');
   // 폼 초기화
   document.getElementById('hoW').style.display='none';
   document.querySelectorAll('#hoExtraSG .rp').forEach(function(p){p.classList.remove('on');});
   hoSetMode('auto');
+  togHoPass(false);
   ['hD','hE'].forEach(id=>{const e=document.getElementById(id);if(e){e.value='';e.classList.remove('show');}});
   var fWrapEl=document.getElementById('hFWrap');if(fWrapEl)fWrapEl.style.display='none';
   ['hFLoc','hFDesc','hFEtc','hFRcv','hFReporter'].forEach(id=>{var e=document.getElementById(id);if(e)e.value='';});
