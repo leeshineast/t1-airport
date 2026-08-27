@@ -15586,22 +15586,30 @@ async function loadRegGateList(){
   }catch(e){ el.innerHTML='<div style="text-align:center;padding:14px;color:var(--danger);font-size:13px">불러오기 실패</div>'; }
 }
 async function addRegGateEmpNo(){
+  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 가능합니다'); return; }
   var empNo=(document.getElementById('regGateNewEmpNo').value||'').trim();
   var name=(document.getElementById('regGateNewName').value||'').trim();
   if(!empNo){ toast('사번을 입력해주세요'); return; }
-  var res=await sb.from('signup_allowed_empnos').upsert({emp_no:empNo, name:name||null, added_by:me?me.name:''},{onConflict:'emp_no'});
-  if(res.error){ toast('오류: '+res.error.message); return; }
-  document.getElementById('regGateNewEmpNo').value='';
-  document.getElementById('regGateNewName').value='';
-  toast('✅ 추가되었습니다');
-  loadRegGateList();
+  requireAdminAuth('가입 허용 사번 추가', async function(pw, errEl){
+    var res=await sb.rpc('admin_add_signup_empno', {p_admin_id:me.id, p_admin_password:pw, p_emp_no:empNo, p_name:name||null});
+    if(res.error || res.data===false){ errEl.textContent='⚠️ '+(res.error?res.error.message:'추가 실패 (비밀번호 확인)'); errEl.style.display='block'; return; }
+    hideM('adminAuthModal');
+    document.getElementById('regGateNewEmpNo').value='';
+    document.getElementById('regGateNewName').value='';
+    toast('✅ 추가되었습니다');
+    loadRegGateList();
+  });
 }
 async function delRegGateEmpNo(empNo){
+  if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 가능합니다'); return; }
   if(!confirm(empNo+' 사번을 목록에서 삭제하시겠습니까?')) return;
-  var res=await sb.from('signup_allowed_empnos').delete().eq('emp_no',empNo);
-  if(res.error){ toast('오류: '+res.error.message); return; }
-  toast('🗑 삭제되었습니다');
-  loadRegGateList();
+  requireAdminAuth(empNo+' 사번 삭제', async function(pw, errEl){
+    var res=await sb.rpc('admin_delete_signup_empno', {p_admin_id:me.id, p_admin_password:pw, p_emp_no:empNo});
+    if(res.error || res.data===false){ errEl.textContent='⚠️ '+(res.error?res.error.message:'삭제 실패 (비밀번호 확인)'); errEl.style.display='block'; return; }
+    hideM('adminAuthModal');
+    toast('🗑 삭제되었습니다');
+    loadRegGateList();
+  });
 }
 
 async function approveUser(id, name){
