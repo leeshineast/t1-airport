@@ -15237,7 +15237,7 @@ async function subReg(){
     var resp=await fetch(SUPABASE_URL+'/functions/v1/signup', {
       method:'POST',
       headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
-      body: JSON.stringify({name:nm, loginId:em, password:pw, team:fullTeam||team, role:finalRole})
+      body: JSON.stringify({name:nm, loginId:em, password:pw, team:fullTeam||team, role:finalRole, employeeId:regGatePassedEmpNo})
     });
     var regData=null;
     try{ regData=await resp.json(); }catch(e){}
