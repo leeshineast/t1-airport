@@ -3581,6 +3581,14 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     </div>
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">참여 대상</label>
     <input id="cpNewTarget" placeholder="예: 전 직원 (공용계정 포함)" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box">
+    <label style="font-size:12.5px;font-weight:700;color:var(--g6)">공개 대상 (선택 안 하면 관리자만 볼 수 있음)</label>
+    <div class="rg" id="cpTargetRoleG" style="flex-wrap:wrap;gap:6px;margin:6px 0 12px">
+      <div class="rp" data-role="__all__" onclick="cpToggleTargetRole(this)">전체공개</div>
+      <div class="rp" data-role="manager" onclick="cpToggleTargetRole(this)">팀장</div>
+      <div class="rp" data-role="leader" onclick="cpToggleTargetRole(this)">조장</div>
+      <div class="rp" data-role="acting_leader" onclick="cpToggleTargetRole(this)">액팅리더</div>
+      <div class="rp" data-role="member" onclick="cpToggleTargetRole(this)">조별공용계정</div>
+    </div>
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">참여 조건</label>
     <textarea id="cpNewCondition" rows="2" placeholder="예: 1인 1건, 표절/유사문구 제외 등" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box;resize:vertical"></textarea>
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">세부 일정 (심사·발표일 등)</label>
@@ -11797,7 +11805,7 @@ function eeTeamSortCmp(a,b){
 var eeEditingEventId=null; // null이면 신규등록, 값이 있으면 그 교육/회의를 수정하는 중
 // 교육·회의 등록/수정 시 주요수행실적에 회차(1차,2차,3차...)마다 각각 자동 기록·동기화
 // eventId를 함께 저장해두면, 나중에 수정·삭제 시 이 이벤트에 연결된 실적 기록을 정확히 찾아 갱신/삭제할 수 있음
-async function eeLogToPerf(eventId, category, title, scheds){
+async function eeLogToPerf(eventId, category, title, scheds, targetRoles){
   try{
     var list=scheds||[];
     for(var i=0;i<list.length;i++){
@@ -11814,17 +11822,17 @@ async function eeLogToPerf(eventId, category, title, scheds){
         occurred_at:occurredAtUtc, category:category, location_main:s.location||'-', location_detail:null,
         content:content, writer:me?me.name:'', team:me?(me.team||''):'',
         updated_by:me?me.name:'', updated_at:new Date().toISOString(),
-        edu_event_id:eventId, edu_schedule_id:s.origId||s.id||null
+        edu_event_id:eventId, edu_schedule_id:s.origId||s.id||null, target_roles:targetRoles
       });
     }
   }catch(e){ console.log('주요수행실적 자동기록 오류:',e); } // 실패해도 교육/회의 등록 자체는 이미 완료된 상태라 조용히 무시
 }
 // 교육·회의를 수정할 때, 이 이벤트에 연결된 기존 실적 기록을 지우고 최신 내용으로 다시 기록 (회차 추가/삭제/변경 전부 반영)
-async function eeSyncPerfForEvent(eventId, category, title, scheds){
+async function eeSyncPerfForEvent(eventId, category, title, scheds, targetRoles){
   try{
     await sb.from('performance_records').delete().eq('edu_event_id',eventId);
   }catch(e){ console.log('주요수행실적 동기화(삭제) 오류:',e); }
-  await eeLogToPerf(eventId, category, title, scheds);
+  await eeLogToPerf(eventId, category, title, scheds, targetRoles);
 }
 // 공개대상 칩 토글: "전체공개"는 나머지와 배타적, 나머지 역할칩은 다중선택 가능
 function eeToggleTargetRole(el){
@@ -11872,6 +11880,66 @@ function eeCanViewByTarget(e){
     return false;
   }
   return e.target_roles.indexOf(me.role)!==-1;
+}
+// ── 사업부 행사(캠페인) 공개대상 칩: 위 교육/회의와 동일한 방식(전체공개/팀장 이상.../조별공용계정 이상) ──
+function cpToggleTargetRole(el){
+  var role=el.dataset.role;
+  if(role==='__all__'){
+    document.querySelectorAll('#cpTargetRoleG .rp').forEach(function(p){ p.classList.remove('on'); });
+    el.classList.add('on');
+  }else{
+    document.querySelector('#cpTargetRoleG .rp[data-role="__all__"]').classList.remove('on');
+    el.classList.toggle('on');
+  }
+}
+function cpGetTargetRolesFromUI(){
+  var chips=Array.from(document.querySelectorAll('#cpTargetRoleG .rp.on'));
+  if(chips.some(function(p){return p.dataset.role==='__all__';})) return null;
+  return chips.map(function(p){return p.dataset.role;});
+}
+function cpSetTargetRolesUI(targetRoles){
+  document.querySelectorAll('#cpTargetRoleG .rp').forEach(function(p){ p.classList.remove('on'); });
+  if(targetRoles==null){
+    document.querySelector('#cpTargetRoleG .rp[data-role="__all__"]').classList.add('on');
+  }else{
+    targetRoles.forEach(function(r){
+      var chip=document.querySelector('#cpTargetRoleG .rp[data-role="'+r+'"]');
+      if(chip) chip.classList.add('on');
+    });
+  }
+}
+function cpCanViewByTarget(c){
+  if(me&&(me.role==='master'||me.role==='admin')) return true;
+  if(c.target_roles==null) return true;
+  if(!c.target_roles.length) return false;
+  if(!me) return false;
+  if(typeof ROLE_RANK!=='undefined'&&ROLE_RANK.hasOwnProperty(me.role)){
+    var minRank=null;
+    c.target_roles.forEach(function(t){
+      if(ROLE_RANK.hasOwnProperty(t)){
+        if(minRank===null||ROLE_RANK[t]<minRank) minRank=ROLE_RANK[t];
+      }
+    });
+    if(minRank!==null) return ROLE_RANK[me.role]>=minRank;
+    return false;
+  }
+  return c.target_roles.indexOf(me.role)!==-1;
+}
+// 사업부 행사를 주요수행실적에 자동 기록(등록 시) / 동기화(수정 시)
+async function cpLogToPerf(campaignId, title, desc, startDate, targetRoles){
+  try{
+    var occurredAtUtc=startDate?new Date(new Date(startDate+'T09:00:00Z').getTime()-9*3600000).toISOString():new Date().toISOString();
+    await sb.from('performance_records').insert({
+      occurred_at:occurredAtUtc, category:'사업부 행사', location_main:'-', location_detail:null,
+      content:title+(desc?(' - '+desc):''), writer:me?me.name:'', team:me?(me.team||''):'',
+      updated_by:me?me.name:'', updated_at:new Date().toISOString(),
+      campaign_id:campaignId, target_roles:targetRoles
+    });
+  }catch(e){ console.log('주요수행실적 자동기록 오류(행사):',e); }
+}
+async function cpSyncPerfForCampaign(campaignId, title, desc, startDate, targetRoles){
+  try{ await sb.from('performance_records').delete().eq('campaign_id',campaignId); }catch(e){}
+  await cpLogToPerf(campaignId, title, desc, startDate, targetRoles);
 }
 async function eeSubmitEvent(){
   try{
@@ -11935,7 +12003,7 @@ async function eeSubmitEvent(){
         for(var k=0;k<removedIds.length;k++){ await sb.from('edu_schedules').delete().eq('id',removedIds[k]); }
       }
     }
-    await eeSyncPerfForEvent(eventId, category, title, scheds); // 주요수행실적도 최신 내용으로 동기화
+    await eeSyncPerfForEvent(eventId, category, title, scheds, targetRoles); // 주요수행실적도 최신 내용으로 동기화
     toast('✅ "'+title+'" 수정 완료 (주요수행실적도 반영됨)');
     eeEditingEventId=null;
     var submitBtnEe=document.querySelector('#eeAdminOnly .btn-prim');
@@ -11954,7 +12022,7 @@ async function eeSubmitEvent(){
     var schedRes=await sb.from('edu_schedules').insert(schedRows);
     if(schedRes.error){ toast('일정 등록 실패: '+schedRes.error.message); return; }
     toast('✅ "'+title+'" 등록 완료 ('+scheds.length+'개 일정)');
-    eeLogToPerf(evId, category, title, scheds); // 주요수행실적에 자동 기록
+    eeLogToPerf(evId, category, title, scheds, targetRoles); // 주요수행실적에 자동 기록
   }
 
   // 폼 초기화
@@ -20067,11 +20135,28 @@ var prfSelectedDate=null; // 'YYYY-MM-DD' (월 보기에서 선택된 날짜)
 var prfEditId=null;
 var PRF_DEFAULT_CATS=['특별작업','특별교육','유실물 지원','정기회의','특별점검','안전관리','현장지원','유관기관 협업','기타'];
 
+function prfCanViewRecord(r){
+  if(me&&(me.role==='master'||me.role==='admin')) return true;
+  if(r.target_roles==null) return true; // 대상 미지정(수동 작성 실적 등)은 전체 공개
+  if(!r.target_roles.length) return false;
+  if(!me) return false;
+  if(typeof ROLE_RANK!=='undefined'&&ROLE_RANK.hasOwnProperty(me.role)){
+    var minRank=null;
+    r.target_roles.forEach(function(t){
+      if(ROLE_RANK.hasOwnProperty(t)){
+        if(minRank===null||ROLE_RANK[t]<minRank) minRank=ROLE_RANK[t];
+      }
+    });
+    if(minRank!==null) return ROLE_RANK[me.role]>=minRank;
+    return false;
+  }
+  return r.target_roles.indexOf(me.role)!==-1;
+}
 async function loadPerfFromDB(){
   try{
     var res=await sb.from('performance_records').select('*').order('occurred_at',{ascending:false});
     if(res.error){ console.error(res.error); return; }
-    perfData=res.data||[];
+    perfData=(res.data||[]).filter(prfCanViewRecord);
     await loadPrfScheduleCounts(); // 교육·회의·출장 회차별 신청/참석 인원 (기존 edu_schedule_id 연결 카드에 표시)
     prfRenderCurrent();
     prfUpdateHomeSummary();
@@ -25898,7 +25983,7 @@ async function cpLoadList(){
   wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div>';
   var res=await sb.from('campaigns').select('*').order('created_at',{ascending:false});
   if(res.error){ wrap.innerHTML='<div style="color:#dc2626;padding:20px;text-align:center">불러오기 실패</div>'; return; }
-  cpCampaigns=res.data||[];
+  cpCampaigns=(res.data||[]).filter(cpCanViewByTarget);
   if(!cpCampaigns.length){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">등록된 행사가 없습니다</div>'; return; }
   var cntRes=await msFetchAll(function(){ return sb.from('campaign_entries').select('campaign_id'); });
   var cntMap={};
@@ -25936,6 +26021,7 @@ function cpOpenCreate(){
   document.getElementById('cpNewCondition').value='';
   document.getElementById('cpNewSchedule').value='';
   document.getElementById('cpNewAllowMulti').checked=false;
+  cpSetTargetRolesUI([]);
   showM('cpCreateModal');
 }
 function cpOpenEditCampaign(id){
@@ -25952,6 +26038,7 @@ function cpOpenEditCampaign(id){
   document.getElementById('cpNewCondition').value=c.condition_text||'';
   document.getElementById('cpNewSchedule').value=c.schedule_note||'';
   document.getElementById('cpNewAllowMulti').checked=!!c.allow_multiple;
+  cpSetTargetRolesUI(c.target_roles===undefined?[]:c.target_roles);
   showM('cpCreateModal');
 }
 async function cpCreateCampaign(){
@@ -25964,20 +26051,30 @@ async function cpCreateCampaign(){
   var condition=(document.getElementById('cpNewCondition').value||'').trim();
   var schedule=(document.getElementById('cpNewSchedule').value||'').trim();
   var allowMulti=document.getElementById('cpNewAllowMulti').checked;
+  var targetRoles=cpGetTargetRolesFromUI();
   if(!title){ toast('⚠️ 제목을 입력해주세요'); return; }
   if(startDate&&endDate&&startDate>endDate){ toast('⚠️ 종료일이 시작일보다 빠릅니다'); return; }
   var payload={
     title:title, description:desc||null, allow_multiple:allowMulti,
-    start_date:startDate, end_date:endDate, target:target||null, condition_text:condition||null, schedule_note:schedule||null
+    start_date:startDate, end_date:endDate, target:target||null, condition_text:condition||null, schedule_note:schedule||null,
+    target_roles:targetRoles
   };
   var res;
+  var campaignId;
   if(cpEditCampaignId){
-    res=await sb.from('campaigns').update(payload).eq('id',cpEditCampaignId);
+    campaignId=cpEditCampaignId;
+    res=await sb.from('campaigns').update(payload).eq('id',campaignId);
   }else{
-    payload.id='cp_'+Date.now(); payload.status='active'; payload.created_by=me?me.name:'';
+    campaignId='cp_'+Date.now();
+    payload.id=campaignId; payload.status='active'; payload.created_by=me?me.name:'';
     res=await sb.from('campaigns').insert(payload);
   }
   if(res.error){ toast('저장 오류: '+res.error.message); return; }
+  if(cpEditCampaignId){
+    cpSyncPerfForCampaign(campaignId, title, desc, startDate, targetRoles); // 주요수행실적도 최신 내용으로 동기화
+  }else{
+    cpLogToPerf(campaignId, title, desc, startDate, targetRoles); // 주요수행실적에 자동 기록
+  }
   toast(cpEditCampaignId?'✓ 수정되었습니다':'✓ 행사가 등록되었습니다');
   hideM('cpCreateModal');
   cpLoadList();
