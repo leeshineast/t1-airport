@@ -1118,21 +1118,25 @@ html{overflow-x:hidden}
   <!-- 습득물/폐기물 한 줄 -->
   <div class="stat-row">
     <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('lost')">
-      <div class="s-lbl">습득물 관리</div>
-      <div style="display:flex;align-items:baseline;gap:3px">
-        <div class="s-val" id="dLostToday" style="font-size:23px;color:var(--teal2)">0</div>
-        <div style="font-size:10px;color:var(--teal2);font-weight:700">금일</div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <div>
+          <div class="s-lbl">습득물 관리</div>
+          <div style="display:flex;align-items:baseline;gap:3px">
+            <div class="s-val" id="dLostToday" style="font-size:23px;color:var(--teal2)">0</div>
+            <div style="font-size:10px;color:var(--teal2);font-weight:700">금일</div>
+          </div>
+          <div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap">
+            <span style="font-size:12px;color:var(--g4)">접수 <b id="dLostPending" style="color:var(--warn)">0</b></span>
+            <span style="font-size:12px;color:var(--g3)">|</span>
+            <span style="font-size:12px;color:var(--g4)">처리중 <b id="dLostProcess" style="color:var(--navy)">0</b></span>
+            <span style="font-size:12px;color:var(--g3)">|</span>
+            <span style="font-size:12px;color:var(--g4)">완료 <b id="dLostDone" style="color:var(--teal2)">0</b></span>
+          </div>
+          <div style="font-size:12px;color:var(--g4);margin-top:2px">누적 <span id="dLostTotal" style="font-weight:700;color:var(--g5)">0</span>건</div>
+        </div>
+        <div id="dLostNoDay" onclick="lostBadgeClick(event)" style="flex-shrink:0;padding:7px 9px;background:#EAF6EC;border-radius:10px;text-align:center;font-size:11px;font-weight:700;color:#1D4ED8;line-height:1.4;white-space:nowrap;cursor:pointer"></div>
       </div>
-      <div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap">
-        <span style="font-size:12px;color:var(--g4)">접수 <b id="dLostPending" style="color:var(--warn)">0</b></span>
-        <span style="font-size:12px;color:var(--g3)">|</span>
-        <span style="font-size:12px;color:var(--g4)">처리중 <b id="dLostProcess" style="color:var(--navy)">0</b></span>
-        <span style="font-size:12px;color:var(--g3)">|</span>
-        <span style="font-size:12px;color:var(--g4)">완료 <b id="dLostDone" style="color:var(--teal2)">0</b></span>
-      </div>
-      <div style="font-size:12px;color:var(--g4);margin-top:2px">누적 <span id="dLostTotal" style="font-weight:700;color:var(--g5)">0</span>건</div>
-      <div id="dLostNoDay" onclick="lostBadgeClick(event)" style="margin-top:6px;padding:6px 9px;background:#EAF6EC;border-radius:10px;text-align:center;font-size:12px;font-weight:700;color:#1D4ED8;line-height:1.4;cursor:pointer"></div>
-      <div id="dLostNote" onclick="lostNoteClick(event)" style="margin-top:6px;padding:6px 9px;background:var(--g1);border-radius:10px;font-size:12px;color:var(--g5);line-height:1.4;cursor:pointer;white-space:pre-wrap;word-break:break-all"></div>
+      <div id="dLostNote" onclick="lostNoteClick(event)" style="margin-top:8px;padding:6px 9px;background:var(--g1);border-radius:10px;font-size:12px;color:var(--g5);line-height:1.4;cursor:pointer;white-space:pre-wrap;word-break:break-all"></div>
     </div>
     <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('waste')">
       <div class="s-lbl" style="display:flex;align-items:center;flex-wrap:wrap;gap:5px">
@@ -16650,10 +16654,10 @@ function lostNoteClick(e){
 function renderLostSafetyBadge(){
   var el=document.getElementById('dLostNoDay'); if(!el) return;
   var d=lostSafetyRow&&lostSafetyRow.last_incident_date;
-  if(!d){ el.innerHTML='🟢 무사고 · <span style="font-weight:600;opacity:.85">사고일자 미등록 (탭하여 등록)</span>'; return; }
+  if(!d){ el.innerHTML='🟢 무사고<br><span style="font-size:9.5px;font-weight:600;opacity:.85">사고일자 미등록</span>'; return; }
   var today=kstDate();
   var diffDays=Math.floor((new Date(today+'T00:00:00+09:00') - new Date(d+'T00:00:00+09:00'))/86400000);
-  el.innerHTML='🟢 무사고 '+diffDays+'일째 <span style="font-weight:600;opacity:.85">('+d+')</span>';
+  el.innerHTML='🟢 무사고<br>'+diffDays+'일째<br><span style="font-size:9.5px;font-weight:600;opacity:.85">('+d.slice(5)+')</span>';
 }
 function renderLostNote(){
   var el=document.getElementById('dLostNote'); if(!el) return;
