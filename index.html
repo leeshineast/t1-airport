@@ -16662,7 +16662,7 @@ function renderLostSafetyBadge(){
 function renderLostNote(){
   var el=document.getElementById('dLostNote'); if(!el) return;
   var n=lostSafetyRow&&lostSafetyRow.free_note;
-  el.textContent=n?('📝 '+n):'📝 메모 없음 (탭하여 작성)';
+  el.textContent=n?n:'메모 없음 (탭하여 작성)';
 }
 function openLostAccModal(){
   var d=lostSafetyRow&&lostSafetyRow.last_incident_date;
