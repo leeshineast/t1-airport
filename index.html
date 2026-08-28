@@ -11855,12 +11855,23 @@ function eeSetTargetRolesUI(targetRoles){
     });
   }
 }
-// 대상 역할로 볼 수 있는지 판정: master/admin은 무조건 통과, target_roles가 null이면 전체공개(기존데이터 호환), []면 관리자만, 배열이면 포함여부로 판정
+// 대상 역할로 볼 수 있는지 판정: master/admin은 무조건 통과, target_roles가 null이면 전체공개(기존데이터 호환), []면 관리자만, 배열이면 선택한 직급 "이상" 판정
 function eeCanViewByTarget(e){
   if(me&&(me.role==='master'||me.role==='admin')) return true;
   if(e.target_roles==null) return true;
   if(!e.target_roles.length) return false;
-  return me&&e.target_roles.indexOf(me.role)!==-1;
+  if(!me) return false;
+  if(typeof ROLE_RANK!=='undefined'&&ROLE_RANK.hasOwnProperty(me.role)){
+    var minRank=null;
+    e.target_roles.forEach(function(t){
+      if(ROLE_RANK.hasOwnProperty(t)){
+        if(minRank===null||ROLE_RANK[t]<minRank) minRank=ROLE_RANK[t];
+      }
+    });
+    if(minRank!==null) return ROLE_RANK[me.role]>=minRank;
+    return false;
+  }
+  return e.target_roles.indexOf(me.role)!==-1;
 }
 async function eeSubmitEvent(){
   try{
