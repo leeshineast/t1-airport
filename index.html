@@ -1117,20 +1117,23 @@ html{overflow-x:hidden}
   </div>
   <!-- 습득물/폐기물 한 줄 -->
   <div class="stat-row">
-    <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('lost')">
-      <div class="s-lbl">습득물 관리</div>
-      <div style="display:flex;align-items:baseline;gap:3px">
-        <div class="s-val" id="dLostToday" style="font-size:23px;color:var(--teal2)">0</div>
-        <div style="font-size:10px;color:var(--teal2);font-weight:700">금일</div>
+    <div class="stat-box" style="flex:1;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px" onclick="go('lost')">
+      <div>
+        <div class="s-lbl">습득물 관리</div>
+        <div style="display:flex;align-items:baseline;gap:3px">
+          <div class="s-val" id="dLostToday" style="font-size:23px;color:var(--teal2)">0</div>
+          <div style="font-size:10px;color:var(--teal2);font-weight:700">금일</div>
+        </div>
+        <div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap">
+          <span style="font-size:12px;color:var(--g4)">접수 <b id="dLostPending" style="color:var(--warn)">0</b></span>
+          <span style="font-size:12px;color:var(--g3)">|</span>
+          <span style="font-size:12px;color:var(--g4)">처리중 <b id="dLostProcess" style="color:var(--navy)">0</b></span>
+          <span style="font-size:12px;color:var(--g3)">|</span>
+          <span style="font-size:12px;color:var(--g4)">완료 <b id="dLostDone" style="color:var(--teal2)">0</b></span>
+        </div>
+        <div style="font-size:12px;color:var(--g4);margin-top:2px">누적 <span id="dLostTotal" style="font-weight:700;color:var(--g5)">0</span>건</div>
       </div>
-      <div style="display:flex;gap:6px;margin-top:3px;flex-wrap:wrap">
-        <span style="font-size:12px;color:var(--g4)">접수 <b id="dLostPending" style="color:var(--warn)">0</b></span>
-        <span style="font-size:12px;color:var(--g3)">|</span>
-        <span style="font-size:12px;color:var(--g4)">처리중 <b id="dLostProcess" style="color:var(--navy)">0</b></span>
-        <span style="font-size:12px;color:var(--g3)">|</span>
-        <span style="font-size:12px;color:var(--g4)">완료 <b id="dLostDone" style="color:var(--teal2)">0</b></span>
-      </div>
-      <div style="font-size:12px;color:var(--g4);margin-top:2px">누적 <span id="dLostTotal" style="font-weight:700;color:var(--g5)">0</span>건</div>
+      <div id="dLostNoDay" onclick="event.stopPropagation();openLostAccModal()" style="flex-shrink:0;padding:7px 9px;background:#EAF6EC;border-radius:10px;text-align:center;font-size:11px;font-weight:700;color:#1D4ED8;line-height:1.4;white-space:nowrap;cursor:pointer"></div>
     </div>
     <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('waste')">
       <div class="s-lbl" style="display:flex;align-items:center;flex-wrap:wrap;gap:5px">
@@ -5638,6 +5641,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
 </div></div>
 <div id="noticeW" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📢 공지사항 작성</h3><button class="m-x" onclick="closeNW()">×</button></div><div style="padding:15px 17px"><div class="fg"><label class="f-lbl">제목</label><input type="text" id="nT" class="ri" placeholder="공지사항 제목" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">내용</label><textarea id="nB" class="f-ta show" rows="5" placeholder="공지사항 내용"></textarea></div><div class="fg"><label class="f-lbl">공지 대상</label><div id="nTargetGrp" style="display:flex;flex-wrap:wrap;gap:7px"></div></div><button onclick="pubNotice()" class="btn-prim">전체 발송</button></div></div></div>
+<div id="lostAccModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🟢 습득물 무사고 관리</h3><button class="m-x" onclick="hideM('lostAccModal')">×</button></div><div style="padding:17px"><div id="lostAccStatus" style="text-align:center;padding:14px;background:#EAF6EC;border-radius:12px;color:#1D4ED8;font-weight:800;margin-bottom:14px"></div><div id="lostAccEditWrap" style="display:none"><label class="f-lbl">사고일자</label><input type="date" id="lostAccDateInput" class="ri" style="margin-bottom:11px"><button onclick="saveLostAccDate()" class="btn-prim">저장</button></div></div></div></div>
 
 <!-- ARS 민원 완료 처리 모달 -->
 <div id="vocCompleteModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--teal),var(--teal2))"><h3>✅ 민원 완료 처리</h3><button class="m-x" onclick="hideM('vocCompleteModal')">×</button></div><div style="padding:15px 17px"><div class="fg"><label class="f-lbl">완료 일자</label><input type="date" id="vocCompleteDate" class="ri" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">완료 시각</label><input type="time" id="vocCompleteTime" class="ri" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">처리 내용 (선택)</label><textarea id="vocCompleteMemo" class="ri" rows="3" placeholder="처리 결과, 담당자 등" style="resize:vertical;font-size:15px;margin-bottom:0"></textarea></div><div style="display:flex;gap:8px;margin-top:4px"><button onclick="hideM('vocCompleteModal')" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">취소</button><button onclick="confirmVocComplete()" style="flex:1;padding:11px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">완료 확인</button></div></div></div></div>
@@ -6913,6 +6917,7 @@ function finishLogin(){
   loadPerms();
   loadFacilityData();
   loadFacilityMenuViewCounts();
+  loadLostSafety();
   loadMpFromDB();
   loadKpiData();
   sendHeartbeat();
@@ -16625,6 +16630,51 @@ async function confHODB(id, btn, domId){
   await confirmHandoverDB(id, resultText);
 }
 
+// ── 습득물 관리 무사고 카운트 (master가 사고일자 직접 입력) ──
+var lostSafetyRow=null;
+async function loadLostSafety(){
+  try{
+    var res=await sb.from('lost_safety_log').select('*').eq('module_key','lost').maybeSingle();
+    lostSafetyRow=res.data||null;
+    renderLostSafetyBadge();
+  }catch(e){}
+}
+function renderLostSafetyBadge(){
+  var el=document.getElementById('dLostNoDay'); if(!el) return;
+  var d=lostSafetyRow&&lostSafetyRow.last_incident_date;
+  if(!d){ el.innerHTML='🟢 무사고<br><span style="font-size:9.5px;font-weight:600;opacity:.85">사고일자 미등록</span>'; return; }
+  var today=kstDate();
+  var diffDays=Math.floor((new Date(today+'T00:00:00+09:00') - new Date(d+'T00:00:00+09:00'))/86400000);
+  el.innerHTML='🟢 무사고<br>'+diffDays+'일째<br><span style="font-size:9.5px;font-weight:600;opacity:.85">('+d.slice(5)+')</span>';
+}
+function openLostAccModal(){
+  var d=lostSafetyRow&&lostSafetyRow.last_incident_date;
+  var statusEl=document.getElementById('lostAccStatus');
+  if(statusEl){
+    if(!d) statusEl.textContent='아직 사고일자가 등록되지 않았습니다';
+    else{
+      var today=kstDate();
+      var diffDays=Math.floor((new Date(today+'T00:00:00+09:00') - new Date(d+'T00:00:00+09:00'))/86400000);
+      statusEl.textContent='🟢 무사고 '+diffDays+'일째 ('+d+' 이후)';
+    }
+  }
+  var editWrap=document.getElementById('lostAccEditWrap');
+  var isMaster=me&&me.role==='master';
+  if(editWrap) editWrap.style.display=isMaster?'block':'none';
+  var dateInput=document.getElementById('lostAccDateInput');
+  if(dateInput) dateInput.value=d||kstDate();
+  showM('lostAccModal');
+}
+async function saveLostAccDate(){
+  if(!me||me.role!=='master'){ toast('⚠️ master만 등록할 수 있습니다'); return; }
+  var v=(document.getElementById('lostAccDateInput').value||'').trim();
+  if(!v){ toast('⚠️ 날짜를 선택해주세요'); return; }
+  var res=await sb.from('lost_safety_log').update({last_incident_date:v, updated_by:me.name, updated_at:new Date().toISOString()}).eq('module_key','lost');
+  if(res.error){ toast('저장 오류: '+res.error.message); return; }
+  toast('✓ 사고일자가 등록되었습니다');
+  hideM('lostAccModal');
+  loadLostSafety();
+}
 function updateAccComplaintCount(){
   // 안전사고: 신규 안전사고 모듈(safety_accidents) 기준 / 민원: ARS민원(voc_data) 단일 기준 (KST 기준)
   var today=kstDate();
@@ -21135,7 +21185,7 @@ async function refreshMpDataLight(){
       }else{
         go('main');
       }
-      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); loadMpAverages(); loadNsAverage(); loadFacilityMenuViewCounts(); }, 500);
+      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); loadMpAverages(); loadNsAverage(); loadFacilityMenuViewCounts(); loadLostSafety(); }, 500);
       setTimeout(function(){ tryAutoCheckin(); checkHeatAlert(); eeCheckAutoAttendance(); }, 2000);
       return;
     }
