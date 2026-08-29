@@ -765,7 +765,7 @@ function execReset(){
 }
 function navBack(){
   var main=document.getElementById('scrMain');
-  if(main.classList.contains('on')) location.href='index.html';
+  if(main.classList.contains('on')){ if(history.length>1) history.back(); else location.href='index.html'; }
   else showScr('scrMain');
 }
 function showScr(id, _fromPop){
