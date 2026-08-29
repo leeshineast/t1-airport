@@ -26045,7 +26045,7 @@ function wfSpDownloadReport(){
    ═══════════════════════════════════════════════════════════ */
 var cpCampaigns=[], cpCurCampaign=null, cpMyEntries=[], cpAllEntriesCache=[];
 function cpIsAdmin(){ return !!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader')); }
-function cpCanSeeIdentity(){ return !!(me&&(me.role==='master'||me.role==='admin')); } // 작성자 정보·총점은 master/admin만
+function cpCanSeeIdentity(){ return !!(me&&me.role==='master'); } // 작성자 정보·총점은 master만 (admin도 제외, 공정성 위해)
 function cpUpdateCharCount(){
   var el=document.getElementById('cpContent'); var cEl=document.getElementById('cpCharCount');
   if(!el||!cEl) return;
@@ -26319,7 +26319,7 @@ async function cpSubmitEntry(){
   cpLoadList();
 }
 async function cpOpenWinnerEdit(){
-  if(!cpCanSeeIdentity()){ toast('⚠️ master·admin만 가능합니다'); return; }
+  if(!cpCanSeeIdentity()){ toast('⚠️ master만 가능합니다'); return; }
   var w=cpCurCampaign._winner;
   document.getElementById('cpWinTitle').value=w?w.title:(cpCurCampaign.title+' 당선작 발표');
   document.getElementById('cpWinBody').value=w?w.body:'';
@@ -26327,7 +26327,7 @@ async function cpOpenWinnerEdit(){
   showM('cpWinnerModal');
 }
 async function cpSaveWinner(){
-  if(!cpCanSeeIdentity()){ toast('⚠️ master·admin만 가능합니다'); return; }
+  if(!cpCanSeeIdentity()){ toast('⚠️ master만 가능합니다'); return; }
   var title=(document.getElementById('cpWinTitle').value||'').trim();
   var body=(document.getElementById('cpWinBody').value||'').trim();
   if(!title||!body){ toast('⚠️ 제목과 내용을 입력해주세요'); return; }
@@ -26340,7 +26340,7 @@ async function cpSaveWinner(){
   cpRenderWinner();
 }
 async function cpDeleteWinner(){
-  if(!cpCanSeeIdentity()){ toast('⚠️ master·admin만 가능합니다'); return; }
+  if(!cpCanSeeIdentity()){ toast('⚠️ master만 가능합니다'); return; }
   var w=cpCurCampaign._winner; if(!w) return;
   if(!confirm('당선작 공지를 삭제하시겠습니까?')) return;
   var res=await sb.from('campaign_winners').delete().eq('campaign_id',cpCurCampaign.id);
@@ -26369,7 +26369,7 @@ async function cpOpenAllEntries(){
 var cpFinalistsCache=[];
 function cpIsFinalist(entryId){ return cpFinalistsCache.some(function(f){return f.entry_id===entryId;}); }
 async function cpToggleFinalist(entryId){
-  if(!cpCanSeeIdentity()){ toast('⚠️ master·admin만 TOP16을 선정할 수 있습니다'); return; }
+  if(!cpCanSeeIdentity()){ toast('⚠️ master만 TOP16을 선정할 수 있습니다'); return; }
   var existing=cpFinalistsCache.find(function(f){return f.entry_id===entryId;});
   if(existing){
     var delRes=await sb.from('campaign_finalists').delete().eq('id',existing.id);
@@ -26430,7 +26430,7 @@ function cpRenderAllEntries(){
          '</div>';
     }
   }else{
-    h+='<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#1e40af">👁️ 공정한 심사를 위해 작성자 정보와 전체 점수는 master·admin만 볼 수 있어요. 내용만 보고 투표해주세요.</div>';
+    h+='<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#1e40af">👁️ 공정한 심사를 위해 작성자 정보와 전체 점수는 master만 볼 수 있어요. 내용만 보고 투표해주세요.</div>';
   }
   h+='<div style="font-size:11.5px;color:var(--g4);margin-bottom:8px">※ 관리자별로 1위(3점)/2위(2점)/3위(1점)를 각각 1건씩 투표할 수 있습니다. 아래 버튼은 내 투표만 표시됩니다.</div>';
   if(canSee) h+='<div style="font-size:11.5px;color:#0e7490;margin-bottom:8px">🏆 TOP16 선정: '+cpFinalistsCache.length+' / 16 — 각 항목의 "TOP16" 버튼으로 최종 후보를 선정하세요. 선정 후 [전직원 투표] 버튼이 활성화됩니다.</div>';
@@ -26489,7 +26489,7 @@ async function cpCastVote(entryId, rank){
   cpRenderAllEntries();
 }
 async function cpAdminDeleteEntry(id){
-  if(!cpCanSeeIdentity()){ toast('⚠️ master·admin만 가능합니다'); return; }
+  if(!cpCanSeeIdentity()){ toast('⚠️ master만 가능합니다'); return; }
   if(!confirm('이 제출내역을 삭제하시겠습니까? (투표 기록도 함께 삭제됩니다)')) return;
   var res=await sb.from('campaign_entries').delete().eq('id',id);
   if(res.error){ toast('삭제 오류: '+res.error.message); return; }
@@ -26503,7 +26503,7 @@ async function cpAdminDeleteEntry(id){
   cpLoadList();
 }
 function cpDownloadEntries(){
-  if(!cpCanSeeIdentity()){ toast('⚠️ master·admin만 다운로드할 수 있습니다'); return; }
+  if(!cpCanSeeIdentity()){ toast('⚠️ master만 다운로드할 수 있습니다'); return; }
   if(!cpAllEntriesCache.length){ toast('다운로드할 데이터가 없습니다'); return; }
   var aoa=[['총점','투표수','사번','이름','팀','내용','제출일시']];
   var rows=cpAllEntriesCache.slice().sort(function(a,b){ return cpEntryScore(b.id)-cpEntryScore(a.id); });
@@ -26564,11 +26564,13 @@ async function cpCheckMyPublicVote(){
 }
 function cpRenderPublicVoteList(){
   var wrap=document.getElementById('cpVoteFinalistsWrap');
-  wrap.innerHTML=cpPublicFinalistsCache.map(function(x){
+  var canSee=cpCanSeeIdentity();
+  wrap.innerHTML=cpPublicFinalistsCache.map(function(x,idx){
     var sel=cpMySelectedFinalistId===x.entry.id;
+    var label=canSee?(eeEsc(x.entry.name||'')+' ('+eeEsc(x.entry.emp_no||'')+')'+(x.entry.team?(' · '+eeEsc(x.entry.team)):'')):('응모작 #'+(idx+1));
     return '<div onclick="cpSelectFinalist(\''+x.entry.id+'\')" style="cursor:pointer;padding:12px;border:1.5px solid '+(sel?'#0e7490':'var(--g2)')+';background:'+(sel?'#ecfeff':'white')+';border-radius:10px;margin-bottom:8px">'+
       '<div style="display:flex;justify-content:space-between;gap:8px;align-items:flex-start">'+
-      '<span style="font-size:13px;font-weight:700;color:var(--g7)">'+(sel?'✅ ':'⬜ ')+eeEsc(x.entry.name||'')+' ('+eeEsc(x.entry.emp_no||'')+')'+(x.entry.team?(' · '+eeEsc(x.entry.team)):'')+'</span>'+
+      '<span style="font-size:13px;font-weight:700;color:var(--g7)">'+(sel?'✅ ':'⬜ ')+label+'</span>'+
       '</div>'+
       '<div style="font-size:13px;color:var(--g6);white-space:pre-wrap;margin-top:6px;line-height:1.6">'+eeEsc(x.entry.content)+'</div>'+
       '</div>';
@@ -26597,7 +26599,7 @@ async function cpSubmitPublicVote(){
 
 /* ── 전직원 투표 결과 (관리자) ── */
 async function cpOpenVoteResults(){
-  if(!cpCanSeeIdentity()){ toast('⚠️ master·admin만 볼 수 있습니다'); return; }
+  if(!cpCanSeeIdentity()){ toast('⚠️ master만 볼 수 있습니다'); return; }
   var fRes=await sb.from('campaign_finalists').select('*').eq('campaign_id',cpCurCampaign.id);
   var finalists=fRes.data||[];
   if(!finalists.length){ document.getElementById('cpResultWrap').innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">아직 TOP16이 선정되지 않았습니다</div>'; showM('cpResultModal'); return; }
@@ -26635,7 +26637,7 @@ async function cpOpenVoteResults(){
 }
 var cpResultRanked=[];
 async function cpSaveAwardLabel(finalistId){
-  if(!cpCanSeeIdentity()){ toast('⚠️ master·admin만 가능합니다'); return; }
+  if(!cpCanSeeIdentity()){ toast('⚠️ master만 가능합니다'); return; }
   var input=document.getElementById('cpAwardInput_'+finalistId);
   var label=(input.value||'').trim();
   var res=await sb.from('campaign_finalists').update({award_label:label||null}).eq('id',finalistId);
