@@ -583,7 +583,7 @@ function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,
 
 function navBack(){
   var home=document.getElementById('scrHome');
-  if(home.classList.contains('on')) location.href='index.html';
+  if(home.classList.contains('on')){ if(history.length>1) history.back(); else location.href='index.html'; }
   else go('scrHome');
 }
 function go(id, _fromPop){
