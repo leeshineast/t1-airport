@@ -364,7 +364,7 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
   </div>
   <div class="card" style="overflow-x:auto">
     <table class="stat-table" id="wdTable">
-      <thead><tr><th style="text-align:left">품목</th><th style="text-align:left">규격</th><th>단위</th><th>입고</th><th>출고</th><th>현재고</th></tr></thead>
+      <thead><tr><th style="text-align:left">품목</th><th style="text-align:left">규격</th><th>단위</th><th>재고</th><th>입고</th><th>출고</th><th>현재고</th></tr></thead>
       <tbody id="wdTbody"></tbody>
     </table>
   </div>
@@ -1839,14 +1839,15 @@ function loadWhDetailStats(){
       if(stock<=0) return;
       var im=w.item_master||{};
       var ps=periodSum[w.item_id]||{inSum:0,outSum:0};
-      list.push({name:im.item_name||'-', spec:im.spec||'', unit:im.unit||'', inSum:ps.inSum, outSum:ps.outSum, stock:stock});
+      var opening=stock-ps.inSum+ps.outSum; // 재고(기초) = 현재고 - 기간내입고 + 기간내출고 (역산): 재고+입고-출고=현재고 관계가 항상 맞도록
+      list.push({name:im.item_name||'-', spec:im.spec||'', unit:im.unit||'', opening:opening, inSum:ps.inSum, outSum:ps.outSum, stock:stock});
     });
     list.sort(function(a,b){ return a.name.localeCompare(b.name,'ko'); });
     tbody.innerHTML='';
-    if(!list.length){ tbody.innerHTML='<tr><td colspan="6" class="empty">재고가 있는 품목이 없습니다</td></tr>'; return; }
+    if(!list.length){ tbody.innerHTML='<tr><td colspan="7" class="empty">재고가 있는 품목이 없습니다</td></tr>'; return; }
     list.forEach(function(x){
       var tr=document.createElement('tr');
-      tr.innerHTML='<td class="lf">'+esc(x.name)+'</td><td class="lf">'+esc(x.spec)+'</td><td>'+esc(x.unit)+'</td><td>'+x.inSum+'</td><td>'+x.outSum+'</td><td style="font-weight:800;color:var(--sky3)">'+x.stock+'</td>';
+      tr.innerHTML='<td class="lf">'+esc(x.name)+'</td><td class="lf">'+esc(x.spec)+'</td><td>'+esc(x.unit)+'</td><td>'+x.opening+'</td><td>'+x.inSum+'</td><td>'+x.outSum+'</td><td style="font-weight:800;color:var(--sky3)">'+x.stock+'</td>';
       tbody.appendChild(tr);
     });
   }).catch(function(){ tbody.innerHTML='<tr><td colspan="6" class="empty">조회 실패</td></tr>'; });
