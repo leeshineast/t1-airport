@@ -1497,6 +1497,29 @@ html{overflow-x:hidden}
     </div></div>
   </div>
 
+  <!-- 월간 통계 -->
+  
+
+    </div>
+    <div class="mh-panel" id="mhPanelNotice">
+  <div style="padding:14px 13px 6px;display:flex;align-items:center;justify-content:space-between">
+    <p style="font-size:13px;color:var(--g4);margin:0" class="dashDateMirror"></p>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="weatherIconBadgeMirror" style="display:none;text-align:center;flex-shrink:0;padding:0 4px">
+        <div class="weatherIconEmojiMirror" style="width:30px;height:30px;margin:0 auto"></div>
+        <div class="weatherIconTempMirror" style="font-size:11px;font-weight:700;color:var(--g5);margin-top:1px"></div>
+      </div>
+      <img id="incheonLogoImgNotice" onclick="goHomePanel()" alt="인천공항운영서비스" style="height:30px;object-fit:contain;flex-shrink:0;cursor:pointer">
+    </div>
+  </div>
+  <!-- 공지사항 목록 -->
+  <div id="homeNoticeBlock">
+  <div class="sec-lbl">📢 공지사항</div>
+  <div class="card" style="margin-bottom:13px"><div style="border-radius:var(--r2);overflow:hidden" id="noticeListWrap">
+    <div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">공지사항을 불러오는 중...</div>
+  </div></div>
+  </div>
+
   <!-- 장비현황 요약 -->
   <div style="margin:0">
     <div class="sec-lbl" style="padding:16px 13px 8px">🔧 장비현황</div>
@@ -1530,29 +1553,6 @@ html{overflow-x:hidden}
         <div id="prfHomeCalWrap"></div>
       </div>
     </div>
-  </div>
-
-  <!-- 월간 통계 -->
-  
-
-    </div>
-    <div class="mh-panel" id="mhPanelNotice">
-  <div style="padding:14px 13px 6px;display:flex;align-items:center;justify-content:space-between">
-    <p style="font-size:13px;color:var(--g4);margin:0" class="dashDateMirror"></p>
-    <div style="display:flex;align-items:center;gap:8px">
-      <div class="weatherIconBadgeMirror" style="display:none;text-align:center;flex-shrink:0;padding:0 4px">
-        <div class="weatherIconEmojiMirror" style="width:30px;height:30px;margin:0 auto"></div>
-        <div class="weatherIconTempMirror" style="font-size:11px;font-weight:700;color:var(--g5);margin-top:1px"></div>
-      </div>
-      <img id="incheonLogoImgNotice" onclick="goHomePanel()" alt="인천공항운영서비스" style="height:30px;object-fit:contain;flex-shrink:0;cursor:pointer">
-    </div>
-  </div>
-  <!-- 공지사항 목록 -->
-  <div id="homeNoticeBlock">
-  <div class="sec-lbl">📢 공지사항</div>
-  <div class="card" style="margin-bottom:13px"><div style="border-radius:var(--r2);overflow:hidden" id="noticeListWrap">
-    <div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">공지사항을 불러오는 중...</div>
-  </div></div>
   </div>
 
   <!-- 산업재해 현황 -->
@@ -1684,6 +1684,7 @@ html{overflow-x:hidden}
     <div id="mpT2" style="flex:1;padding:11px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer;white-space:nowrap;min-width:70px" onclick="mpTab(2)">입력 현황</div>
     <div id="mpT3" style="flex:1;padding:11px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer;white-space:nowrap;min-width:70px" onclick="mpTab(3)">일별 이력</div>
     <div id="mpT4" style="flex:1;padding:11px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer;white-space:nowrap;min-width:70px" onclick="mpTab(4)">관리자 출근</div>
+    <div id="mpT5" style="display:none;flex:1;padding:11px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer;white-space:nowrap;min-width:70px" onclick="mpTab(5)">정원입력</div>
   </div>
   <!-- 입력 -->
   <div id="mpP0">
@@ -1877,6 +1878,11 @@ html{overflow-x:hidden}
       <div class="rp" onclick="switchMgrAttView(this,'yesterday')" style="flex:1;text-align:center">전일</div>
     </div>
     <div id="mgrAttBody" style="padding:0 13px 20px"></div>
+  </div>
+  <!-- 정원입력 (master 전용) -->
+  <div id="mpP5" style="display:none">
+    <div class="pg-hd"><div><h1>정원입력</h1><small>조별 사원 정원 (팀장·조장 정원은 계정 수 기준 자동)</small></div></div>
+    <div id="quotaInputWrap" style="padding:0 13px 20px"></div>
   </div>
 </div>
 
@@ -6496,6 +6502,8 @@ function go(name){
     setTimeout(autoSelectMyShiftTeam, 100);
     updateMpSummary();
     refreshMpDataLight();
+    var mpT5El=document.getElementById('mpT5');
+    if(mpT5El) mpT5El.style.display=(me&&me.role==='master')?'block':'none';
   }
   if(name==='admin'){
     loadPendingUsers();
@@ -8899,6 +8907,26 @@ async function loadTeamAvgAttendance(prefix){
     });
     var TEAM_ROW_ORDER=['1팀','6팀','2팀','7팀','3팀','8팀','4팀','9팀','5팀','10팀'];
     var TEAM_SUBGROUPS={'1팀':['A','B','C'],'2팀':['A','B'],'3팀':['A','B'],'4팀':['A','B'],'6팀':['A','B','C'],'7팀':['A','B'],'8팀':['A','B'],'9팀':['A','B'],'5팀':['A','B'],'10팀':['A','B']};
+    // 정원(팀장+조장은 계정 수 기준 자동 집계, 사원은 team_quota 입력값) — 출근/휴무외 비교용
+    var mgrCntByTeam={}, leaderCntByGroup={}, staffQuotaByGroup={};
+    try{
+      var usrRes=await sb.from('users').select('role,team').eq('status','active').in('role',['manager','leader','acting_leader']);
+      (usrRes.data||[]).forEach(function(u){
+        if(u.role==='manager'){ mgrCntByTeam[u.team]=(mgrCntByTeam[u.team]||0)+1; }
+        else{
+          var mm=(u.team||'').match(/^(\d+팀)\s*([A-Z])조$/);
+          if(mm){ var gk=mm[1]+mm[2]; leaderCntByGroup[gk]=(leaderCntByGroup[gk]||0)+1; }
+        }
+      });
+      var tqRes=await sb.from('team_quota').select('team_code,staff_quota');
+      (tqRes.data||[]).forEach(function(r){ staffQuotaByGroup[r.team_code]=r.staff_quota||0; });
+    }catch(e){}
+    function taQuotaVal(team){
+      var subs=TEAM_SUBGROUPS[team]||[];
+      var q=mgrCntByTeam[team]||0;
+      subs.forEach(function(s){ var gk=team+s; q+=(leaderCntByGroup[gk]||0)+(staffQuotaByGroup[gk]||0); });
+      return q;
+    }
     function taTeamVal(tc){
       if(mode==='day') return sumByTeam[tc]||0;
       var d=Object.keys(daysByTeam[tc]||{}).length||1;
@@ -8915,7 +8943,7 @@ async function loadTeamAvgAttendance(prefix){
       return v;
     }
     var rowsHtml='';
-    var sumMgr=0, sumA=0, sumB=0, sumC=0, sumTotal=0;
+    var sumMgr=0, sumA=0, sumB=0, sumC=0, sumTotal=0, sumQuota=0, sumOff=0;
     TEAM_ROW_ORDER.forEach(function(team,i){
       var subs=TEAM_SUBGROUPS[team]||[];
       var mgr=taMgrVal(team);
@@ -8923,7 +8951,9 @@ async function loadTeamAvgAttendance(prefix){
       var b=subs.indexOf('B')!==-1?taTeamVal(team+'B'):null;
       var c=subs.indexOf('C')!==-1?taTeamVal(team+'C'):null;
       var total=mgr+(a||0)+(b||0)+(c||0);
-      sumMgr+=mgr; sumA+=(a||0); sumB+=(b||0); sumC+=(c||0); sumTotal+=total;
+      var quota=taQuotaVal(team);
+      var off=Math.max(0,quota-total);
+      sumMgr+=mgr; sumA+=(a||0); sumB+=(b||0); sumC+=(c||0); sumTotal+=total; sumQuota+=quota; sumOff+=off;
       var isPairStart=(i%2===0);
       var bg=(Math.floor(i/2)%2===0)?'var(--navy-bg)':'transparent';
       var topBorder=isPairStart?'border-top:2px solid var(--g3)':'border-top:1px solid var(--g1)';
@@ -8934,6 +8964,8 @@ async function loadTeamAvgAttendance(prefix){
         '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy);font-size:13px">'+taCell(b)+'</td>'+
         '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy);font-size:13px">'+taCell(c)+'</td>'+
         '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:900;color:var(--teal2);font-size:13px">'+total+'</td>'+
+        '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--g5);font-size:12.5px">'+quota+'</td>'+
+        '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:700;color:'+(off>0?'var(--warn)':'var(--g3)')+';font-size:12.5px">'+off+'</td>'+
         '</tr>';
     });
     rowsHtml+='<tr style="background:var(--navy)">'+
@@ -8943,6 +8975,8 @@ async function loadTeamAvgAttendance(prefix){
       '<td style="padding:7px 4px;text-align:center;font-weight:900;color:white;font-size:13px">'+sumB+'</td>'+
       '<td style="padding:7px 4px;text-align:center;font-weight:900;color:white;font-size:13px">'+sumC+'</td>'+
       '<td style="padding:7px 4px;text-align:center;font-weight:900;color:#FFE9A8;font-size:14px">'+sumTotal+'</td>'+
+      '<td style="padding:7px 4px;text-align:center;font-weight:900;color:white;font-size:12.5px">'+sumQuota+'</td>'+
+      '<td style="padding:7px 4px;text-align:center;font-weight:900;color:#FFD37A;font-size:12.5px">'+sumOff+'</td>'+
       '</tr>';
     var h='<table style="width:100%;border-collapse:collapse">'+
       '<thead><tr style="color:var(--g4);font-size:10.5px">'+
@@ -8951,7 +8985,9 @@ async function loadTeamAvgAttendance(prefix){
       '<th style="padding:2px 4px 5px;font-weight:700">A조</th>'+
       '<th style="padding:2px 4px 5px;font-weight:700">B조</th>'+
       '<th style="padding:2px 4px 5px;font-weight:700">C조</th>'+
-      '<th style="padding:2px 4px 5px;font-weight:700;color:var(--teal2)">계</th>'+
+      '<th style="padding:2px 4px 5px;font-weight:700;color:var(--teal2)">출근</th>'+
+      '<th style="padding:2px 4px 5px;font-weight:700">정원</th>'+
+      '<th style="padding:2px 4px 5px;font-weight:700;color:var(--warn)">휴무외</th>'+
       '</tr></thead><tbody>'+rowsHtml+'</tbody></table>';
     grid.innerHTML=h;
   }catch(e){ grid.innerHTML='<div style="grid-column:1/-1;text-align:center;color:var(--g4);padding:11px">불러오기 실패</div>'; }
@@ -9456,7 +9492,7 @@ function tabSwitch(prefix,n,count){
     if(p) p.style.display=i===n?'block':'none';
   }
 }
-function mpTab(n){tabSwitch('mp',n,5);if(n===1){
+function mpTab(n){tabSwitch('mp',n,6);if(n===1){
   var dEl=document.getElementById('mpFullDate');
   if(dEl&&!dEl.value){ dEl.value=new Date(Date.now()+9*3600000).toISOString().slice(0,10); }
   if(dEl&&dEl.value) loadFullStatusForDate(dEl.value);
@@ -9469,7 +9505,52 @@ function mpTab(n){tabSwitch('mp',n,5);if(n===1){
   var t2=document.querySelectorAll('#mgrAttViewToggle .rp');
   if(t2.length){t2.forEach(function(b){b.classList.remove('on');});t2[0].classList.add('on');}
   loadMgrAttendance();
-}}
+}if(n===5){loadQuotaInputTab();}}
+async function loadQuotaInputTab(){
+  var wrap=document.getElementById('quotaInputWrap'); if(!wrap) return;
+  if(!me||me.role!=='master'){ wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--g4);font-size:14px">master만 접근 가능합니다</div>'; return; }
+  wrap.innerHTML='불러오는 중...';
+  var TEAM_SUBGROUPS={'1팀':['A','B','C'],'2팀':['A','B'],'3팀':['A','B'],'4팀':['A','B'],'6팀':['A','B','C'],'7팀':['A','B'],'8팀':['A','B'],'9팀':['A','B'],'5팀':['A','B'],'10팀':['A','B']};
+  var TEAM_ROW_ORDER=['1팀','2팀','3팀','4팀','6팀','7팀','8팀','9팀','5팀','10팀'];
+  try{
+    var tqRes=await sb.from('team_quota').select('team_code,staff_quota');
+    var staffQuota={};
+    (tqRes.data||[]).forEach(function(r){ staffQuota[r.team_code]=r.staff_quota||0; });
+    var h='';
+    TEAM_ROW_ORDER.forEach(function(team){
+      h+='<div style="font-size:14px;font-weight:700;color:var(--g7);margin:14px 0 8px">'+team+'</div>';
+      (TEAM_SUBGROUPS[team]||[]).forEach(function(s){
+        var gk=team+s;
+        h+='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--g1)">'+
+          '<span style="font-size:13px;color:var(--g5)">'+team+' '+s+'조 사원정원</span>'+
+          '<input type="number" min="0" id="quota_'+gk+'" value="'+(staffQuota[gk]||0)+'" style="width:80px;text-align:right;height:34px">'+
+          '</div>';
+      });
+    });
+    h+='<button onclick="saveQuotaInput()" class="btn-prim" style="width:100%;margin-top:16px">저장</button>';
+    wrap.innerHTML=h;
+  }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:14px">불러오기 실패</div>'; }
+}
+async function saveQuotaInput(){
+  if(!me||me.role!=='master'){ toast('⚠️ master만 저장할 수 있습니다'); return; }
+  var TEAM_SUBGROUPS={'1팀':['A','B','C'],'2팀':['A','B'],'3팀':['A','B'],'4팀':['A','B'],'6팀':['A','B','C'],'7팀':['A','B'],'8팀':['A','B'],'9팀':['A','B'],'5팀':['A','B'],'10팀':['A','B']};
+  var rows=[];
+  Object.keys(TEAM_SUBGROUPS).forEach(function(team){
+    TEAM_SUBGROUPS[team].forEach(function(s){
+      var gk=team+s;
+      var el=document.getElementById('quota_'+gk);
+      var v=el?parseInt(el.value,10):0;
+      if(isNaN(v)||v<0) v=0;
+      rows.push({team_code:gk, staff_quota:v, updated_by:me.name, updated_at:new Date().toISOString()});
+    });
+  });
+  try{
+    for(var i=0;i<rows.length;i++){
+      await sb.from('team_quota').update({staff_quota:rows[i].staff_quota, updated_by:rows[i].updated_by, updated_at:rows[i].updated_at}).eq('team_code',rows[i].team_code);
+    }
+    toast('✓ 정원이 저장되었습니다');
+  }catch(e){ toast('저장 오류가 발생했습니다'); }
+}
 // 인수인계 팀별 정해진 인계체인 (구역별) — 1(오전)→6(오후)→5(야간)→1... / 2→7→5→2 / 3→8→10→3 / 4→9→10→4
 var HO_TEAM_CHAIN={1:[6],6:[5],5:[1,2],2:[7],7:[5],3:[8],8:[10],10:[3,4],4:[9],9:[10]};
 var HO_SHIFT_MAP={1:'오전팀',2:'오전팀',3:'오전팀',4:'오전팀',5:'야간팀',6:'오후팀',7:'오후팀',8:'오후팀',9:'오후팀',10:'야간팀'};
@@ -24251,9 +24332,60 @@ async function loadMgrAttendance(){
       mgrAttData[r.team+'_'+r.name] = r;
     });
   }catch(e){ console.error(e); }
+  await loadMgrAttQuotaSummary();
   renderMgrAttendance();
   updateDashMgrAtt();
   loadMgrAttendanceYesterday();
+}
+var mgrAttQuotaSummaryCache={};
+async function loadMgrAttQuotaSummary(){
+  try{
+    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+    var usrRes=await sb.from('users').select('role,team').eq('status','active').in('role',['manager','leader','acting_leader']);
+    var mgrCnt={}, leaderCnt={};
+    (usrRes.data||[]).forEach(function(u){
+      if(u.role==='manager'){ mgrCnt[u.team]=(mgrCnt[u.team]||0)+1; }
+      else{
+        var mm=(u.team||'').match(/^(\d+팀)\s*([A-Z])조$/);
+        if(mm){ var gk=mm[1]+mm[2]; leaderCnt[gk]=(leaderCnt[gk]||0)+1; }
+      }
+    });
+    var tqRes=await sb.from('team_quota').select('team_code,staff_quota');
+    var staffQuota={};
+    (tqRes.data||[]).forEach(function(r){ staffQuota[r.team_code]=r.staff_quota||0; });
+    var mpRes=await sb.from('mp_data').select('team_code,values').eq('date',today);
+    var staffToday={};
+    (mpRes.data||[]).forEach(function(r){
+      var vals=r.values; if(typeof vals==='string'){ try{ vals=JSON.parse(vals); }catch(e){ return; } }
+      if(!Array.isArray(vals)) return;
+      var sum=0;
+      for(var ri=0;ri<4;ri++){ if(!vals[ri]) continue; for(var ci=0;ci<7;ci++){ sum+=Number(vals[ri][ci])||0; } }
+      staffToday[r.team_code]=(staffToday[r.team_code]||0)+sum;
+    });
+    var TEAM_SUBGROUPS={'1팀':['A','B','C'],'2팀':['A','B'],'3팀':['A','B'],'4팀':['A','B'],'6팀':['A','B','C'],'7팀':['A','B'],'8팀':['A','B'],'9팀':['A','B'],'5팀':['A','B'],'10팀':['A','B']};
+    var out={};
+    Object.keys(TEAM_SUBGROUPS).forEach(function(team){
+      var subs=TEAM_SUBGROUPS[team];
+      var quota=mgrCnt[team]||0;
+      var staffAttend=0;
+      subs.forEach(function(s){ var gk=team+s; quota+=(leaderCnt[gk]||0)+(staffQuota[gk]||0); staffAttend+=(staffToday[gk]||0); });
+      var checkedLeaders=0;
+      Object.keys(mgrAttData||{}).forEach(function(k){
+        if(k.indexOf(team+'_')===0 && mgrAttData[k]&&mgrAttData[k].checked) checkedLeaders++;
+      });
+      var attend=checkedLeaders+staffAttend;
+      out[team]={quota:quota, attend:attend, off:Math.max(0,quota-attend)};
+    });
+    var opsQuota=0;
+    try{
+      var opsRes=await sb.from('users').select('role').eq('status','active').in('role',['admin','master']);
+      opsQuota=(opsRes.data||[]).length;
+    }catch(e){}
+    var opsChecked=0;
+    Object.keys(mgrAttData||{}).forEach(function(k){ if(k.indexOf('운영_')===0 && mgrAttData[k]&&mgrAttData[k].checked) opsChecked++; });
+    out['운영']={quota:opsQuota, attend:opsChecked, off:Math.max(0,opsQuota-opsChecked)};
+    mgrAttQuotaSummaryCache=out;
+  }catch(e){}
 }
 
 async function loadMgrAttendanceYesterday(){
@@ -24316,6 +24448,7 @@ function renderMgrAttendance(viewDate){
   var dataSrc = viewDate==='yesterday' ? (yMgrAttData||{}) : mgrAttData;
 
   var totalCount = 0, checkedCount = 0;
+  var quotaSummaryByTeam = mgrAttQuotaSummaryCache||{}; // {team: {quota, staffToday, offDuty}} — loadMgrAttQuotaSummary()가 미리 채워둠 (없으면 표기 생략)
 
   // 근무조 하나(오전/오후/야간/운영팀)를 카드 HTML로 생성
   function buildShiftCard(shift){
@@ -24337,6 +24470,10 @@ function renderMgrAttendance(viewDate){
         h += '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:5px">'+team+' <span style="font-weight:400;color:var(--g4)">('+teamChecked+'/'+members.length+')</span></div>';
       } else {
         h += '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:5px">운영진 <span style="font-weight:400;color:var(--g4)">('+teamChecked+'/'+members.length+')</span></div>';
+      }
+      var qs=quotaSummaryByTeam[team];
+      if(qs&&viewDate==='today'){
+        h += '<div style="font-size:11.5px;color:var(--g4);margin:-2px 0 6px">정원 '+qs.quota+' · <span style="color:var(--teal2);font-weight:700">출근 '+qs.attend+'</span> · <span style="color:'+(qs.off>0?'var(--warn)':'var(--g4)')+';font-weight:700">휴무외 '+qs.off+'</span></div>';
       }
       h += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
 
