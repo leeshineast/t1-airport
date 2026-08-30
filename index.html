@@ -24733,6 +24733,7 @@ async function tryAutoCheckin(){
       mgrAttPickTarget=slot;
       setMgrAtt('출근').then(function(){
         toast('📍 제1여객터미널 도착 확인 — 자동 출근 처리되었습니다');
+        try{ sb.rpc('self_update_prefs', {p_last_active: new Date().toISOString()}); }catch(e){}
       });
     }
   }, function(err){
@@ -24743,6 +24744,7 @@ async function tryAutoCheckin(){
         mgrAttPickTarget=slot;
         setMgrAtt('출근').then(function(){
           toast('📍 제1여객터미널 도착 확인 — 자동 출근 처리되었습니다');
+          try{ sb.rpc('self_update_prefs', {p_last_active: new Date().toISOString()}); }catch(e){}
         });
       }
     }, function(err2){
