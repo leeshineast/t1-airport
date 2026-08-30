@@ -21254,7 +21254,11 @@ async function refreshMpDataLight(){
       // ★ 캐시된 me 정보와 별개로, 실제 Supabase 인증 세션(access/refresh token)을 먼저 복구해야
       // 이후 모든 데이터 요청(RLS: authenticated 전용)이 정상 동작함. 복구 실패 시 재로그인 필요.
       _sbLoadAuth();
-      var authOk = await sbAuthEnsureFresh();
+      // 네트워크 응답이 멈춰도 로딩 화면에 계속 머물지 않도록 제한 시간을 둔다.
+      var authOk = await Promise.race([
+        sbAuthEnsureFresh(),
+        new Promise(function(resolve){ setTimeout(function(){ resolve(false); }, 8000); })
+      ]);
       if(!authOk){
         try{ localStorage.removeItem('t1_me'); }catch(e){}
         _sbClearAuth();
