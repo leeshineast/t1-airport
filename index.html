@@ -2031,12 +2031,6 @@ html{overflow-x:hidden}
     </div>
   </div>
 
-  <!-- 조별 평균 출근인원 (정원 대비) -->
-  <div class="sec-lbl" style="padding:14px 13px 6px;font-size:12px">👥 조별 평균 출근인원 (정원 대비)</div>
-  <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px 10px;margin:0 13px 12px">
-    <div id="edTeamAttWrap" style="overflow-x:auto"><div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">불러오는 중...</div></div>
-  </div>
-
   <!-- 4개 현황 패널 -->
   <div class="sec-lbl" style="padding:10px 13px 6px;font-size:12px">현황 분석</div>
   <div id="edAnalysisGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 13px 12px">
@@ -6078,21 +6072,34 @@ window.addEventListener('popstate', function(e){
 });
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sRisk','sTraining','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sActiveUsers','sPerf','sDeleteLogs','sAdc','sEduEvent','sEduAttend','sWorkforce','sWorkSchedule','sSpecialWork','sCampaign','sCampaignDetail'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sRisk','sTraining','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sActiveUsers','sPerf','sDeleteLogs','sAdc','sEduEvent','sEduAttend','sWorkforce','sWorkSchedule','sSpecialWork','sCampaign','sCampaignDetail','sEmpRoster'];
 function goStatsDash(){
   go('statsdash');
   loadMonthlyStats();
 }
 // ═══ 관리자 전용 현황판(Executive Dashboard) ═══
-var ED_TOTAL_STAFF=396; // 사업부 총원 (관리자 포함, 근무율 계산 기준)
+var ED_TOTAL_STAFF=396; // 사업부 총원 (관리자 포함, 근무율 계산 기준) — 정원 실측값 로딩 전 기본값(폴백)
+var edQuotaStages={morning:171, afternoon:324, full:396}; // team_quota 기반 실측 정원으로 교체됨(refreshEdQuotaStages)
+async function refreshEdQuotaStages(){
+  try{
+    var qc=await fetchQuotaCounts();
+    var MORNING_TEAMS=['1팀','2팀','3팀','4팀'], AFTERNOON_TEAMS=['6팀','7팀','8팀','9팀'], NIGHT_TEAMS=['5팀','10팀'];
+    var qM=0,qA=0,qN=0;
+    MORNING_TEAMS.forEach(function(t){ qM+=quotaForTeam(t,qc); });
+    AFTERNOON_TEAMS.forEach(function(t){ qA+=quotaForTeam(t,qc); });
+    NIGHT_TEAMS.forEach(function(t){ qN+=quotaForTeam(t,qc); });
+    var qOps=qc.opsQuota||0;
+    edQuotaStages={morning:qM+qOps, afternoon:qM+qA+qOps, full:qM+qA+qN+qOps};
+  }catch(e){}
+}
 // 실시간(당일) 보기일 때 시간대별 누적 정원 — 오전조만 근무중인 이른 시간에는 정원을 낮게 잡아 근무율을 왜곡 없이 계산
 // 00:00~12:29=오전 정원, 12:30~21:29=오전+오후 누적 정원, 21:30~24:00=전체 정원
 function edStaffQuota(){
   var n=edKst();
   var t=n.getUTCHours()*60+n.getUTCMinutes();
-  if(t<750) return 171;
-  if(t<1290) return 324;
-  return 396;
+  if(t<750) return edQuotaStages.morning;
+  if(t<1290) return edQuotaStages.afternoon;
+  return edQuotaStages.full;
 }
 var edMode='day'; // 'day' | 'month' | 'year'
 var edY=0, edM=0, edD=0;
@@ -6180,6 +6187,7 @@ function startExecDashPoll(){
 async function loadExecDashboard(){
   if(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role))) return;
   try{
+    await refreshEdQuotaStages();
     edInitDate();
     edUpdatePeriodLbl();
     var today=edToday();
@@ -6688,7 +6696,6 @@ function go(name){
   if(name==='execdash'){
     if(typeof loadExecDashboard==='function') loadExecDashboard();
     if(typeof startExecDashPoll==='function') startExecDashPoll();
-    if(typeof renderExecTeamAttTable==='function') renderExecTeamAttTable();
   }
   if(name==='emproster'){ loadEmpRoster(); }
 }
@@ -24471,49 +24478,6 @@ async function loadMgrAttQuotaSummary(){
   }catch(e){}
 }
 
-// ── 현황판(현황판 화면)용 조별 평균 출근인원 표: 오늘 실시간 기준, 인력현황/관리자출근 탭 진입 없이도 바로 계산 ──
-async function renderExecTeamAttTable(){
-  var wrap=document.getElementById('edTeamAttWrap'); if(!wrap) return;
-  wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">불러오는 중...</div>';
-  try{
-    await loadMgrAttQuotaSummary(); // mgrAttQuotaSummaryCache 채움 (팀장·조장 체크 + 사원 오늘 입력 + 정원)
-    var qc=mgrAttQuotaSummaryCache||{};
-    var rowsHtml='';
-    var sumQuota=0, sumAttend=0, sumOff=0;
-    TEAM_ROW_ORDER_G.forEach(function(team,i){
-      var r=qc[team]||{quota:0,attend:0,off:0};
-      sumQuota+=r.quota; sumAttend+=r.attend; sumOff+=r.off;
-      var bg=(i%2===0)?'var(--navy-bg)':'transparent';
-      rowsHtml+='<tr style="background:'+bg+'">'+
-        '<td style="padding:6px 5px;border-top:1px solid var(--g1);font-weight:800;color:var(--g6);font-size:12.5px">'+team+'</td>'+
-        '<td style="padding:6px 5px;border-top:1px solid var(--g1);text-align:center;font-weight:700;color:var(--g5)">'+r.quota+'</td>'+
-        '<td style="padding:6px 5px;border-top:1px solid var(--g1);text-align:center;font-weight:900;color:var(--teal2)">'+r.attend+'</td>'+
-        '<td style="padding:6px 5px;border-top:1px solid var(--g1);text-align:center;font-weight:700;color:'+(r.off>0?'var(--warn)':'var(--g3)')+'">'+r.off+'</td>'+
-        '</tr>';
-    });
-    var opsR=qc['운영']||{quota:0,attend:0,off:0};
-    sumQuota+=opsR.quota; sumAttend+=opsR.attend; sumOff+=opsR.off;
-    rowsHtml+='<tr style="background:var(--teal-bg)">'+
-      '<td style="padding:6px 5px;border-top:2px solid var(--g3);font-weight:800;color:var(--g6);font-size:12.5px">운영팀</td>'+
-      '<td style="padding:6px 5px;border-top:2px solid var(--g3);text-align:center;font-weight:700;color:var(--g5)">'+opsR.quota+'</td>'+
-      '<td style="padding:6px 5px;border-top:2px solid var(--g3);text-align:center;font-weight:900;color:var(--teal2)">'+opsR.attend+'</td>'+
-      '<td style="padding:6px 5px;border-top:2px solid var(--g3);text-align:center;font-weight:700;color:'+(opsR.off>0?'var(--warn)':'var(--g3)')+'">'+opsR.off+'</td>'+
-      '</tr>';
-    rowsHtml+='<tr style="background:var(--navy)">'+
-      '<td style="padding:7px 5px;font-weight:900;color:white;font-size:12.5px">총계</td>'+
-      '<td style="padding:7px 5px;text-align:center;font-weight:900;color:white">'+sumQuota+'</td>'+
-      '<td style="padding:7px 5px;text-align:center;font-weight:900;color:#FFE9A8">'+sumAttend+'</td>'+
-      '<td style="padding:7px 5px;text-align:center;font-weight:900;color:#FFD37A">'+sumOff+'</td>'+
-      '</tr>';
-    wrap.innerHTML='<table style="width:100%;border-collapse:collapse">'+
-      '<thead><tr style="color:var(--g4);font-size:10.5px">'+
-      '<th style="text-align:left;padding:2px 5px 5px;font-weight:700">팀</th>'+
-      '<th style="padding:2px 5px 5px;font-weight:700">정원</th>'+
-      '<th style="padding:2px 5px 5px;font-weight:700;color:var(--teal2)">출근</th>'+
-      '<th style="padding:2px 5px 5px;font-weight:700;color:var(--warn)">휴무외</th>'+
-      '</tr></thead><tbody>'+rowsHtml+'</tbody></table>';
-  }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--danger);font-size:13px">불러오기 실패</div>'; }
-}
 // ── 사원 명부 ──
 var erData=[];
 function erCanEdit(){ return !!(me&&(me.role==='manager'||me.role==='admin'||me.role==='master')); }
