@@ -1998,6 +1998,7 @@ html{overflow-x:hidden}
         <span onclick="edMove(-1)" style="cursor:pointer;padding:3px 7px;border-radius:8px;background:var(--g1);font-size:14px;font-weight:800;color:var(--g5)">◀</span>
         <span id="edPeriodLbl" style="font-size:13px;font-weight:800;color:var(--g6);min-width:74px;text-align:center">오늘</span>
         <span id="edNextBtn" onclick="edMove(1)" style="cursor:pointer;padding:3px 7px;border-radius:8px;background:var(--g1);font-size:14px;font-weight:800;color:var(--g5)">▶</span>
+        <span id="edLiveBtn" onclick="edGoLive()" style="display:none;cursor:pointer;padding:3px 9px;border-radius:14px;background:var(--teal);font-size:12px;font-weight:800;color:white;margin-left:2px">⚡ 실시간</span>
       </div>
       <div style="display:flex;background:var(--g2);border-radius:20px;padding:2px">
         <div id="edModeD" onclick="edSetMode('day')" style="padding:4px 11px;border-radius:16px;font-size:12px;font-weight:800;cursor:pointer;background:white;color:var(--teal2);box-shadow:0 1px 3px rgba(0,0,0,.12)">일간</div>
@@ -6125,6 +6126,13 @@ function edUpdatePeriodLbl(){
   var nb=document.getElementById('edNextBtn');
   var atMax=edMode==='day'?isToday:(edMode==='month'?isThisMonth:isThisYear);
   if(nb) nb.style.opacity=atMax?'0.3':'1';
+  var liveBtn=document.getElementById('edLiveBtn');
+  if(liveBtn) liveBtn.style.display=(edMode==='day'&&!isToday)?'inline-block':'none';
+}
+function edGoLive(){
+  var n=edKst();
+  edY=n.getUTCFullYear(); edM=n.getUTCMonth()+1; edD=n.getUTCDate();
+  edSetMode('day');
 }
 function edMove(dir){
   edInitDate();
@@ -24445,37 +24453,45 @@ async function loadMgrAttendance(){
   loadMgrAttendanceYesterday();
 }
 var mgrAttQuotaSummaryCache={};
-async function loadMgrAttQuotaSummary(){
+var mgrAttQuotaSummaryCacheY={}; // 전일용 캐시
+async function loadMgrAttQuotaSummaryFor(dateStr, attSrc){
+  var out={};
   try{
-    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
     var qCounts=await fetchQuotaCounts(); // 팀장+조장만 카운트(액팅리더 제외), 사원은 team_quota
-    var mpRes=await sb.from('mp_data').select('team_code,values').eq('date',today);
-    var staffToday={};
+    var mpRes=await sb.from('mp_data').select('team_code,values').eq('date',dateStr);
+    var staffMap={};
     (mpRes.data||[]).forEach(function(r){
       var vals=r.values; if(typeof vals==='string'){ try{ vals=JSON.parse(vals); }catch(e){ return; } }
       if(!Array.isArray(vals)) return;
       var sum=0;
       for(var ri=0;ri<4;ri++){ if(!vals[ri]) continue; for(var ci=0;ci<7;ci++){ sum+=Number(vals[ri][ci])||0; } }
-      staffToday[r.team_code]=(staffToday[r.team_code]||0)+sum;
+      staffMap[r.team_code]=(staffMap[r.team_code]||0)+sum;
     });
-    var out={};
     TEAM_ROW_ORDER_G.forEach(function(team){
       var subs=TEAM_SUBGROUPS_G[team]||[];
       var quota=quotaForTeam(team, qCounts);
       var staffAttend=0;
-      subs.forEach(function(s){ staffAttend+=(staffToday[team+s]||0); });
+      subs.forEach(function(s){ staffAttend+=(staffMap[team+s]||0); });
       var checkedLeaders=0;
-      Object.keys(mgrAttData||{}).forEach(function(k){
-        if(k.indexOf(team+'_')===0 && mgrAttData[k]&&mgrAttData[k].checked) checkedLeaders++;
+      Object.keys(attSrc||{}).forEach(function(k){
+        if(k.indexOf(team+'_')===0 && attSrc[k]&&attSrc[k].checked) checkedLeaders++;
       });
       var attend=checkedLeaders+staffAttend;
       out[team]={quota:quota, attend:attend, off:Math.max(0,quota-attend)};
     });
     var opsChecked=0;
-    Object.keys(mgrAttData||{}).forEach(function(k){ if(k.indexOf('운영_')===0 && mgrAttData[k]&&mgrAttData[k].checked) opsChecked++; });
+    Object.keys(attSrc||{}).forEach(function(k){ if(k.indexOf('운영_')===0 && attSrc[k]&&attSrc[k].checked) opsChecked++; });
     out['운영']={quota:qCounts.opsQuota, attend:opsChecked, off:Math.max(0,qCounts.opsQuota-opsChecked)};
-    mgrAttQuotaSummaryCache=out;
   }catch(e){}
+  return out;
+}
+async function loadMgrAttQuotaSummary(){
+  var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+  mgrAttQuotaSummaryCache=await loadMgrAttQuotaSummaryFor(today, mgrAttData);
+}
+async function loadMgrAttQuotaSummaryYesterday(){
+  var yesterday=new Date(Date.now()+9*3600000-86400000).toISOString().slice(0,10);
+  mgrAttQuotaSummaryCacheY=await loadMgrAttQuotaSummaryFor(yesterday, yMgrAttData);
 }
 
 // ── 사원 명부 ──
@@ -24703,7 +24719,7 @@ function switchMgrAttView(btn, mode){
     document.getElementById('mgrAttBody').innerHTML='<div style="text-align:center;padding:16px;color:var(--g3);font-size:14px">불러오는 중...</div>';
     fetchYesterdayMgrAttendance().then(function(){
       if(dateEl){ var y=new Date(Date.now()+9*3600000-86400000).toISOString().slice(0,10); dateEl.textContent=y+' (전일)'; }
-      renderMgrAttendance('yesterday');
+      loadMgrAttQuotaSummaryYesterday().then(function(){ renderMgrAttendance('yesterday'); });
     });
   } else {
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
@@ -24720,7 +24736,7 @@ function renderMgrAttendance(viewDate){
   var dataSrc = viewDate==='yesterday' ? (yMgrAttData||{}) : mgrAttData;
 
   var totalCount = 0, checkedCount = 0;
-  var quotaSummaryByTeam = mgrAttQuotaSummaryCache||{}; // {team: {quota, staffToday, offDuty}} — loadMgrAttQuotaSummary()가 미리 채워둠 (없으면 표기 생략)
+  var quotaSummaryByTeam = viewDate==='yesterday' ? (mgrAttQuotaSummaryCacheY||{}) : (mgrAttQuotaSummaryCache||{}); // {team: {quota, attend, off}}
 
   // 근무조 하나(오전/오후/야간/운영팀)를 카드 HTML로 생성
   function buildShiftCard(shift){
@@ -24744,7 +24760,7 @@ function renderMgrAttendance(viewDate){
         h += '<div style="font-size:13px;font-weight:700;color:var(--navy);margin-bottom:5px">운영진 <span style="font-weight:400;color:var(--g4)">('+teamChecked+'/'+members.length+')</span></div>';
       }
       var qs=quotaSummaryByTeam[team];
-      if(qs&&viewDate==='today'){
+      if(qs){
         h += '<div style="font-size:11.5px;color:var(--g4);margin:-2px 0 6px">정원 '+qs.quota+' · <span style="color:var(--teal2);font-weight:700">출근 '+qs.attend+'</span> · <span style="color:'+(qs.off>0?'var(--warn)':'var(--g4)')+';font-weight:700">휴무외 '+qs.off+'</span></div>';
       }
       h += '<div style="display:flex;flex-wrap:wrap;gap:6px">';
