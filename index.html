@@ -1005,6 +1005,12 @@ html{overflow-x:hidden}
         <div class="menu-desc">확인서 작성·전자서명·문서함</div>
         <span class="menu-arrow">보기 →</span>
       </button>
+      <button class="menu-btn" id="empRosterBtn" onclick="go('emproster')" style="display:none">
+        <span class="menu-icon">🪪</span>
+        <div class="menu-title">사원 명부</div>
+        <div class="menu-desc">엑셀 업로드·조회·수정·삭제 (팀장 이상)</div>
+        <span class="menu-arrow">보기 →</span>
+      </button>
     </div>
   </div>
 
@@ -2025,6 +2031,12 @@ html{overflow-x:hidden}
     </div>
   </div>
 
+  <!-- 조별 평균 출근인원 (정원 대비) -->
+  <div class="sec-lbl" style="padding:14px 13px 6px;font-size:12px">👥 조별 평균 출근인원 (정원 대비)</div>
+  <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px 10px;margin:0 13px 12px">
+    <div id="edTeamAttWrap" style="overflow-x:auto"><div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">불러오는 중...</div></div>
+  </div>
+
   <!-- 4개 현황 패널 -->
   <div class="sec-lbl" style="padding:10px 13px 6px;font-size:12px">현황 분석</div>
   <div id="edAnalysisGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 13px 12px">
@@ -2854,6 +2866,56 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 .adc-sig-table th,.adc-sig-table td{border:1px solid #333;padding:6px 5px;text-align:center;vertical-align:middle}
 .adc-sig-table th{background:#F2F2F2;font-weight:700}
 </style>
+<div id="sEmpRoster" class="scr" style="display:none">
+  <div class="app-hd">
+    <button class="back-hd" onclick="go('main')">← 메인</button>
+    <div class="user-chip"><div class="u-av">🪪</div><span>사원 명부</span></div>
+  </div>
+  <div class="pg-hd"><div><h1>사원 명부</h1><small>팀장 이상 조회·수정 가능</small></div></div>
+  <div style="padding:0 13px 10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+    <input id="erSearch" oninput="erRender()" placeholder="🔍 사번/성명/팀 검색" style="flex:1;min-width:140px;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px">
+    <label style="padding:9px 12px;background:white;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
+      ⬆️ 엑셀 업로드<input type="file" accept=".xlsx,.xls" style="display:none" onchange="erExcelUpload(this)">
+    </label>
+    <button onclick="erOpenEdit(null)" style="padding:9px 12px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">＋ 추가</button>
+  </div>
+  <div style="padding:0 13px 6px;font-size:12px;color:var(--g4)" id="erCountLbl"></div>
+  <div style="padding:0 13px 20px;overflow-x:auto">
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:760px">
+      <thead><tr style="background:var(--g1);color:var(--g5)">
+        <th style="padding:8px 6px;text-align:left">사번</th>
+        <th style="padding:8px 6px;text-align:left">성명</th>
+        <th style="padding:8px 6px;text-align:left">팀</th>
+        <th style="padding:8px 6px;text-align:left">조</th>
+        <th style="padding:8px 6px;text-align:left">직책</th>
+        <th style="padding:8px 6px;text-align:left">출생연도</th>
+        <th style="padding:8px 6px;text-align:left">거주(시)</th>
+        <th style="padding:8px 6px;text-align:left">입사일</th>
+        <th style="padding:8px 6px;text-align:left">휴무</th>
+        <th style="padding:8px 6px"></th>
+      </tr></thead>
+      <tbody id="erTbody"><tr><td colspan="10" style="text-align:center;padding:20px;color:var(--g3)">불러오는 중...</td></tr></tbody>
+    </table>
+  </div>
+</div>
+<div id="erEditModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3 id="erEditTitle">사원 정보</h3><button class="m-x" onclick="hideM('erEditModal')">×</button></div>
+  <div style="padding:15px 17px;max-height:70vh;overflow-y:auto">
+    <input type="hidden" id="er_id">
+    <div class="fg"><label class="f-lbl">사번 *</label><input id="er_emp_no" class="ri"></div>
+    <div class="fg"><label class="f-lbl">성명</label><input id="er_name" class="ri"></div>
+    <div style="display:flex;gap:8px"><div class="fg" style="flex:1"><label class="f-lbl">총괄팀</label><input id="er_hq_team" class="ri"></div>
+      <div class="fg" style="flex:1"><label class="f-lbl">팀</label><input id="er_team" class="ri"></div></div>
+    <div style="display:flex;gap:8px"><div class="fg" style="flex:1"><label class="f-lbl">조</label><input id="er_grp" class="ri"></div>
+      <div class="fg" style="flex:1"><label class="f-lbl">직책</label><input id="er_position" class="ri"></div></div>
+    <div style="display:flex;gap:8px"><div class="fg" style="flex:1"><label class="f-lbl">출생연도</label><input id="er_birth_year" class="ri" placeholder="예: 1985"></div>
+      <div class="fg" style="flex:1"><label class="f-lbl">거주(시)</label><input id="er_city" class="ri" placeholder="예: 인천광역시"></div></div>
+    <div class="fg"><label class="f-lbl">직군</label><input id="er_job_grade" class="ri"></div>
+    <div style="display:flex;gap:8px"><div class="fg" style="flex:1"><label class="f-lbl">최초입사일</label><input type="date" id="er_first_hire_date" class="ri"></div>
+      <div class="fg" style="flex:1"><label class="f-lbl">입사일</label><input type="date" id="er_hire_date" class="ri"></div></div>
+    <div class="fg"><label class="f-lbl">휴무</label><input id="er_day_off" class="ri" placeholder="예: 토일"></div>
+    <button onclick="erSave()" class="btn-prim" style="width:100%;margin-top:8px">저장</button>
+  </div>
+</div></div>
 <div id="sAdc" class="scr" style="display:none">
   <div class="pg-hd">
     <div><h1>📋 관리자 확인사항</h1><small>확인서 작성·전자서명·문서함</small></div>
@@ -6455,6 +6517,7 @@ function go(name){
     if(!window._memberAllowedScreens[name]) return;
   }
   if(name==='execdash'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='group_leader'||me.role==='division_head'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
+  if(name==='emproster'&&(!me||!(me.role==='manager'||me.role==='admin'||me.role==='master'))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
   if(name==='training'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(name==='admin'&&(!me||me.role!=='master')){ toast('⚠️ 최고관리자만 접근할 수 있습니다'); return; }
   if(name==='activeUsers'&&(!me||!(me.role==='admin'||me.role==='master'))){ toast('⚠️ 관리자 이상만 접근할 수 있습니다'); return; }
@@ -6473,7 +6536,7 @@ function go(name){
   _curScreenName=name;
   if(FACILITY_MENU_KEYS.indexOf(name)!==-1) bumpFacilityMenuView(name);
   updateIosBackBtn();
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs',admconfirm:'sAdc',eduevent:'sEduEvent',eduattend:'sEduAttend',workforce:'sWorkforce',workschedule:'sWorkSchedule',specialwork:'sSpecialWork',campaign:'sCampaign',campaigndetail:'sCampaignDetail'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs',admconfirm:'sAdc',eduevent:'sEduEvent',eduattend:'sEduAttend',workforce:'sWorkforce',workschedule:'sWorkSchedule',specialwork:'sSpecialWork',campaign:'sCampaign',campaigndetail:'sCampaignDetail',emproster:'sEmpRoster'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -6625,7 +6688,9 @@ function go(name){
   if(name==='execdash'){
     if(typeof loadExecDashboard==='function') loadExecDashboard();
     if(typeof startExecDashPoll==='function') startExecDashPoll();
+    if(typeof renderExecTeamAttTable==='function') renderExecTeamAttTable();
   }
+  if(name==='emproster'){ loadEmpRoster(); }
 }
 
 // ─ 로그인 ─
@@ -6658,6 +6723,9 @@ function applyRoleUI(){
   if(dlb) dlb.style.display=isMaster?'block':'none';
   var adcb=document.getElementById('adcMenuBtn');
   if(adcb) adcb.style.display=canAdcManage()?'block':'none';
+  var erb=document.getElementById('empRosterBtn');
+  var canEmpRoster=me.role==='manager'||me.role==='admin'||me.role==='master'; // 팀장 이상만 (조장·액팅리더 제외)
+  if(erb) erb.style.display=canEmpRoster?'block':'none';
   var edb=document.getElementById('execDashMenuBtn');
   var isExecView=me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role);
   if(edb) edb.style.display=isExecView?'flex':'none';
@@ -8831,6 +8899,35 @@ function taSetMode(prefix, m){
   });
   loadTeamAvgAttendance(prefix);
 }
+// ── 정원 계산 공통 (전체 화면에서 재사용): 팀장(manager)+조장(leader)만 카운트, 액팅리더는 정원 제외 ──
+var TEAM_SUBGROUPS_G={'1팀':['A','B','C'],'2팀':['A','B'],'3팀':['A','B'],'4팀':['A','B'],'6팀':['A','B','C'],'7팀':['A','B'],'8팀':['A','B'],'9팀':['A','B'],'5팀':['A','B'],'10팀':['A','B']};
+var TEAM_ROW_ORDER_G=['1팀','6팀','2팀','7팀','3팀','8팀','4팀','9팀','5팀','10팀'];
+async function fetchQuotaCounts(){
+  var mgrCntByTeam={}, leaderCntByGroup={}, staffQuotaByGroup={}, opsQuota=0;
+  try{
+    var usrRes=await sb.from('users').select('role,team').eq('status','active').in('role',['manager','leader']); // 액팅리더 제외
+    (usrRes.data||[]).forEach(function(u){
+      if(u.role==='manager'){ mgrCntByTeam[u.team]=(mgrCntByTeam[u.team]||0)+1; }
+      else{
+        var mm=(u.team||'').match(/^(\d+팀)\s*([A-Z])조$/);
+        if(mm){ var gk=mm[1]+mm[2]; leaderCntByGroup[gk]=(leaderCntByGroup[gk]||0)+1; }
+      }
+    });
+    var tqRes=await sb.from('team_quota').select('team_code,staff_quota');
+    (tqRes.data||[]).forEach(function(r){ staffQuotaByGroup[r.team_code]=r.staff_quota||0; });
+  }catch(e){}
+  try{
+    var opsRes=await sb.from('users').select('role').eq('status','active').in('role',['admin','master']);
+    opsQuota=(opsRes.data||[]).length;
+  }catch(e){}
+  return {mgrCntByTeam:mgrCntByTeam, leaderCntByGroup:leaderCntByGroup, staffQuotaByGroup:staffQuotaByGroup, opsQuota:opsQuota};
+}
+function quotaForTeam(team, counts){
+  var subs=TEAM_SUBGROUPS_G[team]||[];
+  var q=counts.mgrCntByTeam[team]||0;
+  subs.forEach(function(s){ var gk=team+s; q+=(counts.leaderCntByGroup[gk]||0)+(counts.staffQuotaByGroup[gk]||0); });
+  return q;
+}
 async function loadTeamAvgAttendance(prefix){
   prefix=prefix||'';
   var gridId=(prefix==='mp'?'mpTaGrid':'taGrid');
@@ -8900,28 +8997,10 @@ async function loadTeamAvgAttendance(prefix){
         daysTeamMgr[r.team][r.date]=1;
       }
     });
-    var TEAM_ROW_ORDER=['1팀','6팀','2팀','7팀','3팀','8팀','4팀','9팀','5팀','10팀'];
-    var TEAM_SUBGROUPS={'1팀':['A','B','C'],'2팀':['A','B'],'3팀':['A','B'],'4팀':['A','B'],'6팀':['A','B','C'],'7팀':['A','B'],'8팀':['A','B'],'9팀':['A','B'],'5팀':['A','B'],'10팀':['A','B']};
-    // 정원(팀장+조장은 계정 수 기준 자동 집계, 사원은 team_quota 입력값) — 출근/휴무외 비교용
-    var mgrCntByTeam={}, leaderCntByGroup={}, staffQuotaByGroup={};
-    try{
-      var usrRes=await sb.from('users').select('role,team').eq('status','active').in('role',['manager','leader','acting_leader']);
-      (usrRes.data||[]).forEach(function(u){
-        if(u.role==='manager'){ mgrCntByTeam[u.team]=(mgrCntByTeam[u.team]||0)+1; }
-        else{
-          var mm=(u.team||'').match(/^(\d+팀)\s*([A-Z])조$/);
-          if(mm){ var gk=mm[1]+mm[2]; leaderCntByGroup[gk]=(leaderCntByGroup[gk]||0)+1; }
-        }
-      });
-      var tqRes=await sb.from('team_quota').select('team_code,staff_quota');
-      (tqRes.data||[]).forEach(function(r){ staffQuotaByGroup[r.team_code]=r.staff_quota||0; });
-    }catch(e){}
-    function taQuotaVal(team){
-      var subs=TEAM_SUBGROUPS[team]||[];
-      var q=mgrCntByTeam[team]||0;
-      subs.forEach(function(s){ var gk=team+s; q+=(leaderCntByGroup[gk]||0)+(staffQuotaByGroup[gk]||0); });
-      return q;
-    }
+    var TEAM_ROW_ORDER=TEAM_ROW_ORDER_G;
+    var TEAM_SUBGROUPS=TEAM_SUBGROUPS_G;
+    var qCounts=await fetchQuotaCounts();
+    function taQuotaVal(team){ return quotaForTeam(team, qCounts); }
     function taTeamVal(tc){
       if(mode==='day') return sumByTeam[tc]||0;
       var d=Object.keys(daysByTeam[tc]||{}).length||1;
@@ -8954,34 +9033,49 @@ async function loadTeamAvgAttendance(prefix){
       var topBorder=isPairStart?'border-top:2px solid var(--g3)':'border-top:1px solid var(--g1)';
       rowsHtml+='<tr style="background:'+bg+'">'+
         '<td style="padding:5px 4px;'+topBorder+';font-weight:800;color:var(--g6);font-size:12.5px">'+team+'</td>'+
+        '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--g5);font-size:12.5px">'+quota+'</td>'+
         '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy);font-size:13px">'+taCell(mgr)+'</td>'+
         '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy);font-size:13px">'+taCell(a)+'</td>'+
         '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy);font-size:13px">'+taCell(b)+'</td>'+
         '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy);font-size:13px">'+taCell(c)+'</td>'+
         '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:900;color:var(--teal2);font-size:13px">'+total+'</td>'+
-        '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--g5);font-size:12.5px">'+quota+'</td>'+
         '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:700;color:'+(off>0?'var(--warn)':'var(--g3)')+';font-size:12.5px">'+off+'</td>'+
         '</tr>';
     });
+    // 운영팀 행 (admin+master 계정 기준, 출근은 오늘 관리자출근 체크 인원)
+    var opsChecked=0;
+    try{
+      var todayKst=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+      Object.keys(mgrAttData||{}).forEach(function(k){ if(k.indexOf('운영_')===0 && mgrAttData[k]&&mgrAttData[k].checked) opsChecked++; });
+    }catch(e){}
+    var opsOff=Math.max(0,qCounts.opsQuota-opsChecked);
+    sumQuota+=qCounts.opsQuota; sumTotal+=opsChecked; sumOff+=opsOff;
+    rowsHtml+='<tr style="background:var(--teal-bg)">'+
+      '<td style="padding:5px 4px;border-top:2px solid var(--g3);font-weight:800;color:var(--g6);font-size:12.5px">운영팀</td>'+
+      '<td style="padding:5px 4px;border-top:2px solid var(--g3);text-align:center;font-weight:700;color:var(--g5);font-size:12.5px">'+qCounts.opsQuota+'</td>'+
+      '<td style="padding:5px 4px;border-top:2px solid var(--g3);text-align:center;color:var(--g3)" colspan="4">-</td>'+
+      '<td style="padding:5px 4px;border-top:2px solid var(--g3);text-align:center;font-weight:900;color:var(--teal2);font-size:13px">'+opsChecked+'</td>'+
+      '<td style="padding:5px 4px;border-top:2px solid var(--g3);text-align:center;font-weight:700;color:'+(opsOff>0?'var(--warn)':'var(--g3)')+';font-size:12.5px">'+opsOff+'</td>'+
+      '</tr>';
     rowsHtml+='<tr style="background:var(--navy)">'+
       '<td style="padding:7px 4px;font-weight:900;color:white;font-size:12.5px">총계</td>'+
+      '<td style="padding:7px 4px;text-align:center;font-weight:900;color:white;font-size:12.5px">'+sumQuota+'</td>'+
       '<td style="padding:7px 4px;text-align:center;font-weight:900;color:white;font-size:13px">'+sumMgr+'</td>'+
       '<td style="padding:7px 4px;text-align:center;font-weight:900;color:white;font-size:13px">'+sumA+'</td>'+
       '<td style="padding:7px 4px;text-align:center;font-weight:900;color:white;font-size:13px">'+sumB+'</td>'+
       '<td style="padding:7px 4px;text-align:center;font-weight:900;color:white;font-size:13px">'+sumC+'</td>'+
       '<td style="padding:7px 4px;text-align:center;font-weight:900;color:#FFE9A8;font-size:14px">'+sumTotal+'</td>'+
-      '<td style="padding:7px 4px;text-align:center;font-weight:900;color:white;font-size:12.5px">'+sumQuota+'</td>'+
       '<td style="padding:7px 4px;text-align:center;font-weight:900;color:#FFD37A;font-size:12.5px">'+sumOff+'</td>'+
       '</tr>';
     var h='<table style="width:100%;border-collapse:collapse">'+
       '<thead><tr style="color:var(--g4);font-size:10.5px">'+
       '<th style="text-align:left;padding:2px 4px 5px;font-weight:700">팀</th>'+
+      '<th style="padding:2px 4px 5px;font-weight:700">정원</th>'+
       '<th style="padding:2px 4px 5px;font-weight:700">팀장</th>'+
       '<th style="padding:2px 4px 5px;font-weight:700">A조</th>'+
       '<th style="padding:2px 4px 5px;font-weight:700">B조</th>'+
       '<th style="padding:2px 4px 5px;font-weight:700">C조</th>'+
       '<th style="padding:2px 4px 5px;font-weight:700;color:var(--teal2)">출근</th>'+
-      '<th style="padding:2px 4px 5px;font-weight:700">정원</th>'+
       '<th style="padding:2px 4px 5px;font-weight:700;color:var(--warn)">휴무외</th>'+
       '</tr></thead><tbody>'+rowsHtml+'</tbody></table>';
     grid.innerHTML=h;
@@ -9505,33 +9599,44 @@ async function loadQuotaInputTab(){
   var wrap=document.getElementById('quotaInputWrap'); if(!wrap) return;
   if(!me||me.role!=='master'){ wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--g4);font-size:14px">master만 접근 가능합니다</div>'; return; }
   wrap.innerHTML='불러오는 중...';
-  var TEAM_SUBGROUPS={'1팀':['A','B','C'],'2팀':['A','B'],'3팀':['A','B'],'4팀':['A','B'],'6팀':['A','B','C'],'7팀':['A','B'],'8팀':['A','B'],'9팀':['A','B'],'5팀':['A','B'],'10팀':['A','B']};
-  var TEAM_ROW_ORDER=['1팀','2팀','3팀','4팀','6팀','7팀','8팀','9팀','5팀','10팀'];
   try{
+    var qCounts=await fetchQuotaCounts();
     var tqRes=await sb.from('team_quota').select('team_code,staff_quota');
     var staffQuota={};
     (tqRes.data||[]).forEach(function(r){ staffQuota[r.team_code]=r.staff_quota||0; });
     var h='';
-    TEAM_ROW_ORDER.forEach(function(team){
-      h+='<div style="font-size:14px;font-weight:700;color:var(--g7);margin:14px 0 8px">'+team+'</div>';
-      (TEAM_SUBGROUPS[team]||[]).forEach(function(s){
+    TEAM_ROW_ORDER_G.forEach(function(team){
+      var subs=TEAM_SUBGROUPS_G[team]||[];
+      var mgrCnt=qCounts.mgrCntByTeam[team]||0;
+      h+='<div style="margin:14px 0 8px;padding:10px 12px;background:var(--g1);border-radius:10px">';
+      h+='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">'+
+           '<span style="font-size:14px;font-weight:800;color:var(--g7)">'+team+'</span>'+
+           '<span style="font-size:11.5px;color:var(--g4)">팀장 '+mgrCnt+'명(자동)</span>'+
+         '</div>';
+      h+='<div style="display:flex;gap:8px;flex-wrap:wrap">';
+      subs.forEach(function(s){
         var gk=team+s;
-        h+='<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--g1)">'+
-          '<span style="font-size:13px;color:var(--g5)">'+team+' '+s+'조 사원정원</span>'+
-          '<input type="number" min="0" id="quota_'+gk+'" value="'+(staffQuota[gk]||0)+'" style="width:80px;text-align:right;height:34px">'+
+        var leaderCnt=qCounts.leaderCntByGroup[gk]||0;
+        h+='<div style="flex:1;min-width:100px">'+
+          '<div style="font-size:11px;color:var(--g4);margin-bottom:3px">'+s+'조 · 조장 '+leaderCnt+'명(자동)</div>'+
+          '<input type="number" min="0" id="quota_'+gk+'" value="'+(staffQuota[gk]||0)+'" placeholder="사원정원" style="width:100%;text-align:right;height:34px;box-sizing:border-box">'+
           '</div>';
       });
+      h+='</div></div>';
     });
+    h+='<div style="margin:14px 0 8px;padding:10px 12px;background:var(--teal-bg);border-radius:10px">'+
+         '<div style="font-size:14px;font-weight:800;color:var(--g7)">운영팀</div>'+
+         '<div style="font-size:11.5px;color:var(--g5);margin-top:4px">admin+master 계정 수 기준 자동 계산 (현재 '+qCounts.opsQuota+'명) — 별도 입력 없음</div>'+
+       '</div>';
     h+='<button onclick="saveQuotaInput()" class="btn-prim" style="width:100%;margin-top:16px">저장</button>';
     wrap.innerHTML=h;
   }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:14px">불러오기 실패</div>'; }
 }
 async function saveQuotaInput(){
   if(!me||me.role!=='master'){ toast('⚠️ master만 저장할 수 있습니다'); return; }
-  var TEAM_SUBGROUPS={'1팀':['A','B','C'],'2팀':['A','B'],'3팀':['A','B'],'4팀':['A','B'],'6팀':['A','B','C'],'7팀':['A','B'],'8팀':['A','B'],'9팀':['A','B'],'5팀':['A','B'],'10팀':['A','B']};
   var rows=[];
-  Object.keys(TEAM_SUBGROUPS).forEach(function(team){
-    TEAM_SUBGROUPS[team].forEach(function(s){
+  TEAM_ROW_ORDER_G.forEach(function(team){
+    (TEAM_SUBGROUPS_G[team]||[]).forEach(function(s){
       var gk=team+s;
       var el=document.getElementById('quota_'+gk);
       var v=el?parseInt(el.value,10):0;
@@ -24336,18 +24441,7 @@ var mgrAttQuotaSummaryCache={};
 async function loadMgrAttQuotaSummary(){
   try{
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-    var usrRes=await sb.from('users').select('role,team').eq('status','active').in('role',['manager','leader','acting_leader']);
-    var mgrCnt={}, leaderCnt={};
-    (usrRes.data||[]).forEach(function(u){
-      if(u.role==='manager'){ mgrCnt[u.team]=(mgrCnt[u.team]||0)+1; }
-      else{
-        var mm=(u.team||'').match(/^(\d+팀)\s*([A-Z])조$/);
-        if(mm){ var gk=mm[1]+mm[2]; leaderCnt[gk]=(leaderCnt[gk]||0)+1; }
-      }
-    });
-    var tqRes=await sb.from('team_quota').select('team_code,staff_quota');
-    var staffQuota={};
-    (tqRes.data||[]).forEach(function(r){ staffQuota[r.team_code]=r.staff_quota||0; });
+    var qCounts=await fetchQuotaCounts(); // 팀장+조장만 카운트(액팅리더 제외), 사원은 team_quota
     var mpRes=await sb.from('mp_data').select('team_code,values').eq('date',today);
     var staffToday={};
     (mpRes.data||[]).forEach(function(r){
@@ -24357,13 +24451,12 @@ async function loadMgrAttQuotaSummary(){
       for(var ri=0;ri<4;ri++){ if(!vals[ri]) continue; for(var ci=0;ci<7;ci++){ sum+=Number(vals[ri][ci])||0; } }
       staffToday[r.team_code]=(staffToday[r.team_code]||0)+sum;
     });
-    var TEAM_SUBGROUPS={'1팀':['A','B','C'],'2팀':['A','B'],'3팀':['A','B'],'4팀':['A','B'],'6팀':['A','B','C'],'7팀':['A','B'],'8팀':['A','B'],'9팀':['A','B'],'5팀':['A','B'],'10팀':['A','B']};
     var out={};
-    Object.keys(TEAM_SUBGROUPS).forEach(function(team){
-      var subs=TEAM_SUBGROUPS[team];
-      var quota=mgrCnt[team]||0;
+    TEAM_ROW_ORDER_G.forEach(function(team){
+      var subs=TEAM_SUBGROUPS_G[team]||[];
+      var quota=quotaForTeam(team, qCounts);
       var staffAttend=0;
-      subs.forEach(function(s){ var gk=team+s; quota+=(leaderCnt[gk]||0)+(staffQuota[gk]||0); staffAttend+=(staffToday[gk]||0); });
+      subs.forEach(function(s){ staffAttend+=(staffToday[team+s]||0); });
       var checkedLeaders=0;
       Object.keys(mgrAttData||{}).forEach(function(k){
         if(k.indexOf(team+'_')===0 && mgrAttData[k]&&mgrAttData[k].checked) checkedLeaders++;
@@ -24371,18 +24464,238 @@ async function loadMgrAttQuotaSummary(){
       var attend=checkedLeaders+staffAttend;
       out[team]={quota:quota, attend:attend, off:Math.max(0,quota-attend)};
     });
-    var opsQuota=0;
-    try{
-      var opsRes=await sb.from('users').select('role').eq('status','active').in('role',['admin','master']);
-      opsQuota=(opsRes.data||[]).length;
-    }catch(e){}
     var opsChecked=0;
     Object.keys(mgrAttData||{}).forEach(function(k){ if(k.indexOf('운영_')===0 && mgrAttData[k]&&mgrAttData[k].checked) opsChecked++; });
-    out['운영']={quota:opsQuota, attend:opsChecked, off:Math.max(0,opsQuota-opsChecked)};
+    out['운영']={quota:qCounts.opsQuota, attend:opsChecked, off:Math.max(0,qCounts.opsQuota-opsChecked)};
     mgrAttQuotaSummaryCache=out;
   }catch(e){}
 }
 
+// ── 현황판(현황판 화면)용 조별 평균 출근인원 표: 오늘 실시간 기준, 인력현황/관리자출근 탭 진입 없이도 바로 계산 ──
+async function renderExecTeamAttTable(){
+  var wrap=document.getElementById('edTeamAttWrap'); if(!wrap) return;
+  wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">불러오는 중...</div>';
+  try{
+    await loadMgrAttQuotaSummary(); // mgrAttQuotaSummaryCache 채움 (팀장·조장 체크 + 사원 오늘 입력 + 정원)
+    var qc=mgrAttQuotaSummaryCache||{};
+    var rowsHtml='';
+    var sumQuota=0, sumAttend=0, sumOff=0;
+    TEAM_ROW_ORDER_G.forEach(function(team,i){
+      var r=qc[team]||{quota:0,attend:0,off:0};
+      sumQuota+=r.quota; sumAttend+=r.attend; sumOff+=r.off;
+      var bg=(i%2===0)?'var(--navy-bg)':'transparent';
+      rowsHtml+='<tr style="background:'+bg+'">'+
+        '<td style="padding:6px 5px;border-top:1px solid var(--g1);font-weight:800;color:var(--g6);font-size:12.5px">'+team+'</td>'+
+        '<td style="padding:6px 5px;border-top:1px solid var(--g1);text-align:center;font-weight:700;color:var(--g5)">'+r.quota+'</td>'+
+        '<td style="padding:6px 5px;border-top:1px solid var(--g1);text-align:center;font-weight:900;color:var(--teal2)">'+r.attend+'</td>'+
+        '<td style="padding:6px 5px;border-top:1px solid var(--g1);text-align:center;font-weight:700;color:'+(r.off>0?'var(--warn)':'var(--g3)')+'">'+r.off+'</td>'+
+        '</tr>';
+    });
+    var opsR=qc['운영']||{quota:0,attend:0,off:0};
+    sumQuota+=opsR.quota; sumAttend+=opsR.attend; sumOff+=opsR.off;
+    rowsHtml+='<tr style="background:var(--teal-bg)">'+
+      '<td style="padding:6px 5px;border-top:2px solid var(--g3);font-weight:800;color:var(--g6);font-size:12.5px">운영팀</td>'+
+      '<td style="padding:6px 5px;border-top:2px solid var(--g3);text-align:center;font-weight:700;color:var(--g5)">'+opsR.quota+'</td>'+
+      '<td style="padding:6px 5px;border-top:2px solid var(--g3);text-align:center;font-weight:900;color:var(--teal2)">'+opsR.attend+'</td>'+
+      '<td style="padding:6px 5px;border-top:2px solid var(--g3);text-align:center;font-weight:700;color:'+(opsR.off>0?'var(--warn)':'var(--g3)')+'">'+opsR.off+'</td>'+
+      '</tr>';
+    rowsHtml+='<tr style="background:var(--navy)">'+
+      '<td style="padding:7px 5px;font-weight:900;color:white;font-size:12.5px">총계</td>'+
+      '<td style="padding:7px 5px;text-align:center;font-weight:900;color:white">'+sumQuota+'</td>'+
+      '<td style="padding:7px 5px;text-align:center;font-weight:900;color:#FFE9A8">'+sumAttend+'</td>'+
+      '<td style="padding:7px 5px;text-align:center;font-weight:900;color:#FFD37A">'+sumOff+'</td>'+
+      '</tr>';
+    wrap.innerHTML='<table style="width:100%;border-collapse:collapse">'+
+      '<thead><tr style="color:var(--g4);font-size:10.5px">'+
+      '<th style="text-align:left;padding:2px 5px 5px;font-weight:700">팀</th>'+
+      '<th style="padding:2px 5px 5px;font-weight:700">정원</th>'+
+      '<th style="padding:2px 5px 5px;font-weight:700;color:var(--teal2)">출근</th>'+
+      '<th style="padding:2px 5px 5px;font-weight:700;color:var(--warn)">휴무외</th>'+
+      '</tr></thead><tbody>'+rowsHtml+'</tbody></table>';
+  }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--danger);font-size:13px">불러오기 실패</div>'; }
+}
+// ── 사원 명부 ──
+var erData=[];
+function erCanEdit(){ return !!(me&&(me.role==='manager'||me.role==='admin'||me.role==='master')); }
+async function loadEmpRoster(){
+  var tbody=document.getElementById('erTbody'); if(!tbody) return;
+  tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--g3)">불러오는 중...</td></tr>';
+  try{
+    var res=await sb.from('employee_roster').select('*').order('team',{ascending:true}).order('emp_no',{ascending:true});
+    if(res.error){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--danger)">불러오기 실패</td></tr>'; return; }
+    erData=res.data||[];
+    erRender();
+  }catch(e){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--danger)">불러오기 실패</td></tr>'; }
+}
+function erRender(){
+  var tbody=document.getElementById('erTbody'); if(!tbody) return;
+  var q=(document.getElementById('erSearch').value||'').trim();
+  var list=erData;
+  if(q){
+    list=list.filter(function(r){
+      return (r.emp_no||'').indexOf(q)!==-1 || (r.name||'').indexOf(q)!==-1 || (r.team||'').indexOf(q)!==-1;
+    });
+  }
+  var lbl=document.getElementById('erCountLbl'); if(lbl) lbl.textContent='전체 '+list.length+'명';
+  var canEdit=erCanEdit();
+  if(!list.length){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--g3)">사원이 없습니다</td></tr>'; return; }
+  tbody.innerHTML=list.map(function(r){
+    return '<tr style="border-bottom:1px solid var(--g1)">'+
+      '<td style="padding:7px 6px">'+eeEsc(r.emp_no||'')+'</td>'+
+      '<td style="padding:7px 6px;font-weight:700">'+eeEsc(r.name||'')+'</td>'+
+      '<td style="padding:7px 6px">'+eeEsc(r.team||'')+'</td>'+
+      '<td style="padding:7px 6px">'+eeEsc(r.grp||'')+'</td>'+
+      '<td style="padding:7px 6px">'+eeEsc(r.position||'')+'</td>'+
+      '<td style="padding:7px 6px">'+eeEsc(r.birth_year||'')+'</td>'+
+      '<td style="padding:7px 6px">'+eeEsc(r.city||'')+'</td>'+
+      '<td style="padding:7px 6px">'+(r.hire_date||'')+'</td>'+
+      '<td style="padding:7px 6px">'+eeEsc(r.day_off||'')+'</td>'+
+      '<td style="padding:7px 6px;white-space:nowrap">'+(canEdit?(
+        '<button onclick=\'erOpenEdit(this)\' data-id="'+r.id+'" style="padding:4px 8px;background:var(--teal-bg);color:var(--teal2);border:none;border-radius:14px;font-size:11.5px;font-weight:700;cursor:pointer;margin-right:4px">수정</button>'+
+        '<button onclick="erDelete(\''+r.id+'\')" style="padding:4px 8px;background:#fee2e2;color:#dc2626;border:none;border-radius:14px;font-size:11.5px;font-weight:700;cursor:pointer">삭제</button>'
+      ):'')+'</td>'+
+      '</tr>';
+  }).join('');
+}
+function erOpenEdit(btn){
+  if(!erCanEdit()){ toast('⚠️ 팀장 이상만 수정할 수 있습니다'); return; }
+  var r=null;
+  if(btn){ var id=btn.getAttribute('data-id'); r=erData.find(function(x){return x.id===id;}); }
+  document.getElementById('erEditTitle').textContent=r?'사원 정보 수정':'사원 추가';
+  document.getElementById('er_id').value=r?r.id:'';
+  document.getElementById('er_emp_no').value=r?(r.emp_no||''):'';
+  document.getElementById('er_name').value=r?(r.name||''):'';
+  document.getElementById('er_hq_team').value=r?(r.hq_team||''):'';
+  document.getElementById('er_team').value=r?(r.team||''):'';
+  document.getElementById('er_grp').value=r?(r.grp||''):'';
+  document.getElementById('er_position').value=r?(r.position||''):'';
+  document.getElementById('er_birth_year').value=r?(r.birth_year||''):'';
+  document.getElementById('er_city').value=r?(r.city||''):'';
+  document.getElementById('er_job_grade').value=r?(r.job_grade||''):'';
+  document.getElementById('er_first_hire_date').value=r?(r.first_hire_date||''):'';
+  document.getElementById('er_hire_date').value=r?(r.hire_date||''):'';
+  document.getElementById('er_day_off').value=r?(r.day_off||''):'';
+  showM('erEditModal');
+}
+async function erSave(){
+  if(!erCanEdit()){ toast('⚠️ 팀장 이상만 저장할 수 있습니다'); return; }
+  var id=document.getElementById('er_id').value;
+  var empNo=(document.getElementById('er_emp_no').value||'').trim();
+  if(!empNo){ toast('⚠️ 사번을 입력해주세요'); return; }
+  var payload={
+    emp_no:empNo,
+    name:document.getElementById('er_name').value.trim()||null,
+    hq_team:document.getElementById('er_hq_team').value.trim()||null,
+    team:document.getElementById('er_team').value.trim()||null,
+    grp:document.getElementById('er_grp').value.trim()||null,
+    position:document.getElementById('er_position').value.trim()||null,
+    birth_year:document.getElementById('er_birth_year').value.trim()||null,
+    city:document.getElementById('er_city').value.trim()||null,
+    job_grade:document.getElementById('er_job_grade').value.trim()||null,
+    first_hire_date:document.getElementById('er_first_hire_date').value||null,
+    hire_date:document.getElementById('er_hire_date').value||null,
+    day_off:document.getElementById('er_day_off').value.trim()||null,
+    updated_by:me.name, updated_at:new Date().toISOString()
+  };
+  var res;
+  if(id){ res=await sb.from('employee_roster').update(payload).eq('id',id); }
+  else{ res=await sb.from('employee_roster').insert(payload); }
+  if(res.error){ toast('저장 오류: '+res.error.message); return; }
+  toast('✓ 저장되었습니다');
+  hideM('erEditModal');
+  loadEmpRoster();
+}
+async function erDelete(id){
+  if(!erCanEdit()){ toast('⚠️ 팀장 이상만 삭제할 수 있습니다'); return; }
+  if(!confirm('이 사원 정보를 삭제할까요?')) return;
+  var row=erData.find(function(x){return x.id===id;});
+  var res=await sb.from('employee_roster').delete().eq('id',id);
+  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  try{ logDeletion('사원 명부', (row?row.name+' ('+row.emp_no+')':id)); }catch(e){}
+  toast('✓ 삭제되었습니다');
+  loadEmpRoster();
+}
+// 주민번호 → 출생연도, 주소 → 거주(시) 만 추출 (원본 민감정보는 저장하지 않음)
+function erExtractYear(jumin){
+  if(!jumin) return '';
+  var s=String(jumin).trim();
+  var m=s.match(/^(\d{2})(\d{2})(\d{2})-?(\d)/);
+  if(!m) return '';
+  var yy=m[1], g=parseInt(m[4],10);
+  var century=1900;
+  if(g===3||g===4||g===7||g===8) century=2000;
+  else if(g===9||g===0) century=1800;
+  return String(century+parseInt(yy,10));
+}
+function erExtractCity(addr){
+  if(!addr) return '';
+  var a=String(addr).trim().replace(/^\(\d{5}\)/,'').replace(/\t/g,' ').replace(/\s+/g,' ').trim();
+  if(!a) return '';
+  var tokens=a.split(' ');
+  var first=tokens[0];
+  if(/(특별시|광역시|특별자치시)$/.test(first)) return first;
+  if(first.endsWith('도')){
+    if(tokens.length>1 && (tokens[1].endsWith('시')||tokens[1].endsWith('군'))) return first+' '+tokens[1];
+    return first;
+  }
+  if(first.endsWith('시')||first.endsWith('군')) return first;
+  return first;
+}
+function erExcelUpload(inputEl){
+  var file=inputEl.files[0]; if(!file) return;
+  if(!erCanEdit()){ toast('⚠️ 팀장 이상만 업로드할 수 있습니다'); inputEl.value=''; return; }
+  var reader=new FileReader();
+  reader.onload=async function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:'binary', cellDates:true});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var aoa=XLSX.utils.sheet_to_json(ws,{header:1, defval:''});
+      var headerRowIdx=aoa.findIndex(function(row){ return row.some(function(c){return String(c).trim()==='사번';}); });
+      if(headerRowIdx===-1){ toast('⚠️ "사번" 컬럼을 찾을 수 없습니다'); inputEl.value=''; return; }
+      var headers=aoa[headerRowIdx].map(function(h){return String(h).trim();});
+      var dataRows=aoa.slice(headerRowIdx+1);
+      var rows=dataRows.map(function(arr){
+        var o={}; headers.forEach(function(h,i){ if(h) o[h]=arr[i]!==undefined?arr[i]:''; }); return o;
+      }).filter(function(o){ return String(o['사번']||'').trim()!==''; });
+      if(!rows.length){ toast('엑셀에 데이터가 없습니다'); inputEl.value=''; return; }
+      function fmtDate(v){
+        if(!v) return null;
+        if(v instanceof Date) return v.toISOString().slice(0,10);
+        var s=String(v).trim(); if(!s) return null;
+        var m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/); if(m) return m[1]+'-'+m[2].padStart(2,'0')+'-'+m[3].padStart(2,'0');
+        return null;
+      }
+      var payloads=rows.map(function(r,idx){
+        return {
+          emp_no:String(r['사번']||'').trim(),
+          seq:parseInt(r['연번'],10)||idx+1,
+          division:String(r['사업부']||'').trim()||null,
+          hq_team:String(r['총괄팀']||'').trim()||null,
+          team:String(r['팀']||'').trim()||null,
+          grp:String(r['조']||'').trim()||null,
+          position:String(r['직책']||'').trim()||null,
+          name:String(r['성명']||'').trim()||null,
+          birth_year:erExtractYear(r['주민번호']),
+          city:erExtractCity(r['주소']),
+          job_grade:String(r['직군']||'').trim()||null,
+          first_hire_date:fmtDate(r['최초입사일']),
+          hire_date:fmtDate(r['입사일']),
+          day_off:String(r['휴무']||'').trim()||null,
+          updated_by:me.name, updated_at:new Date().toISOString()
+        };
+      }).filter(function(p){ return p.emp_no; });
+      var okCnt=0, failCnt=0;
+      for(var i=0;i<payloads.length;i++){
+        var res=await sb.from('employee_roster').upsert(payloads[i], {onConflict:'emp_no'});
+        if(res.error) failCnt++; else okCnt++;
+      }
+      toast('✓ 업로드 완료: '+okCnt+'명'+(failCnt?(' (실패 '+failCnt+'건)'):''));
+      inputEl.value='';
+      loadEmpRoster();
+    }catch(err){ toast('⚠️ 엑셀 처리 중 오류가 발생했습니다'); inputEl.value=''; }
+  };
+  reader.readAsBinaryString(file);
+}
 async function loadMgrAttendanceYesterday(){
   var yEl = document.getElementById('mgrAttYesterday');
   var dashYEl = document.getElementById('dashMgrAttYesterday');
@@ -27729,6 +28042,9 @@ function msToggle(key){
   if(card) card.style.border='1.5px solid var(--teal)';
   msRenderDetail(key);
   det.style.display='block';
+  if(key==='mp'){
+    fetchQuotaCounts().then(function(qc){ window._msQuotaCache=qc; if(msOpenKey==='mp') msRenderDetail('mp'); });
+  }
 }
 
 function msRenderDetail(key){
@@ -27785,7 +28101,8 @@ function msRenderDetail(key){
       return v;
     }
     var taRowsHtml='';
-    var taSumMgr=0, taSumA=0, taSumB=0, taSumC=0, taSumTotal=0;
+    var taSumMgr=0, taSumA=0, taSumB=0, taSumC=0, taSumTotal=0, taSumQuota=0, taSumOff=0;
+    var msQC=window._msQuotaCache||{mgrCntByTeam:{},leaderCntByGroup:{},staffQuotaByGroup:{},opsQuota:0};
     TA_ROW_ORDER.forEach(function(team,ti){
       var subs=TA_SUBGROUPS[team]||[];
       var mgr=taDashMgrVal(team);
@@ -27793,35 +28110,45 @@ function msRenderDetail(key){
       var b=subs.indexOf('B')!==-1?taDashVal(team+'B'):null;
       var c2=subs.indexOf('C')!==-1?taDashVal(team+'C'):null;
       var total=mgr+(a||0)+(b||0)+(c2||0);
-      taSumMgr+=mgr; taSumA+=(a||0); taSumB+=(b||0); taSumC+=(c2||0); taSumTotal+=total;
+      var quota=quotaForTeam(team, msQC);
+      var off=Math.max(0,quota-total);
+      taSumMgr+=mgr; taSumA+=(a||0); taSumB+=(b||0); taSumC+=(c2||0); taSumTotal+=total; taSumQuota+=quota; taSumOff+=off;
       var isPairStart=(ti%2===0);
       var rowBg=(Math.floor(ti/2)%2===0)?'var(--navy-bg)':'transparent';
       var topBorder=isPairStart?'border-top:2px solid var(--g3)':'border-top:1px solid var(--g1)';
       taRowsHtml+='<tr style="background:'+rowBg+'">'+
         '<td style="padding:8px 4px;'+topBorder+';font-weight:800;color:var(--g6);font-size:13px">'+team+'</td>'+
+        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--g5)">'+quota+'</td>'+
         '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taDashCell(mgr)+'</td>'+
         '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taDashCell(a)+'</td>'+
         '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taDashCell(b)+'</td>'+
         '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:var(--navy)">'+taDashCell(c2)+'</td>'+
         '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:900;color:var(--teal2)">'+total+'</td>'+
+        '<td style="padding:8px 4px;'+topBorder+';text-align:center;font-weight:700;color:'+(off>0?'var(--warn)':'var(--g3)')+'">'+off+'</td>'+
         '</tr>';
     });
+    taSumQuota+=msQC.opsQuota||0;
     taRowsHtml+='<tr style="background:var(--navy)">'+
       '<td style="padding:9px 4px;font-weight:900;color:white;font-size:13px">총계</td>'+
+      '<td style="padding:9px 4px;text-align:center;font-weight:900;color:white">'+taSumQuota+'</td>'+
       '<td style="padding:9px 4px;text-align:center;font-weight:900;color:white">'+taSumMgr+'</td>'+
       '<td style="padding:9px 4px;text-align:center;font-weight:900;color:white">'+taSumA+'</td>'+
       '<td style="padding:9px 4px;text-align:center;font-weight:900;color:white">'+taSumB+'</td>'+
       '<td style="padding:9px 4px;text-align:center;font-weight:900;color:white">'+taSumC+'</td>'+
       '<td style="padding:9px 4px;text-align:center;font-weight:900;color:#FFE9A8;font-size:14px">'+taSumTotal+'</td>'+
+      '<td style="padding:9px 4px;text-align:center;font-weight:900;color:#FFD37A">'+taSumOff+'</td>'+
       '</tr>';
+    h+='<div style="font-size:11px;color:var(--g4);margin-bottom:4px">정원: 팀장·조장은 계정 수 자동 집계(액팅리더 제외) + 사원은 정원입력 값 · 운영팀 정원 '+(msQC.opsQuota||0)+'명 별도</div>';
     h+='<table style="width:100%;border-collapse:collapse;margin-bottom:4px">'+
       '<thead><tr style="color:var(--g4);font-size:11px">'+
       '<th style="text-align:left;padding:2px 4px 6px;font-weight:700">팀</th>'+
+      '<th style="padding:2px 4px 6px;font-weight:700">정원</th>'+
       '<th style="padding:2px 4px 6px;font-weight:700">팀장</th>'+
       '<th style="padding:2px 4px 6px;font-weight:700">A조</th>'+
       '<th style="padding:2px 4px 6px;font-weight:700">B조</th>'+
       '<th style="padding:2px 4px 6px;font-weight:700">C조</th>'+
       '<th style="padding:2px 4px 6px;font-weight:700;color:var(--teal2)">계</th>'+
+      '<th style="padding:2px 4px 6px;font-weight:700;color:var(--warn)">휴무외</th>'+
       '</tr></thead><tbody>'+taRowsHtml+'</tbody></table>';
     // 시간대별 인원 일평균 (구간별 카드) - shiftDays 기준 정확한 평균
     h+=msSub('시간대별 인원 일평균');
