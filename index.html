@@ -3688,6 +3688,9 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     </label>
     <label style="font-size:12.5px;font-weight:700;color:var(--g6);margin-top:12px;display:block">최종 후보(TOP N) 선정 개수</label>
     <input type="number" min="1" id="cpNewFinalistLimit" value="16" placeholder="예: 16" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box">
+    <label style="font-size:12.5px;font-weight:700;color:var(--g6)">최소 응모 배수 (0=제한 없음)</label>
+    <input type="number" min="0" step="0.5" id="cpNewMinMultiplier" value="0" placeholder="예: 3 (최종후보 개수의 3배 이상 응모돼야 진행)" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box">
+    <div style="font-size:11px;color:var(--g4);margin:-8px 0 12px">예: 최종 후보 16명 · 배수 3 → 응모 48건 미만이면 "최종 후보 선정"이 막힙니다</div>
     <div style="display:flex;gap:8px;margin-top:16px">
       <button onclick="hideM('cpCreateModal')" style="flex:1;padding:11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-weight:700;cursor:pointer">취소</button>
       <button id="cpCreateSaveBtn" onclick="cpCreateCampaign()" style="flex:1;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">만들기</button>
@@ -26794,6 +26797,7 @@ function cpOpenCreate(){
   document.getElementById('cpNewSchedule').value='';
   document.getElementById('cpNewAllowMulti').checked=false;
   document.getElementById('cpNewFinalistLimit').value=16;
+  document.getElementById('cpNewMinMultiplier').value=0;
   cpSetTargetRolesUI([]);
   showM('cpCreateModal');
 }
@@ -26812,6 +26816,7 @@ function cpOpenEditCampaign(id){
   document.getElementById('cpNewSchedule').value=c.schedule_note||'';
   document.getElementById('cpNewAllowMulti').checked=!!c.allow_multiple;
   document.getElementById('cpNewFinalistLimit').value=c.finalist_limit||16;
+  document.getElementById('cpNewMinMultiplier').value=c.min_multiplier||0;
   cpSetTargetRolesUI(c.target_roles===undefined?[]:c.target_roles);
   showM('cpCreateModal');
 }
@@ -26826,13 +26831,14 @@ async function cpCreateCampaign(){
   var schedule=(document.getElementById('cpNewSchedule').value||'').trim();
   var allowMulti=document.getElementById('cpNewAllowMulti').checked;
   var finalistLimit=parseInt(document.getElementById('cpNewFinalistLimit').value,10)||16;
+  var minMultiplier=parseFloat(document.getElementById('cpNewMinMultiplier').value)||0;
   var targetRoles=cpGetTargetRolesFromUI();
   if(!title){ toast('⚠️ 제목을 입력해주세요'); return; }
   if(startDate&&endDate&&startDate>endDate){ toast('⚠️ 종료일이 시작일보다 빠릅니다'); return; }
   var payload={
     title:title, description:desc||null, allow_multiple:allowMulti,
     start_date:startDate, end_date:endDate, target:target||null, condition_text:condition||null, schedule_note:schedule||null,
-    target_roles:targetRoles, finalist_limit:finalistLimit
+    target_roles:targetRoles, finalist_limit:finalistLimit, min_multiplier:minMultiplier
   };
   var res;
   var campaignId;
@@ -27064,7 +27070,13 @@ function cpIsFinalist(entryId){ return cpFinalistsCache.some(function(f){return 
 async function cpToggleFinalist(entryId){
   if(!cpCanSeeIdentity()){ toast('⚠️ master만 최종 후보를 선정할 수 있습니다'); return; }
   var limit=cpCurCampaign.finalist_limit||16;
+  var minMult=cpCurCampaign.min_multiplier||0;
   var existing=cpFinalistsCache.find(function(f){return f.entry_id===entryId;});
+  if(!existing && minMult>0){
+    var need=Math.ceil(limit*minMult);
+    var totalEntries=cpAllEntriesCache.length;
+    if(totalEntries<need){ toast('⚠️ 최소 응모 '+need+'건 필요 (현재 '+totalEntries+'건) — 최종 후보 선정을 진행할 수 없습니다'); return; }
+  }
   if(existing){
     var delRes=await sb.from('campaign_finalists').delete().eq('id',existing.id);
     if(delRes.error){ toast('오류: '+delRes.error.message); return; }
@@ -27127,7 +27139,15 @@ function cpRenderAllEntries(){
     h+='<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#1e40af">👁️ 공정한 심사를 위해 작성자 정보와 전체 점수는 master만 볼 수 있어요. 내용만 보고 투표해주세요.</div>';
   }
   h+='<div style="font-size:11.5px;color:var(--g4);margin-bottom:8px">※ 관리자별로 1위(3점)/2위(2점)/3위(1점)를 각각 1건씩 투표할 수 있습니다. 아래 버튼은 내 투표만 표시됩니다.</div>';
-  if(canSee) h+='<div style="font-size:11.5px;color:#0e7490;margin-bottom:8px">🏆 최종 후보 선정: '+cpFinalistsCache.length+' / '+(cpCurCampaign.finalist_limit||16)+' — 각 항목의 "선정" 버튼으로 최종 후보를 선정하세요. 선정 후 [전직원 투표] 버튼이 활성화됩니다.</div>';
+  if(canSee){
+    var _limit=cpCurCampaign.finalist_limit||16, _minMult=cpCurCampaign.min_multiplier||0;
+    h+='<div style="font-size:11.5px;color:#0e7490;margin-bottom:8px">🏆 최종 후보 선정: '+cpFinalistsCache.length+' / '+_limit+' — 각 항목의 "선정" 버튼으로 최종 후보를 선정하세요. 선정 후 [전직원 투표] 버튼이 활성화됩니다.</div>';
+    if(_minMult>0){
+      var _need=Math.ceil(_limit*_minMult);
+      var _ok=rows.length>=_need;
+      h+='<div style="font-size:11.5px;color:'+(_ok?'#0e7490':'#dc2626')+';margin-bottom:8px;font-weight:700">'+(_ok?'✓':'⚠️')+' 최소 응모 조건: '+_need+'건 필요 (배수 '+_minMult+'배) · 현재 '+rows.length+'건 '+(_ok?'— 진행 가능':'— 부족하여 최종 후보 선정 불가')+'</div>';
+    }
+  }
   h+='<div style="font-size:12.5px;color:var(--g5);margin-bottom:8px;font-weight:700">전체 '+rows.length+'건</div>';
   rows.forEach(function(e){
     var score=cpEntryScore(e.id), voteCnt=cpEntryVoteCount(e.id);
