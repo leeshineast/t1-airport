@@ -2869,10 +2869,12 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div class="pg-hd"><div><h1>사원 명부</h1><small>팀장 이상 조회·수정 가능</small></div></div>
   <div style="padding:0 13px 10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
     <input id="erSearch" oninput="erRender()" placeholder="🔍 사번/성명/팀 검색" style="flex:1;min-width:140px;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px">
+    <select id="erTeamFilter" onchange="erRender()" style="padding:9px 8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white"><option value="">전체 팀</option></select>
     <label style="padding:9px 12px;background:white;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
       ⬆️ 엑셀 업로드<input type="file" accept=".xlsx,.xls" style="display:none" onchange="erExcelUpload(this)">
     </label>
     <button onclick="erOpenEdit(null)" style="padding:9px 12px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">＋ 추가</button>
+    <button onclick="erDeleteAll()" style="padding:9px 12px;background:#fee2e2;color:#dc2626;border:1.5px solid #fca5a5;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">🗑 전체삭제</button>
   </div>
   <div style="padding:0 13px 6px;font-size:12px;color:var(--g4)" id="erCountLbl"></div>
   <div style="padding:0 13px 20px;overflow-x:auto">
@@ -9082,7 +9084,8 @@ async function loadTeamAvgAttendance(prefix){
       '<td style="padding:7px 4px;text-align:center;font-weight:900;color:#FFE9A8;font-size:14px">'+sumTotal+'</td>'+
       '<td style="padding:7px 4px;text-align:center;font-weight:900;color:#FFD37A;font-size:12.5px">'+sumOff+'</td>'+
       '</tr>';
-    var h='<table style="width:100%;border-collapse:collapse">'+
+    var h='<table style="width:100%;border-collapse:collapse;table-layout:fixed">'+
+      '<colgroup><col style="width:14%"><col style="width:12.3%"><col style="width:12.3%"><col style="width:12.3%"><col style="width:12.3%"><col style="width:12.3%"><col style="width:12.3%"><col style="width:12.2%"></colgroup>'+
       '<thead><tr style="color:var(--g4);font-size:10.5px">'+
       '<th style="text-align:left;padding:2px 4px 5px;font-weight:700">팀</th>'+
       '<th style="padding:2px 4px 5px;font-weight:700">정원</th>'+
@@ -24504,13 +24507,22 @@ async function loadEmpRoster(){
     var res=await sb.from('employee_roster').select('*').order('team',{ascending:true}).order('emp_no',{ascending:true});
     if(res.error){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--danger)">불러오기 실패</td></tr>'; return; }
     erData=res.data||[];
+    var teams=Array.from(new Set(erData.map(function(r){return r.team;}).filter(Boolean))).sort(function(a,b){return a.localeCompare(b,'ko');});
+    var sel=document.getElementById('erTeamFilter');
+    if(sel){
+      var cur=sel.value;
+      sel.innerHTML='<option value="">전체 팀</option>'+teams.map(function(t){return '<option value="'+eeEsc(t)+'">'+eeEsc(t)+'</option>';}).join('');
+      sel.value=cur||'';
+    }
     erRender();
   }catch(e){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--danger)">불러오기 실패</td></tr>'; }
 }
 function erRender(){
   var tbody=document.getElementById('erTbody'); if(!tbody) return;
   var q=(document.getElementById('erSearch').value||'').trim();
+  var teamF=(document.getElementById('erTeamFilter')||{}).value||'';
   var list=erData;
+  if(teamF) list=list.filter(function(r){ return r.team===teamF; });
   if(q){
     list=list.filter(function(r){
       return (r.emp_no||'').indexOf(q)!==-1 || (r.name||'').indexOf(q)!==-1 || (r.team||'').indexOf(q)!==-1;
@@ -24593,6 +24605,17 @@ async function erDelete(id){
   if(res.error){ toast('삭제 오류: '+res.error.message); return; }
   try{ logDeletion('사원 명부', (row?row.name+' ('+row.emp_no+')':id)); }catch(e){}
   toast('✓ 삭제되었습니다');
+  loadEmpRoster();
+}
+async function erDeleteAll(){
+  if(!erCanEdit()){ toast('⚠️ 팀장 이상만 삭제할 수 있습니다'); return; }
+  if(!erData.length){ toast('삭제할 사원이 없습니다'); return; }
+  if(!confirm('사원 명부 전체('+erData.length+'명)를 삭제할까요?\n복구할 수 없습니다.')) return;
+  if(!confirm('정말로 전체 삭제하시겠습니까? 다시 한번 확인합니다.')) return;
+  var res=await sb.from('employee_roster').delete().gte('emp_no','');
+  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  try{ logDeletion('사원 명부', '전체 삭제 ('+erData.length+'명)'); }catch(e){}
+  toast('✓ 전체 삭제되었습니다');
   loadEmpRoster();
 }
 // 주민번호 → 출생연도, 주소 → 거주(시) 만 추출 (원본 민감정보는 저장하지 않음)
@@ -28119,7 +28142,8 @@ function msRenderDetail(key){
       '<td style="padding:9px 4px;text-align:center;font-weight:900;color:#FFD37A">'+taSumOff+'</td>'+
       '</tr>';
     h+='<div style="font-size:11px;color:var(--g4);margin-bottom:4px">정원: 팀장·조장은 계정 수 자동 집계(액팅리더 제외) + 사원은 정원입력 값 · 운영팀 정원 '+(msQC.opsQuota||0)+'명 별도</div>';
-    h+='<table style="width:100%;border-collapse:collapse;margin-bottom:4px">'+
+    h+='<table style="width:100%;border-collapse:collapse;margin-bottom:4px;table-layout:fixed">'+
+      '<colgroup><col style="width:14%"><col style="width:12.3%"><col style="width:12.3%"><col style="width:12.3%"><col style="width:12.3%"><col style="width:12.3%"><col style="width:12.3%"><col style="width:12.2%"></colgroup>'+
       '<thead><tr style="color:var(--g4);font-size:11px">'+
       '<th style="text-align:left;padding:2px 4px 6px;font-weight:700">팀</th>'+
       '<th style="padding:2px 4px 6px;font-weight:700">정원</th>'+
