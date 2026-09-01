@@ -25852,6 +25852,19 @@ async function wfOpenEditLog(empNo, name){
   document.getElementById('wfLogBody').innerHTML=body;
   showM('wfLogModal');
 }
+async function wfSpOpenEditLog(eventId, title){
+  var res=await sb.from('wf_special_edit_log').select('*').eq('event_id',eventId).order('changed_at',{ascending:false}).limit(30);
+  var rows=res.data||[];
+  var body=rows.length ? rows.map(function(r){
+    return '<div style="padding:9px 0;border-bottom:1px solid var(--g1)">'+
+      '<div style="font-size:12.5px;color:var(--g7)"><b>'+eeEsc(r.field_name)+'</b>: '+eeEsc(r.old_value||'')+' → <b style="color:var(--teal)">'+eeEsc(r.new_value||'')+'</b></div>'+
+      '<div style="font-size:11px;color:var(--g4);margin-top:2px">'+(r.changed_by||'')+' · '+new Date(r.changed_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})+'</div>'+
+      '</div>';
+  }).join('') : '<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">수정 이력이 없습니다</div>';
+  document.getElementById('wfLogTitle').textContent=title+' 수정 이력';
+  document.getElementById('wfLogBody').innerHTML=body;
+  showM('wfLogModal');
+}
 
 // ── 엑셀 업로드: 인원현황 시트 파싱 (사번, 한글이름, 직책/직위, 총괄, 근무팀, 근무조, 근무구역, 1분기 등 요일컬럼) ──
 function wfDownloadEmpTemplate(){
@@ -26169,6 +26182,7 @@ async function wfSpLoadEvents(){
        '</div>'+
        '<div style="display:flex;gap:6px;margin-top:10px">'+
        '<button onclick="event.stopPropagation();wfSpOpenEdit(\''+ev.id+'\')" style="flex:1;padding:7px;background:#dbeafe;color:#1e40af;border:none;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer">✎ 수정</button>'+
+       '<button onclick="event.stopPropagation();wfSpOpenEditLog(\''+ev.id+'\',\''+ev.title.replace(/'/g,"\\'")+'\')" style="flex:1;padding:7px;background:#f1f5f9;color:#475569;border:none;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer">📜 이력</button>'+
        '<button onclick="event.stopPropagation();wfSpDeleteEventById(\''+ev.id+'\',\''+ev.title.replace(/'/g,"\\'")+'\')" style="flex:1;padding:7px;background:#fee2e2;color:#dc2626;border:none;border-radius:7px;font-size:12.5px;font-weight:700;cursor:pointer">🗑 삭제</button>'+
        '</div>'+
        '</div>';
@@ -26205,8 +26219,26 @@ async function wfSpCreateEvent(){
   if(!title||!s||!en){ toast('⚠️ 제목·기간을 모두 입력해주세요'); return; }
   if(s>en){ toast('⚠️ 종료일이 시작일보다 빠릅니다'); return; }
   if(wfSpEditId){
+    var evBefore=wfSpEvents.find(function(x){return x.id===wfSpEditId;});
     var res2=await sb.from('wf_special_events').update({title:title, period_type:type, start_date:s, end_date:en}).eq('id', wfSpEditId);
     if(res2.error){ toast('수정 오류: '+res2.error.message); return; }
+    // 수정 이력 기록 (값이 실제로 바뀐 항목만)
+    if(evBefore){
+      var changes=[];
+      if(evBefore.title!==title) changes.push(['제목', evBefore.title, title]);
+      if(evBefore.period_type!==type) changes.push(['구분', evBefore.period_type, type]);
+      if(evBefore.start_date!==s) changes.push(['시작일', evBefore.start_date, s]);
+      if(evBefore.end_date!==en) changes.push(['종료일', evBefore.end_date, en]);
+      for(var ci=0;ci<changes.length;ci++){
+        try{
+          await sb.from('wf_special_edit_log').insert({
+            event_id: wfSpEditId, event_title: title,
+            field_name: changes[ci][0], old_value: changes[ci][1]||'(없음)', new_value: changes[ci][2]||'(없음)',
+            changed_by: me?me.name:''
+          });
+        }catch(logErr){ /* 이력 기록 실패해도 저장 자체는 유지 */ }
+      }
+    }
     toast('✓ 수정되었습니다');
     // 기간이 줄어들어 범위 밖에 남는 기존 편성 데이터가 있으면 정리할지 확인
     var offRes=await sb.from('wf_special_assignments').select('id,work_date').eq('event_id', wfSpEditId);
