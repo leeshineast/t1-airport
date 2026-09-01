@@ -3649,7 +3649,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <div style="font-size:15px;font-weight:800;color:var(--g7);margin-bottom:10px">📝 내 제출내역</div>
     <div id="cpMyEntries" style="margin-bottom:16px"></div>
 
-    <button id="cpAdminBtns" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenAllEntries()">📋 전체 제출목록 보기 / TOP16 선정 (관리자)</button>
+    <button id="cpAdminBtns" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenAllEntries()">📋 전체 제출목록 보기 / 최종 후보 선정 (관리자)</button>
     <button id="cpVoteBtn" style="display:none;width:100%;padding:11px;background:#ecfeff;border:1.5px solid #67e8f9;border-radius:10px;font-size:13.5px;font-weight:700;color:#0e7490;cursor:pointer;margin-bottom:8px" onclick="cpOpenPublicVote()">🗳️ 전직원 투표 참여</button>
     <button id="cpResultBtn" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenVoteResults()">📊 전직원 투표 결과 (관리자)</button>
     <button id="cpWinnerBtn" style="display:none;width:100%;padding:11px;background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;font-size:13.5px;font-weight:700;color:#c2410c;cursor:pointer" onclick="cpOpenWinnerEdit()">📢 당선작 공지 작성/수정</button>
@@ -3686,6 +3686,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <label style="font-size:12.5px;font-weight:700;color:var(--g6);display:flex;align-items:center;gap:8px;cursor:pointer">
       <input type="checkbox" id="cpNewAllowMulti" style="width:16px;height:16px"> 한 사람이 여러 개 제출 가능하게 허용
     </label>
+    <label style="font-size:12.5px;font-weight:700;color:var(--g6);margin-top:12px;display:block">최종 후보(TOP N) 선정 개수</label>
+    <input type="number" min="1" id="cpNewFinalistLimit" value="16" placeholder="예: 16" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box">
     <div style="display:flex;gap:8px;margin-top:16px">
       <button onclick="hideM('cpCreateModal')" style="flex:1;padding:11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-weight:700;cursor:pointer">취소</button>
       <button id="cpCreateSaveBtn" onclick="cpCreateCampaign()" style="flex:1;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">만들기</button>
@@ -26791,6 +26793,7 @@ function cpOpenCreate(){
   document.getElementById('cpNewCondition').value='';
   document.getElementById('cpNewSchedule').value='';
   document.getElementById('cpNewAllowMulti').checked=false;
+  document.getElementById('cpNewFinalistLimit').value=16;
   cpSetTargetRolesUI([]);
   showM('cpCreateModal');
 }
@@ -26808,6 +26811,7 @@ function cpOpenEditCampaign(id){
   document.getElementById('cpNewCondition').value=c.condition_text||'';
   document.getElementById('cpNewSchedule').value=c.schedule_note||'';
   document.getElementById('cpNewAllowMulti').checked=!!c.allow_multiple;
+  document.getElementById('cpNewFinalistLimit').value=c.finalist_limit||16;
   cpSetTargetRolesUI(c.target_roles===undefined?[]:c.target_roles);
   showM('cpCreateModal');
 }
@@ -26821,13 +26825,14 @@ async function cpCreateCampaign(){
   var condition=(document.getElementById('cpNewCondition').value||'').trim();
   var schedule=(document.getElementById('cpNewSchedule').value||'').trim();
   var allowMulti=document.getElementById('cpNewAllowMulti').checked;
+  var finalistLimit=parseInt(document.getElementById('cpNewFinalistLimit').value,10)||16;
   var targetRoles=cpGetTargetRolesFromUI();
   if(!title){ toast('⚠️ 제목을 입력해주세요'); return; }
   if(startDate&&endDate&&startDate>endDate){ toast('⚠️ 종료일이 시작일보다 빠릅니다'); return; }
   var payload={
     title:title, description:desc||null, allow_multiple:allowMulti,
     start_date:startDate, end_date:endDate, target:target||null, condition_text:condition||null, schedule_note:schedule||null,
-    target_roles:targetRoles
+    target_roles:targetRoles, finalist_limit:finalistLimit
   };
   var res;
   var campaignId;
@@ -27057,14 +27062,15 @@ async function cpOpenAllEntries(){
 var cpFinalistsCache=[];
 function cpIsFinalist(entryId){ return cpFinalistsCache.some(function(f){return f.entry_id===entryId;}); }
 async function cpToggleFinalist(entryId){
-  if(!cpCanSeeIdentity()){ toast('⚠️ master만 TOP16을 선정할 수 있습니다'); return; }
+  if(!cpCanSeeIdentity()){ toast('⚠️ master만 최종 후보를 선정할 수 있습니다'); return; }
+  var limit=cpCurCampaign.finalist_limit||16;
   var existing=cpFinalistsCache.find(function(f){return f.entry_id===entryId;});
   if(existing){
     var delRes=await sb.from('campaign_finalists').delete().eq('id',existing.id);
     if(delRes.error){ toast('오류: '+delRes.error.message); return; }
     cpFinalistsCache=cpFinalistsCache.filter(function(f){return f.id!==existing.id;});
   }else{
-    if(cpFinalistsCache.length>=16){ toast('⚠️ TOP16은 최대 16개까지만 선정할 수 있습니다'); return; }
+    if(cpFinalistsCache.length>=limit){ toast('⚠️ 최종 후보는 최대 '+limit+'개까지만 선정할 수 있습니다'); return; }
     var body={ id:'cpf_'+Date.now()+'_'+Math.floor(Math.random()*1000), campaign_id:cpCurCampaign.id, entry_id:entryId, seed_rank:cpFinalistsCache.length+1, created_by: me?me.name:'' };
     var insRes=await sb.from('campaign_finalists').insert(body);
     if(insRes.error){ toast('오류: '+insRes.error.message); return; }
@@ -27121,7 +27127,7 @@ function cpRenderAllEntries(){
     h+='<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#1e40af">👁️ 공정한 심사를 위해 작성자 정보와 전체 점수는 master만 볼 수 있어요. 내용만 보고 투표해주세요.</div>';
   }
   h+='<div style="font-size:11.5px;color:var(--g4);margin-bottom:8px">※ 관리자별로 1위(3점)/2위(2점)/3위(1점)를 각각 1건씩 투표할 수 있습니다. 아래 버튼은 내 투표만 표시됩니다.</div>';
-  if(canSee) h+='<div style="font-size:11.5px;color:#0e7490;margin-bottom:8px">🏆 TOP16 선정: '+cpFinalistsCache.length+' / 16 — 각 항목의 "TOP16" 버튼으로 최종 후보를 선정하세요. 선정 후 [전직원 투표] 버튼이 활성화됩니다.</div>';
+  if(canSee) h+='<div style="font-size:11.5px;color:#0e7490;margin-bottom:8px">🏆 최종 후보 선정: '+cpFinalistsCache.length+' / '+(cpCurCampaign.finalist_limit||16)+' — 각 항목의 "선정" 버튼으로 최종 후보를 선정하세요. 선정 후 [전직원 투표] 버튼이 활성화됩니다.</div>';
   h+='<div style="font-size:12.5px;color:var(--g5);margin-bottom:8px;font-weight:700">전체 '+rows.length+'건</div>';
   rows.forEach(function(e){
     var score=cpEntryScore(e.id), voteCnt=cpEntryVoteCount(e.id);
@@ -27132,7 +27138,7 @@ function cpRenderAllEntries(){
     h+='<div style="background:'+(isFinal?'#ecfeff':(canSee&&hasScore?'#fffbeb':'white'))+';border:1.5px solid '+(isFinal?'#67e8f9':(canSee&&hasScore?'#fde68a':'var(--g2)'))+';border-radius:10px;padding:11px;margin-bottom:8px">'+
        '<div style="display:flex;justify-content:space-between;gap:8px">'+
        '<span style="font-size:13px;font-weight:700;color:var(--g7)">'+(isFinal?'🏆 ':'')+headerLabel+'</span>'+
-       (canSee?('<span style="display:flex;gap:5px;flex-shrink:0"><button onclick="cpToggleFinalist(\''+e.id+'\')" style="padding:3px 9px;border-radius:6px;border:1.5px solid '+(isFinal?'#0e7490':'var(--g2)')+';background:'+(isFinal?'#0e7490':'white')+';color:'+(isFinal?'white':'var(--g6)')+';font-size:11px;font-weight:700;cursor:pointer">'+(isFinal?'TOP16 해제':'TOP16 선정')+'</button><button onclick="cpAdminDeleteEntry(\''+e.id+'\')" style="padding:3px 9px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">삭제</button></span>'):'')+
+       (canSee?('<span style="display:flex;gap:5px;flex-shrink:0"><button onclick="cpToggleFinalist(\''+e.id+'\')" style="padding:3px 9px;border-radius:6px;border:1.5px solid '+(isFinal?'#0e7490':'var(--g2)')+';background:'+(isFinal?'#0e7490':'white')+';color:'+(isFinal?'white':'var(--g6)')+';font-size:11px;font-weight:700;cursor:pointer">'+(isFinal?'선정 해제':'최종 후보 선정')+'</button><button onclick="cpAdminDeleteEntry(\''+e.id+'\')" style="padding:3px 9px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">삭제</button></span>'):'')+
        '</div>'+
        '<div style="font-size:13px;color:var(--g6);white-space:pre-wrap;margin-top:6px;line-height:1.6">'+eeEsc(e.content)+'</div>'+
        '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap">'+
@@ -27290,7 +27296,7 @@ async function cpOpenVoteResults(){
   if(!cpCanSeeIdentity()){ toast('⚠️ master만 볼 수 있습니다'); return; }
   var fRes=await sb.from('campaign_finalists').select('*').eq('campaign_id',cpCurCampaign.id);
   var finalists=fRes.data||[];
-  if(!finalists.length){ document.getElementById('cpResultWrap').innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">아직 TOP16이 선정되지 않았습니다</div>'; showM('cpResultModal'); return; }
+  if(!finalists.length){ document.getElementById('cpResultWrap').innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">아직 최종 후보가 선정되지 않았습니다</div>'; showM('cpResultModal'); return; }
   var entryIds=finalists.map(function(f){return f.entry_id;});
   var eRes=await sb.from('campaign_entries').select('*').in('id',entryIds);
   var entryMap={}; (eRes.data||[]).forEach(function(e){ entryMap[e.id]=e; });
