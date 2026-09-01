@@ -6002,11 +6002,12 @@ function canDeleteWorkItem(){
 }
 async function logDeletion(moduleName, summary){
   try{
-    await sb.from('delete_logs').insert({
+    var r=await sb.from('delete_logs').insert({
       module: moduleName, record_summary: String(summary||'').slice(0,300),
       deleted_by: me?me.name:'', deleted_by_role: me?me.role:''
     });
-  }catch(e){ console.error('삭제기록 저장 실패', e); }
+    if(r.error){ console.error('삭제기록 저장 실패', r.error); toast('⚠️ 삭제는 됐지만 기록 저장에 실패했습니다: '+r.error.message); }
+  }catch(e){ console.error('삭제기록 저장 실패', e); toast('⚠️ 삭제는 됐지만 기록 저장에 실패했습니다'); }
 }
 
 // ─ 유틸 ─
@@ -26273,7 +26274,7 @@ async function wfSpDeleteEventById(id, title){
   if(!confirm(title+'을(를) 삭제하시겠습니까? 편성 데이터도 함께 삭제됩니다.')) return;
   var res=await sb.from('wf_special_events').delete().eq('id', id);
   if(res.error){ toast('삭제 오류: '+res.error.message); return; }
-  logDeletion('특별근무', title);
+  await logDeletion('특별근무', title);
   toast('🗑 삭제되었습니다');
   wfSpLoadEvents();
 }
@@ -26640,7 +26641,7 @@ async function wfSpDeleteEvent(){
   if(!confirm(wfSpCurEvent.title+'을(를) 삭제하시겠습니까? 편성 데이터도 함께 삭제됩니다.')) return;
   var res=await sb.from('wf_special_events').delete().eq('id', wfSpCurEvent.id);
   if(res.error){ toast('삭제 오류: '+res.error.message); return; }
-  logDeletion('특별근무', wfSpCurEvent.title);
+  await logDeletion('특별근무', wfSpCurEvent.title);
   toast('🗑 삭제되었습니다');
   wfSpBackToList();
 }
