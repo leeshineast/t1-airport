@@ -1980,6 +1980,10 @@ html{overflow-x:hidden}
       </div>
     </div>
     <div id="msDetail" style="display:none;background:white;border-radius:var(--r);margin:0 13px 9px;padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)"></div>
+    <div class="sec-lbl" style="padding:8px 13px 6px;font-size:12px">🚻 화장실현황 (설비 개소)</div>
+    <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px 10px;margin:0 13px 12px;overflow-x:auto">
+      <div id="msToiletWrap"><div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">불러오는 중...</div></div>
+    </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:0 15px 6px">
       <span style="font-size:10px;color:var(--g4)">카드를 누르면 상세가 열립니다</span>
       <span style="font-size:10px;color:var(--g4)"><span style="color:var(--teal2);font-weight:800">통계 v2</span> · <span id="msUpdated"></span></span>
@@ -6702,6 +6706,7 @@ function go(name){
   }
   if(name==='main'||name==='statsdash'){
     if(typeof loadMonthlyStats==='function') loadMonthlyStats();
+    if(name==='statsdash'&&typeof renderMsToiletTable==='function') renderMsToiletTable();
   }
   if(name==='execdash'){
     if(typeof loadExecDashboard==='function') loadExecDashboard();
@@ -24500,6 +24505,77 @@ async function loadMgrAttQuotaSummaryYesterday(){
 // ── 사원 명부 ──
 var erData=[];
 function erCanEdit(){ return !!(me&&(me.role==='manager'||me.role==='admin'||me.role==='master')); }
+// ── 통계 화면: 화장실현황(설비 개소) — toilet_master 실측 데이터 자동 집계 ──
+async function renderMsToiletTable(){
+  var wrap=document.getElementById('msToiletWrap'); if(!wrap) return;
+  wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">불러오는 중...</div>';
+  try{
+    var res=await sb.from('toilet_master').select('floor,zone,gender,family_room,toilet_cnt,sink_cnt,urinal_cnt').eq('active',true);
+    if(res.error){ wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--danger);font-size:13px">불러오기 실패</div>'; return; }
+    var rows=res.data||[];
+    var floorOrder=['지하2층','지하1층','1층','2층','3층','4층','기타'];
+    var byKey={}; // key = floor+'|'+zone
+    rows.forEach(function(r){
+      var zoneLbl=r.zone==='Airside'?'A/S':'L/S';
+      var key=(r.floor||'기타')+'|'+zoneLbl;
+      if(!byKey[key]) byKey[key]={floor:r.floor||'기타', zone:zoneLbl, mCnt:0,mToilet:0,mSink:0,mUrinal:0, fCnt:0,fToilet:0,fSink:0, family:0};
+      var b=byKey[key];
+      var isMale=(r.gender||'').indexOf('남')!==-1;
+      if(isMale){ b.mCnt++; b.mToilet+=r.toilet_cnt||0; b.mSink+=r.sink_cnt||0; b.mUrinal+=r.urinal_cnt||0; }
+      else{ b.fCnt++; b.fToilet+=r.toilet_cnt||0; b.fSink+=r.sink_cnt||0; }
+      if(r.family_room==='있음') b.family++;
+    });
+    var keys=Object.keys(byKey).sort(function(a,b2){
+      var ra=byKey[a], rb=byKey[b2];
+      var fa=floorOrder.indexOf(ra.floor), fb=floorOrder.indexOf(rb.floor);
+      if(fa===-1) fa=99; if(fb===-1) fb=99;
+      if(fa!==fb) return fa-fb;
+      return ra.zone.localeCompare(rb.zone);
+    });
+    if(!keys.length){ wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">등록된 화장실 데이터가 없습니다</div>'; return; }
+    var tot={mCnt:0,mToilet:0,mSink:0,mUrinal:0,fCnt:0,fToilet:0,fSink:0,family:0};
+    var body='';
+    keys.forEach(function(k,i){
+      var b=byKey[k];
+      ['mCnt','mToilet','mSink','mUrinal','fCnt','fToilet','fSink','family'].forEach(function(f){ tot[f]+=b[f]; });
+      var bg=(i%2===0)?'var(--navy-bg)':'transparent';
+      body+='<tr style="background:'+bg+'">'+
+        '<td style="padding:5px 4px;border-top:1px solid var(--g1);font-weight:700;color:var(--g6)">'+b.floor+'</td>'+
+        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.zone+'</td>'+
+        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center;color:#1e40af">'+b.mCnt+'</td>'+
+        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.mToilet+'</td>'+
+        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.mSink+'</td>'+
+        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.mUrinal+'</td>'+
+        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center;color:#be185d">'+b.fCnt+'</td>'+
+        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.fToilet+'</td>'+
+        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.fSink+'</td>'+
+        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center;font-weight:700">'+b.family+'</td>'+
+        '</tr>';
+    });
+    body+='<tr style="background:var(--navy)">'+
+      '<td colspan="2" style="padding:6px 4px;font-weight:900;color:white">합계</td>'+
+      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.mCnt+'</td>'+
+      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.mToilet+'</td>'+
+      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.mSink+'</td>'+
+      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.mUrinal+'</td>'+
+      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.fCnt+'</td>'+
+      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.fToilet+'</td>'+
+      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.fSink+'</td>'+
+      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:#FFE9A8">'+tot.family+'</td>'+
+      '</tr>';
+    wrap.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:620px">'+
+      '<thead><tr style="color:var(--g4);font-size:10px">'+
+      '<th rowspan="2" style="text-align:left;padding:2px 4px 5px;font-weight:700;vertical-align:bottom">층</th>'+
+      '<th rowspan="2" style="padding:2px 4px 5px;font-weight:700;vertical-align:bottom">구역</th>'+
+      '<th colspan="4" style="padding:2px 4px 3px;font-weight:700;color:#1e40af;border-bottom:1px solid var(--g2)">남</th>'+
+      '<th colspan="3" style="padding:2px 4px 3px;font-weight:700;color:#be185d;border-bottom:1px solid var(--g2)">여</th>'+
+      '<th rowspan="2" style="padding:2px 4px 5px;font-weight:700;vertical-align:bottom">가족실/<br>장애인실</th>'+
+      '</tr><tr style="color:var(--g4);font-size:10px">'+
+      '<th style="padding:2px 4px 5px;font-weight:700">개소</th><th style="padding:2px 4px 5px;font-weight:700">양변기</th><th style="padding:2px 4px 5px;font-weight:700">세면기</th><th style="padding:2px 4px 5px;font-weight:700">소변기</th>'+
+      '<th style="padding:2px 4px 5px;font-weight:700">개소</th><th style="padding:2px 4px 5px;font-weight:700">양변기</th><th style="padding:2px 4px 5px;font-weight:700">세면기</th>'+
+      '</tr></thead><tbody>'+body+'</tbody></table>';
+  }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--danger);font-size:13px">불러오기 실패</div>'; }
+}
 async function loadEmpRoster(){
   var tbody=document.getElementById('erTbody'); if(!tbody) return;
   tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--g3)">불러오는 중...</td></tr>';
@@ -28338,6 +28414,30 @@ function msRenderDetail(key){
     var wObj={};
     Object.keys(c.waste.byItem).forEach(function(k3){ var rv=Math.round(c.waste.byItem[k3]*100)/100; if(rv>0) wObj[k3]=rv; });
     h+=msTopBars(wObj, 10, 'linear-gradient(90deg,var(--success),#5BBF8A)', '톤');
+    // ── 폐기물처리현황(양식) : 소각/재활용 세부 표 ──
+    (function(){
+      function wv(k4){ var v=c.waste.byItem[k4]||0; return Math.round(v*100)/100; }
+      var incRows=[['생활쓰레기','생활쓰레기'],['폐합성수지','폐합성수지'],['음식물쓰레기','음식물'],['목재류','폐목재']];
+      var recRows=[['폐지','폐지'],['플라스틱','플라스틱'],['캔','캔'],['유리','유리'],['재활용기타','재활용 기타']];
+      var incSum=incRows.reduce(function(s,r){return s+wv(r[1]);},0);
+      var recSum=recRows.reduce(function(s,r){return s+wv(r[1]);},0);
+      var wh='<table style="width:100%;border-collapse:collapse;font-size:12.5px;margin-top:6px">'+
+        '<thead><tr style="background:var(--g1);color:var(--g5)"><th style="padding:6px;text-align:left">구분</th><th style="padding:6px;text-align:left"></th><th style="padding:6px;text-align:right">T1(톤)</th></tr></thead><tbody>';
+      incRows.forEach(function(r,i){
+        wh+='<tr style="border-bottom:1px solid var(--g1)">'+(i===0?'<td rowspan="'+incRows.length+'" style="padding:6px;font-weight:800;color:var(--g6);vertical-align:top">소각</td>':'')+
+          '<td style="padding:6px;color:var(--g6)">'+r[0]+'</td><td style="padding:6px;text-align:right;font-weight:700">'+wv(r[1])+'</td></tr>';
+      });
+      wh+='<tr style="background:var(--navy-bg)"><td colspan="2" style="padding:6px;font-weight:800;color:var(--navy)">소각 소계</td><td style="padding:6px;text-align:right;font-weight:900;color:var(--navy)">'+(Math.round(incSum*100)/100)+'</td></tr>';
+      recRows.forEach(function(r,i){
+        wh+='<tr style="border-bottom:1px solid var(--g1)">'+(i===0?'<td rowspan="'+recRows.length+'" style="padding:6px;font-weight:800;color:var(--g6);vertical-align:top">재활용</td>':'')+
+          '<td style="padding:6px;color:var(--g6)">'+r[0]+'</td><td style="padding:6px;text-align:right;font-weight:700">'+wv(r[1])+'</td></tr>';
+      });
+      wh+='<tr style="background:var(--teal-bg)"><td colspan="2" style="padding:6px;font-weight:800;color:var(--teal2)">재활용 소계</td><td style="padding:6px;text-align:right;font-weight:900;color:var(--teal2)">'+(Math.round(recSum*100)/100)+'</td></tr>';
+      wh+='<tr style="background:var(--navy)"><td colspan="2" style="padding:7px 6px;font-weight:900;color:white">합계</td><td style="padding:7px 6px;text-align:right;font-weight:900;color:#FFE9A8">'+(Math.round((incSum+recSum)*100)/100)+'</td></tr>';
+      wh+='</tbody></table>';
+      h+=msSub('폐기물처리현황');
+      h+=wh;
+    })();
     var weItems=['생활쓰레기','폐합성수지','음식물','폐목재','폐지','플라스틱','캔','유리','재활용 기타','기타'];
     var weH=msWestEastBars(c.waste.byTeam, weItems);
     if(weH){ h+=msSub('서편 · 동편 비교 (1팀 C조 vs 6팀 C조)'); h+=weH; }
