@@ -9143,12 +9143,18 @@ async function loadTeamAvgAttendance(prefix){
         '<td style="padding:5px 4px;'+topBorder+';text-align:center;font-weight:700;color:'+(off>0?'var(--warn)':'var(--g3)')+';font-size:12.5px">'+off+'</td>'+
         '</tr>';
     });
-    // 운영팀 행 (admin+master 계정 기준, 출근은 오늘 관리자출근 체크 인원)
-    var opsChecked=0;
-    try{
-      var todayKst=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-      Object.keys(mgrAttData||{}).forEach(function(k){ if(k.indexOf('운영_')===0 && mgrAttData[k]&&mgrAttData[k].checked) opsChecked++; });
-    }catch(e){}
+    // 운영팀 행 (admin+master 계정 기준, 출근은 선택된 기간의 관리자출근 체크 평균 — 다른 팀과 동일하게 mgrData 기준)
+    var sumOpsAtt=0, daysOpsAtt={};
+    mgrData.forEach(function(r){
+      if(r.team==='운영'){ sumOpsAtt+=1; daysOpsAtt[r.date]=1; }
+    });
+    var opsChecked;
+    if(mode==='day'){
+      opsChecked=sumOpsAtt;
+    }else{
+      var dOps=Object.keys(daysOpsAtt).length||1;
+      opsChecked=Math.round(sumOpsAtt/dOps);
+    }
     var opsOff=Math.max(0,qCounts.opsQuota-opsChecked);
     sumQuota+=qCounts.opsQuota; sumTotal+=opsChecked; sumOff+=opsOff;
     rowsHtml+='<tr style="background:var(--teal-bg)">'+
