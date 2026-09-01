@@ -650,13 +650,13 @@ html{overflow-x:hidden}
 <!-- ══ 앱 메인 ══ -->
 <div id="globalTabbar" class="mh-tabbar" style="display:none">
   <div class="mh-tabbar-row">
-    <div class="mh-tab-item" onclick="go('voc')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/></svg></span><span class="mh-tab-lb">민원응대</span></div>
+    <div class="mh-tab-item" onclick="go('voc')" style="position:relative"><span id="vocTabBadge" style="display:none;position:absolute;top:2px;right:calc(50% - 20px);min-width:16px;height:16px;padding:0 4px;background:var(--danger);color:white;border-radius:20px;font-size:9.5px;font-weight:800;align-items:center;justify-content:center"></span><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><line x1="8" y1="9" x2="16" y2="9"/><line x1="8" y1="13" x2="13" y2="13"/></svg></span><span class="mh-tab-lb">민원응대</span></div>
     <div class="mh-tab-item" onclick="go('mp')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="mh-tab-lb">인력현황</span></div>
     <div class="mh-tab-item" onclick="go('ho')" style="position:relative"><span id="hoTabBadge" style="display:none;position:absolute;top:2px;right:calc(50% - 20px);min-width:16px;height:16px;padding:0 4px;background:var(--danger);color:white;border-radius:20px;font-size:9.5px;font-weight:800;align-items:center;justify-content:center"></span><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg></span><span class="mh-tab-lb">인수인계</span></div>
     <div class="mh-tab-item" id="jwTabItem" onclick="go('jointwork')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span><span class="mh-tab-lb">공동작업</span></div>
   </div>
   <div class="mh-tabbar-row">
-    <div class="mh-tab-item" onclick="go('lost')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="mh-tab-lb">습득물관리</span></div>
+    <div class="mh-tab-item" onclick="go('lost')" style="position:relative"><span id="lostTabBadge" style="display:none;position:absolute;top:2px;right:calc(50% - 20px);min-width:16px;height:16px;padding:0 4px;background:var(--danger);color:white;border-radius:20px;font-size:9.5px;font-weight:800;align-items:center;justify-content:center"></span><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span><span class="mh-tab-lb">습득물관리</span></div>
     <div class="mh-tab-item" onclick="go('accident')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></span><span class="mh-tab-lb">안전사고</span></div>
     <div class="mh-tab-item" onclick="go('workveh')"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="7" width="15" height="11" rx="1"/><path d="M16 10h3l3 3v4a1 1 0 0 1-1 1h-1"/><circle cx="5.5" cy="18.5" r="2"/><circle cx="17.5" cy="18.5" r="2"/></svg></span><span class="mh-tab-lb">공사차량</span></div>
     <div class="mh-tab-item" id="tabbarWarehouseBtn" onclick="location.href='warehouse.html'"><span class="mh-tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 21V12h6v9"/></svg></span><span class="mh-tab-lb">재고관리</span></div>
@@ -7083,7 +7083,7 @@ function finishLogin(){
   }else{
     go('main');
   }
-  setTimeout(function(){ initAppData(); tryAutoCheckin(); checkHeatAlert(); eeCheckAutoAttendance(); }, 100);
+  setTimeout(function(){ initAppData(); tryAutoCheckin(); checkHeatAlert(); eeCheckAutoAttendance(); if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges(); }, 100);
   updateStaff();
   updateFloorChart();
   updateMpSummary();
@@ -17606,6 +17606,7 @@ async function saveVoc(){
     initVocForm();
     loadVocFromDB();
     vocTab(0);
+    if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges();
   }catch(e){
     toast('⚠️ 저장 실패: '+e.message);
   }finally{
@@ -17632,6 +17633,7 @@ async function updateVocStatus(id, newStatus){
     await sb.from('voc_data').update({status:newStatus,completed_at:null}).eq('id',parseInt(id));
     toast('✅ 상태 변경: '+newStatus);
     loadVocFromDB();
+    if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges();
   }catch(e){ toast('⚠️ 변경 실패'); }
 }
 
@@ -17656,6 +17658,7 @@ async function confirmVocComplete(){
     toast('✅ 완료 처리되었습니다');
     _vocCompleteTargetId=null;
     loadVocFromDB();
+    if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges();
   }catch(e){ toast('⚠️ 처리 실패: '+e.message); }
 }
 
@@ -18032,6 +18035,7 @@ async function saveLost(){
     });
     if(res.error) throw res.error;
     toast('✅ 습득물이 접수되었습니다');
+    if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges();
     ['lostFinderId','lostFinderName','lostFoundDate','lostLocation','lostItem','lostNote','lostRouteEtc','lostHandEtc','lostReceiver','lostPasteBox'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.value='';
     });
@@ -18264,6 +18268,7 @@ async function confirmLostEdit(){
     hideM('lostEditModal');
     toast('✅ 수정되었습니다');
     loadLostFromDB();
+    if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges();
   }catch(e){ toast('⚠️ 수정 실패: '+e.message); }
 }
 
@@ -18441,6 +18446,7 @@ async function confirmLostComplete(){
     hideM('lostCompleteModal');
     toast('✅ 처리완료 되었습니다');
     loadLostFromDB();
+    if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges();
   }catch(e){ toast('⚠️ 실패: '+e.message); }
 }
 
@@ -21538,7 +21544,7 @@ async function refreshMpDataLight(){
       }else{
         go('main');
       }
-      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); loadMpAverages(); loadNsAverage(); loadFacilityMenuViewCounts(); loadLostSafety(); }, 500);
+      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); loadMpAverages(); loadNsAverage(); loadFacilityMenuViewCounts(); loadLostSafety(); }, 500);
       setTimeout(function(){ tryAutoCheckin(); checkHeatAlert(); eeCheckAutoAttendance(); }, 2000);
       return;
     }
@@ -28845,6 +28851,27 @@ function checkHoPending(){
   var badge=document.getElementById('hoPendingBadge');
   if(badge){ badge.textContent=cnt>0?cnt+'건 미확인':''; badge.style.display=cnt>0?'block':'none'; }
   if(typeof loadExecSummary==='function') loadExecSummary();
+}
+async function updateVocLostTabBadges(){
+  if(!me) return;
+  try{
+    var vRes=await sb.from('voc_data').select('id').in('status',['접수','처리중']).limit(30);
+    var vBadge=document.getElementById('vocTabBadge');
+    if(vBadge){
+      var vn=(vRes.data||[]).length;
+      if(vn>0){ vBadge.textContent=vn>9?'9+':String(vn); vBadge.style.display='flex'; }
+      else{ vBadge.style.display='none'; }
+    }
+  }catch(e){ console.error('민원 배지 조회 실패', e); }
+  try{
+    var lRes=await sb.from('lost_found').select('id').eq('status','접수').limit(30);
+    var lBadge=document.getElementById('lostTabBadge');
+    if(lBadge){
+      var ln=(lRes.data||[]).length;
+      if(ln>0){ lBadge.textContent=ln>9?'9+':String(ln); lBadge.style.display='flex'; }
+      else{ lBadge.style.display='none'; }
+    }
+  }catch(e){ console.error('습득물 배지 조회 실패', e); }
 }
 function updateHoTabBadge(cnt){
   var b=document.getElementById('hoTabBadge');
