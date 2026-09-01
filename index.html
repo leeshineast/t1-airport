@@ -2873,28 +2873,32 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div class="pg-hd"><div><h1>사원 명부</h1><small>팀장 이상 조회·수정 가능</small></div></div>
   <div style="padding:0 13px 10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
     <input id="erSearch" oninput="erRender()" placeholder="🔍 사번/성명/팀 검색" style="flex:1;min-width:140px;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px">
-    <select id="erTeamFilter" onchange="erRender()" style="padding:9px 8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white"><option value="">전체 팀</option></select>
-    <select id="erGrpFilter" onchange="erRender()" style="padding:9px 8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white"><option value="">전체 조</option></select>
-    <select id="erPosFilter" onchange="erRender()" style="padding:9px 8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white"><option value="">전체 직책</option></select>
     <label style="padding:9px 12px;background:white;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
       ⬆️ 엑셀 업로드<input type="file" accept=".xlsx,.xls" style="display:none" onchange="erExcelUpload(this)">
     </label>
     <button onclick="erOpenEdit(null)" style="padding:9px 12px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">＋ 추가</button>
     <button onclick="erDeleteAll()" style="padding:9px 12px;background:#fee2e2;color:#dc2626;border:1.5px solid #fca5a5;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">🗑 전체삭제</button>
   </div>
-  <div style="padding:0 13px 6px;font-size:12px;color:var(--g4)" id="erCountLbl"></div>
+  <div style="padding:0 13px 6px;display:flex;justify-content:space-between;align-items:center">
+    <span style="font-size:12px;color:var(--g4)" id="erCountLbl"></span>
+    <span id="erFilterActiveLbl" style="font-size:12px;color:var(--teal2);font-weight:700;cursor:pointer" onclick="erClearAllFilters()"></span>
+  </div>
   <div style="padding:0 13px 20px;overflow-x:auto">
-    <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:760px">
+    <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:820px;table-layout:fixed">
+      <colgroup>
+        <col style="width:9%"><col style="width:9%"><col style="width:9%"><col style="width:7%"><col style="width:9%">
+        <col style="width:9%"><col style="width:12%"><col style="width:11%"><col style="width:9%"><col style="width:9%">
+      </colgroup>
       <thead><tr style="background:var(--g1);color:var(--g5)">
         <th onclick="erSort('emp_no')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">사번<span id="erSortIc_emp_no"></span></th>
         <th onclick="erSort('name')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">성명<span id="erSortIc_name"></span></th>
-        <th onclick="erSort('team')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">팀<span id="erSortIc_team"></span></th>
-        <th onclick="erSort('grp')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">조<span id="erSortIc_grp"></span></th>
-        <th onclick="erSort('position')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">직책<span id="erSortIc_position"></span></th>
-        <th onclick="erSort('birth_year')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">출생연도<span id="erSortIc_birth_year"></span></th>
-        <th onclick="erSort('city')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">거주(시)<span id="erSortIc_city"></span></th>
+        <th style="padding:8px 6px;text-align:left;white-space:nowrap"><span onclick="erSort('team')" style="cursor:pointer">팀<span id="erSortIc_team"></span></span> <span onclick="event.stopPropagation();erOpenColFilter('team','팀')" style="cursor:pointer">▾</span></th>
+        <th style="padding:8px 6px;text-align:left;white-space:nowrap"><span onclick="erSort('grp')" style="cursor:pointer">조<span id="erSortIc_grp"></span></span> <span onclick="event.stopPropagation();erOpenColFilter('grp','조')" style="cursor:pointer">▾</span></th>
+        <th style="padding:8px 6px;text-align:left;white-space:nowrap"><span onclick="erSort('position')" style="cursor:pointer">직책<span id="erSortIc_position"></span></span> <span onclick="event.stopPropagation();erOpenColFilter('position','직책')" style="cursor:pointer">▾</span></th>
+        <th style="padding:8px 6px;text-align:left;white-space:nowrap"><span onclick="erSort('birth_year')" style="cursor:pointer">출생연도<span id="erSortIc_birth_year"></span></span> <span onclick="event.stopPropagation();erOpenColFilter('birth_year','출생연도')" style="cursor:pointer">▾</span></th>
+        <th style="padding:8px 6px;text-align:left;white-space:nowrap"><span onclick="erSort('city')" style="cursor:pointer">거주(시)<span id="erSortIc_city"></span></span> <span onclick="event.stopPropagation();erOpenColFilter('city','거주(시)')" style="cursor:pointer">▾</span></th>
         <th onclick="erSort('hire_date')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">입사일<span id="erSortIc_hire_date"></span></th>
-        <th onclick="erSort('day_off')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">휴무<span id="erSortIc_day_off"></span></th>
+        <th style="padding:8px 6px;text-align:left;white-space:nowrap"><span onclick="erSort('day_off')" style="cursor:pointer">휴무<span id="erSortIc_day_off"></span></span> <span onclick="event.stopPropagation();erOpenColFilter('day_off','휴무')" style="cursor:pointer">▾</span></th>
         <th style="padding:8px 6px"></th>
       </tr></thead>
       <tbody id="erTbody"><tr><td colspan="10" style="text-align:center;padding:20px;color:var(--g3)">불러오는 중...</td></tr></tbody>
@@ -2917,6 +2921,17 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div class="fg" style="flex:1"><label class="f-lbl">입사일</label><input type="date" id="er_hire_date" class="ri"></div></div>
     <div class="fg"><label class="f-lbl">휴무</label><input id="er_day_off" class="ri" placeholder="예: 토일"></div>
     <button onclick="erSave()" class="btn-prim" style="width:100%;margin-top:8px">저장</button>
+  </div>
+</div></div>
+<div id="erColFilterModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3 id="erColFilterTitle">필터</h3><button class="m-x" onclick="hideM('erColFilterModal')">×</button></div>
+  <div style="padding:13px 17px">
+    <input id="erColFilterSearch" oninput="erRenderColFilterList()" placeholder="🔍 값 검색" style="width:100%;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;margin-bottom:8px;box-sizing:border-box">
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <span onclick="erColFilterCheckAll(true)" style="font-size:12px;color:var(--teal2);font-weight:700;cursor:pointer">전체선택</span>
+      <span onclick="erColFilterCheckAll(false)" style="font-size:12px;color:var(--g4);font-weight:700;cursor:pointer">전체해제</span>
+    </div>
+    <div id="erColFilterList" style="max-height:44vh;overflow-y:auto;border:1px solid var(--g1);border-radius:8px;padding:4px 8px"></div>
+    <button onclick="erApplyColFilter()" class="btn-prim" style="width:100%;margin-top:11px">적용</button>
   </div>
 </div></div>
 <div id="sAdc" class="scr" style="display:none">
@@ -24515,22 +24530,27 @@ async function renderMsToiletTable(){
     var res=await sb.from('toilet_master').select('number,floor,zone,gender,family_room,toilet_cnt,sink_cnt,urinal_cnt').eq('active',true);
     if(res.error){ wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--danger);font-size:13px">불러오기 실패</div>'; return; }
     var rows=res.data||[];
-    var floorOrder=['지하2층','지하1층','1층','2층','3층','4층','기타'];
+    var floorOrder=['B2F','B1F','1F','2F','3F','4F','기타'];
+    function floorLabel(f){
+      var map={'지하2층':'B2F','지하1층':'B1F','1층':'1F','2층':'2F','3층':'3F','4층':'4F'};
+      return map[f]||f||'기타';
+    }
     var byKey={}; // key = floor+'|'+zone
     rows.forEach(function(r){
       var zoneLbl=r.zone==='Airside'?'A/S':'L/S';
-      var key=(r.floor||'기타')+'|'+zoneLbl;
-      if(!byKey[key]) byKey[key]={floor:r.floor||'기타', zone:zoneLbl, cCnt:0,cToilet:0,cSink:0, mCnt:0,mToilet:0,mSink:0,mUrinal:0, fCnt:0,fToilet:0,fSink:0, family:0};
+      var fl=floorLabel(r.floor);
+      var key=fl+'|'+zoneLbl;
+      if(!byKey[key]) byKey[key]={floor:fl, zone:zoneLbl, mCnt:0,mToilet:0,mSink:0,mUrinal:0,mFamily:0, fCnt:0,fToilet:0,fSink:0,fFamily:0};
       var b=byKey[key];
-      var isShared=(r.number||'').indexOf('공용')!==-1; // "OO 공용(가족화장실)" 표기는 남/여 구분과 별개로 공용 칸으로 집계
+      var isShared=(r.number||'').indexOf('공용')!==-1; // "OO 공용(가족화장실)" → 해당 성별의 가족실/장애인실 칸으로 집계 (개소·양변기 등 일반 칸에는 안 넣음)
+      var isMale=(r.gender||'').indexOf('남')!==-1;
       if(isShared){
-        b.cCnt++; b.cToilet+=r.toilet_cnt||0; b.cSink+=r.sink_cnt||0;
+        if(isMale) b.mFamily++; else b.fFamily++;
+      }else if(isMale){
+        b.mCnt++; b.mToilet+=r.toilet_cnt||0; b.mSink+=r.sink_cnt||0; b.mUrinal+=r.urinal_cnt||0;
       }else{
-        var isMale=(r.gender||'').indexOf('남')!==-1;
-        if(isMale){ b.mCnt++; b.mToilet+=r.toilet_cnt||0; b.mSink+=r.sink_cnt||0; b.mUrinal+=r.urinal_cnt||0; }
-        else{ b.fCnt++; b.fToilet+=r.toilet_cnt||0; b.fSink+=r.sink_cnt||0; }
+        b.fCnt++; b.fToilet+=r.toilet_cnt||0; b.fSink+=r.sink_cnt||0;
       }
-      if(r.family_room==='있음') b.family++;
     });
     var keys=Object.keys(byKey).sort(function(a,b2){
       var ra=byKey[a], rb=byKey[b2];
@@ -24540,58 +24560,128 @@ async function renderMsToiletTable(){
       return ra.zone.localeCompare(rb.zone);
     });
     if(!keys.length){ wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">등록된 화장실 데이터가 없습니다</div>'; return; }
-    var tot={cCnt:0,cToilet:0,cSink:0, mCnt:0,mToilet:0,mSink:0,mUrinal:0,fCnt:0,fToilet:0,fSink:0,family:0};
-    var body='';
-    keys.forEach(function(k,i){
+    var tot={mCnt:0,mToilet:0,mSink:0,mUrinal:0,mFamily:0, fCnt:0,fToilet:0,fSink:0,fFamily:0};
+    // 층별로 그룹핑(층별 셀 rowspan 처리용)
+    var floorGroups=[]; var lastFloor=null;
+    keys.forEach(function(k){
       var b=byKey[k];
-      Object.keys(tot).forEach(function(f){ tot[f]+=b[f]; });
-      var bg=(i%2===0)?'var(--navy-bg)':'transparent';
-      body+='<tr style="background:'+bg+'">'+
-        '<td style="padding:5px 4px;border-top:1px solid var(--g1);font-weight:700;color:var(--g6)">'+b.floor+'</td>'+
-        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.zone+'</td>'+
-        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center;color:#6d28d9">'+b.cCnt+'</td>'+
-        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.cToilet+'</td>'+
-        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.cSink+'</td>'+
-        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center;color:#1e40af">'+b.mCnt+'</td>'+
-        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.mToilet+'</td>'+
-        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.mSink+'</td>'+
-        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.mUrinal+'</td>'+
-        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center;color:#be185d">'+b.fCnt+'</td>'+
-        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.fToilet+'</td>'+
-        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.fSink+'</td>'+
-        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center;font-weight:700">'+b.family+'</td>'+
-        '</tr>';
+      if(b.floor!==lastFloor){ floorGroups.push({floor:b.floor, rows:[]}); lastFloor=b.floor; }
+      floorGroups[floorGroups.length-1].rows.push(b);
     });
-    body+='<tr style="background:var(--navy)">'+
-      '<td colspan="2" style="padding:6px 4px;font-weight:900;color:white">합계</td>'+
-      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.cCnt+'</td>'+
-      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.cToilet+'</td>'+
-      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.cSink+'</td>'+
-      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.mCnt+'</td>'+
-      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.mToilet+'</td>'+
-      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.mSink+'</td>'+
-      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.mUrinal+'</td>'+
-      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.fCnt+'</td>'+
-      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.fToilet+'</td>'+
-      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.fSink+'</td>'+
-      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:#FFE9A8">'+tot.family+'</td>'+
+    var body='';
+    var totalDataRows=keys.length;
+    var firstCellDone=false;
+    floorGroups.forEach(function(fg){
+      fg.rows.forEach(function(b,ri){
+        Object.keys(tot).forEach(function(f){ tot[f]+=b[f]; });
+        var familyTotal=b.mFamily+b.fFamily;
+        body+='<tr>';
+        if(!firstCellDone){ body+='<td rowspan="'+(totalDataRows+1)+'" style="padding:4px;border:1px solid var(--g2);text-align:center;font-weight:800;color:var(--g6);background:var(--g1)">T1</td>'; firstCellDone=true; }
+        if(ri===0) body+='<td rowspan="'+fg.rows.length+'" style="padding:5px 4px;border:1px solid var(--g2);text-align:center;font-weight:800;color:var(--g6);background:var(--g1)">'+fg.floor+'</td>';
+        body+='<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+b.zone+'</td>'+
+          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;color:#1e40af">'+(b.mCnt||'')+'</td>'+
+          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+(b.mToilet||'')+'</td>'+
+          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+(b.mSink||'')+'</td>'+
+          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+(b.mUrinal||'')+'</td>'+
+          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;background:#FFFBD6;font-weight:700">'+(b.mFamily||'')+'</td>'+
+          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;color:#be185d">'+(b.fCnt||'')+'</td>'+
+          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+(b.fToilet||'')+'</td>'+
+          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+(b.fSink||'')+'</td>'+
+          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;background:#FFFBD6;font-weight:700">'+(b.fFamily||'')+'</td>'+
+          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;font-weight:700">'+(familyTotal||'')+'</td>'+
+          '</tr>';
+      });
+    });
+    body+='<tr style="background:var(--g2)">'+
+      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900;color:var(--g7)">합계</td>'+
+      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.mCnt+'</td>'+
+      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.mToilet+'</td>'+
+      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.mSink+'</td>'+
+      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.mUrinal+'</td>'+
+      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900;background:#FFFBD6">'+tot.mFamily+'</td>'+
+      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.fCnt+'</td>'+
+      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.fToilet+'</td>'+
+      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.fSink+'</td>'+
+      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900;background:#FFFBD6">'+tot.fFamily+'</td>'+
+      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+(tot.mFamily+tot.fFamily)+'</td>'+
       '</tr>';
-    wrap.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:760px">'+
-      '<thead><tr style="color:var(--g4);font-size:10px">'+
-      '<th rowspan="2" style="text-align:left;padding:2px 4px 5px;font-weight:700;vertical-align:bottom">층</th>'+
-      '<th rowspan="2" style="padding:2px 4px 5px;font-weight:700;vertical-align:bottom">구역</th>'+
-      '<th colspan="3" style="padding:2px 4px 3px;font-weight:700;color:#6d28d9;border-bottom:1px solid var(--g2)">공용</th>'+
-      '<th colspan="4" style="padding:2px 4px 3px;font-weight:700;color:#1e40af;border-bottom:1px solid var(--g2)">남</th>'+
-      '<th colspan="3" style="padding:2px 4px 3px;font-weight:700;color:#be185d;border-bottom:1px solid var(--g2)">여</th>'+
-      '<th rowspan="2" style="padding:2px 4px 5px;font-weight:700;vertical-align:bottom">가족실/<br>장애인실</th>'+
-      '</tr><tr style="color:var(--g4);font-size:10px">'+
-      '<th style="padding:2px 4px 5px;font-weight:700">개소</th><th style="padding:2px 4px 5px;font-weight:700">양변기</th><th style="padding:2px 4px 5px;font-weight:700">세면기</th>'+
-      '<th style="padding:2px 4px 5px;font-weight:700">개소</th><th style="padding:2px 4px 5px;font-weight:700">양변기</th><th style="padding:2px 4px 5px;font-weight:700">세면기</th><th style="padding:2px 4px 5px;font-weight:700">소변기</th>'+
-      '<th style="padding:2px 4px 5px;font-weight:700">개소</th><th style="padding:2px 4px 5px;font-weight:700">양변기</th><th style="padding:2px 4px 5px;font-weight:700">세면기</th>'+
-      '</tr></thead><tbody>'+body+'</tbody></table>';
+    wrap.innerHTML='<table style="border-collapse:collapse;font-size:11.5px;min-width:820px">'+
+      '<thead>'+
+      '<tr style="color:var(--g5)">'+
+        '<th rowspan="3" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">시설명</th>'+
+        '<th colspan="2" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">구분</th>'+
+        '<th colspan="5" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">남</th>'+
+        '<th colspan="4" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">여</th>'+
+        '<th rowspan="3" style="padding:4px;border:1px solid var(--g2);background:#FFFBD6">가족실/<br>장애인실</th>'+
+      '</tr>'+
+      '<tr style="color:var(--g5)">'+
+        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">층별</th>'+
+        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">구역</th>'+
+        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">개소</th>'+
+        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">양변기</th>'+
+        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">세면기</th>'+
+        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">소변기</th>'+
+        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2);background:#FFFBD6">가족실/<br>장애인실</th>'+
+        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">개소</th>'+
+        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">양변기</th>'+
+        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">세면기</th>'+
+        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2);background:#FFFBD6">가족실/<br>장애인실</th>'+
+      '</tr><tr></tr>'+
+      '</thead><tbody>'+body+'</tbody></table>';
   }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--danger);font-size:13px">불러오기 실패</div>'; }
 }
 var erSortKey='team', erSortDir=1;
+var erColFilters={}; // {field: Set(allowedValues)} — 비어있으면(필드 없음) 필터 없음
+var erColFilterCur=null; // {field,label}
+function erOpenColFilter(field,label){
+  erColFilterCur={field:field,label:label};
+  document.getElementById('erColFilterTitle').textContent=label+' 필터';
+  document.getElementById('erColFilterSearch').value='';
+  erRenderColFilterList();
+  showM('erColFilterModal');
+}
+function erRenderColFilterList(){
+  if(!erColFilterCur) return;
+  var field=erColFilterCur.field;
+  var q=(document.getElementById('erColFilterSearch').value||'').trim();
+  var vals=Array.from(new Set(erData.map(function(r){return r[field]||'(공란)';}))).sort(function(a,b){return String(a).localeCompare(String(b),'ko',{numeric:true});});
+  if(q) vals=vals.filter(function(v){ return String(v).indexOf(q)!==-1; });
+  var selected=erColFilters[field]; // undefined면 전체선택 상태로 표시
+  var list=document.getElementById('erColFilterList');
+  list.innerHTML=vals.map(function(v){
+    var checked=!selected||selected.has(v);
+    return '<label style="display:flex;align-items:center;gap:7px;padding:5px 2px;font-size:13.5px;color:var(--g6)"><input type="checkbox" class="erColFilterChk" value="'+eeEsc(v)+'" '+(checked?'checked':'')+' style="accent-color:var(--teal)">'+eeEsc(v)+'</label>';
+  }).join('')||'<div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">값 없음</div>';
+}
+function erColFilterCheckAll(on){
+  document.querySelectorAll('.erColFilterChk').forEach(function(cb){ cb.checked=on; });
+}
+function erApplyColFilter(){
+  if(!erColFilterCur) return;
+  var field=erColFilterCur.field;
+  var allVals=Array.from(new Set(erData.map(function(r){return r[field]||'(공란)';})));
+  var checked=Array.from(document.querySelectorAll('.erColFilterChk:checked')).map(function(cb){return cb.value;});
+  var searched=(document.getElementById('erColFilterSearch').value||'').trim();
+  if(!searched && checked.length===allVals.length){
+    delete erColFilters[field]; // 전체선택 = 필터 없음과 동일
+  }else if(!searched){
+    erColFilters[field]=new Set(checked);
+  }else{
+    // 검색 중 일부만 보이는 상태에서 적용 → 기존 선택 유지 + 지금 보이는 값들의 체크상태 반영
+    var existing=erColFilters[field]?new Set(erColFilters[field]):new Set(allVals);
+    var visibleVals=Array.from(new Set(erData.map(function(r){return r[field]||'(공란)';}))).filter(function(v){return String(v).indexOf(searched)!==-1;});
+    visibleVals.forEach(function(v){ existing.delete(v); });
+    checked.forEach(function(v){ existing.add(v); });
+    erColFilters[field]=existing;
+  }
+  hideM('erColFilterModal');
+  erRender();
+}
+function erClearAllFilters(){
+  erColFilters={};
+  document.getElementById('erSearch').value='';
+  erRender();
+}
 async function loadEmpRoster(){
   var tbody=document.getElementById('erTbody'); if(!tbody) return;
   tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--g3)">불러오는 중...</td></tr>';
@@ -24599,18 +24689,7 @@ async function loadEmpRoster(){
     var res=await sb.from('employee_roster').select('*').order('team',{ascending:true}).order('emp_no',{ascending:true});
     if(res.error){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--danger)">불러오기 실패</td></tr>'; return; }
     erData=res.data||[];
-    function fillSelect(id, field, label){
-      var vals=Array.from(new Set(erData.map(function(r){return r[field];}).filter(Boolean))).sort(function(a,b){return a.localeCompare(b,'ko');});
-      var sel=document.getElementById(id);
-      if(sel){
-        var cur=sel.value;
-        sel.innerHTML='<option value="">전체 '+label+'</option>'+vals.map(function(v){return '<option value="'+eeEsc(v)+'">'+eeEsc(v)+'</option>';}).join('');
-        sel.value=cur||'';
-      }
-    }
-    fillSelect('erTeamFilter','team','팀');
-    fillSelect('erGrpFilter','grp','조');
-    fillSelect('erPosFilter','position','직책');
+    erColFilters={};
     erRender();
   }catch(e){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--danger)">불러오기 실패</td></tr>'; }
 }
@@ -24624,19 +24703,20 @@ function erSort(key){
 function erRender(){
   var tbody=document.getElementById('erTbody'); if(!tbody) return;
   var q=(document.getElementById('erSearch').value||'').trim();
-  var teamF=(document.getElementById('erTeamFilter')||{}).value||'';
-  var grpF=(document.getElementById('erGrpFilter')||{}).value||'';
-  var posF=(document.getElementById('erPosFilter')||{}).value||'';
   var list=erData;
-  if(teamF) list=list.filter(function(r){ return r.team===teamF; });
-  if(grpF) list=list.filter(function(r){ return r.grp===grpF; });
-  if(posF) list=list.filter(function(r){ return r.position===posF; });
+  Object.keys(erColFilters).forEach(function(field){
+    var allowed=erColFilters[field];
+    list=list.filter(function(r){ return allowed.has(r[field]||'(공란)'); });
+  });
   if(q){
     list=list.filter(function(r){
       return (r.emp_no||'').indexOf(q)!==-1 || (r.name||'').indexOf(q)!==-1 || (r.team||'').indexOf(q)!==-1;
     });
   }
+  var flbl=document.getElementById('erFilterActiveLbl');
+  if(flbl){ var n=Object.keys(erColFilters).length; flbl.textContent=n?('필터 '+n+'개 적용 중 · 초기화'):''; }
   list=list.slice().sort(function(a,b){
+
     var av=a[erSortKey]||'', bv=b[erSortKey]||'';
     return String(av).localeCompare(String(bv),'ko',{numeric:true})*erSortDir;
   });
