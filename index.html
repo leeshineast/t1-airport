@@ -6035,7 +6035,7 @@ async function loadMenuNotifBadges(){
     var since=_notifReadMarks[mod.key]||'1970-01-01T00:00:00Z';
     try{
       // count 헤더 방식은 일부 환경에서 안 읽혀서, 실제 행을 최대 10건 가져와 개수를 센다
-      var res=await sb.from(mod.table).select(mod.col).gt(mod.col, since).limit(10);
+      var res=await sb.from(mod.table).select(mod.col).gte(mod.col, since).limit(10);
       if(res.error){
         console.error('배지 조회 실패:', mod.key, res.error);
         if(!_firstErrShown){ _firstErrShown=true; toast('배지 진단['+mod.key+']: '+res.error.message); }
