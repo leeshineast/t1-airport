@@ -24512,7 +24512,7 @@ async function renderMsToiletTable(){
   var wrap=document.getElementById('msToiletWrap'); if(!wrap) return;
   wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">불러오는 중...</div>';
   try{
-    var res=await sb.from('toilet_master').select('floor,zone,gender,family_room,toilet_cnt,sink_cnt,urinal_cnt').eq('active',true);
+    var res=await sb.from('toilet_master').select('number,floor,zone,gender,family_room,toilet_cnt,sink_cnt,urinal_cnt').eq('active',true);
     if(res.error){ wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--danger);font-size:13px">불러오기 실패</div>'; return; }
     var rows=res.data||[];
     var floorOrder=['지하2층','지하1층','1층','2층','3층','4층','기타'];
@@ -24520,11 +24520,16 @@ async function renderMsToiletTable(){
     rows.forEach(function(r){
       var zoneLbl=r.zone==='Airside'?'A/S':'L/S';
       var key=(r.floor||'기타')+'|'+zoneLbl;
-      if(!byKey[key]) byKey[key]={floor:r.floor||'기타', zone:zoneLbl, mCnt:0,mToilet:0,mSink:0,mUrinal:0, fCnt:0,fToilet:0,fSink:0, family:0};
+      if(!byKey[key]) byKey[key]={floor:r.floor||'기타', zone:zoneLbl, cCnt:0,cToilet:0,cSink:0, mCnt:0,mToilet:0,mSink:0,mUrinal:0, fCnt:0,fToilet:0,fSink:0, family:0};
       var b=byKey[key];
-      var isMale=(r.gender||'').indexOf('남')!==-1;
-      if(isMale){ b.mCnt++; b.mToilet+=r.toilet_cnt||0; b.mSink+=r.sink_cnt||0; b.mUrinal+=r.urinal_cnt||0; }
-      else{ b.fCnt++; b.fToilet+=r.toilet_cnt||0; b.fSink+=r.sink_cnt||0; }
+      var isShared=(r.number||'').indexOf('공용')!==-1; // "OO 공용(가족화장실)" 표기는 남/여 구분과 별개로 공용 칸으로 집계
+      if(isShared){
+        b.cCnt++; b.cToilet+=r.toilet_cnt||0; b.cSink+=r.sink_cnt||0;
+      }else{
+        var isMale=(r.gender||'').indexOf('남')!==-1;
+        if(isMale){ b.mCnt++; b.mToilet+=r.toilet_cnt||0; b.mSink+=r.sink_cnt||0; b.mUrinal+=r.urinal_cnt||0; }
+        else{ b.fCnt++; b.fToilet+=r.toilet_cnt||0; b.fSink+=r.sink_cnt||0; }
+      }
       if(r.family_room==='있음') b.family++;
     });
     var keys=Object.keys(byKey).sort(function(a,b2){
@@ -24535,15 +24540,18 @@ async function renderMsToiletTable(){
       return ra.zone.localeCompare(rb.zone);
     });
     if(!keys.length){ wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">등록된 화장실 데이터가 없습니다</div>'; return; }
-    var tot={mCnt:0,mToilet:0,mSink:0,mUrinal:0,fCnt:0,fToilet:0,fSink:0,family:0};
+    var tot={cCnt:0,cToilet:0,cSink:0, mCnt:0,mToilet:0,mSink:0,mUrinal:0,fCnt:0,fToilet:0,fSink:0,family:0};
     var body='';
     keys.forEach(function(k,i){
       var b=byKey[k];
-      ['mCnt','mToilet','mSink','mUrinal','fCnt','fToilet','fSink','family'].forEach(function(f){ tot[f]+=b[f]; });
+      Object.keys(tot).forEach(function(f){ tot[f]+=b[f]; });
       var bg=(i%2===0)?'var(--navy-bg)':'transparent';
       body+='<tr style="background:'+bg+'">'+
         '<td style="padding:5px 4px;border-top:1px solid var(--g1);font-weight:700;color:var(--g6)">'+b.floor+'</td>'+
         '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.zone+'</td>'+
+        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center;color:#6d28d9">'+b.cCnt+'</td>'+
+        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.cToilet+'</td>'+
+        '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.cSink+'</td>'+
         '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center;color:#1e40af">'+b.mCnt+'</td>'+
         '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.mToilet+'</td>'+
         '<td style="padding:5px 4px;border-top:1px solid var(--g1);text-align:center">'+b.mSink+'</td>'+
@@ -24556,6 +24564,9 @@ async function renderMsToiletTable(){
     });
     body+='<tr style="background:var(--navy)">'+
       '<td colspan="2" style="padding:6px 4px;font-weight:900;color:white">합계</td>'+
+      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.cCnt+'</td>'+
+      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.cToilet+'</td>'+
+      '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.cSink+'</td>'+
       '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.mCnt+'</td>'+
       '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.mToilet+'</td>'+
       '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.mSink+'</td>'+
@@ -24565,14 +24576,16 @@ async function renderMsToiletTable(){
       '<td style="padding:6px 4px;text-align:center;font-weight:900;color:white">'+tot.fSink+'</td>'+
       '<td style="padding:6px 4px;text-align:center;font-weight:900;color:#FFE9A8">'+tot.family+'</td>'+
       '</tr>';
-    wrap.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:620px">'+
+    wrap.innerHTML='<table style="width:100%;border-collapse:collapse;font-size:11.5px;min-width:760px">'+
       '<thead><tr style="color:var(--g4);font-size:10px">'+
       '<th rowspan="2" style="text-align:left;padding:2px 4px 5px;font-weight:700;vertical-align:bottom">층</th>'+
       '<th rowspan="2" style="padding:2px 4px 5px;font-weight:700;vertical-align:bottom">구역</th>'+
+      '<th colspan="3" style="padding:2px 4px 3px;font-weight:700;color:#6d28d9;border-bottom:1px solid var(--g2)">공용</th>'+
       '<th colspan="4" style="padding:2px 4px 3px;font-weight:700;color:#1e40af;border-bottom:1px solid var(--g2)">남</th>'+
       '<th colspan="3" style="padding:2px 4px 3px;font-weight:700;color:#be185d;border-bottom:1px solid var(--g2)">여</th>'+
       '<th rowspan="2" style="padding:2px 4px 5px;font-weight:700;vertical-align:bottom">가족실/<br>장애인실</th>'+
       '</tr><tr style="color:var(--g4);font-size:10px">'+
+      '<th style="padding:2px 4px 5px;font-weight:700">개소</th><th style="padding:2px 4px 5px;font-weight:700">양변기</th><th style="padding:2px 4px 5px;font-weight:700">세면기</th>'+
       '<th style="padding:2px 4px 5px;font-weight:700">개소</th><th style="padding:2px 4px 5px;font-weight:700">양변기</th><th style="padding:2px 4px 5px;font-weight:700">세면기</th><th style="padding:2px 4px 5px;font-weight:700">소변기</th>'+
       '<th style="padding:2px 4px 5px;font-weight:700">개소</th><th style="padding:2px 4px 5px;font-weight:700">양변기</th><th style="padding:2px 4px 5px;font-weight:700">세면기</th>'+
       '</tr></thead><tbody>'+body+'</tbody></table>';
