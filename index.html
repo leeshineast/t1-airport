@@ -6669,6 +6669,7 @@ function go(name){
     loadHandoverFromDB();
     // 인계팀 자동선택: 로그인 사용자 팀을 기본 선택
     setTimeout(autoSelectHandoverTeam, 200);
+    if(typeof loadHoTabBadges==='function') loadHoTabBadges();
   }
   if(name==='eduevent'){ eeTab(0); }
   if(name==='workschedule'){ loadWfEmployees(); }
@@ -9806,6 +9807,37 @@ function hoSetMode(mode){
   if(warnEl) warnEl.style.display='none';
   if(mode==='auto') hoRefreshAutoTargetInfo();
   if(typeof renderHoPassCards==='function') renderHoPassCards();
+}
+async function loadHoTabBadges(){
+  if(!me) return;
+  try{
+    var myTeamNumSh=me&&me.team?parseInt((me.team.match(/\d+/)||[])[0]):0;
+    var myChainSh=([1,2,5,6,7].indexOf(myTeamNumSh)>=0)?'LS':(([3,4,8,9,10].indexOf(myTeamNumSh)>=0)?'AS':null);
+    var isAdminMgr=me&&(me.role==='admin'||isExecRole(me.role));
+    var shifts=[{key:'오전팀',tabId:'hoT1'},{key:'오후팀',tabId:'hoT2'},{key:'야간팀',tabId:'hoT3'}];
+    for(var i=0;i<shifts.length;i++){
+      var s=shifts[i];
+      var q=sb.from('handover').select('*').eq('to_shift', s.key).eq('confirmed', false);
+      if(!isAdminMgr&&myChainSh) q=q.eq('zone_chain', myChainSh);
+      var res=await q.limit(30);
+      var rows=res.data||[];
+      if(!isAdminMgr){
+        var myTeamLabelSh=myTeamNumSh?(myTeamNumSh+'팀'):null;
+        rows=rows.filter(function(r){ return !r.to_team || r.to_team===myTeamLabelSh; });
+      }
+      var tabEl=document.getElementById(s.tabId);
+      if(!tabEl) continue;
+      var existBadge=tabEl.querySelector('.hoTabBadge');
+      if(existBadge) existBadge.remove();
+      if(rows.length>0){
+        var b=document.createElement('span');
+        b.className='hoTabBadge';
+        b.style.cssText='display:inline-block;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#DC2626;color:white;font-size:10px;font-weight:800;line-height:16px;text-align:center;vertical-align:middle;margin-left:4px';
+        b.textContent=rows.length>9?'9+':String(rows.length);
+        tabEl.appendChild(b);
+      }
+    }
+  }catch(e){ console.error('인수인계 탭 배지 조회 실패', e); }
 }
 function hoTab(n){
   tabSwitch('ho',n,5);
@@ -17244,6 +17276,7 @@ async function confirmHandoverDB(id, resultText){
     }).eq('id',id);
     loadHandoverFromDB();
     ['오전팀','오후팀','야간팀'].forEach(function(s){ if(document.getElementById(s==='오전팀'?'hoAmList':s==='오후팀'?'hoPmList':'hoNtList')) loadHandoverByShift(s); });
+    if(typeof loadHoTabBadges==='function') loadHoTabBadges();
   }catch(e){}
 }
 
