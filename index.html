@@ -1980,10 +1980,6 @@ html{overflow-x:hidden}
       </div>
     </div>
     <div id="msDetail" style="display:none;background:white;border-radius:var(--r);margin:0 13px 9px;padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)"></div>
-    <div class="sec-lbl" style="padding:8px 13px 6px;font-size:12px">🚻 화장실현황 (설비 개소)</div>
-    <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px 10px;margin:0 13px 12px;overflow-x:auto">
-      <div id="msToiletWrap"><div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">불러오는 중...</div></div>
-    </div>
     <div style="display:flex;justify-content:space-between;align-items:center;padding:0 15px 6px">
       <span style="font-size:10px;color:var(--g4)">카드를 누르면 상세가 열립니다</span>
       <span style="font-size:10px;color:var(--g4)"><span style="color:var(--teal2);font-weight:800">통계 v2</span> · <span id="msUpdated"></span></span>
@@ -3181,6 +3177,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <div id="tlStatCategoryTable" style="overflow-x:auto;margin-bottom:16px"></div>
     <div style="font-size:14px;font-weight:800;color:var(--g6);margin-bottom:8px">층별 내역</div>
     <div id="tlStatFloorTable" style="overflow-x:auto"></div>
+    <div style="font-size:14px;font-weight:800;color:var(--g6);margin:16px 0 8px">화장실현황 통계</div>
+    <div id="tlStatFullTable" style="overflow-x:auto"></div>
   </div>
 
   <!-- 다운로드 탭 -->
@@ -6723,7 +6721,6 @@ function go(name){
   }
   if(name==='main'||name==='statsdash'){
     if(typeof loadMonthlyStats==='function') loadMonthlyStats();
-    if(name==='statsdash'&&typeof renderMsToiletTable==='function') renderMsToiletTable();
   }
   if(name==='execdash'){
     if(typeof loadExecDashboard==='function') loadExecDashboard();
@@ -19403,6 +19400,7 @@ function renderToiletStats(){
   });
   fh+='</tbody></table>';
   document.getElementById('tlStatFloorTable').innerHTML=anyFloorRow?fh:'<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">데이터가 없습니다</div>';
+  renderToiletFullStatsTable(filtered);
 }
 function renderToiletList(){
   var listEl=document.getElementById('tlList'); if(!listEl) return;
@@ -24523,125 +24521,111 @@ async function loadMgrAttQuotaSummaryYesterday(){
 var erData=[];
 function erCanEdit(){ return !!(me&&(me.role==='manager'||me.role==='admin'||me.role==='master')); }
 // ── 통계 화면: 화장실현황(설비 개소) — toilet_master 실측 데이터 자동 집계 ──
-async function renderMsToiletTable(){
-  var wrap=document.getElementById('msToiletWrap'); if(!wrap) return;
-  wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">불러오는 중...</div>';
-  try{
-    var res=await sb.from('toilet_master').select('number,floor,zone,gender,family_room,toilet_cnt,sink_cnt,urinal_cnt').eq('active',true);
-    if(res.error){ wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--danger);font-size:13px">불러오기 실패</div>'; return; }
-    var rows=res.data||[];
-    var floorOrder=['B2F','B1F','1F','2F','3F','4F','기타'];
-    function floorLabel(f){
-      var map={'지하2층':'B2F','지하1층':'B1F','1층':'1F','2층':'2F','3층':'3F','4층':'4F'};
-      return map[f]||f||'기타';
+function renderToiletFullStatsTable(filtered){
+  var wrap=document.getElementById('tlStatFullTable'); if(!wrap) return;
+  var floorOrder=['B2F','B1F','1F','2F','3F','4F','기타'];
+  function floorLabel(f){
+    var map={'지하2층':'B2F','지하1층':'B1F','1층':'1F','2층':'2F','3층':'3F','4층':'4F'};
+    return map[f]||f||'기타';
+  }
+  var byKey={}; // key = floor+'|'+zone
+  (filtered||[]).forEach(function(r){
+    var zoneLbl=r.zone==='Airside'?'A/S':(r.zone==='Landside'?'L/S':(r.zone||'-'));
+    var fl=floorLabel(r.floor);
+    var key=fl+'|'+zoneLbl;
+    if(!byKey[key]) byKey[key]={floor:fl, zone:zoneLbl, cCnt:0, mCnt:0,mToilet:0,mSink:0,mUrinal:0,mFamily:0, fCnt:0,fToilet:0,fSink:0,fFamily:0};
+    var b=byKey[key];
+    var isShared=(r.number||'').indexOf('공용')!==-1; // "OO 공용(가족화장실)" → 맨 오른쪽 별도 "공용" 칸(개소만), 남/여에는 안 들어감
+    var isMale=(r.gender||'').indexOf('남')!==-1;
+    var hasFamily=r.family_room==='있음'; // 일반 화장실이면서 가족실/장애인실도 함께 있는 경우 → 해당 성별 가족실 칸에 추가 집계
+    if(isShared){
+      b.cCnt++;
+    }else if(isMale){
+      b.mCnt++; b.mToilet+=r.toilet_cnt||0; b.mSink+=r.sink_cnt||0; b.mUrinal+=r.urinal_cnt||0;
+      if(hasFamily) b.mFamily++;
+    }else{
+      b.fCnt++; b.fToilet+=r.toilet_cnt||0; b.fSink+=r.sink_cnt||0;
+      if(hasFamily) b.fFamily++;
     }
-    var byKey={}; // key = floor+'|'+zone
-    rows.forEach(function(r){
-      var zoneLbl=r.zone==='Airside'?'A/S':'L/S';
-      var fl=floorLabel(r.floor);
-      var key=fl+'|'+zoneLbl;
-      if(!byKey[key]) byKey[key]={floor:fl, zone:zoneLbl, cCnt:0,cToilet:0,cSink:0, mCnt:0,mToilet:0,mSink:0,mUrinal:0,mFamily:0, fCnt:0,fToilet:0,fSink:0,fFamily:0};
-      var b=byKey[key];
-      var isShared=(r.number||'').indexOf('공용')!==-1; // "OO 공용(가족화장실)" → 맨 왼쪽 별도 "공용" 칸 (남/여 어느 쪽에도 안 들어감)
-      var isMale=(r.gender||'').indexOf('남')!==-1;
-      var hasFamily=r.family_room==='있음'; // 일반 화장실인데 가족실/장애인실도 같이 있는 경우 → 해당 성별 가족실 칸에 추가 집계
-      if(isShared){
-        b.cCnt++; b.cToilet+=r.toilet_cnt||0; b.cSink+=r.sink_cnt||0;
-      }else if(isMale){
-        b.mCnt++; b.mToilet+=r.toilet_cnt||0; b.mSink+=r.sink_cnt||0; b.mUrinal+=r.urinal_cnt||0;
-        if(hasFamily) b.mFamily++;
-      }else{
-        b.fCnt++; b.fToilet+=r.toilet_cnt||0; b.fSink+=r.sink_cnt||0;
-        if(hasFamily) b.fFamily++;
-      }
+  });
+  var keys=Object.keys(byKey).sort(function(a,b2){
+    var ra=byKey[a], rb=byKey[b2];
+    var fa=floorOrder.indexOf(ra.floor), fb=floorOrder.indexOf(rb.floor);
+    if(fa===-1) fa=99; if(fb===-1) fb=99;
+    if(fa!==fb) return fa-fb;
+    return ra.zone.localeCompare(rb.zone);
+  });
+  if(!keys.length){ wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">데이터가 없습니다</div>'; return; }
+  var tot={cCnt:0, mCnt:0,mToilet:0,mSink:0,mUrinal:0,mFamily:0, fCnt:0,fToilet:0,fSink:0,fFamily:0};
+  var floorGroups=[]; var lastFloor=null;
+  keys.forEach(function(k){
+    var b=byKey[k];
+    if(b.floor!==lastFloor){ floorGroups.push({floor:b.floor, rows:[]}); lastFloor=b.floor; }
+    floorGroups[floorGroups.length-1].rows.push(b);
+  });
+  var body='';
+  var totalDataRows=keys.length;
+  var firstCellDone=false;
+  floorGroups.forEach(function(fg){
+    fg.rows.forEach(function(b,ri){
+      Object.keys(tot).forEach(function(f){ tot[f]+=b[f]; });
+      var familyTotal=b.mFamily+b.fFamily;
+      body+='<tr>';
+      if(!firstCellDone){ body+='<td rowspan="'+(totalDataRows+1)+'" style="padding:4px;border:1px solid var(--g2);text-align:center;font-weight:800;color:var(--g6);background:var(--g1)">T1</td>'; firstCellDone=true; }
+      if(ri===0) body+='<td rowspan="'+fg.rows.length+'" style="padding:5px 4px;border:1px solid var(--g2);text-align:center;font-weight:800;color:var(--g6);background:var(--g1)">'+fg.floor+'</td>';
+      body+='<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+b.zone+'</td>'+
+        '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;color:#1e40af">'+(b.mCnt||'')+'</td>'+
+        '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+(b.mToilet||'')+'</td>'+
+        '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+(b.mSink||'')+'</td>'+
+        '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+(b.mUrinal||'')+'</td>'+
+        '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;background:#FFFBD6;font-weight:700">'+(b.mFamily||'')+'</td>'+
+        '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;color:#be185d">'+(b.fCnt||'')+'</td>'+
+        '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+(b.fToilet||'')+'</td>'+
+        '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+(b.fSink||'')+'</td>'+
+        '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;background:#FFFBD6;font-weight:700">'+(b.fFamily||'')+'</td>'+
+        '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;font-weight:700">'+(familyTotal||'')+'</td>'+
+        '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;color:#6d28d9;background:#F3E8FF">'+(b.cCnt||'')+'</td>'+
+        '</tr>';
     });
-    var keys=Object.keys(byKey).sort(function(a,b2){
-      var ra=byKey[a], rb=byKey[b2];
-      var fa=floorOrder.indexOf(ra.floor), fb=floorOrder.indexOf(rb.floor);
-      if(fa===-1) fa=99; if(fb===-1) fb=99;
-      if(fa!==fb) return fa-fb;
-      return ra.zone.localeCompare(rb.zone);
-    });
-    if(!keys.length){ wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">등록된 화장실 데이터가 없습니다</div>'; return; }
-    var tot={cCnt:0,cToilet:0,cSink:0, mCnt:0,mToilet:0,mSink:0,mUrinal:0,mFamily:0, fCnt:0,fToilet:0,fSink:0,fFamily:0};
-    // 층별로 그룹핑(층별 셀 rowspan 처리용)
-    var floorGroups=[]; var lastFloor=null;
-    keys.forEach(function(k){
-      var b=byKey[k];
-      if(b.floor!==lastFloor){ floorGroups.push({floor:b.floor, rows:[]}); lastFloor=b.floor; }
-      floorGroups[floorGroups.length-1].rows.push(b);
-    });
-    var body='';
-    var totalDataRows=keys.length;
-    var firstCellDone=false;
-    floorGroups.forEach(function(fg){
-      fg.rows.forEach(function(b,ri){
-        Object.keys(tot).forEach(function(f){ tot[f]+=b[f]; });
-        var familyTotal=b.mFamily+b.fFamily;
-        body+='<tr>';
-        if(!firstCellDone){ body+='<td rowspan="'+(totalDataRows+1)+'" style="padding:4px;border:1px solid var(--g2);text-align:center;font-weight:800;color:var(--g6);background:var(--g1)">T1</td>'; firstCellDone=true; }
-        if(ri===0) body+='<td rowspan="'+fg.rows.length+'" style="padding:5px 4px;border:1px solid var(--g2);text-align:center;font-weight:800;color:var(--g6);background:var(--g1)">'+fg.floor+'</td>';
-        body+='<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+b.zone+'</td>'+
-          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;color:#6d28d9;background:#F3E8FF">'+(b.cCnt||'')+'</td>'+
-          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;background:#F3E8FF">'+(b.cToilet||'')+'</td>'+
-          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;background:#F3E8FF">'+(b.cSink||'')+'</td>'+
-          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;color:#1e40af">'+(b.mCnt||'')+'</td>'+
-          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+(b.mToilet||'')+'</td>'+
-          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+(b.mSink||'')+'</td>'+
-          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+(b.mUrinal||'')+'</td>'+
-          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;background:#FFFBD6;font-weight:700">'+(b.mFamily||'')+'</td>'+
-          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;color:#be185d">'+(b.fCnt||'')+'</td>'+
-          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+(b.fToilet||'')+'</td>'+
-          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center">'+(b.fSink||'')+'</td>'+
-          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;background:#FFFBD6;font-weight:700">'+(b.fFamily||'')+'</td>'+
-          '<td style="padding:5px 4px;border:1px solid var(--g2);text-align:center;font-weight:700">'+(familyTotal||'')+'</td>'+
-          '</tr>';
-      });
-    });
-    body+='<tr style="background:var(--g2)">'+
-      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900;color:var(--g7)">합계</td>'+
-      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900;background:#E9D5FF">'+tot.cCnt+'</td>'+
-      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900;background:#E9D5FF">'+tot.cToilet+'</td>'+
-      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900;background:#E9D5FF">'+tot.cSink+'</td>'+
-      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.mCnt+'</td>'+
-      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.mToilet+'</td>'+
-      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.mSink+'</td>'+
-      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.mUrinal+'</td>'+
-      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900;background:#FFFBD6">'+tot.mFamily+'</td>'+
-      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.fCnt+'</td>'+
-      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.fToilet+'</td>'+
-      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.fSink+'</td>'+
-      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900;background:#FFFBD6">'+tot.fFamily+'</td>'+
-      '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+(tot.mFamily+tot.fFamily)+'</td>'+
-      '</tr>';
-    wrap.innerHTML='<table style="border-collapse:collapse;font-size:11.5px;min-width:960px">'+
-      '<thead>'+
-      '<tr style="color:var(--g5)">'+
-        '<th rowspan="3" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">시설명</th>'+
-        '<th colspan="2" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">구분</th>'+
-        '<th colspan="3" style="padding:4px;border:1px solid var(--g2);background:#F3E8FF;color:#6d28d9">공용</th>'+
-        '<th colspan="5" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">남</th>'+
-        '<th colspan="4" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">여</th>'+
-        '<th rowspan="3" style="padding:4px;border:1px solid var(--g2);background:#FFFBD6">가족실/<br>장애인실</th>'+
-      '</tr>'+
-      '<tr style="color:var(--g5)">'+
-        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">층별</th>'+
-        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">구역</th>'+
-        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2);background:#F3E8FF">개소</th>'+
-        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2);background:#F3E8FF">양변기</th>'+
-        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2);background:#F3E8FF">세면기</th>'+
-        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">개소</th>'+
-        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">양변기</th>'+
-        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">세면기</th>'+
-        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">소변기</th>'+
-        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2);background:#FFFBD6">가족실/<br>장애인실</th>'+
-        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">개소</th>'+
-        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">양변기</th>'+
-        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">세면기</th>'+
-        '<th rowspan="2" style="padding:4px;border:1px solid var(--g2);background:#FFFBD6">가족실/<br>장애인실</th>'+
-      '</tr><tr></tr>'+
-      '</thead><tbody>'+body+'</tbody></table>';
-  }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--danger);font-size:13px">불러오기 실패</div>'; }
+  });
+  body+='<tr style="background:var(--g2)">'+
+    '<td colspan="2" style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900;color:var(--g7)">합계</td>'+
+    '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.mCnt+'</td>'+
+    '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.mToilet+'</td>'+
+    '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.mSink+'</td>'+
+    '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.mUrinal+'</td>'+
+    '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900;background:#FFFBD6">'+tot.mFamily+'</td>'+
+    '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.fCnt+'</td>'+
+    '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.fToilet+'</td>'+
+    '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+tot.fSink+'</td>'+
+    '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900;background:#FFFBD6">'+tot.fFamily+'</td>'+
+    '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900">'+(tot.mFamily+tot.fFamily)+'</td>'+
+    '<td style="padding:6px 4px;border:1px solid var(--g2);text-align:center;font-weight:900;background:#E9D5FF">'+tot.cCnt+'</td>'+
+    '</tr>';
+  wrap.innerHTML='<table style="border-collapse:collapse;font-size:11.5px;min-width:900px">'+
+    '<thead>'+
+    '<tr style="color:var(--g5)">'+
+      '<th rowspan="3" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">시설명</th>'+
+      '<th colspan="2" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">구분</th>'+
+      '<th colspan="5" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">남</th>'+
+      '<th colspan="4" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">여</th>'+
+      '<th rowspan="3" style="padding:4px;border:1px solid var(--g2);background:#FFFBD6">가족실/<br>장애인실</th>'+
+      '<th rowspan="3" style="padding:4px;border:1px solid var(--g2);background:#F3E8FF;color:#6d28d9">공용<br>개소</th>'+
+    '</tr>'+
+    '<tr style="color:var(--g5)">'+
+      '<th rowspan="2" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">층별</th>'+
+      '<th rowspan="2" style="padding:4px;border:1px solid var(--g2);background:var(--g1)">구역</th>'+
+      '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">개소</th>'+
+      '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">양변기</th>'+
+      '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">세면기</th>'+
+      '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">소변기</th>'+
+      '<th rowspan="2" style="padding:4px;border:1px solid var(--g2);background:#FFFBD6">가족실/<br>장애인실</th>'+
+      '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">개소</th>'+
+      '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">양변기</th>'+
+      '<th rowspan="2" style="padding:4px;border:1px solid var(--g2)">세면기</th>'+
+      '<th rowspan="2" style="padding:4px;border:1px solid var(--g2);background:#FFFBD6">가족실/<br>장애인실</th>'+
+    '</tr><tr></tr>'+
+    '</thead><tbody>'+body+'</tbody></table>';
 }
 var erSortKey='team', erSortDir=1;
 var erColFilters={}; // {field: Set(allowedValues)} — 비어있으면(필드 없음) 필터 없음
