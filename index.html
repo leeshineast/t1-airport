@@ -2874,6 +2874,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div style="padding:0 13px 10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
     <input id="erSearch" oninput="erRender()" placeholder="🔍 사번/성명/팀 검색" style="flex:1;min-width:140px;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px">
     <select id="erTeamFilter" onchange="erRender()" style="padding:9px 8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white"><option value="">전체 팀</option></select>
+    <select id="erGrpFilter" onchange="erRender()" style="padding:9px 8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white"><option value="">전체 조</option></select>
+    <select id="erPosFilter" onchange="erRender()" style="padding:9px 8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white"><option value="">전체 직책</option></select>
     <label style="padding:9px 12px;background:white;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
       ⬆️ 엑셀 업로드<input type="file" accept=".xlsx,.xls" style="display:none" onchange="erExcelUpload(this)">
     </label>
@@ -2884,15 +2886,15 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div style="padding:0 13px 20px;overflow-x:auto">
     <table style="width:100%;border-collapse:collapse;font-size:12.5px;min-width:760px">
       <thead><tr style="background:var(--g1);color:var(--g5)">
-        <th style="padding:8px 6px;text-align:left">사번</th>
-        <th style="padding:8px 6px;text-align:left">성명</th>
-        <th style="padding:8px 6px;text-align:left">팀</th>
-        <th style="padding:8px 6px;text-align:left">조</th>
-        <th style="padding:8px 6px;text-align:left">직책</th>
-        <th style="padding:8px 6px;text-align:left">출생연도</th>
-        <th style="padding:8px 6px;text-align:left">거주(시)</th>
-        <th style="padding:8px 6px;text-align:left">입사일</th>
-        <th style="padding:8px 6px;text-align:left">휴무</th>
+        <th onclick="erSort('emp_no')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">사번<span id="erSortIc_emp_no"></span></th>
+        <th onclick="erSort('name')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">성명<span id="erSortIc_name"></span></th>
+        <th onclick="erSort('team')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">팀<span id="erSortIc_team"></span></th>
+        <th onclick="erSort('grp')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">조<span id="erSortIc_grp"></span></th>
+        <th onclick="erSort('position')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">직책<span id="erSortIc_position"></span></th>
+        <th onclick="erSort('birth_year')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">출생연도<span id="erSortIc_birth_year"></span></th>
+        <th onclick="erSort('city')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">거주(시)<span id="erSortIc_city"></span></th>
+        <th onclick="erSort('hire_date')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">입사일<span id="erSortIc_hire_date"></span></th>
+        <th onclick="erSort('day_off')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap">휴무<span id="erSortIc_day_off"></span></th>
         <th style="padding:8px 6px"></th>
       </tr></thead>
       <tbody id="erTbody"><tr><td colspan="10" style="text-align:center;padding:20px;color:var(--g3)">불러오는 중...</td></tr></tbody>
@@ -24576,6 +24578,7 @@ async function renderMsToiletTable(){
       '</tr></thead><tbody>'+body+'</tbody></table>';
   }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:14px;color:var(--danger);font-size:13px">불러오기 실패</div>'; }
 }
+var erSortKey='team', erSortDir=1;
 async function loadEmpRoster(){
   var tbody=document.getElementById('erTbody'); if(!tbody) return;
   tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--g3)">불러오는 중...</td></tr>';
@@ -24583,27 +24586,47 @@ async function loadEmpRoster(){
     var res=await sb.from('employee_roster').select('*').order('team',{ascending:true}).order('emp_no',{ascending:true});
     if(res.error){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--danger)">불러오기 실패</td></tr>'; return; }
     erData=res.data||[];
-    var teams=Array.from(new Set(erData.map(function(r){return r.team;}).filter(Boolean))).sort(function(a,b){return a.localeCompare(b,'ko');});
-    var sel=document.getElementById('erTeamFilter');
-    if(sel){
-      var cur=sel.value;
-      sel.innerHTML='<option value="">전체 팀</option>'+teams.map(function(t){return '<option value="'+eeEsc(t)+'">'+eeEsc(t)+'</option>';}).join('');
-      sel.value=cur||'';
+    function fillSelect(id, field, label){
+      var vals=Array.from(new Set(erData.map(function(r){return r[field];}).filter(Boolean))).sort(function(a,b){return a.localeCompare(b,'ko');});
+      var sel=document.getElementById(id);
+      if(sel){
+        var cur=sel.value;
+        sel.innerHTML='<option value="">전체 '+label+'</option>'+vals.map(function(v){return '<option value="'+eeEsc(v)+'">'+eeEsc(v)+'</option>';}).join('');
+        sel.value=cur||'';
+      }
     }
+    fillSelect('erTeamFilter','team','팀');
+    fillSelect('erGrpFilter','grp','조');
+    fillSelect('erPosFilter','position','직책');
     erRender();
   }catch(e){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--danger)">불러오기 실패</td></tr>'; }
+}
+function erSort(key){
+  if(erSortKey===key){ erSortDir=-erSortDir; } else { erSortKey=key; erSortDir=1; }
+  ['emp_no','name','team','grp','position','birth_year','city','hire_date','day_off'].forEach(function(k){
+    var ic=document.getElementById('erSortIc_'+k); if(ic) ic.textContent=(k===erSortKey)?(erSortDir===1?' ▲':' ▼'):'';
+  });
+  erRender();
 }
 function erRender(){
   var tbody=document.getElementById('erTbody'); if(!tbody) return;
   var q=(document.getElementById('erSearch').value||'').trim();
   var teamF=(document.getElementById('erTeamFilter')||{}).value||'';
+  var grpF=(document.getElementById('erGrpFilter')||{}).value||'';
+  var posF=(document.getElementById('erPosFilter')||{}).value||'';
   var list=erData;
   if(teamF) list=list.filter(function(r){ return r.team===teamF; });
+  if(grpF) list=list.filter(function(r){ return r.grp===grpF; });
+  if(posF) list=list.filter(function(r){ return r.position===posF; });
   if(q){
     list=list.filter(function(r){
       return (r.emp_no||'').indexOf(q)!==-1 || (r.name||'').indexOf(q)!==-1 || (r.team||'').indexOf(q)!==-1;
     });
   }
+  list=list.slice().sort(function(a,b){
+    var av=a[erSortKey]||'', bv=b[erSortKey]||'';
+    return String(av).localeCompare(String(bv),'ko',{numeric:true})*erSortDir;
+  });
   var lbl=document.getElementById('erCountLbl'); if(lbl) lbl.textContent='전체 '+list.length+'명';
   var canEdit=erCanEdit();
   if(!list.length){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--g3)">사원이 없습니다</td></tr>'; return; }
@@ -24754,8 +24777,8 @@ function erExcelUpload(inputEl){
           grp:String(r['조']||'').trim()||null,
           position:String(r['직책']||'').trim()||null,
           name:String(r['성명']||'').trim()||null,
-          birth_year:erExtractYear(r['주민번호']),
-          city:erExtractCity(r['주소']),
+          birth_year:r['주민번호']?erExtractYear(r['주민번호']):(String(r['출생연도']||'').trim()||null),
+          city:r['주소']?erExtractCity(r['주소']):(String(r['거주(시)']||'').trim()||null),
           job_grade:String(r['직군']||'').trim()||null,
           first_hire_date:fmtDate(r['최초입사일']),
           hire_date:fmtDate(r['입사일']),
