@@ -777,13 +777,13 @@ html{overflow-x:hidden}
       </button>
       <button class="menu-btn" onclick="go('perf')">
         <span class="menu-icon">📋</span>
-        <div class="menu-title">주요 수행실적</div>
+        <div class="menu-title">주요 수행실적<span id="notifBadge_perf"></span></div>
         <div class="menu-desc">월별 주요 업무 수행실적 기록</div>
         <span class="menu-arrow">기록하기 →</span>
       </button>
       <button class="menu-btn" onclick="go('kpi')">
         <span class="menu-icon">📊</span>
-        <div class="menu-title">과업평가지표</div>
+        <div class="menu-title">과업평가지표<span id="notifBadge_kpi"></span></div>
         <div class="menu-desc">분기 수검 지표 월별 기록</div>
         <span class="menu-arrow">입력하기 →</span>
       </button>
@@ -861,7 +861,7 @@ html{overflow-x:hidden}
       </button>
       <button class="menu-btn" onclick="go('waste')">
         <span class="menu-icon">♻️</span>
-        <div class="menu-title">폐기물 처리현황</div>
+        <div class="menu-title">폐기물 처리현황<span id="notifBadge_waste"></span></div>
         <div class="menu-desc">소각·재활용 처리량 입력 및 이력</div>
         <span class="menu-arrow">입력하기 →</span>
       </button>
@@ -891,25 +891,25 @@ html{overflow-x:hidden}
     <div class="menu-grid">
       <button class="menu-btn" onclick="go('notice')">
         <span class="menu-icon">📢</span>
-        <div class="menu-title">공지사항</div>
+        <div class="menu-title">공지사항<span id="notifBadge_notice"></span></div>
         <div class="menu-desc">전체 공지사항 목록 확인</div>
         <span class="menu-arrow">전체보기 →</span>
       </button>
       <button class="menu-btn" onclick="go('chat')">
         <span class="menu-icon">📋</span>
-        <div class="menu-title">사규 열람</div>
+        <div class="menu-title">사규 열람<span id="notifBadge_chat"></span></div>
         <div class="menu-desc">사내 규정 및 지침서 열람</div>
         <span class="menu-arrow">열람하기 →</span>
       </button>
       <button class="menu-btn" onclick="go('iso9001')">
         <span class="menu-icon">📘</span>
-        <div class="menu-title">ISO</div>
+        <div class="menu-title">ISO<span id="notifBadge_iso9001"></span></div>
         <div class="menu-desc">ISO9001 · ISO37301 등 문서 열람</div>
         <span class="menu-arrow">열람하기 →</span>
       </button>
       <button class="menu-btn" onclick="go('news')">
         <span class="menu-icon">📰</span>
-        <div class="menu-title">회사소식</div>
+        <div class="menu-title">회사소식<span id="notifBadge_news"></span></div>
         <div class="menu-desc">회사소식 PDF 열람</div>
         <span class="menu-arrow">열람하기 →</span>
       </button>
@@ -927,25 +927,25 @@ html{overflow-x:hidden}
       </button>
       <button class="menu-btn" onclick="go('risk')">
         <span class="menu-icon">⚠️</span>
-        <div class="menu-title">위험성평가</div>
+        <div class="menu-title">위험성평가<span id="notifBadge_risk"></span></div>
         <div class="menu-desc">위험성평가 PDF 열람</div>
         <span class="menu-arrow">열람하기 →</span>
       </button>
       <button class="menu-btn" id="trainingMenuBtn" style="display:none" onclick="go('training')">
         <span class="menu-icon">🎓</span>
-        <div class="menu-title">교육자료</div>
+        <div class="menu-title">교육자료<span id="notifBadge_training"></span></div>
         <div class="menu-desc">교육자료 PDF 열람</div>
         <span class="menu-arrow">열람하기 →</span>
       </button>
       <button class="menu-btn" onclick="go('eduevent')">
         <span class="menu-icon">📚</span>
-        <div class="menu-title">교육·회의·출장</div>
+        <div class="menu-title">교육·회의·출장<span id="notifBadge_eduevent"></span></div>
         <div class="menu-desc">신청 및 참석관리</div>
         <span class="menu-arrow">신청하기 →</span>
       </button>
       <button class="menu-btn" onclick="go('campaign')">
         <span class="menu-icon">🏆</span>
-        <div class="menu-title">사업부 행사</div>
+        <div class="menu-title">사업부 행사<span id="notifBadge_campaign"></span></div>
         <div class="menu-desc">슬로건 공모 등 참여형 행사</div>
         <span class="menu-arrow">참여하기 →</span>
       </button>
@@ -964,7 +964,7 @@ html{overflow-x:hidden}
     <div class="menu-grid">
       <button class="menu-btn" onclick="go('workforce')">
         <span class="menu-icon">👔</span>
-        <div class="menu-title">인력관리</div>
+        <div class="menu-title">인력관리<span id="notifBadge_workforce"></span></div>
         <div class="menu-desc">근무계획(더존ERP) · 특별근무 편성</div>
         <span class="menu-arrow">관리하기 →</span>
       </button>
@@ -6005,6 +6005,48 @@ function canAdcManage(){ return !!(me && (me.role==='master'||me.role==='admin'|
 function canDeleteWorkItem(){
   return !!(me && (me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)));
 }
+// ── 전체메뉴 새 글 알림 배지 ──
+var NOTIF_MODULES=[
+  {key:'perf', table:'performance_records', col:'created_at'},
+  {key:'kpi', table:'kpi_data', col:'created_at'},
+  {key:'waste', table:'waste_data', col:'created_at'},
+  {key:'notice', table:'notices', col:'created_at'},
+  {key:'chat', table:'regulation_files', col:'uploaded_at'},
+  {key:'iso9001', table:'iso9001_files', col:'uploaded_at'},
+  {key:'news', table:'companynews_posts', col:'uploaded_at'},
+  {key:'risk', table:'risk_assessment_files', col:'uploaded_at'},
+  {key:'training', table:'training_material_files', col:'uploaded_at'},
+  {key:'eduevent', table:'edu_events', col:'created_at'},
+  {key:'campaign', table:'campaigns', col:'created_at'},
+  {key:'workforce', table:'wf_special_events', col:'created_at'}
+];
+var _notifReadMarks={};
+async function loadMenuNotifBadges(){
+  if(!me) return;
+  try{
+    var mRes=await sb.from('user_read_marks').select('module_key,last_read_at').eq('user_id',me.id);
+    _notifReadMarks={};
+    (mRes.data||[]).forEach(function(r){ _notifReadMarks[r.module_key]=r.last_read_at; });
+  }catch(e){ return; }
+  NOTIF_MODULES.forEach(async function(mod){
+    var badge=document.getElementById('notifBadge_'+mod.key); if(!badge) return;
+    var since=_notifReadMarks[mod.key]||'1970-01-01T00:00:00Z';
+    try{
+      var res=await sb.from(mod.table).select('*', {count:'exact', head:true}).gt(mod.col, since);
+      var n=res.count||0;
+      badge.innerHTML=n>0?(' <span style="display:inline-block;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#DC2626;color:white;font-size:10px;font-weight:800;line-height:16px;text-align:center;vertical-align:middle">'+(n>9?'9+':n)+'</span>'):'';
+    }catch(e){ badge.innerHTML=''; }
+  });
+}
+async function markModuleRead(moduleKey){
+  if(!me) return;
+  if(!NOTIF_MODULES.some(function(m){return m.key===moduleKey;})) return;
+  try{
+    await sb.from('user_read_marks').upsert({user_id:me.id, module_key:moduleKey, last_read_at:new Date().toISOString()}, {onConflict:'user_id,module_key'});
+    var badge=document.getElementById('notifBadge_'+moduleKey); if(badge) badge.innerHTML='';
+  }catch(e){}
+}
+
 async function logDeletion(moduleName, summary){
   try{
     var r=await sb.from('delete_logs').insert({
@@ -6728,6 +6770,10 @@ function go(name){
   if(name==='main'||name==='statsdash'){
     if(typeof loadMonthlyStats==='function') loadMonthlyStats();
   }
+  if(name==='main'){
+    if(typeof loadMenuNotifBadges==='function') loadMenuNotifBadges();
+  }
+  if(typeof markModuleRead==='function') markModuleRead(name);
   if(name==='execdash'){
     if(typeof loadExecDashboard==='function') loadExecDashboard();
     if(typeof startExecDashPoll==='function') startExecDashPoll();
