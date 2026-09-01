@@ -26001,6 +26001,15 @@ function wfEmpUpload(inputEl){
       if(offPayload.length){
         var r2=await sb.from('wf_fixed_off').upsert(offPayload,{onConflict:'emp_no,quarter'});
         if(r2.error){ toast('휴무요일 저장 오류: '+r2.error.message); return; }
+        // 최초 등록도 이력에 남긴다 (이후 한 번도 안 고쳐도 "누가 처음 올렸는지"가 이력에 보이도록)
+        try{
+          var initLogRows=offPayload.map(function(p){
+            var emp=empPayload.find(function(e){return e.emp_no===p.emp_no;});
+            var offTxt=[p.off_day1,p.off_day2].filter(Boolean).join('·')||'(없음)';
+            return { emp_no:p.emp_no, emp_name: emp?emp.name:'', quarter:p.quarter, field_name:'고정휴무요일', old_value:'(신규 등록)', new_value:offTxt, changed_by: me?me.name:'' };
+          });
+          if(initLogRows.length) await sb.from('wf_employee_edit_log').insert(initLogRows);
+        }catch(logErr){ /* 이력 기록 실패해도 저장 자체는 유지 */ }
       }
       if(leavePayload.length){
         var r3=await sb.from('wf_leave').upsert(leavePayload,{onConflict:'emp_no,start_date'});
@@ -26178,6 +26187,7 @@ async function wfSpLoadEvents(){
        '<div onclick="wfSpOpenEvent(\''+ev.id+'\')" style="cursor:pointer">'+
        '<div style="font-weight:800;font-size:15px;color:var(--g7)">'+ev.title+'</div>'+
        '<div style="font-size:13px;color:var(--g4);margin-top:4px">'+ev.start_date+' ~ '+ev.end_date+'</div>'+
+       '<div style="font-size:11.5px;color:var(--g4);margin-top:2px">작성자: '+eeEsc(ev.created_by||'-')+'</div>'+
        '<span style="display:inline-block;margin-top:8px;padding:3px 10px;border-radius:10px;background:'+badgeColor+';color:'+badgeText+';font-size:12px;font-weight:700">'+badgeLabel+'</span>'+
        '</div>'+
        '<div style="display:flex;gap:6px;margin-top:10px">'+
@@ -26276,7 +26286,8 @@ async function wfSpOpenEvent(id){
   document.getElementById('wfSpDetailView').style.display='block';
   document.getElementById('wfSpDetailHead').innerHTML=
     '<div style="font-weight:800;font-size:16px;color:var(--g7)">'+ev.title+'</div>'+
-    '<div style="font-size:13px;color:var(--g4);margin-top:2px">기간: '+ev.start_date+' ~ '+ev.end_date+'</div>';
+    '<div style="font-size:13px;color:var(--g4);margin-top:2px">기간: '+ev.start_date+' ~ '+ev.end_date+'</div>'+
+    '<div style="font-size:11.5px;color:var(--g4);margin-top:2px">작성자: '+eeEsc(ev.created_by||'-')+'</div>';
   var res=await sb.from('wf_special_assignments').select('*').eq('event_id', ev.id);
   wfSpAssignments=res.data||[];
   await wfSpFetchActuals();
