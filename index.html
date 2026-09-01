@@ -5615,6 +5615,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <button onclick="setMgrAtt('출근')" style="width:100%;padding:12px;margin-bottom:8px;background:var(--teal-bg);color:var(--teal2);border:1.5px solid var(--teal2);border-radius:var(--r2);font-size:16px;font-weight:700;cursor:pointer">✔ 출근</button>
     <button onclick="setMgrAtt('출장')" style="width:100%;padding:12px;margin-bottom:8px;background:#EBF0FF;color:#1B4FBE;border:1.5px solid #1B4FBE;border-radius:var(--r2);font-size:16px;font-weight:700;cursor:pointer">✈ 출장</button>
     <button onclick="setMgrAtt('교육')" style="width:100%;padding:12px;margin-bottom:8px;background:#F3EEFC;color:#6B21A8;border:1.5px solid #6B21A8;border-radius:var(--r2);font-size:16px;font-weight:700;cursor:pointer">📚 교육</button>
+    <button onclick="setMgrAtt('휴무')" style="width:100%;padding:12px;margin-bottom:8px;background:#F1F5F9;color:#475569;border:1.5px solid #94A3B8;border-radius:var(--r2);font-size:16px;font-weight:700;cursor:pointer">🏠 휴무</button>
     <button onclick="setMgrAtt('')" style="width:100%;padding:12px;background:var(--g1);color:var(--g5);border:1.5px solid var(--g2);border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">미확인으로 취소</button>
   </div>
 </div></div>
@@ -9003,6 +9004,39 @@ function taSetMode(prefix, m){
 // ── 정원 계산 공통 (전체 화면에서 재사용): 팀장(manager)+조장(leader)만 카운트, 액팅리더는 정원 제외 ──
 var TEAM_SUBGROUPS_G={'1팀':['A','B','C'],'2팀':['A','B'],'3팀':['A','B'],'4팀':['A','B'],'6팀':['A','B','C'],'7팀':['A','B'],'8팀':['A','B'],'9팀':['A','B'],'5팀':['A','B'],'10팀':['A','B']};
 var TEAM_ROW_ORDER_G=['1팀','6팀','2팀','7팀','3팀','8팀','4팀','9팀','5팀','10팀'];
+// ── 근무계획(분기별 고정휴무) 연동: 팀장/조장 슬롯의 실제 담당자가 오늘 고정휴무인지 자동 판별 ──
+async function fetchMgrRosterWithOff(){
+  var roster={}; // '1팀_팀장' / '1팀_A조장' 등 → {empNo, name}
+  var offMap={}; // empNo → {d1, d2}
+  try{
+    var usrRes=await sb.from('users').select('role,team,name,employee_id').eq('status','active').in('role',['manager','leader','acting_leader']);
+    (usrRes.data||[]).forEach(function(u){
+      if(u.role==='manager'){
+        roster[u.team+'_팀장']={empNo:u.employee_id,name:u.name};
+      }else{
+        var mm=(u.team||'').match(/^(\d+팀)\s*([A-Z])조$/);
+        if(mm){ roster[mm[1]+'_'+mm[2]+'조장']={empNo:u.employee_id,name:u.name}; }
+      }
+    });
+  }catch(e){}
+  try{
+    var nowQ=new Date(Date.now()+9*3600000);
+    var quarter=nowQ.getFullYear()+'-Q'+(Math.floor(nowQ.getMonth()/3)+1);
+    var offRes=await sb.from('wf_fixed_off').select('emp_no,off_day1,off_day2').eq('quarter',quarter);
+    (offRes.data||[]).forEach(function(r){ offMap[r.emp_no]={d1:r.off_day1,d2:r.off_day2}; });
+  }catch(e){}
+  return {roster:roster, offMap:offMap};
+}
+function isSlotOffToday(team, slotLabel, rosterData){
+  if(!rosterData) return false;
+  var person=rosterData.roster[team+'_'+slotLabel];
+  if(!person||!person.empNo) return false;
+  var o=rosterData.offMap[person.empNo];
+  if(!o) return false;
+  var dayNames=['일','월','화','수','목','금','토'];
+  var today=dayNames[new Date(Date.now()+9*3600000).getUTCDay()];
+  return o.d1===today||o.d2===today;
+}
 async function fetchQuotaCounts(){
   var mgrCntByTeam={}, leaderCntByGroup={}, staffQuotaByGroup={}, opsQuota=0;
   try{
@@ -24580,6 +24614,7 @@ async function loadMgrAttendance(){
     });
   }catch(e){ console.error(e); }
   await loadMgrAttQuotaSummary();
+  mgrRosterOffCache=await fetchMgrRosterWithOff();
   renderMgrAttendance();
   updateDashMgrAtt();
   loadMgrAttendanceYesterday();
@@ -24601,18 +24636,19 @@ async function loadMgrAttQuotaSummaryFor(dateStr, attSrc){
     });
     TEAM_ROW_ORDER_G.forEach(function(team){
       var subs=TEAM_SUBGROUPS_G[team]||[];
-      var quota=quotaForTeam(team, qCounts);
+      var quota=quotaForTeam(team, qCounts); // 정원은 고정값 그대로 사용 (휴무라고 빼지 않음)
       var staffAttend=0;
       subs.forEach(function(s){ staffAttend+=(staffMap[team+s]||0); });
       var checkedLeaders=0;
       Object.keys(attSrc||{}).forEach(function(k){
-        if(k.indexOf(team+'_')===0 && attSrc[k]&&attSrc[k].checked) checkedLeaders++;
+        // 휴무(연차/결근/병가/휴직 등 출근외 전부 포함)는 출근으로 카운트하지 않음 → 자연히 휴무외에 잡힘
+        if(k.indexOf(team+'_')===0 && attSrc[k] && attSrc[k].checked && attSrc[k].status!=='휴무') checkedLeaders++;
       });
       var attend=checkedLeaders+staffAttend;
       out[team]={quota:quota, attend:attend, off:Math.max(0,quota-attend)};
     });
     var opsChecked=0;
-    Object.keys(attSrc||{}).forEach(function(k){ if(k.indexOf('운영_')===0 && attSrc[k]&&attSrc[k].checked) opsChecked++; });
+    Object.keys(attSrc||{}).forEach(function(k){ if(k.indexOf('운영_')===0 && attSrc[k]&&attSrc[k].checked&&attSrc[k].status!=='휴무') opsChecked++; });
     out['운영']={quota:qCounts.opsQuota, attend:opsChecked, off:Math.max(0,qCounts.opsQuota-opsChecked)};
   }catch(e){}
   return out;
@@ -25048,6 +25084,7 @@ function switchMgrAttView(btn, mode){
     renderMgrAttendance('today');
   }
 }
+var mgrRosterOffCache=null;
 function renderMgrAttendance(viewDate){
   viewDate=viewDate||'today';
   var body = document.getElementById('mgrAttBody');
@@ -25093,13 +25130,16 @@ function renderMgrAttendance(viewDate){
         var status = att && att.status;
         var checkedBy = att ? att.checked_by : '';
         var checkedTime = att && att.checked_at ? toKSTTime(att.checked_at) : '';
+        // 미체크 상태인데 근무계획(분기 고정휴무)상 오늘이 휴무인 경우 자동으로 "휴무"로 표시
+        var isAutoOff = !att && viewDate==='today' && isSlotOffToday(team, name, mgrRosterOffCache);
 
         // 클릭 권한: 당일에만 가능. 관리자 전체, 해당팀 조장/팀장 (운영팀은 관리자만)
         var canCheck = viewDate==='today' && me && me.role!=='acting_leader' && (isAdmin || (team!=='운영' && myTeam === team));
 
-        var statusIcon = status==='출장' ? '✈' : status==='교육' ? '📚' : isChecked ? '✔' : '';
+        var statusIcon = status==='출장' ? '✈' : status==='교육' ? '📚' : status==='휴무' ? '🏠' : isAutoOff ? '🏠' : isChecked ? '✔' : '';
         var bg = status==='출장' ? 'background:#EBF0FF;border-color:#1B4FBE;color:#1B4FBE'
                : status==='교육' ? 'background:#F3EEFC;border-color:#6B21A8;color:#6B21A8'
+               : (status==='휴무'||isAutoOff) ? 'background:#F1F5F9;border-color:#94A3B8;color:#475569'
                : isChecked ? 'background:var(--teal-bg);border-color:var(--teal2);color:var(--teal2)'
                : 'background:var(--g1);border-color:var(--g2);color:var(--g4)';
         var cursor = canCheck ? 'cursor:pointer' : 'cursor:default';
@@ -25109,6 +25149,8 @@ function renderMgrAttendance(viewDate){
         h += '<div>'+(statusIcon?statusIcon+' ':'')+name+'</div>';
         if(isChecked && checkedTime){
           h += '<div style="font-size:10px;color:inherit;margin-top:1px;opacity:.85">'+(status&&status!=='출근'?status+' · ':'')+checkedTime+(checkedBy&&checkedBy!==me.name?' ('+checkedBy+')':'')+'</div>';
+        }else if(isAutoOff){
+          h += '<div style="font-size:10px;color:inherit;margin-top:1px;opacity:.85">근무계획 휴무</div>';
         }
         h += '</div>';
       });
