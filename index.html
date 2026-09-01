@@ -6614,7 +6614,7 @@ function go(name){
     if(!window._memberAllowedScreens[name]) return;
   }
   if(name==='execdash'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='group_leader'||me.role==='division_head'||isExecRole(me.role)))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
-  if(name==='emproster'&&(!me||!(me.role==='manager'||me.role==='admin'||me.role==='master'))){ toast('⚠️ 팀장 이상만 접근할 수 있습니다'); return; }
+  if(name==='emproster'&&(!me||!(me.role==='admin'||me.role==='master'))){ toast('⚠️ admin·master만 접근할 수 있습니다'); return; }
   if(name==='training'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(name==='admin'&&(!me||me.role!=='master')){ toast('⚠️ 최고관리자만 접근할 수 있습니다'); return; }
   if(name==='activeUsers'&&(!me||!(me.role==='admin'||me.role==='master'))){ toast('⚠️ 관리자 이상만 접근할 수 있습니다'); return; }
@@ -6625,7 +6625,7 @@ function go(name){
   if((name==='workforce'||name==='workschedule'||name==='specialwork')&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(['이상욱','강석원'].indexOf(me&&me.name)!==-1 && ['workforce','workschedule','specialwork','admin','activeUsers','deleteLogs','admconfirm','downloadcenter'].indexOf(name)!==-1){ toast('⚠️ 접근 권한이 없습니다'); return; }
   if(['shower','smoking','rest','storage','baby'].indexOf(name)!==-1&&!me){ toast('⚠️ 로그인이 필요합니다'); return; }
-  if(name==='downloadcenter'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
+  if(name==='downloadcenter'&&(!me||!(me.role==='admin'||me.role==='master'))){ toast('⚠️ admin·master만 접근할 수 있습니다'); return; }
   if(name==='groupchat'&&me&&me.role==='guest'){ toast('⚠️ 게스트 계정은 이용할 수 없는 기능입니다'); return; }
   if(!_skipPush&&name!=='login'&&name!=='reg'&&name!==_curScreenName){
     try{ history.pushState({kind:'screen',id:name}, ''); }catch(e){}
@@ -6825,7 +6825,7 @@ function applyRoleUI(){
   var adcb=document.getElementById('adcMenuBtn');
   if(adcb) adcb.style.display=canAdcManage()?'block':'none';
   var erb=document.getElementById('empRosterBtn');
-  var canEmpRoster=me.role==='manager'||me.role==='admin'||me.role==='master'; // 팀장 이상만 (조장·액팅리더 제외)
+  var canEmpRoster=me.role==='admin'||me.role==='master'; // admin/master만
   if(erb) erb.style.display=canEmpRoster?'block':'none';
   var edb=document.getElementById('execDashMenuBtn');
   var isExecView=me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role);
@@ -6840,7 +6840,7 @@ function applyRoleUI(){
   var eddl=document.getElementById('edDownloadBtn');
   if(eddl) eddl.style.display=isAdmin?'inline-block':'none';
   var dcb=document.getElementById('downloadCenterMenuBtn');
-  if(dcb) dcb.style.display=isMgr?'flex':'none';
+  if(dcb) dcb.style.display=isAdmin?'flex':'none';
   var wvb=document.getElementById('workVehMenuBtn');
   if(wvb) wvb.style.display=isExecView?'flex':'none';
   // 현장점검·창고재고관리: master/admin/manager/leader/acting_leader만 메뉴 노출 (그 외 전부 숨김)
