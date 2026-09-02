@@ -19902,12 +19902,13 @@ var FAC_CONFIGS={
       {key:'location', label:'위치', xh:'창고 위치', type:'text', required:true},
       {key:'number', label:'번호', xh:'창고 NUMBER', type:'text'},
       {key:'storage_type', label:'창고 종류(용품/장비/문서 등)', xh:'창고 종류', type:'text'},
+      {key:'fire_extinguisher_count', label:'소화기 현황', xh:'소화기 수량', type:'select', options:['1','2','3','4','5','6']},
       {key:'manager', label:'관리 주체', xh:'관리 주체', type:'text'}
     ,
       {key:'status', label:'사용 여부', xh:'사용여부', type:'select', options:['사용중','공사중','폐쇄','기타'], default:'사용중'}],
     listTitle:function(r){ return (r.location||''); },
     listSub:function(r){ return (r.number||''); },
-    listDetail:function(r){ return (r.storage_type||'-')+' · 관리: '+(r.manager||'-'); }
+    listDetail:function(r){ return (r.storage_type||'-')+' · 관리: '+(r.manager||'-')+(r.fire_extinguisher_count?(' · 소화기 '+r.fire_extinguisher_count+'개'):''); }
   },
   baby:{table:'baby_room_master', icon:'👶', title:'유아휴게실', screen:'sBabyMgmt', pfx:'bb',
     fields:[
@@ -20275,7 +20276,15 @@ async function facDeleteConfirm(type){
 async function facDownload(type){
   if(!canDownload()) return;
   var cfg=FAC_CONFIGS[type];
+  // 화면(현황 탭)과 동일하게 층 순서를 우선 적용하고, 같은 층 안에서는 연번 순으로 정렬
+  var floorFieldDl=cfg.fields.find(function(f){return f.key==='floor';});
+  var floorOrderDl=floorFieldDl?floorFieldDl.options.map(function(o){return Array.isArray(o)?o[0]:o;}):[];
   var data=(facData[type]||[]).slice().sort(function(a,b){
+    if(floorOrderDl.length){
+      var fa=floorOrderDl.indexOf(a.floor), fb=floorOrderDl.indexOf(b.floor);
+      if(fa===-1) fa=999; if(fb===-1) fb=999;
+      if(fa!==fb) return fa-fb;
+    }
     var av=(a.seq_no!=null&&a.seq_no!=='')?Number(a.seq_no):null;
     var bv=(b.seq_no!=null&&b.seq_no!=='')?Number(b.seq_no):null;
     if(av!=null&&bv!=null) return av-bv;
