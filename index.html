@@ -3715,6 +3715,11 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <label style="padding:10px 12px;background:var(--teal-bg);border:1.5px dashed var(--teal2);border-radius:8px;font-size:13px;font-weight:700;color:var(--teal2);cursor:pointer;display:block;text-align:center;margin-bottom:10px">
       ⬆️ 엑셀 업로드 (사번, 이름 컬럼) — 업로드 시 기존 명단 전체 교체<input type="file" accept=".xlsx,.xls" style="display:none" onchange="cpEligibleUpload(this)">
     </label>
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <input id="cpEligAddEmpNo" placeholder="사번" style="width:35%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13.5px;box-sizing:border-box">
+      <input id="cpEligAddName" placeholder="이름" style="flex:1;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13.5px;box-sizing:border-box">
+      <button onclick="cpEligibleAddOne()" style="padding:9px 14px;background:var(--teal);color:white;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">＋ 추가</button>
+    </div>
     <div style="font-size:12.5px;color:var(--g6);margin-bottom:6px" id="cpEligibleCount"></div>
     <div id="cpEligibleList" style="max-height:38vh;overflow-y:auto;border:1px solid var(--g1);border-radius:8px;padding:6px 10px;margin-bottom:12px"></div>
     <div style="display:flex;gap:8px">
@@ -27215,8 +27220,30 @@ function cpRenderEligibleList(){
   if(!listEl) return;
   if(!cpEligibleCache.length){ listEl.innerHTML='<div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">명단이 비어있습니다</div>'; return; }
   listEl.innerHTML=cpEligibleCache.map(function(r){
-    return '<div style="padding:5px 0;border-bottom:1px solid var(--g1);font-size:13px;color:var(--g6)">'+eeEsc(r.emp_no)+' · '+eeEsc(r.name)+'</div>';
+    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--g1);font-size:13px;color:var(--g6)">'+
+      '<span>'+eeEsc(r.emp_no)+' · '+eeEsc(r.name)+'</span>'+
+      '<span onclick="cpEligibleDeleteOne('+r.id+')" style="color:#dc2626;font-size:12px;font-weight:700;cursor:pointer;padding:2px 8px">삭제</span>'+
+      '</div>';
   }).join('');
+}
+async function cpEligibleAddOne(){
+  if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
+  var empNo=(document.getElementById('cpEligAddEmpNo').value||'').trim();
+  var name=(document.getElementById('cpEligAddName').value||'').trim();
+  if(!empNo||!name){ toast('⚠️ 사번과 이름을 입력해주세요'); return; }
+  var res=await sb.from('campaign_eligible').upsert({campaign_id:cpCurCampaign.id, emp_no:empNo, name:name, uploaded_by:me?me.name:''},{onConflict:'campaign_id,emp_no'});
+  if(res.error){ toast('오류: '+res.error.message); return; }
+  document.getElementById('cpEligAddEmpNo').value='';
+  document.getElementById('cpEligAddName').value='';
+  toast('✓ 추가되었습니다');
+  await cpLoadEligible();
+}
+async function cpEligibleDeleteOne(id){
+  if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
+  var res=await sb.from('campaign_eligible').delete().eq('id',id);
+  if(res.error){ toast('오류: '+res.error.message); return; }
+  toast('✓ 삭제되었습니다');
+  await cpLoadEligible();
 }
 async function cpEligibleUpload(inputEl){
   if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
@@ -27502,6 +27529,12 @@ async function cpSubmitPublicVote(){
   var name=(document.getElementById('cpVoteName').value||'').trim();
   if(!empNo||!name){ toast('⚠️ 사번과 이름을 입력해주세요'); return; }
   if(!cpMySelectedFinalistId){ toast('⚠️ 후보를 한 명 선택해주세요'); return; }
+  // 응모 가능자 명단이 등록돼 있으면 투표도 그 명단 기준으로 확인
+  var eligResV=await sb.from('campaign_eligible').select('id').eq('campaign_id',cpCurCampaign.id).limit(1);
+  if(eligResV.data && eligResV.data.length){
+    var matchResV=await sb.from('campaign_eligible').select('id').eq('campaign_id',cpCurCampaign.id).eq('emp_no',empNo).eq('name',name).maybeSingle();
+    if(!matchResV.data){ toast('⚠️ 입력하신 사번·이름이 명단에 없습니다. 다시 확인해주세요'); return; }
+  }
   var existing=await sb.from('campaign_public_votes').select('id').eq('campaign_id',cpCurCampaign.id).eq('voter_emp_no',empNo).maybeSingle();
   var body={
     id: existing.data?existing.data.id:('cppv_'+Date.now()+'_'+Math.floor(Math.random()*1000)),
