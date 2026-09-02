@@ -1129,13 +1129,19 @@ html{overflow-x:hidden}
       </div>
       <div id="dAccNoDay" style="display:none;flex-shrink:0;padding:7px 9px;background:#EAF6EC;border-radius:10px;text-align:center;font-size:11px;font-weight:700;color:#1D4ED8;line-height:1.4;white-space:nowrap"></div>
     </div>
-    <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('voc')">
-      <div class="s-lbl">민원(서비스응대)</div>
-      <div style="display:flex;align-items:baseline;gap:3px">
-        <div class="s-val c-warn" id="dComp" style="font-size:23px">0</div>
-        <div style="font-size:10px;color:var(--warn);font-weight:700">금일</div>
+    <div class="stat-box" style="flex:1;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:8px" onclick="go('voc')">
+      <div>
+        <div class="s-lbl">민원(서비스응대)</div>
+        <div style="display:flex;align-items:baseline;gap:3px">
+          <div class="s-val c-warn" id="dComp" style="font-size:23px">0</div>
+          <div style="font-size:10px;color:var(--warn);font-weight:700">금일</div>
+        </div>
+        <div style="font-size:12px;color:var(--g4)">누적 <span id="dCompT" style="font-weight:700;color:var(--g5)">0</span>건</div>
       </div>
-      <div style="font-size:12px;color:var(--g4)">누적 <span id="dCompT" style="font-weight:700;color:var(--g5)">0</span>건</div>
+      <div id="dVocTopWrap" style="flex-shrink:0;border-left:1px solid var(--g1);padding-left:10px;min-width:78px;display:none">
+        <div style="font-size:9px;color:var(--g4);font-weight:700;margin-bottom:4px;white-space:nowrap">누적 유형 TOP3</div>
+        <div id="dVocTopList"></div>
+      </div>
     </div>
   </div>
   <!-- 공동작업 한 줄 -->
@@ -17139,6 +17145,26 @@ async function updateAccComplaintCount(){
   }
   var dComp=document.getElementById('dComp'); if(dComp) dComp.textContent=compToday;
   var dCompT=document.getElementById('dCompT'); if(dCompT) dCompT.textContent=compTotal;
+
+  // 민원 유형별 누적 TOP3 (category 기준 집계, 오른쪽 여백에 표시)
+  var vocCatCount={};
+  (vocData||[]).forEach(function(r){
+    var c=r.category||'기타';
+    vocCatCount[c]=(vocCatCount[c]||0)+1;
+  });
+  var vocCatTop=Object.keys(vocCatCount).map(function(k){ return {name:k,cnt:vocCatCount[k]}; }).sort(function(a,b){ return b.cnt-a.cnt; }).slice(0,3);
+  var dVocTopWrap=document.getElementById('dVocTopWrap');
+  var dVocTopList=document.getElementById('dVocTopList');
+  if(dVocTopWrap&&dVocTopList){
+    if(vocCatTop.length){
+      dVocTopList.innerHTML=vocCatTop.map(function(t){
+        return '<div style="display:flex;justify-content:space-between;gap:8px;font-size:10.5px;margin-top:3px;white-space:nowrap"><span style="color:var(--g4)">'+t.name+'</span><b style="color:var(--g5);margin-left:6px">'+t.cnt+'</b></div>';
+      }).join('');
+      dVocTopWrap.style.display='block';
+    }else{
+      dVocTopWrap.style.display='none';
+    }
+  }
 
   // 습득물 요약 (금일 접수 건수 / 미처리=접수 상태)
   var lostToday=(lostData||[]).filter(function(r){
