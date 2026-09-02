@@ -507,6 +507,35 @@ html{overflow-x:hidden}
             if(r.error) return r;
             return { data: Array.isArray(r.data)?(r.data[0]||null):r.data, error: null };
           },
+          count: async function(){
+            // 데이터를 전부 받아오지 않고 "개수만" 정확히 세는 전용 조회 (PostgREST count=exact + Range 헤더 활용)
+            try{
+              if(_sbAccessToken) await sbAuthEnsureFresh();
+              var qp = Object.assign({}, _params);
+              var url = BASE + '/' + table;
+              var qs = [];
+              Object.entries(qp).forEach(function([k,v]){
+                if(Array.isArray(v)){ v.forEach(function(vv){ qs.push(k + '=' + encodeURIComponent(vv)); }); }
+                else{ qs.push(k + '=' + encodeURIComponent(v)); }
+              });
+              if(qs.length) url += '?' + qs.join('&');
+              var headers = Object.assign({}, H());
+              headers['Prefer'] = 'count=exact';
+              headers['Range'] = '0-0';
+              headers['Range-Unit'] = 'items';
+              var resp = await fetch(url, { method:'GET', headers:headers });
+              if(!resp.ok){
+                var t=await resp.text(); var d=t?JSON.parse(t):null;
+                return { count: 0, error: { message:(d&&d.message)||('HTTP '+resp.status) } };
+              }
+              var cr = resp.headers.get('content-range'); // 예: "0-0/1017"
+              var total = 0;
+              if(cr && cr.indexOf('/')!==-1){ total = parseInt(cr.split('/')[1], 10) || 0; }
+              return { count: total, error: null };
+            }catch(e){
+              return { count: 0, error: { message: String(e.message||e) } };
+            }
+          },
           then: function(resolve, reject){
             var p;
             if(_method==='GET'){
@@ -16948,7 +16977,7 @@ async function downloadHoExcel(){
   }catch(e){ toast('다운로드 오류: '+e.message); }
 }
 
-function updateHoPending(){
+async function updateHoPending(){
   var cnt=hoAll.filter(function(r){return !r.confirmed;}).length;
   var el=document.getElementById('dHO'); if(el) el.textContent=cnt;
   var todayStr=kstDate();
@@ -16956,7 +16985,9 @@ function updateHoPending(){
   var elT=document.getElementById('dHOToday'); if(elT) elT.textContent=todayCnt;
   var doneTodayCnt=hoAll.filter(function(r){ return r.confirmed && r.confirmed_at && kstDate(r.confirmed_at)===todayStr; }).length;
   var elD=document.getElementById('dHODone'); if(elD) elD.textContent=doneTodayCnt;
-  var doneTotalCnt=hoAll.filter(function(r){ return r.confirmed; }).length;
+  // 누적은 배열 길이 대신 DB에 직접 개수를 물어봐서 정확한 값을 가져온다 (1000건 기본 조회 제한과 무관하게 항상 정확)
+  var totRes=await sb.from('handover').eq('confirmed',true).count();
+  var doneTotalCnt=totRes.error?hoAll.filter(function(r){ return r.confirmed; }).length:totRes.count;
   var elTot=document.getElementById('dHOTotal'); if(elTot) elTot.textContent=doneTotalCnt;
 }
 
@@ -17059,7 +17090,7 @@ async function saveLostNote(){
   hideM('lostNoteModal');
   loadLostSafety();
 }
-function updateAccComplaintCount(){
+async function updateAccComplaintCount(){
   // 안전사고: 신규 안전사고 모듈(safety_accidents) 기준 / 민원: ARS민원(voc_data) 단일 기준 (KST 기준)
   var today=kstDate();
   var todayAcc=(accidentAll||[]).filter(function(r){
@@ -17068,11 +17099,14 @@ function updateAccComplaintCount(){
     return dKst===today;
   });
   var accToday=todayAcc.length;
-  var accTotal=(accidentAll||[]).length;
+  // 누적은 배열 길이 대신 DB에 직접 개수를 물어봐서 정확한 값을 가져온다 (1000건 기본 조회 제한과 무관하게 항상 정확)
+  var accCountRes=await sb.from('safety_accidents').count();
+  var accTotal=accCountRes.error?(accidentAll||[]).length:accCountRes.count;
 
   // ARS 민원(voc_data) — 인수인계에는 더 이상 민원 입력이 없으므로 이 소스만 집계
   var vocToday=(vocData||[]).filter(function(r){ return r.voc_date===today; }).length;
-  var vocTotal=(vocData||[]).length;
+  var vocCountRes=await sb.from('voc_data').count();
+  var vocTotal=vocCountRes.error?(vocData||[]).length:vocCountRes.count;
 
   var compToday=vocToday;
   var compTotal=vocTotal;
@@ -17111,7 +17145,8 @@ function updateAccComplaintCount(){
     var s=r.status||'';
     return s.startsWith('완료');
   }).length;
-  var lostTotal=(lostData||[]).length;
+  var lostCountRes=await sb.from('lost_found').count();
+  var lostTotal=lostCountRes.error?(lostData||[]).length:lostCountRes.count;
   var dLT=document.getElementById('dLostToday'); if(dLT) dLT.textContent=lostToday;
   var dLP=document.getElementById('dLostPending'); if(dLP) dLP.textContent=lostPending;
   var dLPr=document.getElementById('dLostProcess'); if(dLPr) dLPr.textContent=lostProcess;
