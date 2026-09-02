@@ -2188,7 +2188,6 @@ html{overflow-x:hidden}
     <div id="hoT3" style="padding:11px 14px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer;white-space:nowrap" onclick="hoTab(3)">야간팀</div>
     <div id="hoT4" style="padding:11px 14px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer;white-space:nowrap" onclick="hoTab(4)">작성</div>
   </div>
-  <div id="hoDebugBanner" style="display:none;padding:10px 14px;background:#FEF3C7;color:#92400E;font-size:13px;font-weight:700"></div>
   <!-- 전체 -->
   <div id="hoP0">
     <div class="pg-hd"><div><h1>전체 인수인계</h1></div></div>
@@ -6663,7 +6662,6 @@ function go(name){
     loadHandoverFromDB();
     // 인계팀 자동선택: 로그인 사용자 팀을 기본 선택
     setTimeout(autoSelectHandoverTeam, 200);
-    if(typeof loadHoTabBadges==='function') loadHoTabBadges();
   }
   if(name==='eduevent'){ eeTab(0); }
   if(name==='workschedule'){ loadWfEmployees(); }
@@ -9840,56 +9838,6 @@ function hoSetMode(mode){
   if(warnEl) warnEl.style.display='none';
   if(mode==='auto') hoRefreshAutoTargetInfo();
   if(typeof renderHoPassCards==='function') renderHoPassCards();
-}
-async function loadHoTabBadges(){
-  var banner=document.getElementById('hoDebugBanner');
-  if(banner){ banner.style.display='block'; banner.textContent='진단: 함수 실행 시작...'; }
-  if(!me){ if(banner) banner.textContent='진단: me(로그인정보)가 없어서 중단됨'; return; }
-  var debugParts=[];
-  try{
-    var myTeamNumSh=me&&me.team?parseInt((me.team.match(/\d+/)||[])[0]):0;
-    var myChainSh=([1,2,5,6,7].indexOf(myTeamNumSh)>=0)?'LS':(([3,4,8,9,10].indexOf(myTeamNumSh)>=0)?'AS':null);
-    var isAdminMgr=me&&(me.role==='admin'||isExecRole(me.role));
-    var shifts=[{key:'오전팀',tabId:'hoT1'},{key:'오후팀',tabId:'hoT2'},{key:'야간팀',tabId:'hoT3'}];
-    for(var i=0;i<shifts.length;i++){
-      var s=shifts[i];
-      var q=sb.from('handover').select('*').eq('to_shift', s.key).eq('confirmed', false);
-      if(!isAdminMgr&&myChainSh) q=q.eq('zone_chain', myChainSh);
-      var res=await q.limit(30);
-      var tabEl=document.getElementById(s.tabId);
-      var oldBadge=tabEl?tabEl.querySelector('.hoTabBadge'):null;
-      if(oldBadge) oldBadge.remove();
-      if(res.error){
-        debugParts.push(s.key+'=오류('+res.error.message+')');
-        if(tabEl){
-          var eb=document.createElement('span');
-          eb.className='hoTabBadge';
-          eb.style.cssText='display:inline-block;padding:0 4px;border-radius:8px;background:#F59E0B;color:white;font-size:9px;font-weight:800;line-height:16px;vertical-align:middle;margin-left:4px';
-          eb.textContent='ERR';
-          tabEl.appendChild(eb);
-        }
-        continue;
-      }
-      var rows=res.data||[];
-      var rawCount=rows.length;
-      if(!isAdminMgr){
-        var myTeamLabelSh=myTeamNumSh?(myTeamNumSh+'팀'):null;
-        rows=rows.filter(function(r){ return !r.to_team || r.to_team===myTeamLabelSh; });
-      }
-      debugParts.push(s.key+'='+rows.length+'(원본'+rawCount+')');
-      if(rows.length>0 && tabEl){
-        var b=document.createElement('span');
-        b.className='hoTabBadge';
-        b.style.cssText='display:inline-block;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#DC2626;color:white;font-size:10px;font-weight:800;line-height:16px;text-align:center;vertical-align:middle;margin-left:4px';
-        b.textContent=rows.length>9?'9+':String(rows.length);
-        tabEl.appendChild(b);
-      }
-    }
-    if(banner) banner.textContent='진단(역할:'+me.role+'): '+debugParts.join(' / ');
-  }catch(e){
-    console.error('인수인계 탭 배지 조회 실패', e);
-    if(banner) banner.textContent='진단: 예외 발생 - '+(e&&e.message?e.message:e);
-  }
 }
 function hoTab(n){
   tabSwitch('ho',n,5);
@@ -17328,7 +17276,6 @@ async function confirmHandoverDB(id, resultText){
     }).eq('id',id);
     loadHandoverFromDB();
     ['오전팀','오후팀','야간팀'].forEach(function(s){ if(document.getElementById(s==='오전팀'?'hoAmList':s==='오후팀'?'hoPmList':'hoNtList')) loadHandoverByShift(s); });
-    if(typeof loadHoTabBadges==='function') loadHoTabBadges();
   }catch(e){}
 }
 
@@ -28894,6 +28841,27 @@ function checkHoPending(){
   var myTeamNum=me.team?parseInt((me.team.match(/\d+/)||[])[0]):0;
   var myShift=myShiftMap[myTeamNum]||'';
   var myChain=([1,2,5,6,7].indexOf(myTeamNum)>=0)?'LS':(([3,4,8,9,10].indexOf(myTeamNum)>=0)?'AS':null);
+  var isAdminMgr=(me.role==='admin'||isExecRole(me.role));
+  // 오전팀/오후팀/야간팀 탭 배지 — 이미 정상 동작하는 하단탭 배지와 같은 hoAll 데이터, 같은 타이밍에 갱신
+  ['오전팀','오후팀','야간팀'].forEach(function(shiftKey, idx){
+    var tabEl=document.getElementById('hoT'+(idx+1));
+    if(!tabEl) return;
+    var old=tabEl.querySelector('.hoTabBadge'); if(old) old.remove();
+    var cnt2=hoAll.filter(function(r){
+      if(r.confirmed) return false;
+      if(!r.to_shift||r.to_shift.indexOf(shiftKey)<0) return false;
+      if(isAdminMgr) return true;
+      if(myChain&&r.zone_chain) return r.zone_chain===myChain;
+      return true;
+    }).length;
+    if(cnt2>0){
+      var b=document.createElement('span');
+      b.className='hoTabBadge';
+      b.style.cssText='display:inline-block;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#DC2626;color:white;font-size:10px;font-weight:800;line-height:16px;text-align:center;vertical-align:middle;margin-left:4px';
+      b.textContent=cnt2>9?'9+':String(cnt2);
+      tabEl.appendChild(b);
+    }
+  });
   var pending=hoAll.filter(function(r){
     if(r.confirmed) return false;
     if(me.role==='admin'||isExecRole(me.role)) return true; // admin/exec: 전체
