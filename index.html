@@ -9852,6 +9852,7 @@ async function loadHoTabBadges(){
       var q=sb.from('handover').select('*').eq('to_shift', s.key).eq('confirmed', false);
       if(!isAdminMgr&&myChainSh) q=q.eq('zone_chain', myChainSh);
       var res=await q.limit(30);
+      if(res.error){ console.error('인수인계 배지 조회 실패:', s.key, res.error); toast('⚠️ 인수인계 배지 진단['+s.key+']: '+res.error.message); continue; }
       var rows=res.data||[];
       if(!isAdminMgr){
         var myTeamLabelSh=myTeamNumSh?(myTeamNumSh+'팀'):null;
@@ -9869,7 +9870,7 @@ async function loadHoTabBadges(){
         tabEl.appendChild(b);
       }
     }
-  }catch(e){ console.error('인수인계 탭 배지 조회 실패', e); }
+  }catch(e){ console.error('인수인계 탭 배지 조회 실패', e); toast('⚠️ 인수인계 배지 진단: '+(e&&e.message?e.message:e)); }
 }
 function hoTab(n){
   tabSwitch('ho',n,5);
