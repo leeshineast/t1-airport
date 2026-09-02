@@ -2868,37 +2868,29 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
   <div class="pg-hd"><div><h1>사원 명부</h1><small>팀장 이상 조회·수정 가능</small></div></div>
   <div style="padding:0 13px 10px;display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-    <input id="erSearch" oninput="erRender()" placeholder="🔍 사번/성명/팀 검색" style="flex:1;min-width:140px;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px">
+    <input id="erSearch" oninput="erShown=erPageSize;erRender()" placeholder="🔍 사번/성명/팀 검색" style="flex:1;min-width:140px;padding:9px 11px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px">
     <label style="padding:9px 12px;background:white;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">
       ⬆️ 엑셀 업로드<input type="file" accept=".xlsx,.xls" style="display:none" onchange="erExcelUpload(this)">
     </label>
     <button onclick="erOpenEdit(null)" style="padding:9px 12px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">＋ 추가</button>
     <button onclick="erDeleteAll()" style="padding:9px 12px;background:#fee2e2;color:#dc2626;border:1.5px solid #fca5a5;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">🗑 전체삭제</button>
   </div>
-  <div style="padding:0 13px 6px;display:flex;justify-content:space-between;align-items:center">
+  <div style="padding:0 13px 8px;display:flex;justify-content:space-between;align-items:center">
     <span style="font-size:12px;color:var(--g4)" id="erCountLbl"></span>
     <span id="erFilterActiveLbl" style="font-size:12px;color:var(--teal2);font-weight:700;cursor:pointer" onclick="erClearAllFilters()"></span>
   </div>
-  <div style="padding:0 13px 20px;overflow-x:auto">
-    <table style="border-collapse:collapse;font-size:12.5px;min-width:980px">
-      <colgroup>
-        <col style="width:80px"><col style="width:90px"><col style="width:90px"><col style="width:70px"><col style="width:90px">
-        <col style="width:90px"><col style="width:120px"><col style="width:100px"><col style="width:80px"><col style="width:60px">
-      </colgroup>
-      <thead><tr style="background:var(--g1);color:var(--g5)">
-        <th onclick="erSort('emp_no')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap;border:1px solid var(--g3)">사번<span id="erSortIc_emp_no"></span></th>
-        <th onclick="erSort('name')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap;border:1px solid var(--g3)">성명<span id="erSortIc_name"></span></th>
-        <th style="padding:8px 6px;text-align:left;white-space:nowrap;border:1px solid var(--g3)"><span onclick="erSort('team')" style="cursor:pointer">팀<span id="erSortIc_team"></span></span> <span onclick="event.stopPropagation();erOpenColFilter('team','팀')" style="cursor:pointer;font-size:15px;padding:2px 3px">▾</span></th>
-        <th style="padding:8px 6px;text-align:left;white-space:nowrap;border:1px solid var(--g3)"><span onclick="erSort('grp')" style="cursor:pointer">조<span id="erSortIc_grp"></span></span> <span onclick="event.stopPropagation();erOpenColFilter('grp','조')" style="cursor:pointer;font-size:15px;padding:2px 3px">▾</span></th>
-        <th style="padding:8px 6px;text-align:left;white-space:nowrap;border:1px solid var(--g3)"><span onclick="erSort('position')" style="cursor:pointer">직책<span id="erSortIc_position"></span></span> <span onclick="event.stopPropagation();erOpenColFilter('position','직책')" style="cursor:pointer;font-size:15px;padding:2px 3px">▾</span></th>
-        <th style="padding:8px 6px;text-align:left;white-space:nowrap;border:1px solid var(--g3)"><span onclick="erSort('birth_year')" style="cursor:pointer">출생연도<span id="erSortIc_birth_year"></span></span> <span onclick="event.stopPropagation();erOpenColFilter('birth_year','출생연도')" style="cursor:pointer;font-size:15px;padding:2px 3px">▾</span></th>
-        <th style="padding:8px 6px;text-align:left;white-space:nowrap;border:1px solid var(--g3)"><span onclick="erSort('city')" style="cursor:pointer">거주(시)<span id="erSortIc_city"></span></span> <span onclick="event.stopPropagation();erOpenColFilter('city','거주(시)')" style="cursor:pointer;font-size:15px;padding:2px 3px">▾</span></th>
-        <th onclick="erSort('hire_date')" style="padding:8px 6px;text-align:left;cursor:pointer;white-space:nowrap;border:1px solid var(--g3)">입사일<span id="erSortIc_hire_date"></span></th>
-        <th style="padding:8px 6px;text-align:left;white-space:nowrap;border:1px solid var(--g3)"><span onclick="erSort('day_off')" style="cursor:pointer">휴무<span id="erSortIc_day_off"></span></span> <span onclick="event.stopPropagation();erOpenColFilter('day_off','휴무')" style="cursor:pointer;font-size:15px;padding:2px 3px">▾</span></th>
-        <th style="padding:8px 6px;border:1px solid var(--g3)"></th>
-      </tr></thead>
-      <tbody id="erTbody"><tr><td colspan="10" style="text-align:center;padding:20px;color:var(--g3)">불러오는 중...</td></tr></tbody>
-    </table>
+  <div style="padding:0 13px 8px;display:flex;gap:6px;overflow-x:auto;white-space:nowrap">
+    <span onclick="erSort('team')" style="flex-shrink:0;padding:6px 11px;background:white;border:1px solid var(--g2);border-radius:16px;font-size:12.5px;font-weight:700;color:var(--g6);cursor:pointer">팀 정렬<span id="erSortIc_team"></span></span>
+    <span onclick="event.stopPropagation();erOpenColFilter('team','팀')" style="flex-shrink:0;padding:6px 11px;background:white;border:1px solid var(--g2);border-radius:16px;font-size:12.5px;font-weight:700;color:var(--g6);cursor:pointer">팀 필터 ▾</span>
+    <span onclick="event.stopPropagation();erOpenColFilter('grp','조')" style="flex-shrink:0;padding:6px 11px;background:white;border:1px solid var(--g2);border-radius:16px;font-size:12.5px;font-weight:700;color:var(--g6);cursor:pointer">조 필터 ▾</span>
+    <span onclick="event.stopPropagation();erOpenColFilter('position','직책')" style="flex-shrink:0;padding:6px 11px;background:white;border:1px solid var(--g2);border-radius:16px;font-size:12.5px;font-weight:700;color:var(--g6);cursor:pointer">직책 필터 ▾</span>
+    <span onclick="erSort('name')" style="flex-shrink:0;padding:6px 11px;background:white;border:1px solid var(--g2);border-radius:16px;font-size:12.5px;font-weight:700;color:var(--g6);cursor:pointer">이름순<span id="erSortIc_name"></span></span>
+    <span onclick="erSort('hire_date')" style="flex-shrink:0;padding:6px 11px;background:white;border:1px solid var(--g2);border-radius:16px;font-size:12.5px;font-weight:700;color:var(--g6);cursor:pointer">입사일순<span id="erSortIc_hire_date"></span></span>
+    <span onclick="event.stopPropagation();erOpenColFilter('city','거주(시)')" style="flex-shrink:0;padding:6px 11px;background:white;border:1px solid var(--g2);border-radius:16px;font-size:12.5px;font-weight:700;color:var(--g6);cursor:pointer">거주시 필터 ▾</span>
+  </div>
+  <div style="padding:0 13px 20px" id="erCardList"></div>
+  <div style="padding:0 13px 24px;text-align:center">
+    <button id="erMoreBtn" onclick="erShowMore()" style="display:none;padding:10px 22px;background:white;border:1.5px solid var(--g2);border-radius:20px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer">더 보기</button>
   </div>
 </div>
 <div id="erEditModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3 id="erEditTitle">사원 정보</h3><button class="m-x" onclick="hideM('erEditModal')">×</button></div>
@@ -12976,7 +12968,7 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
     if(kind==='sign'){
       title=catLabel+' 참석자 명단';
       rows=apps.map(function(a){ return Object.assign({}, a, {소속:((a.team||'')+' '+(a.team_group||'')).trim()}); });
-      cols=[{key:'소속',label:'소속',width:'90px'},{key:'position',label:'직책',width:'55px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:null,label:'비고'}];
+      cols=[{key:'소속',label:'소속',width:'16%'},{key:'position',label:'직책',width:'12%'},{key:'employee_id',label:'사번',width:'13%'},{key:'name',label:'성명',width:'13%'},{key:null,label:'비고',width:'34%'}];
     }else{ // log — 실제 참석확인된 사람 기준 (신청여부 무관, 워크인 포함)
       title=catLabel+' 참석 서명지';
       var attRes=await sb.from('edu_attendance').select('*').eq('schedule_id',scheduleId);
@@ -12986,7 +12978,7 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
           attend_time:a.verified_at?new Date(a.verified_at).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Seoul'}):'',
           _sigUrl:a.signature_data||null};
       });
-      cols=[{key:'소속',label:'소속',width:'90px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'attend_time',label:'참석시간',width:'65px'},{key:'_sig',label:'서명',width:'100px'},{key:null,label:'비고',width:'110px'}];
+      cols=[{key:'소속',label:'소속',width:'17%'},{key:'employee_id',label:'사번',width:'13%'},{key:'name',label:'성명',width:'13%'},{key:'attend_time',label:'참석시간',width:'13%'},{key:'_sig',label:'서명',width:'20%'},{key:null,label:'비고',width:'24%'}];
     }
     if(kind==='log') await eeAttachSignatures(rows); // QR참석확인 시 직접 서명한 게 있으면 그걸 우선 사용, 없으면 등록된 전자서명(개인계정)으로 보완, 그래도 없으면 빈 칸
     document.getElementById('eeReportModalTitle').textContent='📄 '+title;
@@ -13021,7 +13013,7 @@ async function eeOpenWishSurvey(eventId){
     metaPairs.push(['신청인원', rows.length+'명']);
     document.getElementById('eeReportMeta').innerHTML=eeReportMetaTable(metaPairs);
     document.getElementById('eeReportBody').innerHTML=eeReportRowsTable(rows, [
-      {key:'소속',label:'소속',width:'90px'},{key:'employee_id',label:'사번',width:'70px'},{key:'name',label:'성명',width:'70px'},{key:'wish_date',label:'참석희망일'}
+      {key:'소속',label:'소속',width:'22%'},{key:'employee_id',label:'사번',width:'18%'},{key:'name',label:'성명',width:'18%'},{key:'wish_date',label:'참석희망일',width:'36%'}
     ]);
     showM('eeReportModal');
   }catch(e){ toast('오류: '+e.message); }
@@ -24817,23 +24809,26 @@ function erApplyColFilter(){
     erColFilters[field]=existing;
   }
   hideM('erColFilterModal');
+  erShown=erPageSize;
   erRender();
 }
 function erClearAllFilters(){
   erColFilters={};
   document.getElementById('erSearch').value='';
+  erShown=erPageSize;
   erRender();
 }
 async function loadEmpRoster(){
-  var tbody=document.getElementById('erTbody'); if(!tbody) return;
-  tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--g3)">불러오는 중...</td></tr>';
+  var wrap=document.getElementById('erCardList'); if(!wrap) return;
+  wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div>';
   try{
     var res=await sb.from('employee_roster').select('*').order('team',{ascending:true}).order('emp_no',{ascending:true});
-    if(res.error){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--danger)">불러오기 실패</td></tr>'; return; }
+    if(res.error){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger);font-size:14px">불러오기 실패</div>'; return; }
     erData=res.data||[];
     erColFilters={};
+    erShown=erPageSize;
     erRender();
-  }catch(e){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--danger)">불러오기 실패</td></tr>'; }
+  }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger);font-size:14px">불러오기 실패</div>'; }
 }
 function erSort(key){
   if(erSortKey===key){ erSortDir=-erSortDir; } else { erSortKey=key; erSortDir=1; }
@@ -24842,8 +24837,9 @@ function erSort(key){
   });
   erRender();
 }
+var erPageSize=40, erShown=40;
 function erRender(){
-  var tbody=document.getElementById('erTbody'); if(!tbody) return;
+  var wrap=document.getElementById('erCardList'); if(!wrap) return;
   var q=(document.getElementById('erSearch').value||'').trim();
   var list=erData;
   Object.keys(erColFilters).forEach(function(field){
@@ -24858,31 +24854,39 @@ function erRender(){
   var flbl=document.getElementById('erFilterActiveLbl');
   if(flbl){ var n=Object.keys(erColFilters).length; flbl.textContent=n?('필터 '+n+'개 적용 중 · 초기화'):''; }
   list=list.slice().sort(function(a,b){
-
     var av=a[erSortKey]||'', bv=b[erSortKey]||'';
     return String(av).localeCompare(String(bv),'ko',{numeric:true})*erSortDir;
   });
   var lbl=document.getElementById('erCountLbl'); if(lbl) lbl.textContent='전체 '+list.length+'명';
   var canEdit=erCanEdit();
-  if(!list.length){ tbody.innerHTML='<tr><td colspan="10" style="text-align:center;padding:20px;color:var(--g3)">사원이 없습니다</td></tr>'; return; }
-  tbody.innerHTML=list.map(function(r){
-    return '<tr>'+
-      '<td style="padding:7px 6px;border:1px solid var(--g2)">'+eeEsc(r.emp_no||'')+'</td>'+
-      '<td style="padding:7px 6px;border:1px solid var(--g2);font-weight:700">'+eeEsc(r.name||'')+'</td>'+
-      '<td style="padding:7px 6px;border:1px solid var(--g2)">'+eeEsc(r.team||'')+'</td>'+
-      '<td style="padding:7px 6px;border:1px solid var(--g2)">'+eeEsc(r.grp||'')+'</td>'+
-      '<td style="padding:7px 6px;border:1px solid var(--g2)">'+eeEsc(r.position||'')+'</td>'+
-      '<td style="padding:7px 6px;border:1px solid var(--g2)">'+eeEsc(r.birth_year||'')+'</td>'+
-      '<td style="padding:7px 6px;border:1px solid var(--g2)">'+eeEsc(r.city||'')+'</td>'+
-      '<td style="padding:7px 6px;border:1px solid var(--g2)">'+(r.hire_date||'')+'</td>'+
-      '<td style="padding:7px 6px;border:1px solid var(--g2)">'+eeEsc(r.day_off||'')+'</td>'+
-      '<td style="padding:7px 6px;border:1px solid var(--g2);white-space:nowrap">'+(canEdit?(
-        '<button onclick=\'erOpenEdit(this)\' data-id="'+r.id+'" style="padding:4px 8px;background:var(--teal-bg);color:var(--teal2);border:none;border-radius:14px;font-size:11.5px;font-weight:700;cursor:pointer;margin-right:4px">수정</button>'+
-        '<button onclick="erDelete(\''+r.id+'\')" style="padding:4px 8px;background:#fee2e2;color:#dc2626;border:none;border-radius:14px;font-size:11.5px;font-weight:700;cursor:pointer">삭제</button>'
-      ):'')+'</td>'+
-      '</tr>';
+  if(!list.length){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">사원이 없습니다</div>'; var mb0=document.getElementById('erMoreBtn'); if(mb0) mb0.style.display='none'; return; }
+  var visible=list.slice(0, erShown);
+  wrap.innerHTML=visible.map(function(r, i){
+    var meta=[r.team, r.grp, r.position].filter(Boolean).join(' · ');
+    var meta2=[r.birth_year?r.birth_year+'년생':'', r.city].filter(Boolean).join(' · ');
+    var meta3=[r.hire_date?'입사 '+r.hire_date:'', r.day_off?'휴무 '+r.day_off:''].filter(Boolean).join(' · ');
+    return '<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:12px 14px;margin-bottom:8px">'+
+      '<div style="display:flex;align-items:center;gap:8px">'+
+        '<span style="flex-shrink:0;width:24px;height:24px;border-radius:50%;background:var(--g1);color:var(--g4);font-size:11px;font-weight:800;display:flex;align-items:center;justify-content:center">'+(i+1)+'</span>'+
+        '<span style="font-size:15px;font-weight:800;color:var(--g7)">'+eeEsc(r.name||'(이름없음)')+'</span>'+
+        '<span style="font-size:12px;color:var(--g4)">'+eeEsc(r.emp_no||'')+'</span>'+
+        (canEdit?('<span style="margin-left:auto;display:flex;gap:5px;flex-shrink:0">'+
+          '<button onclick=\'erOpenEdit(this)\' data-id="'+r.id+'" style="padding:4px 10px;background:var(--teal-bg);color:var(--teal2);border:none;border-radius:14px;font-size:11.5px;font-weight:700;cursor:pointer">수정</button>'+
+          '<button onclick="erDelete(\''+r.id+'\')" style="padding:4px 10px;background:#fee2e2;color:#dc2626;border:none;border-radius:14px;font-size:11.5px;font-weight:700;cursor:pointer">삭제</button>'+
+        '</span>'):'')+
+      '</div>'+
+      (meta?'<div style="font-size:13px;color:var(--g6);margin-top:6px">'+eeEsc(meta)+'</div>':'')+
+      (meta2?'<div style="font-size:12px;color:var(--g4);margin-top:2px">'+eeEsc(meta2)+'</div>':'')+
+      (meta3?'<div style="font-size:12px;color:var(--g4);margin-top:2px">'+eeEsc(meta3)+'</div>':'')+
+      '</div>';
   }).join('');
+  var moreBtn=document.getElementById('erMoreBtn');
+  if(moreBtn){
+    if(list.length>erShown){ moreBtn.style.display='inline-block'; moreBtn.textContent='더 보기 ('+(list.length-erShown)+'명 남음)'; }
+    else{ moreBtn.style.display='none'; }
+  }
 }
+function erShowMore(){ erShown+=erPageSize; erRender(); }
 function erOpenEdit(btn){
   if(!erCanEdit()){ toast('⚠️ 팀장 이상만 수정할 수 있습니다'); return; }
   var r=null;
