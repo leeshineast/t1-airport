@@ -7253,7 +7253,11 @@ async function doSubmitPwReq(){
     if(res.error) throw res.error;
     closePwReq();
     toast('✅ 요청이 접수되었습니다. 관리자 확인 후 안내드릴게요.');
-  }catch(e){ err.textContent='요청 중 오류: '+String(e.message||e); err.style.display='block'; }
+  }catch(e){
+    var msg=String(e.message||e);
+    err.textContent = msg.indexOf('존재하지 않는 아이디')>=0 ? '⚠️ 존재하지 않는 아이디입니다. 아이디를 다시 확인해주세요.' : ('요청 중 오류: '+msg);
+    err.style.display='block';
+  }
 }
 
 // ── 비밀번호 변경 ──
