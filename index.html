@@ -27220,11 +27220,34 @@ function cpRenderEligibleList(){
   if(!listEl) return;
   if(!cpEligibleCache.length){ listEl.innerHTML='<div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">명단이 비어있습니다</div>'; return; }
   listEl.innerHTML=cpEligibleCache.map(function(r){
-    return '<div style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--g1);font-size:13px;color:var(--g6)">'+
+    return '<div id="cpElig_'+r.id+'" style="display:flex;align-items:center;justify-content:space-between;padding:5px 0;border-bottom:1px solid var(--g1);font-size:13px;color:var(--g6)">'+
       '<span>'+eeEsc(r.emp_no)+' · '+eeEsc(r.name)+'</span>'+
+      '<span style="display:flex;gap:4px;flex-shrink:0">'+
+      '<span onclick="cpEligibleStartEdit('+r.id+')" style="color:#1e40af;font-size:12px;font-weight:700;cursor:pointer;padding:2px 8px">수정</span>'+
       '<span onclick="cpEligibleDeleteOne('+r.id+')" style="color:#dc2626;font-size:12px;font-weight:700;cursor:pointer;padding:2px 8px">삭제</span>'+
-      '</div>';
+      '</span></div>';
   }).join('');
+}
+function cpEligibleStartEdit(id){
+  var r=cpEligibleCache.find(function(x){return x.id===id;}); if(!r) return;
+  var rowEl=document.getElementById('cpElig_'+id); if(!rowEl) return;
+  rowEl.innerHTML=
+    '<input id="cpEligEditEmpNo_'+id+'" value="'+eeEsc(r.emp_no)+'" style="width:35%;padding:6px 8px;border:1.5px solid var(--teal2);border-radius:6px;font-size:12.5px;box-sizing:border-box">'+
+    '<input id="cpEligEditName_'+id+'" value="'+eeEsc(r.name)+'" style="flex:1;margin:0 4px;padding:6px 8px;border:1.5px solid var(--teal2);border-radius:6px;font-size:12.5px;box-sizing:border-box">'+
+    '<span style="display:flex;gap:4px;flex-shrink:0">'+
+    '<span onclick="cpEligibleSaveEdit('+id+')" style="color:var(--teal2);font-size:12px;font-weight:700;cursor:pointer;padding:2px 8px">저장</span>'+
+    '<span onclick="cpRenderEligibleList()" style="color:var(--g4);font-size:12px;font-weight:700;cursor:pointer;padding:2px 8px">취소</span>'+
+    '</span>';
+}
+async function cpEligibleSaveEdit(id){
+  if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
+  var empNo=(document.getElementById('cpEligEditEmpNo_'+id).value||'').trim();
+  var name=(document.getElementById('cpEligEditName_'+id).value||'').trim();
+  if(!empNo||!name){ toast('⚠️ 사번과 이름을 입력해주세요'); return; }
+  var res=await sb.from('campaign_eligible').update({emp_no:empNo, name:name}).eq('id',id);
+  if(res.error){ toast('오류: '+res.error.message); return; }
+  toast('✓ 수정되었습니다');
+  await cpLoadEligible();
 }
 async function cpEligibleAddOne(){
   if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
