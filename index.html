@@ -2188,6 +2188,7 @@ html{overflow-x:hidden}
     <div id="hoT3" style="padding:11px 14px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer;white-space:nowrap" onclick="hoTab(3)">야간팀</div>
     <div id="hoT4" style="padding:11px 14px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer;white-space:nowrap" onclick="hoTab(4)">작성</div>
   </div>
+  <div id="hoDebugBanner" style="display:none;padding:10px 14px;background:#FEF3C7;color:#92400E;font-size:13px;font-weight:700"></div>
   <!-- 전체 -->
   <div id="hoP0">
     <div class="pg-hd"><div><h1>전체 인수인계</h1></div></div>
@@ -9841,8 +9842,10 @@ function hoSetMode(mode){
   if(typeof renderHoPassCards==='function') renderHoPassCards();
 }
 async function loadHoTabBadges(){
-  toast('🔍 인수인계 배지 함수 실행됨');
-  if(!me){ toast('⚠️ 배지 진단: me(로그인정보) 없음'); return; }
+  var banner=document.getElementById('hoDebugBanner');
+  if(banner){ banner.style.display='block'; banner.textContent='진단: 함수 실행 시작...'; }
+  if(!me){ if(banner) banner.textContent='진단: me(로그인정보)가 없어서 중단됨'; return; }
+  var debugParts=[];
   try{
     var myTeamNumSh=me&&me.team?parseInt((me.team.match(/\d+/)||[])[0]):0;
     var myChainSh=([1,2,5,6,7].indexOf(myTeamNumSh)>=0)?'LS':(([3,4,8,9,10].indexOf(myTeamNumSh)>=0)?'AS':null);
@@ -9854,25 +9857,27 @@ async function loadHoTabBadges(){
       if(!isAdminMgr&&myChainSh) q=q.eq('zone_chain', myChainSh);
       var res=await q.limit(30);
       var tabEl=document.getElementById(s.tabId);
-      if(!tabEl) continue;
-      var existBadge=tabEl.querySelector('.hoTabBadge');
-      if(existBadge) existBadge.remove();
+      var oldBadge=tabEl?tabEl.querySelector('.hoTabBadge'):null;
+      if(oldBadge) oldBadge.remove();
       if(res.error){
-        console.error('인수인계 배지 조회 실패:', s.key, res.error);
-        var eb=document.createElement('span');
-        eb.className='hoTabBadge';
-        eb.style.cssText='display:inline-block;padding:0 4px;border-radius:8px;background:#F59E0B;color:white;font-size:9px;font-weight:800;line-height:16px;vertical-align:middle;margin-left:4px';
-        eb.textContent='ERR';
-        eb.title=res.error.message;
-        tabEl.appendChild(eb);
+        debugParts.push(s.key+'=오류('+res.error.message+')');
+        if(tabEl){
+          var eb=document.createElement('span');
+          eb.className='hoTabBadge';
+          eb.style.cssText='display:inline-block;padding:0 4px;border-radius:8px;background:#F59E0B;color:white;font-size:9px;font-weight:800;line-height:16px;vertical-align:middle;margin-left:4px';
+          eb.textContent='ERR';
+          tabEl.appendChild(eb);
+        }
         continue;
       }
       var rows=res.data||[];
+      var rawCount=rows.length;
       if(!isAdminMgr){
         var myTeamLabelSh=myTeamNumSh?(myTeamNumSh+'팀'):null;
         rows=rows.filter(function(r){ return !r.to_team || r.to_team===myTeamLabelSh; });
       }
-      if(rows.length>0){
+      debugParts.push(s.key+'='+rows.length+'(원본'+rawCount+')');
+      if(rows.length>0 && tabEl){
         var b=document.createElement('span');
         b.className='hoTabBadge';
         b.style.cssText='display:inline-block;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#DC2626;color:white;font-size:10px;font-weight:800;line-height:16px;text-align:center;vertical-align:middle;margin-left:4px';
@@ -9880,7 +9885,11 @@ async function loadHoTabBadges(){
         tabEl.appendChild(b);
       }
     }
-  }catch(e){ console.error('인수인계 탭 배지 조회 실패', e); toast('⚠️ 인수인계 배지 진단: '+(e&&e.message?e.message:e)); }
+    if(banner) banner.textContent='진단(역할:'+me.role+'): '+debugParts.join(' / ');
+  }catch(e){
+    console.error('인수인계 탭 배지 조회 실패', e);
+    if(banner) banner.textContent='진단: 예외 발생 - '+(e&&e.message?e.message:e);
+  }
 }
 function hoTab(n){
   tabSwitch('ho',n,5);
