@@ -23545,10 +23545,16 @@ function renderGroupChat(){
     }
   });
   var isFirstRender = (gcLastCount===0);
-  var wasNearBottom = isFirstRender || (wrap.scrollHeight - wrap.scrollTop - wrap.clientHeight) < 120;
+  // 스크롤 컨테이너는 html/body(페이지 전체)이므로, wrap 자체가 아니라 페이지 스크롤 위치로 "맨 아래 근처인지" 판단해야 한다.
+  var pageScrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop || 0;
+  var pageScrollHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight);
+  var viewportHeight = window.innerHeight;
+  var wasNearBottom = isFirstRender || (pageScrollHeight - pageScrollTop - viewportHeight) < 150;
   var newCount = gcAll.length;
   wrap.innerHTML=html;
-  if(isFirstRender || wasNearBottom || newCount !== gcLastCount){
+  if(isFirstRender || wasNearBottom){
+    // 최초 진입이거나, 사용자가 이미 맨 아래 근처에 있을 때만 자동으로 맨 아래로 이동.
+    // 과거 메시지를 읽고 있는 중(맨 아래 근처가 아님)이면 새 메시지가 와도 스크롤 위치를 그대로 둔다.
     // .scr 전체 페이지 스크롤 구조: 스크롤 컨테이너는 html/body이므로
     // 페이지를 완전히 맨 끝까지 내려야 함 (고정 입력창에 마지막 메시지가 가려지지 않도록
     // scrollIntoView 대신 document 전체 스크롤 최대치로 이동)
