@@ -1055,6 +1055,8 @@ html{overflow-x:hidden}
         <div class="s-lbl">미확인 인계</div>
         <div class="s-val c-warn" id="dHO">0</div>
         <div class="s-unit" id="dHOUnit" style="font-size:10px">건 확인필요</div>
+        <div style="font-size:12px;color:var(--g4);margin-top:3px">확인완료 <b id="dHODone" style="color:var(--teal2)">0</b></div>
+        <div style="font-size:12px;color:var(--g4);margin-top:1px">누적 <span id="dHOTotal" style="font-weight:700;color:var(--g5)">0</span>건</div>
       </div>
       <div style="flex-shrink:0;padding:7px 10px;background:#EFF6FF;border-radius:10px;text-align:center;line-height:1.35">
         <div style="font-size:10px;font-weight:700;color:#1D4ED8">오늘 전체</div>
@@ -16952,6 +16954,10 @@ function updateHoPending(){
   var todayStr=kstDate();
   var todayCnt=hoAll.filter(function(r){ return r.created_at && kstDate(r.created_at)===todayStr; }).length;
   var elT=document.getElementById('dHOToday'); if(elT) elT.textContent=todayCnt;
+  var doneTodayCnt=hoAll.filter(function(r){ return r.confirmed && r.confirmed_at && kstDate(r.confirmed_at)===todayStr; }).length;
+  var elD=document.getElementById('dHODone'); if(elD) elD.textContent=doneTodayCnt;
+  var doneTotalCnt=hoAll.filter(function(r){ return r.confirmed; }).length;
+  var elTot=document.getElementById('dHOTotal'); if(elTot) elTot.textContent=doneTotalCnt;
 }
 
 function renderHoConfBlock(r, prefix){
