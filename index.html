@@ -3642,6 +3642,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <div id="cpMyEntries" style="margin-bottom:16px"></div>
 
     <button id="cpAdminBtns" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenAllEntries()">📋 전체 제출목록 보기 / 최종 후보 선정 (관리자)</button>
+    <button id="cpEligibleBtn" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenEligible()">✅ 응모 가능자 명단 관리 (관리자)</button>
     <button id="cpVoteBtn" style="display:none;width:100%;padding:11px;background:#ecfeff;border:1.5px solid #67e8f9;border-radius:10px;font-size:13.5px;font-weight:700;color:#0e7490;cursor:pointer;margin-bottom:8px" onclick="cpOpenPublicVote()">🗳️ 전직원 투표 참여</button>
     <button id="cpResultBtn" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenVoteResults()">📊 전직원 투표 결과 (관리자)</button>
     <button id="cpWinnerBtn" style="display:none;width:100%;padding:11px;background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;font-size:13.5px;font-weight:700;color:#c2410c;cursor:pointer" onclick="cpOpenWinnerEdit()">📢 당선작 공지 작성/수정</button>
@@ -3702,6 +3703,23 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <button id="cpWinDeleteBtn" onclick="cpDeleteWinner()" style="padding:11px 14px;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;font-weight:700;cursor:pointer;display:none">삭제</button>
       <button onclick="hideM('cpWinnerModal')" style="flex:1;padding:11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-weight:700;cursor:pointer">취소</button>
       <button onclick="cpSaveWinner()" style="flex:1;padding:11px;background:#f97316;color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">공지 게시</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- 응모 가능자 명단 관리 모달(관리자) -->
+<div id="cpEligibleModal" class="modal-bg">
+  <div class="modal" style="max-width:420px"><div style="padding:17px">
+    <h3 style="margin:0 0 6px">✅ 응모 가능자 명단</h3>
+    <div style="font-size:12px;color:var(--g4);margin-bottom:12px">여기 명단에 사번+이름이 등록된 사람만 응모를 저장할 수 있습니다. 명단이 비어있으면(0명) 제한 없이 누구나 응모 가능합니다.</div>
+    <label style="padding:10px 12px;background:var(--teal-bg);border:1.5px dashed var(--teal2);border-radius:8px;font-size:13px;font-weight:700;color:var(--teal2);cursor:pointer;display:block;text-align:center;margin-bottom:10px">
+      ⬆️ 엑셀 업로드 (사번, 이름 컬럼) — 업로드 시 기존 명단 전체 교체<input type="file" accept=".xlsx,.xls" style="display:none" onchange="cpEligibleUpload(this)">
+    </label>
+    <div style="font-size:12.5px;color:var(--g6);margin-bottom:6px" id="cpEligibleCount"></div>
+    <div id="cpEligibleList" style="max-height:38vh;overflow-y:auto;border:1px solid var(--g1);border-radius:8px;padding:6px 10px;margin-bottom:12px"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="cpEligibleClearAll()" style="padding:11px 14px;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;font-weight:700;cursor:pointer">전체삭제(제한없음)</button>
+      <button onclick="hideM('cpEligibleModal')" style="flex:1;padding:11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-weight:700;cursor:pointer">닫기</button>
     </div>
   </div></div>
 </div>
@@ -26984,6 +27002,7 @@ async function cpOpenDetail(id){
   document.getElementById('cpDetTitle').textContent='🏆 '+c.title;
   document.getElementById('cpDetSub').textContent=c.description||'';
   document.getElementById('cpAdminBtns').style.display=cpIsAdmin()?'block':'none';
+  document.getElementById('cpEligibleBtn').style.display=cpIsAdmin()?'block':'none';
   document.getElementById('cpWinnerBtn').style.display=cpCanSeeIdentity()?'block':'none';
   document.getElementById('cpResultBtn').style.display=cpIsAdmin()?'block':'none';
   // 최종 후보(TOP16)가 하나라도 선정돼 있으면 전직원 투표 버튼 노출
@@ -27104,6 +27123,16 @@ async function cpSubmitEntry(){
   var content=(document.getElementById('cpContent').value||'').trim();
   var errEl=document.getElementById('cpFormErr');
   if(!empNo||!name||!content){ errEl.textContent='사번·이름·내용을 모두 입력해주세요'; errEl.style.display='block'; return; }
+  // 응모 가능자 명단이 등록돼 있으면 사번+이름이 명단에 있는지 확인
+  var eligRes=await sb.from('campaign_eligible').select('id').eq('campaign_id',cpCurCampaign.id).limit(1);
+  if(eligRes.data && eligRes.data.length){
+    var matchRes=await sb.from('campaign_eligible').select('id').eq('campaign_id',cpCurCampaign.id).eq('emp_no',empNo).eq('name',name).maybeSingle();
+    if(!matchRes.data){
+      errEl.textContent='입력하신 사번·이름이 응모 가능자 명단에 없습니다. 사번·이름을 다시 확인해주세요';
+      errEl.style.display='block';
+      return;
+    }
+  }
   if(!cpEditingId && !cpCurCampaign.allow_multiple){
     // 캐시가 아닌 실시간 조회로 재확인 (공용계정에서 사번이 방금 바뀐 경우 대비)
     var dupRes=await sb.from('campaign_entries').select('id').eq('campaign_id',cpCurCampaign.id).eq('emp_no',empNo);
@@ -27168,6 +27197,64 @@ var cpVotesCache=[];
 function cpVoterKey(){ return me?(me.employee_id||me.name):''; }
 var CP_RANK_SCORE={1:3,2:2,3:1};
 var CP_RANK_LABEL={1:'🥇 1위',2:'🥈 2위',3:'🥉 3위'};
+var cpEligibleCache=[];
+async function cpOpenEligible(){
+  if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
+  showM('cpEligibleModal');
+  await cpLoadEligible();
+}
+async function cpLoadEligible(){
+  var res=await sb.from('campaign_eligible').select('*').eq('campaign_id',cpCurCampaign.id).order('name',{ascending:true});
+  cpEligibleCache=res.data||[];
+  cpRenderEligibleList();
+}
+function cpRenderEligibleList(){
+  var cntEl=document.getElementById('cpEligibleCount');
+  var listEl=document.getElementById('cpEligibleList');
+  if(cntEl) cntEl.textContent=cpEligibleCache.length?('등록된 응모 가능자: '+cpEligibleCache.length+'명'):'명단 없음 — 지금은 누구나 응모 가능합니다';
+  if(!listEl) return;
+  if(!cpEligibleCache.length){ listEl.innerHTML='<div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">명단이 비어있습니다</div>'; return; }
+  listEl.innerHTML=cpEligibleCache.map(function(r){
+    return '<div style="padding:5px 0;border-bottom:1px solid var(--g1);font-size:13px;color:var(--g6)">'+eeEsc(r.emp_no)+' · '+eeEsc(r.name)+'</div>';
+  }).join('');
+}
+async function cpEligibleUpload(inputEl){
+  if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
+  var file=inputEl.files[0]; if(!file) return;
+  try{
+    var buf=await file.arrayBuffer();
+    var wb=XLSX.read(buf,{type:'array'});
+    var aoa=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:''});
+    var headerRowIdx=aoa.findIndex(function(row){ return row.some(function(c){return String(c).trim()==='사번';}); });
+    if(headerRowIdx===-1){ toast('⚠️ "사번" 컬럼을 찾을 수 없습니다'); inputEl.value=''; return; }
+    var headers=aoa[headerRowIdx].map(function(h){return String(h).trim();});
+    var empIdx=headers.indexOf('사번'), nameIdx=headers.indexOf('이름');
+    if(nameIdx===-1) nameIdx=headers.indexOf('성명');
+    if(empIdx===-1||nameIdx===-1){ toast('⚠️ "사번"과 "이름" 컬럼이 모두 필요합니다'); inputEl.value=''; return; }
+    var rows=aoa.slice(headerRowIdx+1).map(function(arr){
+      var emp=String(arr[empIdx]||'').trim(), nm=String(arr[nameIdx]||'').trim();
+      return {campaign_id:cpCurCampaign.id, emp_no:emp, name:nm, uploaded_by:me?me.name:''};
+    }).filter(function(r){ return r.emp_no&&r.name; });
+    if(!rows.length){ toast('⚠️ 유효한 행이 없습니다'); inputEl.value=''; return; }
+    if(!confirm('기존 명단을 지우고 '+rows.length+'명으로 교체할까요?')) { inputEl.value=''; return; }
+    var delRes=await sb.from('campaign_eligible').delete().eq('campaign_id',cpCurCampaign.id);
+    if(delRes.error){ toast('오류: '+delRes.error.message); inputEl.value=''; return; }
+    var insRes=await sb.from('campaign_eligible').insert(rows);
+    if(insRes.error){ toast('오류: '+insRes.error.message); inputEl.value=''; return; }
+    toast('✓ '+rows.length+'명 등록되었습니다');
+    await cpLoadEligible();
+  }catch(e){ toast('업로드 실패: '+(e&&e.message?e.message:e)); }
+  inputEl.value='';
+}
+async function cpEligibleClearAll(){
+  if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
+  if(!cpEligibleCache.length){ toast('이미 명단이 비어있습니다'); return; }
+  if(!confirm('명단을 전체 삭제하면 제한 없이 누구나 응모할 수 있게 됩니다. 계속할까요?')) return;
+  var res=await sb.from('campaign_eligible').delete().eq('campaign_id',cpCurCampaign.id);
+  if(res.error){ toast('오류: '+res.error.message); return; }
+  toast('✓ 명단이 삭제되었습니다 (제한 없음)');
+  await cpLoadEligible();
+}
 async function cpOpenAllEntries(){
   if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
   document.getElementById('cpAllSearch').value='';
