@@ -12959,7 +12959,7 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
     if(kind==='sign'){
       title=catLabel+' 참석자 명단';
       rows=apps.map(function(a){ return Object.assign({}, a, {소속:((a.team||'')+' '+(a.team_group||'')).trim()}); });
-      cols=[{key:'소속',label:'소속',width:'16%'},{key:'position',label:'직책',width:'12%'},{key:'employee_id',label:'사번',width:'13%'},{key:'name',label:'성명',width:'13%'},{key:null,label:'비고',width:'34%'}];
+      cols=[{key:'소속',label:'소속',width:'19%'},{key:'position',label:'직책',width:'15%'},{key:'employee_id',label:'사번',width:'16%'},{key:'name',label:'성명',width:'16%'},{key:null,label:'비고',width:'23%'}];
     }else{ // log — 실제 참석확인된 사람 기준 (신청여부 무관, 워크인 포함)
       title=catLabel+' 참석 서명지';
       var attRes=await sb.from('edu_attendance').select('*').eq('schedule_id',scheduleId);
@@ -12969,7 +12969,7 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
           attend_time:a.verified_at?new Date(a.verified_at).toLocaleString('ko-KR',{hour:'2-digit',minute:'2-digit',timeZone:'Asia/Seoul'}):'',
           _sigUrl:a.signature_data||null};
       });
-      cols=[{key:'소속',label:'소속',width:'17%'},{key:'employee_id',label:'사번',width:'13%'},{key:'name',label:'성명',width:'13%'},{key:'attend_time',label:'참석시간',width:'13%'},{key:'_sig',label:'서명',width:'20%'},{key:null,label:'비고',width:'24%'}];
+      cols=[{key:'소속',label:'소속',width:'18%'},{key:'employee_id',label:'사번',width:'15%'},{key:'name',label:'성명',width:'15%'},{key:'attend_time',label:'참석시간',width:'15%'},{key:'_sig',label:'서명',width:'21%'},{key:null,label:'비고',width:'16%'}];
     }
     if(kind==='log') await eeAttachSignatures(rows); // QR참석확인 시 직접 서명한 게 있으면 그걸 우선 사용, 없으면 등록된 전자서명(개인계정)으로 보완, 그래도 없으면 빈 칸
     document.getElementById('eeReportModalTitle').textContent='📄 '+title;
