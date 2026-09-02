@@ -9841,7 +9841,8 @@ function hoSetMode(mode){
   if(typeof renderHoPassCards==='function') renderHoPassCards();
 }
 async function loadHoTabBadges(){
-  if(!me) return;
+  toast('🔍 인수인계 배지 함수 실행됨');
+  if(!me){ toast('⚠️ 배지 진단: me(로그인정보) 없음'); return; }
   try{
     var myTeamNumSh=me&&me.team?parseInt((me.team.match(/\d+/)||[])[0]):0;
     var myChainSh=([1,2,5,6,7].indexOf(myTeamNumSh)>=0)?'LS':(([3,4,8,9,10].indexOf(myTeamNumSh)>=0)?'AS':null);
@@ -9852,16 +9853,25 @@ async function loadHoTabBadges(){
       var q=sb.from('handover').select('*').eq('to_shift', s.key).eq('confirmed', false);
       if(!isAdminMgr&&myChainSh) q=q.eq('zone_chain', myChainSh);
       var res=await q.limit(30);
-      if(res.error){ console.error('인수인계 배지 조회 실패:', s.key, res.error); toast('⚠️ 인수인계 배지 진단['+s.key+']: '+res.error.message); continue; }
+      var tabEl=document.getElementById(s.tabId);
+      if(!tabEl) continue;
+      var existBadge=tabEl.querySelector('.hoTabBadge');
+      if(existBadge) existBadge.remove();
+      if(res.error){
+        console.error('인수인계 배지 조회 실패:', s.key, res.error);
+        var eb=document.createElement('span');
+        eb.className='hoTabBadge';
+        eb.style.cssText='display:inline-block;padding:0 4px;border-radius:8px;background:#F59E0B;color:white;font-size:9px;font-weight:800;line-height:16px;vertical-align:middle;margin-left:4px';
+        eb.textContent='ERR';
+        eb.title=res.error.message;
+        tabEl.appendChild(eb);
+        continue;
+      }
       var rows=res.data||[];
       if(!isAdminMgr){
         var myTeamLabelSh=myTeamNumSh?(myTeamNumSh+'팀'):null;
         rows=rows.filter(function(r){ return !r.to_team || r.to_team===myTeamLabelSh; });
       }
-      var tabEl=document.getElementById(s.tabId);
-      if(!tabEl) continue;
-      var existBadge=tabEl.querySelector('.hoTabBadge');
-      if(existBadge) existBadge.remove();
       if(rows.length>0){
         var b=document.createElement('span');
         b.className='hoTabBadge';
