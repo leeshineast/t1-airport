@@ -3300,6 +3300,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 <div id="sRestMgmt" class="scr" style="display:none"></div>
 <div id="sStorageMgmt" class="scr" style="display:none"></div>
 <div id="sBabyMgmt" class="scr" style="display:none"></div>
+<div id="sOfficeMgmt" class="scr" style="display:none"></div>
 
 <!-- 시설물 상세/수정 모달 (공용) -->
 <div id="facDetailModal2" class="modal-bg">
@@ -6217,7 +6218,7 @@ window.addEventListener('popstate', function(e){
 });
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sRisk','sTraining','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sActiveUsers','sPerf','sDeleteLogs','sAdc','sEduEvent','sEduAttend','sWorkforce','sWorkSchedule','sSpecialWork','sCampaign','sCampaignDetail','sEmpRoster'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sRisk','sTraining','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sOfficeMgmt','sActiveUsers','sPerf','sDeleteLogs','sAdc','sEduEvent','sEduAttend','sWorkforce','sWorkSchedule','sSpecialWork','sCampaign','sCampaignDetail','sEmpRoster'];
 function goStatsDash(){
   go('statsdash');
   loadMonthlyStats();
@@ -6687,7 +6688,7 @@ function go(name){
   if(name==='perf'&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if((name==='workforce'||name==='workschedule'||name==='specialwork')&&(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role)))){ toast('⚠️ 조장 이상만 접근할 수 있습니다'); return; }
   if(['이상욱','강석원'].indexOf(me&&me.name)!==-1 && ['workforce','workschedule','specialwork','admin','activeUsers','deleteLogs','admconfirm','downloadcenter'].indexOf(name)!==-1){ toast('⚠️ 접근 권한이 없습니다'); return; }
-  if(['shower','smoking','rest','storage','baby'].indexOf(name)!==-1&&!me){ toast('⚠️ 로그인이 필요합니다'); return; }
+  if(['shower','smoking','rest','storage','baby','office'].indexOf(name)!==-1&&!me){ toast('⚠️ 로그인이 필요합니다'); return; }
   if(name==='downloadcenter'&&(!me||!(me.role==='admin'||me.role==='master'))){ toast('⚠️ admin·master만 접근할 수 있습니다'); return; }
   if(name==='groupchat'&&me&&me.role==='guest'){ toast('⚠️ 게스트 계정은 이용할 수 없는 기능입니다'); return; }
   if(!_skipPush&&name!=='login'&&name!=='reg'&&name!==_curScreenName){
@@ -6696,7 +6697,7 @@ function go(name){
   _curScreenName=name;
   if(FACILITY_MENU_KEYS.indexOf(name)!==-1) bumpFacilityMenuView(name);
   updateIosBackBtn();
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs',admconfirm:'sAdc',eduevent:'sEduEvent',eduattend:'sEduAttend',workforce:'sWorkforce',workschedule:'sWorkSchedule',specialwork:'sSpecialWork',campaign:'sCampaign',campaigndetail:'sCampaignDetail',emproster:'sEmpRoster'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',office:'sOfficeMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs',admconfirm:'sAdc',eduevent:'sEduEvent',eduattend:'sEduAttend',workforce:'sWorkforce',workschedule:'sWorkSchedule',specialwork:'sSpecialWork',campaign:'sCampaign',campaigndetail:'sCampaignDetail',emproster:'sEmpRoster'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -6765,6 +6766,7 @@ function go(name){
   if(name==='rest'){ loadFacScreen('rest'); }
   if(name==='storage'){ loadFacScreen('storage'); }
   if(name==='baby'){ loadFacScreen('baby'); }
+  if(name==='office'){ loadFacScreen('office'); }
   if(name==='facility'){
     loadFacilityFromDB();
   }
@@ -7005,6 +7007,7 @@ var ALL_MENU_ITEMS=[
   {key:'rest', icon:'😴', title:'휴게시설 관리', action:"go('rest')"},
   {key:'storage', icon:'📦', title:'창고 관리', action:"go('storage')"},
   {key:'baby', icon:'👶', title:'유아휴게실 관리', action:"go('baby')"},
+  {key:'office', icon:'💻', title:'사무실 관리', action:"go('office')"},
   {key:'inspect', icon:'📝', title:'현장점검', action:"location.href='inspect.html'"},
   {key:'waste', icon:'♻️', title:'폐기물 처리현황', action:"go('waste')"},
   {key:'warehouse', icon:'📦', title:'창고 재고관리', action:"location.href='warehouse.html'"},
@@ -20008,6 +20011,22 @@ var FAC_CONFIGS={
     listTitle:function(r){ return (r.location||''); },
     listSub:function(r){ return ''; },
     listDetail:function(r){ return '번호: '+(r.number||'-')+' · '+(r.team||'-'); }
+  },
+  office:{table:'office_master', icon:'💻', title:'사무실', screen:'sOfficeMgmt', pfx:'of',
+    fields:[
+      {key:'seq_no', label:'연번', xh:'연번', type:'number'},
+      {key:'zone', label:'구역', xh:'랜드/에어', type:'select', required:true, options:[['Airside','A/S (에어사이드)'],['Landside','L/S (랜드사이드)']]},
+      {key:'floor', label:'층', xh:'사무실 층', type:'select', required:true, options:['지하2층','지하1층','1층','2층','3층','4층']},
+      {key:'location', label:'위치', xh:'사무실 위치', type:'text', required:true},
+      {key:'number', label:'번호', xh:'사무실 NUMBER', type:'text'},
+      {key:'use_team', label:'사용팀', xh:'사용팀', type:'text'},
+      {key:'computer_cnt', label:'컴퓨터 수량(set)', xh:'컴퓨터', type:'number'},
+      {key:'desk_cnt', label:'책상 수량(set)', xh:'책상', type:'number'}
+    ,
+      {key:'status', label:'사용 여부', xh:'사용여부', type:'select', options:['사용중','공사중','폐쇄','기타'], default:'사용중'}],
+    listTitle:function(r){ return (r.location||''); },
+    listSub:function(r){ return (r.use_team||'-'); },
+    listDetail:function(r){ return '컴퓨터 '+(r.computer_cnt||0)+'set · 책상 '+(r.desk_cnt||0)+'set'; }
   }
 };
 var facData={}; // {type: [...]}
