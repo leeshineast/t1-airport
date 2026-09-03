@@ -3525,6 +3525,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         ⬆️ 엑셀 업로드<input type="file" accept=".xlsx,.xls" style="display:none" onchange="wfEmpUpload(this)">
       </label>
       <button onclick="wfDownloadEmpTemplate()" style="padding:9px 12px;background:white;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;font-weight:700;color:var(--g6);cursor:pointer">📄 양식 다운로드</button>
+      <button onclick="wfOpenAddEmp()" style="padding:9px 12px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">➕ 직원 추가</button>
       <button onclick="wfConfirmDeleteAll()" style="padding:9px 12px;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🗑 전체삭제</button>
       <span style="flex:1"></span>
       <select id="wfErpMonth" style="padding:8px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px"></select>
@@ -3538,14 +3539,67 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
 <!-- 근무계획 수정 모달 -->
 <div id="wfEditModal" class="modal-bg">
-  <div class="modal" style="max-width:360px"><div style="padding:17px">
+  <div class="modal" style="max-width:360px"><div style="padding:17px;max-height:80vh;overflow-y:auto">
     <h3 id="wfEditTitle" style="margin:0 0 12px">직원 수정</h3>
     <div style="font-size:13px;color:var(--g5);margin-bottom:10px" id="wfEditSub"></div>
+    <label style="font-size:12.5px;font-weight:700;color:var(--g6)">성명</label>
+    <input id="wfEditName" style="width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box">
+    <label style="font-size:12.5px;font-weight:700;color:var(--g6)">직책</label>
+    <input id="wfEditPosition" style="width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box">
+    <label style="font-size:12.5px;font-weight:700;color:var(--g6)">팀</label>
+    <input id="wfEditTeam" style="width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box">
+    <div style="display:flex;gap:8px">
+      <div style="flex:1">
+        <label style="font-size:12.5px;font-weight:700;color:var(--g6)">조</label>
+        <select id="wfEditGroup" style="width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box">
+          <option value="">-</option><option value="A조">A조</option><option value="B조">B조</option><option value="C조">C조</option>
+        </select>
+      </div>
+      <div style="flex:1">
+        <label style="font-size:12.5px;font-weight:700;color:var(--g6)">오전/오후/야간</label>
+        <select id="wfEditShift" style="width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box">
+          <option value="">-</option><option value="오전">오전</option><option value="오후">오후</option><option value="야간">야간</option><option value="일근">일근</option>
+        </select>
+      </div>
+    </div>
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">고정휴무요일 (분기 기준, 2일 선택)</label>
     <div id="wfEditDayPicker" style="display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 14px"></div>
     <div style="display:flex;gap:8px">
       <button onclick="hideM('wfEditModal')" style="flex:1;padding:11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-weight:700;cursor:pointer">취소</button>
       <button onclick="wfSaveEditEmp()" style="flex:1;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">저장</button>
+    </div>
+  </div></div>
+</div>
+
+<!-- 근무계획 직원 추가 모달 -->
+<div id="wfAddModal" class="modal-bg">
+  <div class="modal" style="max-width:360px"><div style="padding:17px;max-height:80vh;overflow-y:auto">
+    <h3 style="margin:0 0 12px">직원 추가</h3>
+    <label style="font-size:12.5px;font-weight:700;color:var(--g6)">사번 *</label>
+    <input id="wfAddEmpNo" placeholder="사번" style="width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box">
+    <label style="font-size:12.5px;font-weight:700;color:var(--g6)">성명 *</label>
+    <input id="wfAddName" placeholder="성명" style="width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box">
+    <label style="font-size:12.5px;font-weight:700;color:var(--g6)">직책</label>
+    <input id="wfAddPosition" placeholder="예: 사원" style="width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box">
+    <label style="font-size:12.5px;font-weight:700;color:var(--g6)">팀</label>
+    <input id="wfAddTeam" placeholder="예: 환경미화1팀" style="width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box">
+    <div style="display:flex;gap:8px">
+      <div style="flex:1">
+        <label style="font-size:12.5px;font-weight:700;color:var(--g6)">조</label>
+        <select id="wfAddGroup" style="width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box">
+          <option value="">-</option><option value="A조">A조</option><option value="B조">B조</option><option value="C조">C조</option>
+        </select>
+      </div>
+      <div style="flex:1">
+        <label style="font-size:12.5px;font-weight:700;color:var(--g6)">오전/오후/야간</label>
+        <select id="wfAddShift" style="width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 10px;box-sizing:border-box">
+          <option value="">-</option><option value="오전">오전</option><option value="오후">오후</option><option value="야간">야간</option><option value="일근">일근</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:6px">
+      <button onclick="hideM('wfAddModal')" style="flex:1;padding:11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-weight:700;cursor:pointer">취소</button>
+      <button onclick="wfSaveNewEmp()" style="flex:1;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">추가</button>
     </div>
   </div></div>
 </div>
@@ -26176,6 +26230,11 @@ function wfOpenEditEmp(empNo){
   wfEditPicked=[e.off1,e.off2].filter(Boolean);
   document.getElementById('wfEditTitle').textContent=e.name+' ('+e.emp_no+')';
   document.getElementById('wfEditSub').textContent=(e.team||'')+' · '+(e.group_name||'')+' · '+(e.shift_type||'')+' · '+wfQuarterLabel(wfCurQuarter);
+  document.getElementById('wfEditName').value=e.name||'';
+  document.getElementById('wfEditPosition').value=e.position||'';
+  document.getElementById('wfEditTeam').value=e.team||'';
+  document.getElementById('wfEditGroup').value=e.group_name||'';
+  document.getElementById('wfEditShift').value=e.shift_type||'';
   wfRenderDayPicker();
   showM('wfEditModal');
 }
@@ -26198,6 +26257,31 @@ function wfTogglePickDay(d){
 async function wfSaveEditEmp(){
   if(!wfEditEmpNo) return;
   var e=wfEmployees.find(function(x){return x.emp_no===wfEditEmpNo;});
+  var newName=(document.getElementById('wfEditName').value||'').trim();
+  var newPos=(document.getElementById('wfEditPosition').value||'').trim();
+  var newTeam=(document.getElementById('wfEditTeam').value||'').trim();
+  var newGrp=document.getElementById('wfEditGroup').value||'';
+  var newShift=document.getElementById('wfEditShift').value||'';
+  if(!newName){ toast('⚠️ 성명을 입력해주세요'); return; }
+
+  var empRes=await sb.from('wf_employees').update({
+    name:newName, position:newPos||null, team:newTeam||null, group_name:newGrp||null, shift_type:newShift||null,
+    updated_at:new Date().toISOString()
+  }).eq('emp_no', wfEditEmpNo);
+  if(empRes.error){ toast('저장 오류: '+empRes.error.message); return; }
+  // 필드별 변경 이력 기록 (실제로 바뀐 항목만)
+  try{
+    var fieldChanges=[
+      ['성명', e?e.name:'', newName], ['직책', e?e.position:'', newPos], ['팀', e?e.team:'', newTeam],
+      ['조', e?e.group_name:'', newGrp], ['오전/오후/야간', e?e.shift_type:'', newShift]
+    ].filter(function(f){ return (f[1]||'')!==(f[2]||''); });
+    if(fieldChanges.length){
+      await sb.from('wf_employee_edit_log').insert(fieldChanges.map(function(f){
+        return { emp_no: wfEditEmpNo, emp_name: newName, quarter: wfCurQuarter, field_name: f[0], old_value: f[1]||'(없음)', new_value: f[2]||'(없음)', changed_by: me?me.name:'' };
+      }));
+    }
+  }catch(logErr){ /* 이력 기록 실패해도 저장 자체는 유지 */ }
+
   var oldTxt=e?[e.off1,e.off2].filter(Boolean).join('·'):'';
   var newTxt=wfEditPicked.join('·');
   var body={
@@ -26211,7 +26295,7 @@ async function wfSaveEditEmp(){
   if(oldTxt!==newTxt){
     try{
       await sb.from('wf_employee_edit_log').insert({
-        emp_no: wfEditEmpNo, emp_name: e?e.name:'', quarter: wfCurQuarter,
+        emp_no: wfEditEmpNo, emp_name: newName, quarter: wfCurQuarter,
         field_name: '고정휴무요일', old_value: oldTxt||'(없음)', new_value: newTxt||'(없음)',
         changed_by: me?me.name:''
       });
@@ -26219,6 +26303,40 @@ async function wfSaveEditEmp(){
   }
   toast('✓ 저장되었습니다');
   hideM('wfEditModal');
+  loadWfEmployees();
+}
+function wfOpenAddEmp(){
+  document.getElementById('wfAddEmpNo').value='';
+  document.getElementById('wfAddName').value='';
+  document.getElementById('wfAddPosition').value='사원';
+  document.getElementById('wfAddTeam').value='';
+  document.getElementById('wfAddGroup').value='';
+  document.getElementById('wfAddShift').value='';
+  showM('wfAddModal');
+}
+async function wfSaveNewEmp(){
+  var empNo=(document.getElementById('wfAddEmpNo').value||'').trim();
+  var name=(document.getElementById('wfAddName').value||'').trim();
+  var pos=(document.getElementById('wfAddPosition').value||'').trim();
+  var team=(document.getElementById('wfAddTeam').value||'').trim();
+  var grp=document.getElementById('wfAddGroup').value||'';
+  var shift=document.getElementById('wfAddShift').value||'';
+  if(!empNo){ toast('⚠️ 사번을 입력해주세요'); return; }
+  if(!name){ toast('⚠️ 성명을 입력해주세요'); return; }
+  if(wfEmployees.some(function(x){return x.emp_no===empNo;})){ toast('⚠️ 이미 등록된 사번입니다. 수정 버튼을 이용해주세요'); return; }
+  var res=await sb.from('wf_employees').insert({
+    emp_no:empNo, name:name, position:pos||'사원', team:team||null, group_name:grp||null,
+    shift_type:shift||null, updated_at:new Date().toISOString()
+  });
+  if(res.error){ toast('추가 오류: '+res.error.message); return; }
+  try{
+    await sb.from('wf_employee_edit_log').insert({
+      emp_no: empNo, emp_name: name, quarter: wfCurQuarter, field_name: '신규등록',
+      old_value: '(없음)', new_value: name+' 신규 등록', changed_by: me?me.name:''
+    });
+  }catch(logErr){ /* 이력 기록 실패해도 등록 자체는 유지 */ }
+  toast('✓ '+name+'님 추가되었습니다');
+  hideM('wfAddModal');
   loadWfEmployees();
 }
 async function wfDeleteEmployee(empNo, name){
