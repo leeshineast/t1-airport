@@ -9188,9 +9188,10 @@ async function fetchMgrRosterWithOff(){
         if(opsSlot) roster['운영_'+opsSlot]={empNo:u.employee_id,name:u.name};
       }else if(u.role==='manager'){
         roster[u.team+'_팀장']={empNo:u.employee_id,name:u.name};
-      }else{
+      }else if(u.role==='leader'){
         var mm=(u.team||'').match(/^(\d+팀)\s*([A-Z])조$/);
         if(mm){ roster[mm[1]+'_'+mm[2]+'조장']={empNo:u.employee_id,name:u.name}; }
+        // 액팅리더(대리 조장)는 이 출근현황 카드에 별도 슬롯이 없으므로 조장 자리를 덮어쓰지 않도록 제외
       }
     });
   }catch(e){}
