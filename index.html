@@ -19970,12 +19970,13 @@ var FAC_CONFIGS={
       {key:'microwave_cnt', label:'전자레인지 수량', xh:'전자레인지', type:'number'},
       {key:'water_cnt', label:'정수기(생수) 수량', xh:'정수기', type:'number'},
       {key:'hanger_cnt', label:'공용 옷걸이 수량', xh:'옷걸이', type:'number'},
-      {key:'board_type', label:'게시판', xh:'게시판', type:'text'}
+      {key:'board_type', label:'게시판', xh:'게시판', type:'text'},
+      {key:'fire_extinguisher_count', label:'소화기 현황', xh:'소화기 수량', type:'select', options:['1','2','3','4','5','6']}
     ,
       {key:'status', label:'사용 여부', xh:'사용여부', type:'select', options:['사용중','공사중','폐쇄','기타'], default:'사용중'}],
     listTitle:function(r){ return (r.location||''); },
     listSub:function(r){ return (r.gender||'-')+' · '+(r.use_team||''); },
-    listDetail:function(r){ return '냉장고'+(r.fridge_cnt||0)+' 전자레인지'+(r.microwave_cnt||0)+' 정수기'+(r.water_cnt||0); }
+    listDetail:function(r){ return '냉장고'+(r.fridge_cnt||0)+' 전자레인지'+(r.microwave_cnt||0)+' 정수기'+(r.water_cnt||0)+(r.fire_extinguisher_count?(' · 소화기 '+r.fire_extinguisher_count+'개'):''); }
   },
   storage:{table:'storage_room_master', icon:'📦', title:'창고', screen:'sStorageMgmt', pfx:'st',
     fields:[
