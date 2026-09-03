@@ -20292,11 +20292,11 @@ function facRenderList(type){
     var editTxt=r.updated_by?(r.updated_by+' · '+facUpdatedDateShort(r.updated_at)):'';
     var s='<div onclick="facOpenDetail(\''+type+'\','+r.id+')" style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.04)">';
     s+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
-    s+='<div style="display:flex;align-items:center;gap:7px;min-width:0">'+(hasGender?facGenderBadge(r.gender):'')+'<span style="font-size:15px;font-weight:800;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+cfg.icon+' '+(cfg.listTitle(r)||'(위치 미상)')+'</span>'+closedBadge+'</div>';
+    s+='<div style="display:flex;align-items:flex-start;gap:7px;min-width:0;flex:1">'+(hasGender?facGenderBadge(r.gender):'')+'<span style="font-size:15px;font-weight:800;color:var(--g7);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-width:0;line-height:1.3">'+cfg.icon+' '+(cfg.listTitle(r)||'(위치 미상)')+'</span>'+closedBadge+'</div>';
     s+='<div style="display:flex;gap:6px;flex-shrink:0">'+badges+'</div>';
     s+='</div>';
-    s+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:7px;gap:8px">';
-    s+='<span style="font-size:11px;color:var(--g4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+lineTxt+'</span>';
+    s+='<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-top:7px;gap:8px">';
+    s+='<span style="font-size:11px;color:var(--g4);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;flex:1;min-width:0;line-height:1.4">'+lineTxt+'</span>';
     if(editTxt) s+='<span style="font-size:10px;color:var(--teal2);font-weight:600;white-space:nowrap;flex-shrink:0">'+editTxt+'</span>';
     s+='</div></div>';
     return s;
@@ -20311,7 +20311,7 @@ function facRenderList(type){
     var s='<div onclick="facOpenDetail(\''+type+'\','+r.id+')" style="flex:1;min-width:0;background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:10px 11px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.04)">';
     s+='<div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap">'+facGenderBadge(r.gender)+'<span style="font-size:14px;font-weight:800;color:var(--g7)">'+cfg.icon+' '+(cfg.listTitle(r)||'(위치 미상)')+'</span>'+closedBadge+'</div>';
     s+='<div style="display:flex;gap:4px;margin-top:5px;flex-wrap:wrap">'+badges+'</div>';
-    s+='<div style="font-size:10px;color:var(--g4);margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+lineTxt+'</div>';
+    s+='<div style="font-size:10px;color:var(--g4);margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;line-height:1.4">'+lineTxt+'</div>';
     if(editTxt) s+='<div style="font-size:9.5px;color:var(--teal2);font-weight:600;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+editTxt+'</div>';
     s+='</div>';
     return s;
