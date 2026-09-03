@@ -4047,6 +4047,12 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
             <button onclick="clearNewsPostImage()" style="margin-top:6px;padding:6px 12px;background:var(--g1);color:var(--g5);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">사진 제거</button>
           </div>
         </div>
+        <div class="fg"><label style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--g6);font-weight:700;cursor:pointer;margin-bottom:8px"><input type="checkbox" id="newsPostPopupChk" style="accent-color:var(--teal)" onchange="var w=document.getElementById('newsPostTargetWrap');if(w)w.style.display=this.checked?'block':'none'"> 🔔 로그인 시 팝업으로 표시</label>
+          <div id="newsPostTargetWrap" style="display:none">
+            <label class="f-lbl">팝업 대상</label>
+            <div id="nwTargetGrp" style="display:flex;flex-wrap:wrap;gap:7px"></div>
+          </div>
+        </div>
         <div style="display:flex;gap:8px">
         <button id="newsPostSubmitBtn" onclick="submitNewsPost()" style="flex:1;padding:13px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">
           📝 게시하기
@@ -5720,6 +5726,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
 <div id="indModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--danger),#b03030)"><h3 id="indModalTitle">🚑 산업재해 등록</h3><button class="m-x" onclick="closeInd()">×</button></div><div style="padding:15px 17px;max-height:60vh;overflow-y:auto"><div class="fg"><label class="f-lbl">결정통지일자</label><input type="date" id="indDate" class="ri" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">재해자</label><input type="text" id="indPer" class="ri" placeholder="예: 오전1팀 홍길동" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">발생 장소</label><input type="text" id="indLoc" class="ri" placeholder="예: 3F 동편 화장실" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">재해 유형</label><div class="rg" id="indTG"><div class="rp" onclick="pickIT(this)">전도</div><div class="rp" onclick="pickIT(this)">낙상</div><div class="rp" onclick="pickIT(this)">골절</div><div class="rp" onclick="pickIT(this)">타박상</div><div class="rp" onclick="pickIT(this)">열상</div><div class="rp" onclick="pickIT(this)">요통</div><div class="rp" onclick="pickIT(this)">협착</div><div class="rp" onclick="pickIT(this)">충돌</div><div class="rp" onclick="pickIT(this)">기타</div></div><input type="text" id="indTypeCustom" class="ri" placeholder="재해 유형 직접 입력" style="display:none;margin-top:7px;margin-bottom:0"></div><div class="fg"><label class="f-lbl">발생 경위 및 조치</label><textarea id="indDesc" class="f-ta show" rows="3" placeholder="발생 경위, 응급조치 등"></textarea></div><div id="indErr" style="display:none;background:var(--danger-bg);border-radius:var(--r2);padding:8px 11px;font-size:13px;color:var(--danger);font-weight:600;margin-bottom:10px"></div><button id="indSubBtn" onclick="subInd()" style="width:100%;padding:12px;background:linear-gradient(135deg,var(--danger),#b03030);color:white;border:none;border-radius:var(--r2);font-size:16px;font-weight:700;cursor:pointer">등록 완료</button></div></div></div>
 <div id="noticeM" class="modal-bg"><div class="modal" style="max-width:350px"><div style="background:linear-gradient(135deg,var(--navy),var(--teal2));padding:15px 17px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:21px">📢</span><div><div style="color:white;font-size:16px;font-weight:800">전체 공지사항</div><div style="color:rgba(255,255,255,.6);font-size:12px" id="noticeD"></div></div></div><button onclick="closeN()" style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:26px;height:26px;color:white;font-size:17px;cursor:pointer">×</button></div><div style="padding:17px;max-height:46vh;overflow-y:auto"><div style="font-size:17px;font-weight:800;color:var(--g7);margin-bottom:9px" id="noticeT"></div><div style="font-size:15px;color:var(--g5);line-height:1.7" id="noticeB"></div></div><div style="padding:11px 17px 17px;display:flex;gap:9px;border-top:1px solid var(--g2)"><label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--g4);cursor:pointer;flex:1"><input type="checkbox" id="noSkip" style="accent-color:var(--teal)"> 오늘 다시 보지 않기</label><button onclick="closeN()" style="padding:9px 17px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">확인</button></div></div></div>
+<div id="newsPopupM" class="modal-bg"><div class="modal" style="max-width:350px"><div style="background:linear-gradient(135deg,var(--teal),var(--teal2));padding:15px 17px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:8px"><span style="font-size:21px">📰</span><div><div style="color:white;font-size:16px;font-weight:800">회사소식</div><div style="color:rgba(255,255,255,.6);font-size:12px" id="newsPopD"></div></div></div><button onclick="closeNewsPopupModal()" style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:26px;height:26px;color:white;font-size:17px;cursor:pointer">×</button></div><div style="padding:17px;max-height:46vh;overflow-y:auto"><div style="font-size:17px;font-weight:800;color:var(--g7);margin-bottom:9px" id="newsPopT"></div><img id="newsPopImg" style="display:none;width:100%;border-radius:var(--r2);margin-bottom:9px"><div style="font-size:15px;color:var(--g5);line-height:1.7" id="newsPopB"></div></div><div style="padding:11px 17px 17px;display:flex;gap:9px;border-top:1px solid var(--g2)"><label style="display:flex;align-items:center;gap:5px;font-size:13px;color:var(--g4);cursor:pointer;flex:1"><input type="checkbox" id="newsPopSkip" style="accent-color:var(--teal)"> 오늘 다시 보지 않기</label><button onclick="closeNewsPopupModal()" style="padding:9px 17px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">확인</button></div></div></div>
 
 <!-- 인력현황 미입력 조장 안내 팝업 -->
 <div id="vehEditModal" class="modal-bg"><div class="modal" style="max-width:380px">
@@ -7201,6 +7208,7 @@ function finishLogin(){
   if(!IS_LOCAL){loadHoList();}
   // Supabase에서 데이터 로드
   loadNoticesFromDB();
+  loadCompanyNewsPopup();
   loadHandoverFromDB();
   loadAccidentsFromDB();
   loadVehicleFromDB();
@@ -8174,6 +8182,29 @@ function setNoticeTargetChecks(arr){
   var vals=(arr&&arr.length)?arr:['all'];
   wrap.querySelectorAll('.nTargetChk').forEach(function(cb){ cb.checked=vals.indexOf(cb.value)!==-1; });
 }
+// 회사소식 팝업 대상 칩 — 공지사항과 동일한 TARGET_ROLE_DEFS·판정 로직(noticeVisibleFor) 재사용
+function renderNewsTargetChecks(){
+  var wrap=document.getElementById('nwTargetGrp'); if(!wrap) return;
+  wrap.innerHTML=TARGET_ROLE_DEFS.map(function(t){
+    return '<label style="display:flex;align-items:center;gap:4px;font-size:13px;color:var(--g5);padding:5px 10px;background:var(--g1);border-radius:20px;cursor:pointer"><input type="checkbox" class="nwTargetChk" value="'+t.key+'" style="accent-color:var(--teal)"'+(t.key==='all'?' checked':'')+'> '+t.label+'</label>';
+  }).join('');
+  wrap.querySelectorAll('.nwTargetChk').forEach(function(cb){
+    cb.addEventListener('change',function(){
+      if(cb.value==='all'&&cb.checked){ wrap.querySelectorAll('.nwTargetChk').forEach(function(o){ if(o.value!=='all') o.checked=false; }); }
+      else if(cb.checked){ var allCb=wrap.querySelector('.nwTargetChk[value="all"]'); if(allCb) allCb.checked=false; }
+    });
+  });
+}
+function getSelectedNewsTargets(){
+  var wrap=document.getElementById('nwTargetGrp'); if(!wrap) return ['all'];
+  var checked=Array.prototype.slice.call(wrap.querySelectorAll('.nwTargetChk:checked')).map(function(cb){return cb.value;});
+  return checked.length?checked:['all'];
+}
+function setNewsTargetChecks(arr){
+  var wrap=document.getElementById('nwTargetGrp'); if(!wrap) return;
+  var vals=(arr&&arr.length)?arr:['all'];
+  wrap.querySelectorAll('.nwTargetChk').forEach(function(cb){ cb.checked=vals.indexOf(cb.value)!==-1; });
+}
 var ROLE_RANK={member:0, acting_leader:1, leader:2, manager:3, admin:4, master:5};
 function noticeVisibleFor(target_roles, role){
   if(role==='master'||role==='admin') return true; // 관리자(admin·master)는 항상 전체 열람
@@ -8202,7 +8233,41 @@ function targetRolesLabel(target_roles){
   return target_roles.map(function(k){ var d=TARGET_ROLE_DEFS.find(function(x){return x.key===k;}); return d?d.label:k; }).join(', ');
 }
 function showNotice(){try{const sk=localStorage.getItem('nsk_'+new Date().toDateString());if(!sk)showM('noticeM');}catch(e){showM('noticeM');}}
-function closeN(){try{if(document.getElementById('noSkip').checked)try{localStorage.setItem('nsk_'+new Date().toDateString(),'1');}catch(e){}}catch(e){}hideM('noticeM');}
+function closeN(){try{if(document.getElementById('noSkip').checked)try{localStorage.setItem('nsk_'+new Date().toDateString(),'1');}catch(e){}}catch(e){}hideM('noticeM');_afterNoticeClosed();}
+// ── 회사소식 팝업 (조별공용계정 등 지정 역할에게 로그인 시 표시) ──
+var _pendingNewsPopup=null;
+function _afterNoticeClosed(){ if(_pendingNewsPopup){ var n=_pendingNewsPopup; _pendingNewsPopup=null; showCompanyNewsPopupModal(n); } }
+async function loadCompanyNewsPopup(){
+  try{
+    var sk=null; try{ sk=localStorage.getItem('nwssk_'+new Date().toDateString()); }catch(e){}
+    if(sk) return; // 오늘 이미 "다시 보지 않기" 처리됨
+    var res=await sb.from('companynews_posts').select('*').eq('show_popup',true).order('uploaded_at',{ascending:false});
+    if(!res.data||!res.data.length) return;
+    var myRole=me?me.role:null;
+    var visible=res.data.filter(function(n){ return noticeVisibleFor(n.target_roles, myRole); });
+    if(!visible.length) return;
+    var n=visible[0];
+    var noticeOpen=document.getElementById('noticeM')&&document.getElementById('noticeM').classList.contains('on');
+    if(noticeOpen){ _pendingNewsPopup=n; } else { showCompanyNewsPopupModal(n); }
+  }catch(e){}
+}
+function showCompanyNewsPopupModal(n){
+  var t=document.getElementById('newsPopT'); var b=document.getElementById('newsPopB'); var d=document.getElementById('newsPopD');
+  var img=document.getElementById('newsPopImg');
+  if(t) t.textContent=n.title||'회사소식';
+  if(b) b.innerHTML=(n.content||'').replace(/\n/g,'<br>');
+  if(d) d.textContent=n.uploaded_at?toKSTDate(n.uploaded_at)+' 등록':'';
+  if(img){
+    if(n.image_path){ img.src=SUPABASE_URL+'/storage/v1/object/public/companynews/'+encodeURIComponent(n.image_path); img.style.display='block'; }
+    else { img.style.display='none'; }
+  }
+  var sk=document.getElementById('newsPopSkip'); if(sk) sk.checked=false;
+  showM('newsPopupM');
+}
+function closeNewsPopupModal(){
+  try{ var sk=document.getElementById('newsPopSkip'); if(sk&&sk.checked) localStorage.setItem('nwssk_'+new Date().toDateString(),'1'); }catch(e){}
+  hideM('newsPopupM');
+}
 function openNW(){renderNoticeTargetChecks();showM('noticeW');}
 function closeNW(){hideM('noticeW');}
 async function pubNotice(){
@@ -22241,6 +22306,9 @@ function newsStartNewPost(){
   var contentEl=document.getElementById('newsPostContent'); if(contentEl) contentEl.value='';
   clearNewsPostImage();
   _newsPostImageRemoved=false; // clearNewsPostImage가 true로 만들지만 새 글쓰기이므로 다시 false
+  var popupChk=document.getElementById('newsPostPopupChk'); if(popupChk) popupChk.checked=false;
+  var targetWrap=document.getElementById('newsPostTargetWrap'); if(targetWrap) targetWrap.style.display='none';
+  renderNewsTargetChecks();
   var title=document.getElementById('newsPostFormTitle'); if(title) title.textContent='✍️ 회사소식 작성';
   var submitBtn=document.getElementById('newsPostSubmitBtn'); if(submitBtn) submitBtn.textContent='📝 게시하기';
   var cancelBtn=document.getElementById('newsPostCancelBtn'); if(cancelBtn) cancelBtn.style.display='none';
@@ -22277,14 +22345,18 @@ async function submitNewsPost(){
       if(!r.ok){ toast('⚠️ 사진 업로드 실패'); if(prog) prog.style.display='none'; if(btn){btn.disabled=false;btn.style.cursor='pointer';btn.style.opacity='1';} return; }
       imagePath=newPath;
     }
+    var popupChk=document.getElementById('newsPostPopupChk');
+    var showPopup=popupChk?popupChk.checked:false;
+    var popupTargets=showPopup?getSelectedNewsTargets():null;
     var result;
     if(_newsPostEditId){
-      result=await sb.from('companynews_posts').update({title:title, content:content, image_path:imagePath}).eq('id',_newsPostEditId);
+      result=await sb.from('companynews_posts').update({title:title, content:content, image_path:imagePath, show_popup:showPopup, target_roles:popupTargets}).eq('id',_newsPostEditId);
     }else{
       result=await sb.from('companynews_posts').insert({
         title:title, content:content, image_path:imagePath,
         uploaded_at:new Date().toISOString(),
-        uploaded_by:me?me.name:'관리자'
+        uploaded_by:me?me.name:'관리자',
+        show_popup:showPopup, target_roles:popupTargets
       });
     }
     if(result.error){ toast('⚠️ 저장 실패: '+result.error.message); if(prog) prog.style.display='none'; if(btn){btn.disabled=false;btn.style.cursor='pointer';btn.style.opacity='1';} return; }
@@ -22321,6 +22393,10 @@ async function editNewsPostFromDetail(id){
     }else{
       if(wrap) wrap.style.display='none';
     }
+    renderNewsTargetChecks();
+    var popupChk=document.getElementById('newsPostPopupChk'); if(popupChk) popupChk.checked=!!p.show_popup;
+    var targetWrap=document.getElementById('newsPostTargetWrap'); if(targetWrap) targetWrap.style.display=p.show_popup?'block':'none';
+    setNewsTargetChecks(p.target_roles);
     var title=document.getElementById('newsPostFormTitle'); if(title) title.textContent='✏️ 회사소식 수정';
     var submitBtn=document.getElementById('newsPostSubmitBtn'); if(submitBtn) submitBtn.textContent='✅ 수정 완료';
     var cancelBtn=document.getElementById('newsPostCancelBtn'); if(cancelBtn) cancelBtn.style.display='block';
