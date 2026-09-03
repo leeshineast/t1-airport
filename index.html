@@ -7207,6 +7207,7 @@ function finishLogin(){
   toast('어서오세요, '+(me?me.name:'')+'님!');
   if(!IS_LOCAL){loadHoList();}
   // Supabase에서 데이터 로드
+  _noticeQueue=[]; _noticeDone=false; _newsQueue=null; // 재로그인 시 팝업 큐 상태 초기화
   loadNoticesFromDB();
   loadCompanyNewsPopup();
   loadHandoverFromDB();
@@ -8232,24 +8233,45 @@ function targetRolesLabel(target_roles){
   }
   return target_roles.map(function(k){ var d=TARGET_ROLE_DEFS.find(function(x){return x.key===k;}); return d?d.label:k; }).join(', ');
 }
-function showNotice(){try{const sk=localStorage.getItem('nsk_'+new Date().toDateString());if(!sk)showM('noticeM');}catch(e){showM('noticeM');}}
-function closeN(){try{if(document.getElementById('noSkip').checked)try{localStorage.setItem('nsk_'+new Date().toDateString(),'1');}catch(e){}}catch(e){}hideM('noticeM');_afterNoticeClosed();}
-// ── 회사소식 팝업 (조별공용계정 등 지정 역할에게 로그인 시 표시) ──
-var _pendingNewsPopup=null;
-function _afterNoticeClosed(){ if(_pendingNewsPopup){ var n=_pendingNewsPopup; _pendingNewsPopup=null; showCompanyNewsPopupModal(n); } }
+// ── 공지사항 팝업 큐 (최신 3건까지 순차 표시) ──
+var _noticeQueue=[];
+var _noticeDone=false;
+function renderNoticeModalContent(n){
+  var t=document.getElementById('noticeT');
+  var b=document.getElementById('noticeB');
+  var d=document.getElementById('noticeD');
+  if(t) t.textContent=n.title||'공지사항';
+  if(b) b.innerHTML=(n.content||'').replace(/\n/g,'<br>');
+  if(d) d.textContent=n.created_at?toKSTDate(n.created_at)+' 등록':'';
+  var sk=document.getElementById('noSkip'); if(sk) sk.checked=false;
+}
+function closeN(){
+  try{if(document.getElementById('noSkip').checked)try{localStorage.setItem('nsk_'+new Date().toDateString(),'1');}catch(e){}}catch(e){}
+  hideM('noticeM');
+  if(_noticeQueue.length){
+    var next=_noticeQueue.shift();
+    setTimeout(function(){ renderNoticeModalContent(next); showM('noticeM'); },300);
+  } else {
+    _afterNoticeClosed();
+  }
+}
+// ── 회사소식 팝업 큐 (최신 3건까지 순차 표시, 공지사항 큐가 끝난 뒤 이어서 표시) ──
+var _newsQueue=null; // null=아직 로딩중, 배열=로딩 완료
+function _afterNoticeClosed(){ _noticeDone=true; _tryShowNewsQueue(); }
+function _tryShowNewsQueue(){
+  if(!_noticeDone||_newsQueue===null) return;
+  if(_newsQueue.length){ var next=_newsQueue.shift(); showCompanyNewsPopupModal(next); }
+}
 async function loadCompanyNewsPopup(){
   try{
     var sk=null; try{ sk=localStorage.getItem('nwssk_'+new Date().toDateString()); }catch(e){}
-    if(sk) return; // 오늘 이미 "다시 보지 않기" 처리됨
+    if(sk){ _newsQueue=[]; _tryShowNewsQueue(); return; }
     var res=await sb.from('companynews_posts').select('*').eq('show_popup',true).order('uploaded_at',{ascending:false});
-    if(!res.data||!res.data.length) return;
     var myRole=me?me.role:null;
-    var visible=res.data.filter(function(n){ return noticeVisibleFor(n.target_roles, myRole); });
-    if(!visible.length) return;
-    var n=visible[0];
-    var noticeOpen=document.getElementById('noticeM')&&document.getElementById('noticeM').classList.contains('on');
-    if(noticeOpen){ _pendingNewsPopup=n; } else { showCompanyNewsPopupModal(n); }
-  }catch(e){}
+    var visible=(res.data||[]).filter(function(n){ return noticeVisibleFor(n.target_roles, myRole); });
+    _newsQueue=visible.slice(0,3);
+    _tryShowNewsQueue();
+  }catch(e){ _newsQueue=[]; _tryShowNewsQueue(); }
 }
 function showCompanyNewsPopupModal(n){
   var t=document.getElementById('newsPopT'); var b=document.getElementById('newsPopB'); var d=document.getElementById('newsPopD');
@@ -8267,6 +8289,10 @@ function showCompanyNewsPopupModal(n){
 function closeNewsPopupModal(){
   try{ var sk=document.getElementById('newsPopSkip'); if(sk&&sk.checked) localStorage.setItem('nwssk_'+new Date().toDateString(),'1'); }catch(e){}
   hideM('newsPopupM');
+  if(_newsQueue&&_newsQueue.length){
+    var next=_newsQueue.shift();
+    setTimeout(function(){ showCompanyNewsPopupModal(next); },300);
+  }
 }
 function openNW(){renderNoticeTargetChecks();showM('noticeW');}
 function closeNW(){hideM('noticeW');}
@@ -16707,22 +16733,24 @@ async function savePermEdit(){
 async function loadNoticesFromDB(){
   try{
     var res=await sb.from('notices').select('*').neq('title','__ind_prev_year__').order('created_at',{ascending:false});
-    if(!res.data||!res.data.length) return;
+    if(!res.data||!res.data.length){ _afterNoticeClosed(); return; }
     var myRole=me?me.role:null;
     var visible=res.data.filter(function(n){ return noticeVisibleFor(n.target_roles, myRole); });
-    if(!visible.length){ renderNoticeList([]); return; }
-    // 팝업: 내게 보이는 것 중 최신 1건
-    var n=visible[0];
-    var t=document.getElementById('noticeT');
-    var b=document.getElementById('noticeB');
-    var d=document.getElementById('noticeD');
-    if(t) t.textContent=n.title||'공지사항';
-    if(b) b.innerHTML=(n.content||'').replace(/\n/g,'<br>');
-    if(d) d.textContent=n.created_at?toKSTDate(n.created_at)+' 등록':'';
-    showNotice(n.content);
+    if(!visible.length){ renderNoticeList([]); _afterNoticeClosed(); return; }
+    // 팝업: 내게 보이는 것 중 최신 3건까지 순차 표시
+    var sk=null; try{ sk=localStorage.getItem('nsk_'+new Date().toDateString()); }catch(e){}
+    if(sk){
+      _afterNoticeClosed();
+    } else {
+      var queueItems=visible.slice(0,3);
+      var first=queueItems.shift();
+      _noticeQueue=queueItems;
+      renderNoticeModalContent(first);
+      showM('noticeM');
+    }
     // 누적 목록 렌더링 (내게 보이는 것만)
     renderNoticeList(visible);
-  }catch(e){}
+  }catch(e){ _afterNoticeClosed(); }
 }
 
 // 공지사항 메뉴 화면: 전체 목록 (admin/그룹장/본부장/최고관리자는 작성·수정 가능, 그 외 조회 전용)
