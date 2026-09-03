@@ -9087,12 +9087,15 @@ var TEAM_SUBGROUPS_G={'1팀':['A','B','C'],'2팀':['A','B'],'3팀':['A','B'],'4�
 var TEAM_ROW_ORDER_G=['1팀','6팀','2팀','7팀','3팀','8팀','4팀','9팀','5팀','10팀'];
 // ── 근무계획(분기별 고정휴무) 연동: 팀장/조장 슬롯의 실제 담당자가 오늘 고정휴무인지 자동 판별 ──
 async function fetchMgrRosterWithOff(){
-  var roster={}; // '1팀_팀장' / '1팀_A조장' 등 → {empNo, name}
+  var roster={}; // '1팀_팀장' / '1팀_A조장' / '운영_사업부장' 등 → {empNo, name}
   var offMap={}; // empNo → {d1, d2}
   try{
-    var usrRes=await sb.from('users').select('role,team,name,employee_id').eq('status','active').in('role',['manager','leader','acting_leader']);
+    var usrRes=await sb.from('users').select('role,team,name,employee_id').eq('status','active').in('role',['manager','leader','acting_leader','admin','master']);
     (usrRes.data||[]).forEach(function(u){
-      if(u.role==='manager'){
+      if(u.role==='admin'||u.role==='master'){
+        var opsSlot=OPS_TEAM_ROLE_MAP[u.name];
+        if(opsSlot) roster['운영_'+opsSlot]={empNo:u.employee_id,name:u.name};
+      }else if(u.role==='manager'){
         roster[u.team+'_팀장']={empNo:u.employee_id,name:u.name};
       }else{
         var mm=(u.team||'').match(/^(\d+팀)\s*([A-Z])조$/);
