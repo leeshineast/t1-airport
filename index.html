@@ -3747,12 +3747,19 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
 <!-- 당선작 공지 작성 모달 -->
 <div id="cpWinnerModal" class="modal-bg">
-  <div class="modal" style="max-width:380px"><div style="padding:17px">
+  <div class="modal" style="max-width:420px;max-height:90vh"><div style="padding:17px;overflow-y:auto;max-height:90vh">
     <h3 style="margin:0 0 12px">📢 당선작 공지 작성</h3>
+    <div id="cpWinStatsBox" style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:10px 12px;margin-bottom:12px;font-size:12px;color:#1e40af"></div>
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;background:var(--g1);border-radius:8px;padding:9px 12px">
+      <input type="checkbox" id="cpWinShowIdentity" checked onchange="cpAutoFillWinnerBody()" style="width:16px;height:16px">
+      <label for="cpWinShowIdentity" style="font-size:12.5px;font-weight:700;color:var(--g6);cursor:pointer">공지에 당선자 실명(이름·사번·팀) 공개</label>
+    </div>
+    <button onclick="cpAutoFillWinnerBody()" style="width:100%;padding:10px;background:#ecfeff;border:1.5px solid #67e8f9;border-radius:8px;font-size:12.5px;font-weight:700;color:#0e7490;cursor:pointer;margin-bottom:12px">🔄 투표결과로 자동 채우기</button>
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">공지 제목</label>
     <input id="cpWinTitle" placeholder="예: 습득물 근절 슬로건 공모 당선작 발표" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box">
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">내용 (당선자명 / 슬로건 / 소감 등 자유 작성)</label>
-    <textarea id="cpWinBody" rows="6" placeholder="예: 대상 - 환경미화1팀 홍길동&#10;슬로건: '내 물건처럼, 남의 물건도'&#10;수상소감: ..." style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 14px;box-sizing:border-box;resize:vertical"></textarea>
+    <textarea id="cpWinBody" rows="8" placeholder="예: 대상 - 환경미화1팀 홍길동&#10;슬로건: '내 물건처럼, 남의 물건도'&#10;수상소감: ..." style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 14px;box-sizing:border-box;resize:vertical"></textarea>
+    <div style="font-size:11px;color:var(--g4);margin:-8px 0 12px">※ 자동 채우기는 초안일 뿐입니다. 내용을 확인·수정한 뒤 아래 [공지 게시]를 눌러야 실제로 게시됩니다.</div>
     <div style="display:flex;gap:8px">
       <button id="cpWinDeleteBtn" onclick="cpDeleteWinner()" style="padding:11px 14px;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;font-weight:700;cursor:pointer;display:none">삭제</button>
       <button onclick="hideM('cpWinnerModal')" style="flex:1;padding:11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-weight:700;cursor:pointer">취소</button>
@@ -27297,21 +27304,64 @@ async function cpSubmitEntry(){
   cpRenderMyEntries();
   cpLoadList();
 }
+async function cpFetchResultRanked(){
+  var fRes=await sb.from('campaign_finalists').select('*').eq('campaign_id',cpCurCampaign.id);
+  var finalists=fRes.data||[];
+  if(!finalists.length) return [];
+  var entryIds=finalists.map(function(f){return f.entry_id;});
+  var eRes=await sb.from('campaign_entries').select('*').in('id',entryIds);
+  var entryMap={}; (eRes.data||[]).forEach(function(e){ entryMap[e.id]=e; });
+  var vRes=await msFetchAll(function(){ return sb.from('campaign_public_votes').select('*').eq('campaign_id',cpCurCampaign.id); });
+  var votes=vRes.data||[];
+  var countMap={};
+  votes.forEach(function(v){ countMap[v.finalist_entry_id]=(countMap[v.finalist_entry_id]||0)+1; });
+  var ranked=finalists.map(function(f){ return { finalistId:f.id, entry:entryMap[f.entry_id], count:countMap[f.entry_id]||0, awardLabel:f.award_label||null }; })
+    .filter(function(x){return x.entry;})
+    .sort(function(a,b){ return b.count-a.count; });
+  ranked._totalVotes=votes.length;
+  return ranked;
+}
 async function cpOpenWinnerEdit(){
   if(!cpCanSeeIdentity()){ toast('⚠️ master만 가능합니다'); return; }
   var w=cpCurCampaign._winner;
   document.getElementById('cpWinTitle').value=w?w.title:(cpCurCampaign.title+' 당선작 발표');
   document.getElementById('cpWinBody').value=w?w.body:'';
+  document.getElementById('cpWinShowIdentity').checked = w ? (w.show_identity!==false) : true;
   document.getElementById('cpWinDeleteBtn').style.display=w?'block':'none';
+  cpWinResultCache=await cpFetchResultRanked();
+  var statsBox=document.getElementById('cpWinStatsBox');
+  if(!cpWinResultCache.length){
+    statsBox.innerHTML='투표 결과가 아직 없습니다. 최종 후보 선정과 전직원 투표를 먼저 진행해주세요.';
+  }else{
+    var total=cpWinResultCache._totalVotes||0;
+    var lines='📊 총 투표수: <b>'+total+'표</b> (최종 후보 '+cpWinResultCache.length+'명)<br>'+
+      cpWinResultCache.map(function(x,i){
+        return (i+1)+'위 · '+eeEsc(x.entry.name||'')+'('+eeEsc(x.entry.emp_no||'')+') · '+x.count+'표'+(x.awardLabel?(' · '+eeEsc(x.awardLabel)):' · 상 미지정');
+      }).join('<br>');
+    statsBox.innerHTML=lines;
+  }
   showM('cpWinnerModal');
 }
+function cpAutoFillWinnerBody(){
+  if(!cpWinResultCache || !cpWinResultCache.length){ toast('⚠️ 아직 투표 결과가 없습니다'); return; }
+  var showId=document.getElementById('cpWinShowIdentity').checked;
+  var awarded=cpWinResultCache.filter(function(x){ return x.awardLabel; });
+  if(!awarded.length){ toast('⚠️ 결과 화면에서 상 이름을 먼저 지정해주세요'); return; }
+  var body=awarded.map(function(x){
+    var who = showId ? (eeEsc(x.entry.name||'')+' ('+eeEsc(x.entry.emp_no||'')+(x.entry.team?(' · '+eeEsc(x.entry.team)):'')+')') : '당선작';
+    return '🏆 '+x.awardLabel+' — '+who+' (득표 '+x.count+'표)\n"'+x.entry.content+'"';
+  }).join('\n\n');
+  document.getElementById('cpWinBody').value=body;
+  toast('✓ 투표결과로 채웠습니다. 내용을 확인하고 게시해주세요');
+}
+var cpWinResultCache=[];
 async function cpSaveWinner(){
   if(!cpCanSeeIdentity()){ toast('⚠️ master만 가능합니다'); return; }
   var title=(document.getElementById('cpWinTitle').value||'').trim();
   var body=(document.getElementById('cpWinBody').value||'').trim();
   if(!title||!body){ toast('⚠️ 제목과 내용을 입력해주세요'); return; }
   // ★ 공모전당 공지는 항상 1건만 유지 — campaign_id 기준으로 upsert(있으면 갱신, 없으면 생성)
-  var payload={ id:'cpw_'+Date.now(), campaign_id: cpCurCampaign.id, title:title, body:body, created_by: me?me.name:'', updated_at:new Date().toISOString() };
+  var payload={ id:'cpw_'+Date.now(), campaign_id: cpCurCampaign.id, title:title, body:body, show_identity: document.getElementById('cpWinShowIdentity').checked, created_by: me?me.name:'', updated_at:new Date().toISOString() };
   var res=await sb.from('campaign_winners').upsert(payload,{onConflict:'campaign_id'});
   if(res.error){ toast('저장 오류: '+res.error.message); return; }
   toast('✓ 당선작 공지가 게시되었습니다');
