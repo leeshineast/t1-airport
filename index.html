@@ -24917,6 +24917,7 @@ async function loadMgrAttendance(){
   mgrRosterOffCache=await fetchMgrRosterWithOff();
   renderMgrAttendance();
   updateDashMgrAtt();
+  if(typeof updateStaff==='function') updateStaff(); // mgrAttData가 이제서야 채워졌으므로 홈 화면 인력현황(관리/현장 합계)도 다시 계산
   loadMgrAttendanceYesterday();
 }
 var mgrAttQuotaSummaryCache={};
