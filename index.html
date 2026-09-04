@@ -25448,10 +25448,15 @@ function renderMgrAttendance(){
   if(!body) return;
   var isAdmin = me && (me.role==='admin'||me.role==='manager'||isExecRole(me.role));
   var myTeam = me ? (me.team||'').replace(/\s*(A|B|C)조장?$/,'').replace(/\s*팀장$/,'').trim() : '';
-  var todayStr=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+  var nowKstForNight=new Date(Date.now()+9*3600000);
+  var todayStr=nowKstForNight.toISOString().slice(0,10);
   var isToday = !mgrAttCurrentDateStr;
   var viewDateStr = mgrAttCurrentDateStr || todayStr;
   var dataSrc = isToday ? mgrAttData : ((mgrAttDateCache[viewDateStr]||{}).data||{});
+  // 야간조(5팀/10팀)는 자정을 넘겨도 전날 밤 근무로 취급 — 00:00~05:59엔 휴무 판정도 전날 기준으로 계산
+  var isNightWindowNow = isToday && nowKstForNight.getUTCHours()<6;
+  var nightViewDateStr = isNightWindowNow ? new Date(nowKstForNight.getTime()-86400000).toISOString().slice(0,10) : viewDateStr;
+  var NIGHT_TEAMS_FOR_OFF=['5팀','10팀'];
 
   var totalCount = 0, checkedCount = 0;
   var quotaSummaryByTeam = isToday ? (mgrAttQuotaSummaryCache||{}) : ((mgrAttDateCache[viewDateStr]||{}).quota||{}); // {team: {quota, attend, off}}
@@ -25491,7 +25496,9 @@ function renderMgrAttendance(){
         var checkedBy = att ? att.checked_by : '';
         var checkedTime = att && att.checked_at ? toKSTTime(att.checked_at) : '';
         // 미체크 상태인데 근무계획(분기 고정휴무)상 해당 조회일이 휴무인 경우 자동으로 "휴무"로 표시 (당일·전일·조회일 공통 적용)
-        var isAutoOff = !att && isSlotOffToday(team, name, mgrRosterOffCache, viewDateStr);
+        // 야간조(5팀/10팀)는 자정 이후에도 전날 밤 근무 기준으로 휴무를 판단
+        var offCheckDate = (NIGHT_TEAMS_FOR_OFF.indexOf(team)!==-1) ? nightViewDateStr : viewDateStr;
+        var isAutoOff = !att && isSlotOffToday(team, name, mgrRosterOffCache, offCheckDate);
 
         // 클릭 권한: 당일에만 가능. 관리자 전체, 해당팀 조장/팀장 (운영팀은 관리자만)
         var canCheck = isToday && me && me.role!=='acting_leader' && (isAdmin || (team!=='운영' && myTeam === team));
