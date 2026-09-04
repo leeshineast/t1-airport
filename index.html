@@ -25508,7 +25508,9 @@ function renderMgrAttendance(){
 
   // 요약
   var summaryEl = document.getElementById('mgrAttSummary');
-  if(summaryEl) summaryEl.textContent = (viewDate==='yesterday'?'전일 ':'금일 ')+checkedCount+'/'+totalCount+'명';
+  var yStrForSummary = new Date(Date.now()+9*3600000-86400000).toISOString().slice(0,10);
+  var summaryLabel = isToday ? '금일' : (viewDateStr===yStrForSummary ? '전일' : viewDateStr);
+  if(summaryEl) summaryEl.textContent = summaryLabel+' '+checkedCount+'/'+totalCount+'명';
 }
 
 function updateDashMgrAtt(){
