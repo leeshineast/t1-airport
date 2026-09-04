@@ -34,16 +34,16 @@ html{overflow-x:hidden}
   .mh-tabbar,#hoAlertBanner{max-width:720px!important;margin:0 auto!important}
   #mhPanelDash .stat-row{gap:12px}
   #sStatsDash.scr{max-width:1200px}
-  #sStatsDash #monthlyStatsSec>div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:repeat(6,1fr)!important;gap:10px!important}
+  #sStatsDash #monthlyStatsSec>div[style*="grid-template-columns:minmax(0,1fr) minmax(0,1fr)"]{grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:10px!important}
   #sStatsDash .ms-card{padding:11px 10px!important}
   #sStatsDash .ms-card [id^="msV_"]{font-size:23px!important}
   #sExecDash.scr{max-width:1280px}
-  #sExecDash #edKpiGrid{grid-template-columns:repeat(8,1fr)!important}
-  #sExecDash #edMainGrid{display:grid;grid-template-columns:1fr 1.6fr;gap:16px;align-items:start}
-  #sExecDash #edDonutGrid{grid-template-columns:repeat(3,1fr)!important}
-  #sExecDash #edShiftRow{grid-template-columns:repeat(4,1fr)!important}
-  #sExecDash #edHeatmap{grid-template-columns:repeat(7,1fr)!important}
-  #sExecDash #edAnalysisGrid{grid-template-columns:repeat(4,1fr)!important}
+  #sExecDash #edKpiGrid{grid-template-columns:repeat(8,minmax(0,1fr))!important}
+  #sExecDash #edMainGrid{display:grid;grid-template-columns:minmax(0,1fr) 1.6fr;gap:16px;align-items:start}
+  #sExecDash #edDonutGrid{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  #sExecDash #edShiftRow{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+  #sExecDash #edHeatmap{grid-template-columns:repeat(7,minmax(0,1fr))!important}
+  #sExecDash #edAnalysisGrid{grid-template-columns:repeat(4,minmax(0,1fr))!important}
   #sExecDash .ms-donut{width:52px!important;height:52px!important}
   #sStatsDash .ms-bargroup{display:flex;align-items:flex-end;gap:16px;padding:8px 4px 12px;overflow-x:auto}
   #sStatsDash .ms-bar{flex:0 0 auto;width:60px;margin-bottom:0!important;display:flex;flex-direction:column;align-items:center}
@@ -61,7 +61,7 @@ html{overflow-x:hidden}
   #sExecDash h1{font-size:26px!important}
   #sExecDash small{font-size:13px!important}
   /* KPI 카드: 10개 카드가 5열×2행으로 꽉 차게 */
-  #sExecDash #edKpiGrid{grid-template-columns:repeat(5,1fr)!important;gap:10px!important}
+  #sExecDash #edKpiGrid{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:10px!important}
   #sExecDash #edKpiGrid>div{padding:12px 14px!important}
   #sExecDash #edKpiGrid [style*="width:20px;height:20px"]{width:26px!important;height:26px!important;border-radius:8px!important;font-size:14px!important}
   #sExecDash #edKpiGrid span[style*="font-size:10px;font-weight:700"]{font-size:12.5px!important}
@@ -131,7 +131,7 @@ html{overflow-x:hidden}
 .reg-body{background:white;border-radius:20px 20px 0 0;flex:1;padding:20px 17px 40px;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .ri{width:100%;max-width:100%;padding:11px 13px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:16px;color:var(--g6);background:var(--g0);outline:none;font-family:var(--font);margin-bottom:12px;box-sizing:border-box}
 .ri:focus{border-color:var(--teal)}
-.t-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:4px}
+.t-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;margin-bottom:4px}
 .t-btn{padding:8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;text-align:center;cursor:pointer;color:var(--g4)}
 .t-btn.on{border-color:var(--teal);background:var(--teal-bg);color:var(--teal2);font-weight:700}
 .role-row{display:flex;gap:7px;margin-bottom:14px}
@@ -161,7 +161,7 @@ html{overflow-x:hidden}
 .sec-lbl{font-size:12px;font-weight:700;color:var(--g4);letter-spacing:.5px;padding:12px 13px 5px}
 
 /* ─ 메인 메뉴 버튼 ─ */
-.menu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:4px 13px 13px}
+.menu-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:4px 13px 13px}
 .fac-badge{display:inline-flex;align-items:center;font-size:13px;font-weight:800;padding:5px 12px;border-radius:8px;white-space:nowrap}
 .fac-badge-sm{font-size:10.5px!important;padding:3px 7px!important;border-radius:6px!important}
 .fac-b-zone-as{background:#E0F2FE;color:#0369A1}
@@ -176,7 +176,7 @@ html{overflow-x:hidden}
 .menu-arrow{display:none}
 
 /* ─ 통계 카드 ─ */
-.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:3px 13px 11px}
+.stat-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:3px 13px 11px}
 .stat-box{background:white;border-radius:var(--r2);padding:12px 11px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)}
 .s-lbl{font-size:12px;font-weight:600;color:var(--g4);margin-bottom:4px}
 .s-val{font-size:26px;font-weight:800;line-height:1;margin-bottom:2px}
@@ -1111,7 +1111,7 @@ html{overflow-x:hidden}
     </div>
   </div>
   <!-- 주요 수행실적 한 줄 -->
-  <div class="stat-row" id="prfHomeRow" style="grid-template-columns:1fr;display:none">
+  <div class="stat-row" id="prfHomeRow" style="grid-template-columns:minmax(0,1fr);display:none">
     <div class="stat-box" style="cursor:pointer;display:flex;gap:14px;min-width:0" onclick="go('perf')">
       <div style="flex:none;min-width:64px">
         <div class="s-lbl">📋 주요 수행실적</div>
@@ -1151,7 +1151,7 @@ html{overflow-x:hidden}
     </div>
   </div>
   <!-- 공동작업 한 줄 -->
-  <div class="stat-row" style="grid-template-columns:1fr">
+  <div class="stat-row" style="grid-template-columns:minmax(0,1fr)">
     <div class="stat-box" style="cursor:pointer;display:flex;gap:14px" onclick="go('jointwork')">
       <div style="flex:none;min-width:64px">
         <div class="s-lbl">🤝 공동작업</div>
@@ -1203,7 +1203,7 @@ html{overflow-x:hidden}
         <span id="dWTeam1Badge" style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;background:var(--g1);color:var(--g4)">1팀 확인중</span>
         <span id="dWTeam6Badge" style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:20px;background:var(--g1);color:var(--g4)">6팀 확인중</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-top:5px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:3px 8px;margin-top:5px">
         <div style="font-size:12px;color:var(--g5)">생활쓰레기 <b id="dW_living" style="color:var(--g7)">0</b></div>
         <div style="font-size:12px;color:var(--g5)">폐합성 <b id="dW_syn" style="color:var(--g7)">0</b></div>
         <div style="font-size:12px;color:var(--g5)">음식물 <b id="dW_food" style="color:var(--g7)">0</b></div>
@@ -1279,7 +1279,7 @@ html{overflow-x:hidden}
           <tr class="tot"><td class="lbl">전체 총계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
         </tbody>
       </table></div></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px" id="flAllAvgWrap">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:0 13px 11px" id="flAllAvgWrap">
         <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2)">
           <div style="font-size:13px;color:var(--g4);margin-bottom:4px" id="flAllAvgLbl">평균현장인원</div>
           <div style="font-size:26px;font-weight:900;color:var(--g6)" id="flAllAvgNum">-</div>
@@ -1314,7 +1314,7 @@ html{overflow-x:hidden}
         </div>
         <div style="display:flex;align-items:baseline;gap:4px"><span id="flTotArrow_B2F" style="font-size:22px;line-height:1"></span><span style="color:white;font-size:42px;font-weight:900;line-height:1" id="flTotNum_B2F">0</span><span style="color:rgba(255,255,255,.7);font-size:17px">명</span></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:0 13px 11px">
         <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
           <span style="font-size:13px;color:var(--g4);line-height:1.5">L/S 동편<br><span id="flZoneAvg_B2F_0" style="font-size:12px;color:var(--g3)"></span></span>
           <span style="font-size:28px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_B2F_0">0<span style="font-size:13px;font-weight:600">명</span></span>
@@ -1332,7 +1332,7 @@ html{overflow-x:hidden}
           <span style="font-size:28px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_B2F_3">0<span style="font-size:13px;font-weight:600">명</span></span>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:0 13px 11px">
         <div style="background:var(--navy-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(27,58,107,.1);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--navy)">L/S 소계</span>
           <span style="font-size:23px;font-weight:900;color:var(--navy)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
@@ -1352,7 +1352,7 @@ html{overflow-x:hidden}
         </div>
         <div style="display:flex;align-items:baseline;gap:4px"><span id="flTotArrow_B1F" style="font-size:22px;line-height:1"></span><span style="color:white;font-size:42px;font-weight:900;line-height:1" id="flTotNum_B1F">0</span><span style="color:rgba(255,255,255,.7);font-size:17px">명</span></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:0 13px 11px">
         <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
           <span style="font-size:13px;color:var(--g4);line-height:1.5">L/S 동편<br><span id="flZoneAvg_B1F_0" style="font-size:12px;color:var(--g3)"></span></span>
           <span style="font-size:28px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_B1F_0">0<span style="font-size:13px;font-weight:600">명</span></span>
@@ -1370,7 +1370,7 @@ html{overflow-x:hidden}
           <span style="font-size:28px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_B1F_3">0<span style="font-size:13px;font-weight:600">명</span></span>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:0 13px 11px">
         <div style="background:var(--navy-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(27,58,107,.1);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--navy)">L/S 소계</span>
           <span style="font-size:23px;font-weight:900;color:var(--navy)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
@@ -1389,7 +1389,7 @@ html{overflow-x:hidden}
         </div>
         <div style="display:flex;align-items:baseline;gap:4px"><span id="flTotArrow_1F" style="font-size:22px;line-height:1"></span><span style="color:white;font-size:42px;font-weight:900;line-height:1" id="flTotNum_1F">0</span><span style="color:rgba(255,255,255,.7);font-size:17px">명</span></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:0 13px 11px">
         <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
           <span style="font-size:13px;color:var(--g4);line-height:1.5">L/S 동편<br><span id="flZoneAvg_1F_0" style="font-size:12px;color:var(--g3)"></span></span>
           <span style="font-size:28px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_1F_0">0<span style="font-size:13px;font-weight:600">명</span></span>
@@ -1407,7 +1407,7 @@ html{overflow-x:hidden}
           <span style="font-size:28px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_1F_3">0<span style="font-size:13px;font-weight:600">명</span></span>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:0 13px 11px">
         <div style="background:var(--navy-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(27,58,107,.1);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--navy)">L/S 소계</span>
           <span style="font-size:23px;font-weight:900;color:var(--navy)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
@@ -1426,7 +1426,7 @@ html{overflow-x:hidden}
         </div>
         <div style="display:flex;align-items:baseline;gap:4px"><span id="flTotArrow_2F" style="font-size:22px;line-height:1"></span><span style="color:white;font-size:42px;font-weight:900;line-height:1" id="flTotNum_2F">0</span><span style="color:rgba(255,255,255,.7);font-size:17px">명</span></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:0 13px 11px">
         <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
           <span style="font-size:13px;color:var(--g4);line-height:1.5">L/S 동편<br><span id="flZoneAvg_2F_0" style="font-size:12px;color:var(--g3)"></span></span>
           <span style="font-size:28px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_2F_0">0<span style="font-size:13px;font-weight:600">명</span></span>
@@ -1444,7 +1444,7 @@ html{overflow-x:hidden}
           <span style="font-size:28px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_2F_3">0<span style="font-size:13px;font-weight:600">명</span></span>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:0 13px 11px">
         <div style="background:var(--navy-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(27,58,107,.1);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--navy)">L/S 소계</span>
           <span style="font-size:23px;font-weight:900;color:var(--navy)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
@@ -1463,7 +1463,7 @@ html{overflow-x:hidden}
         </div>
         <div style="display:flex;align-items:baseline;gap:4px"><span id="flTotArrow_3F" style="font-size:22px;line-height:1"></span><span style="color:white;font-size:42px;font-weight:900;line-height:1" id="flTotNum_3F">0</span><span style="color:rgba(255,255,255,.7);font-size:17px">명</span></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:0 13px 11px">
         <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
           <span style="font-size:13px;color:var(--g4);line-height:1.5">L/S 동편<br><span id="flZoneAvg_3F_0" style="font-size:12px;color:var(--g3)"></span></span>
           <span style="font-size:28px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_3F_0">0<span style="font-size:13px;font-weight:600">명</span></span>
@@ -1481,7 +1481,7 @@ html{overflow-x:hidden}
           <span style="font-size:28px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_3F_3">0<span style="font-size:13px;font-weight:600">명</span></span>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:0 13px 11px">
         <div style="background:var(--navy-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(27,58,107,.1);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--navy)">L/S 소계</span>
           <span style="font-size:23px;font-weight:900;color:var(--navy)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
@@ -1500,7 +1500,7 @@ html{overflow-x:hidden}
         </div>
         <div style="display:flex;align-items:baseline;gap:4px"><span id="flTotArrow_4F" style="font-size:22px;line-height:1"></span><span style="color:white;font-size:42px;font-weight:900;line-height:1" id="flTotNum_4F">0</span><span style="color:rgba(255,255,255,.7);font-size:17px">명</span></div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:0 13px 11px">
         <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);display:flex;justify-content:space-between;align-items:center;gap:8px">
           <span style="font-size:13px;color:var(--g4);line-height:1.5">L/S 동편<br><span id="flZoneAvg_4F_0" style="font-size:12px;color:var(--g3)"></span></span>
           <span style="font-size:28px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_4F_0">0<span style="font-size:13px;font-weight:600">명</span></span>
@@ -1518,7 +1518,7 @@ html{overflow-x:hidden}
           <span style="font-size:28px;font-weight:900;line-height:1;white-space:nowrap" id="flZoneNum_4F_3">0<span style="font-size:13px;font-weight:600">명</span></span>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 11px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:0 13px 11px">
         <div style="background:var(--navy-bg);border-radius:var(--r2);padding:11px 13px;border:1px solid rgba(27,58,107,.1);display:flex;justify-content:space-between;align-items:center">
           <span style="font-size:13px;font-weight:700;color:var(--navy)">L/S 소계</span>
           <span style="font-size:23px;font-weight:900;color:var(--navy)">0<span style="font-size:12px;color:var(--g4)">명</span></span>
@@ -1581,7 +1581,7 @@ html{overflow-x:hidden}
     <div class="card" style="margin:0 13px 13px;cursor:pointer" onclick="go('equipment')">
       <div class="cb">
         <div id="eqHomeInfo" style="font-size:13px;color:var(--g4);margin-bottom:9px">불러오는 중...</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px">
           <div style="background:var(--navy-bg);border-radius:var(--r2);padding:11px 13px">
             <div style="font-size:12px;font-weight:700;color:var(--navy)">전체 장비</div>
             <div id="eqHomeTotal" style="font-size:28px;font-weight:900;color:var(--navy)">-</div>
@@ -1614,7 +1614,7 @@ html{overflow-x:hidden}
   <div class="sec-lbl">산업재해 현황</div>
   <div class="card" style="margin-bottom:11px">
     <div class="cb">
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:9px;margin-bottom:13px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:9px;margin-bottom:13px">
         <div style="background:var(--danger-bg);border-radius:var(--r2);padding:11px 9px;text-align:center;border:1px solid rgba(217,64,64,.15)">
           <div style="font-size:10px;font-weight:600;color:var(--danger);margin-bottom:4px">당월 발생</div>
           <div style="font-size:26px;font-weight:900;color:var(--danger);line-height:1" id="mainIndMonth">0</div>
@@ -1795,7 +1795,7 @@ html{overflow-x:hidden}
     <div id="nightSpecialCard" class="card" style="display:none">
       <div class="cb">
         <div style="font-size:14px;font-weight:700;color:#6B21A8;margin-bottom:8px">🌙 야간특별작업</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px">
           <div><label style="font-size:13px;color:var(--g4)">카페트</label><input id="nsCarpet" class="ri" type="number" min="0" placeholder="0" style="margin-bottom:0" oninput="calcNightSpecial()" onfocus="this.select()"></div>
           <div><label style="font-size:13px;color:var(--g4)">PBB</label><input id="nsPbb" class="ri" type="number" min="0" placeholder="0" style="margin-bottom:0" oninput="calcNightSpecial()" onfocus="this.select()"></div>
           <div><label style="font-size:13px;color:var(--g4)">왁스</label><input id="nsWax" class="ri" type="number" min="0" placeholder="0" style="margin-bottom:0" oninput="calcNightSpecial()" onfocus="this.select()"></div>
@@ -1852,7 +1852,7 @@ html{overflow-x:hidden}
           <div style="font-size:14px;font-weight:700;color:var(--g6)">👥 팀별 인력현황</div>
           <div style="font-size:13px;font-weight:800;color:var(--teal2)">총계 <span id="mpTeamTotal">0</span>명</div>
         </div>
-        <div id="mpTeamGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"></div>
+        <div id="mpTeamGrid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px"></div>
       </div>
     </div>
     <div class="card" id="mpTeamAvgCard">
@@ -1972,7 +1972,7 @@ html{overflow-x:hidden}
         <span id="msPickerYearLbl" style="font-size:15px;font-weight:800;color:var(--g7)">-</span>
         <button onclick="msPickerYearMove(1)" style="width:26px;height:26px;border:1px solid var(--g2);background:white;border-radius:50%;font-size:12px;color:var(--g5);cursor:pointer">▶</button>
       </div>
-      <div id="msPickerMonthGrid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px"></div>
+      <div id="msPickerMonthGrid" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px"></div>
       <div style="display:flex;gap:8px;margin-top:10px">
         <button onclick="msPickerClose()" style="flex:1;padding:8px;background:var(--g1);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;color:var(--g5);cursor:pointer">취소</button>
         <button onclick="msPickerApply()" style="flex:2;padding:8px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">적용</button>
@@ -1982,7 +1982,7 @@ html{overflow-x:hidden}
       <span>⚠️ 통계 데이터를 불러오지 못했습니다</span>
       <button onclick="loadMonthlyStats()" style="padding:4px 10px;background:var(--danger);color:white;border:none;border-radius:14px;font-size:12px;font-weight:800;cursor:pointer">다시시도</button>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:0 13px 9px">
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:0 13px 9px">
       <!-- 인력현황 -->
       <div class="ms-card" onclick="msToggle('mp')" id="msCard_mp" style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);cursor:pointer;position:relative;overflow:hidden">
         <div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--teal2))"></div>
@@ -2064,7 +2064,7 @@ html{overflow-x:hidden}
   </div>
 
   <!-- KPI 카드 -->
-  <div id="edKpiGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:0 13px 4px"></div>
+  <div id="edKpiGrid" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px;padding:0 13px 4px"></div>
 
   <!-- 운영현황: 완료율 + 인력현황을 하나의 큰 카드로 통합 -->
   <div id="edOpsCard" style="margin:8px 13px 0;background:white;border:1px solid var(--g2);border-radius:16px;box-shadow:0 2px 10px rgba(20,30,60,.06);padding:14px 16px">
@@ -2072,15 +2072,15 @@ html{overflow-x:hidden}
       <div id="edMainCol1">
       <!-- 완료율 도넛 -->
       <div class="sec-lbl" style="padding:0 0 8px;font-size:12px">운영 완료율</div>
-      <div id="edDonutGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px"></div>
+      <div id="edDonutGrid" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px"></div>
       </div>
 
       <div id="edMainCol2">
       <!-- 오전/오후/야간 + 층별 배치 -->
       <div class="sec-lbl" style="padding:0 0 8px;font-size:12px">인력현황</div>
-      <div id="edShiftRow" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px"></div>
+      <div id="edShiftRow" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-bottom:8px"></div>
       <div style="background:var(--g1);border-radius:var(--r2);padding:9px">
-        <div id="edHeatmap" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px"></div>
+        <div id="edHeatmap" style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px"></div>
       </div>
       </div>
     </div>
@@ -2088,7 +2088,7 @@ html{overflow-x:hidden}
 
   <!-- 4개 현황 패널 -->
   <div class="sec-lbl" style="padding:10px 13px 6px;font-size:12px">현황 분석</div>
-  <div id="edAnalysisGrid" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 13px 12px">
+  <div id="edAnalysisGrid" style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:0 13px 12px">
     <div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:9px 10px;display:flex;flex-direction:column">
       <div style="font-size:12px;font-weight:700;color:var(--g6);margin-bottom:7px">⏰ 시간대별 현장 인원</div>
       <div id="edHourPanel" style="flex:1;display:flex;flex-direction:column;justify-content:center"></div>
@@ -2487,7 +2487,7 @@ html{overflow-x:hidden}
       </div>
     </div>
     <!-- 통계 -->
-    <div id="lostStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 13px"></div>
+    <div id="lostStats" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:10px 13px"></div>
     <!-- 목록 -->
     <div id="lostList" style="padding:0 13px;transform:translateZ(0)"></div>
   </div>
@@ -2873,7 +2873,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <!-- 업로드 정보 -->
     <div id="eqUploadInfo" style="font-size:13px;color:var(--g4);margin-bottom:8px;text-align:right"></div>
     <!-- 통계 -->
-    <div id="eqStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px"></div>
+    <div id="eqStats" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:10px"></div>
     <!-- 테이블 -->
     <div id="eqTable" style="overflow-x:auto;overflow-y:auto;max-height:min(58vh,520px);border:1px solid var(--g2);border-radius:var(--r2)"></div>
   </div>
@@ -3155,7 +3155,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <div class="fg"><label class="f-lbl">탕비실 유무</label>
       <div class="rg" id="tlKitchenG"><div class="rp" onclick="selRP(this)" data-v="있음">있음</div><div class="rp on" onclick="selRP(this)" data-v="없음">없음</div></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">
       <div class="fg"><label class="f-lbl">개수대 수량</label><input type="number" id="tlSinkStation" class="ri" min="0" placeholder="0" style="margin-bottom:0"></div>
       <div class="fg"><label class="f-lbl">양변기 수량</label><input type="number" id="tlToiletCnt" class="ri" min="0" placeholder="0" style="margin-bottom:0"></div>
       <div class="fg"><label class="f-lbl">세면기 수량</label><input type="number" id="tlSinkCnt" class="ri" min="0" placeholder="0" style="margin-bottom:0"></div>
@@ -3163,7 +3163,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     </div>
     <div class="fg"><label class="f-lbl">위생휴지통</label><input type="text" id="tlTissueBin" class="ri" placeholder="개수 또는 '폐쇄' 등" style="margin-bottom:0"></div>
     <div class="fg"><label class="f-lbl">소모품 보관창고</label><input type="text" id="tlSupplyStorage" class="ri" placeholder="비고 사항 (없으면 비워두세요)" style="margin-bottom:0"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">
       <div class="fg"><label class="f-lbl">주간관리팀</label><input type="text" id="tlTeam" class="ri" placeholder="예: 1팀, 6팀" style="margin-bottom:0"></div>
       <div class="fg"><label class="f-lbl">야간관리팀</label><input type="text" id="tlNightTeam" class="ri" placeholder="예: 10팀" style="margin-bottom:0"></div>
     </div>
@@ -3195,7 +3195,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <option value="6팀">6팀</option><option value="7팀">7팀</option><option value="8팀">8팀</option><option value="9팀">9팀</option>
       </select>
     </div>
-    <div id="tlStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px"></div>
+    <div id="tlStats" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:8px"></div>
     <div id="tlFloorStats" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>
     <div id="tlList"></div>
   </div>
@@ -3216,7 +3216,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <option value="">전체 일반/상주</option>
       </select>
     </div>
-    <div id="tlStatCards" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px"></div>
+    <div id="tlStatCards" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:16px"></div>
     <div style="font-size:14px;font-weight:800;color:var(--g6);margin-bottom:8px">성별 · 구분별 세부 내역</div>
     <div id="tlStatGenderTable" style="overflow-x:auto;margin-bottom:16px"></div>
     <div style="font-size:14px;font-weight:800;color:var(--g6);margin-bottom:8px">일반/상주 구분별 내역</div>
@@ -3280,7 +3280,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div class="fg"><label class="f-lbl">화장실 번호(위치) *</label><input type="text" id="tlDNumber" class="ri" style="margin-bottom:0"></div>
       <div class="fg"><label class="f-lbl">가족실 유무</label><div class="rg" id="tlDFamilyG"><div class="rp" onclick="selRP(this)" data-v="있음">있음</div><div class="rp" onclick="selRP(this)" data-v="없음">없음</div></div></div>
       <div class="fg"><label class="f-lbl">탕비실 유무</label><div class="rg" id="tlDKitchenG"><div class="rp" onclick="selRP(this)" data-v="있음">있음</div><div class="rp" onclick="selRP(this)" data-v="없음">없음</div></div></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">
         <div class="fg"><label class="f-lbl">개수대</label><input type="number" id="tlDSinkStation" class="ri" min="0" style="margin-bottom:0"></div>
         <div class="fg"><label class="f-lbl">양변기</label><input type="number" id="tlDToiletCnt" class="ri" min="0" style="margin-bottom:0"></div>
         <div class="fg"><label class="f-lbl">세면기</label><input type="number" id="tlDSinkCnt" class="ri" min="0" style="margin-bottom:0"></div>
@@ -3288,7 +3288,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       </div>
       <div class="fg"><label class="f-lbl">위생휴지통</label><input type="text" id="tlDTissueBin" class="ri" style="margin-bottom:0"></div>
       <div class="fg"><label class="f-lbl">소모품 보관창고</label><input type="text" id="tlDSupplyStorage" class="ri" style="margin-bottom:0"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">
         <div class="fg"><label class="f-lbl">주간관리팀</label><input type="text" id="tlDTeam" class="ri" style="margin-bottom:0"></div>
         <div class="fg"><label class="f-lbl">야간관리팀</label><input type="text" id="tlDNightTeam" class="ri" style="margin-bottom:0"></div>
       </div>
@@ -3369,7 +3369,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <!-- 처리현황 -->
     <div class="card" style="margin-bottom:10px"><div class="cb">
       <div style="font-size:15px;font-weight:800;color:var(--g6);margin-bottom:12px">♻️ 폐기물 처리현황</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">
         <div><label class="f-lbl" style="font-size:13px">생활쓰레기(톤_소각)</label><input type="number" id="w_inc_living" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
         <div><label class="f-lbl" style="font-size:13px">폐합성(톤)</label><input type="number" id="w_inc_syn" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
         <div><label class="f-lbl" style="font-size:13px">폐지(톤)</label><input type="number" id="w_rec_paper" class="ri" placeholder="0" min="0" style="margin-bottom:0"></div>
@@ -4727,7 +4727,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <!-- 연도/월 선택 -->
       <div class="fg">
         <label class="f-lbl">📅 기준 연월</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">
+        <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px">
           <select id="kpiYear" class="ri" style="margin-bottom:0" onchange="kpiMonthChange()">
           </select>
           <select id="kpiMonth" class="ri" style="margin-bottom:0" onchange="kpiMonthChange()">
@@ -4801,7 +4801,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
           <div style="background:var(--navy-bg);border-radius:var(--r2);padding:8px 11px;margin-bottom:10px;font-size:12px;color:var(--navy)">
             💡 기준값 대비 % 입력 (예: 기준값 100, 측정값 105 → <b>105</b> 입력)
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin-bottom:10px">
             <div>
               <div style="font-size:12px;font-weight:600;color:var(--g5);margin-bottom:3px">① 무빙워크</div>
               <input type="number" id="atp1" class="ri" placeholder="기준값 대비 %" step="0.1" min="0" style="margin-bottom:2px;font-size:15px" oninput="calcAtpScore()">
@@ -5066,7 +5066,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div id="jwP3" style="display:none;padding:0 13px">
     <div class="card" style="margin-top:13px"><div class="cb">
       <p style="font-size:14px;color:var(--g5);line-height:1.7;margin-bottom:14px">공동작업 기록을 엑셀(xlsx) 형식으로 다운로드합니다.</p>
-      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:7px;align-items:center;margin-bottom:13px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:7px;align-items:center;margin-bottom:13px">
         <input type="month" id="jwDlFrom" style="padding:9px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:15px;outline:none">
         <span style="color:var(--g4);font-size:14px">~</span>
         <input type="month" id="jwDlTo" style="padding:9px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:15px;outline:none">
@@ -5170,7 +5170,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
   <div id="vhP1" style="display:none">
     <div class="pg-hd"><div><h1>운행 이력</h1></div><div style="font-size:14px;color:var(--teal);font-weight:700;cursor:pointer" onclick="vhTab(2)">📥 다운로드</div></div>
-    <div class="stat-row" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="stat-row" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)">
       <div class="stat-box"><div class="s-lbl">총 운행횟수</div><div class="s-val c-teal" id="vhStatCount">0</div><div class="s-unit">회</div></div>
       <div class="stat-box"><div class="s-lbl">총 주행거리</div><div class="s-val c-navy" id="vhStatDist">0</div><div class="s-unit">km</div></div>
       <div class="stat-box"><div class="s-lbl" id="vhStatMonthLbl">이번달</div><div class="s-val c-warn" id="vhStatMonth">0</div><div class="s-unit">km</div></div>
@@ -5189,7 +5189,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     </div>
     <div class="card"><div class="cb">
       <p style="font-size:14px;color:var(--g5);line-height:1.7;margin-bottom:14px">운행기록부를 엑셀(CSV) 형식으로 다운로드합니다.</p>
-      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:7px;align-items:center;margin-bottom:13px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:7px;align-items:center;margin-bottom:13px">
         <input type="month" id="vhDlFrom" style="padding:9px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:15px;outline:none">
         <span style="color:var(--g4);font-size:14px">~</span>
         <input type="month" id="vhDlTo" style="padding:9px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:15px;outline:none">
@@ -5264,7 +5264,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
   <div id="wvP1" style="display:none">
     <div class="pg-hd"><div><h1>운행 이력</h1></div><div style="font-size:14px;color:var(--teal);font-weight:700;cursor:pointer" onclick="wvTab(2)">📥 다운로드</div></div>
-    <div class="stat-row" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="stat-row" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)">
       <div class="stat-box"><div class="s-lbl">총 운행횟수</div><div class="s-val c-teal" id="wvStatCount">0</div><div class="s-unit">회</div></div>
       <div class="stat-box"><div class="s-lbl">총 주행거리</div><div class="s-val c-navy" id="wvStatDist">0</div><div class="s-unit">km</div></div>
       <div class="stat-box"><div class="s-lbl" id="wvStatMonthLbl">이번달</div><div class="s-val c-warn" id="wvStatMonth">0</div><div class="s-unit">km</div></div>
@@ -5306,7 +5306,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     </div>
     <div class="card"><div class="cb">
       <p style="font-size:14px;color:var(--g5);line-height:1.7;margin-bottom:14px">운행기록부를 엑셀(xlsx) 형식으로 다운로드합니다.</p>
-      <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:7px;align-items:center;margin-bottom:13px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:7px;align-items:center;margin-bottom:13px">
         <input type="month" id="wvDlFrom" style="padding:9px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:15px;outline:none">
         <span style="color:var(--g4);font-size:14px">~</span>
         <input type="month" id="wvDlTo" style="padding:9px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:15px;outline:none">
@@ -5382,7 +5382,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
     </div>
     <!-- 통계 요약 -->
-    <div id="vocStats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:0 13px 12px"></div>
+    <div id="vocStats" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:0 13px 12px"></div>
     <!-- 목록 -->
     <div id="vocList" style="margin:0 13px"><div style="text-align:center;padding:30px;color:var(--g3);font-size:15px">불러오는 중...</div></div>
     <div style="height:30px"></div>
@@ -5392,7 +5392,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div id="vocP1" style="display:none">
     <div class="card" style="margin:0 13px 10px"><div class="cb">
       <!-- 일자 + 작성자 -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:12px">
         <div>
           <label class="f-lbl">일자 <span style="color:var(--danger)">*</span></label>
           <input type="date" id="vocDate" class="ri" style="font-size:15px">
@@ -5440,7 +5440,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
           <div class="rp" data-v="중앙" onclick="pickVocSide(this)" style="flex:1;text-align:center">중앙</div>
           <div class="rp" data-v="서편" onclick="pickVocSide(this)" style="flex:1;text-align:center">서편</div>
         </div>
-        <div style="display:none;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:8px" id="vocFloorWrap">
+        <div style="display:none;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin-top:8px" id="vocFloorWrap">
           <div class="rp" data-v="B2F" onclick="pickVocFloor(this)" style="text-align:center;padding:8px 2px;font-size:12px">B2F</div>
           <div class="rp" data-v="B1F" onclick="pickVocFloor(this)" style="text-align:center;padding:8px 2px;font-size:12px">B1F</div>
           <div class="rp" data-v="1F" onclick="pickVocFloor(this)" style="text-align:center;padding:8px 2px;font-size:12px">1F</div>
@@ -5496,7 +5496,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <button class="back-hd" onclick="go('main')">← 메인</button>
   </div>
   <!-- 탭 (2줄) -->
-  <div style="display:grid;grid-template-columns:repeat(4,1fr);background:white;border-bottom:1.5px solid var(--g2)">
+  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));background:white;border-bottom:1.5px solid var(--g2)">
     <div id="adT0" style="padding:11px 6px;text-align:center;font-size:13px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-1.5px" onclick="adTab(0)">가입 승인</div>
     <div id="adT1" style="padding:11px 6px;text-align:center;font-size:13px;font-weight:700;color:var(--g5);cursor:pointer" onclick="adTab(1)">사용자</div>
     <div id="adT2" style="padding:11px 6px;text-align:center;font-size:13px;font-weight:700;color:var(--g5);cursor:pointer" onclick="adTab(2)">공지사항</div>
@@ -5543,7 +5543,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
   <div id="adP3" style="display:none">
     <div class="pg-hd"><div><h1>산업재해 관리</h1><small>최고관리자 전용</small></div><div class="pg-act" onclick="openInd()">+ 등록</div></div>
-    <div class="stat-row" style="grid-template-columns:1fr 1fr 1fr">
+    <div class="stat-row" style="grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)">
       <div class="stat-box"><div class="s-lbl">금년</div><div class="s-val c-danger" id="aIndY">0</div><div class="s-unit">건</div></div>
       <div class="stat-box"><div class="s-lbl">전년 대비</div><div class="s-val" style="color:var(--success)">—</div></div>
       <div class="stat-box"><div class="s-lbl">누적</div><div class="s-val c-danger" id="aIndT">0</div><div class="s-unit">건</div></div>
@@ -5931,7 +5931,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     </div>
     <div style="padding:16px 17px">
       <div style="font-size:15px;font-weight:700;color:var(--g7);margin-bottom:13px" id="permUserName">사용자</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin-bottom:16px">
         <label style="display:flex;align-items:center;gap:9px;background:var(--g1);border-radius:var(--r2);padding:12px;cursor:pointer;border:1.5px solid var(--g2)" id="permLbl-read">
           <input type="checkbox" id="perm-read" style="width:16px;height:16px;accent-color:var(--teal);cursor:pointer">
           <div><div style="font-size:14px;font-weight:700;color:var(--g6)">📖 읽기</div><div style="font-size:12px;color:var(--g4)">현황 조회</div></div>
@@ -6078,7 +6078,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <div style="font-size:13px;color:var(--g5);line-height:1.7">초기화된 데이터는 <b>복구가 불가능</b>합니다.<br>초기화할 항목을 선택 후 확인 버튼을 눌러주세요.</div>
       </div>
       <!-- 체크박스 목록 (2열 그리드) -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:16px">
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7px;margin-bottom:16px">
         <label style="display:flex;align-items:center;gap:8px;padding:9px 10px;background:var(--g1);border-radius:var(--r2);border:1.5px solid var(--g2);cursor:pointer" id="rst_lbl_mp">
           <input type="checkbox" id="rst_mp" style="width:16px;height:16px;flex-shrink:0;accent-color:var(--danger);cursor:pointer" onchange="rstCheckChange()">
           <div><div style="font-size:14px;font-weight:700;color:var(--g7)">👥 인력현황</div><div style="font-size:12px;color:var(--g4)">금일 데이터</div></div>
@@ -11083,7 +11083,7 @@ function wvRenderStats(){
       });
       h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
       h+='<div style="font-size:14px;font-weight:800;color:var(--navy);margin-bottom:8px">🚛 '+veh+' <span style="font-weight:600;color:var(--g4);font-size:13px">(총 '+rows.length+'회)</span></div>';
-      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+      h+='<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px">';
       WV_DEST_TYPES.concat(['기타']).forEach(function(t){
         h+='<div style="background:var(--g1);border-radius:8px;padding:8px 10px"><div style="font-size:12px;color:var(--g5);font-weight:700">'+t+'</div><div style="font-size:19px;font-weight:900;color:var(--teal2)">'+counts[t]+'<span style="font-size:12px;font-weight:600;color:var(--g4)">회</span></div></div>';
       });
@@ -14148,7 +14148,7 @@ function jwRenderStats(){
     // 층별 작업건수
     h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
     h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">🏢 층별 작업건수</div>';
-    h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';
+    h+='<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">';
     ['B2F','B1F','1F','2F','3F','4F'].forEach(function(f){
       if(!byFloor[f]) return;
       h+='<div style="background:var(--g1);border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:var(--g5);font-weight:700">'+f+'</div><div style="font-size:16px;font-weight:900;color:var(--teal2)">'+byFloor[f]+'<span style="font-size:10px;font-weight:600;color:var(--g4)">건</span></div></div>';
@@ -14159,7 +14159,7 @@ function jwRenderStats(){
     // 팀별 작업건수(+투입인원)
     h+='<div style="background:white;border:1px solid var(--g2);border-radius:var(--r2);padding:11px 13px;margin-bottom:10px">';
     h+='<div style="font-size:11px;font-weight:700;color:var(--g5);margin-bottom:6px">👥 팀별 작업건수</div>';
-    h+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
+    h+='<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:8px">';
     Object.keys(byTeamCnt).sort().forEach(function(t){
       h+='<div style="background:var(--g1);border-radius:8px;padding:8px 10px"><div style="font-size:10px;color:var(--g5);font-weight:700">'+t+'</div><div style="font-size:16px;font-weight:900;color:var(--teal2)">'+byTeamCnt[t]+'<span style="font-size:10px;font-weight:600;color:var(--g4)">건</span></div><div style="font-size:9.5px;color:var(--g4)">누적 '+byTeamHead[t]+'명</div></div>';
     });
@@ -15070,7 +15070,7 @@ function kpiDashTab(q){
     el.innerHTML='<div style="text-align:center;padding:16px;color:var(--g3);font-size:14px">'+label+' 입력된 지표가 없습니다</div>';
     return;
   }
-  var html='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  var html='<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px">';
   for(var i=1;i<=6;i++){
     var dashMonths=(i===5||i===6)?(q===0?[3,6,9,12]:[months[2]]):months;
     var vals=dashMonths.map(function(m){var e=yearData[m]||{};return e['kpi'+i]!==undefined?e['kpi'+i]:null;}).filter(function(v){return v!==null;});
@@ -15101,7 +15101,7 @@ function kpiDashRenderMonth(){
     return;
   }
   var html='<div style="font-size:14px;font-weight:800;color:var(--g6);margin-bottom:10px">'+y+'년 '+m+'월 지표</div>';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  html+='<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px">';
   for(var i=1;i<=6;i++){
     if(entry['kpi'+i]===undefined) continue;
     var lbl=KPI_LABELS[i-1];
@@ -15761,7 +15761,7 @@ function renderFacilitySummary(){
 
     // ── LS/AS 합계 행 ──
     if(d.ls||d.as){
-      h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:12px">';
+      h+='<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7px;margin-bottom:12px">';
       h+='<div style="background:var(--navy-bg);border-radius:8px;padding:8px 10px;text-align:center">';
       h+='<div style="font-size:12px;color:var(--g4);margin-bottom:2px">Landside (L/S)</div>';
       h+='<div style="font-size:21px;font-weight:900;color:var(--navy)">'+d.ls+'</div></div>';
@@ -16008,7 +16008,7 @@ function renderFacilityDash(){
     el.innerHTML='<div style="text-align:center;padding:14px;color:var(--g3);font-size:14px">시설물 데이터를 업로드하면 여기에 표시됩니다<br><button onclick="go(\'facility\')" style="margin-top:8px;padding:7px 16px;background:var(--teal-bg);color:var(--teal2);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">🏢 시설현황 →</button></div>';
     return;
   }
-  var h='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px;margin-bottom:9px">';
+  var h='<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:7px;margin-bottom:9px">';
   types.forEach(function(type){
     var d=facilityData[type];
     if(!d) return;
@@ -18802,7 +18802,7 @@ function renderEquipmentGroup(){
   var sorted=Object.keys(groups).sort(function(a,b){ return groups[b]-groups[a]; });
   // 그리드 카드 렌더링
   var h='<div style="font-size:13px;color:var(--g4);margin-bottom:12px;text-align:right">총 '+sorted.length+'종 · '+rows.length+'대</div>';
-  h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">';
+  h+='<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px">';
   sorted.forEach(function(name){
     h+='<div style="background:white;border:1.5px solid var(--g2);border-radius:var(--r2);padding:12px 14px;display:flex;justify-content:space-between;align-items:center">';
     h+='<span style="font-size:14px;font-weight:700;color:var(--g7)">'+name+'</span>';
@@ -20246,7 +20246,7 @@ function facBuildScreenHtml(type){
   h+='<div id="'+p+'P1" style="display:none;padding:13px">';
   h+='<input type="text" id="'+p+'Search" oninput="facRenderList(\''+type+'\')" placeholder="🔍 검색..." style="width:100%;box-sizing:border-box;padding:9px 12px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:15px;background:white;margin-bottom:8px">';
   h+='<select id="'+p+'FilterZone" onchange="facRenderList(\''+type+'\')" style="width:100%;padding:8px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;background:white;margin-bottom:10px"><option value="">전체 구역</option><option value="Airside">A/S</option><option value="Landside">L/S</option></select>';
-  h+='<div id="'+p+'Stats" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px"></div>';
+  h+='<div id="'+p+'Stats" style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-bottom:8px"></div>';
   h+='<div id="'+p+'FloorStats" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px"></div>';
   h+='<div id="'+p+'List"></div></div>';
   // 다운로드 탭
@@ -20949,7 +20949,7 @@ function prfRenderMonthCal(y,m){
   var todayStr=kstDate();
   var firstDow=new Date(Date.UTC(y,m,1)).getUTCDay();
   var daysInMonth=new Date(Date.UTC(y,m+1,0)).getUTCDate();
-  var h='<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center">';
+  var h='<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;text-align:center">';
   ['일','월','화','수','목','금','토'].forEach(function(dw){ h+='<div style="font-size:11px;color:var(--g4);font-weight:700;padding-bottom:4px">'+dw+'</div>'; });
   for(var i=0;i<firstDow;i++) h+='<div></div>';
   for(var dnum=1;dnum<=daysInMonth;dnum++){
@@ -20981,7 +20981,7 @@ function prfRenderYearGrid(y){
     counts[mk]=(counts[mk]||0)+1;
   });
   var curMonthStr=kstDate().slice(0,7);
-  var h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">';
+  var h='<div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px">';
   for(var mi=1;mi<=12;mi++){
     var mk=y+'-'+String(mi).padStart(2,'0');
     var cnt=counts[mk]||0;
@@ -21217,7 +21217,7 @@ function prfRenderHomeCal(){
   var firstDow=new Date(Date.UTC(y,m,1)).getUTCDay();
   var daysInMonth=new Date(Date.UTC(y,m+1,0)).getUTCDate();
   var h='<div onclick="go(\'perf\')" style="cursor:pointer">'
-    +'<div style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center">';
+    +'<div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px;text-align:center">';
   ['일','월','화','수','목','금','토'].forEach(function(dw){ h+='<div style="font-size:11px;color:var(--g4);font-weight:700;padding-bottom:4px">'+dw+'</div>'; });
   for(var i=0;i<firstDow;i++) h+='<div></div>';
   for(var dnum=1;dnum<=daysInMonth;dnum++){
@@ -21418,7 +21418,7 @@ function renderWasteList(){
     // ② 월별 합계 (소계 카드)
     sh+='<div style="margin-bottom:12px">';
     sh+='<div style="font-size:13px;font-weight:700;color:var(--g5);margin-bottom:6px">📆 월별 합계 ('+(mfv||thisMonth)+')</div>';
-    sh+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">';
+    sh+='<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:7px">';
     sh+='<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--danger)"><div style="font-size:17px;font-weight:900;color:var(--danger)">'+totInc.toFixed(3)+'</div><div style="font-size:12px;color:var(--g4)">소각(톤)</div></div>';
     sh+='<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--teal)"><div style="font-size:17px;font-weight:900;color:var(--teal2)">'+totRec.toFixed(3)+'</div><div style="font-size:12px;color:var(--g4)">재활용(톤)</div></div>';
     sh+='<div style="background:white;border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid var(--navy)"><div style="font-size:17px;font-weight:900;color:var(--navy)">'+(totInc+totRec).toFixed(3)+'</div><div style="font-size:12px;color:var(--g4)">합계(톤)</div></div>';
@@ -21427,7 +21427,7 @@ function renderWasteList(){
     // ③ 연간 합계
     sh+='<div style="margin-bottom:4px">';
     sh+='<div style="font-size:13px;font-weight:700;color:var(--g5);margin-bottom:6px">📊 연간 합계 ('+thisYear+'년)</div>';
-    sh+='<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">';
+    sh+='<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:7px">';
     sh+='<div style="background:var(--danger-bg);border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid rgba(217,64,64,.2)"><div style="font-size:17px;font-weight:900;color:var(--danger)">'+yearInc.toFixed(3)+'</div><div style="font-size:12px;color:var(--g4)">소각(톤)</div></div>';
     sh+='<div style="background:var(--teal-bg);border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid rgba(0,180,160,.2)"><div style="font-size:17px;font-weight:900;color:var(--teal2)">'+yearRec.toFixed(3)+'</div><div style="font-size:12px;color:var(--g4)">재활용(톤)</div></div>';
     sh+='<div style="background:var(--navy-bg);border-radius:var(--r2);padding:10px;text-align:center;border:1.5px solid rgba(30,58,120,.15)"><div style="font-size:17px;font-weight:900;color:var(--navy)">'+(yearInc+yearRec).toFixed(3)+'</div><div style="font-size:12px;color:var(--g4)">합계(톤)</div></div>';
@@ -21459,7 +21459,7 @@ function renderWasteList(){
     // 처리현황
     h+='<div style="background:var(--g1);border-radius:8px;padding:8px 10px;margin-bottom:7px">';
     h+='<div style="font-size:13px;font-weight:700;color:var(--g6);margin-bottom:5px">♻️ 처리합계 '+(incTotal+recTotal).toLocaleString()+'톤</div>';
-    h+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:3px;font-size:13px;color:var(--g6)">';
+    h+='<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:3px;font-size:13px;color:var(--g6)">';
     h+='<span>생활쓰레기(소각): '+(r.incineration_living||0)+'톤</span><span>폐합성: '+(r.incineration_synthetic||0)+'톤</span>';
     h+='<span>음식물쓰레기: '+(r.incineration_food||0)+'톤</span><span>폐지: '+(r.recycle_paper||0)+'톤</span>';
     h+='<span>폐페트: '+(r.recycle_plastic||0)+'톤</span><span>폐캔: '+(r.recycle_can||0)+'톤</span>';
@@ -25487,7 +25487,7 @@ function renderMgrAttendance(){
   }
 
   // 2x2 그리드: 오전팀 | 오후팀  /  야간팀 | 운영팀
-  var html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+  var html = '<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">';
   html += buildShiftCard('오전');
   html += buildShiftCard('오후');
   html += buildShiftCard('야간');
@@ -29006,7 +29006,7 @@ function msWestEastBars(byTeam, itemsOrder){
     if(diff===0) diffHtml='<span style="color:var(--g4)">-</span>';
     else if(diff>0) diffHtml='<span style="color:var(--danger)">▲ '+diff+'</span>';
     else diffHtml='<span style="color:#0EA5E9">▼ '+Math.abs(diff)+'</span>';
-    h+='<div style="display:grid;grid-template-columns:64px 1fr 56px;align-items:center;gap:8px;margin-bottom:8px">'
+    h+='<div style="display:grid;grid-template-columns:64px minmax(0,1fr) 56px;align-items:center;gap:8px;margin-bottom:8px">'
       +'<span style="font-size:12px;color:var(--g5)">'+k+'</span>'
       +'<div style="display:flex;flex-direction:column;gap:2px">'
       +'<div style="display:flex;align-items:center;gap:5px"><div style="height:6px;border-radius:3px;background:var(--danger);width:'+wPct+'%"></div><span style="font-size:10px;color:var(--g6);white-space:nowrap">'+wv+'톤</span></div>'
