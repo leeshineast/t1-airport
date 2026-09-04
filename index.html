@@ -1072,17 +1072,17 @@ html{overflow-x:hidden}
     <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('execdash')">
       <div class="s-lbl" style="font-weight:800;color:var(--g7);margin-bottom:8px">👥 인력현황</div>
       <div style="padding:5px 0;border-bottom:1px solid var(--g1)">
-        <div style="display:flex;justify-content:space-between;align-items:center">
-          <span style="font-size:14px;color:var(--g5)">현재 근무</span>
-          <span style="font-size:21px;font-weight:900;color:var(--navy)" id="curStaff">—</span>
-          <span style="font-size:13px;color:var(--g4)" id="curUnit">미입력</span>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:6px">
+          <span style="font-size:14px;color:var(--g5);white-space:nowrap;flex-shrink:0">현재 근무</span>
+          <span style="font-size:21px;font-weight:900;color:var(--navy);white-space:nowrap" id="curStaff">—</span>
+          <span style="font-size:13px;color:var(--g4);white-space:nowrap;text-align:right" id="curUnit">미입력</span>
         </div>
         <div style="text-align:right;font-size:11px;color:var(--g4);margin-top:1px" id="curBreakdown"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0">
-        <span style="font-size:14px;color:var(--g5)">전일 근무</span>
-        <span style="font-size:21px;font-weight:900;color:var(--g5)" id="prevStaff">—</span>
-        <span style="font-size:13px;color:var(--g4)" id="prevUnit">미입력</span>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:5px 0;gap:6px">
+        <span style="font-size:14px;color:var(--g5);white-space:nowrap;flex-shrink:0">전일 근무</span>
+        <span style="font-size:21px;font-weight:900;color:var(--g5);white-space:nowrap" id="prevStaff">—</span>
+        <span style="font-size:13px;color:var(--g4);white-space:nowrap;text-align:right" id="prevUnit">미입력</span>
       </div>
     </div>
     <div class="stat-box" style="flex:1;cursor:pointer;position:relative" onclick="go('ho')">
@@ -2241,6 +2241,7 @@ html{overflow-x:hidden}
     <div id="hoT2" style="padding:11px 14px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer;white-space:nowrap" onclick="hoTab(2)">오후팀</div>
     <div id="hoT3" style="padding:11px 14px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer;white-space:nowrap" onclick="hoTab(3)">야간팀</div>
     <div id="hoT4" style="padding:11px 14px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer;white-space:nowrap" onclick="hoTab(4)">작성</div>
+    <div id="hoT5" style="padding:11px 14px;text-align:center;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer;white-space:nowrap" onclick="hoTab(5)">📊 통계</div>
   </div>
   <!-- 전체 -->
   <div id="hoP0">
@@ -2270,6 +2271,12 @@ html{overflow-x:hidden}
   <div id="hoP1" style="display:none"><div class="pg-hd"><div><h1>🌅 오전팀 인수인계</h1></div></div><div id="hoAmList"><div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">불러오는 중...</div></div><div style="height:20px"></div></div>
   <div id="hoP2" style="display:none"><div class="pg-hd"><div><h1>☀️ 오후팀 인수인계</h1></div></div><div id="hoPmList"><div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">불러오는 중...</div></div><div style="height:20px"></div></div>
   <div id="hoP3" style="display:none"><div class="pg-hd"><div><h1>🌙 야간팀 인수인계</h1></div></div><div id="hoNtList"><div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">불러오는 중...</div></div><div style="height:20px"></div></div>
+  <!-- 통계 -->
+  <div id="hoP5" style="display:none">
+    <div class="pg-hd"><div><h1>📊 인수인계 통계</h1></div></div>
+    <div id="hoStatsBody"><div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">불러오는 중...</div></div>
+    <div style="height:20px"></div>
+  </div>
   <!-- 작성 -->
   <div id="hoP4" style="display:none">
     <div class="pg-hd">
@@ -2465,6 +2472,7 @@ html{overflow-x:hidden}
   <div style="display:flex;border-bottom:2px solid var(--g2);margin-bottom:0">
     <div id="lostT0" onclick="lostTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:15px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">목록</div>
     <div id="lostT1" onclick="lostTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">접수 등록</div>
+    <div id="lostT2" onclick="lostTab(2)" style="flex:1;text-align:center;padding:10px 0;font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">📊 통계</div>
   </div>
 
   <!-- 목록 탭 -->
@@ -2493,6 +2501,12 @@ html{overflow-x:hidden}
   </div>
 
   <!-- 접수 등록 탭 -->
+  <!-- 통계 -->
+  <div id="lostP2" style="display:none;padding:13px 0">
+    <div id="lostStatsBody"><div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">불러오는 중...</div></div>
+    <div style="height:20px"></div>
+  </div>
+
   <div id="lostP1" style="display:none;padding:13px">
     <div class="card" style="margin-bottom:10px;background:var(--teal-bg);border:1.5px dashed var(--teal)"><div class="cb">
       <div class="fg">
@@ -5357,6 +5371,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div style="display:flex;gap:0;border-bottom:2px solid var(--g2);margin:0 13px 14px">
     <div id="vocT0" onclick="vocTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:15px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer">민원 목록</div>
     <div id="vocT1" onclick="vocTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">민원 접수</div>
+    <div id="vocT2" onclick="vocTab(2)" style="flex:1;text-align:center;padding:10px 0;font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">📊 통계</div>
   </div>
 
   <!-- 탭0: 목록 -->
@@ -5389,6 +5404,12 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
 
   <!-- 탭1: 접수 입력 -->
+  <!-- 통계 -->
+  <div id="vocP2" style="display:none">
+    <div id="vocStatsBody" style="padding-top:4px"><div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">불러오는 중...</div></div>
+    <div style="height:20px"></div>
+  </div>
+
   <div id="vocP1" style="display:none">
     <div class="card" style="margin:0 13px 10px"><div class="cb">
       <!-- 일자 + 작성자 -->
@@ -10090,13 +10111,14 @@ function hoSetMode(mode){
   if(typeof renderHoPassCards==='function') renderHoPassCards();
 }
 function hoTab(n){
-  tabSwitch('ho',n,5);
+  tabSwitch('ho',n,6);
   if(n===4){ var rw=document.getElementById('hoResultEditWrap'); if(rw) rw.style.display='none'; }
   // 탭 전환 시 해당 팀 데이터 로드
   if(n===0) loadHandoverFromDB(); // 전체
   else if(n===1) loadHandoverByShift('오전팀');
   else if(n===2) loadHandoverByShift('오후팀');
   else if(n===3) loadHandoverByShift('야간팀');
+  else if(n===5) renderTimeCatStats('hoStatsBody','handover','created_at',{field:'shift'});
   else if(n===4){
     var dEl=document.getElementById('hoDateInput');
     if(dEl&&!dEl.value){
@@ -17748,7 +17770,10 @@ var vocSelectedZone = '';
 var vocSelectedSide = '';
 var vocSelectedFloor = '';
 
-function vocTab(n){ tabSwitch('voc',n,2); }
+function vocTab(n){
+  tabSwitch('voc',n,3);
+  if(n===2) renderTimeCatStats('vocStatsBody','voc_data','voc_date',{field:'category'});
+}
 
 function pickVocStatus(status, el){
   vocSelectedStatus=status;
@@ -18061,7 +18086,7 @@ var lostSelectedStatus='접수';
 var lostCompleteSelectedType='완료-폐기';
 
 function lostTab(n){
-  tabSwitch('lost',n,2);
+  tabSwitch('lost',n,3);
   if(n===1){
     var dEl=document.getElementById('lostFoundDate');
     if(dEl&&!dEl.value){
@@ -18069,6 +18094,7 @@ function lostTab(n){
       dEl.value=now.toISOString().slice(0,16);
     }
   }
+  if(n===2) renderTimeCatStats('lostStatsBody','lost_found','found_date',{field:'item', classify: (typeof msClassifyItem==='function'?msClassifyItem:null)});
 }
 
 // ── 습득물 오픈채널 메시지 붙여넣기 → 자동 파싱 ──
@@ -26102,6 +26128,76 @@ async function msFetchAll(makeQuery){
     off+=batch;
   }
   return {data:all, error:null};
+}
+
+// ── 인수인계/민원/습득물 공용 "통계" 탭: 요일별·월별·주차별·유형별 (msBar/msFetchAll 재사용) ──
+async function renderTimeCatStats(containerId, table, dateCol, catConf){
+  var el=document.getElementById(containerId);
+  if(!el) return;
+  el.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">불러오는 중...</div>';
+  try{
+    var nowKst=new Date(Date.now()+9*3600000);
+    var yearStart=nowKst.getFullYear()+'-01-01';
+    var selectCols=dateCol+(catConf&&catConf.field?(','+catConf.field):'');
+    var res=await msFetchAll(function(){ return sb.from(table).select(selectCols).gte(dateCol, yearStart); });
+    var rows=(res.data||[]).filter(function(r){ return r[dateCol]; });
+
+    var wdNames=['일','월','화','수','목','금','토'];
+    var wdCount=[0,0,0,0,0,0,0];
+    var moCount=new Array(12).fill(0);
+    var curMonth=nowKst.getMonth();
+    var wkCount=[0,0,0,0,0];
+
+    rows.forEach(function(r){
+      var d=new Date(new Date(r[dateCol]).getTime()+9*3600000);
+      wdCount[d.getUTCDay()]++;
+      var mo=d.getUTCMonth();
+      moCount[mo]++;
+      if(mo===curMonth){
+        var wIdx=Math.min(4, Math.floor((d.getUTCDate()-1)/7));
+        wkCount[wIdx]++;
+      }
+    });
+
+    var wdOrder=[1,2,3,4,5,6,0]; // 월~일 순서로 표시
+    var wdMax=Math.max.apply(null, wdCount)||1;
+    var wdHtml=wdOrder.map(function(i){ return msBar(wdNames[i]+'요일', wdCount[i], wdMax, 'var(--teal2)', '건'); }).join('');
+
+    var moMax=Math.max.apply(null, moCount)||1;
+    var moHtml=moCount.map(function(c,i){ return msBar((i+1)+'월', c, moMax, 'var(--navy)', '건'); }).join('');
+
+    var wkMax=Math.max.apply(null, wkCount)||1;
+    var wkHtml=wkCount.map(function(c,i){ return msBar((i+1)+'주차', c, wkMax, '#6B21A8', '건'); }).join('');
+
+    var catHtml='';
+    if(catConf&&catConf.field){
+      var catCounts={};
+      rows.forEach(function(r){
+        var raw=r[catConf.field];
+        var label=catConf.classify ? catConf.classify(raw) : (String(raw||'').trim()||null);
+        if(!label) return;
+        catCounts[label]=(catCounts[label]||0)+1;
+      });
+      var catEntries=Object.keys(catCounts).map(function(k){ return [k, catCounts[k]]; }).sort(function(a,b){ return b[1]-a[1]; }).slice(0,6);
+      if(catEntries.length){
+        var catMax=catEntries[0][1];
+        catHtml=catEntries.map(function(e){ return msBar(e[0], e[1], catMax, '#C2751A', '건'); }).join('');
+      }else{
+        catHtml='<div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">유형 데이터가 없습니다</div>';
+      }
+    }
+
+    el.innerHTML =
+      '<div style="padding:0 13px">'
+      +'<div style="font-size:13px;color:var(--g4);margin-bottom:14px">'+nowKst.getFullYear()+'년 누적 '+rows.length+'건 기준</div>'
+      +'<div class="s-lbl" style="margin-bottom:8px">📅 요일별</div>'+(wdHtml||'')
+      +'<div class="s-lbl" style="margin:18px 0 8px">📆 월별 ('+nowKst.getFullYear()+'년)</div>'+(moHtml||'')
+      +'<div class="s-lbl" style="margin:18px 0 8px">🗓 주차별 (이번 달)</div>'+(wkHtml||'')
+      +(catConf&&catConf.field ? '<div class="s-lbl" style="margin:18px 0 8px">🏷 유형별 (TOP6)</div>'+catHtml : '')
+      +'</div>';
+  }catch(e){
+    el.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:14px">통계를 불러오지 못했습니다</div>';
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════
