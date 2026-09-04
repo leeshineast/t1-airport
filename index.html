@@ -7272,6 +7272,7 @@ function finishLogin(){
   loadAccidentsFromDB();
   loadVehicleFromDB();
   loadKpiFromDB();
+  loadMgrAttendance(); // 홈 화면 "관리자 출근 현황" 카드 — 기존엔 인력관리 탭4를 직접 열어야만 로드되던 문제 수정
 }
 function showInfo(){
   if(!me) return;
@@ -10564,8 +10565,16 @@ function updateFloorChart(){
   var dashTot=document.getElementById('dashTotStaff');if(dashTot&&grandTotal>0)dashTot.textContent=grandTotal;
   var curEl=document.getElementById('curStaff');var unitEl=document.getElementById('curUnit');
   if(curEl&&grandTotal>0){
-    curEl.textContent=grandTotal;
+    var mgrCountFC=0;
+    try{
+      if(typeof mgrAttData==='object'&&mgrAttData){
+        mgrCountFC=Object.keys(mgrAttData).filter(function(k){ return mgrAttData[k]&&mgrAttData[k].checked; }).length;
+      }
+    }catch(e){}
+    curEl.textContent=grandTotal+mgrCountFC;
     if(unitEl){var labels=[];if(mpShiftPresent('오전'))labels.push('오전');if(mpShiftPresent('오후'))labels.push('오후');if(mpShiftPresent('야간'))labels.push('야간');unitEl.textContent='명 ('+(labels.length>0?labels.join('+')+'합계':'입력됨')+')';}
+    var bE=document.getElementById('curBreakdown');
+    if(bE) bE.textContent='관리 '+mgrCountFC+'명 · 현장 '+grandTotal+'명';
   }
 }
 
