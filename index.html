@@ -3546,6 +3546,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <select id="wfErpMonth" style="padding:8px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px"></select>
       <button onclick="wfDownloadErp()" style="padding:9px 14px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📥 ERP 다운로드</button>
     </div>
+    <div id="wfSummaryPanel" style="margin-bottom:12px"></div>
     <div id="wfTableWrap" style="overflow-x:auto;border:1.5px solid var(--g2);border-radius:10px">
       <div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">근무계획을 불러오는 중...</div>
     </div>
@@ -26337,6 +26338,35 @@ function wfTeamSortKey(team){
   var m=team.match(/(\d+)/);
   return m?parseInt(m[1],10):8888;
 }
+function wfRenderSummaryPanel(rows){
+  var panel=document.getElementById('wfSummaryPanel');
+  if(!panel) return;
+  function countBy(getKey){
+    var m={};
+    rows.forEach(function(e){ var k=getKey(e)||'-'; m[k]=(m[k]||0)+1; });
+    return m;
+  }
+  function badges(m, colorFn){
+    return Object.keys(m).sort().map(function(k,idx){
+      var c=colorFn?colorFn(k):{bg:'var(--g1)',fg:'var(--g6)'};
+      return '<span style="padding:4px 10px;border-radius:10px;background:'+c.bg+';color:'+c.fg+';font-size:12px;font-weight:700">'+k+' '+m[k]+'명</span>';
+    }).join('');
+  }
+  var byGroup=countBy(function(e){ return e.group_name; });
+  var byTeam=countBy(function(e){ return e.team; });
+  var byDay=countBy(function(e){ return [e.off1,e.off2].filter(Boolean).join('·')||'-'; });
+  var dayColorFn=function(k){
+    var parts=k.split('·');
+    return wfDayPairColor(parts[0], parts[1]);
+  };
+  panel.innerHTML =
+    '<div style="font-size:12.5px;color:var(--g4);margin-bottom:8px">현재 조건: <b style="color:var(--g7)">'+rows.length+'명</b></div>'
+    +'<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">'
+    +'<div style="background:var(--g1);border-radius:10px;padding:10px"><div style="font-size:11.5px;color:var(--g4);margin-bottom:6px">조별 인원</div><div style="display:flex;flex-wrap:wrap;gap:5px">'+badges(byGroup)+'</div></div>'
+    +'<div style="background:var(--g1);border-radius:10px;padding:10px"><div style="font-size:11.5px;color:var(--g4);margin-bottom:6px">팀별 인원</div><div style="display:flex;flex-wrap:wrap;gap:5px">'+badges(byTeam)+'</div></div>'
+    +'</div>'
+    +'<div style="background:var(--g1);border-radius:10px;padding:10px;margin-top:10px"><div style="font-size:11.5px;color:var(--g4);margin-bottom:6px">휴무요일별 인원</div><div style="display:flex;flex-wrap:wrap;gap:5px">'+badges(byDay, dayColorFn)+'</div></div>';
+}
 function wfRenderTable(){
   var wrap=document.getElementById('wfTableWrap');
   var fTeam=document.getElementById('wfFTeam').value;
@@ -26368,11 +26398,13 @@ function wfRenderTable(){
   });
   if(!rows.length){
     wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">해당 조건의 직원이 없습니다. (엑셀 업로드로 인원현황을 등록해주세요)</div>';
+    document.getElementById('wfSummaryPanel').innerHTML='';
     return;
   }
+  wfRenderSummaryPanel(rows);
   var h='<table style="width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap">';
   h+='<thead><tr style="background:var(--navy);color:#fff">'+
-     ['사번','성명','직책','팀','조','오전/오후/야간','고정휴무요일','관리'].map(function(c){return '<th style="padding:9px 8px;text-align:center">'+c+'</th>';}).join('')+
+     ['연번','사번','성명','직책','팀','조','오전/오후/야간','고정휴무요일','관리'].map(function(c){return '<th style="padding:9px 8px;text-align:center">'+c+'</th>';}).join('')+
      '</tr></thead><tbody>';
   rows.forEach(function(e,i){
     var offTxt=[e.off1,e.off2].filter(Boolean).join('·')||'-';
@@ -26388,6 +26420,7 @@ function wfRenderTable(){
     }
     var rowBg = e.onLeaveNow ? '#FFF8EE' : (i%2===0?'#fff':'var(--g1)');
     h+='<tr style="background:'+rowBg+';border-bottom:1px solid var(--g2)">'+
+       '<td style="padding:8px;text-align:center;color:var(--g4)">'+(i+1)+'</td>'+
        '<td style="padding:8px;text-align:center">'+e.emp_no+'</td>'+
        '<td style="padding:8px;text-align:center;font-weight:700">'+(e.name||'')+'</td>'+
        '<td style="padding:8px;text-align:center">'+(e.position||'-')+'</td>'+
