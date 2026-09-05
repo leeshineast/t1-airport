@@ -27953,9 +27953,22 @@ async function cpFetchResultRanked(){
   var votes=vRes.data||[];
   var countMap={};
   votes.forEach(function(v){ countMap[v.finalist_entry_id]=(countMap[v.finalist_entry_id]||0)+1; });
-  var ranked=finalists.map(function(f){ return { finalistId:f.id, entry:entryMap[f.entry_id], count:countMap[f.entry_id]||0, awardLabel:f.award_label||null }; })
+  // 1차 관리자 점수 재조회 — 전직원 투표 동표일 때 우선 tie-break 기준으로 사용
+  var avRes=await msFetchAll(function(){ return sb.from('campaign_votes').select('*').eq('campaign_id',cpCurCampaign.id); });
+  var adminVotes=avRes.data||[];
+  var scoreMap={};
+  adminVotes.forEach(function(v){ scoreMap[v.entry_id]=(scoreMap[v.entry_id]||0)+(CP_RANK_SCORE[v.rank]||0); });
+  var ranked=finalists.map(function(f){ return { finalistId:f.id, entry:entryMap[f.entry_id], count:countMap[f.entry_id]||0, adminScore:scoreMap[f.entry_id]||0, awardLabel:f.award_label||null }; })
     .filter(function(x){return x.entry;})
-    .sort(function(a,b){ return b.count-a.count; });
+    .sort(function(a,b){
+      if(b.count!==a.count) return b.count-a.count;
+      return b.adminScore-a.adminScore; // 투표수 동점이면 1차 관리자 점수로 우선 순위 결정
+    });
+  // 표준경쟁순위(1224 방식): 투표수·관리자 점수가 모두 같을 때만 진짜 공동 순위, 다음 순위는 동점자 수만큼 건너뜀
+  ranked.forEach(function(x,i){
+    if(i>0 && x.count===ranked[i-1].count && x.adminScore===ranked[i-1].adminScore){ x.rank=ranked[i-1].rank; x.tied=true; }
+    else{ x.rank=i+1; x.tied=false; }
+  });
   ranked._totalVotes=votes.length;
   return ranked;
 }
@@ -27972,10 +27985,16 @@ async function cpOpenWinnerEdit(){
     statsBox.innerHTML='투표 결과가 아직 없습니다. 최종 후보 선정과 전직원 투표를 먼저 진행해주세요.';
   }else{
     var total=cpWinResultCache._totalVotes||0;
-    var lines='📊 총 투표수: <b>'+total+'표</b> (최종 후보 '+cpWinResultCache.length+'명)<br>'+
+    var lines='📊 총 투표수: <b>'+total+'표</b> (최종 후보 '+cpWinResultCache.length+'명) · 1위 기준: 전직원 투표수 → 동점 시 1차 관리자 점수<br><br>'+
       cpWinResultCache.map(function(x,i){
-        return (i+1)+'위 · '+eeEsc(x.entry.name||'')+'('+eeEsc(x.entry.emp_no||'')+') · '+x.count+'표'+(x.awardLabel?(' · '+eeEsc(x.awardLabel)):' · 상 미지정');
-      }).join('<br>');
+        var basis;
+        if(i===0) basis='';
+        else if(x.count!==cpWinResultCache[i-1].count) basis=' <span style="color:var(--g4)">(투표수로 결정)</span>';
+        else if(x.adminScore!==cpWinResultCache[i-1].adminScore) basis=' <span style="color:var(--g4)">(투표 동점 · 관리자 점수로 결정)</span>';
+        else basis=' <span style="color:#c2410c">(투표·관리자 점수 모두 동점)</span>';
+        return '<b>'+(x.tied?'공동 ':'')+x.rank+'위</b> · '+eeEsc(x.entry.name||'')+'('+eeEsc(x.entry.emp_no||'')+') · '+(x.awardLabel?eeEsc(x.awardLabel):'<span style="color:var(--g4)">상 미지정</span>')+'<br>'
+          +'&nbsp;&nbsp;전직원 투표 '+x.count+'표 · 1차 관리자 점수 '+x.adminScore+'점'+basis;
+      }).join('<br><br>');
     statsBox.innerHTML=lines;
   }
   showM('cpWinnerModal');
