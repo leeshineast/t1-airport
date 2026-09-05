@@ -28123,15 +28123,19 @@ async function cpEligibleSaveEdit(id){
 }
 async function cpEligibleSyncByRole(tier){
   if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
-  var roleSets={ all:null, leader:['leader','manager','admin','master'], manager:['manager','admin','master'], admin:['admin','master'] };
   var labelMap={ all:'전체', leader:'조장 이상', manager:'팀장 이상', admin:'admin 이상' };
-  var roles=roleSets[tier];
+  var ADMIN_NAMES=['유준영','한지원','양민석','조준희']; // admin
+  var MASTER_NAMES=['이동환']; // master
   try{
-    var q=sb.from('users').select('employee_id,name').eq('status','active');
-    if(roles) q=q.in('role',roles);
-    var res=await q;
-    if(res.error){ toast('오류: '+res.error.message); return; }
-    var rows=(res.data||[]).filter(function(u){return u.employee_id&&u.name;}).map(function(u){ return {campaign_id:cpCurCampaign.id, emp_no:u.employee_id, name:u.name, uploaded_by:me?me.name:''}; });
+    var empRes=await msFetchAll(function(){ return sb.from('wf_employees').select('emp_no,name,position'); });
+    var all=empRes.data||[];
+    var rows;
+    if(tier==='all') rows=all;
+    else if(tier==='leader') rows=all.filter(function(e){ return ['조장','팀장','총괄팀장','사업부장'].indexOf(e.position)!==-1; });
+    else if(tier==='manager') rows=all.filter(function(e){ return ['팀장','총괄팀장','사업부장'].indexOf(e.position)!==-1; });
+    else if(tier==='admin') rows=all.filter(function(e){ return ADMIN_NAMES.indexOf(e.name)!==-1||MASTER_NAMES.indexOf(e.name)!==-1; });
+    else rows=[];
+    rows=rows.filter(function(e){return e.emp_no&&e.name;}).map(function(e){ return {campaign_id:cpCurCampaign.id, emp_no:e.emp_no, name:e.name, uploaded_by:me?me.name:''}; });
     if(!rows.length){ toast('⚠️ 대상자가 없습니다'); return; }
     if(!confirm('기존 명단을 지우고 "'+labelMap[tier]+'" 기준 '+rows.length+'명으로 교체할까요?\n(액팅리더는 사원으로 취급되어 제외됩니다)')) return;
     var delRes=await sb.from('campaign_eligible').delete().eq('campaign_id',cpCurCampaign.id);
@@ -28147,9 +28151,9 @@ async function cpEligibleSyncByTeam(){
   var team=document.getElementById('cpEligTeamSel').value;
   if(!team){ toast('⚠️ 팀을 선택해주세요'); return; }
   try{
-    var res=await sb.from('users').select('employee_id,name,team').eq('status','active').like('team',team+'%');
+    var res=await sb.from('wf_employees').select('emp_no,name').eq('team','환경미화'+team);
     if(res.error){ toast('오류: '+res.error.message); return; }
-    var rows=(res.data||[]).filter(function(u){return u.employee_id&&u.name;}).map(function(u){ return {campaign_id:cpCurCampaign.id, emp_no:u.employee_id, name:u.name, uploaded_by:me?me.name:''}; });
+    var rows=(res.data||[]).filter(function(e){return e.emp_no&&e.name;}).map(function(e){ return {campaign_id:cpCurCampaign.id, emp_no:e.emp_no, name:e.name, uploaded_by:me?me.name:''}; });
     if(!rows.length){ toast('⚠️ '+team+'에 등록된 인원이 없습니다'); return; }
     if(!confirm('기존 명단을 지우고 '+team+' 기준 '+rows.length+'명으로 교체할까요?')) return;
     var delRes=await sb.from('campaign_eligible').delete().eq('campaign_id',cpCurCampaign.id);
