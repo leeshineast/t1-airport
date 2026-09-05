@@ -26364,53 +26364,86 @@ function wfRenderStatsTab(){
     arr.forEach(function(e){ var k=getKey(e)||'-'; m[k]=(m[k]||0)+1; });
     return m;
   }
-  function badgeRow(m, order, colorFn){
-    var keys = order ? order.filter(function(k){ return m[k]; }) : Object.keys(m);
-    return keys.map(function(k){
-      var c = colorFn ? colorFn(k) : {bg:'var(--g1)',fg:'var(--g6)'};
-      return '<span style="padding:4px 10px;border-radius:10px;background:'+c.bg+';color:'+c.fg+';font-size:12px;font-weight:700">'+k+' '+m[k]+'명</span>';
-    }).join('');
+  // 막대그래프 한 줄 (msBar과 같은 톤: 라벨 - 막대 - 값)
+  function bar(label, val, max, color){
+    var pct = max>0 ? Math.max(3, Math.round(val/max*100)) : 0;
+    return '<div style="margin-bottom:10px">'
+      +'<div style="display:flex;justify-content:space-between;align-items:center;font-size:12.5px;color:var(--g7);margin-bottom:4px"><span style="font-weight:600">'+label+'</span><span style="font-weight:800;color:'+color+'">'+val+'명</span></div>'
+      +'<div style="background:var(--g1);border-radius:999px;height:9px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+color+';border-radius:999px"></div></div>'
+      +'</div>';
+  }
+  function subChips(txt){
+    if(!txt) return '';
+    return '<div style="display:flex;flex-wrap:wrap;gap:4px;margin:-4px 0 10px">'
+      + txt.split(' · ').map(function(t){ return '<span style="font-size:10.5px;font-weight:700;color:var(--g5);background:var(--g1);padding:2px 7px;border-radius:8px">'+t+'</span>'; }).join('')
+      + '</div>';
+  }
+  function barGroup(m, order, color){
+    var keys = order ? order.filter(function(k){ return m[k]; }) : Object.keys(m).sort(function(a,b){ return m[b]-m[a]; });
+    var max=0; keys.forEach(function(k){ if(m[k]>max) max=m[k]; });
+    return keys.map(function(k){ return bar(k, m[k], max, color); }).join('');
+  }
+  function section(icon, title, innerHtml){
+    return '<div style="background:white;border:1px solid var(--g2);border-radius:12px;padding:14px;margin-bottom:12px">'
+      +'<div style="font-size:13px;font-weight:800;color:var(--g7);margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--g1)">'+icon+' '+title+'</div>'
+      +innerHtml+'</div>';
   }
 
-  // 1. 팀별 인원 (팀 안 조별 구성 포함)
+  // 요일 두 개를 정해진 7가지 조합(월화·화수·수목·목금·금토·토일·일월) 중 하나로 통일 — 저장 순서(off1/off2)가 달라도 같은 조합으로 집계
+  var WEEK_CYCLE=['월','화','수','목','금','토','일'];
+  function canonicalDayPair(d1, d2){
+    if(!d1||!d2) return null;
+    var i1=WEEK_CYCLE.indexOf(d1), i2=WEEK_CYCLE.indexOf(d2);
+    if(i1<0||i2<0) return d1+d2;
+    if((i1+1)%7===i2) return d1+d2;
+    if((i2+1)%7===i1) return d2+d1;
+    return d1+d2;
+  }
+
+  // 1. 팀별 인원 — 팀 순서(1,2,3...) 정렬, 조 배정 없는 인원(팀장 등)은 실제 직책명으로 맨 앞에 표시
   var teamNames=Array.from(new Set(rows.map(function(e){ return e.team||'-'; })));
   teamNames.sort(function(a,b){
     var ka=wfTeamSortKey(a), kb=wfTeamSortKey(b);
     if(ka!==kb) return ka-kb;
     return a.localeCompare(b);
   });
-  var subOrder=['A조','B조','C조','-'];
+  var teamCounts={}; teamNames.forEach(function(t){ teamCounts[t]=rows.filter(function(e){ return (e.team||'-')===t; }).length; });
+  var teamMax=0; teamNames.forEach(function(t){ if(teamCounts[t]>teamMax) teamMax=teamCounts[t]; });
+  var subOrder=['A조','B조','C조'];
   var teamHtml=teamNames.map(function(t){
     var teamRows=rows.filter(function(e){ return (e.team||'-')===t; });
-    var subMap=countBy(teamRows, function(e){ return e.group_name; });
-    var subTxt=subOrder.filter(function(k){ return subMap[k]; }).map(function(k){ return k+' '+subMap[k]+'명'; }).join(' · ');
-    return '<div style="padding:7px 0;border-bottom:1px solid var(--g2);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'
-      +'<span style="font-weight:700;font-size:12.5px;color:var(--g7)">'+t+' <span style="font-weight:400;color:var(--g4)">('+teamRows.length+'명)</span></span>'
-      +'<span style="font-size:11.5px;color:var(--g5)">'+subTxt+'</span>'
-      +'</div>';
+    var noGroupRows=teamRows.filter(function(e){ return !e.group_name; });
+    var posMap=countBy(noGroupRows, function(e){ return e.position||'미지정'; });
+    var posTxt=Object.keys(posMap).map(function(p){ return p+' '+posMap[p]+'명'; }).join(' · ');
+    var groupMap=countBy(teamRows.filter(function(e){ return e.group_name; }), function(e){ return e.group_name; });
+    var groupTxt=subOrder.filter(function(k){ return groupMap[k]; }).map(function(k){ return k+' '+groupMap[k]+'명'; }).join(' · ');
+    var subTxt=[posTxt, groupTxt].filter(Boolean).join(' · ');
+    return bar(t, teamRows.length, teamMax, 'var(--navy)')
+      + subChips(subTxt);
   }).join('');
 
   // 2. 요일별 휴무 인원 (요일 순서대로, 어느 요일이 가장 빡빡한지 확인용)
   var DAY_PAIR_ORDER=['월화','화수','수목','목금','금토','토일','일월'];
-  var byDayRaw=countBy(rows, function(e){ return [e.off1,e.off2].filter(Boolean).join('')||'-'; });
-  var dayBadges=DAY_PAIR_ORDER.filter(function(k){ return byDayRaw[k]; }).map(function(k){
-    var label=k.charAt(0)+'·'+k.charAt(1);
+  var byDayRaw={};
+  rows.forEach(function(e){
+    var k=canonicalDayPair(e.off1, e.off2) || '미지정';
+    byDayRaw[k]=(byDayRaw[k]||0)+1;
+  });
+  var dayMax=0; DAY_PAIR_ORDER.forEach(function(k){ if(byDayRaw[k]>dayMax) dayMax=byDayRaw[k]; });
+  var dayHtml=DAY_PAIR_ORDER.filter(function(k){ return byDayRaw[k]; }).map(function(k){
     var c=wfDayPairColor(k.charAt(0), k.charAt(1));
-    return '<span style="padding:4px 10px;border-radius:10px;background:'+c.bg+';color:'+c.fg+';font-size:12px;font-weight:700">'+label+' '+byDayRaw[k]+'명</span>';
+    return bar(k.charAt(0)+'·'+k.charAt(1), byDayRaw[k], dayMax, c.fg);
   }).join('');
-  var otherDayKeys=Object.keys(byDayRaw).filter(function(k){ return DAY_PAIR_ORDER.indexOf(k)===-1; });
-  var otherDayBadges=otherDayKeys.map(function(k){
-    return '<span style="padding:4px 10px;border-radius:10px;background:var(--g1);color:var(--g6);font-size:12px;font-weight:700">'+(k==='-'?'미지정':k)+' '+byDayRaw[k]+'명</span>';
-  }).join('');
+  if(byDayRaw['미지정']) dayHtml += bar('미지정', byDayRaw['미지정'], dayMax, 'var(--g4)');
 
   // 3. 직책별 인원
   var byPosition=countBy(rows, function(e){ return e.position; });
-  var posBadges=badgeRow(byPosition, Object.keys(byPosition).sort(function(a,b){ return byPosition[b]-byPosition[a]; }));
+  var posHtml=barGroup(byPosition, null, 'var(--teal2)');
 
   // 4. 오전/오후/야간별 인원
   var shiftOrder=['오전','오후','야간','일근'];
   var byShift=countBy(rows, function(e){ return e.shift_type; });
-  var shiftBadges=badgeRow(byShift, shiftOrder);
+  var shiftHtml=barGroup(byShift, shiftOrder, '#6B21A8');
 
   // 5. 팀별 실가용 인원 (정원 − 현재 휴직중 인원)
   var teamAvailHtml=teamNames.map(function(t){
@@ -26423,17 +26456,13 @@ function wfRenderStatsTab(){
       +'</div>';
   }).join('');
 
-  function section(title, innerHtml){
-    return '<div style="background:var(--g1);border-radius:10px;padding:10px 12px;margin-bottom:10px"><div style="font-size:11.5px;color:var(--g4);margin-bottom:4px">'+title+'</div>'+innerHtml+'</div>';
-  }
-
   body.innerHTML =
     '<div style="font-size:12.5px;color:var(--g4);margin-bottom:8px">전체 <b style="color:var(--g7)">'+rows.length+'명</b> 기준</div>'
-    + section('팀별 인원 (팀 안 조별 구성 포함)', teamHtml)
-    + section('요일별 휴무 인원', '<div style="display:flex;flex-wrap:wrap;gap:5px">'+dayBadges+otherDayBadges+'</div>')
-    + section('직책별 인원', '<div style="display:flex;flex-wrap:wrap;gap:5px">'+posBadges+'</div>')
-    + section('오전/오후/야간별 인원', '<div style="display:flex;flex-wrap:wrap;gap:5px">'+shiftBadges+'</div>')
-    + section('팀별 실가용 인원 (정원 − 휴직중)', teamAvailHtml);
+    + section('👥','팀별 인원 (팀 안 조별 구성 포함)', teamHtml)
+    + section('📅','요일별 휴무 인원', dayHtml)
+    + section('🏷','직책별 인원', posHtml)
+    + section('⏰','오전/오후/야간별 인원', shiftHtml)
+    + section('✅','팀별 실가용 인원 (정원 − 휴직중)', teamAvailHtml);
 }
 function wfRenderTable(){
   var wrap=document.getElementById('wfTableWrap');
