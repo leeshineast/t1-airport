@@ -27740,9 +27740,23 @@ async function cpLoadList(){
        '<div style="font-size:12px;color:var(--g4);margin-top:6px">응모 '+cnt+'건'+(c.allow_multiple?' · 1인 복수제출 가능':' · 1인 1회 제출')+'</div>'+
        '</div>'+
        (cpIsAdmin()?('<button onclick="event.stopPropagation();cpOpenEditCampaign(\''+c.id+'\')" style="margin-top:10px;padding:6px 12px;background:#dbeafe;color:#1e40af;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">✎ 수정</button>'):'')+
+       (me&&me.role==='master'?('<button onclick="event.stopPropagation();cpDeleteCampaign(\''+c.id+'\')" style="margin-top:10px;margin-left:7px;padding:6px 12px;background:#fee2e2;color:#dc2626;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">🗑 삭제</button>'):'')+
        '</div>';
   });
   wrap.innerHTML=h;
+}
+async function cpDeleteCampaign(id){
+  if(!me||me.role!=='master'){ toast('⚠️ master만 삭제할 수 있습니다'); return; }
+  var c=cpCampaigns.find(function(x){return x.id===id;});
+  var title=c?c.title:'이 행사';
+  if(!confirm('"'+title+'"을(를) 삭제할까요?\n응모작·투표·후보·결과가 모두 함께 삭제되며 되돌릴 수 없습니다.')) return;
+  try{
+    await sb.from('campaign_eligible').delete().eq('campaign_id',id); // FK cascade 없어서 별도 정리
+    var res=await sb.from('campaigns').delete().eq('id',id);
+    if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    toast('✓ 삭제되었습니다');
+    cpLoadList();
+  }catch(e){ toast('삭제 실패: '+(e&&e.message?e.message:e)); }
 }
 var cpEditCampaignId=null;
 function cpOpenCreate(){
