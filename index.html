@@ -25574,13 +25574,42 @@ function mgrLeaveRolesForTeam(team){
   for(var shift in MGR_STRUCTURE){ if(MGR_STRUCTURE[shift][team]) return MGR_STRUCTURE[shift][team]; }
   return [];
 }
+function mgrLeaveMyTeamRole(){
+  if(!me) return null;
+  var team=(me.team||'').trim();
+  if(me.role==='manager'){
+    var tm=team.match(/^(\d+팀)$/);
+    if(tm) return {team:tm[1], name:'팀장'};
+    var opsSlot=OPS_TEAM_ROLE_MAP[me.name];
+    if(opsSlot) return {team:'운영', name:opsSlot};
+    return null;
+  }
+  if(me.role==='leader'){
+    var m=team.match(/^(\d+팀)\s*([A-Z])조$/);
+    if(m) return {team:m[1], name:m[2]+'조장'};
+    return null;
+  }
+  return null; // admin/master는 전체 자유 선택
+}
 function mgrLeaveOpenModal(){
   if(!me||me.role==='acting_leader'||me.role==='member'){ toast('⚠️ 조장 이상만 가능합니다'); return; }
+  var isFullAccess = me.role==='admin'||me.role==='master';
   var teamSel=document.getElementById('mgrLeaveTeam');
+  var roleSel=document.getElementById('mgrLeaveRole');
   if(!teamSel.options.length){
     teamSel.innerHTML=mgrLeaveAllTeams().map(function(t){ return '<option value="'+t+'">'+(t==='운영'?'운영팀':t)+'</option>'; }).join('');
   }
-  mgrLeaveTeamChange();
+  if(isFullAccess){
+    teamSel.disabled=false; roleSel.disabled=false;
+    mgrLeaveTeamChange();
+  }else{
+    var mine=mgrLeaveMyTeamRole();
+    if(!mine){ toast('⚠️ 본인 팀 정보를 확인할 수 없습니다. 관리자에게 문의해주세요'); return; }
+    teamSel.value=mine.team;
+    mgrLeaveTeamChange();
+    roleSel.value=mine.name;
+    teamSel.disabled=true; roleSel.disabled=true;
+  }
   var todayStr=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   document.getElementById('mgrLeaveStart').value=todayStr;
   document.getElementById('mgrLeaveEnd').value=todayStr;
@@ -25594,8 +25623,16 @@ function mgrLeaveTeamChange(){
 }
 async function mgrLeaveSave(){
   if(!me||me.role==='acting_leader'||me.role==='member'){ toast('⚠️ 조장 이상만 가능합니다'); return; }
-  var team=document.getElementById('mgrLeaveTeam').value;
-  var name=document.getElementById('mgrLeaveRole').value;
+  var isFullAccess = me.role==='admin'||me.role==='master';
+  var team, name;
+  if(isFullAccess){
+    team=document.getElementById('mgrLeaveTeam').value;
+    name=document.getElementById('mgrLeaveRole').value;
+  }else{
+    var mine=mgrLeaveMyTeamRole();
+    if(!mine){ toast('⚠️ 본인 팀 정보를 확인할 수 없습니다'); return; }
+    team=mine.team; name=mine.name;
+  }
   var status=document.getElementById('mgrLeaveStatus').value;
   var start=document.getElementById('mgrLeaveStart').value;
   var end=document.getElementById('mgrLeaveEnd').value;
@@ -25611,7 +25648,14 @@ async function mgrLeaveSave(){
 async function mgrLeaveLoadList(){
   var wrap=document.getElementById('mgrLeaveListWrap');
   var todayStr=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-  var res=await sb.from('mgr_leave_schedule').select('*').gte('end_date',todayStr).order('start_date');
+  var isFullAccess = me&&(me.role==='admin'||me.role==='master');
+  var q=sb.from('mgr_leave_schedule').select('*').gte('end_date',todayStr).order('start_date');
+  if(!isFullAccess){
+    var mine=mgrLeaveMyTeamRole();
+    if(mine){ q=q.eq('team',mine.team).eq('name',mine.name); }
+    else{ wrap.innerHTML='<div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">본인 일정을 확인할 수 없습니다</div>'; return; }
+  }
+  var res=await q;
   if(res.error){ wrap.innerHTML='<div style="color:var(--danger);font-size:13px">불러오기 실패</div>'; return; }
   var rows=res.data||[];
   if(!rows.length){ wrap.innerHTML='<div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">등록된 일정이 없습니다</div>'; return; }
