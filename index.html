@@ -3520,7 +3520,11 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <div><h1>📅 근무계획</h1><small id="wfEmpCountLbl">전체 0명</small></div>
     <button onclick="go('workforce')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 인력관리</button>
   </div>
-  <div style="padding:12px">
+  <div style="display:flex;border-bottom:2px solid var(--g2)">
+    <div id="wfMainT0" onclick="wfMainTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:14px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">목록</div>
+    <div id="wfMainT1" onclick="wfMainTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">📊 통계</div>
+  </div>
+  <div id="wfMainP0" style="padding:12px">
     <!-- 필터바 -->
     <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px">
       <select id="wfFTeam" onchange="wfRenderTable()" style="padding:8px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px"><option value="">팀 전체</option></select>
@@ -3546,10 +3550,12 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <select id="wfErpMonth" style="padding:8px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px"></select>
       <button onclick="wfDownloadErp()" style="padding:9px 14px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📥 ERP 다운로드</button>
     </div>
-    <div id="wfSummaryPanel" style="margin-bottom:12px"></div>
     <div id="wfTableWrap" style="overflow-x:auto;border:1.5px solid var(--g2);border-radius:10px">
       <div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">근무계획을 불러오는 중...</div>
     </div>
+  </div>
+  <div id="wfMainP1" style="display:none;padding:12px">
+    <div id="wfStatsBody"><div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">불러오는 중...</div></div>
   </div>
 </div>
 
@@ -26338,34 +26344,96 @@ function wfTeamSortKey(team){
   var m=team.match(/(\d+)/);
   return m?parseInt(m[1],10):8888;
 }
-function wfRenderSummaryPanel(rows){
-  var panel=document.getElementById('wfSummaryPanel');
-  if(!panel) return;
-  function countBy(getKey){
+function wfMainTab(n){
+  document.getElementById('wfMainT0').style.color = n===0?'var(--teal)':'var(--g5)';
+  document.getElementById('wfMainT0').style.borderBottom = n===0?'2.5px solid var(--teal)':'none';
+  document.getElementById('wfMainT1').style.color = n===1?'var(--teal)':'var(--g5)';
+  document.getElementById('wfMainT1').style.borderBottom = n===1?'2.5px solid var(--teal)':'none';
+  document.getElementById('wfMainP0').style.display = n===0?'block':'none';
+  document.getElementById('wfMainP1').style.display = n===1?'block':'none';
+  if(n===1) wfRenderStatsTab();
+}
+function wfRenderStatsTab(){
+  var body=document.getElementById('wfStatsBody');
+  if(!body) return;
+  var rows=wfEmployees||[];
+  if(!rows.length){ body.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">데이터가 없습니다</div>'; return; }
+
+  function countBy(arr, getKey){
     var m={};
-    rows.forEach(function(e){ var k=getKey(e)||'-'; m[k]=(m[k]||0)+1; });
+    arr.forEach(function(e){ var k=getKey(e)||'-'; m[k]=(m[k]||0)+1; });
     return m;
   }
-  function badges(m, colorFn){
-    return Object.keys(m).sort().map(function(k,idx){
-      var c=colorFn?colorFn(k):{bg:'var(--g1)',fg:'var(--g6)'};
+  function badgeRow(m, order, colorFn){
+    var keys = order ? order.filter(function(k){ return m[k]; }) : Object.keys(m);
+    return keys.map(function(k){
+      var c = colorFn ? colorFn(k) : {bg:'var(--g1)',fg:'var(--g6)'};
       return '<span style="padding:4px 10px;border-radius:10px;background:'+c.bg+';color:'+c.fg+';font-size:12px;font-weight:700">'+k+' '+m[k]+'명</span>';
     }).join('');
   }
-  var byGroup=countBy(function(e){ return e.group_name; });
-  var byTeam=countBy(function(e){ return e.team; });
-  var byDay=countBy(function(e){ return [e.off1,e.off2].filter(Boolean).join('·')||'-'; });
-  var dayColorFn=function(k){
-    var parts=k.split('·');
-    return wfDayPairColor(parts[0], parts[1]);
-  };
-  panel.innerHTML =
-    '<div style="font-size:12.5px;color:var(--g4);margin-bottom:8px">현재 조건: <b style="color:var(--g7)">'+rows.length+'명</b></div>'
-    +'<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px">'
-    +'<div style="background:var(--g1);border-radius:10px;padding:10px"><div style="font-size:11.5px;color:var(--g4);margin-bottom:6px">조별 인원</div><div style="display:flex;flex-wrap:wrap;gap:5px">'+badges(byGroup)+'</div></div>'
-    +'<div style="background:var(--g1);border-radius:10px;padding:10px"><div style="font-size:11.5px;color:var(--g4);margin-bottom:6px">팀별 인원</div><div style="display:flex;flex-wrap:wrap;gap:5px">'+badges(byTeam)+'</div></div>'
-    +'</div>'
-    +'<div style="background:var(--g1);border-radius:10px;padding:10px;margin-top:10px"><div style="font-size:11.5px;color:var(--g4);margin-bottom:6px">휴무요일별 인원</div><div style="display:flex;flex-wrap:wrap;gap:5px">'+badges(byDay, dayColorFn)+'</div></div>';
+
+  // 1. 팀별 인원 (팀 안 조별 구성 포함)
+  var teamNames=Array.from(new Set(rows.map(function(e){ return e.team||'-'; })));
+  teamNames.sort(function(a,b){
+    var ka=wfTeamSortKey(a), kb=wfTeamSortKey(b);
+    if(ka!==kb) return ka-kb;
+    return a.localeCompare(b);
+  });
+  var subOrder=['A조','B조','C조','-'];
+  var teamHtml=teamNames.map(function(t){
+    var teamRows=rows.filter(function(e){ return (e.team||'-')===t; });
+    var subMap=countBy(teamRows, function(e){ return e.group_name; });
+    var subTxt=subOrder.filter(function(k){ return subMap[k]; }).map(function(k){ return k+' '+subMap[k]+'명'; }).join(' · ');
+    return '<div style="padding:7px 0;border-bottom:1px solid var(--g2);display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'
+      +'<span style="font-weight:700;font-size:12.5px;color:var(--g7)">'+t+' <span style="font-weight:400;color:var(--g4)">('+teamRows.length+'명)</span></span>'
+      +'<span style="font-size:11.5px;color:var(--g5)">'+subTxt+'</span>'
+      +'</div>';
+  }).join('');
+
+  // 2. 요일별 휴무 인원 (요일 순서대로, 어느 요일이 가장 빡빡한지 확인용)
+  var DAY_PAIR_ORDER=['월화','화수','수목','목금','금토','토일','일월'];
+  var byDayRaw=countBy(rows, function(e){ return [e.off1,e.off2].filter(Boolean).join('')||'-'; });
+  var dayBadges=DAY_PAIR_ORDER.filter(function(k){ return byDayRaw[k]; }).map(function(k){
+    var label=k.charAt(0)+'·'+k.charAt(1);
+    var c=wfDayPairColor(k.charAt(0), k.charAt(1));
+    return '<span style="padding:4px 10px;border-radius:10px;background:'+c.bg+';color:'+c.fg+';font-size:12px;font-weight:700">'+label+' '+byDayRaw[k]+'명</span>';
+  }).join('');
+  var otherDayKeys=Object.keys(byDayRaw).filter(function(k){ return DAY_PAIR_ORDER.indexOf(k)===-1; });
+  var otherDayBadges=otherDayKeys.map(function(k){
+    return '<span style="padding:4px 10px;border-radius:10px;background:var(--g1);color:var(--g6);font-size:12px;font-weight:700">'+(k==='-'?'미지정':k)+' '+byDayRaw[k]+'명</span>';
+  }).join('');
+
+  // 3. 직책별 인원
+  var byPosition=countBy(rows, function(e){ return e.position; });
+  var posBadges=badgeRow(byPosition, Object.keys(byPosition).sort(function(a,b){ return byPosition[b]-byPosition[a]; }));
+
+  // 4. 오전/오후/야간별 인원
+  var shiftOrder=['오전','오후','야간','일근'];
+  var byShift=countBy(rows, function(e){ return e.shift_type; });
+  var shiftBadges=badgeRow(byShift, shiftOrder);
+
+  // 5. 팀별 실가용 인원 (정원 − 현재 휴직중 인원)
+  var teamAvailHtml=teamNames.map(function(t){
+    var teamRows=rows.filter(function(e){ return (e.team||'-')===t; });
+    var onLeaveCount=teamRows.filter(function(e){ return e.onLeaveNow; }).length;
+    var avail=teamRows.length-onLeaveCount;
+    return '<div style="padding:6px 0;border-bottom:1px solid var(--g2);display:flex;justify-content:space-between;align-items:center;font-size:12.5px">'
+      +'<span style="color:var(--g7);font-weight:700">'+t+'</span>'
+      +'<span style="color:var(--g5)">정원 '+teamRows.length+'명'+(onLeaveCount?' · 휴직 '+onLeaveCount+'명':'')+' → <b style="color:'+(onLeaveCount?'#C2751A':'var(--teal2)')+'">실가용 '+avail+'명</b></span>'
+      +'</div>';
+  }).join('');
+
+  function section(title, innerHtml){
+    return '<div style="background:var(--g1);border-radius:10px;padding:10px 12px;margin-bottom:10px"><div style="font-size:11.5px;color:var(--g4);margin-bottom:4px">'+title+'</div>'+innerHtml+'</div>';
+  }
+
+  body.innerHTML =
+    '<div style="font-size:12.5px;color:var(--g4);margin-bottom:8px">전체 <b style="color:var(--g7)">'+rows.length+'명</b> 기준</div>'
+    + section('팀별 인원 (팀 안 조별 구성 포함)', teamHtml)
+    + section('요일별 휴무 인원', '<div style="display:flex;flex-wrap:wrap;gap:5px">'+dayBadges+otherDayBadges+'</div>')
+    + section('직책별 인원', '<div style="display:flex;flex-wrap:wrap;gap:5px">'+posBadges+'</div>')
+    + section('오전/오후/야간별 인원', '<div style="display:flex;flex-wrap:wrap;gap:5px">'+shiftBadges+'</div>')
+    + section('팀별 실가용 인원 (정원 − 휴직중)', teamAvailHtml);
 }
 function wfRenderTable(){
   var wrap=document.getElementById('wfTableWrap');
@@ -26398,10 +26466,8 @@ function wfRenderTable(){
   });
   if(!rows.length){
     wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">해당 조건의 직원이 없습니다. (엑셀 업로드로 인원현황을 등록해주세요)</div>';
-    document.getElementById('wfSummaryPanel').innerHTML='';
     return;
   }
-  wfRenderSummaryPanel(rows);
   var h='<table style="width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap">';
   h+='<thead><tr style="background:var(--navy);color:#fff">'+
      ['연번','사번','성명','직책','팀','조','오전/오후/야간','고정휴무요일','관리'].map(function(c){return '<th style="padding:9px 8px;text-align:center">'+c+'</th>';}).join('')+
