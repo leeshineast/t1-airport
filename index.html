@@ -3871,6 +3871,18 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <label style="padding:10px 12px;background:var(--teal-bg);border:1.5px dashed var(--teal2);border-radius:8px;font-size:13px;font-weight:700;color:var(--teal2);cursor:pointer;display:block;text-align:center;margin-bottom:10px">
       ⬆️ 엑셀 업로드 (사번, 이름 컬럼) — 업로드 시 기존 명단 전체 교체<input type="file" accept=".xlsx,.xls" style="display:none" onchange="cpEligibleUpload(this)">
     </label>
+    <div style="font-size:12px;color:var(--g5);font-weight:700;margin-bottom:6px">🔄 사원명부에서 동기화 (기준 선택 시 기존 명단 전체 교체)</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:8px">
+      <button onclick="cpEligibleSyncByRole('all')" style="padding:9px;background:var(--g1);color:var(--g6);border:none;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer">전체</button>
+      <button onclick="cpEligibleSyncByRole('leader')" style="padding:9px;background:var(--g1);color:var(--g6);border:none;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer">조장 이상</button>
+      <button onclick="cpEligibleSyncByRole('manager')" style="padding:9px;background:var(--g1);color:var(--g6);border:none;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer">팀장 이상</button>
+      <button onclick="cpEligibleSyncByRole('admin')" style="padding:9px;background:var(--g1);color:var(--g6);border:none;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer">admin 이상</button>
+    </div>
+    <div style="font-size:11px;color:var(--g4);margin-bottom:6px">※ 액팅리더는 항상 사원으로 취급되어 "조장 이상"에도 포함되지 않습니다</div>
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <select id="cpEligTeamSel" style="flex:1;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px"></select>
+      <button onclick="cpEligibleSyncByTeam()" style="padding:9px 14px;background:var(--g1);color:var(--g6);border:none;border-radius:8px;font-size:12.5px;font-weight:700;cursor:pointer;white-space:nowrap">이 팀만 동기화</button>
+    </div>
     <div style="display:flex;gap:6px;margin-bottom:12px">
       <input id="cpEligAddEmpNo" placeholder="사번" style="width:35%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13.5px;box-sizing:border-box">
       <input id="cpEligAddName" placeholder="이름" style="flex:1;padding:9px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13.5px;box-sizing:border-box">
@@ -10032,7 +10044,8 @@ async function loadQuotaInputTab(){
     var tqRes=await sb.from('team_quota').select('team_code,staff_quota');
     var staffQuota={};
     (tqRes.data||[]).forEach(function(r){ staffQuota[r.team_code]=r.staff_quota||0; });
-    var h='';
+    var h='<button onclick="wfSyncQuotaFromSchedule()" style="width:100%;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">🔄 근무계획에서 동기화</button>';
+    h+='<div style="font-size:11px;color:var(--g4);margin-bottom:10px">근무계획에 등록된 팀·조별 "사원" 인원수로 채웁니다 (조장·팀장·액팅리더는 제외). 저장 전까지는 자유롭게 수정할 수 있어요.</div>';
     TEAM_ROW_ORDER_G.forEach(function(team){
       var subs=TEAM_SUBGROUPS_G[team]||[];
       var mgrCnt=qCounts.mgrCntByTeam[team]||0;
@@ -10059,6 +10072,34 @@ async function loadQuotaInputTab(){
     h+='<button onclick="saveQuotaInput()" class="btn-prim" style="width:100%;margin-top:16px">저장</button>';
     wrap.innerHTML=h;
   }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:14px">불러오기 실패</div>'; }
+}
+async function wfSyncQuotaFromSchedule(){
+  if(!me||me.role!=='master'){ toast('⚠️ master만 가능합니다'); return; }
+  try{
+    var empRes=await msFetchAll(function(){ return sb.from('wf_employees').select('team,group_name,position').eq('position','사원'); });
+    var countMap={}; // key: "1팀A" 형식 (정원입력 화면 키와 동일)
+    (empRes.data||[]).forEach(function(e){
+      var m=(e.team||'').match(/^환경미화(\d+)팀$/);
+      if(!m||!e.group_name) return;
+      var gk=m[1]+'팀'+e.group_name.replace('조','');
+      countMap[gk]=(countMap[gk]||0)+1;
+    });
+    var changed=0, total=0;
+    TEAM_ROW_ORDER_G.forEach(function(team){
+      (TEAM_SUBGROUPS_G[team]||[]).forEach(function(s){
+        var gk=team+s;
+        var el=document.getElementById('quota_'+gk);
+        if(!el) return;
+        total++;
+        var newVal=countMap[gk]||0;
+        var oldVal=parseInt(el.value,10)||0;
+        el.value=newVal;
+        if(newVal!==oldVal){ el.style.border='2px solid #16a34a'; changed++; }
+        else{ el.style.border=''; }
+      });
+    });
+    toast('✓ 근무계획 기준으로 동기화했습니다 ('+total+'칸 중 '+changed+'칸 변경 · 아직 저장 전입니다)');
+  }catch(e){ toast('동기화 실패: '+(e&&e.message?e.message:e)); }
 }
 async function saveQuotaInput(){
   if(!me||me.role!=='master'){ toast('⚠️ master만 저장할 수 있습니다'); return; }
@@ -28033,6 +28074,10 @@ var cpEligibleCache=[];
 async function cpOpenEligible(){
   if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
   showM('cpEligibleModal');
+  var teamSel=document.getElementById('cpEligTeamSel');
+  if(teamSel&&!teamSel.options.length){
+    teamSel.innerHTML=TEAM_ROW_ORDER_G.map(function(t){ return '<option value="'+t+'">'+t+'</option>'; }).join('');
+  }
   await cpLoadEligible();
 }
 async function cpLoadEligible(){
@@ -28075,6 +28120,45 @@ async function cpEligibleSaveEdit(id){
   if(res.error){ toast('오류: '+res.error.message); return; }
   toast('✓ 수정되었습니다');
   await cpLoadEligible();
+}
+async function cpEligibleSyncByRole(tier){
+  if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
+  var roleSets={ all:null, leader:['leader','manager','admin','master'], manager:['manager','admin','master'], admin:['admin','master'] };
+  var labelMap={ all:'전체', leader:'조장 이상', manager:'팀장 이상', admin:'admin 이상' };
+  var roles=roleSets[tier];
+  try{
+    var q=sb.from('users').select('employee_id,name').eq('status','active');
+    if(roles) q=q.in('role',roles);
+    var res=await q;
+    if(res.error){ toast('오류: '+res.error.message); return; }
+    var rows=(res.data||[]).filter(function(u){return u.employee_id&&u.name;}).map(function(u){ return {campaign_id:cpCurCampaign.id, emp_no:u.employee_id, name:u.name, uploaded_by:me?me.name:''}; });
+    if(!rows.length){ toast('⚠️ 대상자가 없습니다'); return; }
+    if(!confirm('기존 명단을 지우고 "'+labelMap[tier]+'" 기준 '+rows.length+'명으로 교체할까요?\n(액팅리더는 사원으로 취급되어 제외됩니다)')) return;
+    var delRes=await sb.from('campaign_eligible').delete().eq('campaign_id',cpCurCampaign.id);
+    if(delRes.error){ toast('오류: '+delRes.error.message); return; }
+    var insRes=await sb.from('campaign_eligible').insert(rows);
+    if(insRes.error){ toast('오류: '+insRes.error.message); return; }
+    toast('✓ "'+labelMap[tier]+'" 기준 '+rows.length+'명 등록되었습니다');
+    await cpLoadEligible();
+  }catch(e){ toast('동기화 실패: '+(e&&e.message?e.message:e)); }
+}
+async function cpEligibleSyncByTeam(){
+  if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
+  var team=document.getElementById('cpEligTeamSel').value;
+  if(!team){ toast('⚠️ 팀을 선택해주세요'); return; }
+  try{
+    var res=await sb.from('users').select('employee_id,name,team').eq('status','active').like('team',team+'%');
+    if(res.error){ toast('오류: '+res.error.message); return; }
+    var rows=(res.data||[]).filter(function(u){return u.employee_id&&u.name;}).map(function(u){ return {campaign_id:cpCurCampaign.id, emp_no:u.employee_id, name:u.name, uploaded_by:me?me.name:''}; });
+    if(!rows.length){ toast('⚠️ '+team+'에 등록된 인원이 없습니다'); return; }
+    if(!confirm('기존 명단을 지우고 '+team+' 기준 '+rows.length+'명으로 교체할까요?')) return;
+    var delRes=await sb.from('campaign_eligible').delete().eq('campaign_id',cpCurCampaign.id);
+    if(delRes.error){ toast('오류: '+delRes.error.message); return; }
+    var insRes=await sb.from('campaign_eligible').insert(rows);
+    if(insRes.error){ toast('오류: '+insRes.error.message); return; }
+    toast('✓ '+team+' 기준 '+rows.length+'명 등록되었습니다');
+    await cpLoadEligible();
+  }catch(e){ toast('동기화 실패: '+(e&&e.message?e.message:e)); }
 }
 async function cpEligibleAddOne(){
   if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
