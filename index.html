@@ -4488,6 +4488,10 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
       </select>
     </div>
+    <div class="rg" id="eeFilterStatusG" style="gap:6px;margin-bottom:9px">
+      <div class="rp on" onclick="eeSetFilterStatus(this,'active')" style="flex:1;text-align:center">✅ 활성화</div>
+      <div class="rp" onclick="eeSetFilterStatus(this,'closed')" style="flex:1;text-align:center">🚫 마감</div>
+    </div>
     <div class="rg" id="eeFilterCatG" style="flex-wrap:wrap;gap:6px;margin-bottom:13px">
       <div class="rp on" onclick="eeSetFilterCat(this,'')">전체</div>
       <div class="rp" onclick="eeSetFilterCat(this,'교육')">교육</div>
@@ -12756,7 +12760,7 @@ async function eeDeleteEvent(eventId, title){
   }catch(err){ toast('⚠️ 오류: '+String(err&&err.message||err)); }
 }
 
-var eeFilterYear='', eeFilterMonth='', eeFilterCat='';
+var eeFilterYear='', eeFilterMonth='', eeFilterCat='', eeFilterStatus='active';
 async function loadEduEvents(){
   var wrap=document.getElementById('eeListWrap');
   if(!wrap) return;
@@ -12792,15 +12796,25 @@ function eeSetFilterCat(el,val){
   eeFilterCat=val;
   eeRenderEventList();
 }
+function eeSetFilterStatus(el,val){
+  document.querySelectorAll('#eeFilterStatusG .rp').forEach(function(p){p.classList.remove('on');});
+  el.classList.add('on');
+  eeFilterStatus=val;
+  eeRenderEventList();
+}
 function eeRenderEventList(){
   var wrap=document.getElementById('eeListWrap');
   if(!wrap) return;
   eeFilterYear=document.getElementById('eeFilterYear').value||'';
   eeFilterMonth=document.getElementById('eeFilterMonth').value||'';
   if(!eeEventsCache.length){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">등록된 교육·회의가 없습니다</div>'; return; }
+  var today=kstDate();
   var filtered=eeEventsCache.filter(function(e){
     if(!eeCanViewByTarget(e)) return false;
     if(eeFilterCat&&e.category!==eeFilterCat) return false;
+    var closed=e.apply_deadline&&e.apply_deadline<today;
+    if(eeFilterStatus==='active'&&closed) return false;
+    if(eeFilterStatus==='closed'&&!closed) return false;
     if(!eeFilterYear&&!eeFilterMonth) return true;
     return (e._schedules||[]).some(function(s){
       if(!s.event_date) return false;
@@ -12810,8 +12824,16 @@ function eeRenderEventList(){
       return true;
     });
   });
+  // 일자별 정렬: 활성화 탭은 가까운 일정이 먼저(오름차순), 마감 탭은 최근에 마감된 것이 먼저(내림차순)
+  function firstDate(e){ var ds=(e._schedules||[]).map(function(s){return s.event_date;}).filter(Boolean).sort(); return ds[0]||''; }
+  filtered.sort(function(a,b){
+    var da=firstDate(a), db=firstDate(b);
+    if(!da&&!db) return 0;
+    if(!da) return 1;
+    if(!db) return -1;
+    return eeFilterStatus==='closed' ? (da<db?1:-1) : (da<db?-1:1);
+  });
   if(!filtered.length){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">조건에 맞는 교육·회의가 없습니다</div>'; return; }
-  var today=kstDate();
   wrap.innerHTML=filtered.map(function(e){
     var scheds=e._schedules;
     var dates=scheds.map(function(s){return s.event_date;}).sort();
