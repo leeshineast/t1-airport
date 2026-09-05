@@ -5825,8 +5825,12 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 </div></div>
 
 <div id="mgrLeaveModal" class="modal-bg"><div class="modal" style="max-width:360px">
-  <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📅 일정 등록</h3><button class="m-x" onclick="hideM('mgrLeaveModal')">×</button></div>
-  <div style="padding:15px 17px;max-height:75vh;overflow-y:auto">
+  <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📅 일정 관리</h3><button class="m-x" onclick="hideM('mgrLeaveModal')">×</button></div>
+  <div style="display:flex;border-bottom:2px solid var(--g2)">
+    <div id="mgrLeaveT0" onclick="mgrLeaveTab(0)" style="flex:1;text-align:center;padding:11px;font-size:14px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">✏️ 입력</div>
+    <div id="mgrLeaveT1" onclick="mgrLeaveTab(1)" style="flex:1;text-align:center;padding:11px;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">📋 조회</div>
+  </div>
+  <div id="mgrLeaveP0" style="padding:15px 17px;max-height:75vh;overflow-y:auto">
     <label class="f-lbl">팀</label>
     <select id="mgrLeaveTeam" class="ri" onchange="mgrLeaveTeamChange()"></select>
     <label class="f-lbl">직책</label>
@@ -5838,11 +5842,22 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <option value="연차 외">📝 연차 외 (연차·병가·휴직·건강검진·공가)</option>
     </select>
     <div style="display:flex;gap:8px">
-      <div style="flex:1"><label class="f-lbl">시작일</label><input type="date" id="mgrLeaveStart" class="ri"></div>
-      <div style="flex:1"><label class="f-lbl">종료일</label><input type="date" id="mgrLeaveEnd" class="ri"></div>
+      <div style="flex:1"><label class="f-lbl">시작일</label><input type="date" id="mgrLeaveStart" class="ri" onchange="mgrLeaveUpdateDayCount()"></div>
+      <div style="flex:1"><label class="f-lbl">종료일</label><input type="date" id="mgrLeaveEnd" class="ri" onchange="mgrLeaveUpdateDayCount()"></div>
     </div>
-    <button onclick="mgrLeaveSave()" style="width:100%;padding:12px;background:var(--teal);color:#fff;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer;margin:6px 0 16px">저장</button>
-    <div style="font-size:13px;font-weight:700;color:var(--g6);margin-bottom:8px">등록된 일정</div>
+    <div id="mgrLeaveDayCount" style="font-size:12.5px;color:var(--g5);margin:-6px 0 10px"></div>
+    <button onclick="mgrLeaveSave()" style="width:100%;padding:12px;background:var(--teal);color:#fff;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">저장</button>
+  </div>
+  <div id="mgrLeaveP1" style="display:none;padding:15px 17px;max-height:75vh;overflow-y:auto">
+    <div style="display:flex;gap:6px;margin-bottom:12px">
+      <select id="mgrLeaveFilterTeam" class="ri" style="margin-bottom:0" onchange="mgrLeaveLoadList()"></select>
+      <select id="mgrLeaveFilterStatus" class="ri" style="margin-bottom:0" onchange="mgrLeaveLoadList()">
+        <option value="">상태 전체</option>
+        <option value="출장">✈ 출장</option>
+        <option value="교육">📚 교육</option>
+        <option value="연차 외">📝 연차 외</option>
+      </select>
+    </div>
     <div id="mgrLeaveListWrap"><div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">불러오는 중...</div></div>
   </div>
 </div></div>
@@ -25591,6 +25606,22 @@ function mgrLeaveMyTeamRole(){
   }
   return null; // admin/master는 전체 자유 선택
 }
+function mgrLeaveTab(n){
+  document.getElementById('mgrLeaveT0').style.color = n===0?'var(--teal)':'var(--g5)';
+  document.getElementById('mgrLeaveT0').style.borderBottom = n===0?'2.5px solid var(--teal)':'none';
+  document.getElementById('mgrLeaveT1').style.color = n===1?'var(--teal)':'var(--g5)';
+  document.getElementById('mgrLeaveT1').style.borderBottom = n===1?'2.5px solid var(--teal)':'none';
+  document.getElementById('mgrLeaveP0').style.display = n===0?'block':'none';
+  document.getElementById('mgrLeaveP1').style.display = n===1?'block':'none';
+  if(n===1) mgrLeaveLoadList();
+}
+function mgrLeaveUpdateDayCount(){
+  var s=document.getElementById('mgrLeaveStart').value, e=document.getElementById('mgrLeaveEnd').value;
+  var box=document.getElementById('mgrLeaveDayCount');
+  if(!s||!e||s>e){ box.textContent=''; return; }
+  var days=Math.round((new Date(e+'T00:00:00')-new Date(s+'T00:00:00'))/86400000)+1;
+  box.textContent=s+' ~ '+e+' ('+days+'일)';
+}
 function mgrLeaveOpenModal(){
   if(!me||me.role==='acting_leader'||me.role==='member'){ toast('⚠️ 조장 이상만 가능합니다'); return; }
   var isFullAccess = me.role==='admin'||me.role==='master';
@@ -25599,9 +25630,14 @@ function mgrLeaveOpenModal(){
   if(!teamSel.options.length){
     teamSel.innerHTML=mgrLeaveAllTeams().map(function(t){ return '<option value="'+t+'">'+(t==='운영'?'운영팀':t)+'</option>'; }).join('');
   }
+  var filterTeamSel=document.getElementById('mgrLeaveFilterTeam');
+  if(!filterTeamSel.options.length){
+    filterTeamSel.innerHTML='<option value="">팀 전체</option>'+mgrLeaveAllTeams().map(function(t){ return '<option value="'+t+'">'+(t==='운영'?'운영팀':t)+'</option>'; }).join('');
+  }
   if(isFullAccess){
     teamSel.disabled=false; roleSel.disabled=false;
     mgrLeaveTeamChange();
+    filterTeamSel.style.display='';
   }else{
     var mine=mgrLeaveMyTeamRole();
     if(!mine){ toast('⚠️ 본인 팀 정보를 확인할 수 없습니다. 관리자에게 문의해주세요'); return; }
@@ -25609,12 +25645,14 @@ function mgrLeaveOpenModal(){
     mgrLeaveTeamChange();
     roleSel.value=mine.name;
     teamSel.disabled=true; roleSel.disabled=true;
+    filterTeamSel.style.display='none'; // 본인 팀만 보이므로 팀 필터 불필요
   }
   var todayStr=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   document.getElementById('mgrLeaveStart').value=todayStr;
   document.getElementById('mgrLeaveEnd').value=todayStr;
+  mgrLeaveUpdateDayCount();
+  mgrLeaveTab(0);
   showM('mgrLeaveModal');
-  mgrLeaveLoadList();
 }
 function mgrLeaveTeamChange(){
   var team=document.getElementById('mgrLeaveTeam').value;
@@ -25642,11 +25680,17 @@ async function mgrLeaveSave(){
   if(res.error){ toast('저장 오류: '+res.error.message); return; }
   toast('✓ 일정이 등록되었습니다 ('+team+' '+name+' · '+status+')');
   var lsRes=await sb.from('mgr_leave_schedule').select('*'); mgrLeaveScheduleCache=lsRes.data||[];
-  mgrLeaveLoadList();
+  mgrLeaveTab(1);
   renderMgrAttendance();
 }
+var MGR_LEAVE_STATUS_STYLE={
+  '출장':{icon:'✈',bg:'#EBF0FF',fg:'#1B4FBE'},
+  '교육':{icon:'📚',bg:'#F3EEFC',fg:'#6B21A8'},
+  '연차 외':{icon:'📝',bg:'#FEF3E2',fg:'#C2751A'}
+};
 async function mgrLeaveLoadList(){
   var wrap=document.getElementById('mgrLeaveListWrap');
+  wrap.innerHTML='<div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">불러오는 중...</div>';
   var todayStr=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   var isFullAccess = me&&(me.role==='admin'||me.role==='master');
   var q=sb.from('mgr_leave_schedule').select('*').gte('end_date',todayStr).order('start_date');
@@ -25654,15 +25698,25 @@ async function mgrLeaveLoadList(){
     var mine=mgrLeaveMyTeamRole();
     if(mine){ q=q.eq('team',mine.team).eq('name',mine.name); }
     else{ wrap.innerHTML='<div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">본인 일정을 확인할 수 없습니다</div>'; return; }
+  }else{
+    var fTeam=document.getElementById('mgrLeaveFilterTeam').value;
+    if(fTeam) q=q.eq('team',fTeam);
   }
+  var fStatus=document.getElementById('mgrLeaveFilterStatus').value;
+  if(fStatus) q=q.eq('status',fStatus);
   var res=await q;
   if(res.error){ wrap.innerHTML='<div style="color:var(--danger);font-size:13px">불러오기 실패</div>'; return; }
   var rows=res.data||[];
-  if(!rows.length){ wrap.innerHTML='<div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">등록된 일정이 없습니다</div>'; return; }
+  if(!rows.length){ wrap.innerHTML='<div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">조건에 맞는 일정이 없습니다</div>'; return; }
   wrap.innerHTML=rows.map(function(r){
-    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--g2);font-size:12.5px">'
-      +'<span>'+r.team+' '+r.name+' · '+r.status+' · '+r.start_date+'~'+r.end_date+'</span>'
-      +'<button onclick="mgrLeaveDelete('+r.id+')" style="padding:4px 9px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;margin-left:6px">삭제</button>'
+    var st=MGR_LEAVE_STATUS_STYLE[r.status]||{icon:'',bg:'var(--g1)',fg:'var(--g6)'};
+    var days=Math.round((new Date(r.end_date+'T00:00:00')-new Date(r.start_date+'T00:00:00'))/86400000)+1;
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;background:'+st.bg+';margin-bottom:8px">'
+      +'<div>'
+        +'<div style="font-size:13px;font-weight:700;color:'+st.fg+'">'+st.icon+' '+r.team+' '+r.name+' · '+r.status+'</div>'
+        +'<div style="font-size:11.5px;color:'+st.fg+';opacity:.85;margin-top:2px">'+r.start_date+' ~ '+r.end_date+' ('+days+'일)</div>'
+      +'</div>'
+      +'<button onclick="mgrLeaveDelete('+r.id+')" style="padding:5px 10px;background:white;color:#dc2626;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0;margin-left:6px">삭제</button>'
       +'</div>';
   }).join('');
 }
@@ -25730,9 +25784,10 @@ function renderMgrAttendance(){
         // 야간조(5팀/10팀)는 자정 이후에도 전날 밤 근무 기준으로 판단
         var offCheckDate = (NIGHT_TEAMS_FOR_OFF.indexOf(team)!==-1) ? nightViewDateStr : viewDateStr;
         // 사전 등록된 일정(출장/교육/연차 외, 기간 지정)이 있으면 체크인보다는 아래·자동휴무보다는 위 우선순위로 반영
-        var scheduledStatus = !att ? mgrLeaveStatusFor(team, name, offCheckDate) : null;
+        // "미확인으로 취소"를 누른 적이 있으면 att 행 자체는 남아있을 수 있어서, att 존재 여부가 아니라 실제 체크 여부(isChecked)로 판단
+        var scheduledStatus = !isChecked ? mgrLeaveStatusFor(team, name, offCheckDate) : null;
         // 미체크 상태인데 근무계획(분기 고정휴무)상 해당 조회일이 휴무인 경우 자동으로 "휴무"로 표시 (당일·전일·조회일 공통 적용)
-        var isAutoOff = !att && !scheduledStatus && isSlotOffToday(team, name, mgrRosterOffCache, offCheckDate);
+        var isAutoOff = !isChecked && !scheduledStatus && isSlotOffToday(team, name, mgrRosterOffCache, offCheckDate);
         var effStatus = status || scheduledStatus; // 아이콘/색상 판정용
 
         // 클릭 권한: 당일에만 가능. 관리자 전체, 해당팀 조장/팀장 (운영팀은 관리자만)
