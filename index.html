@@ -5877,6 +5877,16 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     </div>
   </div>
   <div id="mgrLeaveP1" style="display:none;padding:15px 17px;max-height:75vh;overflow-y:auto">
+    <div style="display:flex;gap:6px;margin-bottom:8px">
+      <select id="mgrLeaveFilterYear" class="ri" style="margin-bottom:0" onchange="mgrLeaveLoadList()"></select>
+      <select id="mgrLeaveFilterMonth" class="ri" style="margin-bottom:0" onchange="mgrLeaveLoadList()">
+        <option value="">전체 월</option>
+        <option value="1">1월</option><option value="2">2월</option><option value="3">3월</option>
+        <option value="4">4월</option><option value="5">5월</option><option value="6">6월</option>
+        <option value="7">7월</option><option value="8">8월</option><option value="9">9월</option>
+        <option value="10">10월</option><option value="11">11월</option><option value="12">12월</option>
+      </select>
+    </div>
     <div style="display:flex;gap:6px;margin-bottom:12px">
       <select id="mgrLeaveFilterTeam" class="ri" style="margin-bottom:0" onchange="mgrLeaveLoadList()"></select>
       <select id="mgrLeaveFilterStatus" class="ri" style="margin-bottom:0" onchange="mgrLeaveLoadList()">
@@ -25697,6 +25707,11 @@ function mgrLeaveOpenModal(){
   if(!filterTeamSel.options.length){
     filterTeamSel.innerHTML='<option value="">팀 전체</option>'+mgrLeaveAllTeams().map(function(t){ return '<option value="'+t+'">'+(t==='운영'?'운영팀':t)+'</option>'; }).join('');
   }
+  var filterYearSel=document.getElementById('mgrLeaveFilterYear');
+  if(!filterYearSel.options.length){
+    var curY=new Date(Date.now()+9*3600000).getUTCFullYear();
+    filterYearSel.innerHTML='<option value="">전체 연도</option><option value="'+curY+'">'+curY+'년</option><option value="'+(curY+1)+'">'+(curY+1)+'년</option>';
+  }
   if(isFullAccess){
     teamSel.disabled=false; roleSel.disabled=false;
     mgrLeaveTeamChange();
@@ -25842,6 +25857,22 @@ async function mgrLeaveLoadList(){
   var res=await q;
   if(res.error){ wrap.innerHTML='<div style="color:var(--danger);font-size:13px">불러오기 실패</div>'; return; }
   var rows=res.data||[];
+  var fYear=document.getElementById('mgrLeaveFilterYear').value;
+  var fMonth=document.getElementById('mgrLeaveFilterMonth').value;
+  if(fYear||fMonth){
+    rows=rows.filter(function(r){
+      var s=r.start_date, e=r.end_date;
+      if(fYear&&fMonth){
+        var target=fYear+'-'+(fMonth.length===1?'0'+fMonth:fMonth);
+        return s.slice(0,7)<=target && e.slice(0,7)>=target;
+      }else if(fYear){
+        return s.slice(0,4)<=fYear && e.slice(0,4)>=fYear;
+      }else{
+        var mm=fMonth.length===1?'0'+fMonth:fMonth;
+        return s.slice(5,7)===mm || e.slice(5,7)===mm;
+      }
+    });
+  }
   if(!rows.length){ wrap.innerHTML='<div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">조건에 맞는 일정이 없습니다</div>'; return; }
   var html='';
   var curMonthKey='';
