@@ -25736,7 +25736,7 @@ async function mgrLeaveLoadHistory(){
   if(!rows.length){ wrap.innerHTML='<div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">이력이 없습니다</div>'; return; }
   wrap.innerHTML=rows.map(function(r){
     var when=toKSTDateTime(r.changed_at);
-    var srcLabel = r.source==='checkin' ? '당일 체크' : '일정 등록';
+    var srcLabel = r.source==='checkin' ? '당일 체크' : '일정';
     return '<div style="padding:9px 0;border-bottom:1px solid var(--g2);font-size:12.5px">'
       +'<div style="color:var(--g7);font-weight:700">'+r.team+' '+r.name+' · '+srcLabel+' '+r.action+'</div>'
       +'<div style="color:var(--g5);margin-top:2px">'+r.detail+'</div>'
