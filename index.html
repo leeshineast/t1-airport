@@ -25945,7 +25945,7 @@ function renderMgrAttendance(){
         // 미체크 상태인데 근무계획(분기 고정휴무)상 해당 조회일이 휴무인 경우 자동으로 "휴무"로 표시 (당일·전일·조회일 공통 적용)
         var isAutoOff = !isChecked && !scheduledStatus && isSlotOffToday(team, name, mgrRosterOffCache, offCheckDate);
         var effStatus = status || scheduledStatus; // 아이콘/색상 판정용
-        var isLeaveType = effStatus && effStatus!=='출장' && effStatus!=='교육' && effStatus!=='휴무'; // 연차/공가/건강검진/병가/휴직/기타 통칭
+        var isLeaveType = effStatus && effStatus!=='출장' && effStatus!=='교육' && effStatus!=='휴무' && effStatus!=='출근'; // 연차/공가/건강검진/병가/휴직/기타 통칭
 
         // 클릭 권한: 당일에만 가능. 관리자 전체, 해당팀 조장/팀장 (운영팀은 관리자만)
         var canCheck = isToday && me && me.role!=='acting_leader' && (isAdmin || (team!=='운영' && myTeam === team));
