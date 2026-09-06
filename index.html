@@ -25737,8 +25737,9 @@ async function mgrLeaveLoadHistory(){
   wrap.innerHTML=rows.map(function(r){
     var when=toKSTDateTime(r.changed_at);
     var srcLabel = r.source==='checkin' ? '당일 체크' : '일정';
+    var actionLabel = r.action==='체크' ? '완료' : r.action; // 예전 기록에 남아있는 옛 표기 보정
     return '<div style="padding:9px 0;border-bottom:1px solid var(--g2);font-size:12.5px">'
-      +'<div style="color:var(--g7);font-weight:700">'+r.team+' '+r.name+' · '+srcLabel+' '+r.action+'</div>'
+      +'<div style="color:var(--g7);font-weight:700">'+r.team+' '+r.name+' · '+srcLabel+' '+actionLabel+'</div>'
       +'<div style="color:var(--g5);margin-top:2px">'+r.detail+'</div>'
       +'<div style="color:var(--g4);font-size:11px;margin-top:2px">'+when+' · '+(r.changed_by||'')+'</div>'
       +'</div>';
