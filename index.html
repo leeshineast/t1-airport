@@ -26530,7 +26530,7 @@ async function setMgrAtt(status){
     },{onConflict:'date,team,name'});
     if(res.error) throw res.error;
     var newLabel = checked ? status : '미확인';
-    if(oldLabel!==newLabel) mgrLogStatus(team, name, 'checkin', '체크', today+' '+oldLabel+' → '+newLabel);
+    if(oldLabel!==newLabel) mgrLogStatus(team, name, 'checkin', '완료', today+' '+oldLabel+' → '+newLabel);
     // 로컬 즉시 반영
     if(checked){
       mgrAttData[key] = {team:team, name:name, checked:true, status:status, checked_by:checkerName, checked_at:nowISO};
