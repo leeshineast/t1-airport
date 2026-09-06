@@ -1929,9 +1929,10 @@ html{overflow-x:hidden}
       </div>
     </div>
     <div style="padding:0 13px 10px;display:flex;gap:7px;align-items:center" id="mgrAttViewToggle">
-      <div class="rp on" onclick="switchMgrAttView(this,'today')" style="flex:1;text-align:center">당일</div>
-      <div class="rp" onclick="switchMgrAttView(this,'yesterday')" style="flex:1;text-align:center">전일</div>
-      <input type="date" id="mgrAttDatePick" onchange="mgrAttGoToDate(this.value)" style="flex:1.3;padding:8px 6px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;color:var(--g6);background:white">
+      <button onclick="mgrAttStepDay(-1)" style="flex:0 0 auto;width:38px;height:38px;border:1.5px solid var(--g2);border-radius:8px;background:white;color:var(--g6);font-size:16px;font-weight:700;cursor:pointer">◀</button>
+      <div id="mgrAttDateCenter" style="flex:1;text-align:center;padding:8px 4px;border:1.5px solid var(--teal2);border-radius:8px;background:var(--teal-bg);color:var(--teal2);font-weight:700;font-size:14px">당일</div>
+      <button onclick="mgrAttStepDay(1)" style="flex:0 0 auto;width:38px;height:38px;border:1.5px solid var(--g2);border-radius:8px;background:white;color:var(--g6);font-size:16px;font-weight:700;cursor:pointer">▶</button>
+      <input type="date" id="mgrAttDatePick" onchange="mgrAttGoToDate(this.value)" style="flex:0 0 auto;width:38px;height:38px;padding:0;border:1.5px solid var(--g2);border-radius:8px;color:transparent;background:white url('data:image/svg+xml;utf8,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22%23666%22><path d=%22M19 3h-1V1h-2v2H8V1H6v2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z%22/></svg>') center/20px no-repeat;cursor:pointer">
     </div>
     <div style="padding:0 13px 10px">
       <button onclick="mgrLeaveOpenModal()" style="width:100%;padding:9px;background:#FEF3E2;color:#C2751A;border:1.5px solid #C2751A;border-radius:8px;font-size:13.5px;font-weight:700;cursor:pointer">📅 출장·교육·연차 외 일정 등록 (기간 지정)</button>
@@ -25578,29 +25579,33 @@ async function fetchMgrAttendanceForDate(dateStr){
   return entry;
 }
 var mgrAttCurrentDateStr=null; // null=당일, 그 외에는 'YYYY-MM-DD' (전일 포함, 조회일 통합 관리)
-function switchMgrAttView(btn, mode){
-  document.querySelectorAll('#mgrAttViewToggle .rp').forEach(function(b){b.classList.remove('on');});
-  btn.classList.add('on');
-  var dp=document.getElementById('mgrAttDatePick'); if(dp) dp.value='';
-  if(mode==='yesterday'){
-    var y=new Date(Date.now()+9*3600000-86400000).toISOString().slice(0,10);
-    mgrAttLoadAndRender(y);
-  } else {
-    mgrAttCurrentDateStr=null;
-    var dateEl=document.getElementById('mgrAttDate');
-    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
-    if(dateEl) dateEl.textContent=today;
-    renderMgrAttendance();
+function mgrAttUpdateCenterLabel(dateStr, todayStr){
+  var center=document.getElementById('mgrAttDateCenter');
+  var dp=document.getElementById('mgrAttDatePick');
+  if(dp) dp.value=dateStr;
+  if(!center) return;
+  if(dateStr===todayStr){
+    center.textContent='당일';
+    center.style.background='var(--teal-bg)'; center.style.borderColor='var(--teal2)'; center.style.color='var(--teal2)';
+  }else{
+    var yesterdayStr=new Date(new Date(todayStr+'T00:00:00+09:00').getTime()-86400000).toISOString().slice(0,10);
+    center.textContent = dateStr+(dateStr===yesterdayStr?' (전일)':'');
+    center.style.background='white'; center.style.borderColor='var(--g2)'; center.style.color='var(--g6)';
   }
+}
+function mgrAttStepDay(delta){
+  var todayStr=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+  var base=mgrAttCurrentDateStr||todayStr;
+  var next=new Date(new Date(base+'T00:00:00+09:00').getTime()+delta*86400000).toISOString().slice(0,10);
+  mgrAttGoToDate(next);
 }
 function mgrAttGoToDate(dateStr){
   if(!dateStr) return;
-  document.querySelectorAll('#mgrAttViewToggle .rp').forEach(function(b){b.classList.remove('on');});
   var todayStr=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   if(dateStr===todayStr){
     mgrAttCurrentDateStr=null;
-    var t0=document.querySelectorAll('#mgrAttViewToggle .rp')[0]; if(t0) t0.classList.add('on');
     var dateEl=document.getElementById('mgrAttDate'); if(dateEl) dateEl.textContent=todayStr;
+    mgrAttUpdateCenterLabel(todayStr, todayStr);
     renderMgrAttendance();
     return;
   }
@@ -25611,8 +25616,10 @@ function mgrAttLoadAndRender(dateStr){
   document.getElementById('mgrAttBody').innerHTML='<div style="text-align:center;padding:16px;color:var(--g3);font-size:14px">불러오는 중...</div>';
   fetchMgrAttendanceForDate(dateStr).then(function(){
     var dateEl=document.getElementById('mgrAttDate');
+    var todayStr=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
     var yesterdayStr=new Date(Date.now()+9*3600000-86400000).toISOString().slice(0,10);
     if(dateEl) dateEl.textContent = dateStr+(dateStr===yesterdayStr?' (전일)':' (조회)');
+    mgrAttUpdateCenterLabel(dateStr, todayStr);
     renderMgrAttendance();
   });
 }
