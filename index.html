@@ -5831,11 +5831,22 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
 </div></div>
 
+<div id="mgrAttConfirmModal" class="modal-bg"><div class="modal" style="max-width:320px">
+  <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3 id="mgrAttConfirmTitle">오늘 실제로 맞나요?</h3><button class="m-x" onclick="hideM('mgrAttConfirmModal')">×</button></div>
+  <div style="padding:17px">
+    <div id="mgrAttConfirmDesc" style="font-size:14px;color:var(--g6);margin-bottom:14px;line-height:1.5"></div>
+    <button onclick="mgrAttConfirmYes()" style="width:100%;padding:12px;margin-bottom:8px;background:var(--teal-bg);color:var(--teal2);border:1.5px solid var(--teal2);border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">✔ 맞습니다, 오늘로 확정</button>
+    <button onclick="mgrAttConfirmDifferent()" style="width:100%;padding:12px;margin-bottom:8px;background:#FEF3E2;color:#C2751A;border:1.5px solid #C2751A;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">✏️ 실제로는 다릅니다 (직접 선택)</button>
+    <button onclick="mgrAttConfirmEditSchedule()" style="width:100%;padding:12px;background:var(--g1);color:var(--g6);border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">📅 등록된 일정 자체를 수정/삭제</button>
+  </div>
+</div></div>
+
 <div id="mgrLeaveModal" class="modal-bg"><div class="modal" style="max-width:360px">
   <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📅 일정 관리</h3><button class="m-x" onclick="hideM('mgrLeaveModal')">×</button></div>
   <div style="display:flex;border-bottom:2px solid var(--g2)">
     <div id="mgrLeaveT0" onclick="mgrLeaveTab(0)" style="flex:1;text-align:center;padding:11px;font-size:14px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">✏️ 입력</div>
     <div id="mgrLeaveT1" onclick="mgrLeaveTab(1)" style="flex:1;text-align:center;padding:11px;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">📋 조회</div>
+    <div id="mgrLeaveT2" onclick="mgrLeaveTab(2)" style="flex:1;text-align:center;padding:11px;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">🕘 이력</div>
   </div>
   <div id="mgrLeaveP0" style="padding:15px 17px;max-height:75vh;overflow-y:auto">
     <div id="mgrLeaveEditBadge" style="display:none;font-size:12.5px;font-weight:700;color:#C2751A;background:#FEF3E2;padding:6px 10px;border-radius:8px;margin-bottom:10px">✏️ 기존 일정 수정 중</div>
@@ -5880,6 +5891,9 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       </select>
     </div>
     <div id="mgrLeaveListWrap"><div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">불러오는 중...</div></div>
+  </div>
+  <div id="mgrLeaveP2" style="display:none;padding:15px 17px;max-height:75vh;overflow-y:auto">
+    <div id="mgrLeaveHistWrap"><div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">불러오는 중...</div></div>
   </div>
 </div></div>
 
@@ -25627,13 +25641,37 @@ function mgrLeaveMyTeamRole(){
   return null; // admin/master는 전체 자유 선택
 }
 function mgrLeaveTab(n){
-  document.getElementById('mgrLeaveT0').style.color = n===0?'var(--teal)':'var(--g5)';
-  document.getElementById('mgrLeaveT0').style.borderBottom = n===0?'2.5px solid var(--teal)':'none';
-  document.getElementById('mgrLeaveT1').style.color = n===1?'var(--teal)':'var(--g5)';
-  document.getElementById('mgrLeaveT1').style.borderBottom = n===1?'2.5px solid var(--teal)':'none';
-  document.getElementById('mgrLeaveP0').style.display = n===0?'block':'none';
-  document.getElementById('mgrLeaveP1').style.display = n===1?'block':'none';
+  [0,1,2].forEach(function(i){
+    var t=document.getElementById('mgrLeaveT'+i);
+    t.style.color = n===i?'var(--teal)':'var(--g5)';
+    t.style.borderBottom = n===i?'2.5px solid var(--teal)':'none';
+    document.getElementById('mgrLeaveP'+i).style.display = n===i?'block':'none';
+  });
   if(n===1) mgrLeaveLoadList();
+  if(n===2) mgrLeaveLoadHistory();
+}
+async function mgrLeaveLoadHistory(){
+  var wrap=document.getElementById('mgrLeaveHistWrap');
+  wrap.innerHTML='<div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">불러오는 중...</div>';
+  var isFullAccess = me&&(me.role==='admin'||me.role==='master');
+  var q=sb.from('mgr_status_log').select('*').order('changed_at',{ascending:false}).limit(100);
+  if(!isFullAccess){
+    var mine=mgrLeaveMyTeamRole();
+    if(mine){ q=q.eq('team',mine.team).eq('name',mine.name); }
+  }
+  var res=await q;
+  if(res.error){ wrap.innerHTML='<div style="color:var(--danger);font-size:13px">불러오기 실패</div>'; return; }
+  var rows=res.data||[];
+  if(!rows.length){ wrap.innerHTML='<div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">이력이 없습니다</div>'; return; }
+  wrap.innerHTML=rows.map(function(r){
+    var when=toKSTDateTime(r.changed_at);
+    var srcLabel = r.source==='checkin' ? '당일 체크' : '일정 등록';
+    return '<div style="padding:9px 0;border-bottom:1px solid var(--g2);font-size:12.5px">'
+      +'<div style="color:var(--g7);font-weight:700">'+r.team+' '+r.name+' · '+srcLabel+' '+r.action+'</div>'
+      +'<div style="color:var(--g5);margin-top:2px">'+r.detail+'</div>'
+      +'<div style="color:var(--g4);font-size:11px;margin-top:2px">'+when+' · '+(r.changed_by||'')+'</div>'
+      +'</div>';
+  }).join('');
 }
 function mgrLeaveUpdateDayCount(){
   var s=document.getElementById('mgrLeaveStart').value, e=document.getElementById('mgrLeaveEnd').value;
@@ -25754,12 +25792,20 @@ async function mgrLeaveSave(){
   var end=document.getElementById('mgrLeaveEnd').value;
   if(!team||!name||!start||!end){ toast('⚠️ 전부 입력해주세요'); return; }
   if(start>end){ toast('⚠️ 종료일이 시작일보다 빠릅니다'); return; }
+  var oldEntry = mgrLeaveEditId ? (mgrLeaveScheduleCache||[]).find(function(x){return x.id===mgrLeaveEditId;}) : null;
   var body={team:team, name:name, status:status, start_date:start, end_date:end, created_by:me?me.name:''};
   var res = mgrLeaveEditId
     ? await sb.from('mgr_leave_schedule').update(body).eq('id', mgrLeaveEditId)
     : await sb.from('mgr_leave_schedule').insert(body);
   if(res.error){ toast('저장 오류: '+res.error.message); return; }
   toast('✓ 일정이 '+(mgrLeaveEditId?'수정':'등록')+'되었습니다 ('+team+' '+name+' · '+status+')');
+  if(mgrLeaveEditId){
+    var oldTxt=oldEntry?(oldEntry.status+' '+oldEntry.start_date+'~'+oldEntry.end_date):'(알수없음)';
+    var newTxt=status+' '+start+'~'+end;
+    if(oldTxt!==newTxt) mgrLogStatus(team, name, 'schedule', '수정', oldTxt+' → '+newTxt);
+  }else{
+    mgrLogStatus(team, name, 'schedule', '등록', status+' '+start+'~'+end);
+  }
   mgrLeaveEditId=null;
   document.getElementById('mgrLeaveEditBadge').style.display='none';
   document.getElementById('mgrLeaveDeleteBtn').style.display='none';
@@ -25814,9 +25860,11 @@ async function mgrLeaveLoadList(){
 }
 async function mgrLeaveDelete(id){
   if(!confirm('이 일정을 삭제할까요?')) return;
+  var r=(mgrLeaveScheduleCache||[]).find(function(x){return x.id===id;});
   var res=await sb.from('mgr_leave_schedule').delete().eq('id',id);
   if(res.error){ toast('삭제 오류: '+res.error.message); return; }
   toast('✓ 삭제되었습니다');
+  if(r) mgrLogStatus(r.team, r.name, 'schedule', '삭제', r.status+' '+r.start_date+'~'+r.end_date);
   var lsRes=await sb.from('mgr_leave_schedule').select('*'); mgrLeaveScheduleCache=lsRes.data||[];
   mgrLeaveLoadList();
   renderMgrAttendance();
@@ -25824,9 +25872,11 @@ async function mgrLeaveDelete(id){
 async function mgrLeaveDeleteCurrent(){
   if(!mgrLeaveEditId) return;
   if(!confirm('이 일정을 삭제할까요?')) return;
+  var r=(mgrLeaveScheduleCache||[]).find(function(x){return x.id===mgrLeaveEditId;});
   var res=await sb.from('mgr_leave_schedule').delete().eq('id',mgrLeaveEditId);
   if(res.error){ toast('삭제 오류: '+res.error.message); return; }
   toast('✓ 삭제되었습니다');
+  if(r) mgrLogStatus(r.team, r.name, 'schedule', '삭제', r.status+' '+r.start_date+'~'+r.end_date);
   mgrLeaveEditId=null;
   document.getElementById('mgrLeaveEditBadge').style.display='none';
   document.getElementById('mgrLeaveDeleteBtn').style.display='none';
@@ -25908,14 +25958,14 @@ function renderMgrAttendance(){
                : isChecked ? 'background:var(--teal-bg);border-color:var(--teal2);color:var(--teal2)'
                : 'background:var(--g1);border-color:var(--g2);color:var(--g4)';
         var cursor = canCheck ? 'cursor:pointer' : 'cursor:default';
-        var onclick = !canCheck ? '' : scheduledEntry ? 'onclick="mgrLeaveOpenEdit('+scheduledEntry.id+')"' : 'onclick="openMgrAttPicker(\'' + team + '\',\'' + name + '\')"';
+        var onclick = !canCheck ? '' : scheduledEntry ? 'onclick="mgrAttOpenConfirm(\''+team+'\',\''+name+'\','+scheduledEntry.id+',\''+scheduledEntry.status.replace(/'/g,"\\'")+'\')"' : 'onclick="openMgrAttPicker(\'' + team + '\',\'' + name + '\')"';
 
         h += '<div '+onclick+' style="padding:6px 10px;border-radius:var(--r2);border:1.5px solid;font-size:13px;font-weight:600;'+bg+';'+cursor+';min-width:60px;text-align:center">';
         h += '<div>'+(statusIcon?statusIcon+' ':'')+name+'</div>';
         if(isChecked && checkedTime){
           h += '<div style="font-size:10px;color:inherit;margin-top:1px;opacity:.85">'+(status&&status!=='출근'?status+' · ':'')+checkedTime+(checkedBy&&checkedBy!==me.name?' ('+checkedBy+')':'')+'</div>';
         }else if(scheduledStatus){
-          h += '<div style="font-size:10px;color:inherit;margin-top:1px;opacity:.85">'+scheduledStatus+'</div>';
+          h += '<div style="font-size:10px;color:inherit;margin-top:1px;opacity:.85">'+scheduledStatus+' (예정)</div>';
         }else if(isAutoOff){
           h += '<div style="font-size:10px;color:inherit;margin-top:1px;opacity:.85">근무계획 휴무</div>';
         }
@@ -26317,6 +26367,36 @@ function openMgrAttPicker(team, name){
 }
 function closeMgrAttPick(){ hideM('mgrAttPickModal'); mgrAttPickTarget = null; }
 
+var mgrAttConfirmTarget = null; // {team,name,entryId,status}
+function mgrAttOpenConfirm(team, name, entryId, status){
+  mgrAttConfirmTarget = {team:team, name:name, entryId:entryId, status:status};
+  document.getElementById('mgrAttConfirmTitle').textContent = name+' 오늘 실제로 맞나요?';
+  document.getElementById('mgrAttConfirmDesc').innerHTML = '등록된 일정상 오늘은 <b style="color:#C2751A">'+status+'</b>(으)로 예정되어 있습니다. 실제로도 맞나요?';
+  showM('mgrAttConfirmModal');
+}
+function mgrAttConfirmYes(){
+  if(!mgrAttConfirmTarget) return;
+  mgrAttPickTarget = {team:mgrAttConfirmTarget.team, name:mgrAttConfirmTarget.name};
+  var status = mgrAttConfirmTarget.status;
+  hideM('mgrAttConfirmModal');
+  setMgrAtt(status);
+}
+function mgrAttConfirmDifferent(){
+  if(!mgrAttConfirmTarget) return;
+  var team=mgrAttConfirmTarget.team, name=mgrAttConfirmTarget.name;
+  hideM('mgrAttConfirmModal');
+  openMgrAttPicker(team, name);
+}
+function mgrAttConfirmEditSchedule(){
+  if(!mgrAttConfirmTarget) return;
+  var id=mgrAttConfirmTarget.entryId;
+  hideM('mgrAttConfirmModal');
+  mgrLeaveOpenEdit(id);
+}
+
+async function mgrLogStatus(team, name, source, action, detail){
+  try{ await sb.from('mgr_status_log').insert({team:team, name:name, source:source, action:action, detail:detail, changed_by:me?me.name:''}); }catch(e){ /* 이력 기록 실패해도 원 작업은 유지 */ }
+}
 function setMgrAttOther(){
   var v=prompt('상태명을 입력해주세요 (예: 조퇴, 예비군 등)');
   if(v===null) return; // 취소
@@ -26330,6 +26410,8 @@ async function setMgrAtt(status){
   var today = new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   var key = team+'_'+name;
   var checked = !!status;
+  var oldEntry = mgrAttData[key];
+  var oldLabel = oldEntry&&oldEntry.checked ? (oldEntry.status||'출근') : '미확인';
   // 순수 UTC로 저장 (KST 보정은 표시 시점 toKSTTime에서만 수행)
   var nowISO = new Date().toISOString();
   var checkerName = me ? me.name : '';
@@ -26346,6 +26428,8 @@ async function setMgrAtt(status){
       checked_at: checked ? nowISO : null
     },{onConflict:'date,team,name'});
     if(res.error) throw res.error;
+    var newLabel = checked ? status : '미확인';
+    if(oldLabel!==newLabel) mgrLogStatus(team, name, 'checkin', '체크', today+' '+oldLabel+' → '+newLabel);
     // 로컬 즉시 반영
     if(checked){
       mgrAttData[key] = {team:team, name:name, checked:true, status:status, checked_by:checkerName, checked_at:nowISO};
