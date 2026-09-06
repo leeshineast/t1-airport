@@ -25636,6 +25636,29 @@ function mgrLeaveEntryFor(team, name, dateStr){
   if(!mgrLeaveScheduleCache||!mgrLeaveScheduleCache.length) return null;
   return mgrLeaveScheduleCache.find(function(r){ return r.team===team && r.name===name && r.start_date<=dateStr && r.end_date>=dateStr; }) || null;
 }
+// 당일 체크(mgr_attendance)와 일정 등록(mgr_leave_schedule)을 한쪽 방향으로만 잇지 않고, 당일 체크에서도 조회탭에 남도록 동기화.
+// 단, 미리 등록된 여러 날짜짜리 계획은 오늘 하루 값이 다르다고 건드리지 않음 — 하루짜리(당일 단발) 기록만 생성/수정/삭제 대상.
+async function syncMgrLeaveWithCheckin(team, name, todayStr, status){
+  try{
+    var existing = mgrLeaveEntryFor(team, name, todayStr);
+    var isSingleDayToday = existing && existing.start_date===todayStr && existing.end_date===todayStr;
+    if(status && status!=='출근'){
+      if(!existing){
+        await sb.from('mgr_leave_schedule').insert({team:team, name:name, status:status, start_date:todayStr, end_date:todayStr, created_by:me?me.name:''});
+        mgrLogStatus(team, name, 'schedule', '등록', status+' '+todayStr+'~'+todayStr+' (당일체크 자동기록)');
+      }else if(isSingleDayToday && existing.status!==status){
+        await sb.from('mgr_leave_schedule').update({status:status}).eq('id', existing.id);
+        mgrLogStatus(team, name, 'schedule', '수정', existing.status+' → '+status+' ('+todayStr+', 당일체크 자동수정)');
+      }
+      // 여러 날짜짜리 기존 계획은 건드리지 않음 — 화면엔 어차피 당일 체크값이 우선 표시됨
+    }else if(isSingleDayToday){
+      // 출근으로 정정되거나 취소된 경우, 당일 단발 자동기록이었다면 정리
+      await sb.from('mgr_leave_schedule').delete().eq('id', existing.id);
+      mgrLogStatus(team, name, 'schedule', '삭제', existing.status+' '+todayStr+'~'+todayStr+' (당일체크로 정정되어 자동삭제)');
+    }
+    var lsRes=await sb.from('mgr_leave_schedule').select('*'); mgrLeaveScheduleCache=lsRes.data||[];
+  }catch(e){ /* 동기화 실패해도 당일 체크 자체는 이미 저장됐으므로 무시 */ }
+}
 function mgrLeaveRealNameSuffix(team, roleLabel){
   var person = mgrRosterOffCache && mgrRosterOffCache.roster && mgrRosterOffCache.roster[team+'_'+roleLabel];
   return person && person.name ? '('+person.name+')' : '';
@@ -26497,6 +26520,7 @@ async function setMgrAtt(status){
     closeMgrAttPick();
     renderMgrAttendance();
     updateDashMgrAtt();
+    syncMgrLeaveWithCheckin(team, name, today, checked?status:null);
   }catch(e){ toast('저장 오류: '+String(e.message||e)); }
 }
 
