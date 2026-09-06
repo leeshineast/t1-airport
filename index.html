@@ -25622,6 +25622,10 @@ function mgrLeaveEntryFor(team, name, dateStr){
   if(!mgrLeaveScheduleCache||!mgrLeaveScheduleCache.length) return null;
   return mgrLeaveScheduleCache.find(function(r){ return r.team===team && r.name===name && r.start_date<=dateStr && r.end_date>=dateStr; }) || null;
 }
+function mgrLeaveRealNameSuffix(team, roleLabel){
+  var person = mgrRosterOffCache && mgrRosterOffCache.roster && mgrRosterOffCache.roster[team+'_'+roleLabel];
+  return person && person.name ? '('+person.name+')' : '';
+}
 function mgrLeaveAllTeams(){
   var out=[];
   Object.keys(MGR_STRUCTURE).forEach(function(shift){
@@ -25887,7 +25891,7 @@ async function mgrLeaveLoadList(){
     var days=Math.round((new Date(r.end_date+'T00:00:00')-new Date(r.start_date+'T00:00:00'))/86400000)+1;
     html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;background:'+st.bg+';margin-bottom:8px">'
       +'<div>'
-        +'<div style="font-size:13px;font-weight:700;color:'+st.fg+'">'+st.icon+' '+r.team+' '+r.name+' · '+r.status+'</div>'
+        +'<div style="font-size:13px;font-weight:700;color:'+st.fg+'">'+st.icon+' '+r.team+' '+r.name+mgrLeaveRealNameSuffix(r.team,r.name)+' · '+r.status+'</div>'
         +'<div style="font-size:11.5px;color:'+st.fg+';opacity:.85;margin-top:2px">'+r.start_date+' ~ '+r.end_date+' ('+days+'일)</div>'
       +'</div>'
       +'<div style="display:flex;gap:5px;flex-shrink:0;margin-left:6px">'
