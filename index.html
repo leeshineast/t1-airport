@@ -22145,7 +22145,7 @@ async function refreshMpDataLight(){
       }else{
         go('main');
       }
-      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); loadExecSummary(); if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); loadMpAverages(); loadNsAverage(); loadFacilityMenuViewCounts(); loadLostSafety(); }, 500);
+      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); checkLostPending(); checkVocPending(); loadExecSummary(); if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); loadMpAverages(); loadNsAverage(); loadFacilityMenuViewCounts(); loadLostSafety(); }, 500);
       setTimeout(function(){ tryAutoCheckin(); checkHeatAlert(); eeCheckAutoAttendance(); }, 2000);
       return;
     }
@@ -24900,6 +24900,7 @@ var notifUnread = 0;
 var _lastHoCount = 0;
 var _lastMpKeys = {};
 var _lastIndCount = 0;
+var _lastMgrAttKeys = {};
 
 function openNotifDrawer(){
   var drawer=document.getElementById('notifDrawer');
@@ -24930,7 +24931,7 @@ function renderNotifList(){
     el.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">알림이 없습니다</div>';
     return;
   }
-  var bgs={ho:'#E6FAF8',mp:'#EEF2FF',ind:'#FFF0F0',notice:'#FFFBEB'};
+  var bgs={ho:'#E6FAF8',mp:'#EEF2FF',ind:'#FFF0F0',notice:'#FFFBEB',mgratt:'#F0FDF4'};
   var h='';
   notifList.forEach(function(n){
     var diff=Math.floor((Date.now()-new Date(n.time).getTime())/1000);
@@ -25010,6 +25011,27 @@ function checkNotifUpdates(){
     addNotif('🚑','산업재해 등록', latest2?(latest2.worker||latest2.per||'')+'님 '+(latest2.type||'')+'재해 등록됨':'산업재해 등록','ind');
   }
   _lastIndCount=curInd;
+
+  // 관리자 출근 체크 — 누군가 체크할 때마다 알림
+  (async function(){
+    try{
+      var todayStrForNotif=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+      var res=await sb.from('mgr_attendance').select('name,team,checked_by').eq('date',todayStrForNotif).eq('checked',true);
+      if(res.error) return;
+      var rows=res.data||[];
+      var curMgrKeys={};
+      rows.forEach(function(r){ curMgrKeys[r.team+'_'+r.name]=r.checked_by||''; });
+      if(Object.keys(_lastMgrAttKeys).length>0){
+        Object.keys(curMgrKeys).forEach(function(k){
+          if(!_lastMgrAttKeys[k]){
+            var parts=k.split('_');
+            addNotif('✅','관리자 출근 체크', parts[0]+' '+parts[1]+' 체크됨'+(curMgrKeys[k]?' ('+curMgrKeys[k]+')':''),'mgratt');
+          }
+        });
+      }
+      _lastMgrAttKeys=curMgrKeys;
+    }catch(e){}
+  })();
 }
 
 function initNotifBaseline(){
@@ -25020,6 +25042,15 @@ function initNotifBaseline(){
   });
   _lastMpKeys=keys;
   _lastIndCount=(indData||[]).length;
+  (async function(){
+    try{
+      var todayStrForNotif=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+      var res=await sb.from('mgr_attendance').select('name,team').eq('date',todayStrForNotif).eq('checked',true);
+      var keys2={};
+      (res.data||[]).forEach(function(r){ keys2[r.team+'_'+r.name]=1; });
+      _lastMgrAttKeys=keys2;
+    }catch(e){}
+  })();
 }
 
 
@@ -30670,6 +30701,27 @@ function updateHoTabBadge(cnt){
   }
 }
 
+var _t1PrevLostPending=-1, _t1PrevVocPending=-1;
+async function checkLostPending(){
+  try{
+    var res=await sb.from('lost_found').select('id').neq('status','완료');
+    if(res.error) return;
+    var cnt=(res.data||[]).length;
+    if(_t1PrevLostPending===-1){ _t1PrevLostPending=cnt; return; }
+    if(cnt>_t1PrevLostPending && typeof playNotifSound==='function') playNotifSound();
+    _t1PrevLostPending=cnt;
+  }catch(e){}
+}
+async function checkVocPending(){
+  try{
+    var res=await sb.from('voc_data').select('id').neq('status','완료');
+    if(res.error) return;
+    var cnt=(res.data||[]).length;
+    if(_t1PrevVocPending===-1){ _t1PrevVocPending=cnt; return; }
+    if(cnt>_t1PrevVocPending && typeof playNotifSound==='function') playNotifSound();
+    _t1PrevVocPending=cnt;
+  }catch(e){}
+}
 function startHoPoll(){
   if(_t1HoPollTimer) return;
   _t1HoPollTimer=setInterval(async function(){
@@ -30677,6 +30729,8 @@ function startHoPoll(){
       var res=await sb.from('handover').select('*').order('created_at',{ascending:false});
       if(!res.error){ hoAll=res.data||[]; checkHoPending(); }
     }catch(e){}
+    checkLostPending();
+    checkVocPending();
   }, 7200000); // 2시간
 }
 
