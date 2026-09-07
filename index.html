@@ -29009,7 +29009,7 @@ function cpRenderAllEntries(){
          var len=(e.content||'').length;
          var max=cpCurCampaign.max_length;
          var over=max && len>max;
-         return '<div style="font-size:11px;'+(over?'color:#dc2626;font-weight:700':'color:var(--g4)')+';margin-top:3px">'+(over?'⚠️ ':'')+len+(max?(' / '+max+'자'):'자')+(over?' (초과)':'')+'</div>';
+         return '<div style="font-size:11px;'+(over?'color:#dc2626;font-weight:700':'color:var(--g4)')+';margin-top:3px">'+(over?'⚠️ ':'')+len+(max?(' / '+max+'자 (공백포함)'):'자 (공백포함)')+(over?' 초과':'')+'</div>';
        })()+
        (canSee&&hasScore?('<div style="font-size:11px;color:#c2410c;margin-top:4px">투표: '+cpVotesCache.filter(function(v){return v.entry_id===e.id;}).sort(function(a,b){return a.rank-b.rank;}).map(function(v){return eeEsc(v.voter_name||'?')+'('+v.rank+'위)';}).join(', ')+'</div>'):'')+
        '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap">'+
