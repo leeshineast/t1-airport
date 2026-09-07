@@ -1067,6 +1067,14 @@ html{overflow-x:hidden}
   <!-- 폭염경보 배너 (체감온도 기준 실시간) -->
   <!-- 기상특보 배너 (폭염/한파/강풍(태풍성)/호우 — 동시 여러개 가능) -->
   <div id="weatherAlertWrap" style="display:flex;flex-direction:column;gap:8px;margin:10px 13px 0"></div>
+  <!-- 푸시 알림 허용 배너 -->
+  <div id="pushOptInBanner" style="display:none;margin:10px 13px 0;background:linear-gradient(135deg,var(--navy),var(--teal2));border-radius:12px;padding:12px 14px;align-items:center;justify-content:space-between;gap:10px">
+    <div style="color:#fff;font-size:13px;font-weight:700;flex:1">🔔 새 공지·민원 등을 알림(소리)으로 받아보세요</div>
+    <div style="display:flex;gap:6px;flex-shrink:0">
+      <button onclick="pushOptInDismiss()" style="padding:7px 10px;background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">나중에</button>
+      <button onclick="pushOptInEnable()" style="padding:7px 12px;background:#fff;color:var(--navy);border:none;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer">허용</button>
+    </div>
+  </div>
   <!-- 인력현황 통합 카드 -->
   <div class="stat-row">
     <div class="stat-box" style="flex:1;cursor:pointer" onclick="go('execdash')">
@@ -12787,6 +12795,7 @@ async function eeSubmitEvent(){
     if(schedRes.error){ toast('일정 등록 실패: '+schedRes.error.message); return; }
     toast('✅ "'+title+'" 등록 완료 ('+scheds.length+'개 일정)');
     eeLogToPerf(evId, category, title, scheds, targetRoles); // 주요수행실적에 자동 기록
+    pushSendNotification('edu','📚 새 교육·회의 등록', title);
   }
 
   // 폼 초기화
@@ -13085,6 +13094,7 @@ async function eeSubmitApply(){
       await sb.from('edu_applications').delete().eq('id',toDelete[j].id);
     }
     toast('✅ 신청 완료 ('+checked.length+'개 일정)');
+    if(toInsert.length) pushSendNotification('edu','✍️ 교육·회의 신청', (name||'')+'님 신청 ('+checked.length+'개 일정)');
     eeTab(0);
   }catch(err){
     console.error('[eeSubmitApply 오류]', err);
@@ -17202,7 +17212,7 @@ async function saveNoticeDB(noticeContent){
       author:me?me.name:'관리자'
     });
     if(res&&res.error) toast('공지 저장 오류: '+res.error.message);
-    else { toast('✅ 공지사항 저장 완료'); loadNoticesFromDB(); }
+    else { toast('✅ 공지사항 저장 완료'); loadNoticesFromDB(); pushSendNotification('notice','📢 새 공지사항', noticeContent.slice(0,60)); }
   }catch(e){toast('오류: '+e.message);}
 }
 // (구) saveNoticeDB_unused:
@@ -17768,7 +17778,14 @@ async function saveHandoverToDB(data){
   try{
     var res=await sb.from('handover').insert(data);
     if(res.error) toast('저장 오류: '+res.error.message);
-    else{ loadHandoverFromDB(true); }
+    else{
+      loadHandoverFromDB(true);
+      var first=Array.isArray(data)?data[0]:data;
+      if(first){
+        var teams=Array.isArray(data)?data.map(function(r){return r.to_team;}).join(', '):first.to_team;
+        pushSendNotification('handover','🔄 새 인수인계', (first.author||'')+'님 → '+teams+' (확인 필요)');
+      }
+    }
   }catch(e){}
 }
 
@@ -18546,6 +18563,7 @@ async function saveLost(){
     });
     if(res.error) throw res.error;
     toast('✅ 습득물이 접수되었습니다');
+    pushSendNotification('lost_found','🔍 새 습득물 접수', location+' · '+item);
     if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges();
     ['lostFinderId','lostFinderName','lostFoundDate','lostLocation','lostItem','lostNote','lostRouteEtc','lostHandEtc','lostReceiver','lostPasteBox'].forEach(function(id){
       var el=document.getElementById(id); if(el) el.value='';
@@ -22683,6 +22701,7 @@ async function submitNewsPost(){
     }
     if(result.error){ toast('⚠️ 저장 실패: '+result.error.message); if(prog) prog.style.display='none'; if(btn){btn.disabled=false;btn.style.cursor='pointer';btn.style.opacity='1';} return; }
     toast(_newsPostEditId?'✅ 수정되었습니다':'✅ 회사소식이 게시되었습니다');
+    if(!_newsPostEditId) pushSendNotification('companynews','📰 새 회사소식', title);
     if(prog) prog.style.display='none';
     if(btn){ btn.disabled=false; btn.style.cursor='pointer'; btn.style.opacity='1'; }
     newsStartNewPost(); // 폼 초기화 (수정모드 해제)
@@ -24115,6 +24134,7 @@ async function sendGroupChat(){
       message: msg
     });
     await loadGroupChat();
+    pushSendNotification('chat','💬 '+me.name, msg.slice(0,60));
   }catch(e){ toast('전송 오류: '+e.message); }
 }
 
@@ -28339,6 +28359,7 @@ async function cpCreateCampaign(){
     cpLogToPerf(campaignId, title, desc, startDate, targetRoles); // 주요수행실적에 자동 기록
   }
   toast(cpEditCampaignId?'✓ 수정되었습니다':'✓ 행사가 등록되었습니다');
+  if(!cpEditCampaignId) pushSendNotification('campaign','🏆 새 사업부 행사', title);
   hideM('cpCreateModal');
   cpLoadList();
 }
@@ -30606,10 +30627,67 @@ if('serviceWorker' in navigator){
       });
       // 5분마다도 한 번씩 백그라운드로 확인 (앱을 오래 켜두는 경우 대비)
       setInterval(function(){ reg.update().catch(function(){}); }, 5*60*1000);
+      pushCheckOptIn(); // 알림 배너 표시 여부 판단
     }).catch(function(err){
       console.log('SW 등록 실패:', err);
     });
   });
+}
+
+// ── 푸시 알림 (앱이 꺼져있어도 소리로 수신) ──
+var PUSH_VAPID_PUBLIC_KEY = 'BCnXRJ8baISf3XJlLGXlS90o-hiT2YTEgXNlWA67sy-SvlyFk40fk1FVt5pNtOxQLxVUeFMrSL8FCzlAkmb7oNk';
+var PUSH_TOPICS = ['handover','notice','companynews','lost_found','campaign','edu','chat'];
+function pushUrlB64ToUint8Array(base64String){
+  var padding='='.repeat((4-base64String.length%4)%4);
+  var base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  var raw=atob(base64);
+  var out=new Uint8Array(raw.length);
+  for(var i=0;i<raw.length;i++){ out[i]=raw.charCodeAt(i); }
+  return out;
+}
+function pushCheckOptIn(){
+  if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window)) return; // 미지원 환경(구형 iOS 등)
+  if(localStorage.getItem('pushOptInDismissed')==='1') return;
+  if(Notification.permission==='granted') return; // 이미 허용됨(아이폰 홈화면앱은 매번 새로 물어볼 수 있어 여기선 배너만 스킵)
+  if(Notification.permission==='denied') return; // 이전에 거부 — 배너로 다시 유도해도 브라우저가 자체적으로 막음
+  var banner=document.getElementById('pushOptInBanner');
+  if(banner) banner.style.display='flex';
+}
+function pushOptInDismiss(){
+  localStorage.setItem('pushOptInDismissed','1');
+  var banner=document.getElementById('pushOptInBanner');
+  if(banner) banner.style.display='none';
+}
+async function pushOptInEnable(){
+  try{
+    var perm = await Notification.requestPermission();
+    if(perm!=='granted'){ toast('⚠️ 알림이 허용되지 않았습니다'); pushOptInDismiss(); return; }
+    var reg = await navigator.serviceWorker.ready;
+    var sub = await reg.pushManager.getSubscription();
+    if(!sub){
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: pushUrlB64ToUint8Array(PUSH_VAPID_PUBLIC_KEY)
+      });
+    }
+    var json = sub.toJSON();
+    var res = await sb.from('push_subscriptions').upsert({
+      emp_no: me?me.employee_id:null,
+      name: me?me.name:null,
+      endpoint: json.endpoint,
+      p256dh: json.keys.p256dh,
+      auth: json.keys.auth,
+      topics: PUSH_TOPICS,
+      last_seen_at: new Date().toISOString()
+    }, {onConflict:'endpoint'});
+    if(res.error){ toast('알림 등록 오류: '+res.error.message); return; }
+    toast('✓ 알림이 설정되었습니다');
+    pushOptInDismiss();
+  }catch(e){ toast('알림 설정 실패: '+(e&&e.message?e.message:e)); }
+}
+async function pushSendNotification(topic, title, body, url){
+  try{ await sb.functions.invoke('send-push', { body: { topic:topic, title:title, body:body||'', url:url||'./index.html' } }); }
+  catch(e){ /* 알림 발송 실패해도 원 작업은 유지 */ }
 }
 </script>
 
