@@ -3775,6 +3775,10 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
   <div style="padding:13px">
     <button id="cpCreateBtn" onclick="cpOpenCreate()" style="display:none;width:100%;padding:12px;background:var(--teal);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px">＋ 행사 만들기</button>
+    <div style="display:flex;gap:7px;margin-bottom:12px">
+      <div id="cpTabActive" class="rp on" onclick="cpSwitchTab('active')" style="flex:1;text-align:center">🟢 진행중</div>
+      <div id="cpTabDone" class="rp" onclick="cpSwitchTab('done')" style="flex:1;text-align:center">✅ 완료</div>
+    </div>
     <div id="cpListWrap"><div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div></div>
   </div>
 </div>
@@ -28287,12 +28291,31 @@ async function cpLoadList(){
   var res=await sb.from('campaigns').select('*').order('created_at',{ascending:false});
   if(res.error){ wrap.innerHTML='<div style="color:#dc2626;padding:20px;text-align:center">불러오기 실패</div>'; return; }
   cpCampaigns=(res.data||[]).filter(cpCanViewByTarget);
-  if(!cpCampaigns.length){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">등록된 행사가 없습니다</div>'; return; }
   var cntRes=await msFetchAll(function(){ return sb.from('campaign_entries').select('campaign_id'); });
-  var cntMap={};
-  (cntRes.data||[]).forEach(function(e){ cntMap[e.campaign_id]=(cntMap[e.campaign_id]||0)+1; });
+  cpEntryCountMap={};
+  (cntRes.data||[]).forEach(function(e){ cpEntryCountMap[e.campaign_id]=(cpEntryCountMap[e.campaign_id]||0)+1; });
+  cpRenderListForTab();
+}
+var cpEntryCountMap={};
+var cpFilterTab='active'; // 'active'=진행중(종료일 미도래 또는 미설정) | 'done'=완료(종료일 지남)
+function cpSwitchTab(tab){
+  cpFilterTab=tab;
+  document.getElementById('cpTabActive').classList.toggle('on', tab==='active');
+  document.getElementById('cpTabDone').classList.toggle('on', tab==='done');
+  cpRenderListForTab();
+}
+function cpRenderListForTab(){
+  var wrap=document.getElementById('cpListWrap');
+  if(!cpCampaigns.length){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">등록된 행사가 없습니다</div>'; return; }
+  var todayStr=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+  var cntMap=cpEntryCountMap;
+  var filtered=cpCampaigns.filter(function(c){
+    var isDone = c.status==='closed' || (c.end_date && c.end_date<todayStr);
+    return cpFilterTab==='active' ? !isDone : isDone;
+  });
+  if(!filtered.length){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">'+(cpFilterTab==='active'?'진행중인':'완료된')+' 행사가 없습니다</div>'; return; }
   var h='';
-  cpCampaigns.forEach(function(c){
+  filtered.forEach(function(c){
     var cnt=cntMap[c.id]||0;
     var statusBadge=c.status==='closed'?'<span style="padding:3px 10px;border-radius:10px;background:#f1f5f9;color:#64748b;font-size:12px;font-weight:700">종료</span>':'<span style="padding:3px 10px;border-radius:10px;background:#dcfce7;color:#15803d;font-size:12px;font-weight:700">진행중</span>';
     var period=cpFmtPeriod(c);
