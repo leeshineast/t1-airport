@@ -13,6 +13,36 @@ self.addEventListener('activate', function(e){
   self.clients.claim();
 });
 
+// 푸시 알림 수신 (앱이 꺼져있어도 동작) — 안드로이드는 기본 알림음까지 같이 울림
+self.addEventListener('push', function(e){
+  var data = {};
+  try{ data = e.data ? e.data.json() : {}; }catch(err){ data = {title:'T1OS', body: e.data ? e.data.text() : ''}; }
+  var title = data.title || 'T1 환경미화사업부';
+  var options = {
+    body: data.body || '',
+    icon: 'icon-192.png',
+    badge: 'icon-192.png',
+    vibrate: [200,100,200],
+    data: { url: data.url || './index.html' },
+    tag: data.topic || 't1os-push'
+  };
+  e.waitUntil(self.registration.showNotification(title, options));
+});
+
+// 알림 탭하면 앱으로 이동
+self.addEventListener('notificationclick', function(e){
+  e.notification.close();
+  var targetUrl = (e.notification.data && e.notification.data.url) || './index.html';
+  e.waitUntil(
+    clients.matchAll({type:'window', includeUncontrolled:true}).then(function(clientList){
+      for(var i=0;i<clientList.length;i++){
+        if('focus' in clientList[i]) return clientList[i].focus();
+      }
+      if(clients.openWindow) return clients.openWindow(targetUrl);
+    })
+  );
+});
+
 self.addEventListener('fetch', function(e){
   // 페이지 자체를 처음 여는 요청(주소 입력, 홈화면 아이콘 실행 등)은
   // 서비스워커가 가로채지 않고 브라우저가 직접 처리하게 둔다.
