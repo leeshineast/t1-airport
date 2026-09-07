@@ -6337,6 +6337,27 @@ var NOTIF_MODULES=[
   {key:'workforce', table:'wf_special_events', col:'created_at'}
 ];
 var _notifReadMarks={};
+// ── 목록 안 개별 항목 "NEW" 표시 (모듈 방문 전 새로 생긴 것만, 클릭하면 그 항목만 해제) ──
+function _newSeenKey(moduleKey){ return 't1os_seen_'+moduleKey; }
+function _newSeenSet(moduleKey){
+  try{ return new Set(JSON.parse(localStorage.getItem(_newSeenKey(moduleKey))||'[]')); }catch(e){ return new Set(); }
+}
+function isItemNew(moduleKey, itemId, createdAt){
+  if(!createdAt) return false;
+  var since=_notifReadMarks[moduleKey]||'1970-01-01T00:00:00Z';
+  if(createdAt<=since) return false;
+  return !_newSeenSet(moduleKey).has(String(itemId));
+}
+function markItemSeen(moduleKey, itemId){
+  try{
+    var s=_newSeenSet(moduleKey);
+    s.add(String(itemId));
+    localStorage.setItem(_newSeenKey(moduleKey), JSON.stringify(Array.from(s)));
+  }catch(e){}
+}
+function newBadgeHtml(){
+  return ' <span style="display:inline-block;padding:2px 7px;border-radius:8px;background:#DC2626;color:#fff;font-size:10.5px;font-weight:800;vertical-align:middle">NEW</span>';
+}
 async function loadMenuNotifBadges(){
   if(!me) return;
   try{
@@ -12959,15 +12980,15 @@ function eeRenderEventList(){
         +'<span style="background:var(--teal-bg);color:var(--teal2);font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">'+catLabel+'</span>'
         +(closed?'<span style="background:var(--danger-bg);color:var(--danger);font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">신청마감</span>':'<span style="background:var(--success-bg);color:var(--success);font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">신청가능</span>')
       +'</div>'
-      +'<div style="font-size:16px;font-weight:800;color:var(--g7);margin-bottom:4px">'+eeEsc(e.title)+'</div>'
+      +'<div style="font-size:16px;font-weight:800;color:var(--g7);margin-bottom:4px">'+eeEsc(e.title)+(isItemNew('eduevent',e.id,e.created_at)?newBadgeHtml():'')+'</div>'
       +(e.content?('<div style="font-size:13px;color:var(--g6);margin-bottom:6px;white-space:pre-wrap;line-height:1.5">'+eeEsc(e.content)+'</div>'):'')
       +(dateRange?'<div style="font-size:13px;color:var(--g5);margin-bottom:2px">📅 '+dateRange+'</div>':'')
       +(e.apply_deadline?'<div style="font-size:12px;color:var(--g4);margin-bottom:2px">신청기간~'+e.apply_deadline+'</div>':'')
       +'<div style="font-size:11.5px;color:var(--g4);margin-bottom:8px">작성자: '+eeEsc(e.created_by||'-')+'</div>'
       +'<div style="display:flex;gap:7px">'
-        +'<button onclick="eeOpenApply(\''+e.id+'\')" style="flex:1;padding:9px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer" '+(closed?'disabled':'')+'>'+(closed?'마감됨':'📝 신청하기')+'</button>'
-        +(eeCanAdmin()?('<button onclick="eeOpenAdminView(\''+e.id+'\')" style="flex:1;padding:9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">📊 신청현황</button>'):'')
-        +(eeCanAdmin()?('<button onclick="eeEditEvent(\''+e.id+'\')" style="padding:9px 12px;background:var(--g1);color:var(--g6);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">✏️ 수정</button>'):'')
+        +'<button onclick="markItemSeen(\'eduevent\',\''+e.id+'\');eeOpenApply(\''+e.id+'\')" style="flex:1;padding:9px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer" '+(closed?'disabled':'')+'>'+(closed?'마감됨':'📝 신청하기')+'</button>'
+        +(eeCanAdmin()?('<button onclick="markItemSeen(\'eduevent\',\''+e.id+'\');eeOpenAdminView(\''+e.id+'\')" style="flex:1;padding:9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">📊 신청현황</button>'):'')
+        +(eeCanAdmin()?('<button onclick="markItemSeen(\'eduevent\',\''+e.id+'\');eeEditEvent(\''+e.id+'\')" style="padding:9px 12px;background:var(--g1);color:var(--g6);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">✏️ 수정</button>'):'')
         +((me&&me.role==='master')?('<button onclick="eeDeleteEvent(\''+e.id+'\',\''+eeJsAttrEsc(e.title)+'\')" style="padding:9px 12px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">🗑️ 삭제</button>'):'')
       +'</div>'
     +'</div></div>';
@@ -17103,9 +17124,9 @@ function renderNoticeList(data, targetId){
   }
   displayData.forEach(function(n,i){
     var date=n.created_at?toKSTDate(n.created_at):'';
-    html+='<div style="padding:13px;border-bottom:1px solid var(--g2);cursor:pointer" onclick="openNoticeDetail('+i+')" >';
+    html+='<div style="padding:13px;border-bottom:1px solid var(--g2);cursor:pointer" onclick="markItemSeen(\'notice\','+n.id+');openNoticeDetail('+i+')" >';
     html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
-    html+='<div style="font-size:15px;font-weight:700;color:var(--g7)">'+(n.title||'공지사항')+'</div>';
+    html+='<div style="font-size:15px;font-weight:700;color:var(--g7)">'+(n.title||'공지사항')+(isItemNew('notice',n.id,n.created_at)?newBadgeHtml():'')+'</div>';
     html+='<div style="font-size:12px;color:var(--g4)">'+date+'</div>';
     html+='</div>';
     html+='<div style="font-size:13px;color:var(--g5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(n.content||'').replace(/\n/g,' ')+'</div>';
@@ -21290,8 +21311,8 @@ function prfRenderDayList(ds){
         var attColor = cnt.attended<cnt.applied ? 'var(--danger)' : (cnt.attended===cnt.applied ? 'var(--g6)' : 'var(--avg-blue)');
         cntHtml='<div style="font-size:11px;color:var(--g5);margin-top:6px;font-weight:700">신청 '+cnt.applied+'명 / <span style="color:'+attColor+'">참석 '+cnt.attended+'명</span></div>';
       }
-      h+='<div onclick="prfOpenEdit('+r.id+')" style="background:white;border-radius:12px;padding:13px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.05);cursor:pointer">'
-        +'<span style="display:inline-block;background:var(--navy-bg);color:var(--navy);font-size:11px;font-weight:800;padding:3px 9px;border-radius:7px;margin-bottom:5px">'+(r.category||'')+'</span>'
+      h+='<div onclick="markItemSeen(\'perf\','+r.id+');prfOpenEdit('+r.id+')" style="background:white;border-radius:12px;padding:13px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.05);cursor:pointer">'
+        +'<span style="display:inline-block;background:var(--navy-bg);color:var(--navy);font-size:11px;font-weight:800;padding:3px 9px;border-radius:7px;margin-bottom:5px">'+(r.category||'')+(isItemNew('perf',r.id,r.created_at)?newBadgeHtml():'')+'</span>'
         +'<div style="font-size:14px;color:var(--g6);line-height:1.5">'+String(r.content||'').replace(/</g,'&lt;')+'</div>'
         +'<div style="font-size:11px;color:var(--g4);margin-top:6px">'+meta+'</div>'
         +cntHtml
@@ -21325,8 +21346,8 @@ function prfRenderMonthList(wrap){
       }
       var loc=[r.location_main,r.location_detail].filter(Boolean).join(' · ');
       var meta=[loc,r.team,r.writer,kstTime(r.occurred_at)].filter(Boolean).join(' · ');
-      h+='<div onclick="prfOpenEdit('+r.id+')" style="background:white;border-radius:12px;padding:13px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.05);cursor:pointer">'
-        +'<span style="display:inline-block;background:var(--navy-bg);color:var(--navy);font-size:11px;font-weight:800;padding:3px 9px;border-radius:7px;margin-bottom:5px">'+(r.category||'')+'</span>'
+      h+='<div onclick="markItemSeen(\'perf\','+r.id+');prfOpenEdit('+r.id+')" style="background:white;border-radius:12px;padding:13px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.05);cursor:pointer">'
+        +'<span style="display:inline-block;background:var(--navy-bg);color:var(--navy);font-size:11px;font-weight:800;padding:3px 9px;border-radius:7px;margin-bottom:5px">'+(r.category||'')+(isItemNew('perf',r.id,r.created_at)?newBadgeHtml():'')+'</span>'
         +'<div style="font-size:14px;color:var(--g6);line-height:1.5">'+String(r.content||'').replace(/</g,'&lt;')+'</div>'
         +'<div style="font-size:11px;color:var(--g4);margin-top:6px">'+meta+'</div>'
         +'</div>';
@@ -22386,10 +22407,10 @@ async function loadIsoList(){
     filtered.forEach(function(f){
       var escapedPath=f.path.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       var escapedName=f.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      html+='<div onclick="viewIso(\''+escapedPath+'\',\''+escapedName+'\','+f.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
+      html+='<div onclick="markItemSeen(\'iso9001\','+f.id+');viewIso(\''+escapedPath+'\',\''+escapedName+'\','+f.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
       html+='<div style="width:38px;height:38px;background:var(--navy-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0">📘</div>';
       html+='<div style="flex:1;min-width:0">';
-      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+'</div>';
+      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+(isItemNew('iso9001',f.id,f.uploaded_at)?newBadgeHtml():'')+'</div>';
       html+='<div style="font-size:12px;color:var(--g4);margin-top:2px">'+(f.uploaded_at?f.uploaded_at.slice(0,10):'')+docViewBadge(f)+'</div>';
       html+='</div>';
       html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
@@ -22604,14 +22625,14 @@ async function loadNewsList(){
           if((p.content||'').length>40) listTitle+='…';
         }
         listTitle=listTitle.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        html+='<div onclick="viewNewsPost('+p.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
+        html+='<div onclick="markItemSeen(\'news\','+p.id+');viewNewsPost('+p.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
         if(p.image_path){
           html+='<img src="'+SUPABASE_URL+'/storage/v1/object/public/companynews/'+encodeURIComponent(p.image_path)+'" style="width:38px;height:38px;object-fit:cover;border-radius:8px;flex-shrink:0">';
         }else{
           html+='<div style="width:38px;height:38px;background:var(--teal-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0">📝</div>';
         }
         html+='<div style="flex:1;min-width:0">';
-        html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(listTitle||'(제목 없음)')+'</div>';
+        html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(listTitle||'(제목 없음)')+(isItemNew('news',p.id,p.uploaded_at)?newBadgeHtml():'')+'</div>';
         html+='<div style="font-size:12px;color:var(--g4);margin-top:2px">'+(p.uploaded_at?p.uploaded_at.slice(0,10):'')+' · '+(p.uploaded_by||'')+docViewBadge(p)+'</div>';
         html+='</div>';
         html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
@@ -23371,10 +23392,10 @@ async function loadRiskList(){
     riskFiles.forEach(function(f){
       var escapedPath=f.path.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       var escapedName=f.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      html+='<div onclick="viewRisk(\''+escapedPath+'\',\''+escapedName+'\','+f.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
+      html+='<div onclick="markItemSeen(\'risk\','+f.id+');viewRisk(\''+escapedPath+'\',\''+escapedName+'\','+f.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
       html+='<div style="width:38px;height:38px;background:var(--navy-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0">⚠️</div>';
       html+='<div style="flex:1;min-width:0">';
-      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+'</div>';
+      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+(isItemNew('risk',f.id,f.uploaded_at)?newBadgeHtml():'')+'</div>';
       html+='<div style="font-size:12px;color:var(--g4);margin-top:2px">'+(f.uploaded_at?f.uploaded_at.slice(0,10):'')+docViewBadge(f)+'</div>';
       html+='</div>';
       html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
@@ -23557,10 +23578,10 @@ async function loadTrainingList(){
     trainingFiles.forEach(function(f){
       var escapedPath=f.path.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       var escapedName=f.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      html+='<div onclick="viewTraining(\''+escapedPath+'\',\''+escapedName+'\','+f.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
+      html+='<div onclick="markItemSeen(\'training\','+f.id+');viewTraining(\''+escapedPath+'\',\''+escapedName+'\','+f.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
       html+='<div style="width:38px;height:38px;background:var(--navy-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0">🎓</div>';
       html+='<div style="flex:1;min-width:0">';
-      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+'</div>';
+      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+(isItemNew('training',f.id,f.uploaded_at)?newBadgeHtml():'')+'</div>';
       html+='<div style="font-size:12px;color:var(--g4);margin-top:2px">'+(f.uploaded_at?f.uploaded_at.slice(0,10):'')+docViewBadge(f)+'</div>';
       html+='</div>';
       html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
@@ -24200,10 +24221,10 @@ async function loadRegList(){
     regFiles.forEach(function(f){
       var escapedPath=f.path.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       var escapedName=f.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
-      html+='<div onclick="viewReg(\''+escapedPath+'\',\''+escapedName+'\','+f.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
+      html+='<div onclick="markItemSeen(\'chat\','+f.id+');viewReg(\''+escapedPath+'\',\''+escapedName+'\','+f.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
       html+='<div style="width:38px;height:38px;background:#FFF0F0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0">📄</div>';
       html+='<div style="flex:1;min-width:0">';
-      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+'</div>';
+      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+(isItemNew('chat',f.id,f.uploaded_at)?newBadgeHtml():'')+'</div>';
       html+='<div style="font-size:12px;color:var(--g4);margin-top:2px">'+(f.uploaded_at?f.uploaded_at.slice(0,10):'')+docViewBadge(f)+'</div>';
       html+='</div>';
       html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
@@ -27719,8 +27740,8 @@ function wfSpRenderListForTab(){
     var badgeColor=cnt>0?'#dbeafe':'#fee2e2', badgeText=cnt>0?'#1e40af':'#dc2626';
     var badgeLabel=cnt>0?(cnt+'건 편성'):'미편성';
     h+='<div style="padding:14px;border:1.5px solid var(--g2);border-radius:12px;margin-bottom:10px;background:white">'+
-       '<div onclick="wfSpOpenEvent(\''+ev.id+'\')" style="cursor:pointer">'+
-       '<div style="font-weight:800;font-size:15px;color:var(--g7)">'+ev.title+'</div>'+
+       '<div onclick="markItemSeen(\'workforce\',\''+ev.id+'\');wfSpOpenEvent(\''+ev.id+'\')" style="cursor:pointer">'+
+       '<div style="font-weight:800;font-size:15px;color:var(--g7)">'+ev.title+(isItemNew('workforce',ev.id,ev.created_at)?newBadgeHtml():'')+'</div>'+
        '<div style="font-size:13px;color:var(--g4);margin-top:4px">'+ev.start_date+' ~ '+ev.end_date+'</div>'+
        '<div style="font-size:11.5px;color:var(--g4);margin-top:2px">작성자: '+eeEsc(ev.created_by||'-')+'</div>'+
        '<span style="display:inline-block;margin-top:8px;padding:3px 10px;border-radius:10px;background:'+badgeColor+';color:'+badgeText+';font-size:12px;font-weight:700">'+badgeLabel+'</span>'+
@@ -28320,9 +28341,9 @@ function cpRenderListForTab(){
     var statusBadge=c.status==='closed'?'<span style="padding:3px 10px;border-radius:10px;background:#f1f5f9;color:#64748b;font-size:12px;font-weight:700">종료</span>':'<span style="padding:3px 10px;border-radius:10px;background:#dcfce7;color:#15803d;font-size:12px;font-weight:700">진행중</span>';
     var period=cpFmtPeriod(c);
     h+='<div style="padding:14px;border:1.5px solid var(--g2);border-radius:12px;margin-bottom:10px;background:white">'+
-       '<div onclick="cpOpenDetail(\''+c.id+'\')" style="cursor:pointer">'+
+       '<div onclick="markItemSeen(\'campaign\',\''+c.id+'\');cpOpenDetail(\''+c.id+'\')" style="cursor:pointer">'+
        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'+
-       '<div style="font-weight:800;font-size:15px;color:var(--g7)">🏆 '+eeEsc(c.title)+'</div>'+statusBadge+
+       '<div style="font-weight:800;font-size:15px;color:var(--g7)">🏆 '+eeEsc(c.title)+(isItemNew('campaign',c.id,c.created_at)?newBadgeHtml():'')+'</div>'+statusBadge+
        '</div>'+
        (c.description?('<div style="font-size:13px;color:var(--g4);margin-top:6px">'+eeEsc(c.description)+'</div>'):'')+
        (period?('<div style="font-size:12px;color:var(--g5);margin-top:6px">📅 '+period+'</div>'):'')+
