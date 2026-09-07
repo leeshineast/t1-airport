@@ -28498,7 +28498,11 @@ async function cpDeleteEntry(id){
   cpRenderMyEntries();
   cpLoadList();
 }
+var cpSubmitInProgress=false;
 async function cpSubmitEntry(){
+  if(cpSubmitInProgress){ return; } // 연타 방지: 앞선 제출이 아직 처리 중이면 무시
+  cpSubmitInProgress=true;
+  try{
   var today=kstDate();
   if(cpCurCampaign.start_date && today<cpCurCampaign.start_date){ toast('⚠️ 아직 응모 기간이 아닙니다'); return; }
   if(cpCurCampaign.end_date && today>cpCurCampaign.end_date){ toast('⚠️ 응모가 마감되었습니다'); return; }
@@ -28545,6 +28549,9 @@ async function cpSubmitEntry(){
   cpUpdateCharCount();
   cpRenderMyEntries();
   cpLoadList();
+  }finally{
+    cpSubmitInProgress=false;
+  }
 }
 async function cpFetchResultRanked(){
   var fRes=await sb.from('campaign_finalists').select('*').eq('campaign_id',cpCurCampaign.id);
