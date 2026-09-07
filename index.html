@@ -30654,9 +30654,17 @@ function pushUrlB64ToUint8Array(base64String){
 }
 function pushCheckOptIn(){
   if(!('Notification' in window)||!('serviceWorker' in navigator)||!('PushManager' in window)) return; // 미지원 환경(구형 iOS 등)
-  if(localStorage.getItem('pushOptInDismissed')==='1') return;
-  if(Notification.permission==='granted') return; // 이미 허용됨(아이폰 홈화면앱은 매번 새로 물어볼 수 있어 여기선 배너만 스킵)
   if(Notification.permission==='denied') return; // 이전에 거부 — 배너로 다시 유도해도 브라우저가 자체적으로 막음
+  if(Notification.permission==='granted'){
+    // 권한은 이미 있는데(브라우저 설정에서 직접 켠 경우 포함) 실제 구독이 안 돼 있을 수 있으니 조용히 확인 후 등록
+    navigator.serviceWorker.ready.then(function(reg){
+      return reg.pushManager.getSubscription().then(function(sub){
+        if(!sub) return pushDoSubscribe(reg);
+      });
+    }).catch(function(){});
+    return;
+  }
+  if(localStorage.getItem('pushOptInDismissed')==='1') return;
   var banner=document.getElementById('pushOptInBanner');
   if(banner) banner.style.display='flex';
 }
@@ -30665,11 +30673,8 @@ function pushOptInDismiss(){
   var banner=document.getElementById('pushOptInBanner');
   if(banner) banner.style.display='none';
 }
-async function pushOptInEnable(){
+async function pushDoSubscribe(reg){
   try{
-    var perm = await Notification.requestPermission();
-    if(perm!=='granted'){ toast('⚠️ 알림이 허용되지 않았습니다'); pushOptInDismiss(); return; }
-    var reg = await navigator.serviceWorker.ready;
     var sub = await reg.pushManager.getSubscription();
     if(!sub){
       sub = await reg.pushManager.subscribe({
@@ -30687,7 +30692,16 @@ async function pushOptInEnable(){
       topics: PUSH_TOPICS,
       last_seen_at: new Date().toISOString()
     }, {onConflict:'endpoint'});
-    if(res.error){ toast('알림 등록 오류: '+res.error.message); return; }
+    return res;
+  }catch(e){ return {error:e}; }
+}
+async function pushOptInEnable(){
+  try{
+    var perm = await Notification.requestPermission();
+    if(perm!=='granted'){ toast('⚠️ 알림이 허용되지 않았습니다'); pushOptInDismiss(); return; }
+    var reg = await navigator.serviceWorker.ready;
+    var res = await pushDoSubscribe(reg);
+    if(res && res.error){ toast('알림 등록 오류: '+(res.error.message||res.error)); return; }
     toast('✓ 알림이 설정되었습니다');
     pushOptInDismiss();
   }catch(e){ toast('알림 설정 실패: '+(e&&e.message?e.message:e)); }
