@@ -3845,6 +3845,16 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">최소 응모 배수 (0=제한 없음)</label>
     <input type="number" min="0" step="0.5" id="cpNewMinMultiplier" value="0" placeholder="예: 3 (최종후보 개수의 3배 이상 응모돼야 진행)" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box">
     <div style="font-size:11px;color:var(--g4);margin:-8px 0 12px">예: 최종 후보 16명 · 배수 3 → 응모 48건 미만이면 "최종 후보 선정"이 막힙니다</div>
+    <div id="cpMasterOnlyFields" style="display:none;background:#FEF3E2;border:1.5px dashed #C2751A;border-radius:10px;padding:12px;margin-bottom:12px">
+      <div style="font-size:11.5px;font-weight:800;color:#C2751A;margin-bottom:8px">🔒 master 전용 설정</div>
+      <label style="font-size:12.5px;font-weight:700;color:var(--g6)">글자수 제한 (띄어쓰기 포함, 비워두면 제한 없음)</label>
+      <input type="number" min="1" id="cpNewMaxLength" placeholder="예: 25" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box">
+      <label style="font-size:12.5px;font-weight:700;color:var(--g6)">관리자 투표 가능 기간 (비워두면 제한 없음)</label>
+      <div style="display:flex;gap:6px;margin:6px 0 0">
+        <input type="date" id="cpNewVoteStart" style="flex:1;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
+        <input type="date" id="cpNewVoteEnd" style="flex:1;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
+      </div>
+    </div>
     <div style="display:flex;gap:8px;margin-top:16px">
       <button onclick="hideM('cpCreateModal')" style="flex:1;padding:11px;background:var(--g2);color:var(--g6);border:none;border-radius:8px;font-weight:700;cursor:pointer">취소</button>
       <button id="cpCreateSaveBtn" onclick="cpCreateCampaign()" style="flex:1;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-weight:700;cursor:pointer">만들기</button>
@@ -28235,7 +28245,10 @@ function cpCanSeeIdentity(){ return !!(me&&me.role==='master'); } // 작성자 �
 function cpUpdateCharCount(){
   var el=document.getElementById('cpContent'); var cEl=document.getElementById('cpCharCount');
   if(!el||!cEl) return;
-  cEl.textContent=(el.value||'').length+'자 (공백 포함)';
+  var len=(el.value||'').length;
+  var max=cpCurCampaign&&cpCurCampaign.max_length;
+  cEl.textContent=max ? (len+' / '+max+'자 (공백 포함)') : (len+'자 (공백 포함)');
+  cEl.style.color = (max && len>max) ? '#dc2626' : '';
 }
 function cpIsPersonalAcct(){ return !!(me&&(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader')); }
 
@@ -28305,6 +28318,10 @@ function cpOpenCreate(){
   document.getElementById('cpNewAllowMulti').checked=false;
   document.getElementById('cpNewFinalistLimit').value=16;
   document.getElementById('cpNewMinMultiplier').value=0;
+  document.getElementById('cpMasterOnlyFields').style.display=(me&&me.role==='master')?'block':'none';
+  document.getElementById('cpNewMaxLength').value='';
+  document.getElementById('cpNewVoteStart').value='';
+  document.getElementById('cpNewVoteEnd').value='';
   cpSetTargetRolesUI([]);
   showM('cpCreateModal');
 }
@@ -28324,6 +28341,10 @@ function cpOpenEditCampaign(id){
   document.getElementById('cpNewAllowMulti').checked=!!c.allow_multiple;
   document.getElementById('cpNewFinalistLimit').value=c.finalist_limit||16;
   document.getElementById('cpNewMinMultiplier').value=c.min_multiplier||0;
+  document.getElementById('cpMasterOnlyFields').style.display=(me&&me.role==='master')?'block':'none';
+  document.getElementById('cpNewMaxLength').value=c.max_length||'';
+  document.getElementById('cpNewVoteStart').value=c.vote_start_date||'';
+  document.getElementById('cpNewVoteEnd').value=c.vote_end_date||'';
   cpSetTargetRolesUI(c.target_roles===undefined?[]:c.target_roles);
   showM('cpCreateModal');
 }
@@ -28347,6 +28368,12 @@ async function cpCreateCampaign(){
     start_date:startDate, end_date:endDate, target:target||null, condition_text:condition||null, schedule_note:schedule||null,
     target_roles:targetRoles, finalist_limit:finalistLimit, min_multiplier:minMultiplier
   };
+  if(me&&me.role==='master'){
+    var maxLen=parseInt(document.getElementById('cpNewMaxLength').value,10);
+    payload.max_length = maxLen>0 ? maxLen : null;
+    payload.vote_start_date = document.getElementById('cpNewVoteStart').value||null;
+    payload.vote_end_date = document.getElementById('cpNewVoteEnd').value||null;
+  }
   var res;
   var campaignId;
   if(cpEditCampaignId){
@@ -28516,6 +28543,11 @@ async function cpSubmitEntry(){
   var content=(document.getElementById('cpContent').value||'').trim();
   var errEl=document.getElementById('cpFormErr');
   if(!empNo||!name||!content){ errEl.textContent='사번·이름·내용을 모두 입력해주세요'; errEl.style.display='block'; return; }
+  if(cpCurCampaign.max_length && content.length>cpCurCampaign.max_length){
+    errEl.textContent='내용이 '+cpCurCampaign.max_length+'자를 초과했습니다 (현재 '+content.length+'자, 띄어쓰기 포함)';
+    errEl.style.display='block';
+    return;
+  }
   // 응모 가능자 명단이 등록돼 있으면 사번+이름이 명단에 있는지 확인
   var eligRes=await sb.from('campaign_eligible').select('id').eq('campaign_id',cpCurCampaign.id).limit(1);
   if(eligRes.data && eligRes.data.length){
@@ -28882,6 +28914,9 @@ function cpRenderAllEntries(){
     h+='<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#1e40af">👁️ 공정한 심사를 위해 작성자 정보와 전체 점수는 master만 볼 수 있어요. 내용만 보고 투표해주세요.</div>';
   }
   h+='<div style="font-size:11.5px;color:var(--g4);margin-bottom:8px">※ 관리자별로 1위(3점)/2위(2점)/3위(1점)를 각각 1건씩 투표할 수 있습니다. 아래 버튼은 내 투표만 표시됩니다.</div>';
+  if(cpCurCampaign.vote_start_date||cpCurCampaign.vote_end_date){
+    h+='<div style="font-size:11.5px;color:#C2751A;font-weight:700;margin-bottom:8px">🗓 관리자 투표 가능 기간: '+(cpCurCampaign.vote_start_date||'제한없음')+' ~ '+(cpCurCampaign.vote_end_date||'제한없음')+'</div>';
+  }
   if(canSee){
     var _limit=cpCurCampaign.finalist_limit||16, _minMult=cpCurCampaign.min_multiplier||0;
     h+='<div style="font-size:11.5px;color:#0e7490;margin-bottom:8px">🏆 최종 후보 선정: '+cpFinalistsCache.length+' / '+_limit+' — 각 항목의 "선정" 버튼으로 최종 후보를 선정하세요. 선정 후 [전직원 투표] 버튼이 활성화됩니다.</div>';
@@ -28904,6 +28939,7 @@ function cpRenderAllEntries(){
        (canSee?('<span style="display:flex;gap:5px;flex-shrink:0"><button onclick="cpToggleFinalist(\''+e.id+'\')" style="padding:3px 9px;border-radius:6px;border:1.5px solid '+(isFinal?'#0e7490':'var(--g2)')+';background:'+(isFinal?'#0e7490':'white')+';color:'+(isFinal?'white':'var(--g6)')+';font-size:11px;font-weight:700;cursor:pointer">'+(isFinal?'선정 해제':'최종 후보 선정')+'</button><button onclick="cpAdminDeleteEntry(\''+e.id+'\')" style="padding:3px 9px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">삭제</button></span>'):'')+
        '</div>'+
        '<div style="font-size:13px;color:var(--g6);white-space:pre-wrap;margin-top:6px;line-height:1.6">'+eeEsc(e.content)+'</div>'+
+       (canSee&&hasScore?('<div style="font-size:11px;color:#c2410c;margin-top:4px">투표: '+cpVotesCache.filter(function(v){return v.entry_id===e.id;}).sort(function(a,b){return a.rank-b.rank;}).map(function(v){return eeEsc(v.voter_name||'?')+'('+v.rank+'위)';}).join(', ')+'</div>'):'')+
        '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap">'+
        '<span style="font-size:11px;color:var(--g4)">'+new Date(e.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})+(canSee&&hasScore?(' · <b style="color:#c2410c">'+score+'점</b> (투표 '+voteCnt+'명)'):'')+'</span>'+
        '<span style="display:flex;gap:5px">'+
@@ -28918,6 +28954,11 @@ function cpRenderAllEntries(){
 }
 async function cpCastVote(entryId, rank){
   if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
+  if(cpCurCampaign.vote_start_date || cpCurCampaign.vote_end_date){
+    var todayForVote=kstDate();
+    if(cpCurCampaign.vote_start_date && todayForVote<cpCurCampaign.vote_start_date){ toast('⚠️ 아직 투표 기간이 아닙니다 ('+cpCurCampaign.vote_start_date+'부터)'); return; }
+    if(cpCurCampaign.vote_end_date && todayForVote>cpCurCampaign.vote_end_date){ toast('⚠️ 투표 기간이 종료되었습니다 ('+cpCurCampaign.vote_end_date+'까지)'); return; }
+  }
   var key=cpVoterKey();
   if(!key){ toast('⚠️ 계정 정보를 확인할 수 없습니다'); return; }
   var existing=cpVotesCache.find(function(v){return v.entry_id===entryId && v.voter_key===key;});
