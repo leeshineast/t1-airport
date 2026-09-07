@@ -12944,7 +12944,8 @@ function eeRenderEventList(){
       +'<div style="font-size:16px;font-weight:800;color:var(--g7);margin-bottom:4px">'+eeEsc(e.title)+'</div>'
       +(e.content?('<div style="font-size:13px;color:var(--g6);margin-bottom:6px;white-space:pre-wrap;line-height:1.5">'+eeEsc(e.content)+'</div>'):'')
       +(dateRange?'<div style="font-size:13px;color:var(--g5);margin-bottom:2px">📅 '+dateRange+'</div>':'')
-      +(e.apply_deadline?'<div style="font-size:12px;color:var(--g4);margin-bottom:8px">신청기간~'+e.apply_deadline+'</div>':'<div style="margin-bottom:8px"></div>')
+      +(e.apply_deadline?'<div style="font-size:12px;color:var(--g4);margin-bottom:2px">신청기간~'+e.apply_deadline+'</div>':'')
+      +'<div style="font-size:11.5px;color:var(--g4);margin-bottom:8px">작성자: '+eeEsc(e.created_by||'-')+'</div>'
       +'<div style="display:flex;gap:7px">'
         +'<button onclick="eeOpenApply(\''+e.id+'\')" style="flex:1;padding:9px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer" '+(closed?'disabled':'')+'>'+(closed?'마감됨':'📝 신청하기')+'</button>'
         +(eeCanAdmin()?('<button onclick="eeOpenAdminView(\''+e.id+'\')" style="flex:1;padding:9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">📊 신청현황</button>'):'')
@@ -25970,7 +25971,7 @@ async function mgrLeaveLoadList(){
     html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;background:'+st.bg+';margin-bottom:8px">'
       +'<div>'
         +'<div style="font-size:13px;font-weight:700;color:'+st.fg+'">'+st.icon+' '+r.team+' '+r.name+mgrLeaveRealNameSuffix(r.team,r.name)+' · '+r.status+'</div>'
-        +'<div style="font-size:11.5px;color:'+st.fg+';opacity:.85;margin-top:2px">'+r.start_date+' ~ '+r.end_date+' ('+days+'일)</div>'
+        +'<div style="font-size:11.5px;color:'+st.fg+';opacity:.85;margin-top:2px">'+r.start_date+' ~ '+r.end_date+' ('+days+'일) · 등록: '+(r.created_by||'-')+'</div>'
       +'</div>'
       +'<div style="display:flex;gap:5px;flex-shrink:0;margin-left:6px">'
         +'<button onclick="mgrLeaveOpenEdit('+r.id+')" style="padding:5px 9px;background:white;color:#1B4FBE;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">수정</button>'
@@ -26885,6 +26886,9 @@ async function loadWfEmployees(){
     var leaveRes=await msFetchAll(function(){ return sb.from('wf_leave').select('*'); });
     var leaveMap={};
     (leaveRes.data||[]).forEach(function(r){ (leaveMap[r.emp_no]=leaveMap[r.emp_no]||[]).push(r); });
+    var editLogRes=await msFetchAll(function(){ return sb.from('wf_employee_edit_log').select('emp_no,changed_by,changed_at').order('changed_at',{ascending:false}); });
+    var lastEditorMap={};
+    (editLogRes.data||[]).forEach(function(r){ if(!lastEditorMap[r.emp_no]) lastEditorMap[r.emp_no]=r.changed_by; }); // 최신순 정렬이라 처음 만나는 값이 최근 수정자
     var todayStrForLeave=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
     wfEmployees=(empRes.data||[]).map(function(e){
       var off=offMap[e.emp_no]||{};
@@ -26893,7 +26897,7 @@ async function loadWfEmployees(){
       var curLeave=myLeaves.find(function(l){ return l.start_date<=todayStrForLeave && l.end_date>=todayStrForLeave; })
                  || myLeaves.find(function(l){ return l.start_date>todayStrForLeave; }) || null;
       var onLeaveNow = !!(curLeave && curLeave.start_date<=todayStrForLeave && curLeave.end_date>=todayStrForLeave);
-      return Object.assign({}, e, {off1:off.off1||'', off2:off.off2||'', leave:curLeave, onLeaveNow:onLeaveNow});
+      return Object.assign({}, e, {off1:off.off1||'', off2:off.off2||'', leave:curLeave, onLeaveNow:onLeaveNow, lastEditor:lastEditorMap[e.emp_no]||null});
     });
     document.getElementById('wfEmpCountLbl').textContent='전체 '+wfEmployees.length+'명';
     wfFillFilterOptions();
@@ -27088,7 +27092,7 @@ function wfRenderTable(){
   }
   var h='<table style="width:100%;border-collapse:collapse;font-size:12.5px;white-space:nowrap">';
   h+='<thead><tr style="background:var(--navy);color:#fff">'+
-     ['연번','사번','성명','직책','팀','조','오전/오후/야간','고정휴무요일','관리'].map(function(c){return '<th style="padding:9px 8px;text-align:center">'+c+'</th>';}).join('')+
+     ['연번','사번','성명','직책','팀','조','오전/오후/야간','고정휴무요일','최근 수정자','관리'].map(function(c){return '<th style="padding:9px 8px;text-align:center">'+c+'</th>';}).join('')+
      '</tr></thead><tbody>';
   rows.forEach(function(e,i){
     var offTxt=[e.off1,e.off2].filter(Boolean).join('·')||'-';
@@ -27112,6 +27116,7 @@ function wfRenderTable(){
        '<td style="padding:8px;text-align:center">'+(e.group_name||'-')+'</td>'+
        '<td style="padding:8px;text-align:center">'+(e.shift_type||'-')+'</td>'+
        '<td style="padding:8px;text-align:center"><span style="padding:3px 10px;border-radius:10px;background:'+pc.bg+';color:'+pc.fg+';font-weight:700">'+offTxt+'</span>'+leaveBadge+'</td>'+
+       '<td style="padding:8px;text-align:center;color:var(--g5)">'+(e.lastEditor||'-')+'</td>'+
        '<td style="padding:8px;text-align:center"><div style="display:flex;gap:4px;justify-content:center">'+
        '<button onclick="wfOpenEditEmp(\''+e.emp_no+'\')" style="padding:4px 8px;background:#dbeafe;color:#1e40af;border:none;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer">수정</button>'+
        '<button onclick="wfOpenEditLog(\''+e.emp_no+'\',\''+nameEsc+'\')" style="padding:4px 8px;background:#f1f5f9;color:#475569;border:none;border-radius:6px;font-size:11.5px;font-weight:700;cursor:pointer">이력</button>'+
