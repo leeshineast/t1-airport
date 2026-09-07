@@ -3674,6 +3674,10 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   </div>
   <div id="wfSpListView" style="padding:13px">
     <button onclick="wfSpOpenCreate()" style="width:100%;padding:12px;background:var(--teal);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px">＋ 특별근무 등록</button>
+    <div style="display:flex;gap:7px;margin-bottom:12px">
+      <div id="wfSpTabActive" class="rp on" onclick="wfSpSwitchTab('active')" style="flex:1;text-align:center">🟢 진행중</div>
+      <div id="wfSpTabDone" class="rp" onclick="wfSpSwitchTab('done')" style="flex:1;text-align:center">✅ 완료</div>
+    </div>
     <div id="wfSpListWrap"><div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div></div>
   </div>
   <div id="wfSpDetailView" style="display:none;padding:13px">
@@ -27678,17 +27682,35 @@ async function wfSpLoadEvents(){
   var res=await sb.from('wf_special_events').select('*').order('start_date',{ascending:false});
   if(res.error){ wrap.innerHTML='<div style="color:#dc2626;padding:20px;text-align:center">불러오기 실패</div>'; return; }
   wfSpEvents=res.data||[];
-  if(!wfSpEvents.length){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">등록된 특별근무가 없습니다</div>'; return; }
   var assignRes=await msFetchAll(function(){ return sb.from('wf_special_assignments').select('event_id,team_no,work_date'); });
-  var countMap={};
+  wfSpAssignCountMap={};
   (assignRes.data||[]).forEach(function(a){
     var ev=wfSpEvents.find(function(e){return e.id===a.event_id;});
     if(ev && a.work_date>=ev.start_date && a.work_date<=ev.end_date){
-      countMap[a.event_id]=(countMap[a.event_id]||0)+1;
+      wfSpAssignCountMap[a.event_id]=(wfSpAssignCountMap[a.event_id]||0)+1;
     }
   });
+  wfSpRenderListForTab();
+}
+var wfSpAssignCountMap={};
+var wfSpFilterTab='active'; // 'active'=진행중(오늘 포함 미종료) | 'done'=완료(종료일 지남)
+function wfSpSwitchTab(tab){
+  wfSpFilterTab=tab;
+  document.getElementById('wfSpTabActive').classList.toggle('on', tab==='active');
+  document.getElementById('wfSpTabDone').classList.toggle('on', tab==='done');
+  wfSpRenderListForTab();
+}
+function wfSpRenderListForTab(){
+  var wrap=document.getElementById('wfSpListWrap');
+  var todayStr=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+  var countMap=wfSpAssignCountMap;
+  var filtered=wfSpEvents.filter(function(ev){
+    return wfSpFilterTab==='active' ? (ev.end_date>=todayStr) : (ev.end_date<todayStr);
+  });
+  if(!wfSpEvents.length){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">등록된 특별근무가 없습니다</div>'; return; }
+  if(!filtered.length){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">'+(wfSpFilterTab==='active'?'진행중인':'완료된')+' 특별근무가 없습니다</div>'; return; }
   var h='';
-  wfSpEvents.forEach(function(ev){
+  filtered.forEach(function(ev){
     var cnt=countMap[ev.id]||0;
     var badgeColor=cnt>0?'#dbeafe':'#fee2e2', badgeText=cnt>0?'#1e40af':'#dc2626';
     var badgeLabel=cnt>0?(cnt+'건 편성'):'미편성';
