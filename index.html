@@ -3129,7 +3129,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 
 <!-- 공지 확인서 작성 모달 -->
 <div id="ncfCreateModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🔔 공지 확인서 작성</h3><button class="m-x" onclick="hideM('ncfCreateModal')">×</button></div><div style="padding:15px 17px">
-  <div class="fg"><label class="f-lbl">제목 <span style="color:var(--danger)">*</span></label><input type="text" id="ncfNewTitle" class="ri" placeholder="예: 9월 안전수칙 공지 확인서"></div>
+  <div class="fg"><label class="f-lbl">제목 <span style="color:var(--danger)">*</span></label><input type="text" id="ncfNewTitle" class="ri" placeholder="예: 9월 안전수칙 공지 확인서" style="margin-bottom:6px"><div id="sfTb_ncfNewTitle"></div></div>
   <div class="fg"><label class="f-lbl">내용 <span style="color:var(--danger)">*</span></label><div id="sfTb_ncfNewContent1"></div><textarea id="ncfNewContent1" class="ri" rows="4" placeholder="확인이 필요한 공지 내용을 입력하세요"></textarea></div>
   <div class="fg"><label class="f-lbl">공개범위(대상)</label><div id="ncfTargetGrp" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
   <div class="fg"><label class="f-lbl">연월일</label><input type="date" id="ncfNewDate" class="ri"></div>
@@ -3873,7 +3873,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div class="modal" style="max-width:380px;max-height:90vh;overflow-y:auto"><div style="padding:17px">
     <h3 id="cpCreateModalTitle" style="margin:0 0 12px">행사 만들기</h3>
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">제목</label>
-    <input id="cpNewTitle" placeholder="예: 습득물(유실물) 근절 슬로건 공모" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box">
+    <input id="cpNewTitle" placeholder="예: 습득물(유실물) 근절 슬로건 공모" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 6px;box-sizing:border-box">
+    <div id="sfTb_cpNewTitle" style="margin-bottom:6px"></div>
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">설명</label>
     <div id="sfTb_cpNewDesc"></div>
     <textarea id="cpNewDesc" rows="3" placeholder="행사 취지 등" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box;resize:vertical"></textarea>
@@ -4220,7 +4221,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div id="newsPostFormTitle" style="font-size:15px;font-weight:700;color:var(--g7);margin-bottom:13px">✍️ 회사소식 작성</div>
       <div id="newsPostAdminOnly" style="display:none">
         <div class="fg"><label class="f-lbl">제목 *</label>
-          <input type="text" id="newsPostTitle" class="ri" placeholder="제목을 입력하세요">
+          <input type="text" id="newsPostTitle" class="ri" placeholder="제목을 입력하세요" style="margin-bottom:6px">
+          <div id="sfTb_newsPostTitle"></div>
         </div>
         <div class="fg"><label class="f-lbl">내용 *</label>
           <div id="sfTb_newsPostContent"></div>
@@ -4603,7 +4605,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <input type="text" id="eeCatCustom" class="ri" placeholder="구분 직접입력 (기타 선택 시)" style="display:none;margin-bottom:11px">
 
         <div class="f-lbl">제목</div>
-        <input type="text" id="eeTitle" class="ri" placeholder="예: 2026년 하반기 안전교육" style="margin-bottom:11px">
+        <input type="text" id="eeTitle" class="ri" placeholder="예: 2026년 하반기 안전교육" style="margin-bottom:6px">
+        <div id="sfTb_eeTitle" style="margin-bottom:11px"></div>
 
         <div class="f-lbl">내용</div>
         <div id="sfTb_eeContent"></div>
@@ -6108,7 +6111,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <button onclick="closeMissingLeaderModal()" style="width:100%;padding:11px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">확인</button>
   </div>
 </div></div>
-<div id="noticeW" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📢 공지사항 작성</h3><button class="m-x" onclick="closeNW()">×</button></div><div style="padding:15px 17px"><div class="fg"><label class="f-lbl">제목</label><input type="text" id="nT" class="ri" placeholder="공지사항 제목" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">내용</label><div id="sfTb_nB"></div><textarea id="nB" class="f-ta show" rows="5" placeholder="공지사항 내용"></textarea></div><div class="fg"><label class="f-lbl">공지 대상</label><div id="nTargetGrp" style="display:flex;flex-wrap:wrap;gap:7px"></div></div><div class="fg"><label style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--g6);font-weight:700;cursor:pointer"><input type="checkbox" id="nPopupChk" checked style="accent-color:var(--teal)"> 🔔 로그인 시 팝업으로 표시</label></div><button onclick="pubNotice()" class="btn-prim">전체 발송</button></div></div></div>
+<div id="noticeW" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📢 공지사항 작성</h3><button class="m-x" onclick="closeNW()">×</button></div><div style="padding:15px 17px"><div class="fg"><label class="f-lbl">제목</label><input type="text" id="nT" class="ri" placeholder="공지사항 제목" style="margin-bottom:6px"><div id="sfTb_nT"></div></div><div class="fg"><label class="f-lbl">내용</label><div id="sfTb_nB"></div><textarea id="nB" class="f-ta show" rows="5" placeholder="공지사항 내용"></textarea></div><div class="fg"><label class="f-lbl">공지 대상</label><div id="nTargetGrp" style="display:flex;flex-wrap:wrap;gap:7px"></div></div><div class="fg"><label style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--g6);font-weight:700;cursor:pointer"><input type="checkbox" id="nPopupChk" checked style="accent-color:var(--teal)"> 🔔 로그인 시 팝업으로 표시</label></div><button onclick="pubNotice()" class="btn-prim">전체 발송</button></div></div></div>
 <div id="lostAccModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🟢 습득물 무사고 관리</h3><button class="m-x" onclick="hideM('lostAccModal')">×</button></div><div style="padding:17px"><div id="lostAccStatus" style="text-align:center;padding:14px;background:#EAF6EC;border-radius:12px;color:#1D4ED8;font-weight:800;margin-bottom:14px"></div><div id="lostAccEditWrap" style="display:none"><label class="f-lbl">사고일자</label><input type="date" id="lostAccDateInput" class="ri" style="margin-bottom:11px"><button onclick="saveLostAccDate()" class="btn-prim">저장</button></div></div></div></div>
 <div id="lostNoteModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📝 습득물 메모</h3><button class="m-x" onclick="hideM('lostNoteModal')">×</button></div><div style="padding:17px"><textarea id="lostNoteInput" class="f-ta show" rows="4" placeholder="자유롭게 입력 (예: 유의사항, 안내문 등)"></textarea><button onclick="saveLostNote()" class="btn-prim" style="margin-top:11px">저장</button></div></div></div>
 
@@ -8557,7 +8560,7 @@ function renderNoticeModalContent(n){
   var t=document.getElementById('noticeT');
   var b=document.getElementById('noticeB');
   var d=document.getElementById('noticeD');
-  if(t) t.textContent=n.title||'공지사항';
+  if(t) t.innerHTML=sfRender(n.title||'공지사항');
   if(b) b.innerHTML=sfRender(n.content);
   if(d) d.textContent=n.created_at?toKSTDate(n.created_at)+' 등록':'';
   var sk=document.getElementById('noSkip'); if(sk) sk.checked=false;
@@ -8593,7 +8596,7 @@ async function loadCompanyNewsPopup(){
 function showCompanyNewsPopupModal(n){
   var t=document.getElementById('newsPopT'); var b=document.getElementById('newsPopB'); var d=document.getElementById('newsPopD');
   var img=document.getElementById('newsPopImg');
-  if(t) t.textContent=n.title||'회사소식';
+  if(t) t.innerHTML=sfRender(n.title||'회사소식');
   if(b) b.innerHTML=sfRender(n.content);
   if(d) d.textContent=n.uploaded_at?toKSTDate(n.uploaded_at)+' 등록':'';
   if(img){
@@ -13055,7 +13058,7 @@ function eeRenderEventList(){
         +'<span style="background:var(--teal-bg);color:var(--teal2);font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">'+catLabel+'</span>'
         +(closed?'<span style="background:var(--danger-bg);color:var(--danger);font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">신청마감</span>':'<span style="background:var(--success-bg);color:var(--success);font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">신청가능</span>')
       +'</div>'
-      +'<div style="font-size:16px;font-weight:800;color:var(--g7);margin-bottom:4px">'+eeEsc(e.title)+(isItemNew('eduevent',e.id,e.created_at)?newBadgeHtml():'')+'</div>'
+      +'<div style="font-size:16px;font-weight:800;color:var(--g7);margin-bottom:4px">'+sfApplyMarkup(eeEsc(e.title))+(isItemNew('eduevent',e.id,e.created_at)?newBadgeHtml():'')+'</div>'
       +(e.content?('<div style="font-size:13px;color:var(--g6);margin-bottom:6px;white-space:pre-wrap;line-height:1.5">'+sfApplyMarkup(eeEsc(e.content))+'</div>'):'')
       +(dateRange?'<div style="font-size:13px;color:var(--g5);margin-bottom:2px">📅 '+dateRange+'</div>':'')
       +(e.apply_deadline?'<div style="font-size:12px;color:var(--g4);margin-bottom:2px">신청기간~'+e.apply_deadline+'</div>':'')
@@ -17203,7 +17206,7 @@ function renderNoticeList(data, targetId){
     html+='<div style="padding:13px;border-bottom:1px solid var(--g2)">';
     html+='<div onclick="markItemSeen(\'notice\',\''+n.id+'\');go(\'notice\')" style="cursor:pointer">';
     html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
-    html+='<div style="font-size:15px;font-weight:700;color:var(--g7)">'+(n.title||'공지사항')+(isItemNew('notice',n.id,n.created_at)?newBadgeHtml():'')+'</div>';
+    html+='<div style="font-size:15px;font-weight:700;color:var(--g7)">'+sfRender(n.title||'공지사항')+(isItemNew('notice',n.id,n.created_at)?newBadgeHtml():'')+'</div>';
     html+='<div style="font-size:12px;color:var(--g4)">'+date+'</div>';
     html+='</div>';
     html+='<div style="font-size:13px;color:var(--g5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(n.content||'').replace(/\n/g,' ')+'</div>';
@@ -17260,7 +17263,7 @@ function openNoticeDetail(idx){
   var t=document.getElementById('noticeT');
   var b=document.getElementById('noticeB');
   var d=document.getElementById('noticeD');
-  if(t) t.textContent=n.title||'공지사항';
+  if(t) t.innerHTML=sfRender(n.title||'공지사항');
   if(b) b.innerHTML=sfRender(n.content);
   if(d) d.textContent=n.created_at?toKSTDate(n.created_at)+' 등록':'';
   document.getElementById('noSkip').checked=false;
@@ -17288,7 +17291,7 @@ async function loadAdminNoticeList(targetId){
       h+='<div class="card" style="margin:0 13px 9px"><div class="cb" style="padding:11px 13px">';
       h+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
       h+='<div style="flex:1;min-width:0;cursor:pointer" onclick="openNoticeDetail('+i+')">';
-      h+='<div style="font-size:15px;font-weight:800;color:var(--g7);margin-bottom:3px">'+n.title+'</div>';
+      h+='<div style="font-size:15px;font-weight:800;color:var(--g7);margin-bottom:3px">'+sfRender(n.title)+'</div>';
       h+='<div style="font-size:13px;color:var(--g5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(n.content||'').split('\n').join(' ')+'</div>';
       h+='<div style="font-size:12px;color:var(--g3);margin-top:4px">'+date+' · '+(n.author||'')+' · <span style="color:var(--teal2);font-weight:700">'+targetRolesLabel(n.target_roles)+'</span></div>';
       h+='</div>';
@@ -20028,7 +20031,7 @@ async function loadNcfDocList(){
       var overdue=d.due_date&&d.due_date<todayStr;
       var iSigned=!!mySignedSet[d.id];
       h+='<div onclick="ncfOpenDocDetail('+d.id+')" style="background:white;border:1.5px solid '+(overdue&&!iSigned&&!ncfCanManage()?'var(--danger)':'var(--g2)')+';border-radius:var(--r2);padding:13px 14px;margin-bottom:9px;cursor:pointer">'
-        +'<div style="font-size:14.5px;font-weight:700;color:var(--g7);margin-bottom:5px">🔔 '+lrptEsc(d.title)+(iSigned?' <span style="font-size:11px;color:var(--teal2)">✅확인함</span>':'')+'</div>'
+        +'<div style="font-size:14.5px;font-weight:700;color:var(--g7);margin-bottom:5px">🔔 '+sfRender(d.title)+(iSigned?' <span style="font-size:11px;color:var(--teal2)">✅확인함</span>':'')+'</div>'
         +'<div style="font-size:12.5px;color:var(--g4)">대상: '+targetRolesLabel(d.target_roles)+(d.due_date?(' · 확인기한 '+lrptEsc(d.due_date)+(overdue?' <span style="color:var(--danger);font-weight:700">(경과)</span>':'')):'')+'</div>'
         +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:7px">'
         +'<span style="font-size:12px;color:var(--g4)">'+lrptEsc(d.doc_date)+' · '+lrptEsc(d.created_by)+'</span>'
@@ -20103,7 +20106,7 @@ async function ncfOpenDocDetail(id){
     var iAmEligible=ncfEligible(d.target_roles);
     var h='<div class="card" style="margin-bottom:12px"><div class="cb">'
       +'<div style="border-top:3px double #444;border-bottom:3px double #444;padding:9px 0;text-align:center;margin-bottom:10px">'
-      +'<span style="font-size:17px;font-weight:800;letter-spacing:1px;color:var(--g7)">'+lrptEsc(d.title)+'</span></div>'
+      +'<span style="font-size:17px;font-weight:800;letter-spacing:1px;color:var(--g7)">'+sfRender(d.title)+'</span></div>'
       +'<div style="font-size:12px;color:var(--g4);margin-bottom:4px">'+lrptEsc(d.doc_date)+(d.due_date?(' · 확인기한 '+lrptEsc(d.due_date)):'')+'</div>'
       +'<div style="font-size:12px;color:var(--teal2);font-weight:700;margin-bottom:10px">대상: '+targetRolesLabel(d.target_roles)+'</div>'
       +'<div style="font-size:13px;color:var(--g6);line-height:2.1">'
@@ -23204,7 +23207,7 @@ async function viewNewsPost(id){
     if(res.error||!p){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">불러오기 실패</div>'; return; }
     var html='';
     if(p.title){
-      html+='<div style="font-size:19px;font-weight:800;color:var(--g7);margin-bottom:8px;line-height:1.4">'+String(p.title).replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
+      html+='<div style="font-size:19px;font-weight:800;color:var(--g7);margin-bottom:8px;line-height:1.4">'+sfRender(p.title)+'</div>';
     }
     html+='<div style="font-size:12px;color:var(--g4);margin-bottom:10px">'+(p.uploaded_at?p.uploaded_at.slice(0,16).replace('T',' '):'')+' · '+(p.uploaded_by||'')+'</div>';
     html+='<div style="font-size:15px;color:var(--g7);line-height:1.7;white-space:pre-wrap">'+sfApplyMarkup(linkifyText((p.content||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')))+'</div>';
@@ -28806,9 +28809,9 @@ function cpRenderListForTab(){
     h+='<div style="padding:14px;border:1.5px solid var(--g2);border-radius:12px;margin-bottom:10px;background:white">'+
        '<div onclick="markItemSeen(\'campaign\',\''+c.id+'\');cpOpenDetail(\''+c.id+'\')" style="cursor:pointer">'+
        '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">'+
-       '<div style="font-weight:800;font-size:15px;color:var(--g7)">🏆 '+eeEsc(c.title)+(isItemNew('campaign',c.id,c.created_at)?newBadgeHtml():'')+'</div>'+statusBadge+
+       '<div style="font-weight:800;font-size:15px;color:var(--g7)">🏆 '+sfApplyMarkup(eeEsc(c.title))+(isItemNew('campaign',c.id,c.created_at)?newBadgeHtml():'')+'</div>'+statusBadge+
        '</div>'+
-       (c.description?('<div style="font-size:13px;color:var(--g4);margin-top:6px">'+eeEsc(c.description)+'</div>'):'')+
+       (c.description?('<div style="font-size:13px;color:var(--g4);margin-top:6px">'+sfApplyMarkup(eeEsc(c.description))+'</div>'):'')+
        (period?('<div style="font-size:12px;color:var(--g5);margin-top:6px">📅 '+period+'</div>'):'')+
        '<div style="font-size:12px;color:var(--g4);margin-top:6px">응모 '+cnt+'건'+(c.allow_multiple?' · 1인 복수제출 가능':' · 1인 1회 제출')+'</div>'+
        '</div>'+
@@ -28929,7 +28932,7 @@ async function cpOpenDetail(id){
   if(!c){ var r=await sb.from('campaigns').select('*').eq('id',id).maybeSingle(); c=r.data; }
   if(!c){ toast('행사 정보를 찾을 수 없습니다'); return; }
   cpCurCampaign=c;
-  document.getElementById('cpDetTitle').textContent='🏆 '+c.title;
+  document.getElementById('cpDetTitle').innerHTML='🏆 '+sfRender(c.title);
   document.getElementById('cpDetSub').innerHTML=sfRender(c.description||'');
   document.getElementById('cpAdminBtns').style.display=cpIsAdmin()?'block':'none';
   document.getElementById('cpEligibleBtn').style.display=cpIsAdmin()?'block':'none';
@@ -30418,7 +30421,7 @@ function sfToolbarHtml(textareaId){
   return h;
 }
 document.addEventListener('DOMContentLoaded', function(){
-  ['nB','newsPostContent','cpNewDesc','eeContent','prfContent','ncfNewContent1'].forEach(function(id){
+  ['nT','nB','newsPostTitle','newsPostContent','cpNewTitle','cpNewDesc','eeTitle','eeContent','prfContent','ncfNewTitle','ncfNewContent1'].forEach(function(id){
     var host=document.getElementById('sfTb_'+id);
     if(host) host.innerHTML=sfToolbarHtml(id);
   });
