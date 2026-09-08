@@ -12165,7 +12165,9 @@ function jwUpdateShiftBadge(){
 }
 async function loadJwSuggestions(){
   try{
-    var res=await sb.from('joint_work_data').select('location').not('location','is',null).order('created_at',{ascending:false}).limit(60);
+    // 이 앱의 경량 DB 클라이언트에는 not()/is() 필터가 없어서(eq/neq/gte/lte만 지원),
+    // null 제외는 서버 필터 대신 받아온 뒤 자바스크립트에서 걸러내는 방식으로 처리한다.
+    var res=await sb.from('joint_work_data').select('location').order('created_at',{ascending:false}).limit(60);
     if(res.error||!res.data) return;
     var locCount={};
     res.data.forEach(function(r){
