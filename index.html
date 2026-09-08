@@ -17185,7 +17185,7 @@ async function ncfAttachNoticeBadges(notices){
   if(!notices||!notices.length||!me) return;
   var ids=notices.map(function(n){return n.id;});
   try{
-    var docRes=await sb.from('notice_confirm_docs').select('id,title,target_roles').in('linked_notice_id',ids);
+    var docRes=await sb.from('notice_confirm_docs').select('id,title,target_roles,linked_notice_id').in('linked_notice_id',ids);
     if(docRes.error||!docRes.data||!docRes.data.length) return;
     var sigRes=await sb.from('notice_confirm_signatures').select('doc_id,signed_by');
     var mySigned={};
