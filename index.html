@@ -5978,6 +5978,11 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <option value="휴직">📝 휴직</option>
       </select>
     </div>
+    <div style="display:flex;gap:6px;margin-bottom:12px" id="mgrLeaveProgressTabs">
+      <button data-v="ongoing" onclick="mgrLeaveSetProgressFilter('ongoing')" class="rp on" style="flex:1;text-align:center">진행중</button>
+      <button data-v="done" onclick="mgrLeaveSetProgressFilter('done')" class="rp" style="flex:1;text-align:center">완료(지난 일정)</button>
+      <button data-v="all" onclick="mgrLeaveSetProgressFilter('all')" class="rp" style="flex:1;text-align:center">전체</button>
+    </div>
     <div id="mgrLeaveListWrap"><div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">불러오는 중...</div></div>
   </div>
   <div id="mgrLeaveP2" style="display:none;padding:15px 17px;max-height:75vh;overflow-y:auto">
@@ -26342,12 +26347,21 @@ var MGR_LEAVE_STATUS_STYLE={
   '휴직':{icon:'📝',bg:'#FEF3E2',fg:'#C2751A'}
 };
 var MGR_LEAVE_STATUS_DEFAULT={icon:'📝',bg:'#FEF3E2',fg:'#C2751A'}; // 기타(직접 입력) 등 목록에 없는 값 공통 스타일
+var mgrLeaveProgressFilter='ongoing'; // 'ongoing' | 'done' | 'all'
+function mgrLeaveSetProgressFilter(v){
+  mgrLeaveProgressFilter=v;
+  document.querySelectorAll('#mgrLeaveProgressTabs .rp').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-v')===v); });
+  mgrLeaveLoadList();
+}
 async function mgrLeaveLoadList(){
   var wrap=document.getElementById('mgrLeaveListWrap');
   wrap.innerHTML='<div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">불러오는 중...</div>';
   var todayStr=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   var isFullAccess = me&&(me.role==='admin'||me.role==='master');
-  var q=sb.from('mgr_leave_schedule').select('*').gte('end_date',todayStr).order('start_date');
+  var q=sb.from('mgr_leave_schedule').select('*').order('start_date');
+  if(mgrLeaveProgressFilter==='ongoing') q=q.gte('end_date',todayStr);
+  else if(mgrLeaveProgressFilter==='done') q=q.lt('end_date',todayStr);
+  // 'all'이면 날짜 조건 없이 전체
   if(!isFullAccess){
     var mine=mgrLeaveMyTeamRole();
     if(mine){ q=q.eq('team',mine.team).eq('name',mine.name); }
@@ -26388,11 +26402,12 @@ async function mgrLeaveLoadList(){
       html+='<div style="font-size:13px;font-weight:800;color:var(--g6);margin:'+(html?'16px':'0')+' 0 8px;padding-bottom:4px;border-bottom:1.5px solid var(--g2)">'+y+'년 '+m+'월</div>';
     }
     var st=MGR_LEAVE_STATUS_STYLE[r.status]||MGR_LEAVE_STATUS_DEFAULT;
+    var isDone=r.end_date<todayStr;
     var days=Math.round((new Date(r.end_date+'T00:00:00')-new Date(r.start_date+'T00:00:00'))/86400000)+1;
-    html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;background:'+st.bg+';margin-bottom:8px">'
+    html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:10px;background:'+(isDone?'var(--g1)':st.bg)+';margin-bottom:8px;opacity:'+(isDone?'.75':'1')+'">'
       +'<div>'
-        +'<div style="font-size:13px;font-weight:700;color:'+st.fg+'">'+st.icon+' '+r.team+' '+r.name+mgrLeaveRealNameSuffix(r.team,r.name)+' · '+r.status+'</div>'
-        +'<div style="font-size:11.5px;color:'+st.fg+';opacity:.85;margin-top:2px">'+r.start_date+' ~ '+r.end_date+' ('+days+'일) · 등록: '+(r.created_by||'-')+'</div>'
+        +'<div style="font-size:13px;font-weight:700;color:'+(isDone?'var(--g5)':st.fg)+'">'+st.icon+' '+r.team+' '+r.name+mgrLeaveRealNameSuffix(r.team,r.name)+' · '+r.status+(isDone?' <span style="font-size:11px;font-weight:800;color:var(--g4);background:var(--g2);border-radius:8px;padding:1px 6px;margin-left:2px">완료</span>':'')+'</div>'
+        +'<div style="font-size:11.5px;color:'+(isDone?'var(--g4)':st.fg)+';opacity:.85;margin-top:2px">'+r.start_date+' ~ '+r.end_date+' ('+days+'일) · 등록: '+(r.created_by||'-')+'</div>'
       +'</div>'
       +'<div style="display:flex;gap:5px;flex-shrink:0;margin-left:6px">'
         +'<button onclick="mgrLeaveOpenEdit('+r.id+')" style="padding:5px 9px;background:white;color:#1B4FBE;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">수정</button>'
