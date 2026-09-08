@@ -1594,7 +1594,10 @@ html{overflow-x:hidden}
   </div>
   <!-- 공지사항 목록 -->
   <div id="homeNoticeBlock">
-  <div class="sec-lbl">📢 공지사항</div>
+  <div class="sec-lbl" style="display:flex;align-items:center;justify-content:space-between">
+    <span>📢 공지사항</span>
+    <button onclick="go('notice')" style="padding:5px 11px;background:var(--teal-bg);color:var(--teal2);border:1px solid var(--teal);border-radius:20px;font-size:12.5px;font-weight:700;cursor:pointer">공지사항 메뉴로 →</button>
+  </div>
   <div class="card" style="margin-bottom:13px"><div style="border-radius:var(--r2);overflow:hidden" id="noticeListWrap">
     <div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">공지사항을 불러오는 중...</div>
   </div></div>
