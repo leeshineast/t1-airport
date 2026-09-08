@@ -4057,7 +4057,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div class="pg-hd">
     <div><h1>📢 공지사항</h1><small>전체 공지사항 목록</small></div>
     <div style="display:flex;gap:6px;align-items:center">
-      <button id="noticeWriteBtn" onclick="openNW()" style="display:none;padding:6px 12px;background:var(--teal);color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✏️ 작성</button>
+      <button id="noticeWriteBtn" onclick="resetNoticeWriteForm();openNW()" style="display:none;padding:6px 12px;background:var(--teal);color:#fff;border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✏️ 작성</button>
       <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 메인</button>
     </div>
   </div>
@@ -6108,7 +6108,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <button onclick="closeMissingLeaderModal()" style="width:100%;padding:11px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">확인</button>
   </div>
 </div></div>
-<div id="noticeW" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📢 공지사항 작성</h3><button class="m-x" onclick="closeNW()">×</button></div><div style="padding:15px 17px"><div class="fg"><label class="f-lbl">제목</label><input type="text" id="nT" class="ri" placeholder="공지사항 제목" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">내용</label><div id="sfTb_nB"></div><textarea id="nB" class="f-ta show" rows="5" placeholder="공지사항 내용"></textarea></div><div class="fg"><label class="f-lbl">공지 대상</label><div id="nTargetGrp" style="display:flex;flex-wrap:wrap;gap:7px"></div></div><button onclick="pubNotice()" class="btn-prim">전체 발송</button></div></div></div>
+<div id="noticeW" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📢 공지사항 작성</h3><button class="m-x" onclick="closeNW()">×</button></div><div style="padding:15px 17px"><div class="fg"><label class="f-lbl">제목</label><input type="text" id="nT" class="ri" placeholder="공지사항 제목" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">내용</label><div id="sfTb_nB"></div><textarea id="nB" class="f-ta show" rows="5" placeholder="공지사항 내용"></textarea></div><div class="fg"><label class="f-lbl">공지 대상</label><div id="nTargetGrp" style="display:flex;flex-wrap:wrap;gap:7px"></div></div><div class="fg"><label style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--g6);font-weight:700;cursor:pointer"><input type="checkbox" id="nPopupChk" checked style="accent-color:var(--teal)"> 🔔 로그인 시 팝업으로 표시</label></div><button onclick="pubNotice()" class="btn-prim">전체 발송</button></div></div></div>
 <div id="lostAccModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🟢 습득물 무사고 관리</h3><button class="m-x" onclick="hideM('lostAccModal')">×</button></div><div style="padding:17px"><div id="lostAccStatus" style="text-align:center;padding:14px;background:#EAF6EC;border-radius:12px;color:#1D4ED8;font-weight:800;margin-bottom:14px"></div><div id="lostAccEditWrap" style="display:none"><label class="f-lbl">사고일자</label><input type="date" id="lostAccDateInput" class="ri" style="margin-bottom:11px"><button onclick="saveLostAccDate()" class="btn-prim">저장</button></div></div></div></div>
 <div id="lostNoteModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📝 습득물 메모</h3><button class="m-x" onclick="hideM('lostNoteModal')">×</button></div><div style="padding:17px"><textarea id="lostNoteInput" class="f-ta show" rows="4" placeholder="자유롭게 입력 (예: 유의사항, 안내문 등)"></textarea><button onclick="saveLostNote()" class="btn-prim" style="margin-top:11px">저장</button></div></div></div>
 
@@ -8612,16 +8612,25 @@ function closeNewsPopupModal(){
   }
 }
 function openNW(){renderNoticeTargetChecks();showM('noticeW');}
+function resetNoticeWriteForm(){
+  _editNoticeId=null;
+  document.getElementById('nT').value='';
+  document.getElementById('nB').value='';
+  var popupChk=document.getElementById('nPopupChk'); if(popupChk) popupChk.checked=true;
+  var mhd=document.querySelector('#noticeW .m-hd h3'); if(mhd) mhd.textContent='📢 공지사항 작성';
+  var btn2=document.querySelector('#noticeW .btn-prim'); if(btn2){ btn2.textContent='전체 발송'; btn2.onclick=pubNotice; }
+}
 function closeNW(){hideM('noticeW');}
 async function pubNotice(){
   if(!me||!(me.role==='admin'||isExecRole(me.role))){toast('⚠️ 공지 작성 권한이 없습니다');return;}
   const t=document.getElementById('nT').value.trim();const b=document.getElementById('nB').value.trim();if(!t){toast('제목을 입력해주세요');return;}if(!b){toast('내용을 입력해주세요');return;}
   var targets=getSelectedNoticeTargets();
+  var showPopup = document.getElementById('nPopupChk') ? document.getElementById('nPopupChk').checked : true;
   // DB 저장 (전체 공유)
-  var res2=await sb.from('notices').insert({title:t,content:b,author:me?me.name:'',target_roles:targets});
+  var res2=await sb.from('notices').insert({title:t,content:b,author:me?me.name:'',target_roles:targets,show_popup:showPopup});
   if(res2.error){toast('공지 저장 오류: '+res2.error.message);return;}
   loadNoticesFromDB();
-  document.getElementById('noticeT').textContent=t;document.getElementById('noticeB').innerHTML=b.replace(/\n/g,'<br>');const now=new Date();document.getElementById('noticeD').textContent=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0')+' 등록';try{localStorage.removeItem('nsk_'+new Date().toDateString());}catch(e){}document.getElementById('noSkip').checked=false;closeNW();document.getElementById('nT').value='';document.getElementById('nB').value='';setTimeout(()=>showM('noticeM'),500);toast('✓ 공지사항 전체 발송 완료!'); loadAdminNoticeList(); loadNoticesFromDB();}
+  document.getElementById('noticeT').textContent=t;document.getElementById('noticeB').innerHTML=b.replace(/\n/g,'<br>');const now=new Date();document.getElementById('noticeD').textContent=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0')+' 등록';try{localStorage.removeItem('nsk_'+new Date().toDateString());}catch(e){}document.getElementById('noSkip').checked=false;closeNW();document.getElementById('nT').value='';document.getElementById('nB').value='';if(showPopup) setTimeout(()=>showM('noticeM'),500);toast('✓ 공지사항 전체 발송 완료!'); loadAdminNoticeList(); loadNoticesFromDB();}
 
 // ─ 산업재해 ─
 function openInd(){if(!me||(me.role!=='admin'&&me.role!=='manager'&&me.role!=='leader'&&me.role!=='acting_leader'&&!isExecRole(me.role))){toast('팀장 이상만 등록 가능합니다');return;}indEditId=null;const now=new Date();const local=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16);document.getElementById('indDate').value=local;['indPer','indLoc','indDesc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});document.querySelectorAll('#indTG .rp').forEach(p=>p.classList.remove('on'));var ce=document.getElementById('indTypeCustom');if(ce){ce.style.display='none';ce.value='';}document.getElementById('indErr').style.display='none';var t=document.getElementById('indModalTitle');if(t)t.textContent='🚑 산업재해 등록';var b=document.getElementById('indSubBtn');if(b)b.textContent='등록 완료';showM('indModal');}
@@ -17143,12 +17152,13 @@ async function loadNoticesFromDB(){
     var myRole=me?me.role:null;
     var visible=res.data.filter(function(n){ return noticeVisibleFor(n.target_roles, myRole); });
     if(!visible.length){ renderNoticeList([]); _afterNoticeClosed(); return; }
-    // 팝업: 내게 보이는 것 중 최신 3건까지 순차 표시
+    // 팝업: 내게 보이는 것 중 "로그인 시 팝업 표시"로 설정된 것만, 최신 3건까지 순차 표시
+    var popupCandidates=visible.filter(function(n){ return n.show_popup!==false; });
     var sk=null; try{ sk=localStorage.getItem('nsk_'+new Date().toDateString()); }catch(e){}
-    if(sk){
+    if(sk||!popupCandidates.length){
       _afterNoticeClosed();
     } else {
-      var queueItems=visible.slice(0,3);
+      var queueItems=popupCandidates.slice(0,3);
       var first=queueItems.shift();
       _noticeQueue=queueItems;
       renderNoticeModalContent(first);
@@ -17284,7 +17294,7 @@ async function loadAdminNoticeList(targetId){
       h+='</div>';
       h+='<div style="display:flex;gap:5px;flex-shrink:0">';
       if(canEdit){h+='<button onclick="event.stopPropagation();ncfOpenCreateDoc({title:\''+eeJsAttrEsc((n.title||'').replace(/[\r\n]+/g,' '))+'\',content:\''+eeJsAttrEsc((n.content||'').replace(/[\r\n]+/g,' ').slice(0,80))+'\',linkedId:\''+n.id+'\'})" style="padding:5px 10px;background:var(--g1);color:var(--g6);border:1px solid var(--g3);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔔 확인서</button>';}
-      if(canEdit){h+='<button data-id="'+n.id+'" data-title="'+encodeURIComponent(n.title)+'" data-content="'+encodeURIComponent(n.content||'')+'" data-target="'+encodeURIComponent(JSON.stringify(n.target_roles||['all']))+'" onclick="event.stopPropagation();openEditNotice(this)" style="padding:5px 10px;background:var(--teal-bg);color:var(--teal2);border:1px solid var(--teal);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">수정</button>';}
+      if(canEdit){h+='<button data-id="'+n.id+'" data-title="'+encodeURIComponent(n.title)+'" data-content="'+encodeURIComponent(n.content||'')+'" data-target="'+encodeURIComponent(JSON.stringify(n.target_roles||['all']))+'" data-popup="'+(n.show_popup===false?'0':'1')+'" onclick="event.stopPropagation();openEditNotice(this)" style="padding:5px 10px;background:var(--teal-bg);color:var(--teal2);border:1px solid var(--teal);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">수정</button>';}
       if(isAdminOnly){h+='<button data-id="'+n.id+'" onclick="event.stopPropagation();deleteNotice(this)" style="padding:5px 10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>';}
       h+='</div></div>';
       h+='<div id="ncfBadge_'+n.id+'"></div>';
@@ -17320,6 +17330,8 @@ function openEditNotice(btn){
   try{ if(targetsRaw) targets=JSON.parse(decodeURIComponent(targetsRaw))||['all']; }catch(e){}
   document.getElementById('nT').value=title;
   document.getElementById('nB').value=content;
+  var popupChk=document.getElementById('nPopupChk');
+  if(popupChk) popupChk.checked = btn.getAttribute('data-popup')!=='0';
   // 모달 제목 변경
   var mhd=document.querySelector('#noticeW .m-hd h3');
   if(mhd) mhd.textContent='📢 공지사항 수정';
@@ -17338,8 +17350,9 @@ async function saveEditNotice(){
   if(!t){toast('제목을 입력해주세요');return;}
   if(!b){toast('내용을 입력해주세요');return;}
   var targets=getSelectedNoticeTargets();
+  var showPopup = document.getElementById('nPopupChk') ? document.getElementById('nPopupChk').checked : true;
   try{
-    var res=await sb.from('notices').update({title:t,content:b,target_roles:targets}).eq('id',_editNoticeId);
+    var res=await sb.from('notices').update({title:t,content:b,target_roles:targets,show_popup:showPopup}).eq('id',_editNoticeId);
     if(res&&res.error){ toast('수정 오류: '+res.error.message); return; }
     toast('✅ 공지사항 수정 완료');
     closeNW();
