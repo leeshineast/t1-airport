@@ -27439,19 +27439,21 @@ async function wfSpOpenEditLog(eventId, title){
 // 상단 "팀 전체" 필터(wfFTeam)에 특정 팀이 선택돼 있으면 그 팀의 실제 등록 인원으로 채운 양식을, 선택 안 돼있으면 기존 예시 양식을 내려받는다.
 function wfDownloadEmpTemplate(){
   var selTeam=(document.getElementById('wfFTeam')||{}).value||'';
-  var qLabel=(typeof wfQuarterLabel==='function' && wfCurQuarter) ? wfQuarterLabel(wfCurQuarter) : (wfCurQuarter||wfNowQuarter());
+  // 업로드 시 분기 자동인식 정규식(/(20\d\d)년\s*([1-4])\s*분기/)과 반드시 맞도록 4자리 연도로 제목을 만든다
+  var qm=(wfCurQuarter||wfNowQuarter()).match(/^(\d{4})-Q(\d)$/);
+  var fullQLabel=qm ? (qm[1]+'년 '+qm[2]+'분기') : (wfCurQuarter||wfNowQuarter());
   var aoa, fileName;
   if(selTeam){
     var teamEmps=wfEmployees.filter(function(e){return e.team===selTeam;})
       .slice().sort(function(a,b){return String(a.emp_no).localeCompare(String(b.emp_no));});
     aoa=[
-      [selTeam+' 근무계획 수정양식 ('+qLabel+') — 변경후 칸만 고쳐서 업로드하세요'],
-      ['사번','성명','직책','근무팀','근무조','성별','변경전','변경후','비고','휴직','시작일자','종료일자']
+      [fullQLabel+' '+selTeam+' 근무계획 수정양식 — 변경후 칸만 고쳐서 업로드하세요'],
+      ['사번','성명','직책','근무팀','근무조','변경전','변경후','비고','휴직','시작일자','종료일자']
     ];
     teamEmps.forEach(function(e){
       var off=(e.off1&&e.off2)?(e.off1+e.off2):'';
       aoa.push([
-        e.emp_no, e.name||'', e.position||'', e.team||'', e.group_name||'', '',
+        e.emp_no, e.name||'', e.position||'', e.team||'', e.group_name||'',
         off, off, '', e.leave?e.leave.leave_type:'', e.leave?e.leave.start_date:'', e.leave?e.leave.end_date:''
       ]);
     });
@@ -27459,18 +27461,18 @@ function wfDownloadEmpTemplate(){
     fileName=selTeam+'_근무계획_업로드양식.xlsx';
   } else {
     aoa=[
-      ['2026년 O분기 정기 휴무변경(적용일 기입)'],
-      ['사번','성명','직책','근무팀','근무조','성별','변경전','변경후','비고','휴직','시작일자','종료일자'],
-      [140000,'홍길동','팀장','환경미화1팀','-','남','월화','월화','예시행 - 지우고 사용하세요','', '', ''],
-      [140001,'홍이동','조장','환경미화1팀','A조','여','금토','금토','','', '', ''],
-      [140002,'홍삼동','','환경미화1팀','A조','남','화수','수목','업무조정','', '', ''],
-      [140003,'홍사동','','행정','-','여','토일','토일','','휴직', new Date(2026,2,1), new Date(2027,1,28)]
+      [fullQLabel+' 정기 휴무변경(적용일 기입)'],
+      ['사번','성명','직책','근무팀','근무조','변경전','변경후','비고','휴직','시작일자','종료일자'],
+      [140000,'홍길동','팀장','환경미화1팀','-','월화','월화','예시행 - 지우고 사용하세요','', '', ''],
+      [140001,'홍이동','조장','환경미화1팀','A조','금토','금토','','', '', ''],
+      [140002,'홍삼동','','환경미화1팀','A조','화수','수목','업무조정','', '', ''],
+      [140003,'홍사동','','행정','-','토일','토일','','휴직', new Date(2026,2,1), new Date(2027,1,28)]
     ];
     fileName='근무계획_업로드양식.xlsx';
   }
   var wb=XLSX.utils.book_new();
   var ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols']=[{wch:9},{wch:9},{wch:8},{wch:14},{wch:8},{wch:7},{wch:8},{wch:8},{wch:22},{wch:8},{wch:12},{wch:12}];
+  ws['!cols']=[{wch:9},{wch:9},{wch:8},{wch:14},{wch:8},{wch:8},{wch:8},{wch:22},{wch:8},{wch:12},{wch:12}];
   XLSX.utils.book_append_sheet(wb, ws, '근무계획업로드양식');
   XLSX.writeFile(wb, fileName);
   toast('📄 양식 다운로드 완료'+(selTeam?(' ('+selTeam+' '+wfEmployees.filter(function(e){return e.team===selTeam;}).length+'명)'):''));
