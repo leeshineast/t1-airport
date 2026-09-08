@@ -349,7 +349,7 @@ html{overflow-x:hidden}
     // anon 키만으로는 어떤 데이터도 읽고 쓸 수 없음 — 로그인 시 발급받은 access_token을 실어보내야 함.
     // ★ inspect.html 등 다른 파일들이 이미 localStorage.t1_auth를
     //   {access_token, refresh_token, expires_at(초단위 유닉스타임)} 형태로 읽고 있으므로 반드시 이 스키마에 맞춤.
-    var _sbAccessToken=null, _sbRefreshToken=null, _sbTokenExpiresAt=0;
+    var _sbAccessToken=null, _sbRefreshToken=null, _sbTokenExpiresAt=0, _sbRefreshPromise=null;
     function _sbSaveAuth(data){
       _sbAccessToken=data.access_token; _sbRefreshToken=data.refresh_token;
       var expiresAtSec = data.expires_at || Math.floor(Date.now()/1000)+(data.expires_in||3600);
@@ -381,18 +381,29 @@ html{overflow-x:hidden}
       }catch(e){ return {error:{message:String(e.message||e)}}; }
     }
     async function sbAuthRefresh(){
+      // 여러 API 호출이 동시에 "토큰 만료 임박"을 감지하면 각자 갱신을 시도해서
+      // Supabase의 1회용 refresh_token이 충돌·무효화되는 문제가 있었음(동시 요청 중 하나만 성공, 나머지는 401).
+      // 이미 갱신이 진행 중이면 새로 시작하지 않고 그 결과를 같이 기다린다.
+      if(_sbRefreshPromise) return _sbRefreshPromise;
       if(!_sbRefreshToken) _sbLoadAuth();
       if(!_sbRefreshToken) return false;
+      _sbRefreshPromise = (async function(){
+        try{
+          var resp=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=refresh_token', {
+            method:'POST', headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
+            body: JSON.stringify({refresh_token:_sbRefreshToken})
+          });
+          var data=await resp.json();
+          if(!resp.ok) return false;
+          _sbSaveAuth(data);
+          return true;
+        }catch(e){ return false; }
+      })();
       try{
-        var resp=await fetch(SUPABASE_URL+'/auth/v1/token?grant_type=refresh_token', {
-          method:'POST', headers:{'apikey':SUPABASE_KEY,'Content-Type':'application/json'},
-          body: JSON.stringify({refresh_token:_sbRefreshToken})
-        });
-        var data=await resp.json();
-        if(!resp.ok) return false;
-        _sbSaveAuth(data);
-        return true;
-      }catch(e){ return false; }
+        return await _sbRefreshPromise;
+      } finally {
+        _sbRefreshPromise = null;
+      }
     }
     // 만료 5분 전이면 미리 갱신 (여러 화면에서 API 호출 전에 불러 씀)
     async function sbAuthEnsureFresh(){
