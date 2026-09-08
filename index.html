@@ -5980,7 +5980,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     </div>
     <div style="display:flex;gap:6px;margin-bottom:12px" id="mgrLeaveProgressTabs">
       <button data-v="ongoing" onclick="mgrLeaveSetProgressFilter('ongoing')" class="rp on" style="flex:1;text-align:center">진행중</button>
-      <button data-v="done" onclick="mgrLeaveSetProgressFilter('done')" class="rp" style="flex:1;text-align:center">완료(지난 일정)</button>
+      <button data-v="done" onclick="mgrLeaveSetProgressFilter('done')" class="rp" style="flex:1;text-align:center">완료</button>
       <button data-v="all" onclick="mgrLeaveSetProgressFilter('all')" class="rp" style="flex:1;text-align:center">전체</button>
     </div>
     <div id="mgrLeaveListWrap"><div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">불러오는 중...</div></div>
@@ -26360,7 +26360,12 @@ async function mgrLeaveLoadList(){
   var isFullAccess = me&&(me.role==='admin'||me.role==='master');
   var q=sb.from('mgr_leave_schedule').select('*').order('start_date');
   if(mgrLeaveProgressFilter==='ongoing') q=q.gte('end_date',todayStr);
-  else if(mgrLeaveProgressFilter==='done') q=q.lt('end_date',todayStr);
+  else if(mgrLeaveProgressFilter==='done'){
+    // 이 앱의 경량 DB 클라이언트에는 lt(미만) 필터가 없고 eq/neq/gte/lte만 있어서,
+    // "어제까지(<=어제)"로 바꿔서 lte로 표현한다 (end_date < 오늘  ==  end_date <= 어제)
+    var yStr=new Date(Date.now()+9*3600000-86400000).toISOString().slice(0,10);
+    q=q.lte('end_date',yStr);
+  }
   // 'all'이면 날짜 조건 없이 전체
   if(!isFullAccess){
     var mine=mgrLeaveMyTeamRole();
