@@ -7487,7 +7487,7 @@ function finishLogin(){
   }else{
     go('main');
   }
-  setTimeout(function(){ initAppData(); tryAutoCheckin(); checkHeatAlert(); eeCheckAutoAttendance(); if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges(); }, 100);
+  setTimeout(function(){ initAppData(); tryAutoCheckin(); checkHeatAlert(); eeCheckAutoAttendance(); if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges(); updateNotifBadge(); }, 100);
   updateStaff();
   updateFloorChart();
   updateMpSummary();
@@ -22511,7 +22511,7 @@ async function refreshMpDataLight(){
       }else{
         go('main');
       }
-      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); checkLostPending(); checkVocPending(); loadExecSummary(); if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); }, 500);
+      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); checkLostPending(); checkVocPending(); loadExecSummary(); if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); updateNotifBadge(); }, 500);
       // 나머지는 화면에 바로 안 보이는 요약값들이라, 초기 로딩 부하가 몰리지 않도록 1.2초 뒤로 미뤄서 실행
       // (아이폰에서 로그인 직후 수십 개 요청이 한꺼번에 몰려 화면 반응이 느려지는 문제의 일부였음)
       setTimeout(function(){ loadEqHomeSummary(); loadMpAverages(); loadNsAverage(); loadFacilityMenuViewCounts(); loadLostSafety(); }, 1700);
