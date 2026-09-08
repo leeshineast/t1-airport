@@ -3130,7 +3130,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 <!-- 공지 확인서 작성 모달 -->
 <div id="ncfCreateModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🔔 공지 확인서 작성</h3><button class="m-x" onclick="hideM('ncfCreateModal')">×</button></div><div style="padding:15px 17px">
   <div class="fg"><label class="f-lbl">제목 <span style="color:var(--danger)">*</span></label><input type="text" id="ncfNewTitle" class="ri" placeholder="예: 9월 안전수칙 공지 확인서"></div>
-  <div class="fg"><label class="f-lbl">내용 <span style="color:var(--danger)">*</span></label><textarea id="ncfNewContent1" class="ri" rows="4" placeholder="확인이 필요한 공지 내용을 입력하세요"></textarea></div>
+  <div class="fg"><label class="f-lbl">내용 <span style="color:var(--danger)">*</span></label><div id="sfTb_ncfNewContent1"></div><textarea id="ncfNewContent1" class="ri" rows="4" placeholder="확인이 필요한 공지 내용을 입력하세요"></textarea></div>
   <div class="fg"><label class="f-lbl">공개범위(대상)</label><div id="ncfTargetGrp" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
   <div class="fg"><label class="f-lbl">연월일</label><input type="date" id="ncfNewDate" class="ri"></div>
   <div class="fg"><label class="f-lbl">확인기한</label><input type="date" id="ncfNewDue" class="ri"></div>
@@ -3875,6 +3875,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">제목</label>
     <input id="cpNewTitle" placeholder="예: 습득물(유실물) 근절 슬로건 공모" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box">
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">설명</label>
+    <div id="sfTb_cpNewDesc"></div>
     <textarea id="cpNewDesc" rows="3" placeholder="행사 취지 등" style="width:100%;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:14px;margin:6px 0 12px;box-sizing:border-box;resize:vertical"></textarea>
     <label style="font-size:12.5px;font-weight:700;color:var(--g6)">응모 기간</label>
     <div style="display:flex;gap:6px;margin:6px 0 12px">
@@ -4222,6 +4223,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
           <input type="text" id="newsPostTitle" class="ri" placeholder="제목을 입력하세요">
         </div>
         <div class="fg"><label class="f-lbl">내용 *</label>
+          <div id="sfTb_newsPostContent"></div>
           <textarea id="newsPostContent" class="ri" rows="6" placeholder="회사소식 내용을 입력하세요" style="resize:vertical"></textarea>
         </div>
         <div class="fg"><label class="f-lbl">사진 첨부 (선택)</label>
@@ -4604,6 +4606,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <input type="text" id="eeTitle" class="ri" placeholder="예: 2026년 하반기 안전교육" style="margin-bottom:11px">
 
         <div class="f-lbl">내용</div>
+        <div id="sfTb_eeContent"></div>
         <textarea id="eeContent" class="f-ta show" rows="3" placeholder="교육/회의 내용" style="margin-bottom:11px"></textarea>
 
         <div class="f-lbl">신청 종료일 (이후 신청 불가)</div>
@@ -4833,6 +4836,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div class="fg">
         <label class="f-lbl">수행 내용 *</label>
         <div class="rg" id="prfRecentContentG" style="flex-wrap:wrap;gap:6px;margin-bottom:8px"></div>
+        <div id="sfTb_prfContent"></div>
         <textarea id="prfContent" class="ri" rows="3" placeholder="예) T1 야간 특별점검 실시 및 현장 안전사항 확인" style="resize:vertical"></textarea>
       </div>
       <div id="prfWriterInfo" style="font-size:12px;color:var(--g4);margin-bottom:14px"></div>
@@ -6104,7 +6108,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <button onclick="closeMissingLeaderModal()" style="width:100%;padding:11px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">확인</button>
   </div>
 </div></div>
-<div id="noticeW" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📢 공지사항 작성</h3><button class="m-x" onclick="closeNW()">×</button></div><div style="padding:15px 17px"><div class="fg"><label class="f-lbl">제목</label><input type="text" id="nT" class="ri" placeholder="공지사항 제목" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">내용</label><textarea id="nB" class="f-ta show" rows="5" placeholder="공지사항 내용"></textarea></div><div class="fg"><label class="f-lbl">공지 대상</label><div id="nTargetGrp" style="display:flex;flex-wrap:wrap;gap:7px"></div></div><button onclick="pubNotice()" class="btn-prim">전체 발송</button></div></div></div>
+<div id="noticeW" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📢 공지사항 작성</h3><button class="m-x" onclick="closeNW()">×</button></div><div style="padding:15px 17px"><div class="fg"><label class="f-lbl">제목</label><input type="text" id="nT" class="ri" placeholder="공지사항 제목" style="margin-bottom:0"></div><div class="fg"><label class="f-lbl">내용</label><div id="sfTb_nB"></div><textarea id="nB" class="f-ta show" rows="5" placeholder="공지사항 내용"></textarea></div><div class="fg"><label class="f-lbl">공지 대상</label><div id="nTargetGrp" style="display:flex;flex-wrap:wrap;gap:7px"></div></div><button onclick="pubNotice()" class="btn-prim">전체 발송</button></div></div></div>
 <div id="lostAccModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🟢 습득물 무사고 관리</h3><button class="m-x" onclick="hideM('lostAccModal')">×</button></div><div style="padding:17px"><div id="lostAccStatus" style="text-align:center;padding:14px;background:#EAF6EC;border-radius:12px;color:#1D4ED8;font-weight:800;margin-bottom:14px"></div><div id="lostAccEditWrap" style="display:none"><label class="f-lbl">사고일자</label><input type="date" id="lostAccDateInput" class="ri" style="margin-bottom:11px"><button onclick="saveLostAccDate()" class="btn-prim">저장</button></div></div></div></div>
 <div id="lostNoteModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📝 습득물 메모</h3><button class="m-x" onclick="hideM('lostNoteModal')">×</button></div><div style="padding:17px"><textarea id="lostNoteInput" class="f-ta show" rows="4" placeholder="자유롭게 입력 (예: 유의사항, 안내문 등)"></textarea><button onclick="saveLostNote()" class="btn-prim" style="margin-top:11px">저장</button></div></div></div>
 
@@ -8554,7 +8558,7 @@ function renderNoticeModalContent(n){
   var b=document.getElementById('noticeB');
   var d=document.getElementById('noticeD');
   if(t) t.textContent=n.title||'공지사항';
-  if(b) b.innerHTML=(n.content||'').replace(/\n/g,'<br>');
+  if(b) b.innerHTML=sfRender(n.content);
   if(d) d.textContent=n.created_at?toKSTDate(n.created_at)+' 등록':'';
   var sk=document.getElementById('noSkip'); if(sk) sk.checked=false;
 }
@@ -8590,7 +8594,7 @@ function showCompanyNewsPopupModal(n){
   var t=document.getElementById('newsPopT'); var b=document.getElementById('newsPopB'); var d=document.getElementById('newsPopD');
   var img=document.getElementById('newsPopImg');
   if(t) t.textContent=n.title||'회사소식';
-  if(b) b.innerHTML=(n.content||'').replace(/\n/g,'<br>');
+  if(b) b.innerHTML=sfRender(n.content);
   if(d) d.textContent=n.uploaded_at?toKSTDate(n.uploaded_at)+' 등록':'';
   if(img){
     if(n.image_path){ img.src=SUPABASE_URL+'/storage/v1/object/public/companynews/'+encodeURIComponent(n.image_path); img.style.display='block'; }
@@ -13043,7 +13047,7 @@ function eeRenderEventList(){
         +(closed?'<span style="background:var(--danger-bg);color:var(--danger);font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">신청마감</span>':'<span style="background:var(--success-bg);color:var(--success);font-size:11px;font-weight:800;padding:3px 9px;border-radius:20px">신청가능</span>')
       +'</div>'
       +'<div style="font-size:16px;font-weight:800;color:var(--g7);margin-bottom:4px">'+eeEsc(e.title)+(isItemNew('eduevent',e.id,e.created_at)?newBadgeHtml():'')+'</div>'
-      +(e.content?('<div style="font-size:13px;color:var(--g6);margin-bottom:6px;white-space:pre-wrap;line-height:1.5">'+eeEsc(e.content)+'</div>'):'')
+      +(e.content?('<div style="font-size:13px;color:var(--g6);margin-bottom:6px;white-space:pre-wrap;line-height:1.5">'+sfApplyMarkup(eeEsc(e.content))+'</div>'):'')
       +(dateRange?'<div style="font-size:13px;color:var(--g5);margin-bottom:2px">📅 '+dateRange+'</div>':'')
       +(e.apply_deadline?'<div style="font-size:12px;color:var(--g4);margin-bottom:2px">신청기간~'+e.apply_deadline+'</div>':'')
       +'<div style="font-size:11.5px;color:var(--g4);margin-bottom:8px">작성자: '+eeEsc(e.created_by||'-')+'</div>'
@@ -17247,7 +17251,7 @@ function openNoticeDetail(idx){
   var b=document.getElementById('noticeB');
   var d=document.getElementById('noticeD');
   if(t) t.textContent=n.title||'공지사항';
-  if(b) b.innerHTML=(n.content||'').replace(/\n/g,'<br>');
+  if(b) b.innerHTML=sfRender(n.content);
   if(d) d.textContent=n.created_at?toKSTDate(n.created_at)+' 등록':'';
   document.getElementById('noSkip').checked=false;
   showM('noticeM');
@@ -20090,9 +20094,9 @@ async function ncfOpenDocDetail(id){
       +'<div style="font-size:12px;color:var(--g4);margin-bottom:4px">'+lrptEsc(d.doc_date)+(d.due_date?(' · 확인기한 '+lrptEsc(d.due_date)):'')+'</div>'
       +'<div style="font-size:12px;color:var(--teal2);font-weight:700;margin-bottom:10px">대상: '+targetRolesLabel(d.target_roles)+'</div>'
       +'<div style="font-size:13px;color:var(--g6);line-height:2.1">'
-      +'· ('+lrptEsc(d.label1||'내용')+') '+lrptEsc(d.content1)+'<br>'
-      +'· ('+lrptEsc(d.label2||'확인방법')+') '+lrptEsc(d.content2||'내용 확인 후 아래 서명란에 서명')
-      +(d.content3?('<br>· ('+lrptEsc(d.label3||'')+') '+lrptEsc(d.content3)):'')
+      +'· ('+lrptEsc(d.label1||'내용')+') '+sfRender(d.content1)+'<br>'
+      +'· ('+lrptEsc(d.label2||'확인방법')+') '+sfRender(d.content2||'내용 확인 후 아래 서명란에 서명')
+      +(d.content3?('<br>· ('+lrptEsc(d.label3||'')+') '+sfRender(d.content3)):'')
       +'</div></div></div>';
     h+='<table class="adc-sig-table"><thead><tr><th>연번</th><th>소속</th><th>직책</th><th>사번</th><th>성명</th><th>확인일자</th><th>서명</th>'+(canEdit?'<th></th>':'')+'</tr></thead><tbody>';
     sigs.forEach(function(s,i){
@@ -21653,7 +21657,7 @@ function prfRenderDayList(ds){
       }
       h+='<div onclick="markItemSeen(\'perf\','+r.id+');prfOpenEdit('+r.id+')" style="background:white;border-radius:12px;padding:13px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.05);cursor:pointer">'
         +'<span style="display:inline-block;background:var(--navy-bg);color:var(--navy);font-size:11px;font-weight:800;padding:3px 9px;border-radius:7px;margin-bottom:5px">'+(r.category||'')+(isItemNew('perf',r.id,r.created_at)?newBadgeHtml():'')+'</span>'
-        +'<div style="font-size:14px;color:var(--g6);line-height:1.5">'+String(r.content||'').replace(/</g,'&lt;')+'</div>'
+        +'<div style="font-size:14px;color:var(--g6);line-height:1.5">'+sfApplyMarkup(sfEsc(r.content||''))+'</div>'
         +'<div style="font-size:11px;color:var(--g4);margin-top:6px">'+meta+'</div>'
         +cntHtml
         +'</div>';
@@ -21688,7 +21692,7 @@ function prfRenderMonthList(wrap){
       var meta=[loc,r.team,r.writer,kstTime(r.occurred_at)].filter(Boolean).join(' · ');
       h+='<div onclick="markItemSeen(\'perf\','+r.id+');prfOpenEdit('+r.id+')" style="background:white;border-radius:12px;padding:13px;margin-bottom:8px;box-shadow:0 1px 4px rgba(0,0,0,.05);cursor:pointer">'
         +'<span style="display:inline-block;background:var(--navy-bg);color:var(--navy);font-size:11px;font-weight:800;padding:3px 9px;border-radius:7px;margin-bottom:5px">'+(r.category||'')+(isItemNew('perf',r.id,r.created_at)?newBadgeHtml():'')+'</span>'
-        +'<div style="font-size:14px;color:var(--g6);line-height:1.5">'+String(r.content||'').replace(/</g,'&lt;')+'</div>'
+        +'<div style="font-size:14px;color:var(--g6);line-height:1.5">'+sfApplyMarkup(sfEsc(r.content||''))+'</div>'
         +'<div style="font-size:11px;color:var(--g4);margin-top:6px">'+meta+'</div>'
         +'</div>';
     });
@@ -21889,7 +21893,7 @@ function prfUpdateHomeSummary(){
     todays.forEach(function(r,i){
       html+='<div style="font-size:13px;color:var(--g6);white-space:nowrap;overflow:hidden;text-overflow:ellipsis'+(i>0?';margin-top:2px':'')+'">'
         +(r.category?('<span style="color:var(--teal2);font-weight:700">['+r.category+']</span> '):'')
-        +String(r.content||'').replace(/</g,'&lt;')+cntSuffix(r)+'</div>';
+        +sfApplyMarkup(sfEsc(r.content||''))+cntSuffix(r)+'</div>';
     });
   }else{
     html+='<div style="color:var(--g4);font-size:13px">등록된 수행실적이 없습니다</div>';
@@ -21899,7 +21903,7 @@ function prfUpdateHomeSummary(){
     tomorrows.forEach(function(r,i){
       html+='<div style="font-size:12.5px;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis'+(i>0?';margin-top:2px':'')+'">'
         +(r.category?('['+r.category+'] '):'')
-        +String(r.content||'').replace(/</g,'&lt;')+cntSuffix(r)+'</div>';
+        +sfApplyMarkup(sfEsc(r.content||''))+cntSuffix(r)+'</div>';
     });
   }
   bodyEl.innerHTML=html;
@@ -22615,8 +22619,11 @@ async function checkAndShowMissingLeaderPopup(){
 // DB 자동 로드 (로그인 후 호출되지만 앱 시작시 미리 캐싱)
 async function initAppData(){
   // 14개를 한꺼번에 병렬로 쏘면 저사양 기기(특히 아이폰 사파리)에서 동시 처리 부하가 커서
-  // 그 몇 초 동안 어느 화면을 눌러도 버벅이는 문제가 있었음. 화면에 바로 필요한 가벼운 것부터
-  // 두 그룹으로 나눠 순차 실행한다(그룹 내부는 그대로 병렬 유지). 최종 로드 결과·순서 보장은 동일.
+  // 그 몇 초 동안 어느 화면을 눌러도(네이티브 드롭다운 포함) 버벅이는 문제가 있었음. 화면에 바로
+  // 필요한 가벼운 것부터 두 그룹으로 나눠 순차 실행한다(그룹 내부는 그대로 병렬 유지).
+  // 서버 응답 자체가 워낙 빨라서(1초 내) 두 단계가 실제로는 거의 동시에 처리돼버리는 문제가 있어,
+  // 두 단계 사이에 실제 시간 간격(600ms)을 둬서 브라우저가 한 덩어리씩 처리할 여유를 준다.
+  // 최종 로드 결과·순서 보장은 동일, 화면에 다 채워지는 총 시간만 살짝 늘어남.
   await Promise.all([
     loadNoticesFromDB(),
     loadWasteFromDB(),
@@ -22626,6 +22633,7 @@ async function initAppData(){
     loadKpiFromDB(),
     loadFacilityFromDB()
   ]);
+  // 화면 반응성보다 "총 로딩 시간"이 더 중요하다는 피드백에 따라 인위적 지연은 넣지 않음
   await Promise.all([
     loadHandoverFromDB(),
     loadAccidentsFromDB(),
@@ -22640,7 +22648,7 @@ async function initAppData(){
   // 전일 근무 인원 로드
   loadPrevStaff();
   // 당일/전일 미입력 조장 안내 팝업 (다른 팝업과 겹치지 않게 약간의 지연)
-  setTimeout(function(){ checkAndShowMissingLeaderPopup(); }, 800);
+  setTimeout(function(){ checkAndShowMissingLeaderPopup(); }, 1200);
 }
 
 
@@ -23186,7 +23194,7 @@ async function viewNewsPost(id){
       html+='<div style="font-size:19px;font-weight:800;color:var(--g7);margin-bottom:8px;line-height:1.4">'+String(p.title).replace(/</g,'&lt;').replace(/>/g,'&gt;')+'</div>';
     }
     html+='<div style="font-size:12px;color:var(--g4);margin-bottom:10px">'+(p.uploaded_at?p.uploaded_at.slice(0,16).replace('T',' '):'')+' · '+(p.uploaded_by||'')+'</div>';
-    html+='<div style="font-size:15px;color:var(--g7);line-height:1.7;white-space:pre-wrap">'+linkifyText((p.content||'').replace(/</g,'&lt;').replace(/>/g,'&gt;'))+'</div>';
+    html+='<div style="font-size:15px;color:var(--g7);line-height:1.7;white-space:pre-wrap">'+sfApplyMarkup(linkifyText((p.content||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')))+'</div>';
     if(p.image_path){
       html+='<img src="'+SUPABASE_URL+'/storage/v1/object/public/companynews/'+encodeURIComponent(p.image_path)+'" style="width:100%;border-radius:var(--r2);margin-top:14px">';
     }
@@ -28909,7 +28917,7 @@ async function cpOpenDetail(id){
   if(!c){ toast('행사 정보를 찾을 수 없습니다'); return; }
   cpCurCampaign=c;
   document.getElementById('cpDetTitle').textContent='🏆 '+c.title;
-  document.getElementById('cpDetSub').textContent=c.description||'';
+  document.getElementById('cpDetSub').innerHTML=sfRender(c.description||'');
   document.getElementById('cpAdminBtns').style.display=cpIsAdmin()?'block':'none';
   document.getElementById('cpEligibleBtn').style.display=cpIsAdmin()?'block':'none';
   document.getElementById('cpWinnerBtn').style.display=cpCanSeeIdentity()?'block':'none';
@@ -30356,6 +30364,52 @@ function lrptPaginate(rowsHtmlArr, bigTitle, metaTxt, headerRowHtml, colspan, ro
   return out;
 }
 function lrptEsc(s){ return (s===undefined||s===null)?'':String(s); }
+
+// ══════════════════════════════════════════
+// 🅱️ 간단 서식(굵게·색상) 공통 모듈 — 공지사항/주요수행실적/회사소식/사업부행사/교육회의/공지확인에서 공용으로 사용
+// 저장은 순수 텍스트에 [b]...[/b], [red]...[/red] 같은 표시만 섞어서 저장하고,
+// 화면에 보여줄 때 sfRender()로 HTML 이스케이프 후 그 표시만 <strong>/<span>으로 바꿔서 렌더링한다.
+// ══════════════════════════════════════════
+var SF_COLORS={red:'#E53935',blue:'#1E88E5',orange:'#FB8C00',green:'#2E7D32'};
+function sfEsc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function sfApplyMarkup(escapedHtml){
+  var h=escapedHtml;
+  h=h.replace(/\[b\]([\s\S]*?)\[\/b\]/g,'<strong>$1</strong>');
+  Object.keys(SF_COLORS).forEach(function(c){
+    var re=new RegExp('\\['+c+'\\]([\\s\\S]*?)\\['+'\\/'+c+'\\]','g');
+    h=h.replace(re,'<span style="color:'+SF_COLORS[c]+';font-weight:700">$1</span>');
+  });
+  return h;
+}
+function sfRender(text){
+  return sfApplyMarkup(sfEsc(text||'')).replace(/\n/g,'<br>');
+}
+function sfWrap(id, open, close, placeholder){
+  var ta=document.getElementById(id); if(!ta) return;
+  var s=ta.selectionStart, e=ta.selectionEnd;
+  var val=ta.value;
+  var sel=val.slice(s,e);
+  var insert = sel ? (open+sel+close) : (open+placeholder+close);
+  ta.value = val.slice(0,s)+insert+val.slice(e);
+  ta.focus();
+  if(sel){ var p=s+insert.length; ta.setSelectionRange(p,p); }
+  else{ ta.setSelectionRange(s+open.length, s+open.length+placeholder.length); }
+}
+function sfToolbarHtml(textareaId){
+  var h='<div style="display:flex;gap:5px;margin-bottom:6px;flex-wrap:wrap">';
+  h+='<button type="button" onclick="sfWrap(\''+textareaId+'\',\'[b]\',\'[/b]\',\'굵게\')" title="굵게" style="padding:5px 11px;border:1.5px solid var(--g3);border-radius:6px;background:white;font-weight:800;font-size:13px;cursor:pointer;color:var(--g6)">B</button>';
+  Object.keys(SF_COLORS).forEach(function(c){
+    h+='<button type="button" onclick="sfWrap(\''+textareaId+'\',\'['+c+']\',\'[/'+c+']\',\'색상\')" title="색상" style="padding:5px 11px;border:1.5px solid '+SF_COLORS[c]+';border-radius:6px;background:white;font-weight:800;font-size:13px;cursor:pointer;color:'+SF_COLORS[c]+'">A</button>';
+  });
+  h+='</div>';
+  return h;
+}
+document.addEventListener('DOMContentLoaded', function(){
+  ['nB','newsPostContent','cpNewDesc','eeContent','prfContent','ncfNewContent1'].forEach(function(id){
+    var host=document.getElementById('sfTb_'+id);
+    if(host) host.innerHTML=sfToolbarHtml(id);
+  });
+});
 function openListReport(type){
   var titleEl=document.getElementById('listReportModalTitle');
   var bigEl=document.getElementById('listReportBigTitle');
