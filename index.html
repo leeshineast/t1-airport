@@ -17209,7 +17209,7 @@ function renderNoticeList(data, targetId){
     html+='<div style="font-size:15px;font-weight:700;color:var(--g7)">'+sfRender(n.title||'공지사항')+(isItemNew('notice',n.id,n.created_at)?newBadgeHtml():'')+'</div>';
     html+='<div style="font-size:12px;color:var(--g4)">'+date+'</div>';
     html+='</div>';
-    html+='<div style="font-size:13px;color:var(--g5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(n.content||'').replace(/\n/g,' ')+'</div>';
+    html+='<div style="font-size:13px;color:var(--g5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+sfApplyMarkup(sfEsc((n.content||'').replace(/\n/g,' ')))+'</div>';
     html+='</div>';
     html+='<div id="ncfBadge_'+n.id+'"></div>';
     html+='</div>';
@@ -17292,7 +17292,7 @@ async function loadAdminNoticeList(targetId){
       h+='<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">';
       h+='<div style="flex:1;min-width:0;cursor:pointer" onclick="openNoticeDetail('+i+')">';
       h+='<div style="font-size:15px;font-weight:800;color:var(--g7);margin-bottom:3px">'+sfRender(n.title)+'</div>';
-      h+='<div style="font-size:13px;color:var(--g5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(n.content||'').split('\n').join(' ')+'</div>';
+      h+='<div style="font-size:13px;color:var(--g5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+sfApplyMarkup(sfEsc((n.content||'').split('\n').join(' ')))+'</div>';
       h+='<div style="font-size:12px;color:var(--g3);margin-top:4px">'+date+' · '+(n.author||'')+' · <span style="color:var(--teal2);font-weight:700">'+targetRolesLabel(n.target_roles)+'</span></div>';
       h+='</div>';
       h+='<div style="display:flex;gap:5px;flex-shrink:0">';
@@ -20054,14 +20054,14 @@ async function ncfOpenCreateDoc(prefill){
   sel.innerHTML='<option value="">연결 안 함</option>';
   try{
     var nres=await sb.from('notices').select('id,title').neq('title','__ind_prev_year__').order('created_at',{ascending:false}).limit(30);
-    (nres.data||[]).forEach(function(n){ sel.innerHTML+='<option value="'+n.id+'">'+lrptEsc(n.title)+'</option>'; });
+    (nres.data||[]).forEach(function(n){ sel.innerHTML+='<option value="'+n.id+'">'+sfPlain(lrptEsc(n.title))+'</option>'; });
   }catch(e){}
   if(prefill&&prefill.linkedId) sel.value=prefill.linkedId;
   var newsSel=document.getElementById('ncfNewLinkedNews');
   newsSel.innerHTML='<option value="">연결 안 함</option>';
   try{
     var nwres=await sb.from('companynews_posts').select('id,title').order('uploaded_at',{ascending:false}).limit(30);
-    (nwres.data||[]).forEach(function(p){ newsSel.innerHTML+='<option value="'+p.id+'">'+lrptEsc(p.title||'(제목 없음)')+'</option>'; });
+    (nwres.data||[]).forEach(function(p){ newsSel.innerHTML+='<option value="'+p.id+'">'+sfPlain(lrptEsc(p.title||'(제목 없음)'))+'</option>'; });
   }catch(e){}
   if(prefill&&prefill.linkedNewsId) newsSel.value=prefill.linkedNewsId;
   showM('ncfCreateModal');
@@ -23001,7 +23001,7 @@ async function loadNewsList(){
           listTitle=(p.content||'').replace(/\n/g,' ').slice(0,40);
           if((p.content||'').length>40) listTitle+='…';
         }
-        listTitle=listTitle.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        listTitle=sfApplyMarkup(listTitle.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
         html+='<div onclick="markItemSeen(\'news\','+p.id+');viewNewsPost('+p.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
         if(p.image_path){
           html+='<img src="'+SUPABASE_URL+'/storage/v1/object/public/companynews/'+encodeURIComponent(p.image_path)+'" style="width:38px;height:38px;object-fit:cover;border-radius:8px;flex-shrink:0">';
@@ -30399,6 +30399,16 @@ function sfApplyMarkup(escapedHtml){
 }
 function sfRender(text){
   return sfApplyMarkup(sfEsc(text||'')).replace(/\n/g,'<br>');
+}
+function sfPlain(text){
+  // 드롭다운(<option>) 등 HTML이 아니라 순수 글자로만 보여줄 자리에서 [b]/[color] 표시만 제거
+  var h=String(text||'');
+  h=h.replace(/\[b\]([\s\S]*?)\[\/b\]/g,'$1');
+  Object.keys(SF_COLORS).forEach(function(c){
+    var re=new RegExp('\\['+c+'\\]([\\s\\S]*?)\\['+'\\/'+c+'\\]','g');
+    h=h.replace(re,'$1');
+  });
+  return h;
 }
 function sfWrap(id, open, close, placeholder){
   var ta=document.getElementById(id); if(!ta) return;
