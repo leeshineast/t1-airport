@@ -3123,6 +3123,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div class="fg"><label class="f-lbl">연월일</label><input type="date" id="ncfNewDate" class="ri"></div>
   <div class="fg"><label class="f-lbl">확인기한</label><input type="date" id="ncfNewDue" class="ri"></div>
   <div class="fg"><label class="f-lbl">연결할 공지사항 (선택)</label><select id="ncfNewLinkedNotice" class="ri"><option value="">연결 안 함</option></select></div>
+  <div class="fg"><label class="f-lbl">연결할 회사소식 (선택)</label><select id="ncfNewLinkedNews" class="ri"><option value="">연결 안 함</option></select></div>
   <div style="font-size:12px;color:var(--g4);margin-bottom:13px;line-height:1.5">항목명과 내용은 자유롭게 바꿔서 다양한 용도로 쓰실 수 있습니다. 공개범위에서 고른 대상만 확인·서명할 수 있습니다.</div>
   <button onclick="ncfSaveNewDoc()" class="btn-prim" style="width:100%">🔔 작성 완료</button>
 </div></div></div>
@@ -4249,6 +4250,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     </div>
     <div style="flex:1;overflow-y:auto;padding:16px" id="newsPostDetailBody"></div>
     <div id="newsPostDetailActions" style="display:none;flex-shrink:0;gap:8px;padding:11px 16px;border-top:1px solid var(--g2)">
+      <button id="newsPostConfirmBtn" style="padding:12px;background:var(--g1);color:var(--g6);border:1px solid var(--g3);border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🔔 확인서</button>
       <button id="newsPostEditBtn" style="flex:1;padding:12px;background:var(--g1);color:var(--g6);border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">✏️ 수정</button>
       <button id="newsPostDeleteBtn" style="flex:1;padding:12px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🗑️ 삭제</button>
     </div>
@@ -17198,6 +17200,24 @@ async function ncfAttachNoticeBadges(notices){
     });
   }catch(e){}
 }
+// 회사소식 목록/상세에 연결된 "공지 확인서"가 있으면 서명 배지를 붙인다 (구조는 ncfAttachNoticeBadges와 동일, linked_news_id 기준)
+async function ncfAttachNewsBadges(posts){
+  if(!posts||!posts.length||!me) return;
+  var ids=posts.map(function(p){return p.id;});
+  try{
+    var docRes=await sb.from('notice_confirm_docs').select('id,title,target_roles,linked_news_id').in('linked_news_id',ids);
+    if(docRes.error||!docRes.data||!docRes.data.length) return;
+    var sigRes=await sb.from('notice_confirm_signatures').select('doc_id,signed_by');
+    var mySigned={};
+    (sigRes.data||[]).forEach(function(s){ if(s.signed_by===me.id) mySigned[s.doc_id]=true; });
+    docRes.data.forEach(function(d){
+      if(!ncfEligible(d.target_roles)) return;
+      var el=document.getElementById('ncfNewsBadge_'+d.linked_news_id); if(!el) return;
+      var signed=!!mySigned[d.id];
+      el.innerHTML='<button onclick="event.stopPropagation();go(\'noticeconfirm\');setTimeout(function(){ncfOpenDocDetail('+d.id+');},80)" style="margin-top:8px;padding:6px 12px;background:'+(signed?'var(--teal-bg)':'#FFF7E0')+';color:'+(signed?'var(--teal2)':'#B8860B')+';border:1px solid '+(signed?'var(--teal)':'#E0C46A')+';border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">'+(signed?'✅ 확인 서명 완료':'🔔 확인 서명 필요')+'</button>';
+    });
+  }catch(e){}
+}
 
 function openNoticeDetail(idx){
   var data=window._noticeData||[];
@@ -20000,6 +20020,13 @@ async function ncfOpenCreateDoc(prefill){
     (nres.data||[]).forEach(function(n){ sel.innerHTML+='<option value="'+n.id+'">'+lrptEsc(n.title)+'</option>'; });
   }catch(e){}
   if(prefill&&prefill.linkedId) sel.value=prefill.linkedId;
+  var newsSel=document.getElementById('ncfNewLinkedNews');
+  newsSel.innerHTML='<option value="">연결 안 함</option>';
+  try{
+    var nwres=await sb.from('companynews_posts').select('id,title').order('uploaded_at',{ascending:false}).limit(30);
+    (nwres.data||[]).forEach(function(p){ newsSel.innerHTML+='<option value="'+p.id+'">'+lrptEsc(p.title||'(제목 없음)')+'</option>'; });
+  }catch(e){}
+  if(prefill&&prefill.linkedNewsId) newsSel.value=prefill.linkedNewsId;
   showM('ncfCreateModal');
 }
 async function ncfSaveNewDoc(){
@@ -20014,12 +20041,13 @@ async function ncfSaveNewDoc(){
   var docDate=document.getElementById('ncfNewDate').value;
   var dueDate=document.getElementById('ncfNewDue').value||null;
   var linkedId=document.getElementById('ncfNewLinkedNotice').value||null;
+  var linkedNewsId=document.getElementById('ncfNewLinkedNews').value||null;
   var targets=getSelectedNcfTargets();
   if(!title||!label1||!content1||!label2||!content2||!label3||!content3||!docDate){ toast('제목, ①②③ 항목명·내용, 연월일을 모두 입력해주세요'); return; }
   try{
     var res=await sb.from('notice_confirm_docs').insert({
       title:title,label1:label1,content1:content1,label2:label2,content2:content2,label3:label3,content3:content3,
-      doc_date:docDate, due_date:dueDate, target_roles:targets, linked_notice_id:linkedId||null, created_by:me?me.name:''
+      doc_date:docDate, due_date:dueDate, target_roles:targets, linked_notice_id:linkedId||null, linked_news_id:linkedNewsId||null, created_by:me?me.name:''
     });
     if(res.error) throw res.error;
     toast('✅ 공지 확인서가 작성되었습니다');
@@ -22937,9 +22965,12 @@ async function loadNewsList(){
         html+='</div>';
         html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
         html+='</div>';
+        html+='<div id="ncfNewsBadge_'+p.id+'"></div>';
       }
     });
     wrap.innerHTML=html;
+    var postItems=merged.filter(function(m){return m.kind==='post';}).map(function(m){return m.data;});
+    ncfAttachNewsBadges(postItems);
   }catch(e){
     wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:14px">불러오기 실패: '+e.message+'</div>';
   }
@@ -23140,8 +23171,10 @@ async function viewNewsPost(id){
       actions.style.display='flex';
       var editBtn=document.getElementById('newsPostEditBtn');
       var delBtn=document.getElementById('newsPostDeleteBtn');
+      var confirmBtn=document.getElementById('newsPostConfirmBtn');
       if(editBtn) editBtn.onclick=function(){ editNewsPostFromDetail(p.id); };
       if(delBtn) delBtn.onclick=function(){ deleteNewsPostFromDetail(p.id, p.image_path); };
+      if(confirmBtn) confirmBtn.onclick=function(){ ncfOpenCreateDoc({title:(p.title||'').replace(/[\r\n]+/g,' '), content:(p.content||'').replace(/[\r\n]+/g,' ').slice(0,80), linkedNewsId:p.id}); };
     }
   }catch(e){
     body.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">불러오기 실패: '+e.message+'</div>';
