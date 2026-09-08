@@ -18738,11 +18738,12 @@ async function loadLostFromDB(){
 }
 
 // ── 긴 목록 스크롤 시 흰 화면 깜빡임 완화용 공용 '더보기' 페이지네이션 ──
-var _lmShown={lost:30, ind:30, waste:30};
+var _lmShown={lost:30, ind:30, waste:30, voc:30};
 var _lmRenderers={
   lost:function(){ renderLostList(); },
   ind:function(){ renderIndList(indData); },
-  waste:function(){ renderWasteList(); }
+  waste:function(){ renderWasteList(); },
+  voc:function(){ renderVocList(); }
 };
 function lmMore(key){ _lmShown[key]=(_lmShown[key]||30)+30; _lmRenderers[key](); }
 function lmReset(key){ _lmShown[key]=30; }
@@ -22210,7 +22211,8 @@ function renderVocList(){
   var stBg={접수:'#FEF2F2',처리중:'#FFFBEB',완료:'var(--teal-bg)'};
 
   var h='';
-  filtered.forEach(function(r,idx){
+  var _vocShown=_lmShown.voc||30;
+  filtered.slice(0,_vocShown).forEach(function(r,idx){
     var seq=vocData.indexOf(r)+1; // 전체 기준 연번
     // 접수일시 (created_at → 한국시간)
     var _rdt=r.created_at?new Date(r.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hour12:false}):'';
@@ -22258,10 +22260,9 @@ function renderVocList(){
     }
     h+='</div>';
   });
+  h+=lmButtonHtml('voc', filtered.length);
   listEl.innerHTML=h;
 }
-
-// ── 시설현황: 6개 관리 화면(마스터 테이블)에서 실시간 집계 ──
 async function loadFacilityFromDB(){
   try{
     facilityData={};
@@ -22473,7 +22474,10 @@ async function refreshMpDataLight(){
       }else{
         go('main');
       }
-      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); checkLostPending(); checkVocPending(); loadExecSummary(); if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); loadEqHomeSummary(); loadMpAverages(); loadNsAverage(); loadFacilityMenuViewCounts(); loadLostSafety(); }, 500);
+      setTimeout(function(){ applyRoleUI(); initAppData().then(function(){ checkHoPending(); startHoPoll(); checkLostPending(); checkVocPending(); loadExecSummary(); if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges(); }); updateStaff(); updateFloorChart(); updateMpSummary(); loadTeamAvgAttendance(''); loadIndPrev(); updateIndCmp(); loadLeaders(); loadPerms(); renderLeaderStatus(); }, 500);
+      // 나머지는 화면에 바로 안 보이는 요약값들이라, 초기 로딩 부하가 몰리지 않도록 1.2초 뒤로 미뤄서 실행
+      // (아이폰에서 로그인 직후 수십 개 요청이 한꺼번에 몰려 화면 반응이 느려지는 문제의 일부였음)
+      setTimeout(function(){ loadEqHomeSummary(); loadMpAverages(); loadNsAverage(); loadFacilityMenuViewCounts(); loadLostSafety(); }, 1700);
       setTimeout(function(){ tryAutoCheckin(); checkHeatAlert(); eeCheckAutoAttendance(); }, 2000);
       return;
     }
