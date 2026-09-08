@@ -1040,6 +1040,12 @@ html{overflow-x:hidden}
         <div class="menu-desc">확인서 작성·전자서명·문서함</div>
         <span class="menu-arrow">보기 →</span>
       </button>
+      <button class="menu-btn" id="ncfMenuBtn" onclick="go('noticeconfirm')">
+        <span class="menu-icon">🔔</span>
+        <div class="menu-title">공지 확인서</div>
+        <div class="menu-desc">공지·전달사항 읽음 확인·전자서명</div>
+        <span class="menu-arrow">보기 →</span>
+      </button>
       <button class="menu-btn" id="empRosterBtn" onclick="go('emproster')" style="display:none">
         <span class="menu-icon">🪪</span>
         <div class="menu-title">사원 명부</div>
@@ -3089,6 +3095,37 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     </div></div>
   </div>
 </div>
+
+<div id="sNcf" class="scr" style="display:none">
+  <div class="pg-hd">
+    <div><h1>🔔 공지 확인서</h1><small>공지·전달사항 읽음 확인·전자서명</small></div>
+    <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 메인</button>
+  </div>
+  <div style="padding:13px">
+    <div id="ncfDocListView">
+      <button id="ncfNewDocBtn" onclick="ncfOpenCreateDoc()" style="display:none;width:100%;margin-bottom:12px;padding:11px;background:var(--teal-bg);border:1.5px dashed var(--teal);border-radius:var(--r2);font-size:14px;font-weight:700;color:var(--teal2);cursor:pointer">➕ 새 공지 확인서 작성</button>
+      <div id="ncfDocListWrap"><div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">불러오는 중...</div></div>
+    </div>
+    <div id="ncfDocDetailView" style="display:none">
+      <button onclick="ncfBackToDocList()" style="padding:6px 12px;background:var(--g1);border:1.5px solid var(--g2);border-radius:20px;font-size:13px;font-weight:700;color:var(--g5);cursor:pointer;margin-bottom:12px">← 목록</button>
+      <div id="ncfDocDetailBody"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 공지 확인서 작성 모달 -->
+<div id="ncfCreateModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🔔 공지 확인서 작성</h3><button class="m-x" onclick="hideM('ncfCreateModal')">×</button></div><div style="padding:15px 17px">
+  <div class="fg"><label class="f-lbl">제목 <span style="color:var(--danger)">*</span></label><input type="text" id="ncfNewTitle" class="ri" placeholder="예: 9월 안전수칙 공지 확인서"></div>
+  <div class="fg"><label class="f-lbl">① 항목명 <span style="color:var(--danger)">*</span></label><input type="text" id="ncfNewLabel1" class="ri" value="공지내용"><input type="text" id="ncfNewContent1" class="ri" placeholder="내용 입력" style="margin-top:6px"></div>
+  <div class="fg"><label class="f-lbl">② 항목명 <span style="color:var(--danger)">*</span></label><input type="text" id="ncfNewLabel2" class="ri" value="공지대상"><input type="text" id="ncfNewContent2" class="ri" placeholder="내용 입력" style="margin-top:6px"></div>
+  <div class="fg"><label class="f-lbl">③ 항목명 <span style="color:var(--danger)">*</span></label><input type="text" id="ncfNewLabel3" class="ri" value="확인방법"><input type="text" id="ncfNewContent3" class="ri" placeholder="내용 입력" style="margin-top:6px"></div>
+  <div class="fg"><label class="f-lbl">공개범위(대상)</label><div id="ncfTargetGrp" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
+  <div class="fg"><label class="f-lbl">연월일</label><input type="date" id="ncfNewDate" class="ri"></div>
+  <div class="fg"><label class="f-lbl">확인기한</label><input type="date" id="ncfNewDue" class="ri"></div>
+  <div class="fg"><label class="f-lbl">연결할 공지사항 (선택)</label><select id="ncfNewLinkedNotice" class="ri"><option value="">연결 안 함</option></select></div>
+  <div style="font-size:12px;color:var(--g4);margin-bottom:13px;line-height:1.5">항목명과 내용은 자유롭게 바꿔서 다양한 용도로 쓰실 수 있습니다. 공개범위에서 고른 대상만 확인·서명할 수 있습니다.</div>
+  <button onclick="ncfSaveNewDoc()" class="btn-prim" style="width:100%">🔔 작성 완료</button>
+</div></div></div>
 
 <!-- 확인서 작성 모달 -->
 <div id="adcCreateModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📋 확인서 작성</h3><button class="m-x" onclick="hideM('adcCreateModal')">×</button></div><div style="padding:15px 17px">
@@ -6491,7 +6528,7 @@ window.addEventListener('popstate', function(e){
 });
 
 // ─ 화면 전환 (단순! display:block/none만 사용) ─
-const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sRisk','sTraining','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sOfficeMgmt','sActiveUsers','sPerf','sDeleteLogs','sAdc','sEduEvent','sEduAttend','sWorkforce','sWorkSchedule','sSpecialWork','sCampaign','sCampaignDetail','sEmpRoster'];
+const SCREENS=['sLogin','sReg','sMain','sMp','sHo','sChat','sIso9001','sNews','sSafety','sManual','sRisk','sTraining','sAccident','sGroupChat','sAdmin','sVeh','sKpi','sFacility','sVoc','sLost','sEquipment','sWaste','sNotice','sStatsDash','sExecDash','sDownloadCenter','sWorkVeh','sJointWork','sToiletMgmt','sShowerMgmt','sSmokingMgmt','sRestMgmt','sStorageMgmt','sBabyMgmt','sOfficeMgmt','sActiveUsers','sPerf','sDeleteLogs','sAdc','sEduEvent','sEduAttend','sWorkforce','sWorkSchedule','sSpecialWork','sCampaign','sCampaignDetail','sEmpRoster','sNcf'];
 function goStatsDash(){
   go('statsdash');
   loadMonthlyStats();
@@ -6970,7 +7007,7 @@ function go(name){
   _curScreenName=name;
   if(FACILITY_MENU_KEYS.indexOf(name)!==-1) bumpFacilityMenuView(name);
   updateIosBackBtn();
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',office:'sOfficeMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs',admconfirm:'sAdc',eduevent:'sEduEvent',eduattend:'sEduAttend',workforce:'sWorkforce',workschedule:'sWorkSchedule',specialwork:'sSpecialWork',campaign:'sCampaign',campaigndetail:'sCampaignDetail',emproster:'sEmpRoster'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',office:'sOfficeMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs',admconfirm:'sAdc',eduevent:'sEduEvent',eduattend:'sEduAttend',workforce:'sWorkforce',workschedule:'sWorkSchedule',specialwork:'sSpecialWork',campaign:'sCampaign',campaigndetail:'sCampaignDetail',emproster:'sEmpRoster',noticeconfirm:'sNcf'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -7102,6 +7139,9 @@ function go(name){
   }
   if(name==='admconfirm'){
     adcTab(0);
+  }
+  if(name==='noticeconfirm'){
+    loadNcfDocList();
   }
   if(name==='perf'){
     loadPerfFromDB();
@@ -17124,17 +17164,39 @@ function renderNoticeList(data, targetId){
   }
   displayData.forEach(function(n,i){
     var date=n.created_at?toKSTDate(n.created_at):'';
-    html+='<div style="padding:13px;border-bottom:1px solid var(--g2);cursor:pointer" onclick="markItemSeen(\'notice\','+n.id+');openNoticeDetail('+i+')" >';
+    html+='<div style="padding:13px;border-bottom:1px solid var(--g2)">';
+    html+='<div onclick="markItemSeen(\'notice\','+n.id+');openNoticeDetail('+i+')" style="cursor:pointer">';
     html+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">';
     html+='<div style="font-size:15px;font-weight:700;color:var(--g7)">'+(n.title||'공지사항')+(isItemNew('notice',n.id,n.created_at)?newBadgeHtml():'')+'</div>';
     html+='<div style="font-size:12px;color:var(--g4)">'+date+'</div>';
     html+='</div>';
     html+='<div style="font-size:13px;color:var(--g5);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+(n.content||'').replace(/\n/g,' ')+'</div>';
     html+='</div>';
+    html+='<div id="ncfBadge_'+n.id+'"></div>';
+    html+='</div>';
   });
   wrap.innerHTML=html;
   // 공지 데이터 저장 (상세보기용)
   window._noticeData=data;
+  ncfAttachNoticeBadges(displayData);
+}
+// 공지사항 목록에 연결된 "공지 확인서"가 있으면 서명 배지를 붙인다
+async function ncfAttachNoticeBadges(notices){
+  if(!notices||!notices.length||!me) return;
+  var ids=notices.map(function(n){return n.id;});
+  try{
+    var docRes=await sb.from('notice_confirm_docs').select('id,title,target_roles').in('linked_notice_id',ids);
+    if(docRes.error||!docRes.data||!docRes.data.length) return;
+    var sigRes=await sb.from('notice_confirm_signatures').select('doc_id,signed_by');
+    var mySigned={};
+    (sigRes.data||[]).forEach(function(s){ if(s.signed_by===me.id) mySigned[s.doc_id]=true; });
+    docRes.data.forEach(function(d){
+      if(!ncfEligible(d.target_roles)) return;
+      var el=document.getElementById('ncfBadge_'+d.linked_notice_id); if(!el) return;
+      var signed=!!mySigned[d.id];
+      el.innerHTML='<button onclick="event.stopPropagation();go(\'noticeconfirm\');setTimeout(function(){ncfOpenDocDetail('+d.id+');},80)" style="margin-top:8px;padding:6px 12px;background:'+(signed?'var(--teal-bg)':'#FFF7E0')+';color:'+(signed?'var(--teal2)':'#B8860B')+';border:1px solid '+(signed?'var(--teal)':'#E0C46A')+';border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">'+(signed?'✅ 확인 서명 완료':'🔔 확인 서명 필요')+'</button>';
+    });
+  }catch(e){}
 }
 
 function openNoticeDetail(idx){
@@ -17175,6 +17237,7 @@ async function loadAdminNoticeList(targetId){
       h+='<div style="font-size:12px;color:var(--g3);margin-top:4px">'+date+' · '+(n.author||'')+' · <span style="color:var(--teal2);font-weight:700">'+targetRolesLabel(n.target_roles)+'</span></div>';
       h+='</div>';
       h+='<div style="display:flex;gap:5px;flex-shrink:0">';
+      if(canEdit){h+='<button onclick="ncfOpenCreateDoc({title:\''+eeJsAttrEsc(n.title||'')+'\',content:\''+eeJsAttrEsc((n.content||'').slice(0,80))+'\',linkedId:\''+n.id+'\'})" style="padding:5px 10px;background:var(--g1);color:var(--g6);border:1px solid var(--g3);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔔 확인서</button>';}
       if(canEdit){h+='<button data-id="'+n.id+'" data-title="'+encodeURIComponent(n.title)+'" data-content="'+encodeURIComponent(n.content||'')+'" data-target="'+encodeURIComponent(JSON.stringify(n.target_roles||['all']))+'" onclick="openEditNotice(this)" style="padding:5px 10px;background:var(--teal-bg);color:var(--teal2);border:1px solid var(--teal);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">수정</button>';}
       if(isAdminOnly){h+='<button data-id="'+n.id+'" onclick="deleteNotice(this)" style="padding:5px 10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>';}
       h+='</div></div></div></div>';
@@ -19848,7 +19911,240 @@ async function adcSaveMySig(){
   }catch(e){ toast('⚠️ 저장 실패: '+e.message); }
 }
 
-// ══ 시설물 공통: 수정자 표기 / 날짜 표기 헬퍼 ══
+// ══════════════════════════════════════════
+// 🔔 공지 확인서 모듈 (notice_confirm_docs / notice_confirm_signatures)
+// 관리자 확인사항(adc)과 같은 서식이지만, 서명 대상이 "관리자 이상"이 아니라
+// target_roles로 지정한 전 직원이라는 점이 다름. 서명 이미지는 adc와 동일하게
+// user_signatures 테이블·"관리자 확인사항 > 내 서명 등록" 탭 정보를 그대로 재사용한다.
+// ══════════════════════════════════════════
+function ncfCanManage(){ return !!(me&&(me.role==='admin'||isExecRole(me.role))); } // MASTER·ADMIN만 작성/관리
+function ncfEligible(target_roles){ return noticeVisibleFor(target_roles, me?me.role:null); } // 서명 가능 대상 판정(공지사항과 동일 로직)
+
+function renderNcfTargetChecks(){
+  var wrap=document.getElementById('ncfTargetGrp'); if(!wrap) return;
+  wrap.innerHTML=TARGET_ROLE_DEFS.map(function(t){
+    return '<label style="display:flex;align-items:center;gap:4px;font-size:13px;color:var(--g5);padding:5px 10px;background:var(--g1);border-radius:20px;cursor:pointer"><input type="checkbox" class="ncfTargetChk" value="'+t.key+'" style="accent-color:var(--teal)"'+(t.key==='all'?' checked':'')+'> '+t.label+'</label>';
+  }).join('');
+  wrap.querySelectorAll('.ncfTargetChk').forEach(function(cb){
+    cb.addEventListener('change',function(){
+      if(cb.value==='all'&&cb.checked){ wrap.querySelectorAll('.ncfTargetChk').forEach(function(o){ if(o.value!=='all') o.checked=false; }); }
+      else if(cb.checked){ var allCb=wrap.querySelector('.ncfTargetChk[value="all"]'); if(allCb) allCb.checked=false; }
+    });
+  });
+}
+function getSelectedNcfTargets(){
+  var wrap=document.getElementById('ncfTargetGrp'); if(!wrap) return ['all'];
+  var checked=Array.prototype.slice.call(wrap.querySelectorAll('.ncfTargetChk:checked')).map(function(cb){return cb.value;});
+  return checked.length?checked:['all'];
+}
+
+// ── 목록 ──
+function ncfBackToDocList(){
+  var lv=document.getElementById('ncfDocListView'); if(lv) lv.style.display='block';
+  var dv=document.getElementById('ncfDocDetailView'); if(dv) dv.style.display='none';
+}
+async function loadNcfDocList(){
+  var wrap=document.getElementById('ncfDocListWrap'); if(!wrap) return;
+  var newBtn=document.getElementById('ncfNewDocBtn'); if(newBtn) newBtn.style.display=ncfCanManage()?'block':'none';
+  try{
+    var docRes=await sb.from('notice_confirm_docs').select('*').order('created_at',{ascending:false});
+    if(docRes.error||!docRes.data||!docRes.data.length){
+      wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">📭 등록된 공지 확인서가 없습니다</div>';
+      return;
+    }
+    var docs=docRes.data.filter(function(d){ return ncfCanManage()||ncfEligible(d.target_roles); });
+    if(!docs.length){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">📭 대상인 공지 확인서가 없습니다</div>'; return; }
+    var sigRes=await sb.from('notice_confirm_signatures').select('doc_id, signed_by');
+    var countMap={};
+    (sigRes.data||[]).forEach(function(s){ countMap[s.doc_id]=(countMap[s.doc_id]||0)+1; });
+    var mySignedSet={};
+    if(me) (sigRes.data||[]).forEach(function(s){ if(s.signed_by===me.id) mySignedSet[s.doc_id]=true; });
+    var todayStr=kstDate();
+    var h='';
+    docs.forEach(function(d){
+      var overdue=d.due_date&&d.due_date<todayStr;
+      var iSigned=!!mySignedSet[d.id];
+      h+='<div onclick="ncfOpenDocDetail('+d.id+')" style="background:white;border:1.5px solid '+(overdue&&!iSigned&&!ncfCanManage()?'var(--danger)':'var(--g2)')+';border-radius:var(--r2);padding:13px 14px;margin-bottom:9px;cursor:pointer">'
+        +'<div style="font-size:14.5px;font-weight:700;color:var(--g7);margin-bottom:5px">🔔 '+lrptEsc(d.title)+(iSigned?' <span style="font-size:11px;color:var(--teal2)">✅확인함</span>':'')+'</div>'
+        +'<div style="font-size:12.5px;color:var(--g4)">대상: '+targetRolesLabel(d.target_roles)+(d.due_date?(' · 확인기한 '+lrptEsc(d.due_date)+(overdue?' <span style="color:var(--danger);font-weight:700">(경과)</span>':'')):'')+'</div>'
+        +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:7px">'
+        +'<span style="font-size:12px;color:var(--g4)">'+lrptEsc(d.doc_date)+' · '+lrptEsc(d.created_by)+'</span>'
+        +'<span style="background:var(--teal-bg);color:var(--teal2);border-radius:20px;padding:2px 10px;font-size:12px;font-weight:700">확인 '+(countMap[d.id]||0)+'명</span>'
+        +'</div></div>';
+    });
+    wrap.innerHTML=h;
+  }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger);font-size:14px">불러오기 실패</div>'; }
+}
+
+// ── 작성 ──
+async function ncfOpenCreateDoc(prefill){
+  if(!ncfCanManage()){ toast('⚠️ master·admin만 작성할 수 있습니다'); return; }
+  document.getElementById('ncfNewTitle').value=(prefill&&prefill.title)||'';
+  document.getElementById('ncfNewLabel1').value='공지내용';
+  document.getElementById('ncfNewContent1').value=(prefill&&prefill.content)||'';
+  document.getElementById('ncfNewLabel2').value='공지대상';
+  document.getElementById('ncfNewContent2').value='';
+  document.getElementById('ncfNewLabel3').value='확인방법';
+  document.getElementById('ncfNewContent3').value='내용 확인 후 아래 서명란에 서명';
+  document.getElementById('ncfNewDate').value=kstDate();
+  document.getElementById('ncfNewDue').value='';
+  renderNcfTargetChecks();
+  var sel=document.getElementById('ncfNewLinkedNotice');
+  sel.innerHTML='<option value="">연결 안 함</option>';
+  try{
+    var nres=await sb.from('notices').select('id,title').neq('title','__ind_prev_year__').order('created_at',{ascending:false}).limit(30);
+    (nres.data||[]).forEach(function(n){ sel.innerHTML+='<option value="'+n.id+'">'+lrptEsc(n.title)+'</option>'; });
+  }catch(e){}
+  if(prefill&&prefill.linkedId) sel.value=prefill.linkedId;
+  showM('ncfCreateModal');
+}
+async function ncfSaveNewDoc(){
+  if(!ncfCanManage()){ toast('⚠️ master·admin만 작성할 수 있습니다'); return; }
+  var title=document.getElementById('ncfNewTitle').value.trim();
+  var label1=document.getElementById('ncfNewLabel1').value.trim();
+  var content1=document.getElementById('ncfNewContent1').value.trim();
+  var label2=document.getElementById('ncfNewLabel2').value.trim();
+  var content2=document.getElementById('ncfNewContent2').value.trim();
+  var label3=document.getElementById('ncfNewLabel3').value.trim();
+  var content3=document.getElementById('ncfNewContent3').value.trim();
+  var docDate=document.getElementById('ncfNewDate').value;
+  var dueDate=document.getElementById('ncfNewDue').value||null;
+  var linkedId=document.getElementById('ncfNewLinkedNotice').value||null;
+  var targets=getSelectedNcfTargets();
+  if(!title||!label1||!content1||!label2||!content2||!label3||!content3||!docDate){ toast('제목, ①②③ 항목명·내용, 연월일을 모두 입력해주세요'); return; }
+  try{
+    var res=await sb.from('notice_confirm_docs').insert({
+      title:title,label1:label1,content1:content1,label2:label2,content2:content2,label3:label3,content3:content3,
+      doc_date:docDate, due_date:dueDate, target_roles:targets, linked_notice_id:linkedId||null, created_by:me?me.name:''
+    });
+    if(res.error) throw res.error;
+    toast('✅ 공지 확인서가 작성되었습니다');
+    hideM('ncfCreateModal');
+    loadNcfDocList();
+  }catch(e){ toast('⚠️ 저장 실패: '+e.message); }
+}
+
+// ── 상세/서명 ──
+async function ncfOpenDocDetail(id){
+  var lv=document.getElementById('ncfDocListView'); if(lv) lv.style.display='none';
+  var dv=document.getElementById('ncfDocDetailView'); if(dv) dv.style.display='block';
+  var body=document.getElementById('ncfDocDetailBody'); if(!body) return;
+  body.innerHTML='<div style="text-align:center;padding:30px;color:var(--g3)">불러오는 중...</div>';
+  try{
+    var docRes=await sb.from('notice_confirm_docs').select('*').eq('id',id);
+    var d=docRes&&docRes.data&&docRes.data[0];
+    if(!d){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">문서를 찾을 수 없습니다</div>'; return; }
+    if(!ncfCanManage()&&!ncfEligible(d.target_roles)){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">열람 대상이 아닙니다</div>'; return; }
+    var sigRes=await sb.from('notice_confirm_signatures').select('*').eq('doc_id',id).order('seq',{ascending:true});
+    var sigs=(sigRes&&sigRes.data)||[];
+    var alreadySigned=me&&sigs.some(function(s){ return s.signed_by===me.id; });
+    var canEdit=ncfCanManage();
+    var iAmEligible=ncfEligible(d.target_roles);
+    var h='<div class="card" style="margin-bottom:12px"><div class="cb">'
+      +'<div style="border-top:3px double #444;border-bottom:3px double #444;padding:9px 0;text-align:center;margin-bottom:10px">'
+      +'<span style="font-size:17px;font-weight:800;letter-spacing:1px;color:var(--g7)">'+lrptEsc(d.title)+'</span></div>'
+      +'<div style="font-size:12px;color:var(--g4);margin-bottom:4px">'+lrptEsc(d.doc_date)+(d.due_date?(' · 확인기한 '+lrptEsc(d.due_date)):'')+'</div>'
+      +'<div style="font-size:12px;color:var(--teal2);font-weight:700;margin-bottom:10px">대상: '+targetRolesLabel(d.target_roles)+'</div>'
+      +'<div style="font-size:13px;color:var(--g6);line-height:2.1">'
+      +'1. ('+lrptEsc(d.label1||'공지내용')+') '+lrptEsc(d.content1)+'<br>'
+      +'2. ('+lrptEsc(d.label2||'공지대상')+') '+lrptEsc(d.content2)+'<br>'
+      +'3. ('+lrptEsc(d.label3||'확인방법')+') '+lrptEsc(d.content3)
+      +'</div></div></div>';
+    h+='<table class="adc-sig-table"><thead><tr><th>연번</th><th>소속</th><th>직책</th><th>사번</th><th>성명</th><th>확인일자</th><th>서명</th>'+(canEdit?'<th></th>':'')+'</tr></thead><tbody>';
+    sigs.forEach(function(s,i){
+      var sigImg=s.signature_path?'<img src="'+SUPABASE_URL+'/storage/v1/object/public/adminconfirm/'+encodeURIComponent(s.signature_path)+'" style="height:26px">':'';
+      h+='<tr><td>'+(i+1)+'</td><td>'+lrptEsc(s.dept)+'</td><td>'+lrptEsc(s.position)+'</td><td>'+lrptEsc(s.employee_id)+'</td><td>'+lrptEsc(s.name)+'</td><td>'+lrptEsc(s.confirmed_date)+'</td><td>'+sigImg+'</td>'
+        +(canEdit?'<td><span onclick="ncfDeleteSignature('+s.id+','+id+')" style="cursor:pointer" title="삭제">🗑️</span></td>':'')
+        +'</tr>';
+    });
+    h+='</tbody></table>';
+    h+='<div style="display:flex;gap:8px;margin-top:14px">';
+    if(iAmEligible&&!alreadySigned){
+      h+='<button onclick="ncfSign('+id+')" class="btn-prim" style="flex:1">✍️ 확인 서명하기</button>';
+    }else if(alreadySigned){
+      h+='<div style="flex:1;text-align:center;padding:12px;color:var(--teal2);font-weight:700;font-size:14px;background:var(--teal-bg);border-radius:var(--r2)">✅ 이미 확인·서명하셨습니다</div>';
+    }
+    h+='<button onclick="ncfPrintDoc('+id+')" style="flex:1;padding:12px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🖨️ 인쇄</button>';
+    h+='</div>';
+    if(canEdit){
+      h+='<div id="ncfUnsignedWrap" style="margin-top:14px"><div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">미확인자 집계 중...</div></div>';
+      h+='<button onclick="ncfDeleteDoc('+id+')" style="width:100%;margin-top:8px;padding:10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">🗑️ 이 확인서 전체 삭제</button>';
+    }
+    body.innerHTML=h;
+    if(canEdit) ncfRenderUnsigned(d, sigs);
+  }catch(e){ body.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger)">불러오기 실패: '+e.message+'</div>'; }
+}
+// 대상 역할에 해당하는 승인된 계정 전체 중 아직 서명하지 않은 사람 목록 (관리자만 조회)
+async function ncfRenderUnsigned(d, sigs){
+  var wrap=document.getElementById('ncfUnsignedWrap'); if(!wrap) return;
+  try{
+    var ures=await sb.from('users').select('id,name,role,team,employee_id,status').eq('status','approved');
+    if(ures.error||!ures.data){ wrap.innerHTML=''; return; }
+    var signedIds={}; sigs.forEach(function(s){ if(s.signed_by) signedIds[s.signed_by]=true; });
+    var target=ures.data.filter(function(u){ return noticeVisibleFor(d.target_roles, u.role); });
+    var unsigned=target.filter(function(u){ return !signedIds[u.id]; });
+    var h='<div style="font-size:13px;font-weight:700;color:var(--g6);margin-bottom:7px">📋 대상 '+target.length+'명 중 미확인 '+unsigned.length+'명</div>';
+    if(unsigned.length){
+      h+='<div style="background:var(--g1);border-radius:var(--r2);padding:10px 12px;font-size:12.5px;color:var(--g5);line-height:1.9;max-height:180px;overflow-y:auto">'
+        +unsigned.map(function(u){ return lrptEsc(u.name)+'('+lrptEsc(u.team||'-')+')'; }).join(', ')
+        +'</div>';
+    }
+    wrap.innerHTML=h;
+  }catch(e){ wrap.innerHTML=''; }
+}
+async function ncfSign(docId){
+  if(!me){ return; }
+  try{
+    var profRes=await sb.from('user_signatures').select('*').eq('username',me.id);
+    var prof=profRes&&profRes.data&&profRes.data[0];
+    if(!prof||!prof.signature_path||!prof.dept||!prof.position||!prof.employee_id){
+      toast('⚠️ 먼저 "관리자 확인사항 > 내 서명 등록" 탭에서 소속·직책·사번·서명 이미지를 등록해주세요');
+      return;
+    }
+    var sigRes=await sb.from('notice_confirm_signatures').select('seq').eq('doc_id',docId);
+    var maxSeq=0;
+    if(sigRes.data) sigRes.data.forEach(function(s){ if(s.seq>maxSeq) maxSeq=s.seq; });
+    var res=await sb.from('notice_confirm_signatures').insert({
+      doc_id:docId, seq:maxSeq+1, dept:prof.dept, position:prof.position, employee_id:prof.employee_id,
+      name:me.name, confirmed_date:kstDate(), signature_path:prof.signature_path,
+      signed_by:me.id, signed_by_role:me.role
+    });
+    if(res.error) throw res.error;
+    toast('✅ 확인 서명이 완료되었습니다');
+    ncfOpenDocDetail(docId);
+  }catch(e){ toast('⚠️ 서명 실패: '+e.message); }
+}
+async function ncfDeleteSignature(sigId, docId){
+  if(!ncfCanManage()) return;
+  if(!confirm('이 서명을 삭제하시겠습니까?')) return;
+  try{
+    var res=await sb.from('notice_confirm_signatures').delete().eq('id',sigId);
+    if(res.error) throw res.error;
+    toast('✅ 삭제되었습니다');
+    ncfOpenDocDetail(docId);
+  }catch(e){ toast('⚠️ 삭제 실패: '+e.message); }
+}
+async function ncfDeleteDoc(id){
+  if(!ncfCanManage()) return;
+  if(!confirm('이 공지 확인서를 서명 기록까지 전부 삭제하시겠습니까?')) return;
+  try{
+    var res=await sb.from('notice_confirm_docs').delete().eq('id',id);
+    if(res.error) throw res.error;
+    toast('✅ 삭제되었습니다');
+    ncfBackToDocList();
+    loadNcfDocList();
+  }catch(e){ toast('⚠️ 삭제 실패: '+e.message); }
+}
+function ncfPrintDoc(id){
+  var body=document.getElementById('ncfDocDetailBody');
+  if(!body) return;
+  var w=window.open('','_blank');
+  w.document.write('<html><head><title>공지 확인서 인쇄</title><style>body{font-family:sans-serif;padding:20px}table{width:100%;border-collapse:collapse;margin-top:14px}th,td{border:1px solid #999;padding:6px 8px;font-size:13px;text-align:center}img{height:24px}</style></head><body>'+body.innerHTML+'</body></html>');
+  w.document.close();
+  setTimeout(function(){ w.print(); },300);
+}
+
+
 function facEditorTag(){
   if(!me) return '';
   var roleLabel=me.role==='master'?'최고관리자':me.role==='admin'?'관리자':me.role==='group_leader'?'그룹장':me.role==='division_head'?'본부장':me.role==='manager'?'팀장':me.role==='leader'?'조장':me.role==='acting_leader'?'액팅리더':me.role==='guest'?'게스트':me.role==='member'?'열람전용':me.role==='work_vehicle'?'차량운행':'팀원';
