@@ -50,7 +50,14 @@ self.addEventListener('fetch', function(e){
   if(e.request.mode==='navigate'){
     return;
   }
-  // 그 외 리소스(이미지 등)는 네트워크에서만 가져오되, 8초 넘게 응답이 없으면
+  // Supabase API·외부 CDN 등 다른 출처로 가는 요청은 그대로 네트워크로 흘려보낸다.
+  // iOS Safari는 서비스워커가 가로챈 요청을 처리하는 속도가 느려서, 화면 하나에서
+  // API를 수십 개씩 병렬로 부르는 이 앱 특성상 가로채면 로딩이 10초 이상 걸리는 문제가 있었음.
+  // 이 서비스워커는 애초에 캐시를 안 쓰므로(위 주석 참고) 가로채도 얻는 이점이 없다.
+  if(e.request.url.indexOf(self.location.origin)!==0){
+    return;
+  }
+  // 그 외 우리 앱 자체 파일(아이콘 등)은 네트워크에서만 가져오되, 8초 넘게 응답이 없으면
   // 무한 대기하지 않고 바로 에러로 처리(타임아웃 안전장치)
   e.respondWith(
     Promise.race([
