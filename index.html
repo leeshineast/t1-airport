@@ -22593,20 +22593,24 @@ async function checkAndShowMissingLeaderPopup(){
 
 // DB 자동 로드 (로그인 후 호출되지만 앱 시작시 미리 캐싱)
 async function initAppData(){
-  // 모든 DB 데이터 동시 로드 (전체 공유)
+  // 14개를 한꺼번에 병렬로 쏘면 저사양 기기(특히 아이폰 사파리)에서 동시 처리 부하가 커서
+  // 그 몇 초 동안 어느 화면을 눌러도 버벅이는 문제가 있었음. 화면에 바로 필요한 가벼운 것부터
+  // 두 그룹으로 나눠 순차 실행한다(그룹 내부는 그대로 병렬 유지). 최종 로드 결과·순서 보장은 동일.
+  await Promise.all([
+    loadNoticesFromDB(),
+    loadWasteFromDB(),
+    loadVocFromDB(),
+    loadLostFromDB(),
+    loadIndPrev(),
+    loadKpiFromDB(),
+    loadFacilityFromDB()
+  ]);
   await Promise.all([
     loadHandoverFromDB(),
     loadAccidentsFromDB(),
     loadAccidentFromDB(),
     loadVehicleFromDB(),
-    loadKpiFromDB(),
-    loadFacilityFromDB(),
-    loadNoticesFromDB(),
     loadMpFromDB(),
-    loadIndPrev(),
-    loadVocFromDB(),
-    loadLostFromDB(),
-    loadWasteFromDB(),
     loadPerfFromDB(),
     loadJointWorkTodayFromDB()
   ]);
