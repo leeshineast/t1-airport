@@ -3116,15 +3116,13 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 <!-- 공지 확인서 작성 모달 -->
 <div id="ncfCreateModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🔔 공지 확인서 작성</h3><button class="m-x" onclick="hideM('ncfCreateModal')">×</button></div><div style="padding:15px 17px">
   <div class="fg"><label class="f-lbl">제목 <span style="color:var(--danger)">*</span></label><input type="text" id="ncfNewTitle" class="ri" placeholder="예: 9월 안전수칙 공지 확인서"></div>
-  <div class="fg"><label class="f-lbl">① 항목명 <span style="color:var(--danger)">*</span></label><input type="text" id="ncfNewLabel1" class="ri" value="공지내용"><input type="text" id="ncfNewContent1" class="ri" placeholder="내용 입력" style="margin-top:6px"></div>
-  <div class="fg"><label class="f-lbl">② 항목명 <span style="color:var(--danger)">*</span></label><input type="text" id="ncfNewLabel2" class="ri" value="공지대상"><input type="text" id="ncfNewContent2" class="ri" placeholder="내용 입력" style="margin-top:6px"></div>
-  <div class="fg"><label class="f-lbl">③ 항목명 <span style="color:var(--danger)">*</span></label><input type="text" id="ncfNewLabel3" class="ri" value="확인방법"><input type="text" id="ncfNewContent3" class="ri" placeholder="내용 입력" style="margin-top:6px"></div>
+  <div class="fg"><label class="f-lbl">내용 <span style="color:var(--danger)">*</span></label><textarea id="ncfNewContent1" class="ri" rows="4" placeholder="확인이 필요한 공지 내용을 입력하세요"></textarea></div>
   <div class="fg"><label class="f-lbl">공개범위(대상)</label><div id="ncfTargetGrp" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
   <div class="fg"><label class="f-lbl">연월일</label><input type="date" id="ncfNewDate" class="ri"></div>
   <div class="fg"><label class="f-lbl">확인기한</label><input type="date" id="ncfNewDue" class="ri"></div>
   <div class="fg"><label class="f-lbl">연결할 공지사항 (선택)</label><select id="ncfNewLinkedNotice" class="ri"><option value="">연결 안 함</option></select></div>
   <div class="fg"><label class="f-lbl">연결할 회사소식 (선택)</label><select id="ncfNewLinkedNews" class="ri"><option value="">연결 안 함</option></select></div>
-  <div style="font-size:12px;color:var(--g4);margin-bottom:13px;line-height:1.5">항목명과 내용은 자유롭게 바꿔서 다양한 용도로 쓰실 수 있습니다. 공개범위에서 고른 대상만 확인·서명할 수 있습니다.</div>
+  <div style="font-size:12px;color:var(--g4);margin-bottom:13px;line-height:1.5">"내용 확인 후 아래 서명란에 서명"이 확인방법으로 자동 포함됩니다. 공개범위에서 고른 대상만 확인·서명할 수 있습니다.</div>
   <button onclick="ncfSaveNewDoc()" class="btn-prim" style="width:100%">🔔 작성 완료</button>
 </div></div></div>
 
@@ -17180,10 +17178,10 @@ function renderNoticeList(data, targetId){
   wrap.innerHTML=html;
   // 공지 데이터 저장 (상세보기용)
   window._noticeData=data;
-  ncfAttachNoticeBadges(displayData);
+  ncfAttachNoticeBadges(displayData, wrap);
 }
 // 공지사항 목록에 연결된 "공지 확인서"가 있으면 서명 배지를 붙인다
-async function ncfAttachNoticeBadges(notices){
+async function ncfAttachNoticeBadges(notices, wrap){
   if(!notices||!notices.length||!me) return;
   var ids=notices.map(function(n){return n.id;});
   try{
@@ -17194,14 +17192,15 @@ async function ncfAttachNoticeBadges(notices){
     (sigRes.data||[]).forEach(function(s){ if(s.signed_by===me.id) mySigned[s.doc_id]=true; });
     docRes.data.forEach(function(d){
       if(!ncfEligible(d.target_roles)) return;
-      var el=document.getElementById('ncfBadge_'+d.linked_notice_id); if(!el) return;
+      // 같은 id를 쓰는 배지 div가 여러 화면(홈 패널/관리자 목록)에 동시에 존재할 수 있어 getElementById 대신 해당 목록 안에서만 찾는다
+      var el=(wrap||document).querySelector('#ncfBadge_'+CSS.escape(String(d.linked_notice_id))); if(!el) return;
       var signed=!!mySigned[d.id];
       el.innerHTML='<button onclick="event.stopPropagation();go(\'noticeconfirm\');setTimeout(function(){ncfOpenDocDetail('+d.id+');},80)" style="margin-top:8px;padding:6px 12px;background:'+(signed?'var(--teal-bg)':'#FFF7E0')+';color:'+(signed?'var(--teal2)':'#B8860B')+';border:1px solid '+(signed?'var(--teal)':'#E0C46A')+';border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">'+(signed?'✅ 확인 서명 완료':'🔔 확인 서명 필요')+'</button>';
     });
   }catch(e){}
 }
 // 회사소식 목록/상세에 연결된 "공지 확인서"가 있으면 서명 배지를 붙인다 (구조는 ncfAttachNoticeBadges와 동일, linked_news_id 기준)
-async function ncfAttachNewsBadges(posts){
+async function ncfAttachNewsBadges(posts, wrap){
   if(!posts||!posts.length||!me) return;
   var ids=posts.map(function(p){return p.id;});
   try{
@@ -17212,7 +17211,7 @@ async function ncfAttachNewsBadges(posts){
     (sigRes.data||[]).forEach(function(s){ if(s.signed_by===me.id) mySigned[s.doc_id]=true; });
     docRes.data.forEach(function(d){
       if(!ncfEligible(d.target_roles)) return;
-      var el=document.getElementById('ncfNewsBadge_'+d.linked_news_id); if(!el) return;
+      var el=(wrap||document).querySelector('#ncfNewsBadge_'+CSS.escape(String(d.linked_news_id))); if(!el) return;
       var signed=!!mySigned[d.id];
       el.innerHTML='<button onclick="event.stopPropagation();go(\'noticeconfirm\');setTimeout(function(){ncfOpenDocDetail('+d.id+');},80)" style="margin-top:8px;padding:6px 12px;background:'+(signed?'var(--teal-bg)':'#FFF7E0')+';color:'+(signed?'var(--teal2)':'#B8860B')+';border:1px solid '+(signed?'var(--teal)':'#E0C46A')+';border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">'+(signed?'✅ 확인 서명 완료':'🔔 확인 서명 필요')+'</button>';
     });
@@ -17266,7 +17265,7 @@ async function loadAdminNoticeList(targetId){
       h+='</div></div>';
     });
     wrap.innerHTML=h;
-    ncfAttachNoticeBadges(res.data);
+    ncfAttachNoticeBadges(res.data, wrap);
   }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:16px;color:var(--danger);font-size:14px">불러오기 실패</div>'; }
 }
 
@@ -20004,12 +20003,7 @@ async function loadNcfDocList(){
 async function ncfOpenCreateDoc(prefill){
   if(!ncfCanManage()){ toast('⚠️ master·admin만 작성할 수 있습니다'); return; }
   document.getElementById('ncfNewTitle').value=(prefill&&prefill.title)||'';
-  document.getElementById('ncfNewLabel1').value='공지내용';
   document.getElementById('ncfNewContent1').value=(prefill&&prefill.content)||'';
-  document.getElementById('ncfNewLabel2').value='공지대상';
-  document.getElementById('ncfNewContent2').value='';
-  document.getElementById('ncfNewLabel3').value='확인방법';
-  document.getElementById('ncfNewContent3').value='내용 확인 후 아래 서명란에 서명';
   document.getElementById('ncfNewDate').value=kstDate();
   document.getElementById('ncfNewDue').value='';
   renderNcfTargetChecks();
@@ -20032,21 +20026,16 @@ async function ncfOpenCreateDoc(prefill){
 async function ncfSaveNewDoc(){
   if(!ncfCanManage()){ toast('⚠️ master·admin만 작성할 수 있습니다'); return; }
   var title=document.getElementById('ncfNewTitle').value.trim();
-  var label1=document.getElementById('ncfNewLabel1').value.trim();
   var content1=document.getElementById('ncfNewContent1').value.trim();
-  var label2=document.getElementById('ncfNewLabel2').value.trim();
-  var content2=document.getElementById('ncfNewContent2').value.trim();
-  var label3=document.getElementById('ncfNewLabel3').value.trim();
-  var content3=document.getElementById('ncfNewContent3').value.trim();
   var docDate=document.getElementById('ncfNewDate').value;
   var dueDate=document.getElementById('ncfNewDue').value||null;
   var linkedId=document.getElementById('ncfNewLinkedNotice').value||null;
   var linkedNewsId=document.getElementById('ncfNewLinkedNews').value||null;
   var targets=getSelectedNcfTargets();
-  if(!title||!label1||!content1||!label2||!content2||!label3||!content3||!docDate){ toast('제목, ①②③ 항목명·내용, 연월일을 모두 입력해주세요'); return; }
+  if(!title||!content1||!docDate){ toast('제목, 내용, 연월일을 모두 입력해주세요'); return; }
   try{
     var res=await sb.from('notice_confirm_docs').insert({
-      title:title,label1:label1,content1:content1,label2:label2,content2:content2,label3:label3,content3:content3,
+      title:title,label1:'내용',content1:content1,label2:'확인방법',content2:'내용 확인 후 아래 서명란에 서명',
       doc_date:docDate, due_date:dueDate, target_roles:targets, linked_notice_id:linkedId||null, linked_news_id:linkedNewsId||null, created_by:me?me.name:''
     });
     if(res.error) throw res.error;
@@ -20078,9 +20067,9 @@ async function ncfOpenDocDetail(id){
       +'<div style="font-size:12px;color:var(--g4);margin-bottom:4px">'+lrptEsc(d.doc_date)+(d.due_date?(' · 확인기한 '+lrptEsc(d.due_date)):'')+'</div>'
       +'<div style="font-size:12px;color:var(--teal2);font-weight:700;margin-bottom:10px">대상: '+targetRolesLabel(d.target_roles)+'</div>'
       +'<div style="font-size:13px;color:var(--g6);line-height:2.1">'
-      +'1. ('+lrptEsc(d.label1||'공지내용')+') '+lrptEsc(d.content1)+'<br>'
-      +'2. ('+lrptEsc(d.label2||'공지대상')+') '+lrptEsc(d.content2)+'<br>'
-      +'3. ('+lrptEsc(d.label3||'확인방법')+') '+lrptEsc(d.content3)
+      +'· ('+lrptEsc(d.label1||'내용')+') '+lrptEsc(d.content1)+'<br>'
+      +'· ('+lrptEsc(d.label2||'확인방법')+') '+lrptEsc(d.content2||'내용 확인 후 아래 서명란에 서명')
+      +(d.content3?('<br>· ('+lrptEsc(d.label3||'')+') '+lrptEsc(d.content3)):'')
       +'</div></div></div>';
     h+='<table class="adc-sig-table"><thead><tr><th>연번</th><th>소속</th><th>직책</th><th>사번</th><th>성명</th><th>확인일자</th><th>서명</th>'+(canEdit?'<th></th>':'')+'</tr></thead><tbody>';
     sigs.forEach(function(s,i){
@@ -22970,7 +22959,7 @@ async function loadNewsList(){
     });
     wrap.innerHTML=html;
     var postItems=merged.filter(function(m){return m.kind==='post';}).map(function(m){return m.data;});
-    ncfAttachNewsBadges(postItems);
+    ncfAttachNewsBadges(postItems, wrap);
   }catch(e){
     wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:14px">불러오기 실패: '+e.message+'</div>';
   }
