@@ -9396,6 +9396,7 @@ function updateStaff(){
   var vE=document.getElementById('curStaff');
   var uE=document.getElementById('curUnit');
   if(vE) vE.textContent=todayTotal>0?todayTotal:'—';
+  // 괄호 안 글자는 항상 "금일" 고정 — 숫자 자체는 오전/오후/야간 데이터가 들어오는 대로 계속 누적 계산됨
   if(uE) uE.textContent=todayTotal>0?'명 (금일)':'미입력';
   var bE=document.getElementById('curBreakdown');
   if(bE) bE.textContent=todayTotal>0?('관리 '+mgrTodayCount+'명 · 현장 '+fieldCount+'명'):'';
@@ -10848,7 +10849,7 @@ function updateFloorChart(){
       }
     }catch(e){}
     curEl.textContent=grandTotal+mgrCountFC;
-    if(unitEl){var labels=[];if(mpShiftPresent('오전'))labels.push('오전');if(mpShiftPresent('오후'))labels.push('오후');if(mpShiftPresent('야간'))labels.push('야간');unitEl.textContent='명 ('+(labels.length>0?labels.join('+')+'합계':'입력됨')+')';}
+    if(unitEl){unitEl.textContent='명 (금일)';}
     var bE=document.getElementById('curBreakdown');
     if(bE) bE.textContent='관리 '+mgrCountFC+'명 · 현장 '+grandTotal+'명';
   }
@@ -22426,6 +22427,12 @@ async function refreshMpDataLight(){
       // 이후 모든 데이터 요청(RLS: authenticated 전용)이 정상 동작함. 복구 실패 시 재로그인 필요.
       _sbLoadAuth();
       var authOk = await sbAuthEnsureFresh();
+      if(!authOk){
+        // 앱을 백그라운드에 뒀다가 돌아온 직후처럼 네트워크가 막 다시 붙는 타이밍에
+        // 첫 시도가 우연히 실패해서 멀쩡한 세션인데도 로그아웃되는 문제가 있었음 — 한 번만 재시도
+        await new Promise(function(r){ setTimeout(r,1200); });
+        authOk = await sbAuthEnsureFresh();
+      }
       if(!authOk){
         try{ localStorage.removeItem('t1_me'); }catch(e){}
         _sbClearAuth();
