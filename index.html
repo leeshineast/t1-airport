@@ -3552,10 +3552,10 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     </div>
     <div style="display:flex;gap:6px;margin-bottom:10px;align-items:center;flex-wrap:wrap">
       <select id="wfQuarterSel" onchange="loadWfEmployees()" style="padding:8px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;font-weight:700"></select>
-      <label style="padding:8px 12px;background:white;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">
+      <label title="상단 '팀 전체' 필터에서 팀을 고른 상태로 업로드하면, 다른 팀 사번이 섞여 있을 때 확인 창이 뜹니다" style="padding:8px 12px;background:white;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">
         ⬆️ 엑셀 업로드<input type="file" accept=".xlsx,.xls" style="display:none" onchange="wfEmpUpload(this)">
       </label>
-      <button onclick="wfDownloadEmpTemplate()" style="padding:9px 12px;background:white;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;font-weight:700;color:var(--g6);cursor:pointer">📄 양식 다운로드</button>
+      <button onclick="wfDownloadEmpTemplate()" title="상단 '팀 전체' 필터에서 팀을 고르면 그 팀 실제 명단으로 채운 양식이, 안 고르면 예시 양식이 다운로드됩니다" style="padding:9px 12px;background:white;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;font-weight:700;color:var(--g6);cursor:pointer">📄 양식 다운로드</button>
       <button onclick="wfOpenAddEmp()" style="padding:9px 12px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">➕ 직원 추가</button>
       <button onclick="wfConfirmDeleteAll()" style="padding:9px 12px;background:#fee2e2;color:#dc2626;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">🗑 전체삭제</button>
       <span style="flex:1"></span>
@@ -27436,21 +27436,44 @@ async function wfSpOpenEditLog(eventId, title){
 }
 
 // ── 엑셀 업로드: 인원현황 시트 파싱 (사번, 한글이름, 직책/직위, 총괄, 근무팀, 근무조, 근무구역, 1분기 등 요일컬럼) ──
+// 상단 "팀 전체" 필터(wfFTeam)에 특정 팀이 선택돼 있으면 그 팀의 실제 등록 인원으로 채운 양식을, 선택 안 돼있으면 기존 예시 양식을 내려받는다.
 function wfDownloadEmpTemplate(){
-  var aoa=[
-    ['2026년 O분기 정기 휴무변경(적용일 기입)'],
-    ['사번','성명','직책','근무팀','근무조','성별','변경전','변경후','비고','휴직','시작일자','종료일자'],
-    [140000,'홍길동','팀장','환경미화1팀','-','남','월화','월화','예시행 - 지우고 사용하세요','', '', ''],
-    [140001,'홍이동','조장','환경미화1팀','A조','여','금토','금토','','', '', ''],
-    [140002,'홍삼동','','환경미화1팀','A조','남','화수','수목','업무조정','', '', ''],
-    [140003,'홍사동','','행정','-','여','토일','토일','','휴직', new Date(2026,2,1), new Date(2027,1,28)]
-  ];
+  var selTeam=(document.getElementById('wfFTeam')||{}).value||'';
+  var qLabel=(typeof wfQuarterLabel==='function' && wfCurQuarter) ? wfQuarterLabel(wfCurQuarter) : (wfCurQuarter||wfNowQuarter());
+  var aoa, fileName;
+  if(selTeam){
+    var teamEmps=wfEmployees.filter(function(e){return e.team===selTeam;})
+      .slice().sort(function(a,b){return String(a.emp_no).localeCompare(String(b.emp_no));});
+    aoa=[
+      [selTeam+' 근무계획 수정양식 ('+qLabel+') — 변경후 칸만 고쳐서 업로드하세요'],
+      ['사번','성명','직책','근무팀','근무조','성별','변경전','변경후','비고','휴직','시작일자','종료일자']
+    ];
+    teamEmps.forEach(function(e){
+      var off=(e.off1&&e.off2)?(e.off1+e.off2):'';
+      aoa.push([
+        e.emp_no, e.name||'', e.position||'', e.team||'', e.group_name||'', '',
+        off, off, '', e.leave?e.leave.leave_type:'', e.leave?e.leave.start_date:'', e.leave?e.leave.end_date:''
+      ]);
+    });
+    if(!teamEmps.length) aoa.push(['(해당 팀 등록 인원이 없습니다)']);
+    fileName=selTeam+'_근무계획_업로드양식.xlsx';
+  } else {
+    aoa=[
+      ['2026년 O분기 정기 휴무변경(적용일 기입)'],
+      ['사번','성명','직책','근무팀','근무조','성별','변경전','변경후','비고','휴직','시작일자','종료일자'],
+      [140000,'홍길동','팀장','환경미화1팀','-','남','월화','월화','예시행 - 지우고 사용하세요','', '', ''],
+      [140001,'홍이동','조장','환경미화1팀','A조','여','금토','금토','','', '', ''],
+      [140002,'홍삼동','','환경미화1팀','A조','남','화수','수목','업무조정','', '', ''],
+      [140003,'홍사동','','행정','-','여','토일','토일','','휴직', new Date(2026,2,1), new Date(2027,1,28)]
+    ];
+    fileName='근무계획_업로드양식.xlsx';
+  }
   var wb=XLSX.utils.book_new();
   var ws=XLSX.utils.aoa_to_sheet(aoa);
   ws['!cols']=[{wch:9},{wch:9},{wch:8},{wch:14},{wch:8},{wch:7},{wch:8},{wch:8},{wch:22},{wch:8},{wch:12},{wch:12}];
   XLSX.utils.book_append_sheet(wb, ws, '근무계획업로드양식');
-  XLSX.writeFile(wb, '근무계획_업로드양식.xlsx');
-  toast('📄 양식 다운로드 완료');
+  XLSX.writeFile(wb, fileName);
+  toast('📄 양식 다운로드 완료'+(selTeam?(' ('+selTeam+' '+wfEmployees.filter(function(e){return e.team===selTeam;}).length+'명)'):''));
 }
 function wfConfirmDeleteAll(){
   if(!wfEmployees.length){ toast('삭제할 데이터가 없습니다'); return; }
@@ -27565,6 +27588,19 @@ function wfEmpUpload(inputEl){
         }
       });
       if(!empPayload.length){ toast('⚠️ 유효한 사번 데이터가 없습니다. 양식을 확인해주세요'); inputEl.value=''; return; }
+
+      // 팀별 업로드 안전장치: 상단 "팀 전체" 필터에 특정 팀이 선택된 상태면, 업로드 파일 속 다른 팀 소속 사번을 걸러내 확인받는다
+      var selTeamForUpload=(document.getElementById('wfFTeam')||{}).value||'';
+      if(selTeamForUpload){
+        var mismatched=empPayload.filter(function(p){ return p.team && p.team!==selTeamForUpload; });
+        if(mismatched.length){
+          var mmNames=mismatched.slice(0,10).map(function(p){return p.name+'('+p.emp_no+')';}).join(', ')+(mismatched.length>10?' 외 '+(mismatched.length-10)+'명':'');
+          if(!confirm('현재 "'+selTeamForUpload+'" 팀으로 필터링된 상태인데, 업로드 파일에 다른 팀 소속 '+mismatched.length+'명이 포함되어 있습니다.\n('+mmNames+')\n\n그래도 계속 업로드하시겠습니까?')){
+            inputEl.value=''; toast('업로드가 취소되었습니다'); return;
+          }
+        }
+      }
+
       var r1=await sb.from('wf_employees').upsert(empPayload,{onConflict:'emp_no'});
       if(r1.error){ toast('직원정보 저장 오류: '+r1.error.message); return; }
       if(offPayload.length){
