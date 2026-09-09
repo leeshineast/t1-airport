@@ -6425,10 +6425,10 @@ async function loadMenuNotifBadges(){
   if(!me) return;
   try{
     var mRes=await sb.from('user_read_marks').select('module_key,last_read_at').eq('user_id',me.id);
-    if(mRes.error){ console.error('읽음기록 조회 실패', mRes.error); toast('배지 진단: 읽음기록 조회 실패 - '+mRes.error.message); return; }
+    if(mRes.error){ console.error('읽음기록 조회 실패', mRes.error); toast('배지 진단: 읽음기록 조회 실패 - '+_safeErrMsg(mRes.error)); return; }
     _notifReadMarks={};
     (mRes.data||[]).forEach(function(r){ _notifReadMarks[r.module_key]=r.last_read_at; });
-  }catch(e){ console.error('읽음기록 조회 실패', e); toast('배지 진단: 읽음기록 조회 중 예외 - '+(e&&e.message?e.message:e)); return; }
+  }catch(e){ console.error('읽음기록 조회 실패', e); toast('배지 진단: 읽음기록 조회 중 예외 - '+(e&&_safeErrMsg(e)?_safeErrMsg(e):e)); return; }
   var _firstErrShown=false;
   NOTIF_MODULES.forEach(async function(mod){
     var badge=document.getElementById('notifBadge_'+mod.key); if(!badge) return;
@@ -6438,14 +6438,14 @@ async function loadMenuNotifBadges(){
       var res=await sb.from(mod.table).select(mod.col).gte(mod.col, since).limit(10);
       if(res.error){
         console.error('배지 조회 실패:', mod.key, res.error);
-        if(!_firstErrShown){ _firstErrShown=true; toast('배지 진단['+mod.key+']: '+res.error.message); }
+        if(!_firstErrShown){ _firstErrShown=true; toast('배지 진단['+mod.key+']: '+_safeErrMsg(res.error)); }
         badge.innerHTML=''; return;
       }
       var n=(res.data||[]).length;
       badge.innerHTML=n>0?(' <span style="display:inline-block;min-width:16px;height:16px;padding:0 4px;border-radius:8px;background:#DC2626;color:white;font-size:10px;font-weight:800;line-height:16px;text-align:center;vertical-align:middle">'+(n>9?'9+':n)+'</span>'):'';
     }catch(e){
       console.error('배지 조회 실패:', mod.key, e);
-      if(!_firstErrShown){ _firstErrShown=true; toast('배지 진단['+mod.key+'] 예외: '+(e&&e.message?e.message:e)); }
+      if(!_firstErrShown){ _firstErrShown=true; toast('배지 진단['+mod.key+'] 예외: '+(e&&_safeErrMsg(e)?_safeErrMsg(e):e)); }
       badge.innerHTML='';
     }
   });
@@ -6465,7 +6465,7 @@ async function logDeletion(moduleName, summary){
       module: moduleName, record_summary: String(summary||'').slice(0,300),
       deleted_by: me?me.name:'', deleted_by_role: me?me.role:''
     });
-    if(r.error){ console.error('삭제기록 저장 실패', r.error); toast('⚠️ 삭제는 됐지만 기록 저장에 실패했습니다: '+r.error.message); }
+    if(r.error){ console.error('삭제기록 저장 실패', r.error); toast('⚠️ 삭제는 됐지만 기록 저장에 실패했습니다: '+_safeErrMsg(r.error)); }
   }catch(e){ console.error('삭제기록 저장 실패', e); toast('⚠️ 삭제는 됐지만 기록 저장에 실패했습니다'); }
 }
 
@@ -6954,7 +6954,7 @@ async function edDownloadExcel(){
     var wb={SheetNames:['현황판'],Sheets:{'현황판':ws}};
                 await dlSaveWorkbook(wb, 'T1_현황판_'+d.dFrom+(d.dFrom!==d.dTo?'~'+d.dTo:'')+'.xlsx');
     toast('✅ 현황판 엑셀 다운로드 완료');
-  }catch(e){ toast('다운로드 오류: '+e.message); }
+  }catch(e){ toast('다운로드 오류: '+_safeErrMsg(e)); }
 }
 
 function goHomeMain(){
@@ -7467,7 +7467,7 @@ async function doLogin(){
     }
     me={name:u.name,role:u.role,team:u.team,initial:u.name[0],email:u.email,permissions:u.permissions,id:u.id,font_scale:u.font_scale||100,favorite_menus:Array.isArray(u.favorite_menus)?u.favorite_menus:[],employee_id:u.employee_id||'',department:u.department||'T1환경미화사업부'};
     finishLogin();
-  }catch(e){toast('오류: '+e.message);}
+  }catch(e){toast('오류: '+_safeErrMsg(e));}
 }
 
 function finishLogin(){
@@ -8425,7 +8425,7 @@ function subHO(){
     otherBatchIds.forEach(function(bid){ updatePromises.push(sb.from('handover').update(sharedPayload).eq('id', bid)); });
     Promise.all(updatePromises).then(function(resArr){
       var errRes=resArr.find(function(rz){return rz.error;});
-      if(errRes) toast('수정 오류: '+errRes.error.message);
+      if(errRes) toast('수정 오류: '+_safeErrMsg(errRes.error));
       else{ loadHandoverFromDB(); toast(otherBatchIds.length?('✅ 인수인계 '+(otherBatchIds.length+1)+'건이 묶음으로 수정되었습니다'):'✅ 인수인계가 수정되었습니다'); }
     });
     // 버튼 원상복귀
@@ -8631,7 +8631,7 @@ async function pubNotice(){
   var showPopup = document.getElementById('nPopupChk') ? document.getElementById('nPopupChk').checked : true;
   // DB 저장 (전체 공유)
   var res2=await sb.from('notices').insert({title:t,content:b,author:me?me.name:'',target_roles:targets,show_popup:showPopup});
-  if(res2.error){toast('공지 저장 오류: '+res2.error.message);return;}
+  if(res2.error){toast('공지 저장 오류: '+_safeErrMsg(res2.error));return;}
   loadNoticesFromDB();
   document.getElementById('noticeT').textContent=t;document.getElementById('noticeB').innerHTML=b.replace(/\n/g,'<br>');const now=new Date();document.getElementById('noticeD').textContent=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0')+' 등록';try{localStorage.removeItem('nsk_'+new Date().toDateString());}catch(e){}document.getElementById('noSkip').checked=false;closeNW();document.getElementById('nT').value='';document.getElementById('nB').value='';if(showPopup) setTimeout(()=>showM('noticeM'),500);toast('✓ 공지사항 전체 발송 완료!'); loadAdminNoticeList(); loadNoticesFromDB();}
 
@@ -8664,7 +8664,7 @@ async function deleteAccidentDB(id){
   if(!me||me.role!=='master'){toast('관리자만 삭제 가능합니다');return;}
   if(!confirm('이 산업재해 기록을 삭제하시겠습니까?')) return;
   var res=await sb.from('industrial_accident').delete().eq('id',id);
-  if(res.error){toast('삭제 오류: '+res.error.message);return;}
+  if(res.error){toast('삭제 오류: '+_safeErrMsg(res.error));return;}
   logDeletion('산업재해현황', 'id:'+id);
   toast('✅ 삭제되었습니다');
   loadAccidentsFromDB();
@@ -8711,7 +8711,7 @@ function subInd(){
       payload.action='';
       res = await sb.from('industrial_accident').insert(payload);
     }
-    if(res.error){ console.error('산업재해 저장 오류:', res.error); toast('저장 오류: '+res.error.message); return; }
+    if(res.error){ console.error('산업재해 저장 오류:', res.error); toast('저장 오류: '+_safeErrMsg(res.error)); return; }
     toast(indEditId?'✅ 수정 완료':'✅ 등록 완료');
     indEditId=null;
     closeInd();
@@ -9388,7 +9388,7 @@ async function dlCSV(type){
     var dlLabel=dlNameMap[type]||type;
     await dlSaveWorkbook(wb, 'T1_'+dlLabel+'_'+today+'.xlsx');
     toast('✅ 엑셀 다운로드 완료');
-  }catch(e){console.error(e);toast('오류: '+e.message);}
+  }catch(e){console.error(e);toast('오류: '+_safeErrMsg(e));}
 }
 function _dlCSV_old(type){if(!me||!(me.role==='admin'||me.role==='master')){toast('다운로드 권한이 없습니다');return;}toast(type+' 다운로드 중...');setTimeout(()=>{const rows=[['T1환경미화사업부 '+type],['날짜','구역','B2F','B1F','1F','2F','3F','4F','집하장','소계']];const zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];const from=new Date('2026-05-01'),to=new Date('2026-05-31');for(let d=new Date(from);d<=to&&rows.length<200;d.setDate(d.getDate()+1)){zones.forEach(z=>{const vs=[2,5,8,7,6,5,2].map(v=>v+Math.floor(Math.random()*3));rows.push([d.toISOString().slice(0,10),z,...vs,vs.reduce((a,b)=>a+b,0)]);});}const csv='\uFEFF'+rows.map(r=>r.map(c=>'"'+String(c).replace(/"/g,'""')+'"').join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='T1_'+type+'.csv';a.click();URL.revokeObjectURL(url);toast('✓ 다운로드 완료!');},600);}
 
@@ -10313,7 +10313,7 @@ async function wfSyncQuotaFromSchedule(){
       });
     });
     toast('✓ 근무계획 기준으로 동기화했습니다 ('+total+'칸 중 '+changed+'칸 변경 · 아직 저장 전입니다)');
-  }catch(e){ toast('동기화 실패: '+(e&&e.message?e.message:e)); }
+  }catch(e){ toast('동기화 실패: '+(e&&_safeErrMsg(e)?_safeErrMsg(e):e)); }
 }
 async function saveQuotaInput(){
   if(!me||me.role!=='master'){ toast('⚠️ master만 저장할 수 있습니다'); return; }
@@ -11031,7 +11031,7 @@ function subVeh(){
       end_time: record.end||null,
       etc: record.etc||null
     });
-    if(res.error){ console.error('차량 저장 오류:', res.error); toast('저장 오류: '+res.error.message); }
+    if(res.error){ console.error('차량 저장 오류:', res.error); toast('저장 오류: '+_safeErrMsg(res.error)); }
     else { await loadVehicleFromDB(); }
   })();
   toast('운행 기록이 저장되었습니다');
@@ -11116,12 +11116,12 @@ async function deleteVeh(id){
   if(!confirm('이 운행 기록을 삭제하시겠습니까?')) return;
   try{
     var res=await sb.from('vehicle_log').delete().eq('id',id);
-    if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    if(res.error){ toast('삭제 실패: '+_safeErrMsg(res.error)); return; }
     logDeletion('차량운행기록', 'id:'+id);
     vehData=(vehData||[]).filter(function(r){ return r.id!==id; });
     renderVehList(vehData);
     toast('✅ 삭제되었습니다');
-  }catch(e){ toast('삭제 오류: '+e.message); }
+  }catch(e){ toast('삭제 오류: '+_safeErrMsg(e)); }
 }
 async function saveVehEdit(){
   if(!canWrite()) return;
@@ -11152,11 +11152,11 @@ async function saveVehEdit(){
       purpose:purpose, start_km:before, end_km:after,
       start_time:start||null, end_time:end||null, etc:etc||null
     }).eq('id',id);
-    if(res.error){ toast('수정 오류: '+res.error.message); return; }
+    if(res.error){ toast('수정 오류: '+_safeErrMsg(res.error)); return; }
     toast('운행 기록이 수정되었습니다');
     closeVehEdit();
     await loadVehicleFromDB();
-  }catch(e){ toast('수정 오류: '+String(e.message||e)); }
+  }catch(e){ toast('수정 오류: '+String(_safeErrMsg(e)||e)); }
 }
 function updateVehStats(data){
   var cnt=document.getElementById('vhStatCount');var dist=document.getElementById('vhStatDist');var month=document.getElementById('vhStatMonth');
@@ -11479,7 +11479,7 @@ function subWorkVeh(){
       co_rider: coRider||null,
       fuel: fuel||null
     });
-    if(res.error){ console.error('공사업무용차량 저장 오류:', res.error); toast('저장 오류: '+res.error.message); }
+    if(res.error){ console.error('공사업무용차량 저장 오류:', res.error); toast('저장 오류: '+_safeErrMsg(res.error)); }
     else { await loadWorkVehicleFromDB(); }
   })();
   toast('운행 기록이 저장되었습니다');
@@ -11602,12 +11602,12 @@ async function deleteWv(id){
   if(!confirm('이 운행 기록을 삭제하시겠습니까?')) return;
   try{
     var res=await sb.from('work_vehicle_log').delete().eq('id',id);
-    if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    if(res.error){ toast('삭제 실패: '+_safeErrMsg(res.error)); return; }
     logDeletion('공사차량운행일지', 'id:'+id);
     workVehData=(workVehData||[]).filter(function(r){ return r.id!==id; });
     renderWorkVehList(workVehData);
     toast('✅ 삭제되었습니다');
-  }catch(e){ toast('삭제 오류: '+e.message); }
+  }catch(e){ toast('삭제 오류: '+_safeErrMsg(e)); }
 }
 async function saveWvEdit(){
   if(!canWrite()) return;
@@ -11642,11 +11642,11 @@ async function saveWvEdit(){
       start_km:before, end_km:after, start_time:start||null, end_time:end||null,
       dest:dest, purpose:purpose, co_rider:coRider||null, fuel:fuel||null, etc:etc||null
     }).eq('id',id);
-    if(res.error){ toast('수정 오류: '+res.error.message); return; }
+    if(res.error){ toast('수정 오류: '+_safeErrMsg(res.error)); return; }
     toast('운행 기록이 수정되었습니다');
     closeWvEdit();
     await loadWorkVehicleFromDB();
-  }catch(e){ toast('수정 오류: '+String(e.message||e)); }
+  }catch(e){ toast('수정 오류: '+String(_safeErrMsg(e)||e)); }
 }
 function updateWvStats(data){
   var cnt=document.getElementById('wvStatCount');var dist=document.getElementById('wvStatDist');var month=document.getElementById('wvStatMonth');
@@ -12033,7 +12033,7 @@ async function dlJointWork(){
     XLSX.utils.book_append_sheet(wb,ws,'공동작업');
                 await dlSaveWorkbook(wb, 'T1_공동작업기록_'+(from&&to?from+'_'+to:'전체')+'.xlsx');
     toast('📥 공동작업 기록 다운로드 완료 ('+filtered.length+'건)');
-  }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 다운로드 실패: '+_safeErrMsg(e)); }
 }
 function jwToggleTeam(el,code){
   var idx=jwSelectedTeams.indexOf(code);
@@ -12341,18 +12341,18 @@ async function subJointWork(){
       if(!rows.length){ toast('작업 항목을 1개 이상 입력해주세요'); return; }
       rows.forEach(function(rw){ rw.batch_id=jwEditBatchKey; });
       var delRes=await sb.from('joint_work_data').delete().in('id',jwEditIds);
-      if(delRes.error){ toast('수정 오류: '+delRes.error.message); return; }
+      if(delRes.error){ toast('수정 오류: '+_safeErrMsg(delRes.error)); return; }
       res=await sb.from('joint_work_data').insert(rows);
     }else{
       res=await sb.from('joint_work_data').insert(rows);
     }
-    if(res.error){ toast('저장 오류: '+res.error.message); return; }
+    if(res.error){ toast('저장 오류: '+_safeErrMsg(res.error)); return; }
     toast((jwEditId||jwEditBatchKey)?'✅ 수정되었습니다':'✅ '+rows.length+'건 저장되었습니다');
     jwResetForm();
     await loadJointWorkFromDB();
     loadJointWorkTodayFromDB();
     jwTab(1);
-  }catch(e){ toast('저장 오류: '+String(e.message||e)); }
+  }catch(e){ toast('저장 오류: '+String(_safeErrMsg(e)||e)); }
 }
 // 사전등록 스케줄 '팀' 버튼그룹을 22개 조로 채움 (한 번만, 중복선택 가능)
 var jwSchedNewTeams=[];
@@ -12383,14 +12383,14 @@ async function jwSchedAddOne(){
       return {team:tc, floor:floor||null, location:loc||null, category:category, work_name:work, updated_by:me?me.name:''};
     });
     var res=await sb.from('joint_work_schedule').insert(payload);
-    if(res.error){ toast('추가 오류: '+res.error.message); return; }
+    if(res.error){ toast('추가 오류: '+_safeErrMsg(res.error)); return; }
     toast('✓ '+jwSchedNewTeams.length+'개 팀에 스케줄이 추가되었습니다');
     ['jwSchedNewFloor','jwSchedNewLoc','jwSchedNewCategory','jwSchedNewWork'].forEach(function(id){ document.getElementById(id).value=''; });
     jwSchedNewTeams=[];
     Array.from(document.getElementById('jwSchedNewTeamG').children).forEach(function(c){c.classList.remove('on');});
     await loadJointWorkSchedule();
     jwRenderScheduleAdminList();
-  }catch(e){ toast('추가 오류: '+String(e.message||e)); }
+  }catch(e){ toast('추가 오류: '+String(_safeErrMsg(e)||e)); }
 }
 async function jwSchedDownload(){
   if(!jwScheduleData.length){ toast('다운로드할 스케줄이 없습니다'); return; }
@@ -12408,7 +12408,7 @@ async function jwSchedDownload(){
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
     await dlSaveWorkbook(wb, 'T1_공동작업_사전등록스케줄_'+today+'.xlsx');
     toast('📥 다운로드 완료 ('+jwScheduleData.length+'건)');
-  }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 다운로드 실패: '+_safeErrMsg(e)); }
 }
 function jwSchedUpload(inputEl){
   var file=inputEl.files[0]; if(!file) return;
@@ -12429,12 +12429,12 @@ function jwSchedUpload(inputEl){
       }).filter(function(r){return r.team&&r.category&&r.work_name;});
       if(!payload.length){ toast('⚠️ 팀·대분류·작업명이 비어있는 행이 많습니다. 양식을 확인해주세요'); return; }
       var res=await sb.from('joint_work_schedule').insert(payload);
-      if(res.error){ toast('업로드 오류: '+res.error.message); return; }
+      if(res.error){ toast('업로드 오류: '+_safeErrMsg(res.error)); return; }
       toast('✓ '+payload.length+'건 등록되었습니다');
       inputEl.value='';
       await loadJointWorkSchedule();
       jwRenderScheduleAdminList();
-    }catch(err){ toast('엑셀 처리 오류: '+String(err.message||err)); }
+    }catch(err){ toast('엑셀 처리 오류: '+String(_safeErrMsg(err)||err)); }
   };
   reader.readAsBinaryString(file);
 }
@@ -12459,7 +12459,7 @@ async function jwSchedDelete(id){
   if(!me||me.role!=='master'){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
   if(!confirm('이 스케줄 항목을 삭제할까요?')) return;
   var res=await sb.from('joint_work_schedule').delete().eq('id',id);
-  if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+  if(res.error){ toast('삭제 실패: '+_safeErrMsg(res.error)); return; }
   logDeletion('공동작업 일정', 'id:'+id);
   toast('✓ 삭제되었습니다');
   await loadJointWorkSchedule();
@@ -12470,7 +12470,7 @@ async function jwSchedClearAll(){
   if(!jwScheduleData.length){ toast('삭제할 스케줄이 없습니다'); return; }
   if(!confirm('등록된 스케줄 '+jwScheduleData.length+'건을 전부 삭제할까요? 되돌릴 수 없습니다.')) return;
   var res=await sb.from('joint_work_schedule').delete().neq('id',0);
-  if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+  if(res.error){ toast('삭제 실패: '+_safeErrMsg(res.error)); return; }
   toast('✓ 전체 삭제되었습니다');
   await loadJointWorkSchedule();
   jwRenderScheduleAdminList();
@@ -12531,7 +12531,7 @@ async function jwYearTeamSave(){
   var y=parseInt(sel.value);
   var teams=Array.from(teamG.children).filter(function(b){return b.classList.contains('on');}).map(function(b){return parseInt(b.dataset.team);});
   var res=await sb.from('jw_year_teams').upsert({year:y, teams:teams, updated_by:me?me.name:'', updated_at:new Date().toISOString()},{onConflict:'year'});
-  if(res.error){ toast('저장 실패: '+res.error.message); return; }
+  if(res.error){ toast('저장 실패: '+_safeErrMsg(res.error)); return; }
   jwYearTeamsCache[y]=teams;
   toast('✅ '+y+'년 담당팀이 저장되었습니다');
   jwYearTeamLoadForYear();
@@ -12672,6 +12672,12 @@ function eeSetVenueGps(rid){
 }
 function eeGenToken(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,10); }
 function eeEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function _safeErrMsg(err){
+  var raw=(err&&err.message)?String(err.message):'알 수 없는 오류';
+  if(me && (me.role==='master'||me.role==='admin')) return raw;
+  console.error('상세 오류(관리자만 표시):', err);
+  return '처리 중 오류가 발생했습니다. 문제가 계속되면 관리자에게 문의해주세요.';
+}
 function _validateFileList(files, allowedExts, maxMB){
   var arr=Array.from(files||[]);
   var ok=[];
@@ -12876,7 +12882,7 @@ async function eeSubmitEvent(){
     var updRes=await sb.from('edu_events').update({
       category:category, category_custom:categoryCustom, title:title, content:content, apply_deadline:deadline, note:note, target_roles:targetRoles
     }).eq('id',eventId);
-    if(updRes.error){ toast('수정 실패: '+updRes.error.message); return; }
+    if(updRes.error){ toast('수정 실패: '+_safeErrMsg(updRes.error)); return; }
 
     var origEv=(eeEventsCache||[]).find(function(e){ return e.id===eventId; });
     var origIds=(origEv&&origEv._schedules||[]).map(function(s){return s.id;});
@@ -12888,11 +12894,11 @@ async function eeSubmitEvent(){
       var payload={seq:s.seq, event_date:s.event_date, start_time:s.start_time, end_time:s.end_time, location:s.location, venue_lat:s.venue_lat, venue_lng:s.venue_lng};
       if(s.origId){
         var upRes=await sb.from('edu_schedules').update(payload).eq('id',s.origId);
-        if(upRes.error){ toast('⚠️ '+s.seq+'차 일정 수정 실패: '+upRes.error.message); }
+        if(upRes.error){ toast('⚠️ '+s.seq+'차 일정 수정 실패: '+_safeErrMsg(upRes.error)); }
       }else{
         payload.id=eeGenToken(); payload.event_id=eventId; payload.qr_token=eeGenToken();
         var insRes=await sb.from('edu_schedules').insert(payload);
-        if(insRes.error){ toast('⚠️ '+s.seq+'차 일정 추가 실패: '+insRes.error.message); }
+        if(insRes.error){ toast('⚠️ '+s.seq+'차 일정 추가 실패: '+_safeErrMsg(insRes.error)); }
         s.origId=payload.id; // 새로 생긴 회차의 id를 기억해둬서 주요수행실적 연결에 사용
       }
     }
@@ -12917,11 +12923,11 @@ async function eeSubmitEvent(){
       id:evId, category:category, category_custom:categoryCustom, title:title, content:content,
       apply_deadline:deadline, note:note, created_by:me?me.name:'', target_roles:targetRoles
     });
-    if(evRes.error){ toast('등록 실패: '+evRes.error.message); return; }
+    if(evRes.error){ toast('등록 실패: '+_safeErrMsg(evRes.error)); return; }
     scheds.forEach(function(s){ s.origId=eeGenToken(); }); // 회차별 id를 미리 정해서 실적 기록과 연결
     var schedRows=scheds.map(function(s){ return {id:s.origId, event_id:evId, seq:s.seq, event_date:s.event_date, start_time:s.start_time, end_time:s.end_time, location:s.location, qr_token:eeGenToken(), venue_lat:s.venue_lat, venue_lng:s.venue_lng}; });
     var schedRes=await sb.from('edu_schedules').insert(schedRows);
-    if(schedRes.error){ toast('일정 등록 실패: '+schedRes.error.message); return; }
+    if(schedRes.error){ toast('일정 등록 실패: '+_safeErrMsg(schedRes.error)); return; }
     toast('✅ "'+title+'" 등록 완료 ('+scheds.length+'개 일정)');
     eeLogToPerf(evId, category, title, scheds, targetRoles); // 주요수행실적에 자동 기록
     pushSendNotification('edu','📚 새 교육·회의 등록', title);
@@ -12940,7 +12946,7 @@ async function eeSubmitEvent(){
   eeTab(0);
   }catch(err){
     console.error('[eeSubmitEvent 오류]', err);
-    toast('⚠️ 처리 중 오류가 발생했습니다: '+String(err&&err.message||err));
+    toast('⚠️ 처리 중 오류가 발생했습니다: '+String(err&&_safeErrMsg(err)||err));
   }
 }
 // 등록된 교육/회의 수정 화면 열기 (관리자 전용)
@@ -12978,11 +12984,11 @@ async function eeDeleteEvent(eventId, title){
   try{
     await sb.from('performance_records').delete().eq('edu_event_id',eventId);
     var res=await sb.from('edu_events').delete().eq('id',eventId); // edu_schedules/edu_applications/edu_attendance는 FK CASCADE로 함께 삭제됨
-    if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    if(res.error){ toast('삭제 실패: '+_safeErrMsg(res.error)); return; }
     logDeletion('교육·회의', title);
     toast('✅ 삭제되었습니다');
     loadEduEvents();
-  }catch(err){ toast('⚠️ 오류: '+String(err&&err.message||err)); }
+  }catch(err){ toast('⚠️ 오류: '+String(err&&_safeErrMsg(err)||err)); }
 }
 
 var eeFilterYear='', eeFilterMonth='', eeFilterCat='', eeFilterStatus='active';
@@ -13120,7 +13126,7 @@ async function eeOpenApply(eventId){
     try{
       var freshRes=await sb.from('users').select('employee_id').eq('id',me.id).maybeSingle();
       if(freshRes.error){
-        toast('⚠️ 사번 조회 오류: '+String(freshRes.error.message||freshRes.error));
+        toast('⚠️ 사번 조회 오류: '+String(_safeErrMsg(freshRes.error)||freshRes.error));
       }else if(freshRes.data && freshRes.data.employee_id){
         me.employee_id=freshRes.data.employee_id;
         try{ localStorage.setItem('t1_me', JSON.stringify(me)); }catch(e){}
@@ -13129,7 +13135,7 @@ async function eeOpenApply(eventId){
         toast('⚠️ 이 계정에 등록된 사번이 없습니다. 관리자에게 문의해주세요');
       }
     }catch(e){
-      toast('⚠️ 사번 조회 실패: '+String(e&&e.message||e));
+      toast('⚠️ 사번 조회 실패: '+String(e&&_safeErrMsg(e)||e));
     }
   }
   var defPos=eeDefaultPosByRole();
@@ -13201,7 +13207,7 @@ async function eeSubmitApply(){
     if(!checked.length){ toast('⚠️ 참석 가능한 날짜를 최소 1개 선택하세요'); return; }
 
     var existRes=await sb.from('edu_applications').select('id,schedule_id').eq('event_id',eventId).eq('employee_id',empId);
-    if(existRes.error){ toast('조회 실패: '+existRes.error.message); return; }
+    if(existRes.error){ toast('조회 실패: '+_safeErrMsg(existRes.error)); return; }
     var existRows=existRes.data||[];
     var existScheduleIds=existRows.map(function(r){return r.schedule_id;});
     var toInsert=checked.filter(function(sid){ return existScheduleIds.indexOf(sid)===-1; });
@@ -13212,7 +13218,7 @@ async function eeSubmitApply(){
         id:eeGenToken(), event_id:eventId, schedule_id:toInsert[i], team:team, team_group:group, position:position,
         employee_id:empId, name:name, applied_by:me?me.name:''
       });
-      if(insRes.error){ toast('⚠️ 일부 신청 실패: '+insRes.error.message); }
+      if(insRes.error){ toast('⚠️ 일부 신청 실패: '+_safeErrMsg(insRes.error)); }
     }
     // 이미 신청된 회차도 직책/팀/조/이름이 바뀌었을 수 있으니 최신값으로 갱신
     for(var k=0;k<existRows.length;k++){
@@ -13228,7 +13234,7 @@ async function eeSubmitApply(){
     eeTab(0);
   }catch(err){
     console.error('[eeSubmitApply 오류]', err);
-    toast('⚠️ 신청 중 오류가 발생했습니다: '+String(err&&err.message||err));
+    toast('⚠️ 신청 중 오류가 발생했습니다: '+String(err&&_safeErrMsg(err)||err));
   }
 }
 
@@ -13426,22 +13432,22 @@ async function eeSaveApplicationEdit(){
       team:team, team_group:group, position:eeAppEditSelectedPos, employee_id:empId, name:name,
       edited_by:me?me.name:'', edited_at:new Date().toISOString()
     }).eq('id',id);
-    if(res.error){ toast('수정 실패: '+res.error.message); return; }
+    if(res.error){ toast('수정 실패: '+_safeErrMsg(res.error)); return; }
     toast('✅ 수정 완료 (수정자: '+(me?me.name:'')+')');
     hideM('eeAppEditModal');
     var a=(eeAppsCache||[]).find(function(x){ return x.id===id; });
     if(a){ eeOpenAdminView(a.event_id); }
-  }catch(err){ toast('⚠️ 오류: '+String(err&&err.message||err)); }
+  }catch(err){ toast('⚠️ 오류: '+String(err&&_safeErrMsg(err)||err)); }
 }
 async function eeDeleteApplication(appId, eventId){
   if(!confirm('이 신청내역을 삭제할까요?')) return;
   try{
     var res=await sb.from('edu_applications').delete().eq('id',appId);
-    if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    if(res.error){ toast('삭제 실패: '+_safeErrMsg(res.error)); return; }
     logDeletion('교육·회의 신청내역', 'id:'+appId);
     toast('✅ 삭제되었습니다');
     eeOpenAdminView(eventId);
-  }catch(err){ toast('⚠️ 오류: '+String(err&&err.message||err)); }
+  }catch(err){ toast('⚠️ 오류: '+String(err&&_safeErrMsg(err)||err)); }
 }
 // 미신청 참석자(워크인)의 QR 출석기록 삭제 — 신청내역이 없으므로 attendance 레코드만 지움
 async function eeDeleteAttendanceRow(attId, eventId){
@@ -13449,10 +13455,10 @@ async function eeDeleteAttendanceRow(attId, eventId){
   if(!confirm('이 출석기록을 취소할까요? (신청내역은 원래 없던 사람입니다)')) return;
   try{
     var res=await sb.from('edu_attendance').delete().eq('id',attId);
-    if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    if(res.error){ toast('삭제 실패: '+_safeErrMsg(res.error)); return; }
     toast('✅ 출석기록이 취소되었습니다');
     eeOpenAdminView(eventId);
-  }catch(err){ toast('⚠️ 오류: '+String(err&&err.message||err)); }
+  }catch(err){ toast('⚠️ 오류: '+String(err&&_safeErrMsg(err)||err)); }
 }
 
 function eeAttendUrl(scheduleId, token){
@@ -13553,7 +13559,7 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
     ]);
     document.getElementById('eeReportBody').innerHTML=eeReportRowsTable(rows, cols);
     showM('eeReportModal');
-  }catch(e){ toast('오류: '+e.message); }
+  }catch(e){ toast('오류: '+_safeErrMsg(e)); }
 }
 async function eeOpenWishSurvey(eventId){
   var ev=(eeEventsCache||[]).find(function(e){ return e.id===eventId; });
@@ -13578,7 +13584,7 @@ async function eeOpenWishSurvey(eventId){
       {key:'소속',label:'소속',width:'22%'},{key:'employee_id',label:'사번',width:'18%'},{key:'name',label:'성명',width:'18%'},{key:'wish_date',label:'참석희망일',width:'36%'}
     ]);
     showM('eeReportModal');
-  }catch(e){ toast('오류: '+e.message); }
+  }catch(e){ toast('오류: '+_safeErrMsg(e)); }
 }
 
 // ═══ 엑셀 다운로드 ═══
@@ -13644,7 +13650,7 @@ async function eeExportExcel(eventId){
     toast('✅ 엑셀 다운로드 완료');
   }catch(e){
     console.error('[eeExportExcel 오류]', e);
-    toast('⚠️ 엑셀 다운로드 실패: '+String(e&&e.message||e));
+    toast('⚠️ 엑셀 다운로드 실패: '+String(e&&_safeErrMsg(e)||e));
   }
 }
 
@@ -13676,7 +13682,7 @@ async function eeDownloadApplyTemplate(eventId){
     toast('📥 양식 다운로드 완료');
   }catch(e){
     console.error('[eeDownloadApplyTemplate 오류]', e);
-    toast('⚠️ 양식 다운로드 실패: '+String(e&&e.message||e));
+    toast('⚠️ 양식 다운로드 실패: '+String(e&&_safeErrMsg(e)||e));
   }
 }
 function eeUploadApplyExcel(inputEl, eventId){
@@ -13736,7 +13742,7 @@ function eeUploadApplyExcel(inputEl, eventId){
       eeOpenAdminView(eventId);
     }catch(err){
       console.error('[eeUploadApplyExcel 오류]', err);
-      toast('⚠️ 엑셀 처리 오류: '+String(err&&err.message||err));
+      toast('⚠️ 엑셀 처리 오류: '+String(err&&_safeErrMsg(err)||err));
       inputEl.value='';
     }
   };
@@ -13897,7 +13903,7 @@ async function eeConfirmAttendance(){
       id:eeGenToken(), schedule_id:eeAttendCurSchedId, employee_id:empId, name:name, team:team, team_group:group,
       qr_verified:true, gps_verified:gpsOk, distance_m:distM, verify_method:'qr', verified_at:new Date().toISOString(), signature_data:sigDataUrl
     }, {onConflict:'schedule_id,employee_id'});
-    if(res.error){ toast('⚠️ 참석확인 실패: '+res.error.message); return; }
+    if(res.error){ toast('⚠️ 참석확인 실패: '+_safeErrMsg(res.error)); return; }
     var wrap=document.getElementById('eeAttendWrap');
     wrap.innerHTML='<div class="card"><div class="cb" style="text-align:center;padding:20px 13px">'
       +'<div style="font-size:40px;margin-bottom:9px">✅</div>'
@@ -13905,7 +13911,7 @@ async function eeConfirmAttendance(){
       +'<div style="font-size:13px;color:var(--g5)">'+eeEsc(name)+'님 참석 처리되었습니다'+(distM!==null?('<br><span style="font-size:11px;color:var(--g4)">위치 확인: '+(gpsOk?'✓ 교육장 인근':'⚠️ 위치가 다소 떨어져 있으나 QR인증으로 처리됨')+'</span>'):'')+'</div>'
       +'</div></div>';
   }catch(err){
-    toast('⚠️ 오류: '+String(err&&err.message||err));
+    toast('⚠️ 오류: '+String(err&&_safeErrMsg(err)||err));
   }
 }
 
@@ -14195,7 +14201,7 @@ async function deleteJwBatch(key){
   try{
     var ids=rows.map(function(r){return r.id;});
     var res=await sb.from('joint_work_data').delete().in('id',ids);
-    if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
     logDeletion('공동작업', rows.map(function(r){return (r.teams||r.location||'')+' '+(r.category||'');}).join(' / ').slice(0,300));
     toast('🗑 삭제되었습니다');
     loadJointWorkFromDB();
@@ -14231,7 +14237,7 @@ async function jwDeleteSelected(key){
   try{
     var targets=(jointWorkData||[]).filter(function(r){ return ids.indexOf(r.id)!==-1; });
     var res=await sb.from('joint_work_data').delete().in('id',ids);
-    if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
     logDeletion('공동작업', targets.map(function(r){return (r.teams||r.location||'')+' '+(r.category||'');}).join(' / ').slice(0,300));
     toast('🗑 '+ids.length+'건 삭제되었습니다');
     loadJointWorkFromDB();
@@ -14343,13 +14349,13 @@ async function deleteJw(id){
   try{
     var target=(jointWorkData||[]).find(function(r){return r.id===id;});
     var res=await sb.from('joint_work_data').delete().eq('id',id);
-    if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    if(res.error){ toast('삭제 실패: '+_safeErrMsg(res.error)); return; }
     logDeletion('공동작업', target?((target.teams||target.location||'')+' '+(target.category||'')):('id:'+id));
     jointWorkData=jointWorkData.filter(function(r){return r.id!==id;});
     renderJointWorkList();
     loadJointWorkTodayFromDB();
     toast('✅ 삭제되었습니다');
-  }catch(e){ toast('삭제 오류: '+String(e.message||e)); }
+  }catch(e){ toast('삭제 오류: '+String(_safeErrMsg(e)||e)); }
 }
 
 // ─ 공동작업 통계(일/월/연) ─
@@ -14601,13 +14607,13 @@ async function execWvReset(){
     var res=await sb.from('work_vehicle_log').delete().neq('id',0);
     btn.disabled=false; btn.textContent='삭제';
     hideM('wvResetOverlay');
-    if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    if(res.error){ toast('삭제 실패: '+_safeErrMsg(res.error)); return; }
     toast('✅ 운행일지 전체 삭제 완료');
     workVehData=[];
     renderWorkVehList([]);
   }catch(e){
     btn.disabled=false; btn.textContent='삭제';
-    toast('삭제 오류: '+String(e.message||e));
+    toast('삭제 오류: '+String(_safeErrMsg(e)||e));
   }
 }
 
@@ -14895,7 +14901,7 @@ async function confirmNs(){
     recalcMpData();
     updateFloorChart();
     logMpInput('야간', team);
-  }catch(e){ toast('저장 오류: '+String(e.message||e)); }
+  }catch(e){ toast('저장 오류: '+String(_safeErrMsg(e)||e)); }
   _nsPending=null;
 }
 async function loadNightSpecialFromDB(){
@@ -15684,7 +15690,7 @@ async function resetLeaderDataToday(){
     if(si!==undefined) rstShiftTab(si);
     closeLeaderDataEdit();
     toast('🗑️ '+editTeam+' '+editShift+' 당일 입력이 초기화되었습니다');
-  }catch(e){ toast('초기화 오류: '+String(e.message||e)); }
+  }catch(e){ toast('초기화 오류: '+String(_safeErrMsg(e)||e)); }
 }
 
 async function saveLeaderDataEdit(){
@@ -15710,7 +15716,7 @@ async function saveLeaderDataEdit(){
       closeLeaderDataEdit();
       loadNightSpecialFromDB();
       toast('✅ '+editTeam+' 야간특별작업 수정 완료');
-    }catch(e){ toast('저장 오류: '+String(e.message||e)); }
+    }catch(e){ toast('저장 오류: '+String(_safeErrMsg(e)||e)); }
     return;
   }
   var newVals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
@@ -16532,10 +16538,10 @@ async function confirmDeleteAllPwReq(){
   if(!confirm('비밀번호 재설정 요청을 전체(대기중 포함) 삭제하시겠습니까?\n복구할 수 없습니다.')) return;
   try{
     var res=await sb.from('pw_reset_requests').delete().gte('created_at','1970-01-01');
-    if(res.error){ toast('삭제 실패: '+res.error.message); return; }
+    if(res.error){ toast('삭제 실패: '+_safeErrMsg(res.error)); return; }
     toast('🗑️ 전체 삭제되었습니다');
     loadPwResetRequests();
-  }catch(e){ toast('삭제 오류: '+String(e.message||e)); }
+  }catch(e){ toast('삭제 오류: '+String(_safeErrMsg(e)||e)); }
 }
 var DB_TOTAL_BYTES = 500*1024*1024; // Supabase Free 플랜 기준 DB 500MB
 var DB_TABLE_LABELS={
@@ -17327,12 +17333,12 @@ async function deleteNotice(btn){
   var id=btn.getAttribute('data-id');
   try{
     var res=await sb.from('notices').delete().eq('id',id);
-    if(res&&res.error){ toast('삭제 오류: '+res.error.message); return; }
+    if(res&&res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
     logDeletion('공지사항', 'id:'+id);
     toast('✅ 공지사항 삭제 완료');
     loadAdminNoticeList();
     loadNoticesFromDB();
-  }catch(e){ toast('오류: '+e.message); }
+  }catch(e){ toast('오류: '+_safeErrMsg(e)); }
 }
 
 var _editNoticeId=null;
@@ -17368,7 +17374,7 @@ async function saveEditNotice(){
   var showPopup = document.getElementById('nPopupChk') ? document.getElementById('nPopupChk').checked : true;
   try{
     var res=await sb.from('notices').update({title:t,content:b,target_roles:targets,show_popup:showPopup}).eq('id',_editNoticeId);
-    if(res&&res.error){ toast('수정 오류: '+res.error.message); return; }
+    if(res&&res.error){ toast('수정 오류: '+_safeErrMsg(res.error)); return; }
     toast('✅ 공지사항 수정 완료');
     closeNW();
     // 모달 버튼 원래대로 복구
@@ -17379,7 +17385,7 @@ async function saveEditNotice(){
     _editNoticeId=null;
     loadAdminNoticeList();
     loadNoticesFromDB();
-  }catch(e){ toast('오류: '+e.message); }
+  }catch(e){ toast('오류: '+_safeErrMsg(e)); }
 }
 
 async function saveNoticeDB(noticeContent){
@@ -17391,9 +17397,9 @@ async function saveNoticeDB(noticeContent){
       content:noticeContent,
       author:me?me.name:'관리자'
     });
-    if(res&&res.error) toast('공지 저장 오류: '+res.error.message);
+    if(res&&res.error) toast('공지 저장 오류: '+_safeErrMsg(res.error));
     else { toast('✅ 공지사항 저장 완료'); loadNoticesFromDB(); pushSendNotification('notice','📢 새 공지사항', noticeContent.slice(0,60)); }
-  }catch(e){toast('오류: '+e.message);}
+  }catch(e){toast('오류: '+_safeErrMsg(e));}
 }
 // (구) saveNoticeDB_unused:
 async function _saveNoticeDB_unused(content){
@@ -17582,7 +17588,7 @@ async function downloadHoExcel(){
     var now=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
                 await dlSaveWorkbook(wb, 'T1_인수인계_'+now+'.xlsx');
     toast('✅ 인수인계 엑셀 다운로드 완료');
-  }catch(e){ toast('다운로드 오류: '+e.message); }
+  }catch(e){ toast('다운로드 오류: '+_safeErrMsg(e)); }
 }
 
 async function updateHoPending(){
@@ -17680,7 +17686,7 @@ async function saveLostAccDate(){
   var v=(document.getElementById('lostAccDateInput').value||'').trim();
   if(!v){ toast('⚠️ 날짜를 선택해주세요'); return; }
   var res=await sb.from('lost_safety_log').update({last_incident_date:v, updated_by:me.name, updated_at:new Date().toISOString()}).eq('module_key','lost');
-  if(res.error){ toast('저장 오류: '+res.error.message); return; }
+  if(res.error){ toast('저장 오류: '+_safeErrMsg(res.error)); return; }
   toast('✓ 사고일자가 등록되었습니다');
   hideM('lostAccModal');
   loadLostSafety();
@@ -17695,7 +17701,7 @@ async function saveLostNote(){
   if(!me||me.role!=='master'){ toast('⚠️ master만 작성할 수 있습니다'); return; }
   var v=(document.getElementById('lostNoteInput').value||'').trim();
   var res=await sb.from('lost_safety_log').update({free_note:v||null, updated_by:me.name, updated_at:new Date().toISOString()}).eq('module_key','lost');
-  if(res.error){ toast('저장 오류: '+res.error.message); return; }
+  if(res.error){ toast('저장 오류: '+_safeErrMsg(res.error)); return; }
   toast('✓ 저장되었습니다');
   hideM('lostNoteModal');
   loadLostSafety();
@@ -17821,11 +17827,11 @@ async function deleteHo(btn){
   try{
     var target=(hoAll||[]).find(function(r){ return String(r.id)===String(id); });
     var res=await sb.from('handover').delete().eq('id',id);
-    if(res&&res.error){toast('삭제 오류: '+res.error.message);return;}
+    if(res&&res.error){toast('삭제 오류: '+_safeErrMsg(res.error));return;}
     logDeletion('인수인계', target?((target.team||'')+' '+(target.notice||target.facility||'').slice(0,60)):('id:'+id));
     toast('✅ 삭제 완료');
     loadHandoverFromDB();
-  }catch(e){toast('오류: '+e.message);}
+  }catch(e){toast('오류: '+_safeErrMsg(e));}
 }
 
 // 저장된 시설물 문자열 '[장소] .. / [내용] .. / [신고] .. / [접수자] ..' 을 구조화된 필드로 역파싱
@@ -17957,7 +17963,7 @@ async function loadHandoverFromDB(highlightNewest){
 async function saveHandoverToDB(data){
   try{
     var res=await sb.from('handover').insert(data);
-    if(res.error) toast('저장 오류: '+res.error.message);
+    if(res.error) toast('저장 오류: '+_safeErrMsg(res.error));
     else{
       loadHandoverFromDB(true);
       var first=Array.isArray(data)?data[0]:data;
@@ -18080,7 +18086,7 @@ function renderMainIndList(data){
 async function saveAccidentToDB(data){
   try{
     var res=await sb.from('industrial_accident').insert(data);
-    if(res.error) toast('저장 오류: '+res.error.message);
+    if(res.error) toast('저장 오류: '+_safeErrMsg(res.error));
     else loadAccidentsFromDB();
   }catch(e){}
 }
@@ -18115,7 +18121,7 @@ async function loadVehicleFromDB(){
 async function saveVehicleToDB(data){
   try{
     var res=await sb.from('vehicle_log').insert(data);
-    if(res.error) toast('저장 오류: '+res.error.message);
+    if(res.error) toast('저장 오류: '+_safeErrMsg(res.error));
     else loadVehicleFromDB();
   }catch(e){}
 }
@@ -18315,7 +18321,7 @@ async function saveVoc(){
     vocTab(0);
     if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges();
   }catch(e){
-    toast('⚠️ 저장 실패: '+e.message);
+    toast('⚠️ 저장 실패: '+_safeErrMsg(e));
   }finally{
     if(btn){ btn.disabled=false; btn.textContent='📞 민원 접수 저장'; }
   }
@@ -18366,7 +18372,7 @@ async function confirmVocComplete(){
     _vocCompleteTargetId=null;
     loadVocFromDB();
     if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges();
-  }catch(e){ toast('⚠️ 처리 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 처리 실패: '+_safeErrMsg(e)); }
 }
 
 async function deleteVoc(id){
@@ -18468,7 +18474,7 @@ async function confirmVocEdit(){
     hideM('vocEditModal');
     toast('✅ 수정되었습니다');
     loadVocFromDB();
-  }catch(e){ toast('⚠️ 수정 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 수정 실패: '+_safeErrMsg(e)); }
 }
 
 // ══ 습득물 관리 ══
@@ -18764,7 +18770,7 @@ async function saveLost(){
     loadLostFromDB();
     lostTab(0);
   }catch(e){
-    toast('⚠️ 저장 실패: '+e.message);
+    toast('⚠️ 저장 실패: '+_safeErrMsg(e));
   }finally{
     if(btn){btn.disabled=false;btn.textContent='🎒 습득물 접수 저장';}
   }
@@ -18979,7 +18985,7 @@ async function confirmLostEdit(){
     toast('✅ 수정되었습니다');
     loadLostFromDB();
     if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges();
-  }catch(e){ toast('⚠️ 수정 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 수정 실패: '+_safeErrMsg(e)); }
 }
 
 async function downloadAccidentReportExcel(){
@@ -19038,7 +19044,7 @@ async function downloadAccidentReportExcel(){
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
                 await dlSaveWorkbook(wb, '안전사고발생보고서_'+today+'.xlsx');
     toast('📥 다운로드 완료');
-  }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 다운로드 실패: '+_safeErrMsg(e)); }
 }
 
 async function downloadAccidentExcel(){
@@ -19085,7 +19091,7 @@ async function downloadAccidentExcel(){
     var fname='T1_안전사고현황'+(mf?'_'+mf:'')+'.xlsx';
                 await dlSaveWorkbook(wb, fname);
     toast('📥 다운로드 완료');
-  }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 다운로드 실패: '+_safeErrMsg(e)); }
 }
 
 async function downloadLostExcel(){
@@ -19124,7 +19130,7 @@ async function downloadLostExcel(){
     var fname='T1_습득물관리'+(mf?'_'+mf:'')+'.xlsx';
                 await dlSaveWorkbook(wb, fname);
     toast('📥 다운로드 완료');
-  }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 다운로드 실패: '+_safeErrMsg(e)); }
 }
 
 function openLostComplete(id){
@@ -19157,7 +19163,7 @@ async function confirmLostComplete(){
     toast('✅ 처리완료 되었습니다');
     loadLostFromDB();
     if(typeof updateVocLostTabBadges==='function') updateVocLostTabBadges();
-  }catch(e){ toast('⚠️ 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 실패: '+_safeErrMsg(e)); }
 }
 
 async function deleteLost(id){
@@ -19457,7 +19463,7 @@ async function eqSaveEdit(){
     toast(_eqAddMode?'✅ 추가되었습니다':'✅ 수정되었습니다');
     closeEqEditModal();
     renderEquipment();
-  }catch(e){ toast('⚠️ 저장 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 저장 실패: '+_safeErrMsg(e)); }
 }
 async function eqDeleteRow(idx){
   if(!canDeleteWorkItem()){ toast('⚠️ 조장 이상만 삭제할 수 있습니다'); return; }
@@ -19474,7 +19480,7 @@ async function eqDeleteRow(idx){
     await logDeletion('장비현황', summary);
     toast('✅ 삭제되었습니다');
     renderEquipment();
-  }catch(e){ toast('⚠️ 삭제 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 삭제 실패: '+_safeErrMsg(e)); }
 }
 
 function previewEquipmentFile(input){
@@ -19530,7 +19536,7 @@ function previewEquipmentFile(input){
       window._eqPendingData={headers:headers,rows:rows};
       window._eqPendingTotal=rows.length;
       toast('✅ '+rows.length+'건 확인 완료. 업로드 버튼을 눌러주세요');
-    }catch(ex){ toast('⚠️ 파일 읽기 오류: '+ex.message); }
+    }catch(ex){ toast('⚠️ 파일 읽기 오류: '+_safeErrMsg(ex)); }
   };
   reader.readAsBinaryString(file);
 }
@@ -19556,7 +19562,7 @@ async function uploadEquipmentData(){
     document.getElementById('eqPreview').style.display='none';
     loadEquipmentFromDB();
     eqTab(0);
-  }catch(e){ toast('⚠️ 업로드 실패: '+e.message);
+  }catch(e){ toast('⚠️ 업로드 실패: '+_safeErrMsg(e));
   }finally{ if(btn){btn.disabled=false;btn.textContent='🔧 장비현황 업로드';} }
 }
 
@@ -19638,7 +19644,7 @@ async function adcSaveNewDoc(){
     toast('✅ 확인서가 작성되었습니다');
     hideM('adcCreateModal');
     loadAdcDocList();
-  }catch(e){ toast('⚠️ 저장 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 저장 실패: '+_safeErrMsg(e)); }
 }
 async function adcOpenDocDetail(id){
   var lv=document.getElementById('adcDocListView'); if(lv) lv.style.display='none';
@@ -19706,7 +19712,7 @@ async function adcEditField(id, field, currentValue, label){
     if(res.error) throw res.error;
     toast('✅ 수정되었습니다');
     adcOpenDocDetail(id);
-  }catch(e){ toast('⚠️ 수정 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 수정 실패: '+_safeErrMsg(e)); }
 }
 async function adcEditLine(id, idx, currentLabel, currentContent){
   if(!canAdcManage()){ toast('⚠️ 관리자 이상만 수정할 수 있습니다'); return; }
@@ -19724,7 +19730,7 @@ async function adcEditLine(id, idx, currentLabel, currentContent){
     if(res.error) throw res.error;
     toast('✅ 수정되었습니다');
     adcOpenDocDetail(id);
-  }catch(e){ toast('⚠️ 수정 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 수정 실패: '+_safeErrMsg(e)); }
 }
 async function adcSign(docId){
   if(!canAdcManage()){ toast('⚠️ 관리자 이상만 서명할 수 있습니다'); return; }
@@ -19748,7 +19754,7 @@ async function adcSign(docId){
     if(res.error) throw res.error;
     toast('✅ 서명이 완료되었습니다');
     adcOpenDocDetail(docId);
-  }catch(e){ toast('⚠️ 서명 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 서명 실패: '+_safeErrMsg(e)); }
 }
 async function adcDeleteSignature(sigId, docId){
   if(!canAdcManage()){ toast('⚠️ 관리자 이상만 삭제할 수 있습니다'); return; }
@@ -19759,7 +19765,7 @@ async function adcDeleteSignature(sigId, docId){
     await logDeletion('관리자확인사항(서명)', '서명 1건 삭제');
     toast('✅ 삭제되었습니다');
     adcOpenDocDetail(docId);
-  }catch(e){ toast('⚠️ 삭제 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 삭제 실패: '+_safeErrMsg(e)); }
 }
 async function adcDeleteDoc(id){
   if(!canAdcManage()){ toast('⚠️ 관리자 이상만 삭제할 수 있습니다'); return; }
@@ -19773,7 +19779,7 @@ async function adcDeleteDoc(id){
     toast('✅ 삭제되었습니다');
     adcBackToDocList();
     loadAdcDocList();
-  }catch(e){ toast('⚠️ 삭제 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 삭제 실패: '+_safeErrMsg(e)); }
 }
 async function adcPrintDoc(id){
   try{
@@ -19806,7 +19812,7 @@ async function adcPrintDoc(id){
     h+='<div style="font-size:12.5px;text-align:center;margin-top:18px;line-height:1.8">상기 회람자는 '+lrptEsc(d.content1)+'의 내용을 확인·숙지 하였습니다.</div>';
     area.innerHTML=h;
     showM('adcPrintModal');
-  }catch(e){ toast('⚠️ 인쇄 준비 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 인쇄 준비 실패: '+_safeErrMsg(e)); }
 }
 
 // ── PDF 문서함 ──
@@ -19881,7 +19887,7 @@ async function adcDeletePdf(id, path){
     await logDeletion('관리자확인사항(PDF)', 'PDF 문서 1건 삭제');
     toast('✅ 삭제되었습니다');
     loadAdcPdfList();
-  }catch(e){ toast('⚠️ 삭제 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 삭제 실패: '+_safeErrMsg(e)); }
 }
 
 // ── 내 서명 등록 ──
@@ -19944,8 +19950,10 @@ async function loadAdcMySig(){
 }
 function adcPreviewMySig(files){
   if(!files||!files[0]) return;
+  var checked=_validateFileList(files, ['.jpg','.jpeg','.png'], 5);
+  if(!checked.length) return;
   toast('🪄 배경 정리 중...');
-  adcMakeSigTransparent(files[0], function(blob){
+  adcMakeSigTransparent(checked[0], function(blob){
     _adcMySigFile=blob;
     var url=URL.createObjectURL(blob);
     var img=document.getElementById('adcMySigPreview');
@@ -19986,7 +19994,7 @@ async function adcSaveMySig(){
     if(res.error) throw res.error;
     _adcMySigExistingPath=sigPath; _adcMySigFile=null;
     toast('✅ 서명정보가 저장되었습니다');
-  }catch(e){ toast('⚠️ 저장 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 저장 실패: '+_safeErrMsg(e)); }
 }
 
 // ══════════════════════════════════════════
@@ -20097,7 +20105,7 @@ async function ncfSaveNewDoc(){
     toast('✅ 공지 확인서가 작성되었습니다');
     hideM('ncfCreateModal');
     loadNcfDocList();
-  }catch(e){ toast('⚠️ 저장 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 저장 실패: '+_safeErrMsg(e)); }
 }
 
 // ── 상세/서명 ──
@@ -20188,7 +20196,7 @@ async function ncfSign(docId){
     if(res.error) throw res.error;
     toast('✅ 확인 서명이 완료되었습니다');
     ncfOpenDocDetail(docId);
-  }catch(e){ toast('⚠️ 서명 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 서명 실패: '+_safeErrMsg(e)); }
 }
 async function ncfDeleteSignature(sigId, docId){
   if(!ncfCanManage()) return;
@@ -20198,7 +20206,7 @@ async function ncfDeleteSignature(sigId, docId){
     if(res.error) throw res.error;
     toast('✅ 삭제되었습니다');
     ncfOpenDocDetail(docId);
-  }catch(e){ toast('⚠️ 삭제 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 삭제 실패: '+_safeErrMsg(e)); }
 }
 async function ncfDeleteDoc(id){
   if(!ncfCanManage()) return;
@@ -20209,7 +20217,7 @@ async function ncfDeleteDoc(id){
     toast('✅ 삭제되었습니다');
     ncfBackToDocList();
     loadNcfDocList();
-  }catch(e){ toast('⚠️ 삭제 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 삭제 실패: '+_safeErrMsg(e)); }
 }
 function ncfPrintDoc(id){
   var body=document.getElementById('ncfDocDetailBody');
@@ -20344,12 +20352,12 @@ async function subToiletNew(){
   };
   try{
     var res=await sb.from('toilet_master').insert(payload);
-    if(res.error){ toast('저장 오류: '+res.error.message); return; }
+    if(res.error){ toast('저장 오류: '+_safeErrMsg(res.error)); return; }
     toast('✅ 화장실이 등록되었습니다');
     tlResetForm();
     await loadToiletFromDB();
     tlTab(1);
-  }catch(e){ toast('저장 오류: '+String(e.message||e)); }
+  }catch(e){ toast('저장 오류: '+String(_safeErrMsg(e)||e)); }
 }
 function renderToiletStats(){
   var cardsEl=document.getElementById('tlStatCards'); if(!cardsEl) return;
@@ -20602,11 +20610,11 @@ async function saveToiletDetail(){
   };
   try{
     var res=await sb.from('toilet_master').update(payload).eq('id',tlEditId);
-    if(res.error){ toast('수정 오류: '+res.error.message); return; }
+    if(res.error){ toast('수정 오류: '+_safeErrMsg(res.error)); return; }
     toast('✅ 수정되었습니다');
     hideM('toiletDetailModal');
     await loadToiletFromDB();
-  }catch(e){ toast('수정 오류: '+String(e.message||e)); }
+  }catch(e){ toast('수정 오류: '+String(_safeErrMsg(e)||e)); }
 }
 async function deleteToiletConfirm(){
   if(!facilityCanDelete()){ toast('⚠️ 삭제 권한이 없습니다'); return; }
@@ -20614,12 +20622,12 @@ async function deleteToiletConfirm(){
   if(!confirm('이 화장실 정보를 삭제하시겠습니까?\n삭제 후에는 되돌릴 수 없습니다.')) return;
   try{
     var res=await sb.from('toilet_master').delete().eq('id',tlEditId);
-    if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
     logDeletion('화장실 관리', 'id:'+tlEditId);
     toast('🗑 삭제되었습니다');
     hideM('toiletDetailModal');
     await loadToiletFromDB();
-  }catch(e){ toast('삭제 오류: '+String(e.message||e)); }
+  }catch(e){ toast('삭제 오류: '+String(_safeErrMsg(e)||e)); }
 }
 async function dlToiletExcel(){
   if(!canDownload()) return;
@@ -20652,7 +20660,7 @@ async function dlToiletExcel(){
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
                 await dlSaveWorkbook(wb, 'T1_화장실현황_'+today+'.xlsx');
     toast('📥 다운로드 완료 ('+toiletData.length+'건)');
-  }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 다운로드 실패: '+_safeErrMsg(e)); }
 }
 function previewToiletFile(input){
   var file=input.files[0];
@@ -20721,7 +20729,7 @@ function previewToiletFile(input){
       prevTbl.innerHTML=h;
       window._tlPendingData=parsed;
       toast('✅ '+parsed.length+'건 확인 완료. 아래 버튼으로 업로드하세요');
-    }catch(ex){ toast('⚠️ 파일 읽기 오류: '+ex.message); }
+    }catch(ex){ toast('⚠️ 파일 읽기 오류: '+_safeErrMsg(ex)); }
   };
   reader.readAsBinaryString(file);
 }
@@ -20745,7 +20753,7 @@ async function uploadToiletData(){
     document.getElementById('tlPreview').style.display='none';
     await loadToiletFromDB();
     tlTab(1);
-  }catch(e){ toast('⚠️ 업로드 실패: '+e.message);
+  }catch(e){ toast('⚠️ 업로드 실패: '+_safeErrMsg(e));
   }finally{ if(btn){btn.disabled=false;btn.textContent='⚠️ 기존 데이터 교체하고 업로드';} }
 }
 
@@ -21007,7 +21015,7 @@ async function facLoadFromDB(type){
   var cfg=FAC_CONFIGS[type];
   try{
     var res=await sb.from(cfg.table).select('*').order('updated_at',{ascending:false});
-    if(res.error){ console.error(res.error); toast('⚠️ '+cfg.title+' 조회 오류: '+res.error.message); return; }
+    if(res.error){ console.error(res.error); toast('⚠️ '+cfg.title+' 조회 오류: '+_safeErrMsg(res.error)); return; }
     facData[type]=res.data||[];
     facRenderList(type);
   }catch(e){}
@@ -21038,12 +21046,12 @@ async function facSubmitNew(type){
   var payload=Object.assign({}, r.payload, {active:true, updated_at:new Date().toISOString(), updated_by:facEditorTag()});
   try{
     var res=await sb.from(cfg.table).insert(payload);
-    if(res.error){ toast('저장 오류: '+res.error.message); return; }
+    if(res.error){ toast('저장 오류: '+_safeErrMsg(res.error)); return; }
     toast('✅ '+cfg.title+'이(가) 등록되었습니다');
     facResetForm(type);
     await facLoadFromDB(type);
     facTab(type,1);
-  }catch(e){ toast('저장 오류: '+String(e.message||e)); }
+  }catch(e){ toast('저장 오류: '+String(_safeErrMsg(e)||e)); }
 }
 function facRenderList(type){
   var cfg=FAC_CONFIGS[type];
@@ -21195,11 +21203,11 @@ async function facSaveDetail(type){
   var payload=Object.assign({}, r.payload, {updated_at:new Date().toISOString(), updated_by:facEditorTag()});
   try{
     var res=await sb.from(cfg.table).update(payload).eq('id',id);
-    if(res.error){ toast('수정 오류: '+res.error.message); return; }
+    if(res.error){ toast('수정 오류: '+_safeErrMsg(res.error)); return; }
     toast('✅ 수정되었습니다');
     hideM('facDetailModal2');
     await facLoadFromDB(type);
-  }catch(e){ toast('수정 오류: '+String(e.message||e)); }
+  }catch(e){ toast('수정 오류: '+String(_safeErrMsg(e)||e)); }
 }
 async function facDeleteConfirm(type){
   if(!facilityCanDelete()){ toast('⚠️ 삭제 권한이 없습니다'); return; }
@@ -21209,11 +21217,11 @@ async function facDeleteConfirm(type){
   if(!confirm('이 '+cfg.title+' 정보를 삭제하시겠습니까?\n삭제 후에는 되돌릴 수 없습니다.')) return;
   try{
     var res=await sb.from(cfg.table).delete().eq('id',id);
-    if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
     toast('🗑 삭제되었습니다');
     hideM('facDetailModal2');
     await facLoadFromDB(type);
-  }catch(e){ toast('삭제 오류: '+String(e.message||e)); }
+  }catch(e){ toast('삭제 오류: '+String(_safeErrMsg(e)||e)); }
 }
 async function facDownload(type){
   if(!canDownload()) return;
@@ -21250,7 +21258,7 @@ async function facDownload(type){
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
                 await dlSaveWorkbook(wb, 'T1_'+cfg.title+'현황_'+today+'.xlsx');
     toast('📥 다운로드 완료 ('+data.length+'건)');
-  }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 다운로드 실패: '+_safeErrMsg(e)); }
 }
 function facPreviewFile(type,input){
   var cfg=FAC_CONFIGS[type];
@@ -21319,7 +21327,7 @@ function facPreviewFile(type,input){
       prevTbl.innerHTML=h;
       window['_facPending_'+type]=parsed;
       toast('✅ '+parsed.length+'건 확인 완료. 아래 버튼으로 업로드하세요');
-    }catch(ex){ toast('⚠️ 파일 읽기 오류: '+ex.message); }
+    }catch(ex){ toast('⚠️ 파일 읽기 오류: '+_safeErrMsg(ex)); }
   };
   reader.readAsBinaryString(file);
 }
@@ -21346,7 +21354,7 @@ async function facUploadData(type){
     document.getElementById(cfg.pfx+'Preview').style.display='none';
     await facLoadFromDB(type);
     facTab(type,1);
-  }catch(e){ toast('⚠️ 업로드 실패: '+e.message);
+  }catch(e){ toast('⚠️ 업로드 실패: '+_safeErrMsg(e));
   }finally{ if(btn){btn.disabled=false;btn.textContent='⚠️ 기존 데이터 교체하고 업로드';} }
 }
 
@@ -21494,7 +21502,7 @@ async function confirmSaveWaste(){
     if(btn2) btn2.textContent='♻️ 폐기물 처리현황 저장';
     loadWasteFromDB();
     wasteTab(0);
-  }catch(e){ toast('⚠️ 저장 실패: '+e.message);
+  }catch(e){ toast('⚠️ 저장 실패: '+_safeErrMsg(e));
   }finally{ if(modalBtn){modalBtn.disabled=false;modalBtn.textContent='✅ 저장 확인';} }
 }
 
@@ -21842,11 +21850,11 @@ async function prfSave(){
       payload.writer=me?me.name:''; payload.team=me?(me.team||''):'';
       res=await sb.from('performance_records').insert(payload);
     }
-    if(res.error){ toast('저장 오류: '+res.error.message); return; }
+    if(res.error){ toast('저장 오류: '+_safeErrMsg(res.error)); return; }
     toast('✓ 저장되었습니다');
     hideM('prfModal');
     await loadPerfFromDB();
-  }catch(e){ toast('저장 오류: '+String(e.message||e)); }
+  }catch(e){ toast('저장 오류: '+String(_safeErrMsg(e)||e)); }
 }
 
 async function prfDelete(){
@@ -21856,12 +21864,12 @@ async function prfDelete(){
   try{
     var target=(perfData||[]).find(function(r){return r.id===prfEditId;});
     var res=await sb.from('performance_records').delete().eq('id',prfEditId);
-    if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
     logDeletion('주요 수행실적', target?((target.category||'')+' '+(target.content||'').slice(0,60)):('id:'+prfEditId));
     toast('✓ 삭제되었습니다');
     hideM('prfModal');
     await loadPerfFromDB();
-  }catch(e){ toast('삭제 오류: '+String(e.message||e)); }
+  }catch(e){ toast('삭제 오류: '+String(_safeErrMsg(e)||e)); }
 }
 
 // 홈화면 요약 카드 갱신
@@ -22888,7 +22896,7 @@ async function uploadIsoFiles(){
         console.error('업로드 실패:', r.status, rText);
         toast('⚠️ '+file.name+' 업로드 실패 ('+r.status+')');
       }
-    }catch(e){ toast('⚠️ '+file.name+' 오류: '+e.message); }
+    }catch(e){ toast('⚠️ '+file.name+' 오류: '+_safeErrMsg(e)); }
   }
   if(progBar) progBar.style.width='100%';
   if(progText) progText.textContent='완료! '+done+'개 업로드됨';
@@ -22937,7 +22945,7 @@ async function deleteIso(id, path){
     toast('✅ 삭제 완료');
     loadIsoManage();
     loadIsoList();
-  }catch(e){ toast('삭제 실패: '+e.message); }
+  }catch(e){ toast('삭제 실패: '+_safeErrMsg(e)); }
 }
 
 // ══ 회사소식 ══
@@ -23052,7 +23060,9 @@ var _newsPostExistingImagePath=null; // 수정 시 원래 있던 이미지 경�
 var _newsPostImageRemoved=false;  // 수정 중 "사진 제거"를 눌렀는지
 function handleNewsPostImage(files){
   if(!files||!files.length){ return; }
-  _newsPostImageFile=files[0];
+  var checked=_validateFileList(files, ['.jpg','.jpeg','.png'], 10);
+  if(!checked.length) return;
+  _newsPostImageFile=checked[0];
   _newsPostImageRemoved=false;
   var reader=new FileReader();
   reader.onload=function(e){
@@ -23131,7 +23141,7 @@ async function submitNewsPost(){
         show_popup:showPopup, target_roles:popupTargets
       });
     }
-    if(result.error){ toast('⚠️ 저장 실패: '+result.error.message); if(prog) prog.style.display='none'; if(btn){btn.disabled=false;btn.style.cursor='pointer';btn.style.opacity='1';} return; }
+    if(result.error){ toast('⚠️ 저장 실패: '+_safeErrMsg(result.error)); if(prog) prog.style.display='none'; if(btn){btn.disabled=false;btn.style.cursor='pointer';btn.style.opacity='1';} return; }
     toast(_newsPostEditId?'✅ 수정되었습니다':'✅ 회사소식이 게시되었습니다');
     if(!_newsPostEditId) pushSendNotification('companynews','📰 새 회사소식', title);
     if(prog) prog.style.display='none';
@@ -23139,7 +23149,7 @@ async function submitNewsPost(){
     newsStartNewPost(); // 폼 초기화 (수정모드 해제)
     newsTab(0);
   }catch(e){
-    toast('⚠️ 오류: '+e.message);
+    toast('⚠️ 오류: '+_safeErrMsg(e));
     if(prog) prog.style.display='none';
     if(btn){ btn.disabled=false; btn.style.cursor='pointer'; btn.style.opacity='1'; }
   }
@@ -23175,7 +23185,7 @@ async function editNewsPostFromDetail(id){
     var cancelBtn=document.getElementById('newsPostCancelBtn'); if(cancelBtn) cancelBtn.style.display='block';
     closeNewsPostDetail();
     newsTab(3); // 새 글쓰기 초기화 없이 바로 이동 (수정 데이터 유지)
-  }catch(e){ toast('⚠️ 오류: '+e.message); }
+  }catch(e){ toast('⚠️ 오류: '+_safeErrMsg(e)); }
 }
 async function deleteNewsPostFromDetail(id, imagePath){
   if(!me||(me.role!=='master'&&me.role!=='admin')){toast('⚠️ 삭제는 관리자만 가능합니다');return;}
@@ -23186,12 +23196,12 @@ async function deleteNewsPostFromDetail(id, imagePath){
       await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
     }
     var res=await sb.from('companynews_posts').delete().eq('id',id);
-    if(res.error){ toast('⚠️ 삭제 실패: '+res.error.message); return; }
+    if(res.error){ toast('⚠️ 삭제 실패: '+_safeErrMsg(res.error)); return; }
     logDeletion('회사소식', 'id:'+id);
     toast('✅ 삭제되었습니다');
     closeNewsPostDetail();
     if(document.getElementById('newsP0').style.display!=='none') loadNewsList();
-  }catch(e){ toast('⚠️ 오류: '+e.message); }
+  }catch(e){ toast('⚠️ 오류: '+_safeErrMsg(e)); }
 }
 var newsPosts=[];
 function linkifyText(escapedText){
@@ -23312,7 +23322,7 @@ async function uploadNewsFiles(){
         console.error('업로드 실패:', r.status, rText);
         toast('⚠️ '+file.name+' 업로드 실패 ('+r.status+')');
       }
-    }catch(e){ toast('⚠️ '+file.name+' 오류: '+e.message); }
+    }catch(e){ toast('⚠️ '+file.name+' 오류: '+_safeErrMsg(e)); }
   }
   if(progBar) progBar.style.width='100%';
   if(progText) progText.textContent='완료! '+done+'개 업로드됨';
@@ -23359,7 +23369,7 @@ async function deleteNews(id, path){
     toast('✅ 삭제 완료');
     loadNewsManage();
     loadNewsList();
-  }catch(e){ toast('삭제 실패: '+e.message); }
+  }catch(e){ toast('삭제 실패: '+_safeErrMsg(e)); }
 }
 
 // ══ 안전작업절차서 (ISO9001과 동일 구조) ══
@@ -23502,7 +23512,7 @@ async function uploadSafetyFiles(){
         console.error('업로드 실패:', r.status, rText);
         toast('⚠️ '+file.name+' 업로드 실패 ('+r.status+')');
       }
-    }catch(e){ toast('⚠️ '+file.name+' 오류: '+e.message); }
+    }catch(e){ toast('⚠️ '+file.name+' 오류: '+_safeErrMsg(e)); }
   }
   if(progBar) progBar.style.width='100%';
   if(progText) progText.textContent='완료! '+done+'개 업로드됨';
@@ -23553,7 +23563,7 @@ async function deleteSafety(id, path){
     toast('✅ 삭제 완료');
     loadSafetyManage();
     loadSafetyList();
-  }catch(e){ toast('삭제 실패: '+e.message); }
+  }catch(e){ toast('삭제 실패: '+_safeErrMsg(e)); }
 }
 
 // ══ 운영매뉴얼 (안전작업절차서와 동일 구조) ══
@@ -23688,7 +23698,7 @@ async function uploadManualFiles(){
         console.error('업로드 실패:', r.status, rText);
         toast('⚠️ '+file.name+' 업로드 실패 ('+r.status+')');
       }
-    }catch(e){ toast('⚠️ '+file.name+' 오류: '+e.message); }
+    }catch(e){ toast('⚠️ '+file.name+' 오류: '+_safeErrMsg(e)); }
   }
   if(progBar) progBar.style.width='100%';
   if(progText) progText.textContent='완료! '+done+'개 업로드됨';
@@ -23739,7 +23749,7 @@ async function deleteManual(id, path){
     toast('✅ 삭제 완료');
     loadManualManage();
     loadManualList();
-  }catch(e){ toast('삭제 실패: '+e.message); }
+  }catch(e){ toast('삭제 실패: '+_safeErrMsg(e)); }
 }
 
 // ══ 위험성평가 (운영매뉴얼과 동일 구조) ══
@@ -23874,7 +23884,7 @@ async function uploadRiskFiles(){
         console.error('업로드 실패:', r.status, rText);
         toast('⚠️ '+file.name+' 업로드 실패 ('+r.status+')');
       }
-    }catch(e){ toast('⚠️ '+file.name+' 오류: '+e.message); }
+    }catch(e){ toast('⚠️ '+file.name+' 오류: '+_safeErrMsg(e)); }
   }
   if(progBar) progBar.style.width='100%';
   if(progText) progText.textContent='완료! '+done+'개 업로드됨';
@@ -23925,7 +23935,7 @@ async function deleteRisk(id, path){
     toast('✅ 삭제 완료');
     loadRiskManage();
     loadRiskList();
-  }catch(e){ toast('삭제 실패: '+e.message); }
+  }catch(e){ toast('삭제 실패: '+_safeErrMsg(e)); }
 }
 
 // ══ 교육자료 (위험성평가와 동일 구조 — 업로드는 master/admin만, 열람은 조장 이상만) ══
@@ -24060,7 +24070,7 @@ async function uploadTrainingFiles(){
         console.error('업로드 실패:', r.status, rText);
         toast('⚠️ '+file.name+' 업로드 실패 ('+r.status+')');
       }
-    }catch(e){ toast('⚠️ '+file.name+' 오류: '+e.message); }
+    }catch(e){ toast('⚠️ '+file.name+' 오류: '+_safeErrMsg(e)); }
   }
   if(progBar) progBar.style.width='100%';
   if(progText) progText.textContent='완료! '+done+'개 업로드됨';
@@ -24111,7 +24121,7 @@ async function deleteTraining(id, path){
     toast('✅ 삭제 완료');
     loadTrainingManage();
     loadTrainingList();
-  }catch(e){ toast('삭제 실패: '+e.message); }
+  }catch(e){ toast('삭제 실패: '+_safeErrMsg(e)); }
 }
 
 // ══ 안전사고 (신규 전용 모듈) ══
@@ -24199,12 +24209,12 @@ async function subAcc(){
     }else{
       res=await sb.from('safety_accidents').insert(payload);
     }
-    if(res.error){ toast('저장 오류: '+res.error.message); return; }
+    if(res.error){ toast('저장 오류: '+_safeErrMsg(res.error)); return; }
     toast(editId?'✅ 안전사고 수정 완료':'✅ 안전사고 등록 완료');
     resetAccForm();
     await loadAccidentFromDB();
     accTab(0);
-  }catch(e){ toast('저장 오류: '+e.message); }
+  }catch(e){ toast('저장 오류: '+_safeErrMsg(e)); }
 }
 
 async function loadAccidentFromDB(){
@@ -24312,11 +24322,11 @@ async function deleteAccident(id){
   try{
     var target=(accidentAll||[]).find(function(r){return r.id===id;});
     var res=await sb.from('safety_accidents').delete().eq('id',id);
-    if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
     logDeletion('안전사고', target?((target.team||'')+' '+(target.location||'')+' '+(target.description||'').slice(0,60)):('id:'+id));
     toast('🗑 삭제되었습니다');
     await loadAccidentFromDB();
-  }catch(e){ toast('삭제 오류: '+String(e.message||e)); }
+  }catch(e){ toast('삭제 오류: '+String(_safeErrMsg(e)||e)); }
 }
 function editAccident(id){
   if(!me||['admin','manager','leader','acting_leader'].indexOf(me.role)<0){ toast('⚠️ 조장 이상만 수정할 수 있습니다'); return; }
@@ -24412,7 +24422,7 @@ async function confAccDB(id, btn, domId){
     }).eq('id',id);
     await loadAccidentFromDB();
     toast('✅ 확인 및 결과입력 완료되었습니다');
-  }catch(e){ toast('처리 오류: '+e.message); if(btn) btn.disabled=false; }
+  }catch(e){ toast('처리 오류: '+_safeErrMsg(e)); if(btn) btn.disabled=false; }
 }
 
 // ══ 전체채팅 (전 직원 단체방, 7초 주기 새로고침) ══
@@ -24569,7 +24579,7 @@ async function sendGroupChat(){
     });
     await loadGroupChat();
     pushSendNotification('chat','💬 '+me.name, msg.slice(0,60));
-  }catch(e){ toast('전송 오류: '+e.message); }
+  }catch(e){ toast('전송 오류: '+_safeErrMsg(e)); }
 }
 
 
@@ -25155,7 +25165,7 @@ async function uploadRegFiles(){
         console.error('업로드 실패:', r.status, rText);
         toast('⚠️ '+file.name+' 업로드 실패 ('+r.status+')');
       }
-    }catch(e){ toast('⚠️ '+file.name+' 오류: '+e.message); }
+    }catch(e){ toast('⚠️ '+file.name+' 오류: '+_safeErrMsg(e)); }
   }
   if(progBar) progBar.style.width='100%';
   if(progText) progText.textContent='완료! '+done+'개 업로드됨';
@@ -25206,7 +25216,7 @@ async function deleteReg(id, path){
     toast('✅ 삭제 완료');
     loadRegManage();
     loadRegList();
-  }catch(e){ toast('삭제 실패: '+e.message); }
+  }catch(e){ toast('삭제 실패: '+_safeErrMsg(e)); }
 }
 
 // 시간대별 인력현황 자동 초기화 체크
@@ -25940,7 +25950,7 @@ async function erSave(){
   var res;
   if(id){ res=await sb.from('employee_roster').update(payload).eq('id',id); }
   else{ res=await sb.from('employee_roster').insert(payload); }
-  if(res.error){ toast('저장 오류: '+res.error.message); return; }
+  if(res.error){ toast('저장 오류: '+_safeErrMsg(res.error)); return; }
   toast('✓ 저장되었습니다');
   hideM('erEditModal');
   loadEmpRoster();
@@ -25950,7 +25960,7 @@ async function erDelete(id){
   if(!confirm('이 사원 정보를 삭제할까요?')) return;
   var row=erData.find(function(x){return x.id===id;});
   var res=await sb.from('employee_roster').delete().eq('id',id);
-  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
   try{ logDeletion('사원 명부', (row?row.name+' ('+row.emp_no+')':id)); }catch(e){}
   toast('✓ 삭제되었습니다');
   loadEmpRoster();
@@ -25961,7 +25971,7 @@ async function erDeleteAll(){
   if(!confirm('사원 명부 전체('+erData.length+'명)를 삭제할까요?\n복구할 수 없습니다.')) return;
   if(!confirm('정말로 전체 삭제하시겠습니까? 다시 한번 확인합니다.')) return;
   var res=await sb.from('employee_roster').delete().gte('emp_no','');
-  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
   try{ logDeletion('사원 명부', '전체 삭제 ('+erData.length+'명)'); }catch(e){}
   toast('✓ 전체 삭제되었습니다');
   loadEmpRoster();
@@ -26359,7 +26369,7 @@ async function mgrLeaveSave(){
   var res = mgrLeaveEditId
     ? await sb.from('mgr_leave_schedule').update(body).eq('id', mgrLeaveEditId)
     : await sb.from('mgr_leave_schedule').insert(body);
-  if(res.error){ toast('저장 오류: '+res.error.message); return; }
+  if(res.error){ toast('저장 오류: '+_safeErrMsg(res.error)); return; }
   toast('✓ 일정이 '+(mgrLeaveEditId?'수정':'등록')+'되었습니다 ('+team+' '+name+' · '+status+')');
   if(mgrLeaveEditId){
     var oldTxt=oldEntry?(oldEntry.status+' '+oldEntry.start_date+'~'+oldEntry.end_date):'(알수없음)';
@@ -26464,7 +26474,7 @@ async function mgrLeaveDelete(id){
   if(!confirm('이 일정을 삭제할까요?')) return;
   var r=(mgrLeaveScheduleCache||[]).find(function(x){return x.id===id;});
   var res=await sb.from('mgr_leave_schedule').delete().eq('id',id);
-  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
   toast('✓ 삭제되었습니다');
   if(r) mgrLogStatus(r.team, r.name, 'schedule', '삭제', r.status+' '+r.start_date+'~'+r.end_date);
   var lsRes=await sb.from('mgr_leave_schedule').select('*'); mgrLeaveScheduleCache=lsRes.data||[];
@@ -26476,7 +26486,7 @@ async function mgrLeaveDeleteCurrent(){
   if(!confirm('이 일정을 삭제할까요?')) return;
   var r=(mgrLeaveScheduleCache||[]).find(function(x){return x.id===mgrLeaveEditId;});
   var res=await sb.from('mgr_leave_schedule').delete().eq('id',mgrLeaveEditId);
-  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
   toast('✓ 삭제되었습니다');
   if(r) mgrLogStatus(r.team, r.name, 'schedule', '삭제', r.status+' '+r.start_date+'~'+r.end_date);
   mgrLeaveEditId=null;
@@ -27042,7 +27052,7 @@ async function setMgrAtt(status){
     renderMgrAttendance();
     updateDashMgrAtt();
     syncMgrLeaveWithCheckin(team, name, today, checked?status:null);
-  }catch(e){ toast('저장 오류: '+String(e.message||e)); }
+  }catch(e){ toast('저장 오류: '+String(_safeErrMsg(e)||e)); }
 }
 
 
@@ -27666,7 +27676,7 @@ async function wfSaveEditEmp(){
     name:newName, position:newPos||null, team:newTeam||null, group_name:newGrp||null, shift_type:newShift||null,
     updated_at:new Date().toISOString()
   }).eq('emp_no', wfEditEmpNo);
-  if(empRes.error){ toast('저장 오류: '+empRes.error.message); return; }
+  if(empRes.error){ toast('저장 오류: '+_safeErrMsg(empRes.error)); return; }
   // 필드별 변경 이력 기록 (실제로 바뀐 항목만)
   try{
     var fieldChanges=[
@@ -27688,7 +27698,7 @@ async function wfSaveEditEmp(){
     updated_by: me?me.name:''
   };
   var res=await sb.from('wf_fixed_off').upsert(body,{onConflict:'emp_no,quarter'});
-  if(res.error){ toast('저장 오류: '+res.error.message); return; }
+  if(res.error){ toast('저장 오류: '+_safeErrMsg(res.error)); return; }
   // 수정 이력 기록 (값이 실제로 바뀐 경우만)
   if(oldTxt!==newTxt){
     try{
@@ -27714,7 +27724,7 @@ async function wfSaveEditEmp(){
     var leaveRes;
     if(e&&e.leave&&e.leave.id){ leaveRes=await sb.from('wf_leave').update(leaveBody).eq('id', e.leave.id); }
     else{ leaveRes=await sb.from('wf_leave').insert(leaveBody); }
-    if(leaveRes.error){ toast('휴직정보 저장 오류: '+leaveRes.error.message); return; }
+    if(leaveRes.error){ toast('휴직정보 저장 오류: '+_safeErrMsg(leaveRes.error)); return; }
     var newLeaveTxt=lType+' '+lStart+'~'+lEnd;
     if(oldLeaveTxt!==newLeaveTxt){
       try{
@@ -27727,7 +27737,7 @@ async function wfSaveEditEmp(){
     }
   }else if(e&&e.leave&&e.leave.id){
     var delRes=await sb.from('wf_leave').delete().eq('id', e.leave.id);
-    if(delRes.error){ toast('휴직정보 삭제 오류: '+delRes.error.message); return; }
+    if(delRes.error){ toast('휴직정보 삭제 오류: '+_safeErrMsg(delRes.error)); return; }
     try{
       await sb.from('wf_employee_edit_log').insert({
         emp_no: wfEditEmpNo, emp_name: newName, quarter: wfCurQuarter,
@@ -27783,7 +27793,7 @@ async function wfSaveNewEmp(){
     emp_no:empNo, name:name, position:pos||'사원', team:team||null, group_name:grp||null,
     shift_type:shift||null, updated_at:new Date().toISOString()
   });
-  if(res.error){ toast('추가 오류: '+res.error.message); return; }
+  if(res.error){ toast('추가 오류: '+_safeErrMsg(res.error)); return; }
   try{
     await sb.from('wf_employee_edit_log').insert({
       emp_no: empNo, emp_name: name, quarter: wfCurQuarter, field_name: '신규등록',
@@ -27797,7 +27807,7 @@ async function wfSaveNewEmp(){
       updated_by: me?me.name:''
     };
     var offRes=await sb.from('wf_fixed_off').upsert(offBody,{onConflict:'emp_no,quarter'});
-    if(offRes.error){ toast('⚠️ 직원은 등록됐지만 휴무요일 저장 오류: '+offRes.error.message); hideM('wfAddModal'); loadWfEmployees(); return; }
+    if(offRes.error){ toast('⚠️ 직원은 등록됐지만 휴무요일 저장 오류: '+_safeErrMsg(offRes.error)); hideM('wfAddModal'); loadWfEmployees(); return; }
     try{
       await sb.from('wf_employee_edit_log').insert({
         emp_no: empNo, emp_name: name, quarter: wfCurQuarter, field_name: '고정휴무요일',
@@ -27812,7 +27822,7 @@ async function wfSaveNewEmp(){
 async function wfDeleteEmployee(empNo, name){
   if(!confirm(name+'('+empNo+') 님을 근무계획에서 삭제하시겠습니까?\n고정휴무요일·휴직정보도 함께 삭제됩니다.')) return;
   var res=await sb.from('wf_employees').delete().eq('emp_no', empNo);
-  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
   logDeletion('근무계획', name+'('+empNo+')');
   toast('🗑 '+name+'님 삭제되었습니다');
   loadWfEmployees();
@@ -27895,7 +27905,7 @@ function wfConfirmDeleteAll(){
 async function wfDeleteAllEmployees(){
   toast('🗑 삭제 중...');
   var res=await sb.from('wf_employees').delete().neq('emp_no','__none__');
-  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
   toast('✓ 전체 삭제되었습니다. 새 엑셀을 업로드해주세요');
   loadWfEmployees();
 }
@@ -28013,10 +28023,10 @@ function wfEmpUpload(inputEl){
       }
 
       var r1=await sb.from('wf_employees').upsert(empPayload,{onConflict:'emp_no'});
-      if(r1.error){ toast('직원정보 저장 오류: '+r1.error.message); return; }
+      if(r1.error){ toast('직원정보 저장 오류: '+_safeErrMsg(r1.error)); return; }
       if(offPayload.length){
         var r2=await sb.from('wf_fixed_off').upsert(offPayload,{onConflict:'emp_no,quarter'});
-        if(r2.error){ toast('휴무요일 저장 오류: '+r2.error.message); return; }
+        if(r2.error){ toast('휴무요일 저장 오류: '+_safeErrMsg(r2.error)); return; }
         // 최초 등록도 이력에 남긴다 (이후 한 번도 안 고쳐도 "누가 처음 올렸는지"가 이력에 보이도록)
         try{
           var initLogRows=offPayload.map(function(p){
@@ -28029,12 +28039,12 @@ function wfEmpUpload(inputEl){
       }
       if(leavePayload.length){
         var r3=await sb.from('wf_leave').upsert(leavePayload,{onConflict:'emp_no,start_date'});
-        if(r3.error){ toast('휴직정보 저장 오류: '+r3.error.message); return; }
+        if(r3.error){ toast('휴직정보 저장 오류: '+_safeErrMsg(r3.error)); return; }
       }
       toast('✓ '+empPayload.length+'명 등록/갱신 완료'+(offPayload.length?(' ('+(wfCurQuarter||wfNowQuarter())+' 휴무요일 '+offPayload.length+'건 포함)'):'')+(leavePayload.length?(' · 휴직 '+leavePayload.length+'건'):''));
       inputEl.value='';
       loadWfEmployees();
-    }catch(err){ toast('엑셀 처리 오류: '+String(err.message||err)); inputEl.value=''; }
+    }catch(err){ toast('엑셀 처리 오류: '+String(_safeErrMsg(err)||err)); inputEl.value=''; }
   };
   reader.readAsBinaryString(file);
 }
@@ -28075,7 +28085,7 @@ async function wfDownloadErp(){
   try{
     var monthEndDash=wfYmd(end).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3'); // 실제 말일(예:09-30)로 조회 — '-31' 하드코딩시 30일짜리 달에서 쿼리 자체가 오류남
     var holRes=await sb.from('wf_holidays').select('holiday_date').gte('holiday_date', monthVal+'-01').lte('holiday_date', monthEndDash);
-    if(holRes.error){ toast('⚠️ 공휴일 조회 오류: '+holRes.error.message); }
+    if(holRes.error){ toast('⚠️ 공휴일 조회 오류: '+_safeErrMsg(holRes.error)); }
     var holidaySet={};
     (holRes.data||[]).forEach(function(h){ holidaySet[h.holiday_date.replace(/-/g,'')]=true; });
 
@@ -28149,7 +28159,7 @@ async function wfDownloadErp(){
     XLSX.writeFile(wb, '근무계획_더존ERP_'+monthVal+'.xlsx');
     await sb.from('wf_export_log').insert({target_month:monthVal, row_count:aoa.length-1, exported_by: me?me.name:''});
     toast('📥 다운로드 완료 ('+(aoa.length-1)+'행)');
-  }catch(e){ toast('⚠️ 다운로드 실패: '+String(e.message||e)); }
+  }catch(e){ toast('⚠️ 다운로드 실패: '+String(_safeErrMsg(e)||e)); }
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -28265,7 +28275,7 @@ async function wfSpCreateEvent(){
   if(wfSpEditId){
     var evBefore=wfSpEvents.find(function(x){return x.id===wfSpEditId;});
     var res2=await sb.from('wf_special_events').update({title:title, period_type:type, start_date:s, end_date:en}).eq('id', wfSpEditId);
-    if(res2.error){ toast('수정 오류: '+res2.error.message); return; }
+    if(res2.error){ toast('수정 오류: '+_safeErrMsg(res2.error)); return; }
     // 수정 이력 기록 (값이 실제로 바뀐 항목만)
     if(evBefore){
       var changes=[];
@@ -28290,14 +28300,14 @@ async function wfSpCreateEvent(){
     if(orphan.length){
       if(confirm('변경된 기간('+s+'~'+en+') 밖에 남아있는 기존 편성 데이터가 '+orphan.length+'건 있습니다.\n삭제하시겠습니까? (취소하면 화면엔 안 보이지만 데이터는 그대로 남습니다)')){
         var delRes=await sb.from('wf_special_assignments').delete().in('id', orphan.map(function(o){return o.id;}));
-        if(delRes.error){ toast('정리 오류: '+delRes.error.message); }
+        if(delRes.error){ toast('정리 오류: '+_safeErrMsg(delRes.error)); }
         else{ toast('🗑 범위 밖 데이터 '+orphan.length+'건 정리 완료'); }
       }
     }
   }else{
     var id='sp_'+Date.now();
     var res=await sb.from('wf_special_events').insert({id:id, title:title, period_type:type, start_date:s, end_date:en, created_by: me?me.name:''});
-    if(res.error){ toast('등록 오류: '+res.error.message); return; }
+    if(res.error){ toast('등록 오류: '+_safeErrMsg(res.error)); return; }
     toast('✓ 등록되었습니다');
   }
   hideM('wfSpCreateModal');
@@ -28306,7 +28316,7 @@ async function wfSpCreateEvent(){
 async function wfSpDeleteEventById(id, title){
   if(!confirm(title+'을(를) 삭제하시겠습니까? 편성 데이터도 함께 삭제됩니다.')) return;
   var res=await sb.from('wf_special_events').delete().eq('id', id);
-  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
   await logDeletion('특별근무', title);
   toast('🗑 삭제되었습니다');
   wfSpLoadEvents();
@@ -28651,7 +28661,7 @@ async function wfSpSaveCell(){
     body.staff_count=isNaN(staff)?0:staff;
   }
   var res=await sb.from('wf_special_assignments').upsert(body,{onConflict:'event_id,work_date,team_no'});
-  if(res.error){ toast('저장 오류: '+res.error.message); return; }
+  if(res.error){ toast('저장 오류: '+_safeErrMsg(res.error)); return; }
   toast('✓ 저장되었습니다');
   hideM('wfSpCellModal');
   var r2=await sb.from('wf_special_assignments').select('*').eq('event_id', wfSpCurEvent.id);
@@ -28663,7 +28673,7 @@ async function wfSpDeleteCell(){
   var existing=wfSpFindAssign(wfSpCellCtx.code, wfSpCellCtx.date);
   if(!existing){ hideM('wfSpCellModal'); return; }
   var res=await sb.from('wf_special_assignments').delete().eq('id', existing.id);
-  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
   toast('🗑 삭제되었습니다');
   hideM('wfSpCellModal');
   wfSpAssignments=wfSpAssignments.filter(function(a){return a.id!==existing.id;});
@@ -28673,7 +28683,7 @@ async function wfSpDeleteEvent(){
   if(!wfSpCurEvent) return;
   if(!confirm(wfSpCurEvent.title+'을(를) 삭제하시겠습니까? 편성 데이터도 함께 삭제됩니다.')) return;
   var res=await sb.from('wf_special_events').delete().eq('id', wfSpCurEvent.id);
-  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
   await logDeletion('특별근무', wfSpCurEvent.title);
   toast('🗑 삭제되었습니다');
   wfSpBackToList();
@@ -28841,10 +28851,10 @@ async function cpDeleteCampaign(id){
   try{
     await sb.from('campaign_eligible').delete().eq('campaign_id',id); // FK cascade 없어서 별도 정리
     var res=await sb.from('campaigns').delete().eq('id',id);
-    if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+    if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
     toast('✓ 삭제되었습니다');
     cpLoadList();
-  }catch(e){ toast('삭제 실패: '+(e&&e.message?e.message:e)); }
+  }catch(e){ toast('삭제 실패: '+(e&&_safeErrMsg(e)?_safeErrMsg(e):e)); }
 }
 var cpEditCampaignId=null;
 function cpOpenCreate(){
@@ -28928,7 +28938,7 @@ async function cpCreateCampaign(){
     payload.id=campaignId; payload.status='active'; payload.created_by=me?me.name:'';
     res=await sb.from('campaigns').insert(payload);
   }
-  if(res.error){ toast('저장 오류: '+res.error.message); return; }
+  if(res.error){ toast('저장 오류: '+_safeErrMsg(res.error)); return; }
   if(cpEditCampaignId){
     cpSyncPerfForCampaign(campaignId, title, desc, startDate, targetRoles); // 주요수행실적도 최신 내용으로 동기화
   }else{
@@ -29068,7 +29078,7 @@ function cpEditEntry(id){
 async function cpDeleteEntry(id){
   if(!confirm('이 제출내역을 삭제하시겠습니까?')) return;
   var res=await sb.from('campaign_entries').delete().eq('id',id);
-  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
   logDeletion('사업부 행사', '본인 제출 삭제 id:'+id);
   toast('🗑 삭제되었습니다');
   cpRenderMyEntries();
@@ -29123,7 +29133,7 @@ async function cpSubmitEntry(){
     body.id='cpe_'+Date.now()+'_'+Math.floor(Math.random()*1000);
     res=await sb.from('campaign_entries').insert(body);
   }
-  if(res.error){ toast('제출 오류: '+res.error.message); return; }
+  if(res.error){ toast('제출 오류: '+_safeErrMsg(res.error)); return; }
   toast(cpEditingId?'✓ 수정되었습니다':'✓ 제출되었습니다');
   cpEditingId=null;
   document.getElementById('cpContent').value='';
@@ -29202,7 +29212,7 @@ async function cpSaveWinner(){
   // ★ 공모전당 공지는 항상 1건만 유지 — campaign_id 기준으로 upsert(있으면 갱신, 없으면 생성)
   var payload={ id:'cpw_'+Date.now(), campaign_id: cpCurCampaign.id, title:title, body:body, show_identity: document.getElementById('cpWinShowIdentity').checked, created_by: me?me.name:'', updated_at:new Date().toISOString() };
   var res=await sb.from('campaign_winners').upsert(payload,{onConflict:'campaign_id'});
-  if(res.error){ toast('저장 오류: '+res.error.message); return; }
+  if(res.error){ toast('저장 오류: '+_safeErrMsg(res.error)); return; }
   toast('✓ 당선작 공지가 게시되었습니다');
   hideM('cpWinnerModal');
   cpRenderWinner();
@@ -29212,7 +29222,7 @@ async function cpDeleteWinner(){
   var w=cpCurCampaign._winner; if(!w) return;
   if(!confirm('당선작 공지를 삭제하시겠습니까?')) return;
   var res=await sb.from('campaign_winners').delete().eq('campaign_id',cpCurCampaign.id);
-  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
   toast('🗑 삭제되었습니다');
   hideM('cpWinnerModal');
   cpRenderWinner();
@@ -29268,7 +29278,7 @@ async function cpEligibleSaveEdit(id){
   var name=(document.getElementById('cpEligEditName_'+id).value||'').trim();
   if(!empNo||!name){ toast('⚠️ 사번과 이름을 입력해주세요'); return; }
   var res=await sb.from('campaign_eligible').update({emp_no:empNo, name:name}).eq('id',id);
-  if(res.error){ toast('오류: '+res.error.message); return; }
+  if(res.error){ toast('오류: '+_safeErrMsg(res.error)); return; }
   toast('✓ 수정되었습니다');
   await cpLoadEligible();
 }
@@ -29290,12 +29300,12 @@ async function cpEligibleSyncByRole(tier){
     if(!rows.length){ toast('⚠️ 대상자가 없습니다'); return; }
     if(!confirm('기존 명단을 지우고 "'+labelMap[tier]+'" 기준 '+rows.length+'명으로 교체할까요?\n(액팅리더는 사원으로 취급되어 제외됩니다)')) return;
     var delRes=await sb.from('campaign_eligible').delete().eq('campaign_id',cpCurCampaign.id);
-    if(delRes.error){ toast('오류: '+delRes.error.message); return; }
+    if(delRes.error){ toast('오류: '+_safeErrMsg(delRes.error)); return; }
     var insRes=await sb.from('campaign_eligible').insert(rows);
-    if(insRes.error){ toast('오류: '+insRes.error.message); return; }
+    if(insRes.error){ toast('오류: '+_safeErrMsg(insRes.error)); return; }
     toast('✓ "'+labelMap[tier]+'" 기준 '+rows.length+'명 등록되었습니다');
     await cpLoadEligible();
-  }catch(e){ toast('동기화 실패: '+(e&&e.message?e.message:e)); }
+  }catch(e){ toast('동기화 실패: '+(e&&_safeErrMsg(e)?_safeErrMsg(e):e)); }
 }
 async function cpEligibleSyncByTeam(){
   if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
@@ -29303,17 +29313,17 @@ async function cpEligibleSyncByTeam(){
   if(!team){ toast('⚠️ 팀을 선택해주세요'); return; }
   try{
     var res=await sb.from('wf_employees').select('emp_no,name').eq('team','환경미화'+team);
-    if(res.error){ toast('오류: '+res.error.message); return; }
+    if(res.error){ toast('오류: '+_safeErrMsg(res.error)); return; }
     var rows=(res.data||[]).filter(function(e){return e.emp_no&&e.name;}).map(function(e){ return {campaign_id:cpCurCampaign.id, emp_no:e.emp_no, name:e.name, uploaded_by:me?me.name:''}; });
     if(!rows.length){ toast('⚠️ '+team+'에 등록된 인원이 없습니다'); return; }
     if(!confirm('기존 명단을 지우고 '+team+' 기준 '+rows.length+'명으로 교체할까요?')) return;
     var delRes=await sb.from('campaign_eligible').delete().eq('campaign_id',cpCurCampaign.id);
-    if(delRes.error){ toast('오류: '+delRes.error.message); return; }
+    if(delRes.error){ toast('오류: '+_safeErrMsg(delRes.error)); return; }
     var insRes=await sb.from('campaign_eligible').insert(rows);
-    if(insRes.error){ toast('오류: '+insRes.error.message); return; }
+    if(insRes.error){ toast('오류: '+_safeErrMsg(insRes.error)); return; }
     toast('✓ '+team+' 기준 '+rows.length+'명 등록되었습니다');
     await cpLoadEligible();
-  }catch(e){ toast('동기화 실패: '+(e&&e.message?e.message:e)); }
+  }catch(e){ toast('동기화 실패: '+(e&&_safeErrMsg(e)?_safeErrMsg(e):e)); }
 }
 async function cpEligibleAddOne(){
   if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
@@ -29321,7 +29331,7 @@ async function cpEligibleAddOne(){
   var name=(document.getElementById('cpEligAddName').value||'').trim();
   if(!empNo||!name){ toast('⚠️ 사번과 이름을 입력해주세요'); return; }
   var res=await sb.from('campaign_eligible').upsert({campaign_id:cpCurCampaign.id, emp_no:empNo, name:name, uploaded_by:me?me.name:''},{onConflict:'campaign_id,emp_no'});
-  if(res.error){ toast('오류: '+res.error.message); return; }
+  if(res.error){ toast('오류: '+_safeErrMsg(res.error)); return; }
   document.getElementById('cpEligAddEmpNo').value='';
   document.getElementById('cpEligAddName').value='';
   toast('✓ 추가되었습니다');
@@ -29330,7 +29340,7 @@ async function cpEligibleAddOne(){
 async function cpEligibleDeleteOne(id){
   if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
   var res=await sb.from('campaign_eligible').delete().eq('id',id);
-  if(res.error){ toast('오류: '+res.error.message); return; }
+  if(res.error){ toast('오류: '+_safeErrMsg(res.error)); return; }
   toast('✓ 삭제되었습니다');
   await cpLoadEligible();
 }
@@ -29354,12 +29364,12 @@ async function cpEligibleUpload(inputEl){
     if(!rows.length){ toast('⚠️ 유효한 행이 없습니다'); inputEl.value=''; return; }
     if(!confirm('기존 명단을 지우고 '+rows.length+'명으로 교체할까요?')) { inputEl.value=''; return; }
     var delRes=await sb.from('campaign_eligible').delete().eq('campaign_id',cpCurCampaign.id);
-    if(delRes.error){ toast('오류: '+delRes.error.message); inputEl.value=''; return; }
+    if(delRes.error){ toast('오류: '+_safeErrMsg(delRes.error)); inputEl.value=''; return; }
     var insRes=await sb.from('campaign_eligible').insert(rows);
-    if(insRes.error){ toast('오류: '+insRes.error.message); inputEl.value=''; return; }
+    if(insRes.error){ toast('오류: '+_safeErrMsg(insRes.error)); inputEl.value=''; return; }
     toast('✓ '+rows.length+'명 등록되었습니다');
     await cpLoadEligible();
-  }catch(e){ toast('업로드 실패: '+(e&&e.message?e.message:e)); }
+  }catch(e){ toast('업로드 실패: '+(e&&_safeErrMsg(e)?_safeErrMsg(e):e)); }
   inputEl.value='';
 }
 async function cpEligibleClearAll(){
@@ -29367,7 +29377,7 @@ async function cpEligibleClearAll(){
   if(!cpEligibleCache.length){ toast('이미 명단이 비어있습니다'); return; }
   if(!confirm('명단을 전체 삭제하면 제한 없이 누구나 응모할 수 있게 됩니다. 계속할까요?')) return;
   var res=await sb.from('campaign_eligible').delete().eq('campaign_id',cpCurCampaign.id);
-  if(res.error){ toast('오류: '+res.error.message); return; }
+  if(res.error){ toast('오류: '+_safeErrMsg(res.error)); return; }
   toast('✓ 명단이 삭제되었습니다 (제한 없음)');
   await cpLoadEligible();
 }
@@ -29398,13 +29408,13 @@ async function cpToggleFinalist(entryId){
   }
   if(existing){
     var delRes=await sb.from('campaign_finalists').delete().eq('id',existing.id);
-    if(delRes.error){ toast('오류: '+delRes.error.message); return; }
+    if(delRes.error){ toast('오류: '+_safeErrMsg(delRes.error)); return; }
     cpFinalistsCache=cpFinalistsCache.filter(function(f){return f.id!==existing.id;});
   }else{
     if(cpFinalistsCache.length>=limit){ toast('⚠️ 최종 후보는 최대 '+limit+'개까지만 선정할 수 있습니다'); return; }
     var body={ id:'cpf_'+Date.now()+'_'+Math.floor(Math.random()*1000), campaign_id:cpCurCampaign.id, entry_id:entryId, seed_rank:cpFinalistsCache.length+1, created_by: me?me.name:'' };
     var insRes=await sb.from('campaign_finalists').insert(body);
-    if(insRes.error){ toast('오류: '+insRes.error.message); return; }
+    if(insRes.error){ toast('오류: '+_safeErrMsg(insRes.error)); return; }
     cpFinalistsCache.push(body);
   }
   cpRenderAllEntries();
@@ -29515,7 +29525,7 @@ async function cpCastVote(entryId, rank){
   // 같은 응모작에 이미 내 투표가 있는 경우: 같은 순위 다시 누르면 해제, 다른 순위 누르면 변경
   if(existing && existing.rank===rank){
     var delRes=await sb.from('campaign_votes').delete().eq('id',existing.id);
-    if(delRes.error){ toast('오류: '+delRes.error.message); return; }
+    if(delRes.error){ toast('오류: '+_safeErrMsg(delRes.error)); return; }
     cpVotesCache=cpVotesCache.filter(function(v){return v.id!==existing.id;});
     cpRenderAllEntries();
     return;
@@ -29524,7 +29534,7 @@ async function cpCastVote(entryId, rank){
   var sameRankElsewhere=cpVotesCache.find(function(v){return v.voter_key===key && v.rank===rank && v.entry_id!==entryId;});
   if(sameRankElsewhere){
     var delRes2=await sb.from('campaign_votes').delete().eq('id',sameRankElsewhere.id);
-    if(delRes2.error){ toast('오류: '+delRes2.error.message); return; }
+    if(delRes2.error){ toast('오류: '+_safeErrMsg(delRes2.error)); return; }
     cpVotesCache=cpVotesCache.filter(function(v){return v.id!==sameRankElsewhere.id;});
   }
   var body={
@@ -29532,7 +29542,7 @@ async function cpCastVote(entryId, rank){
     campaign_id: cpCurCampaign.id, entry_id: entryId, voter_key: key, voter_name: me?me.name:'', rank: rank
   };
   var res=await sb.from('campaign_votes').upsert(body,{onConflict:'id'});
-  if(res.error){ toast('오류: '+res.error.message); return; }
+  if(res.error){ toast('오류: '+_safeErrMsg(res.error)); return; }
   if(existing){ existing.rank=rank; } else { cpVotesCache.push(body); }
   cpRenderAllEntries();
 }
@@ -29540,7 +29550,7 @@ async function cpAdminDeleteEntry(id){
   if(!cpCanSeeIdentity()){ toast('⚠️ master만 가능합니다'); return; }
   if(!confirm('이 제출내역을 삭제하시겠습니까? (투표 기록도 함께 삭제됩니다)')) return;
   var res=await sb.from('campaign_entries').delete().eq('id',id);
-  if(res.error){ toast('삭제 오류: '+res.error.message); return; }
+  if(res.error){ toast('삭제 오류: '+_safeErrMsg(res.error)); return; }
   logDeletion('사업부 행사(관리자)', 'id:'+id);
   toast('🗑 삭제되었습니다');
   cpAllEntriesCache=cpAllEntriesCache.filter(function(e){return e.id!==id;});
@@ -29646,7 +29656,7 @@ async function cpSubmitPublicVote(){
     voter_emp_no: empNo, voter_name: name, updated_at: new Date().toISOString()
   };
   var res=await sb.from('campaign_public_votes').upsert(body,{onConflict:'campaign_id,voter_emp_no'});
-  if(res.error){ toast('투표 오류: '+res.error.message); return; }
+  if(res.error){ toast('투표 오류: '+_safeErrMsg(res.error)); return; }
   toast(existing.data?'✓ 투표가 변경되었습니다':'✓ 투표해주셔서 감사합니다');
   hideM('cpVoteModal');
 }
@@ -29695,7 +29705,7 @@ async function cpSaveAwardLabel(finalistId){
   var input=document.getElementById('cpAwardInput_'+finalistId);
   var label=(input.value||'').trim();
   var res=await sb.from('campaign_finalists').update({award_label:label||null}).eq('id',finalistId);
-  if(res.error){ toast('저장 오류: '+res.error.message); return; }
+  if(res.error){ toast('저장 오류: '+_safeErrMsg(res.error)); return; }
   var item=cpResultRanked.find(function(x){return x.finalistId===finalistId;});
   if(item) item.awardLabel=label||null;
   toast('✓ 저장되었습니다');
@@ -30359,12 +30369,12 @@ async function saveAccidentReport(){
   };
   try{
     var res=await sb.from('safety_accidents').update(payload).eq('id',_rptData.id);
-    if(res.error){ toast('저장 실패: '+res.error.message); return; }
+    if(res.error){ toast('저장 실패: '+_safeErrMsg(res.error)); return; }
     toast('✅ 저장되었습니다');
     // 로컬 캐시도 갱신
     var idx=(accidentAll||[]).findIndex(function(x){return x.id===_rptData.id;});
     if(idx>=0) Object.assign(accidentAll[idx], payload);
-  }catch(e){ toast('저장 오류: '+String(e.message||e)); }
+  }catch(e){ toast('저장 오류: '+String(_safeErrMsg(e)||e)); }
 }
 function printReport(){
   window.print();
@@ -30614,7 +30624,7 @@ async function downloadReportExcel(){
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
                 await dlSaveWorkbook(wb, f.title.replace(/\s/g,'')+'_'+today+'.xlsx');
     toast('📥 다운로드 완료');
-  }catch(e){ toast('⚠️ 다운로드 실패: '+e.message); }
+  }catch(e){ toast('⚠️ 다운로드 실패: '+_safeErrMsg(e)); }
 }
 
 function parseHoFacility(text){
@@ -31369,10 +31379,10 @@ async function pushOptInEnable(){
     if(perm!=='granted'){ toast('⚠️ 알림이 허용되지 않았습니다'); pushOptInDismiss(); return; }
     var reg = await navigator.serviceWorker.ready;
     var res = await pushDoSubscribe(reg);
-    if(res && res.error){ toast('알림 등록 오류: '+(res.error.message||res.error)); return; }
+    if(res && res.error){ toast('알림 등록 오류: '+(_safeErrMsg(res.error)||res.error)); return; }
     toast('✓ 알림이 설정되었습니다');
     pushOptInDismiss();
-  }catch(e){ toast('알림 설정 실패: '+(e&&e.message?e.message:e)); }
+  }catch(e){ toast('알림 설정 실패: '+(e&&_safeErrMsg(e)?_safeErrMsg(e):e)); }
 }
 async function pushSendNotification(topic, title, body, url){
   try{ await sb.functions.invoke('send-push', { body: { topic:topic, title:title, body:body||'', url:url||'./index.html' } }); }
