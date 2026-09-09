@@ -14157,7 +14157,7 @@ function renderJointWorkList(){
         });
       }
     });
-    if(g.note) h+='<div style="margin-top:6px;font-size:11px;color:var(--warn);background:var(--warn-bg,#FFF7E0);border-radius:6px;padding:6px 8px">📝 '+g.note+'</div>';
+    if(g.note) h+='<div style="margin-top:6px;font-size:11px;color:var(--warn);background:var(--warn-bg,#FFF7E0);border-radius:6px;padding:6px 8px">📝 '+eeEsc(g.note)+'</div>';
     h+='<div style="margin-top:8px;font-size:10px;color:var(--g3)">작성자: '+(g.writer||'')+'</div>';
     h+='<div style="margin-top:8px;text-align:right;display:flex;gap:6px;justify-content:flex-end">';
     var allHaveCategory=g.rows.every(function(r){return !!r.category;});
@@ -16709,9 +16709,9 @@ async function loadPwResetRequests(){
         ? '<span style="padding:3px 9px;background:var(--warn-bg);color:var(--warn);border-radius:20px;font-size:12px;font-weight:700">대기중</span>'
         : '<span style="padding:3px 9px;background:var(--teal-bg);color:var(--teal2);border-radius:20px;font-size:12px;font-weight:700">처리완료</span>';
       var actionHtml = r.status==='pending'
-        ? '<div style="display:flex;gap:6px;margin-top:8px;width:100%;flex-wrap:wrap"><input type="password" class="pwreq-newpw" placeholder="임시 비밀번호(6자 이상)" style="flex:1;min-width:120px;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px"><button class="pwreq-reset-btn" style="padding:8px 12px;background:var(--g1);color:var(--g6);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">🔁 123456으로 초기화</button><button class="pwreq-resolve-btn" data-id="'+r.id+'" data-claimed="'+r.claimed_id+'" style="padding:8px 14px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">발급·완료처리</button></div>'
+        ? '<div style="display:flex;gap:6px;margin-top:8px;width:100%;flex-wrap:wrap"><input type="password" class="pwreq-newpw" placeholder="임시 비밀번호(6자 이상)" style="flex:1;min-width:120px;padding:8px 10px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px"><button class="pwreq-reset-btn" style="padding:8px 12px;background:var(--g1);color:var(--g6);border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">🔁 123456으로 초기화</button><button class="pwreq-resolve-btn" data-id="'+r.id+'" data-claimed="'+eeEsc(r.claimed_id)+'" style="padding:8px 14px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap">발급·완료처리</button></div>'
         : '';
-      div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="u-info"><div class="u-ico">'+r.name[0]+'</div><div><div class="u-name">'+r.name+' <span style="font-weight:400;color:var(--g4);font-size:13px">('+r.claimed_id+')</span></div><div class="u-sub">'+(r.note?r.note:'비고 없음')+'</div></div></div>'+statusPill+'</div><div style="font-size:12px;color:var(--g4)">'+when+'</div>'+actionHtml;
+      div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="u-info"><div class="u-ico">'+eeEsc(r.name[0])+'</div><div><div class="u-name">'+eeEsc(r.name)+' <span style="font-weight:400;color:var(--g4);font-size:13px">('+eeEsc(r.claimed_id)+')</span></div><div class="u-sub">'+(r.note?eeEsc(r.note):'비고 없음')+'</div></div></div>'+statusPill+'</div><div style="font-size:12px;color:var(--g4)">'+when+'</div>'+actionHtml;
       var resetBtn = div.querySelector('.pwreq-reset-btn');
       if(resetBtn){
         resetBtn.onclick=function(){
@@ -18874,7 +18874,7 @@ function renderLostList(){
     // 물품
     h+='<div style="font-size:15px;font-weight:700;color:var(--g7);margin-bottom:8px;line-height:1.5">'+r.item+'</div>';
     // 기타
-    if(r.note) h+='<div style="font-size:13px;color:var(--g5);background:var(--g1);border-radius:6px;padding:6px 9px;margin-bottom:8px">📎 '+r.note+'</div>';
+    if(r.note) h+='<div style="font-size:13px;color:var(--g5);background:var(--g1);border-radius:6px;padding:6px 9px;margin-bottom:8px">📎 '+eeEsc(r.note)+'</div>';
     // 작성자
     h+='<div style="font-size:12px;color:var(--g4);margin-bottom:8px">✍️ '+r.writer+'</div>';
     h+='<div style="margin-bottom:8px"><button data-id="'+r.id+'" onclick="openReport(\'lost\',parseInt(this.dataset.id))" style="padding:6px 11px;background:var(--g1);color:var(--g6);border:1.5px solid var(--g3);border-radius:var(--r2);font-size:12px;font-weight:700;cursor:pointer">📄 상황보고서</button></div>';
@@ -22113,7 +22113,7 @@ function renderWasteList(){
     h+='<span>병/유리류: '+(r.recycle_glass||0)+'톤</span><span>폐고철,가전: '+(r.recycle_etc||0)+'톤</span>';
     h+='<span>기타: '+(r.misc_etc||0)+'톤</span>';
     h+='</div></div>';
-    if(r.note) h+='<div style="font-size:13px;color:var(--g5);background:var(--g1);border-radius:6px;padding:6px 9px;margin-bottom:7px">📎 '+r.note+'</div>';
+    if(r.note) h+='<div style="font-size:13px;color:var(--g5);background:var(--g1);border-radius:6px;padding:6px 9px;margin-bottom:7px">📎 '+eeEsc(r.note)+'</div>';
     h+='<div style="display:flex;gap:8px">';
     if(canEditWaste){
       h+='<button data-id="'+r.id+'" onclick="openWasteEdit(this.dataset.id)" style="flex:1;padding:6px 12px;background:var(--teal-bg);color:var(--teal2);border:1.5px solid var(--teal2);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">✏️ 수정</button>';
@@ -22266,9 +22266,9 @@ function renderVocList(){
       h+='</div>';
     }
     // 민원 내용
-    h+='<div style="font-size:15px;color:var(--g7);line-height:1.6;margin-bottom:8px;white-space:pre-wrap">'+r.content+'</div>';
+    h+='<div style="font-size:15px;color:var(--g7);line-height:1.6;margin-bottom:8px;white-space:pre-wrap">'+eeEsc(r.content)+'</div>';
     // 비고
-    if(r.note) h+='<div style="font-size:13px;color:var(--g5);background:var(--g1);border-radius:6px;padding:6px 9px;margin-bottom:8px">📎 '+r.note+'</div>';
+    if(r.note) h+='<div style="font-size:13px;color:var(--g5);background:var(--g1);border-radius:6px;padding:6px 9px;margin-bottom:8px">📎 '+eeEsc(r.note)+'</div>';
     // 접수일시 (항상 표시)
     if(_rdt) h+='<div style="font-size:13px;color:var(--g4);margin-bottom:6px">📅 접수일시: '+_rdt+'</div>';
     // 완료일시 (한국시간)
@@ -25321,7 +25321,7 @@ function renderNotifList(){
     h+='<div style="padding:12px 14px;border-bottom:1px solid var(--g1);display:flex;gap:10px;align-items:flex-start;background:'+(n.read?'white':'#F0FDF9')+'">';
     h+='<div style="width:36px;height:36px;border-radius:50%;background:'+(bgs[n.type]||'var(--g1)')+';display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0">'+n.icon+'</div>';
     h+='<div style="flex:1"><div style="font-size:14px;font-weight:700;color:var(--g7);margin-bottom:2px">'+n.title+'</div>';
-    h+='<div style="font-size:13px;color:var(--g4);line-height:1.4">'+n.desc+'</div>';
+    h+='<div style="font-size:13px;color:var(--g4);line-height:1.4">'+eeEsc(n.desc)+'</div>';
     h+='<div style="font-size:12px;color:var(--g3);margin-top:3px">'+timeStr+'</div></div>';
     if(!n.read) h+='<div style="width:7px;height:7px;background:var(--teal);border-radius:50%;flex-shrink:0;margin-top:5px"></div>';
     h+='</div>';
