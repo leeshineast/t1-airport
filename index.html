@@ -10307,7 +10307,7 @@ async function wfSyncQuotaFromSchedule(){
     var empRes=await msFetchAll(function(){ return sb.from('wf_employees').select('team,group_name,position').eq('position','사원'); });
     var countMap={}; // key: "1팀A" 형식 (정원입력 화면 키와 동일)
     (empRes.data||[]).forEach(function(e){
-      var m=(e.team||'').match(/^환경미화(\d+)팀$/);
+      var m=(e.team||'').match(/^(\d+)팀$/);
       if(!m||!e.group_name) return;
       var gk=m[1]+'팀'+e.group_name.replace('조','');
       countMap[gk]=(countMap[gk]||0)+1;
@@ -16993,7 +16993,7 @@ async function loadUserList(){
         +(groupOnly?('<span style="font-size:11.5px;padding:2px 8px;border-radius:20px;background:#FDF4FF;color:#A21CAF;font-weight:700">'+groupOnly+'</span>'):'')
         +'<span style="font-size:11.5px;padding:2px 8px;border-radius:20px;background:var(--navy-bg);color:var(--navy);font-weight:700">'+u.role+'</span>';
       row.innerHTML='<div style="display:flex;flex-direction:column;width:100%;gap:8px">'
-        +'<div class="u-info" style="width:100%;justify-content:space-between"><div style="display:flex;align-items:center;gap:9px;min-width:0"><div class="u-ico" style="flex-shrink:0">'+u.name[0]+'</div><div style="font-size:17px;font-weight:800;color:var(--navy)">'+(u.department||'T1환경미화사업부')+'</div></div><div style="font-size:13px;color:var(--g5);font-weight:600;flex-shrink:0;padding-left:8px">'+u.name+'</div></div>'
+        +'<div class="u-info" style="width:100%;justify-content:space-between"><div style="display:flex;align-items:center;gap:9px;min-width:0"><div class="u-ico" style="flex-shrink:0">'+eeEsc(u.name[0])+'</div><div style="font-size:17px;font-weight:800;color:var(--navy)">'+eeEsc(u.department||'T1환경미화사업부')+'</div></div><div style="font-size:13px;color:var(--g5);font-weight:600;flex-shrink:0;padding-left:8px">'+eeEsc(u.name)+'</div></div>'
         +'<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap"><span class="chip chip-ok">활성</span>'+moveBtn+empIdBtn+memberBtn+'<button class="perm-btn" data-name="'+u.name+'" data-id="'+u.id+'" style="padding:4px 9px;background:var(--navy-bg);color:var(--navy);border:none;border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">🔐 권한</button><button class="withdraw-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:5px 9px;background:var(--danger-bg);color:var(--danger);border:1.5px solid rgba(217,64,64,.2);border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">🗑️ 완전삭제</button></div>'
         +'<div style="display:flex;flex-wrap:wrap;gap:5px">'+infoChips+'</div>'
         +'<div id="perm-'+u.id+'" style="display:flex;flex-wrap:wrap;gap:4px">'+permChips+'</div>'
@@ -28012,8 +28012,8 @@ function wfEmpUpload(inputEl){
         if(pos==='-'||!pos) pos='사원';
         var hq=String(r['총괄']||'').trim();
         var team=String(r['근무팀']||'').trim();
-        // "환경1팀" 같은 축약형을 "환경미화1팀"으로 정규화 (특별근무 등 다른 화면과 매칭 일관성 유지)
-        if(/^환경\d/.test(team)) team=team.replace(/^환경/, '환경미화');
+        // "환경8팀", "환경미화8팀", "8팀" 등 어떻게 입력해도 앱 전체 표준인 "8팀" 형식으로 통일
+        team=team.replace(/^환경미화/, '').replace(/^환경/, '');
         var grpRaw=String(r['근무조']||'').trim();
         var grpM=grpRaw.match(/([A-Ca-c])조$/);
         var grp=grpM ? (grpM[1].toUpperCase()+'조') : ''; // A조/B조/C조만 인정, 그 외(팀명 등)는 무시
@@ -29361,7 +29361,7 @@ async function cpEligibleSyncByTeam(){
   var team=document.getElementById('cpEligTeamSel').value;
   if(!team){ toast('⚠️ 팀을 선택해주세요'); return; }
   try{
-    var res=await sb.from('wf_employees').select('emp_no,name').eq('team','환경미화'+team);
+    var res=await sb.from('wf_employees').select('emp_no,name').eq('team',team);
     if(res.error){ toast('오류: '+_safeErrMsg(res.error)); return; }
     var rows=(res.data||[]).filter(function(e){return e.emp_no&&e.name;}).map(function(e){ return {campaign_id:cpCurCampaign.id, emp_no:e.emp_no, name:e.name, uploaded_by:me?me.name:''}; });
     if(!rows.length){ toast('⚠️ '+team+'에 등록된 인원이 없습니다'); return; }
