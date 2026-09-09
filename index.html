@@ -7696,6 +7696,20 @@ function doLogout(){
   goLogin();
   toast('로그아웃되었습니다');
 }
+// ─ 자동 로그아웃(세션 타임아웃): 30분간 아무 조작이 없으면 자동으로 로그아웃 ─
+var _idleLastActivity=Date.now();
+var IDLE_TIMEOUT_MS=30*60*1000;
+function _resetIdleTimer(){ _idleLastActivity=Date.now(); }
+['click','keydown','touchstart','scroll','mousemove'].forEach(function(evt){
+  document.addEventListener(evt, _resetIdleTimer, {passive:true});
+});
+setInterval(function(){
+  if(!me) return;
+  if(Date.now()-_idleLastActivity > IDLE_TIMEOUT_MS){
+    toast('⏱️ 30분간 사용이 없어 자동으로 로그아웃되었습니다');
+    doLogout();
+  }
+}, 60000);
 function goLogin(){go('login');document.querySelectorAll('.t-btn,.r-btn').forEach(b=>b.classList.remove('on'));['rNm','rEm','rPw','rPw2'].forEach(i=>{const e=document.getElementById(i);if(e)e.value='';});document.getElementById('rErr').style.display='none';regGatePassedEmpNo=null;var gs=document.getElementById('regGateStep');if(gs)gs.style.display='block';var fb=document.getElementById('regFormBody');if(fb)fb.style.display='none';var ge=document.getElementById('regGateEmpNo');if(ge)ge.value='';var gerr=document.getElementById('regGateErr');if(gerr)gerr.style.display='none';var gce=document.getElementById('regConfirmedEmpNo');if(gce)gce.textContent='';var gd=document.getElementById('regDept');if(gd)gd.value='T1환경미화사업부';var gcd=document.getElementById('regConfirmedDept');if(gcd)gcd.textContent='';}
 function pickT(el){
   document.querySelectorAll('.t-btn').forEach(function(b){b.classList.remove('on');});
@@ -12412,6 +12426,7 @@ async function jwSchedDownload(){
 }
 function jwSchedUpload(inputEl){
   var file=inputEl.files[0]; if(!file) return;
+  if(!_validateFileList([file], ['.xlsx','.xls'], 15).length){ inputEl.value=''; return; }
   var reader=new FileReader();
   reader.onload=async function(e){
     try{
@@ -13708,6 +13723,7 @@ async function eeDownloadApplyTemplate(eventId){
 function eeUploadApplyExcel(inputEl, eventId){
   if(!eeCanAdmin()){ toast('⚠️ 조장 이상만 사용할 수 있습니다'); inputEl.value=''; return; }
   var file=inputEl.files[0]; if(!file) return;
+  if(!_validateFileList([file], ['.xlsx','.xls'], 15).length){ inputEl.value=''; return; }
   var ev=(eeEventsCache||[]).find(function(e){ return e.id===eventId; });
   if(!ev){ toast('정보를 찾을 수 없습니다'); inputEl.value=''; return; }
   var reader=new FileReader();
@@ -19506,6 +19522,7 @@ async function eqDeleteRow(idx){
 function previewEquipmentFile(input){
   var file=input.files[0];
   if(!file){ return; }
+  var _chk=_validateFileList([file], ['.xlsx','.xls'], 15); if(!_chk.length){ input.value=''; return; }
   var reader=new FileReader();
   reader.onload=function(e){
     try{
@@ -20691,6 +20708,7 @@ async function dlToiletExcel(){
 function previewToiletFile(input){
   var file=input.files[0];
   if(!file) return;
+  if(!_validateFileList([file], ['.xlsx','.xls'], 15).length){ input.value=''; return; }
   var reader=new FileReader();
   reader.onload=function(e){
     try{
@@ -21290,6 +21308,7 @@ function facPreviewFile(type,input){
   var cfg=FAC_CONFIGS[type];
   var file=input.files[0];
   if(!file) return;
+  if(!_validateFileList([file], ['.xlsx','.xls'], 15).length){ input.value=''; return; }
   var reader=new FileReader();
   reader.onload=function(e){
     try{
@@ -26033,6 +26052,7 @@ function erExtractCity(addr){
 function erExcelUpload(inputEl){
   var file=inputEl.files[0]; if(!file) return;
   if(!erCanEdit()){ toast('⚠️ 팀장 이상만 업로드할 수 있습니다'); inputEl.value=''; return; }
+  if(!_validateFileList([file], ['.xlsx','.xls'], 15).length){ inputEl.value=''; return; }
   var reader=new FileReader();
   reader.onload=async function(e){
     try{
@@ -27939,6 +27959,7 @@ async function wfDeleteAllEmployees(){
 }
 function wfEmpUpload(inputEl){
   var file=inputEl.files[0]; if(!file) return;
+  if(!_validateFileList([file], ['.xlsx','.xls'], 15).length){ inputEl.value=''; return; }
   var reader=new FileReader();
   reader.onload=async function(e){
     try{
@@ -29375,6 +29396,7 @@ async function cpEligibleDeleteOne(id){
 async function cpEligibleUpload(inputEl){
   if(!cpIsAdmin()){ toast('⚠️ 팀장 이상만 관리할 수 있습니다'); return; }
   var file=inputEl.files[0]; if(!file) return;
+  if(!_validateFileList([file], ['.xlsx','.xls'], 15).length){ inputEl.value=''; return; }
   try{
     var buf=await file.arrayBuffer();
     var wb=XLSX.read(buf,{type:'array'});
