@@ -12678,6 +12678,27 @@ function _safeErrMsg(err){
   console.error('상세 오류(관리자만 표시):', err);
   return '처리 중 오류가 발생했습니다. 문제가 계속되면 관리자에게 문의해주세요.';
 }
+// 비공개 저장소(adminconfirm 등)의 파일을 잠깐만 열람 가능한 서명 URL로 변환
+var _signedUrlCache={};
+async function getSignedFileUrl(bucket, path, expireSec){
+  if(!path) return '';
+  expireSec = expireSec || 3600;
+  var cacheKey=bucket+'/'+path;
+  var cached=_signedUrlCache[cacheKey];
+  if(cached && cached.exp > Date.now()) return cached.url;
+  try{
+    var resp=await fetch(SUPABASE_URL+'/storage/v1/object/sign/'+bucket+'/'+encodeURIComponent(path), {
+      method:'POST',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+(_sbAccessToken||SUPABASE_KEY),'Content-Type':'application/json'},
+      body: JSON.stringify({expiresIn: expireSec})
+    });
+    var data=await resp.json();
+    if(!resp.ok || !data || !data.signedURL){ console.error('서명 URL 발급 실패', data); return ''; }
+    var full=SUPABASE_URL+'/storage/v1'+data.signedURL;
+    _signedUrlCache[cacheKey]={url:full, exp:Date.now()+(expireSec-60)*1000};
+    return full;
+  }catch(e){ console.error('서명 URL 발급 오류', e); return ''; }
+}
 function _validateFileList(files, allowedExts, maxMB){
   var arr=Array.from(files||[]);
   var ok=[];
@@ -13508,11 +13529,12 @@ async function eeAttachSignatures(rows){
     var sigRes=await sb.from('user_signatures').select('employee_id,signature_path').in('employee_id',empIds);
     var sigByEmp={};
     (sigRes.data||[]).forEach(function(s){ if(s.employee_id&&s.signature_path) sigByEmp[s.employee_id]=s.signature_path; });
-    rows.forEach(function(r){
-      if(r._sigUrl) return;
+    for(var _si=0; _si<rows.length; _si++){
+      var r=rows[_si];
+      if(r._sigUrl) continue;
       var path=sigByEmp[r.employee_id];
-      if(path) r._sigUrl=SUPABASE_URL+'/storage/v1/object/public/adminconfirm/'+encodeURIComponent(path);
-    });
+      if(path) r._sigUrl=await getSignedFileUrl('adminconfirm', path);
+    }
   }catch(e){}
   return rows;
 }
@@ -13809,7 +13831,7 @@ async function eeAtCheckRegisteredSig(){
   if(empId){
     try{
       var res=await sb.from('user_signatures').select('signature_path').eq('employee_id',empId).maybeSingle();
-      if(res.data&&res.data.signature_path) eeAtRegisteredSigUrl=SUPABASE_URL+'/storage/v1/object/public/adminconfirm/'+encodeURIComponent(res.data.signature_path);
+      if(res.data&&res.data.signature_path) eeAtRegisteredSigUrl=await getSignedFileUrl('adminconfirm', res.data.signature_path);
     }catch(e){}
   }
   eeAtRenderSigBlock();
@@ -19679,8 +19701,10 @@ async function adcOpenDocDetail(id){
       +'3. ('+lrptEsc(d.label3||'회람방법')+') '+lrptEsc(d.content3)+(canEdit?' <span onclick="adcEditLine('+id+',3,\''+escL3+'\',\''+esc3+'\')" style="cursor:pointer;font-size:12px" title="수정">✏️</span>':'')
       +'</div></div></div>';
     h+='<table class="adc-sig-table"><thead><tr><th>연번</th><th>소속</th><th>직책</th><th>사번</th><th>성명</th><th>확인일자</th><th>서명</th>'+(canEdit?'<th></th>':'')+'</tr></thead><tbody>';
+    var _sigUrlMap1={};
+    await Promise.all(sigs.filter(function(s){return s.signature_path;}).map(async function(s){ _sigUrlMap1[s.signature_path]=await getSignedFileUrl('adminconfirm', s.signature_path); }));
     sigs.forEach(function(s,i){
-      var sigImg=s.signature_path?'<img src="'+SUPABASE_URL+'/storage/v1/object/public/adminconfirm/'+encodeURIComponent(s.signature_path)+'" style="height:26px">':'';
+      var sigImg=s.signature_path?'<img src="'+(_sigUrlMap1[s.signature_path]||'')+'" style="height:26px">':'';
       h+='<tr><td>'+(i+1)+'</td><td>'+lrptEsc(s.dept)+'</td><td>'+lrptEsc(s.position)+'</td><td>'+lrptEsc(s.employee_id)+'</td><td>'+lrptEsc(s.name)+'</td><td>'+lrptEsc(s.confirmed_date)+'</td><td>'+sigImg+'</td>'
         +(canEdit?'<td><span onclick="adcDeleteSignature('+s.id+','+id+')" style="cursor:pointer" title="삭제">🗑️</span></td>':'')
         +'</tr>';
@@ -19799,10 +19823,12 @@ async function adcPrintDoc(id){
       +'</div>';
     h+='<table class="adc-sig-table"><thead><tr><th style="width:6%">연번</th><th style="width:16%">소속</th><th style="width:12%">직책</th><th style="width:12%">사번</th><th style="width:12%">성명</th><th style="width:14%">확인일자</th><th style="width:18%">서명</th></tr></thead><tbody>';
     var maxRows=Math.max(20, sigs.length);
+    var _sigUrlMap2={};
+    await Promise.all(sigs.filter(function(s){return s&&s.signature_path;}).map(async function(s){ _sigUrlMap2[s.signature_path]=await getSignedFileUrl('adminconfirm', s.signature_path); }));
     for(var i=0;i<maxRows;i++){
       var s=sigs[i];
       if(s){
-        var sigImg=s.signature_path?'<img src="'+SUPABASE_URL+'/storage/v1/object/public/adminconfirm/'+encodeURIComponent(s.signature_path)+'" style="height:24px">':'';
+        var sigImg=s.signature_path?'<img src="'+(_sigUrlMap2[s.signature_path]||'')+'" style="height:24px">':'';
         h+='<tr><td>'+(i+1)+'</td><td>'+lrptEsc(s.dept)+'</td><td>'+lrptEsc(s.position)+'</td><td>'+lrptEsc(s.employee_id)+'</td><td>'+lrptEsc(s.name)+'</td><td>'+lrptEsc(s.confirmed_date)+'</td><td>'+sigImg+'</td></tr>';
       }else{
         h+='<tr><td>'+(i+1)+'</td><td></td><td></td><td></td><td></td><td></td><td></td></tr>';
@@ -19838,9 +19864,9 @@ async function loadAdcPdfList(){
     wrap.innerHTML=h;
   }catch(e){ wrap.innerHTML='<div style="text-align:center;padding:30px;color:var(--danger);font-size:14px">불러오기 실패</div>'; }
 }
-function adcOpenPdf(id, path, title){
+async function adcOpenPdf(id, path, title){
   bumpViewCount('admin_confirm_files', id);
-  var url=SUPABASE_URL+'/storage/v1/object/public/adminconfirm/'+encodeURIComponent(path);
+  var url=await getSignedFileUrl('adminconfirm', path);
   window._adcPdfUrl=url;
   var t=document.getElementById('adcViewerTitleText'); if(t) t.textContent='📄 '+title;
   var pv=document.getElementById('adcPv'); if(pv){ pv.style.display='flex'; }
@@ -19943,7 +19969,7 @@ async function loadAdcMySig(){
     var wrap=document.getElementById('adcMySigPreviewWrap');
     var img=document.getElementById('adcMySigPreview');
     if(p&&p.signature_path&&wrap&&img){
-      img.src=SUPABASE_URL+'/storage/v1/object/public/adminconfirm/'+encodeURIComponent(p.signature_path);
+      img.src=await getSignedFileUrl('adminconfirm', p.signature_path);
       wrap.style.display='block';
     }else if(wrap){ wrap.style.display='none'; }
   }catch(e){}
@@ -20135,8 +20161,10 @@ async function ncfOpenDocDetail(id){
       +(d.content3?('<br>· ('+lrptEsc(d.label3||'')+') '+sfRender(d.content3)):'')
       +'</div></div></div>';
     h+='<table class="adc-sig-table"><thead><tr><th>연번</th><th>소속</th><th>직책</th><th>사번</th><th>성명</th><th>확인일자</th><th>서명</th>'+(canEdit?'<th></th>':'')+'</tr></thead><tbody>';
+    var _sigUrlMap1={};
+    await Promise.all(sigs.filter(function(s){return s.signature_path;}).map(async function(s){ _sigUrlMap1[s.signature_path]=await getSignedFileUrl('adminconfirm', s.signature_path); }));
     sigs.forEach(function(s,i){
-      var sigImg=s.signature_path?'<img src="'+SUPABASE_URL+'/storage/v1/object/public/adminconfirm/'+encodeURIComponent(s.signature_path)+'" style="height:26px">':'';
+      var sigImg=s.signature_path?'<img src="'+(_sigUrlMap1[s.signature_path]||'')+'" style="height:26px">':'';
       h+='<tr><td>'+(i+1)+'</td><td>'+lrptEsc(s.dept)+'</td><td>'+lrptEsc(s.position)+'</td><td>'+lrptEsc(s.employee_id)+'</td><td>'+lrptEsc(s.name)+'</td><td>'+lrptEsc(s.confirmed_date)+'</td><td>'+sigImg+'</td>'
         +(canEdit?'<td><span onclick="ncfDeleteSignature('+s.id+','+id+')" style="cursor:pointer" title="삭제">🗑️</span></td>':'')
         +'</tr>';
