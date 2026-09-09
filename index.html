@@ -12682,22 +12682,20 @@ function _safeErrMsg(err){
 var _signedUrlCache={};
 async function getSignedFileUrl(bucket, path, expireSec){
   if(!path) return '';
-  expireSec = expireSec || 3600;
   var cacheKey=bucket+'/'+path;
   var cached=_signedUrlCache[cacheKey];
-  if(cached && cached.exp > Date.now()) return cached.url;
+  if(cached) return cached;
   try{
-    var resp=await fetch(SUPABASE_URL+'/storage/v1/object/sign/'+bucket+'/'+encodeURIComponent(path), {
-      method:'POST',
-      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+(_sbAccessToken||SUPABASE_KEY),'Content-Type':'application/json'},
-      body: JSON.stringify({expiresIn: expireSec})
+    var resp=await fetch(SUPABASE_URL+'/storage/v1/object/'+bucket+'/'+path.split('/').map(encodeURIComponent).join('/'), {
+      method:'GET',
+      headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+(_sbAccessToken||SUPABASE_KEY)}
     });
-    var data=await resp.json();
-    if(!resp.ok || !data || !data.signedURL){ console.error('서명 URL 발급 실패', data); return ''; }
-    var full=SUPABASE_URL+'/storage/v1'+data.signedURL;
-    _signedUrlCache[cacheKey]={url:full, exp:Date.now()+(expireSec-60)*1000};
-    return full;
-  }catch(e){ console.error('서명 URL 발급 오류', e); return ''; }
+    if(!resp.ok){ console.error('파일 조회 실패', resp.status, await resp.text().catch(function(){return '';})); return ''; }
+    var blob=await resp.blob();
+    var objUrl=URL.createObjectURL(blob);
+    _signedUrlCache[cacheKey]=objUrl;
+    return objUrl;
+  }catch(e){ console.error('파일 조회 오류', e); return ''; }
 }
 function _validateFileList(files, allowedExts, maxMB){
   var arr=Array.from(files||[]);
