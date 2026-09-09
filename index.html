@@ -10273,7 +10273,7 @@ async function loadQuotaInputTab(){
     var staffQuota={};
     (tqRes.data||[]).forEach(function(r){ staffQuota[r.team_code]=r.staff_quota||0; });
     var h='<button onclick="wfSyncQuotaFromSchedule()" style="width:100%;padding:11px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:6px">🔄 근무계획에서 동기화</button>';
-    h+='<div style="font-size:11px;color:var(--g4);margin-bottom:10px">근무계획에 등록된 팀·조별 "사원" 인원수로 채웁니다 (조장·팀장·액팅리더는 제외). 저장 전까지는 자유롭게 수정할 수 있어요.</div>';
+    h+='<div style="font-size:11px;color:var(--g4);margin-bottom:10px">근무계획에 등록된 팀·조별 "사원" 인원수로 채웁니다 (조장·팀장은 제외, 액팅리더는 사원으로 포함). 저장 전까지는 자유롭게 수정할 수 있어요.</div>';
     TEAM_ROW_ORDER_G.forEach(function(team){
       var subs=TEAM_SUBGROUPS_G[team]||[];
       var mgrCnt=qCounts.mgrCntByTeam[team]||0;
