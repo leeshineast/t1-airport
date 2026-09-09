@@ -10093,10 +10093,10 @@ function renderLeaderStatus(viewDate){
       if(isDone){
         var oc=canEdit?' onclick="openLeaderDataEdit(\''+shift+'\',\''+l.team+'\',\''+l.name+'\')"':'';
         var meta=(metaSrc[shift]&&metaSrc[shift][l.team])||null;
-        var proxyTag=(meta&&meta.proxy_writer)?' <span style="font-size:10px;font-weight:700;opacity:.85">(대리:'+meta.proxy_writer+')</span>':'';
-        html+='<div'+oc+' style="padding:4px 10px;border-radius:20px;font-size:13px;font-weight:600;'+(canEdit?'cursor:pointer;':'cursor:default;')+'background:'+shiftBgs[shift]+';color:'+shiftColors[shift]+';border:1.5px solid '+shiftColors[shift]+'40">✔ '+l.name+proxyTag+'</div>';
+        var proxyTag=(meta&&meta.proxy_writer)?' <span style="font-size:10px;font-weight:700;opacity:.85">(대리:'+eeEsc(meta.proxy_writer)+')</span>':'';
+        html+='<div'+oc+' style="padding:4px 10px;border-radius:20px;font-size:13px;font-weight:600;'+(canEdit?'cursor:pointer;':'cursor:default;')+'background:'+shiftBgs[shift]+';color:'+shiftColors[shift]+';border:1.5px solid '+shiftColors[shift]+'40">✔ '+eeEsc(l.name)+proxyTag+'</div>';
       } else {
-        html+='<div style="padding:4px 10px;border-radius:20px;font-size:13px;font-weight:600;cursor:default;background:var(--g1);color:var(--g3);border:1.5px solid var(--g2)">'+l.name+'</div>';
+        html+='<div style="padding:4px 10px;border-radius:20px;font-size:13px;font-weight:600;cursor:default;background:var(--g1);color:var(--g3);border:1.5px solid var(--g2)">'+eeEsc(l.name)+'</div>';
       }
     });
     html+='</div></div>';
@@ -11078,7 +11078,7 @@ function renderVehList(data){
     h+='<div style="background:white;border-radius:var(--r);margin:0 13px 10px;box-shadow:0 2px 8px rgba(0,0,0,.07);border:1px solid var(--g2);overflow:hidden">';
     h+='<div style="background:var(--navy-bg);padding:10px 13px;display:flex;align-items:center;justify-content:space-between">';
     h+='<div style="display:flex;align-items:center;gap:8px"><span style="font-size:14px;font-weight:800;color:var(--navy)">'+r.date+'</span>';
-    h+='<span style="background:var(--navy);color:white;border-radius:20px;padding:2px 9px;font-size:12px;font-weight:700">'+r.name+'</span></div>';
+    h+='<span style="background:var(--navy);color:white;border-radius:20px;padding:2px 9px;font-size:12px;font-weight:700">'+eeEsc(r.name)+'</span></div>';
     h+='<span style="font-size:15px;font-weight:900;color:var(--teal2)">'+(r.dist||0).toLocaleString()+'km</span></div>';
     h+='<div style="padding:10px 13px">';
     h+='<div style="display:flex;gap:5px;align-items:center;margin-bottom:6px">';
@@ -11569,7 +11569,7 @@ function renderWorkVehList(data){
         h+='<div style="font-size:14px;font-weight:700;color:var(--g6)">📍'+(r.dest||'')+' <span style="font-weight:400;color:var(--g4);font-size:12.5px">— '+(r.purpose||'')+'</span></div>';
         h+='<span style="flex:none;font-size:13px;font-weight:900;color:var(--teal2)">'+(r.dist||0).toLocaleString()+'km</span>';
         h+='</div>';
-        h+='<div style="font-size:11.5px;color:var(--g4);margin-top:2px">'+r.name+' · 계기 '+(r.before||0).toLocaleString()+'→'+(r.after||0).toLocaleString()+'km</div>';
+        h+='<div style="font-size:11.5px;color:var(--g4);margin-top:2px">'+eeEsc(r.name)+' · 계기 '+(r.before||0).toLocaleString()+'→'+(r.after||0).toLocaleString()+'km</div>';
         h+=extraH+etcH;
         h+='<div style="margin-top:6px;text-align:right;display:flex;gap:6px;justify-content:flex-end"><button onclick="openWvEdit('+r.id+')" style="background:var(--g1);border:1px solid var(--g2);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--g6);cursor:pointer">✏️ 수정</button>'+(me&&me.role==='master'?('<button onclick="deleteWv('+r.id+')" style="background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:8px;padding:4px 10px;font-size:12px;font-weight:700;color:var(--danger);cursor:pointer">🗑 삭제</button>'):'')+'</div>';
         h+='</div></div>';
@@ -16853,7 +16853,7 @@ async function loadPendingUsers(){
           var div=document.createElement('div');
           div.className='u-row';
           div.style.cssText='flex-direction:column;align-items:flex-start;gap:8px';
-          div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="u-info"><div class="u-ico">'+u.name[0]+'</div><div><div class="u-name">'+u.name+'</div><div class="u-sub">'+u.team+' &middot; '+u.role+'</div></div></div><div style="display:flex;gap:6px"><button class="pend-approve-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--success-bg);color:var(--success);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✓ 승인</button><button class="pend-reject-btn" data-id="'+u.id+'" data-name="'+u.name+'" style="padding:6px 12px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✕ 거부</button></div></div><div style="font-size:12px;color:var(--g4)">'+u.email+' &middot; '+new Date(u.created_at).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'})+'</div>';
+          div.innerHTML='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="u-info"><div class="u-ico">'+eeEsc(u.name[0])+'</div><div><div class="u-name">'+eeEsc(u.name)+'</div><div class="u-sub">'+eeEsc(u.team)+' &middot; '+eeEsc(u.role)+'</div></div></div><div style="display:flex;gap:6px"><button class="pend-approve-btn" data-id="'+u.id+'" data-name="'+eeEsc(u.name)+'" style="padding:6px 12px;background:var(--success-bg);color:var(--success);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✓ 승인</button><button class="pend-reject-btn" data-id="'+u.id+'" data-name="'+eeEsc(u.name)+'" style="padding:6px 12px;background:var(--danger-bg);color:var(--danger);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">✕ 거부</button></div></div><div style="font-size:12px;color:var(--g4)">'+eeEsc(u.email)+' &middot; '+new Date(u.created_at).toLocaleDateString('ko-KR',{timeZone:'Asia/Seoul'})+'</div>';
           div.querySelector('.pend-approve-btn').onclick=function(){approveUser(this.dataset.id,this.dataset.name);};
           div.querySelector('.pend-reject-btn').onclick=function(){rejectUser(this.dataset.id,this.dataset.name);};
           el.appendChild(div);
@@ -17792,7 +17792,7 @@ async function updateAccComplaintCount(){
   if(dVocTopWrap&&dVocTopList){
     if(vocCatTop.length){
       dVocTopList.innerHTML=vocCatTop.map(function(t){
-        return '<div style="display:flex;justify-content:space-between;gap:8px;font-size:10.5px;margin-top:3px;white-space:nowrap"><span style="color:var(--g4)">'+t.name+'</span><b style="color:var(--g5);margin-left:6px">'+t.cnt+'</b></div>';
+        return '<div style="display:flex;justify-content:space-between;gap:8px;font-size:10.5px;margin-top:3px;white-space:nowrap"><span style="color:var(--g4)">'+eeEsc(t.name)+'</span><b style="color:var(--g5);margin-left:6px">'+t.cnt+'</b></div>';
       }).join('');
       dVocTopWrap.style.display='block';
     }else{
@@ -22852,7 +22852,7 @@ async function loadIsoList(){
       html+='<div onclick="markItemSeen(\'iso9001\','+f.id+');viewIso(\''+escapedPath+'\',\''+escapedName+'\','+f.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
       html+='<div style="width:38px;height:38px;background:var(--navy-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0">📘</div>';
       html+='<div style="flex:1;min-width:0">';
-      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+(isItemNew('iso9001',f.id,f.uploaded_at)?newBadgeHtml():'')+'</div>';
+      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+eeEsc(f.name)+(isItemNew('iso9001',f.id,f.uploaded_at)?newBadgeHtml():'')+'</div>';
       html+='<div style="font-size:12px;color:var(--g4);margin-top:2px">'+(f.uploaded_at?f.uploaded_at.slice(0,10):'')+docViewBadge(f)+'</div>';
       html+='</div>';
       html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
@@ -22965,7 +22965,7 @@ async function loadIsoManage(){
     var html='<div class="card"><div class="cb"><div style="font-size:14px;font-weight:800;color:var(--g7);margin-bottom:11px">등록된 문서 관리 ('+res.data.length+'개)</div>';
     res.data.forEach(function(f){
       html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g2)">';
-      html+='<span style="font-size:13px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+f.name+docViewBadge(f)+'</span>';
+      html+='<span style="font-size:13px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+eeEsc(f.name)+docViewBadge(f)+'</span>';
       html+='<button data-id="'+f.id+'" data-path="'+encodeURIComponent(f.path)+'" onclick="deleteIsoById(this)" style="padding:4px 10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>';
       html+='</div>';
     });
@@ -23056,7 +23056,7 @@ async function loadNewsList(){
         html+='<div onclick="viewNews(\''+escapedPath+'\',\''+escapedName+'\','+f.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
         html+='<div style="width:38px;height:38px;background:var(--navy-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0">📰</div>';
         html+='<div style="flex:1;min-width:0">';
-        html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+'</div>';
+        html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+eeEsc(f.name)+'</div>';
         html+='<div style="font-size:12px;color:var(--g4);margin-top:2px">'+(f.uploaded_at?f.uploaded_at.slice(0,10):'')+docViewBadge(f)+'</div>';
         html+='</div>';
         html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
@@ -23392,7 +23392,7 @@ async function loadNewsManage(){
     var html='<div class="card"><div class="cb"><div style="font-size:14px;font-weight:800;color:var(--g7);margin-bottom:11px">등록된 문서 관리 ('+res.data.length+'개)</div>';
     res.data.forEach(function(f){
       html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g2)">';
-      html+='<span style="font-size:13px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+f.name+docViewBadge(f)+'</span>';
+      html+='<span style="font-size:13px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+eeEsc(f.name)+docViewBadge(f)+'</span>';
       html+='<button data-id="'+f.id+'" data-path="'+encodeURIComponent(f.path)+'" onclick="deleteNewsById(this)" style="padding:4px 10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>';
       html+='</div>';
     });
@@ -23474,7 +23474,7 @@ async function loadSafetyList(){
       html+='<div onclick="viewSafety(\''+escapedPath+'\',\''+escapedName+'\',\''+f.id+'\')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
       html+='<div style="width:38px;height:38px;background:var(--navy-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0">⛑️</div>';
       html+='<div style="flex:1;min-width:0">';
-      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+'</div>';
+      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+eeEsc(f.name)+'</div>';
       html+='<div style="font-size:12px;color:var(--g4);margin-top:2px">'+(f.uploaded_at?f.uploaded_at.slice(0,10):'')+docViewBadge(f)+'</div>';
       html+='</div>';
       html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
@@ -23584,7 +23584,7 @@ async function loadSafetyManage(){
     var html='<div class="card"><div class="cb"><div style="font-size:14px;font-weight:800;color:var(--g7);margin-bottom:11px">등록된 문서 관리 ('+sortedData.length+'개)</div>';
     sortedData.forEach(function(f){
       html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g2)">';
-      html+='<span style="font-size:13px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+f.name+docViewBadge(f)+'</span>';
+      html+='<span style="font-size:13px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+eeEsc(f.name)+docViewBadge(f)+'</span>';
       html+='<button data-id="'+f.id+'" data-path="'+encodeURIComponent(f.path)+'" onclick="deleteSafetyById(this)" style="padding:4px 10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>';
       html+='</div>';
     });
@@ -23660,7 +23660,7 @@ async function loadManualList(){
       html+='<div onclick="viewManual(\''+escapedPath+'\',\''+escapedName+'\',\''+f.id+'\')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
       html+='<div style="width:38px;height:38px;background:var(--navy-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0">📗</div>';
       html+='<div style="flex:1;min-width:0">';
-      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+'</div>';
+      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+eeEsc(f.name)+'</div>';
       html+='<div style="font-size:12px;color:var(--g4);margin-top:2px">'+(f.uploaded_at?f.uploaded_at.slice(0,10):'')+docViewBadge(f)+'</div>';
       html+='</div>';
       html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
@@ -23770,7 +23770,7 @@ async function loadManualManage(){
     var html='<div class="card"><div class="cb"><div style="font-size:14px;font-weight:800;color:var(--g7);margin-bottom:11px">등록된 문서 관리 ('+sortedData.length+'개)</div>';
     sortedData.forEach(function(f){
       html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g2)">';
-      html+='<span style="font-size:13px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+f.name+docViewBadge(f)+'</span>';
+      html+='<span style="font-size:13px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+eeEsc(f.name)+docViewBadge(f)+'</span>';
       html+='<button data-id="'+f.id+'" data-path="'+encodeURIComponent(f.path)+'" onclick="deleteManualById(this)" style="padding:4px 10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>';
       html+='</div>';
     });
@@ -23846,7 +23846,7 @@ async function loadRiskList(){
       html+='<div onclick="markItemSeen(\'risk\','+f.id+');viewRisk(\''+escapedPath+'\',\''+escapedName+'\','+f.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
       html+='<div style="width:38px;height:38px;background:var(--navy-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0">⚠️</div>';
       html+='<div style="flex:1;min-width:0">';
-      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+(isItemNew('risk',f.id,f.uploaded_at)?newBadgeHtml():'')+'</div>';
+      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+eeEsc(f.name)+(isItemNew('risk',f.id,f.uploaded_at)?newBadgeHtml():'')+'</div>';
       html+='<div style="font-size:12px;color:var(--g4);margin-top:2px">'+(f.uploaded_at?f.uploaded_at.slice(0,10):'')+docViewBadge(f)+'</div>';
       html+='</div>';
       html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
@@ -23956,7 +23956,7 @@ async function loadRiskManage(){
     var html='<div class="card"><div class="cb"><div style="font-size:14px;font-weight:800;color:var(--g7);margin-bottom:11px">등록된 문서 관리 ('+sortedData.length+'개)</div>';
     sortedData.forEach(function(f){
       html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g2)">';
-      html+='<span style="font-size:13px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+f.name+docViewBadge(f)+'</span>';
+      html+='<span style="font-size:13px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+eeEsc(f.name)+docViewBadge(f)+'</span>';
       html+='<button data-id="'+f.id+'" data-path="'+encodeURIComponent(f.path)+'" onclick="deleteRiskById(this)" style="padding:4px 10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>';
       html+='</div>';
     });
@@ -24032,7 +24032,7 @@ async function loadTrainingList(){
       html+='<div onclick="markItemSeen(\'training\','+f.id+');viewTraining(\''+escapedPath+'\',\''+escapedName+'\','+f.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
       html+='<div style="width:38px;height:38px;background:var(--navy-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0">🎓</div>';
       html+='<div style="flex:1;min-width:0">';
-      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+(isItemNew('training',f.id,f.uploaded_at)?newBadgeHtml():'')+'</div>';
+      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+eeEsc(f.name)+(isItemNew('training',f.id,f.uploaded_at)?newBadgeHtml():'')+'</div>';
       html+='<div style="font-size:12px;color:var(--g4);margin-top:2px">'+(f.uploaded_at?f.uploaded_at.slice(0,10):'')+docViewBadge(f)+'</div>';
       html+='</div>';
       html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
@@ -24142,7 +24142,7 @@ async function loadTrainingManage(){
     var html='<div class="card"><div class="cb"><div style="font-size:14px;font-weight:800;color:var(--g7);margin-bottom:11px">등록된 문서 관리 ('+sortedData.length+'개)</div>';
     sortedData.forEach(function(f){
       html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g2)">';
-      html+='<span style="font-size:13px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+f.name+docViewBadge(f)+'</span>';
+      html+='<span style="font-size:13px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+eeEsc(f.name)+docViewBadge(f)+'</span>';
       html+='<button data-id="'+f.id+'" data-path="'+encodeURIComponent(f.path)+'" onclick="deleteTrainingById(this)" style="padding:4px 10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>';
       html+='</div>';
     });
@@ -24675,7 +24675,7 @@ async function loadRegList(){
       html+='<div onclick="markItemSeen(\'chat\','+f.id+');viewReg(\''+escapedPath+'\',\''+escapedName+'\','+f.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
       html+='<div style="width:38px;height:38px;background:#FFF0F0;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0">📄</div>';
       html+='<div style="flex:1;min-width:0">';
-      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+f.name+(isItemNew('chat',f.id,f.uploaded_at)?newBadgeHtml():'')+'</div>';
+      html+='<div style="font-size:15px;font-weight:700;color:var(--g7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+eeEsc(f.name)+(isItemNew('chat',f.id,f.uploaded_at)?newBadgeHtml():'')+'</div>';
       html+='<div style="font-size:12px;color:var(--g4);margin-top:2px">'+(f.uploaded_at?f.uploaded_at.slice(0,10):'')+docViewBadge(f)+'</div>';
       html+='</div>';
       html+='<div style="font-size:13px;color:var(--teal2);font-weight:700;flex-shrink:0">열기 →</div>';
@@ -25236,7 +25236,7 @@ async function loadRegManage(){
     var html='<div class="card"><div class="cb"><div style="font-size:14px;font-weight:800;color:var(--g7);margin-bottom:11px">등록된 사규 관리 ('+res.data.length+'개)</div>';
     res.data.forEach(function(f){
       html+='<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--g2)">';
-      html+='<span style="font-size:13px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+f.name+docViewBadge(f)+'</span>';
+      html+='<span style="font-size:13px;color:var(--g6);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">📄 '+eeEsc(f.name)+docViewBadge(f)+'</span>';
       // data-* 속성으로 전달 (onclick 내 따옴표 오류 방지)
       html+='<button data-id="'+f.id+'" data-path="'+encodeURIComponent(f.path)+'" onclick="deleteRegById(this)" style="padding:4px 10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer;flex-shrink:0">삭제</button>';
       html+='</div>';
@@ -26224,7 +26224,7 @@ async function syncMgrLeaveWithCheckin(team, name, todayStr, status){
 }
 function mgrLeaveRealNameSuffix(team, roleLabel){
   var person = mgrRosterOffCache && mgrRosterOffCache.roster && mgrRosterOffCache.roster[team+'_'+roleLabel];
-  return person && person.name ? '('+person.name+')' : '';
+  return person && person.name ? '('+eeEsc(person.name)+')' : '';
 }
 function mgrLeaveAllTeams(){
   var out=[];
@@ -28790,7 +28790,7 @@ function wfSpOpenReportPreview(){
     h+='</tr>';
   });
   h+='</tbody></table>';
-  h+='<div style="margin-top:16px;font-size:12px;color:#666">작성일: '+new Date().toISOString().slice(0,10)+(me?('  ·  작성자: '+me.name):'')+'</div>';
+  h+='<div style="margin-top:16px;font-size:12px;color:#666">작성일: '+new Date().toISOString().slice(0,10)+(me?('  ·  작성자: '+eeEsc(me.name)):'')+'</div>';
   document.getElementById('wfSpReportPrintArea').innerHTML=h;
   showM('wfSpReportModal');
 }
@@ -30393,8 +30393,8 @@ async function openAccidentReport(id){
     var mgr=list.find(function(u){return u.role==='manager';});
     var ldrs=list.filter(function(u){return u.role==='leader';});
     var html='';
-    if(mgr) html+='팀장: '+mgr.name+'<br>';
-    ldrs.forEach(function(l){ var joLbl=l.team.replace(teamNum+'팀','').trim(); html+='조장'+(joLbl?('('+joLbl+')'):'')+': '+l.name+'<br>'; });
+    if(mgr) html+='팀장: '+eeEsc(mgr.name)+'<br>';
+    ldrs.forEach(function(l){ var joLbl=l.team.replace(teamNum+'팀','').trim(); html+='조장'+(joLbl?('('+eeEsc(joLbl)+')'):'')+': '+eeEsc(l.name)+'<br>'; });
     document.getElementById('accLeaders').innerHTML=html||'-';
   }catch(e){ document.getElementById('accLeaders').innerHTML='-'; }
 }
