@@ -12672,6 +12672,18 @@ function eeSetVenueGps(rid){
 }
 function eeGenToken(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,10); }
 function eeEsc(s){ return String(s==null?'':s).replace(/[&<>"']/g,function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function _validateFileList(files, allowedExts, maxMB){
+  var arr=Array.from(files||[]);
+  var ok=[];
+  arr.forEach(function(f){
+    var lower=(f.name||'').toLowerCase();
+    var extOk=allowedExts.some(function(e){ return lower.endsWith(e); });
+    if(!extOk){ toast('⚠️ '+f.name+' - 허용되지 않는 파일 형식입니다 ('+allowedExts.join(', ')+'만 가능)'); return; }
+    if(maxMB && f.size > maxMB*1024*1024){ toast('⚠️ '+f.name+' - 파일 용량이 너무 큽니다 (최대 '+maxMB+'MB)'); return; }
+    ok.push(f);
+  });
+  return ok;
+}
 // onclick="..." 속성 안, 작은따옴표로 감싼 JS 문자열 인자로 안전하게 넣기 위한 이스케이프
 // (HTML 속성은 렌더링 시 먼저 엔티티 디코딩된 후 JS로 파싱되므로, eeEsc만 쓰면 따옴표가 다시 살아나 코드가 깨짐)
 function eeJsAttrEsc(s){
@@ -22812,14 +22824,14 @@ function viewIso(path, name, id){
 
 function handleIsoUpload(files){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
-    _isoUploadFiles=Array.from(files);
+    _isoUploadFiles=_validateFileList(files, ['.pdf'], 20);
   var listWrap=document.getElementById('isoFileList');
   var items=document.getElementById('isoFileItems');
   var btn=document.getElementById('isoUploadBtn');
   if(!_isoUploadFiles.length){ if(listWrap) listWrap.style.display='none'; return; }
   if(listWrap) listWrap.style.display='block';
   if(items) items.innerHTML=_isoUploadFiles.map(function(f){
-    return '<div style="font-size:13px;color:var(--g5);padding:3px 0;border-bottom:1px solid var(--g2)">📄 '+f.name+'</div>';
+    return '<div style="font-size:13px;color:var(--g5);padding:3px 0;border-bottom:1px solid var(--g2)">📄 '+eeEsc(f.name)+'</div>';
   }).join('');
   if(btn){ btn.disabled=false; btn.style.background='var(--teal)'; btn.style.cursor='pointer'; }
 }
@@ -23235,14 +23247,14 @@ function closeNewsPostDetail(){
 }
 function handleNewsUpload(files){
   if(me&&me.role==='guest'){toast('⚠️ 조회 전용 계정입니다');return;}
-  _newsUploadFiles=Array.from(files);
+  _newsUploadFiles=_validateFileList(files, ['.pdf'], 20);
   var listWrap=document.getElementById('newsFileList');
   var items=document.getElementById('newsFileItems');
   var btn=document.getElementById('newsUploadBtn');
   if(!_newsUploadFiles.length){ if(listWrap) listWrap.style.display='none'; return; }
   if(listWrap) listWrap.style.display='block';
   if(items) items.innerHTML=_newsUploadFiles.map(function(f){
-    return '<div style="font-size:13px;color:var(--g5);padding:3px 0;border-bottom:1px solid var(--g2)">📄 '+f.name+'</div>';
+    return '<div style="font-size:13px;color:var(--g5);padding:3px 0;border-bottom:1px solid var(--g2)">📄 '+eeEsc(f.name)+'</div>';
   }).join('');
   if(btn){ btn.disabled=false; btn.style.background='var(--teal)'; btn.style.cursor='pointer'; }
 }
@@ -23428,14 +23440,14 @@ function viewSafety(path, name, id){
 }
 
 function handleSafetyUpload(files){
-  _safetyUploadFiles=Array.from(files);
+  _safetyUploadFiles=_validateFileList(files, ['.pdf'], 20);
   var listWrap=document.getElementById('safetyFileList');
   var items=document.getElementById('safetyFileItems');
   var btn=document.getElementById('safetyUploadBtn');
   if(!_safetyUploadFiles.length){ if(listWrap) listWrap.style.display='none'; return; }
   if(listWrap) listWrap.style.display='block';
   if(items) items.innerHTML=_safetyUploadFiles.map(function(f){
-    return '<div style="font-size:13px;color:var(--g5);padding:3px 0;border-bottom:1px solid var(--g2)">📄 '+f.name+'</div>';
+    return '<div style="font-size:13px;color:var(--g5);padding:3px 0;border-bottom:1px solid var(--g2)">📄 '+eeEsc(f.name)+'</div>';
   }).join('');
   if(btn){ btn.disabled=false; btn.style.background='var(--teal)'; btn.style.cursor='pointer'; }
 }
@@ -23614,14 +23626,14 @@ function viewManual(path, name, id){
 }
 
 function handleManualUpload(files){
-  _manualUploadFiles=Array.from(files);
+  _manualUploadFiles=_validateFileList(files, ['.pdf'], 20);
   var listWrap=document.getElementById('manualFileList');
   var items=document.getElementById('manualFileItems');
   var btn=document.getElementById('manualUploadBtn');
   if(!_manualUploadFiles.length){ if(listWrap) listWrap.style.display='none'; return; }
   if(listWrap) listWrap.style.display='block';
   if(items) items.innerHTML=_manualUploadFiles.map(function(f){
-    return '<div style="font-size:13px;color:var(--g5);padding:3px 0;border-bottom:1px solid var(--g2)">📄 '+f.name+'</div>';
+    return '<div style="font-size:13px;color:var(--g5);padding:3px 0;border-bottom:1px solid var(--g2)">📄 '+eeEsc(f.name)+'</div>';
   }).join('');
   if(btn){ btn.disabled=false; btn.style.background='var(--teal)'; btn.style.cursor='pointer'; }
 }
@@ -23800,14 +23812,14 @@ function viewRisk(path, name, id){
 }
 
 function handleRiskUpload(files){
-  _riskUploadFiles=Array.from(files);
+  _riskUploadFiles=_validateFileList(files, ['.pdf'], 20);
   var listWrap=document.getElementById('riskFileList');
   var items=document.getElementById('riskFileItems');
   var btn=document.getElementById('riskUploadBtn');
   if(!_riskUploadFiles.length){ if(listWrap) listWrap.style.display='none'; return; }
   if(listWrap) listWrap.style.display='block';
   if(items) items.innerHTML=_riskUploadFiles.map(function(f){
-    return '<div style="font-size:13px;color:var(--g5);padding:3px 0;border-bottom:1px solid var(--g2)">📄 '+f.name+'</div>';
+    return '<div style="font-size:13px;color:var(--g5);padding:3px 0;border-bottom:1px solid var(--g2)">📄 '+eeEsc(f.name)+'</div>';
   }).join('');
   if(btn){ btn.disabled=false; btn.style.background='var(--teal)'; btn.style.cursor='pointer'; }
 }
@@ -23986,14 +23998,14 @@ function viewTraining(path, name, id){
 }
 
 function handleTrainingUpload(files){
-  _trainingUploadFiles=Array.from(files);
+  _trainingUploadFiles=_validateFileList(files, ['.pdf'], 20);
   var listWrap=document.getElementById('trainingFileList');
   var items=document.getElementById('trainingFileItems');
   var btn=document.getElementById('trainingUploadBtn');
   if(!_trainingUploadFiles.length){ if(listWrap) listWrap.style.display='none'; return; }
   if(listWrap) listWrap.style.display='block';
   if(items) items.innerHTML=_trainingUploadFiles.map(function(f){
-    return '<div style="font-size:13px;color:var(--g5);padding:3px 0;border-bottom:1px solid var(--g2)">📄 '+f.name+'</div>';
+    return '<div style="font-size:13px;color:var(--g5);padding:3px 0;border-bottom:1px solid var(--g2)">📄 '+eeEsc(f.name)+'</div>';
   }).join('');
   if(btn){ btn.disabled=false; btn.style.background='var(--teal)'; btn.style.cursor='pointer'; }
 }
@@ -25080,14 +25092,14 @@ function ebookTouchEnd(e, prefix){
 }
 
 function handleRegUpload(files){
-  _regUploadFiles=Array.from(files);
+  _regUploadFiles=_validateFileList(files, ['.pdf'], 20);
   var listWrap=document.getElementById('regFileList');
   var items=document.getElementById('regFileItems');
   var btn=document.getElementById('regUploadBtn');
   if(!_regUploadFiles.length){ if(listWrap) listWrap.style.display='none'; return; }
   if(listWrap) listWrap.style.display='block';
   if(items) items.innerHTML=_regUploadFiles.map(function(f){
-    return '<div style="font-size:13px;color:var(--g5);padding:3px 0;border-bottom:1px solid var(--g2)">📄 '+f.name+'</div>';
+    return '<div style="font-size:13px;color:var(--g5);padding:3px 0;border-bottom:1px solid var(--g2)">📄 '+eeEsc(f.name)+'</div>';
   }).join('');
   if(btn){ btn.disabled=false; btn.style.background='var(--teal)'; btn.style.cursor='pointer'; }
 }
