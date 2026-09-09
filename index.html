@@ -8593,14 +8593,14 @@ async function loadCompanyNewsPopup(){
     _tryShowNewsQueue();
   }catch(e){ _newsQueue=[]; _tryShowNewsQueue(); }
 }
-function showCompanyNewsPopupModal(n){
+async function showCompanyNewsPopupModal(n){
   var t=document.getElementById('newsPopT'); var b=document.getElementById('newsPopB'); var d=document.getElementById('newsPopD');
   var img=document.getElementById('newsPopImg');
   if(t) t.innerHTML=sfRender(n.title||'회사소식');
   if(b) b.innerHTML=sfRender(n.content);
   if(d) d.textContent=n.uploaded_at?toKSTDate(n.uploaded_at)+' 등록':'';
   if(img){
-    if(n.image_path){ img.src=SUPABASE_URL+'/storage/v1/object/public/companynews/'+encodeURIComponent(n.image_path); img.style.display='block'; }
+    if(n.image_path){ img.src=await getSignedFileUrl('companynews', n.image_path); img.style.display='block'; }
     else { img.style.display='none'; }
   }
   var sk=document.getElementById('newsPopSkip'); if(sk) sk.checked=false;
@@ -22848,9 +22848,9 @@ async function loadIsoList(){
 }
 function isoSwitchCat(cat){ isoCurCat=cat; loadIsoList(); }
 
-function viewIso(path, name, id){
+async function viewIso(path, name, id){
   bumpViewCount('iso9001_files', id);
-  var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/iso9001/'+encodeURIComponent(path);
+  var pdfUrl=await getSignedFileUrl('iso9001', path);
   window._isoPdfUrl=pdfUrl;
   var t=document.getElementById('isoViewerTitleText');
   if(t) t.textContent='📘 '+name;
@@ -23029,6 +23029,8 @@ async function loadNewsList(){
     posts.forEach(function(p){ merged.push({kind:'post', data:p, ts:p.uploaded_at||''}); });
     merged.sort(function(a,b){ return (b.ts||'').localeCompare(a.ts||''); });
     var html='<div style="margin-bottom:11px;font-size:13px;color:var(--g4)">총 '+merged.length+'건 등록됨 · 탭하여 열기</div>';
+    var _newsImgMap={};
+    await Promise.all(posts.filter(function(p){return p.image_path;}).map(async function(p){ _newsImgMap[p.image_path]=await getSignedFileUrl('companynews', p.image_path); }));
     merged.forEach(function(m){
       if(m.kind==='file'){
         var f=m.data;
@@ -23052,7 +23054,7 @@ async function loadNewsList(){
         listTitle=sfApplyMarkup(listTitle.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'));
         html+='<div onclick="markItemSeen(\'news\','+p.id+');viewNewsPost('+p.id+')" style="display:flex;align-items:center;gap:11px;padding:12px 13px;background:white;border-radius:var(--r2);border:1.5px solid var(--g2);margin-bottom:8px;cursor:pointer">';
         if(p.image_path){
-          html+='<img src="'+SUPABASE_URL+'/storage/v1/object/public/companynews/'+encodeURIComponent(p.image_path)+'" style="width:38px;height:38px;object-fit:cover;border-radius:8px;flex-shrink:0">';
+          html+='<img src="'+(_newsImgMap[p.image_path]||'')+'" style="width:38px;height:38px;object-fit:cover;border-radius:8px;flex-shrink:0">';
         }else{
           html+='<div style="width:38px;height:38px;background:var(--teal-bg);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:23px;flex-shrink:0">📝</div>';
         }
@@ -23072,9 +23074,9 @@ async function loadNewsList(){
     wrap.innerHTML='<div style="text-align:center;padding:20px;color:var(--danger);font-size:14px">불러오기 실패: '+e.message+'</div>';
   }
 }
-function viewNews(path, name, id){
+async function viewNews(path, name, id){
   bumpViewCount('companynews_files', id);
-  var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/companynews/'+encodeURIComponent(path);
+  var pdfUrl=await getSignedFileUrl('companynews', path);
   window._newsPdfUrl=pdfUrl;
   var t=document.getElementById('newsViewerTitleText');
   if(t) t.textContent='📰 '+name;
@@ -23199,7 +23201,7 @@ async function editNewsPostFromDetail(id){
     var img=document.getElementById('newsPostImagePreview');
     var wrap=document.getElementById('newsPostImagePreviewWrap');
     if(p.image_path){
-      if(img) img.src=SUPABASE_URL+'/storage/v1/object/public/companynews/'+encodeURIComponent(p.image_path);
+      if(img) img.src=await getSignedFileUrl('companynews', p.image_path);
       if(wrap) wrap.style.display='block';
     }else{
       if(wrap) wrap.style.display='none';
@@ -23262,7 +23264,7 @@ async function viewNewsPost(id){
     html+='<div style="font-size:12px;color:var(--g4);margin-bottom:10px">'+(p.uploaded_at?p.uploaded_at.slice(0,16).replace('T',' '):'')+' · '+(p.uploaded_by||'')+'</div>';
     html+='<div style="font-size:15px;color:var(--g7);line-height:1.7;white-space:pre-wrap">'+sfApplyMarkup(linkifyText((p.content||'').replace(/</g,'&lt;').replace(/>/g,'&gt;')))+'</div>';
     if(p.image_path){
-      html+='<img src="'+SUPABASE_URL+'/storage/v1/object/public/companynews/'+encodeURIComponent(p.image_path)+'" style="width:100%;border-radius:var(--r2);margin-top:14px">';
+      html+='<img src="'+(await getSignedFileUrl('companynews', p.image_path))+'" style="width:100%;border-radius:var(--r2);margin-top:14px">';
     }
     body.innerHTML=html;
     var isAdmin=(me&&(me.role==='master'||me.role==='admin'));
@@ -23467,9 +23469,9 @@ async function loadSafetyList(){
   }
 }
 
-function viewSafety(path, name, id){
+async function viewSafety(path, name, id){
   bumpViewCount('safety_files', id);
-  var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/safety-procedures/'+encodeURIComponent(path);
+  var pdfUrl=await getSignedFileUrl('safety-procedures', path);
   window._safetyPdfUrl=pdfUrl;
   var t=document.getElementById('safetyViewerTitleText');
   if(t) t.textContent='⛑️ '+name;
@@ -23653,9 +23655,9 @@ async function loadManualList(){
   }
 }
 
-function viewManual(path, name, id){
+async function viewManual(path, name, id){
   bumpViewCount('operation_manual_files', id);
-  var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/operation-manuals/'+encodeURIComponent(path);
+  var pdfUrl=await getSignedFileUrl('operation-manuals', path);
   window._manualPdfUrl=pdfUrl;
   var t=document.getElementById('manualViewerTitleText');
   if(t) t.textContent='📗 '+name;
@@ -23839,9 +23841,9 @@ async function loadRiskList(){
   }
 }
 
-function viewRisk(path, name, id){
+async function viewRisk(path, name, id){
   bumpViewCount('risk_assessment_files', id);
-  var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/riskassessment/'+encodeURIComponent(path);
+  var pdfUrl=await getSignedFileUrl('riskassessment', path);
   window._riskPdfUrl=pdfUrl;
   var t=document.getElementById('riskViewerTitleText');
   if(t) t.textContent='⚠️ '+name;
@@ -24025,9 +24027,9 @@ async function loadTrainingList(){
   }
 }
 
-function viewTraining(path, name, id){
+async function viewTraining(path, name, id){
   bumpViewCount('training_material_files', id);
-  var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/trainingmaterial/'+encodeURIComponent(path);
+  var pdfUrl=await getSignedFileUrl('trainingmaterial', path);
   window._trainingPdfUrl=pdfUrl;
   var t=document.getElementById('trainingViewerTitleText');
   if(t) t.textContent='🎓 '+name;
@@ -24668,9 +24670,9 @@ async function loadRegList(){
   }
 }
 
-function viewReg(path, name, id){
+async function viewReg(path, name, id){
   bumpViewCount('regulation_files', id);
-  var pdfUrl=SUPABASE_URL+'/storage/v1/object/public/regulations/'+encodeURIComponent(path);
+  var pdfUrl=await getSignedFileUrl('regulations', path);
   window._regPdfUrl=pdfUrl;
   var t=document.getElementById('regViewerTitleText');
   if(t) t.textContent='📄 '+name;
