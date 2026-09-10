@@ -19918,7 +19918,7 @@ async function adcUploadPdfs(files){
       var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
       var safePath='pdfs/adc_'+ts+ext;
       var titleNoExt=file.name.lastIndexOf('.')>=0?file.name.slice(0,file.name.lastIndexOf('.')):file.name;
-      var uploadUrl=SUPABASE_URL+'/storage/v1/object/adminconfirm/'+encodeURIComponent(safePath);
+      var uploadUrl=SUPABASE_URL+'/storage/v1/object/adminconfirm/'+safePath.split('/').map(encodeURIComponent).join('/');
       var r=await fetch(uploadUrl,{
         method:'POST',
         headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/pdf','x-upsert':'true'},
@@ -19938,7 +19938,7 @@ async function adcDeletePdf(id, path){
   if(!confirm('이 문서를 삭제하시겠습니까?')) return;
   try{
     if(path){
-      var delUrl=SUPABASE_URL+'/storage/v1/object/adminconfirm/'+encodeURIComponent(path);
+      var delUrl=SUPABASE_URL+'/storage/v1/object/adminconfirm/'+path.split('/').map(encodeURIComponent).join('/');
       await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
     }
     var res=await sb.from('admin_confirm_files').delete().eq('id',id);
@@ -20087,7 +20087,7 @@ async function adcSaveMySig(){
   try{
     if(_adcMySigFile){
       sigPath='signatures/'+targetId+'_'+Date.now()+'.png';
-      var uploadUrl=SUPABASE_URL+'/storage/v1/object/adminconfirm/'+encodeURIComponent(sigPath);
+      var uploadUrl=SUPABASE_URL+'/storage/v1/object/adminconfirm/'+sigPath.split('/').map(encodeURIComponent).join('/');
       var r=await fetch(uploadUrl,{
         method:'POST',
         headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'image/png','x-upsert':'true'},
@@ -20096,7 +20096,7 @@ async function adcSaveMySig(){
       if(!r.ok) throw new Error('서명 이미지 업로드 실패');
       if(_adcMySigExistingPath&&_adcMySigExistingPath!==sigPath){
         try{
-          var oldDelUrl=SUPABASE_URL+'/storage/v1/object/adminconfirm/'+encodeURIComponent(_adcMySigExistingPath);
+          var oldDelUrl=SUPABASE_URL+'/storage/v1/object/adminconfirm/'+_adcMySigExistingPath.split('/').map(encodeURIComponent).join('/');
           await fetch(oldDelUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
         }catch(delErr){}
       }
@@ -23238,7 +23238,7 @@ async function submitNewsPost(){
       var newPath='posts/news_post_'+ts+ext;
       var extLower=ext.toLowerCase();
       var contentType=(extLower==='.png')?'image/png':'image/jpeg';
-      var uploadUrl=SUPABASE_URL+'/storage/v1/object/companynews/'+encodeURIComponent(newPath);
+      var uploadUrl=SUPABASE_URL+'/storage/v1/object/companynews/'+newPath.split('/').map(encodeURIComponent).join('/');
       var r=await fetch(uploadUrl,{
         method:'POST',
         headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':contentType,'x-upsert':'true'},
@@ -23312,7 +23312,7 @@ async function deleteNewsPostFromDetail(id, imagePath){
   if(!confirm('이 소식을 삭제하시겠습니까?')) return;
   try{
     if(imagePath){
-      var delUrl=SUPABASE_URL+'/storage/v1/object/companynews/'+encodeURIComponent(imagePath);
+      var delUrl=SUPABASE_URL+'/storage/v1/object/companynews/'+imagePath.split('/').map(encodeURIComponent).join('/');
       await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
     }
     var res=await sb.from('companynews_posts').delete().eq('id',id);
@@ -23407,7 +23407,7 @@ async function uploadNewsFiles(){
       var ts=Date.now()+i;
       var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
       var safePath='pdfs/news_'+ts+ext;
-      var uploadUrl=SUPABASE_URL+'/storage/v1/object/companynews/'+encodeURIComponent(safePath);
+      var uploadUrl=SUPABASE_URL+'/storage/v1/object/companynews/'+safePath.split('/').map(encodeURIComponent).join('/');
       var extLower=ext.toLowerCase();
       var contentType = (extLower==='.jpg'||extLower==='.jpeg') ? 'image/jpeg'
         : extLower==='.png' ? 'image/png'
@@ -23432,7 +23432,7 @@ async function uploadNewsFiles(){
         // 같은 제목의 옛날 파일이 있었으면 저장공간에서 삭제 (유령파일 방지)
         if(existingPath && existingPath!==safePath){
           try{
-            var oldDelUrl=SUPABASE_URL+'/storage/v1/object/companynews/'+encodeURIComponent(existingPath);
+            var oldDelUrl=SUPABASE_URL+'/storage/v1/object/companynews/'+existingPath.split('/').map(encodeURIComponent).join('/');
             await fetch(oldDelUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
           }catch(delErr){ console.error('이전 파일 삭제 실패:', delErr); }
         }
@@ -23483,7 +23483,7 @@ async function deleteNews(id, path){
   if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 문서를 삭제하시겠습니까?')) return;
   try{
-    var delUrl=SUPABASE_URL+'/storage/v1/object/companynews/'+encodeURIComponent(path);
+    var delUrl=SUPABASE_URL+'/storage/v1/object/companynews/'+path.split('/').map(encodeURIComponent).join('/');
     await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
     await sb.from('companynews_files').delete().eq('id',id);
     toast('✅ 삭제 완료');
@@ -23973,7 +23973,7 @@ async function uploadRiskFiles(){
       var ts=Date.now()+i;
       var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
       var safePath='pdfs/risk_'+ts+ext;
-      var uploadUrl=SUPABASE_URL+'/storage/v1/object/riskassessment/'+encodeURIComponent(safePath);
+      var uploadUrl=SUPABASE_URL+'/storage/v1/object/riskassessment/'+safePath.split('/').map(encodeURIComponent).join('/');
       var r=await fetch(uploadUrl,{
         method:'POST',
         headers:{
@@ -23994,7 +23994,7 @@ async function uploadRiskFiles(){
         // 같은 제목의 옛날 파일이 있었으면 저장공간에서 삭제 (유령파일 방지)
         if(existingPath && existingPath!==safePath){
           try{
-            var oldDelUrl=SUPABASE_URL+'/storage/v1/object/riskassessment/'+encodeURIComponent(existingPath);
+            var oldDelUrl=SUPABASE_URL+'/storage/v1/object/riskassessment/'+existingPath.split('/').map(encodeURIComponent).join('/');
             await fetch(oldDelUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
           }catch(delErr){ console.error('이전 파일 삭제 실패:', delErr); }
         }
@@ -24048,7 +24048,7 @@ async function deleteRisk(id, path){
   if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 문서를 삭제하시겠습니까?')) return;
   try{
-    var delUrl=SUPABASE_URL+'/storage/v1/object/riskassessment/'+encodeURIComponent(path);
+    var delUrl=SUPABASE_URL+'/storage/v1/object/riskassessment/'+path.split('/').map(encodeURIComponent).join('/');
     await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
     await sb.from('risk_assessment_files').delete().eq('id',id);
     logDeletion('위험성평가', 'id:'+id);
@@ -24159,7 +24159,7 @@ async function uploadTrainingFiles(){
       var ts=Date.now()+i;
       var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
       var safePath='pdfs/training_'+ts+ext;
-      var uploadUrl=SUPABASE_URL+'/storage/v1/object/trainingmaterial/'+encodeURIComponent(safePath);
+      var uploadUrl=SUPABASE_URL+'/storage/v1/object/trainingmaterial/'+safePath.split('/').map(encodeURIComponent).join('/');
       var r=await fetch(uploadUrl,{
         method:'POST',
         headers:{
@@ -24180,7 +24180,7 @@ async function uploadTrainingFiles(){
         // 같은 제목의 옛날 파일이 있었으면 저장공간에서 삭제 (유령파일 방지)
         if(existingPath && existingPath!==safePath){
           try{
-            var oldDelUrl=SUPABASE_URL+'/storage/v1/object/trainingmaterial/'+encodeURIComponent(existingPath);
+            var oldDelUrl=SUPABASE_URL+'/storage/v1/object/trainingmaterial/'+existingPath.split('/').map(encodeURIComponent).join('/');
             await fetch(oldDelUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
           }catch(delErr){ console.error('이전 파일 삭제 실패:', delErr); }
         }
@@ -24234,7 +24234,7 @@ async function deleteTraining(id, path){
   if(!me||me.role!=='master'){toast('⚠️ 최고관리자/관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 문서를 삭제하시겠습니까?')) return;
   try{
-    var delUrl=SUPABASE_URL+'/storage/v1/object/trainingmaterial/'+encodeURIComponent(path);
+    var delUrl=SUPABASE_URL+'/storage/v1/object/trainingmaterial/'+path.split('/').map(encodeURIComponent).join('/');
     await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
     await sb.from('training_material_files').delete().eq('id',id);
     logDeletion('교육자료', 'id:'+id);
@@ -25253,7 +25253,7 @@ async function uploadRegFiles(){
       var ts=Date.now()+i;
       var ext=file.name.lastIndexOf('.')>=0?file.name.slice(file.name.lastIndexOf('.')):'.pdf';
       var safePath='pdfs/sagu_'+ts+ext;
-      var uploadUrl=SUPABASE_URL+'/storage/v1/object/regulations/'+encodeURIComponent(safePath);
+      var uploadUrl=SUPABASE_URL+'/storage/v1/object/regulations/'+safePath.split('/').map(encodeURIComponent).join('/');
       var r=await fetch(uploadUrl,{
         method:'POST',
         headers:{
@@ -25275,7 +25275,7 @@ async function uploadRegFiles(){
         // 같은 제목의 옛날 파일이 있었으면 저장공간에서 삭제 (유령파일 방지)
         if(existingPath && existingPath!==safePath){
           try{
-            var oldDelUrl=SUPABASE_URL+'/storage/v1/object/regulations/'+encodeURIComponent(existingPath);
+            var oldDelUrl=SUPABASE_URL+'/storage/v1/object/regulations/'+existingPath.split('/').map(encodeURIComponent).join('/');
             await fetch(oldDelUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
           }catch(delErr){ console.error('이전 파일 삭제 실패:', delErr); }
         }
@@ -25329,7 +25329,7 @@ async function deleteReg(id, path){
     if(!me||me.role!=='master'){toast('⚠️ 최고관리자만 삭제할 수 있습니다');return;}
   if(!confirm('이 사규를 삭제하시겠습니까?')) return;
   try{
-    var delUrl=SUPABASE_URL+'/storage/v1/object/regulations/'+encodeURIComponent(path);
+    var delUrl=SUPABASE_URL+'/storage/v1/object/regulations/'+path.split('/').map(encodeURIComponent).join('/');
     await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
     await sb.from('regulation_files').delete().eq('id',id);
     logDeletion('사규', 'id:'+id);
