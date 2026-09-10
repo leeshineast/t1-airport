@@ -758,6 +758,13 @@ html{overflow-x:hidden}
     <div class="menu-grid" id="favMenuGrid"></div>
   </div>
 
+  <!-- 폴더형 메뉴 (master·admin·manager·leader·acting_leader 전용) — 긴 목록을 카테고리 폴더로 묶어서 보여줌 -->
+  <button type="button" id="menuFolderBackBtn" onclick="closeMenuFolder()" style="display:none;margin:10px 13px 0;padding:9px 14px;background:var(--g1);border:1px solid var(--g2);border-radius:20px;font-size:13px;font-weight:700;color:var(--g6);cursor:pointer">← 폴더 목록</button>
+  <div id="menuFolderGrid" style="display:none;padding:10px 13px 4px">
+    <div class="sec-lbl" style="padding:4px 0 8px">📁 전체 메뉴</div>
+    <div id="menuFolderCards" style="display:grid;grid-template-columns:1fr 1fr;gap:9px"></div>
+  </div>
+
   <div class="menu-cat" id="menuCat_stat">
     <div class="sec-lbl" style="padding:14px 13px 6px">📊 통계·현황</div>
     <div class="menu-grid">
@@ -6982,6 +6989,7 @@ async function edDownloadExcel(){
 
 function goHomeMain(){
   go('main');
+  if(typeof closeMenuFolder==='function') closeMenuFolder();
   setTimeout(function(){
     var sc = document.getElementById('mhScroller');
     if(sc) sc.scrollLeft = sc.clientWidth;
@@ -7014,6 +7022,7 @@ function updateIosBackBtn(){
 // 헤더 로고 클릭 → 홈(운영현황) 패널로 이동
 function goHomePanel(){
   if(typeof go==='function') go('main');
+  if(typeof closeMenuFolder==='function') closeMenuFolder();
   var sc=document.getElementById('mhScroller');
   if(!sc) return;
   var doScroll=function(){ sc.scrollTo({left:sc.clientWidth,behavior:'smooth'}); };
@@ -7346,6 +7355,7 @@ function applyRoleUI(){
     var homeNoticeBlock=document.getElementById('homeNoticeBlock');if(homeNoticeBlock)homeNoticeBlock.style.display='none';
   }
   updateMenuCatVisibility();
+  renderMenuFolders();
 }
 // ══ 즐겨찾기 메뉴 ══
 var FAV_MAX=6;
@@ -7462,6 +7472,75 @@ function updateMenuCatVisibility(){
     });
     cat.style.display=anyVisible?'':'none';
   });
+}
+// ── 폴더형 메뉴 (master·admin·manager·leader·acting_leader 전용) ──
+// 긴 세로 메뉴를 카테고리 폴더 카드로 묶어서 보여주고, 눌러야 그 안의 메뉴가 펼쳐지게 한다.
+// 그 외 계정(조별 공용 계정, 차량 운전자 계정 등)은 이 로직을 타지 않고 기존 방식(전체 펼침) 그대로 유지된다.
+var MENU_FOLDER_DEFS=[
+  {icon:'📊', label:'통계·현황', cats:['menuCat_stat'], bg:'var(--avg-blue-bg)', fg:'var(--avg-blue)'},
+  {icon:'✍️', label:'업무입력', cats:['menuCat_input'], bg:'var(--teal-bg)', fg:'var(--teal2)'},
+  {icon:'🚗', label:'차량·장비', cats:['menuCat_veh','menuCat_equip'], bg:'var(--warn-bg)', fg:'var(--warn)'},
+  {icon:'🏢', label:'시설', cats:['menuCat_fac'], bg:'var(--navy-bg)', fg:'var(--navy)'},
+  {icon:'📖', label:'열람·자료', cats:['menuCat_ref'], bg:'var(--g1)', fg:'var(--g5)'},
+  {icon:'👔', label:'인력관리', cats:['menuCat_workforce'], bg:'var(--success-bg)', fg:'var(--success)'},
+  {icon:'🔐', label:'관리자', cats:['menuCat_admin'], bg:'var(--g2)', fg:'var(--g6)'}
+];
+function renderMenuFolders(){
+  if(!me) return;
+  var wantsFolder=(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader');
+  var gridEl=document.getElementById('menuFolderGrid');
+  var backBtn=document.getElementById('menuFolderBackBtn');
+  if(!wantsFolder){
+    if(gridEl) gridEl.style.display='none';
+    if(backBtn) backBtn.style.display='none';
+    return; // 카테고리들은 updateMenuCatVisibility가 이미 정한 상태(전체 펼침) 그대로 둔다
+  }
+  var cardsWrap=document.getElementById('menuFolderCards');
+  if(!cardsWrap||!gridEl) return;
+  var html='';
+  MENU_FOLDER_DEFS.forEach(function(f, idx){
+    var anyVisible=f.cats.some(function(cid){ var el=document.getElementById(cid); return el && getComputedStyle(el).display!=='none'; });
+    if(!anyVisible) return;
+    var count=0;
+    f.cats.forEach(function(cid){
+      var el=document.getElementById(cid); if(!el) return;
+      el.querySelectorAll('.menu-btn').forEach(function(b){ if(getComputedStyle(b).display!=='none') count++; });
+    });
+    html+='<button type="button" onclick="openMenuFolder('+idx+')" style="background:#fff;border:1px solid var(--g2);border-radius:var(--r2);padding:16px 10px;text-align:center;cursor:pointer">'
+      +'<div style="width:42px;height:42px;border-radius:50%;background:'+f.bg+';display:flex;align-items:center;justify-content:center;margin:0 auto 8px;font-size:19px">'+f.icon+'</div>'
+      +'<div style="font-size:14px;font-weight:700;color:var(--g7)">'+f.label+'</div>'
+      +'<div style="font-size:11.5px;color:var(--g4);margin-top:2px">'+count+'개 메뉴</div>'
+      +'</button>';
+  });
+  cardsWrap.innerHTML=html;
+  // 접힌 상태(폴더 목록)로 시작 — 카테고리는 전부 숨기고 폴더 카드만 노출
+  document.querySelectorAll('.menu-cat').forEach(function(cat){
+    if(cat.id==='menuCat_fav') return;
+    cat.dataset.folderManaged='1';
+    cat.style.display='none';
+  });
+  gridEl.style.display='block';
+  if(backBtn) backBtn.style.display='none';
+}
+function openMenuFolder(idx){
+  var f=MENU_FOLDER_DEFS[idx]; if(!f) return;
+  document.querySelectorAll('.menu-cat').forEach(function(cat){
+    if(cat.id==='menuCat_fav'||!cat.dataset.folderManaged) return;
+    cat.style.display = f.cats.indexOf(cat.id)!==-1 ? '' : 'none';
+  });
+  var gridEl=document.getElementById('menuFolderGrid'); if(gridEl) gridEl.style.display='none';
+  var backBtn=document.getElementById('menuFolderBackBtn'); if(backBtn) backBtn.style.display='block';
+}
+function closeMenuFolder(){
+  var anyManaged=false;
+  document.querySelectorAll('.menu-cat').forEach(function(cat){
+    if(cat.id==='menuCat_fav'||!cat.dataset.folderManaged) return;
+    anyManaged=true;
+    cat.style.display='none';
+  });
+  if(!anyManaged) return; // 폴더형이 아닌 계정에서는 아무 것도 하지 않음
+  var gridEl=document.getElementById('menuFolderGrid'); if(gridEl) gridEl.style.display='block';
+  var backBtn=document.getElementById('menuFolderBackBtn'); if(backBtn) backBtn.style.display='none';
 }
 
 async function doLogin(){
