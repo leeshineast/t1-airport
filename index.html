@@ -3099,6 +3099,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <input type="text" id="adcSigTargetInput" class="ri" placeholder="직원 이름 검색" oninput="adcSigTargetSearch()" style="margin-bottom:6px">
         <div id="adcSigTargetCands" style="max-height:180px;overflow-y:auto;border-radius:8px"></div>
         <div id="adcSigTargetSelected" style="display:none;font-size:13px;margin-top:4px"></div>
+        <div id="adcSigStatusToggle" style="margin-top:10px;font-size:12.5px;font-weight:700;color:var(--teal2);cursor:pointer;text-decoration:underline" onclick="adcToggleSigStatus()">📋 등록 현황 보기 (관리자·팀장·조장·조장대행)</div>
+        <div id="adcSigStatusPanel" style="display:none;margin-top:8px;max-height:280px;overflow-y:auto;background:#fff;border-radius:8px;padding:6px 4px"></div>
       </div>
       <div class="fg"><label class="f-lbl">소속</label><input type="text" id="adcMyDept" class="ri" value="T1환경미화사업부"></div>
       <div class="fg"><label class="f-lbl">직책</label><input type="text" id="adcMyPosition" class="ri" placeholder="예: 과장, 팀장, 사원"></div>
@@ -19967,7 +19969,7 @@ function adcInitSigTargetUI(){
 async function adcEnsureSigUsersList(){
   if(_adcSigUsersList) return;
   // 커스텀 sb 클라이언트는 ilike를 지원하지 않으므로, 활성 사용자 전체를 한 번만 받아 이후 클라이언트에서 이름으로 필터링한다
-  var res=await sb.from('users').select('id,name,employee_id,team,department').eq('status','active').order('name');
+  var res=await sb.from('users').select('id,name,employee_id,team,department,role').eq('status','active').order('name');
   _adcSigUsersList=res.data||[];
   _adcSigUsersById={};
   _adcSigUsersList.forEach(function(u){ _adcSigUsersById[u.id]=u; });
@@ -19994,6 +19996,11 @@ async function adcPickSigTarget(id, name){
   sel.style.display='block';
   sel.innerHTML='✓ <b>'+name+'</b>님 서명을 등록/수정합니다 <button onclick="adcClearSigTarget()" style="margin-left:8px;padding:3px 9px;font-size:11.5px;border-radius:10px;border:1px solid var(--g3);background:#fff;color:var(--g4);cursor:pointer">본인으로 전환</button>';
   adcUpdateSaveBtnLabel();
+  var statusPanel=document.getElementById('adcSigStatusPanel');
+  var statusToggle=document.getElementById('adcSigStatusToggle');
+  if(statusPanel){ statusPanel.style.display='none'; }
+  if(statusToggle){ statusToggle.textContent='📋 등록 현황 보기 (관리자·팀장·조장·조장대행)'; }
+  _adcSigStatusOpen=false;
   await loadAdcMySig();
 }
 function adcClearSigTarget(){
@@ -20002,6 +20009,45 @@ function adcClearSigTarget(){
   if(sel) sel.style.display='none';
   adcUpdateSaveBtnLabel();
   loadAdcMySig();
+}
+var _adcSigStatusOpen=false;
+var ADC_SIG_STATUS_ROLES=['admin','manager','leader','acting_leader'];
+var ADC_SIG_ROLE_LABEL={admin:'관리자',manager:'팀장',leader:'조장',acting_leader:'조장대행'};
+async function adcToggleSigStatus(){
+  var panel=document.getElementById('adcSigStatusPanel');
+  var toggle=document.getElementById('adcSigStatusToggle');
+  _adcSigStatusOpen=!_adcSigStatusOpen;
+  if(!_adcSigStatusOpen){
+    panel.style.display='none';
+    toggle.textContent='📋 등록 현황 보기 (관리자·팀장·조장·조장대행)';
+    return;
+  }
+  toggle.textContent='📋 등록 현황 접기';
+  panel.style.display='block';
+  panel.innerHTML='<div style="padding:8px;color:var(--g4);font-size:12.5px">불러오는 중…</div>';
+  await adcEnsureSigUsersList();
+  var targets=(_adcSigUsersList||[]).filter(function(u){ return ADC_SIG_STATUS_ROLES.indexOf(u.role)!==-1; });
+  var sigRes=await sb.from('user_signatures').select('username');
+  var registeredSet={};
+  (sigRes.data||[]).forEach(function(s){ registeredSet[s.username]=true; });
+  var registered=targets.filter(function(u){ return registeredSet[u.id]; });
+  var unregistered=targets.filter(function(u){ return !registeredSet[u.id]; });
+  function rowHtml(u, clickable){
+    var label=(u.team||'-')+' · '+(ADC_SIG_ROLE_LABEL[u.role]||u.role);
+    var onclickAttr=clickable?(' onclick="adcPickSigTarget(\''+u.id+'\',\''+String(u.name||'').replace(/\'/g,"\\'")+'\')"'):'';
+    return '<div'+onclickAttr+' style="padding:7px 8px;border-bottom:1px solid var(--g1);font-size:12.5px;'+(clickable?'cursor:pointer;color:var(--g6)':'color:var(--g5)')+'">'+(u.name||'')+' <span style="color:var(--g4);font-size:11px">('+label+')</span></div>';
+  }
+  var html='<div style="font-size:12.5px;color:var(--g5);font-weight:700;margin-bottom:6px">대상 '+targets.length+'명 중 등록 '+registered.length+'명 · 미등록 '+unregistered.length+'명</div>';
+  if(unregistered.length){
+    html+='<div style="font-size:12px;font-weight:700;color:#C0392B;margin:6px 0 4px">❌ 미등록 (눌러서 바로 등록)</div>';
+    html+=unregistered.map(function(u){ return rowHtml(u, true); }).join('');
+  }
+  if(registered.length){
+    html+='<div style="font-size:12px;font-weight:700;color:var(--teal2);margin:10px 0 4px">✅ 등록완료</div>';
+    html+=registered.map(function(u){ return rowHtml(u, false); }).join('');
+  }
+  if(!targets.length){ html='<div style="padding:8px;color:var(--g4);font-size:12.5px">대상자가 없습니다</div>'; }
+  panel.innerHTML=html;
 }
 // 서명 이미지의 밝은 배경(종이색/얼룩)을 순백색으로 정리해서 표에 깔끔하게 들어가도록 처리
 function adcMakeSigTransparent(file, cb){
