@@ -3644,6 +3644,16 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <select id="wfErpMonth" style="padding:8px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px"></select>
       <button onclick="wfDownloadErp()" style="padding:9px 14px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📥 ERP 다운로드</button>
     </div>
+    <div style="margin-bottom:10px;padding:10px 10px 8px;background:var(--g1);border-radius:10px">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span style="font-size:13px;font-weight:700;color:var(--g6)">🔍 수정이력 조회</span>
+        <input type="date" id="wfEditFrom" style="padding:7px 8px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
+        <span style="color:var(--g4)">~</span>
+        <input type="date" id="wfEditTo" style="padding:7px 8px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
+        <button onclick="wfSearchEditHistory()" style="padding:7px 12px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">조회</button>
+      </div>
+      <div id="wfEditHistResult"></div>
+    </div>
     <div id="wfTableWrap" style="overflow-x:auto;border:1.5px solid var(--g2);border-radius:10px">
       <div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">근무계획을 불러오는 중...</div>
     </div>
@@ -28496,6 +28506,92 @@ function wfBaseTmCode(e){
   if(e.shift_type==='오후') return 'S06';
   if(e.shift_type==='야간') return 'S07';
   return 'P01';
+}
+// ── 기간 지정 수정이력 조회: 정기(분기) 변경 말고 수시로 몇 명만 고쳤을 때, 그 사람들만 걸러서 보고 ERP도 그 사람들만 다시 받게 해준다 ──
+var _wfLastChangedEmpIds=[];
+async function wfSearchEditHistory(){
+  var from=document.getElementById('wfEditFrom').value;
+  var to=document.getElementById('wfEditTo').value;
+  if(!from||!to){ toast('시작일과 종료일을 모두 선택해주세요'); return; }
+  var resultEl=document.getElementById('wfEditHistResult');
+  resultEl.innerHTML='<div style="padding:10px 0;color:var(--g4);font-size:13px">조회 중...</div>';
+  try{
+    var fromTs=from+'T00:00:00+09:00', toTs=to+'T23:59:59+09:00';
+    var res=await msFetchAll(function(){ return sb.from('wf_employee_edit_log').select('emp_no,changed_by,changed_at').gte('changed_at',fromTs).lte('changed_at',toTs).order('changed_at',{ascending:false}); });
+    if(res.error){ resultEl.innerHTML='<div style="padding:10px 0;color:var(--danger);font-size:13px">조회 실패: '+_safeErrMsg(res.error)+'</div>'; return; }
+    var rows=res.data||[];
+    var byEmp={};
+    rows.forEach(function(r){
+      if(!byEmp[r.emp_no]) byEmp[r.emp_no]={last_at:r.changed_at, last_by:r.changed_by, count:0};
+      byEmp[r.emp_no].count++;
+    });
+    var empIds=Object.keys(byEmp);
+    _wfLastChangedEmpIds=empIds;
+    if(!empIds.length){ resultEl.innerHTML='<div style="padding:10px 0;color:var(--g4);font-size:13px">해당 기간에 수정된 사람이 없습니다</div>'; return; }
+    var html='<div style="font-size:13px;font-weight:700;color:var(--g6);margin:8px 0 6px">✏️ 수정된 사람 '+empIds.length+'명</div>'
+      +'<div style="max-height:260px;overflow-y:auto;border:1px solid var(--g2);border-radius:8px;background:#fff">';
+    empIds.forEach(function(id){
+      var e=wfEmployees.find(function(x){ return String(x.emp_no)===String(id); });
+      var info=byEmp[id];
+      html+='<div style="padding:7px 9px;border-bottom:1px solid var(--g1);font-size:12.5px;display:flex;justify-content:space-between;gap:8px">'
+        +'<span>'+(e?(e.name+' ('+id+')'):('(퇴사·미상) '+id))+' <span style="color:var(--g4)">'+(e?(e.team+' '+(e.group_name||'')):'')+'</span></span>'
+        +'<span style="color:var(--g4);white-space:nowrap">'+(info.last_by||'')+' · '+toKSTDateTime(info.last_at)+'</span>'
+        +'</div>';
+    });
+    html+='</div>'
+      +'<button onclick="wfDownloadErpForChanged()" style="width:100%;margin-top:8px;padding:9px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📥 이 '+empIds.length+'명만 ERP 다운로드</button>';
+    resultEl.innerHTML=html;
+  }catch(e){ resultEl.innerHTML='<div style="padding:10px 0;color:var(--danger);font-size:13px">조회 실패: '+_safeErrMsg(e)+'</div>'; }
+}
+async function wfDownloadErpForChanged(){
+  if(!_wfLastChangedEmpIds.length){ toast('⚠️ 먼저 수정이력을 조회해주세요'); return; }
+  var monthVal=document.getElementById('wfErpMonth').value;
+  if(!monthVal){ toast('⚠️ ERP 다운로드 대상 월을 선택해주세요'); return; }
+  var parts=monthVal.split('-'); var yy=parseInt(parts[0],10), mm=parseInt(parts[1],10);
+  var start=new Date(yy, mm-1, 1), end=new Date(yy, mm, 0);
+  try{
+    var monthEndDash=wfYmd(end).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3');
+    var holRes=await sb.from('wf_holidays').select('holiday_date').gte('holiday_date', monthVal+'-01').lte('holiday_date', monthEndDash);
+    var holidaySet={};
+    (holRes.data||[]).forEach(function(h){ holidaySet[h.holiday_date.replace(/-/g,'')]=true; });
+    var monthStartStr=monthVal+'-01', monthEndStr=monthEndDash;
+    var leaveRes=await msFetchAll(function(){ return sb.from('wf_leave').select('emp_no,start_date,end_date').lte('start_date', monthEndStr).gte('end_date', monthStartStr); });
+    var leaveMap={};
+    (leaveRes.data||[]).forEach(function(l){ (leaveMap[l.emp_no]=leaveMap[l.emp_no]||[]).push({s:l.start_date, e:l.end_date}); });
+    function wfIsOnLeave2(empNo, dateStr){
+      var ranges=leaveMap[empNo]; if(!ranges) return false;
+      return ranges.some(function(r){ return dateStr>=r.s && dateStr<=r.e; });
+    }
+    var weekMap=['일','월','화','수','목','금','토'];
+    function buildRow(e, d){
+      var wdKr=weekMap[d.getDay()];
+      var dg=wfCalcDayGubun(d, holidaySet);
+      var ymdDash=wfYmd(d).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3');
+      var tkg=wfTkgCode(e), baseTm=wfBaseTmCode(e);
+      var tm;
+      if(wfIsOnLeave2(e.emp_no, ymdDash)) tm='P27';
+      else{
+        var offDays=[e.off1,e.off2].filter(Boolean);
+        var isOff=offDays.indexOf(wdKr)!==-1;
+        tm=isOff?'P26':baseTm;
+      }
+      return ['IAOS','1000',e.emp_no,dg,wfYmd(d),tkg,tm];
+    }
+    var targetEmps=wfEmployees.filter(function(e){ return _wfLastChangedEmpIds.indexOf(String(e.emp_no))!==-1; });
+    if(!targetEmps.length){ toast('⚠️ 대상 직원 정보를 찾을 수 없습니다 (재직자 명단에 없는 사번일 수 있음)'); return; }
+    var aoa=[['회사코드','사업장코드','사원번호','일구분코드','시작일','근무조코드','시간코드']];
+    targetEmps.forEach(function(e){
+      var d=new Date(start);
+      while(d<=end){ aoa.push(buildRow(e, d)); d.setDate(d.getDate()+1); }
+    });
+    var wb=XLSX.utils.book_new();
+    var ws=XLSX.utils.aoa_to_sheet(aoa);
+    ws['!cols']=[{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:10}];
+    XLSX.utils.book_append_sheet(wb, ws, '근무계획업로드(변경분)');
+    XLSX.writeFile(wb, '근무계획_더존ERP_'+monthVal+'_변경분_'+targetEmps.length+'명.xlsx');
+    await sb.from('wf_export_log').insert({target_month:monthVal, row_count:aoa.length-1, exported_by:(me?me.name:'')+'(변경분)'});
+    toast('📥 변경분 ERP 다운로드 완료 ('+targetEmps.length+'명)');
+  }catch(e){ toast('⚠️ 다운로드 실패: '+String(_safeErrMsg(e)||e)); }
 }
 async function wfDownloadErp(){
   if(!wfEmployees.length){ toast('⚠️ 등록된 직원이 없습니다. 먼저 엑셀을 업로드해주세요'); return; }
