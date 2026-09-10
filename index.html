@@ -329,12 +329,12 @@ html{overflow-x:hidden}
 #mhPanelMenu .menu-desc{display:none}
 #mhPanelMenu .menu-title{font-size:13px;margin-bottom:0}
 /* 폴더(대분류)마다 고유 파스텔 톤으로 안의 아이콘 배경을 통일 — 폴더 카드 색상과 짝을 맞춤 */
-#menuCat_stat .menu-icon{background:var(--avg-blue-bg)}
+#menuCat_stat .menu-icon{background:var(--g2)}
 #menuCat_input .menu-icon{background:var(--teal-bg)}
 #menuCat_veh .menu-icon,#menuCat_equip .menu-icon{background:var(--warn-bg)}
 #menuCat_fac .menu-icon{background:var(--navy-bg)}
 #menuCat_ref .menu-icon{background:var(--pink-bg)}
-#menuCat_workforce .menu-icon{background:var(--yellow-bg)}
+#menuCat_workforce .menu-icon{background:var(--danger-bg)}
 #menuCat_admin .menu-icon{background:var(--purple-bg)}
 .mh-tabbar{position:fixed;left:0;right:0;bottom:0;height:100px;padding-bottom:env(safe-area-inset-bottom);background:white;border-top:1px solid var(--g2);display:flex;flex-direction:column;z-index:60}
 .mh-tabbar-row{display:flex;flex:1}
@@ -880,13 +880,13 @@ html{overflow-x:hidden}
         <span class="menu-arrow">조회하기 →</span>
       </button>
       <button class="menu-btn" onclick="go('toilet')">
-        <span class="menu-icon">🚻</span>
+        <span class="menu-icon">🚽</span>
         <div class="menu-title">화장실 관리<span id="fmvBadge_toilet"></span></div>
         <div class="menu-desc">화장실 현황 조회·작성·수정·다운로드</div>
         <span class="menu-arrow">관리하기 →</span>
       </button>
       <button class="menu-btn" onclick="go('shower')">
-        <span class="menu-icon">🚿</span>
+        <span class="menu-icon">🛁</span>
         <div class="menu-title">샤워실 관리<span id="fmvBadge_shower"></span></div>
         <div class="menu-desc">샤워실 현황 조회·작성·수정·다운로드</div>
         <span class="menu-arrow">관리하기 →</span>
@@ -898,7 +898,7 @@ html{overflow-x:hidden}
         <span class="menu-arrow">관리하기 →</span>
       </button>
       <button class="menu-btn" onclick="go('rest')">
-        <span class="menu-icon">😴</span>
+        <span class="menu-icon">🛋️</span>
         <div class="menu-title">휴게시설 관리</div>
         <div class="menu-desc">휴게시설 현황 조회·작성·수정·다운로드</div>
         <span class="menu-arrow">관리하기 →</span>
@@ -910,7 +910,7 @@ html{overflow-x:hidden}
         <span class="menu-arrow">관리하기 →</span>
       </button>
       <button class="menu-btn" onclick="go('baby')">
-        <span class="menu-icon">👶</span>
+        <span class="menu-icon">🧸</span>
         <div class="menu-title">유아휴게실 관리<span id="fmvBadge_baby"></span></div>
         <div class="menu-desc">유아휴게실 현황 조회·작성·수정·다운로드</div>
         <span class="menu-arrow">관리하기 →</span>
@@ -1031,7 +1031,7 @@ html{overflow-x:hidden}
       </button>
       <button class="menu-btn" id="groupChatMenuBtn" onclick="go('groupchat')" style="position:relative">
         <span id="gcTabBadge" style="display:none;position:absolute;top:8px;right:10px;min-width:18px;height:18px;padding:0 5px;background:var(--danger);color:white;border-radius:20px;font-size:10.5px;font-weight:800"></span>
-        <span class="menu-icon" style="display:flex;align-items:center;justify-content:center;color:white"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
+        <span class="menu-icon" style="display:flex;align-items:center;justify-content:center;color:var(--danger)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></span>
         <div class="menu-title">전체채팅</div>
         <div class="menu-desc">전 직원 단체 대화방</div>
         <span class="menu-arrow">대화하기 →</span>
@@ -7515,12 +7515,12 @@ function updateMenuCatVisibility(){
 // 긴 세로 메뉴를 카테고리 폴더 카드로 묶어서 보여주고, 눌러야 그 안의 메뉴가 펼쳐지게 한다.
 // 그 외 계정(조별 공용 계정, 차량 운전자 계정 등)은 이 로직을 타지 않고 기존 방식(전체 펼침) 그대로 유지된다.
 var MENU_FOLDER_DEFS=[
-  {icon:'📊', label:'통계·현황', cats:['menuCat_stat'], bg:'var(--avg-blue-bg)', fg:'var(--avg-blue)'},
+  {icon:'📊', label:'통계·현황', cats:['menuCat_stat'], bg:'var(--g2)', fg:'var(--g7)'},
   {icon:'✍️', label:'업무입력', cats:['menuCat_input'], bg:'var(--teal-bg)', fg:'var(--teal2)'},
   {icon:'🚗', label:'차량·장비', cats:['menuCat_veh','menuCat_equip'], bg:'var(--warn-bg)', fg:'var(--warn)'},
   {icon:'🏢', label:'시설', cats:['menuCat_fac'], bg:'var(--navy-bg)', fg:'var(--navy)'},
   {icon:'📖', label:'열람·자료', cats:['menuCat_ref'], bg:'var(--pink-bg)', fg:'var(--pink)'},
-  {icon:'📅', label:'근무계획', cats:['menuCat_workforce'], bg:'var(--yellow-bg)', fg:'var(--yellow)'},
+  {icon:'📅', label:'근무계획', cats:['menuCat_workforce'], bg:'var(--danger-bg)', fg:'var(--danger)'},
   {icon:'🔐', label:'관리자', cats:['menuCat_admin'], bg:'var(--purple-bg)', fg:'var(--purple)'}
 ];
 // 폴더 안에 숨겨진 메뉴들 중 안 읽은 알림(빨간 배지)이 하나라도 있으면, 폴더 카드 자체에도 NEW로 알려준다 —
