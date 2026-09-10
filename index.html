@@ -3111,7 +3111,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
           <img id="adcMySigPreview" style="max-height:70px">
         </div>
       </div>
-      <button onclick="adcSaveMySig()" class="btn-prim" style="width:100%">💾 내 서명정보 저장</button>
+      <button onclick="adcSaveMySig()" class="btn-prim" id="adcSaveMySigBtn" style="width:100%">💾 내 서명정보 저장</button>
     </div></div>
   </div>
 </div>
@@ -19955,20 +19955,36 @@ var _adcMySigExistingPath=null;
 // master가 다른 직원 대신 서명을 등록할 때: null이면 본인, 값이 있으면 그 직원의 users.id
 var _adcSigTargetId=null;
 var _adcSigTargetLabel=null;
+var _adcSigUsersList=null; // 검색용 활성 사용자 목록(최초 1회만 조회 후 캐시)
+var _adcSigUsersById={};
 function adcInitSigTargetUI(){
   var box=document.getElementById('adcSigTargetBox');
-  if(box) box.style.display=(me&&me.role==='master')?'block':'none';
-  if(!(me&&me.role==='master')){ _adcSigTargetId=null; _adcSigTargetLabel=null; }
+  var isMasterUser=!!(me&&me.role==='master');
+  if(box) box.style.display=isMasterUser?'block':'none';
+  if(!isMasterUser){ _adcSigTargetId=null; _adcSigTargetLabel=null; }
+  else{ adcEnsureSigUsersList(); }
+}
+async function adcEnsureSigUsersList(){
+  if(_adcSigUsersList) return;
+  // 커스텀 sb 클라이언트는 ilike를 지원하지 않으므로, 활성 사용자 전체를 한 번만 받아 이후 클라이언트에서 이름으로 필터링한다
+  var res=await sb.from('users').select('id,name,employee_id,team,department').eq('status','active').order('name');
+  _adcSigUsersList=res.data||[];
+  _adcSigUsersById={};
+  _adcSigUsersList.forEach(function(u){ _adcSigUsersById[u.id]=u; });
 }
 async function adcSigTargetSearch(){
   var q=(document.getElementById('adcSigTargetInput').value||'').trim();
   var box=document.getElementById('adcSigTargetCands');
   if(!q){ box.innerHTML=''; return; }
-  var res=await sb.from('users').select('id,name,employee_id,team').eq('status','active').ilike('name','%'+q+'%').limit(15);
-  var list=res.data||[];
+  await adcEnsureSigUsersList();
+  var list=(_adcSigUsersList||[]).filter(function(u){ return (u.name||'').indexOf(q)!==-1; }).slice(0,15);
   box.innerHTML = list.length ? list.map(function(u){
     return '<div onclick="adcPickSigTarget(\''+u.id+'\',\''+String(u.name||'').replace(/'/g,"\\'")+'\')" style="padding:8px;border-bottom:1px solid var(--g1);cursor:pointer;font-size:13px;background:#fff">'+(u.name||'')+' <span style="color:var(--g4);font-size:11.5px">('+(u.team||'-')+' · '+(u.employee_id||'사번없음')+')</span></div>';
   }).join('') : '<div style="padding:8px;color:var(--g4);font-size:12.5px">검색 결과 없음</div>';
+}
+function adcUpdateSaveBtnLabel(){
+  var btn=document.getElementById('adcSaveMySigBtn');
+  if(btn) btn.innerHTML='💾 '+(_adcSigTargetLabel?(_adcSigTargetLabel+'님 서명정보 저장'):'내 서명정보 저장');
 }
 async function adcPickSigTarget(id, name){
   _adcSigTargetId=id; _adcSigTargetLabel=name;
@@ -19977,12 +19993,14 @@ async function adcPickSigTarget(id, name){
   var sel=document.getElementById('adcSigTargetSelected');
   sel.style.display='block';
   sel.innerHTML='✓ <b>'+name+'</b>님 서명을 등록/수정합니다 <button onclick="adcClearSigTarget()" style="margin-left:8px;padding:3px 9px;font-size:11.5px;border-radius:10px;border:1px solid var(--g3);background:#fff;color:var(--g4);cursor:pointer">본인으로 전환</button>';
+  adcUpdateSaveBtnLabel();
   await loadAdcMySig();
 }
 function adcClearSigTarget(){
   _adcSigTargetId=null; _adcSigTargetLabel=null;
   var sel=document.getElementById('adcSigTargetSelected');
   if(sel) sel.style.display='none';
+  adcUpdateSaveBtnLabel();
   loadAdcMySig();
 }
 // 서명 이미지의 밝은 배경(종이색/얼룩)을 순백색으로 정리해서 표에 깔끔하게 들어가도록 처리
@@ -20028,9 +20046,11 @@ async function loadAdcMySig(){
   try{
     var res=await sb.from('user_signatures').select('*').eq('username',targetId);
     var p=res&&res.data&&res.data[0];
-    document.getElementById('adcMyDept').value=(p&&p.dept)||'T1환경미화사업부';
+    // 기존 서명 등록 이력이 없는 직원이면(=p 없음), users 테이블에 있는 사번/소속을 기본값으로 미리 채워준다
+    var prof=_adcSigUsersById[targetId];
+    document.getElementById('adcMyDept').value=(p&&p.dept)||(prof&&prof.department)||'T1환경미화사업부';
     document.getElementById('adcMyPosition').value=(p&&p.position)||'';
-    document.getElementById('adcMyEmpId').value=(p&&p.employee_id)||'';
+    document.getElementById('adcMyEmpId').value=(p&&p.employee_id)||(prof&&prof.employee_id)||'';
     _adcMySigExistingPath=(p&&p.signature_path)||null;
     _adcMySigFile=null;
     var wrap=document.getElementById('adcMySigPreviewWrap');
