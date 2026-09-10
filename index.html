@@ -3148,6 +3148,13 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <button onclick="ncfSaveNewDoc()" class="btn-prim" style="width:100%">🔔 작성 완료</button>
 </div></div></div>
 
+<!-- 공지 확인서 기한·대상 수정 모달 (자동생성된 확인서를 나중에 조정할 때 사용) -->
+<div id="ncfEditMetaModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>✏️ 확인기한·대상 수정</h3><button class="m-x" onclick="hideM('ncfEditMetaModal')">×</button></div><div style="padding:15px 17px">
+  <div class="fg"><label class="f-lbl">공개범위(대상)</label><div id="ncfEditTargetGrp" style="display:flex;flex-wrap:wrap;gap:6px"></div></div>
+  <div class="fg"><label class="f-lbl">확인기한</label><input type="date" id="ncfEditDue" class="ri"></div>
+  <button onclick="ncfSaveEditMeta()" class="btn-prim" style="width:100%">저장</button>
+</div></div></div>
+
 <!-- 확인서 작성 모달 -->
 <div id="adcCreateModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📋 확인서 작성</h3><button class="m-x" onclick="hideM('adcCreateModal')">×</button></div><div style="padding:15px 17px">
   <div class="fg"><label class="f-lbl">제목 <span style="color:var(--danger)">*</span></label><input type="text" id="adcNewTitle" class="ri" placeholder="예: 회 람 확 인 서"></div>
@@ -4252,6 +4259,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
             <div id="nwTargetGrp" style="display:flex;flex-wrap:wrap;gap:7px"></div>
           </div>
         </div>
+        <div class="fg"><label style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--g6);font-weight:700;cursor:pointer"><input type="checkbox" id="newsPostNcfChk" style="accent-color:var(--teal)"> ✍️ 공지 확인서 자동 생성 (관리자·팀장·조장·조장대행 대상 — 기한·대상은 "공지 확인서"에서 나중에 조정)</label></div>
         <div style="display:flex;gap:8px">
         <button id="newsPostSubmitBtn" onclick="submitNewsPost()" style="flex:1;padding:13px;background:var(--teal);color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">
           📝 게시하기
@@ -6126,7 +6134,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <button onclick="closeMissingLeaderModal()" style="width:100%;padding:11px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:15px;font-weight:700;cursor:pointer">확인</button>
   </div>
 </div></div>
-<div id="noticeW" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📢 공지사항 작성</h3><button class="m-x" onclick="closeNW()">×</button></div><div style="padding:15px 17px"><div class="fg"><label class="f-lbl">제목</label><input type="text" id="nT" class="ri" placeholder="공지사항 제목" style="margin-bottom:6px"><div id="sfTb_nT"></div></div><div class="fg"><label class="f-lbl">내용</label><div id="sfTb_nB"></div><textarea id="nB" class="f-ta show" rows="5" placeholder="공지사항 내용"></textarea></div><div class="fg"><label class="f-lbl">공지 대상</label><div id="nTargetGrp" style="display:flex;flex-wrap:wrap;gap:7px"></div></div><div class="fg"><label style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--g6);font-weight:700;cursor:pointer"><input type="checkbox" id="nPopupChk" checked style="accent-color:var(--teal)"> 🔔 로그인 시 팝업으로 표시</label></div><button onclick="pubNotice()" class="btn-prim">전체 발송</button></div></div></div>
+<div id="noticeW" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📢 공지사항 작성</h3><button class="m-x" onclick="closeNW()">×</button></div><div style="padding:15px 17px"><div class="fg"><label class="f-lbl">제목</label><input type="text" id="nT" class="ri" placeholder="공지사항 제목" style="margin-bottom:6px"><div id="sfTb_nT"></div></div><div class="fg"><label class="f-lbl">내용</label><div id="sfTb_nB"></div><textarea id="nB" class="f-ta show" rows="5" placeholder="공지사항 내용"></textarea></div><div class="fg"><label class="f-lbl">공지 대상</label><div id="nTargetGrp" style="display:flex;flex-wrap:wrap;gap:7px"></div></div><div class="fg"><label style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--g6);font-weight:700;cursor:pointer"><input type="checkbox" id="nPopupChk" checked style="accent-color:var(--teal)"> 🔔 로그인 시 팝업으로 표시</label></div><div class="fg"><label style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--g6);font-weight:700;cursor:pointer"><input type="checkbox" id="nNcfChk" style="accent-color:var(--teal)"> ✍️ 공지 확인서 자동 생성 (관리자·팀장·조장·조장대행 대상 — 기한·대상은 "공지 확인서"에서 나중에 조정)</label></div><button onclick="pubNotice()" class="btn-prim">전체 발송</button></div></div></div>
 <div id="lostAccModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🟢 습득물 무사고 관리</h3><button class="m-x" onclick="hideM('lostAccModal')">×</button></div><div style="padding:17px"><div id="lostAccStatus" style="text-align:center;padding:14px;background:#EAF6EC;border-radius:12px;color:#1D4ED8;font-weight:800;margin-bottom:14px"></div><div id="lostAccEditWrap" style="display:none"><label class="f-lbl">사고일자</label><input type="date" id="lostAccDateInput" class="ri" style="margin-bottom:11px"><button onclick="saveLostAccDate()" class="btn-prim">저장</button></div></div></div></div>
 <div id="lostNoteModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📝 습득물 메모</h3><button class="m-x" onclick="hideM('lostNoteModal')">×</button></div><div style="padding:17px"><textarea id="lostNoteInput" class="f-ta show" rows="4" placeholder="자유롭게 입력 (예: 유의사항, 안내문 등)"></textarea><button onclick="saveLostNote()" class="btn-prim" style="margin-top:11px">저장</button></div></div></div>
 
@@ -8658,11 +8666,17 @@ async function pubNotice(){
   const t=document.getElementById('nT').value.trim();const b=document.getElementById('nB').value.trim();if(!t){toast('제목을 입력해주세요');return;}if(!b){toast('내용을 입력해주세요');return;}
   var targets=getSelectedNoticeTargets();
   var showPopup = document.getElementById('nPopupChk') ? document.getElementById('nPopupChk').checked : true;
+  var ncfChk = document.getElementById('nNcfChk');
+  var wantNcf = ncfChk ? ncfChk.checked : false;
   // DB 저장 (전체 공유)
   var res2=await sb.from('notices').insert({title:t,content:b,author:me?me.name:'',target_roles:targets,show_popup:showPopup});
   if(res2.error){toast('공지 저장 오류: '+_safeErrMsg(res2.error));return;}
+  if(wantNcf){
+    var newNoticeId=res2.data&&res2.data[0]&&res2.data[0].id;
+    if(newNoticeId) await ncfAutoCreateFromLink({title:t, content:b, linkedNoticeId:newNoticeId});
+  }
   loadNoticesFromDB();
-  document.getElementById('noticeT').textContent=t;document.getElementById('noticeB').innerHTML=b.replace(/\n/g,'<br>');const now=new Date();document.getElementById('noticeD').textContent=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0')+' 등록';try{localStorage.removeItem('nsk_'+new Date().toDateString());}catch(e){}document.getElementById('noSkip').checked=false;closeNW();document.getElementById('nT').value='';document.getElementById('nB').value='';if(showPopup) setTimeout(()=>showM('noticeM'),500);toast('✓ 공지사항 전체 발송 완료!'); loadAdminNoticeList(); loadNoticesFromDB();}
+  document.getElementById('noticeT').textContent=t;document.getElementById('noticeB').innerHTML=b.replace(/\n/g,'<br>');const now=new Date();document.getElementById('noticeD').textContent=now.getFullYear()+'-'+(now.getMonth()+1).toString().padStart(2,'0')+'-'+now.getDate().toString().padStart(2,'0')+' 등록';try{localStorage.removeItem('nsk_'+new Date().toDateString());}catch(e){}document.getElementById('noSkip').checked=false;closeNW();document.getElementById('nT').value='';document.getElementById('nB').value='';if(ncfChk) ncfChk.checked=false;if(showPopup) setTimeout(()=>showM('noticeM'),500);toast('✓ 공지사항 전체 발송 완료!'); loadAdminNoticeList(); loadNoticesFromDB();}
 
 // ─ 산업재해 ─
 function openInd(){if(!me||(me.role!=='admin'&&me.role!=='manager'&&me.role!=='leader'&&me.role!=='acting_leader'&&!isExecRole(me.role))){toast('팀장 이상만 등록 가능합니다');return;}indEditId=null;const now=new Date();const local=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16);document.getElementById('indDate').value=local;['indPer','indLoc','indDesc'].forEach(id=>{const e=document.getElementById(id);if(e)e.value='';});document.querySelectorAll('#indTG .rp').forEach(p=>p.classList.remove('on'));var ce=document.getElementById('indTypeCustom');if(ce){ce.style.display='none';ce.value='';}document.getElementById('indErr').style.display='none';var t=document.getElementById('indModalTitle');if(t)t.textContent='🚑 산업재해 등록';var b=document.getElementById('indSubBtn');if(b)b.textContent='등록 완료';showM('indModal');}
@@ -20173,10 +20187,11 @@ async function adcSaveMySig(){
 function ncfCanManage(){ return !!(me&&(me.role==='admin'||isExecRole(me.role))); } // MASTER·ADMIN만 작성/관리
 function ncfEligible(target_roles){ return noticeVisibleFor(target_roles, me?me.role:null); } // 서명 가능 대상 판정(공지사항과 동일 로직)
 
-function renderNcfTargetChecks(){
-  var wrap=document.getElementById('ncfTargetGrp'); if(!wrap) return;
+function renderNcfTargetChecks(wrapId, preselected){
+  var wrap=document.getElementById(wrapId||'ncfTargetGrp'); if(!wrap) return;
   wrap.innerHTML=TARGET_ROLE_DEFS.map(function(t){
-    return '<label style="display:flex;align-items:center;gap:4px;font-size:13px;color:var(--g5);padding:5px 10px;background:var(--g1);border-radius:20px;cursor:pointer"><input type="checkbox" class="ncfTargetChk" value="'+t.key+'" style="accent-color:var(--teal)"'+(t.key==='all'?' checked':'')+'> '+t.label+'</label>';
+    var checked = preselected ? (preselected.indexOf(t.key)!==-1) : (t.key==='all');
+    return '<label style="display:flex;align-items:center;gap:4px;font-size:13px;color:var(--g5);padding:5px 10px;background:var(--g1);border-radius:20px;cursor:pointer"><input type="checkbox" class="ncfTargetChk" value="'+t.key+'" style="accent-color:var(--teal)"'+(checked?' checked':'')+'> '+t.label+'</label>';
   }).join('');
   wrap.querySelectorAll('.ncfTargetChk').forEach(function(cb){
     cb.addEventListener('change',function(){
@@ -20185,8 +20200,8 @@ function renderNcfTargetChecks(){
     });
   });
 }
-function getSelectedNcfTargets(){
-  var wrap=document.getElementById('ncfTargetGrp'); if(!wrap) return ['all'];
+function getSelectedNcfTargets(wrapId){
+  var wrap=document.getElementById(wrapId||'ncfTargetGrp'); if(!wrap) return ['all'];
   var checked=Array.prototype.slice.call(wrap.querySelectorAll('.ncfTargetChk:checked')).map(function(cb){return cb.value;});
   return checked.length?checked:['all'];
 }
@@ -20252,6 +20267,22 @@ async function ncfOpenCreateDoc(prefill){
   }catch(e){}
   if(prefill&&prefill.linkedNewsId) newsSel.value=prefill.linkedNewsId;
   showM('ncfCreateModal');
+}
+// 공지사항/회사소식 작성 화면의 "공지 확인서 자동 생성" 체크박스에서 호출.
+// 대상은 일부러 전체/조원(member)을 제외한, 실제로 전자서명 등록이 가능한 역할로 고정한다 —
+// 서명하려면 반드시 사전 등록된 서명이 있어야 하는데 일반 조원은 그 기능 자체를 쓸 수 없기 때문.
+// 확인기한은 비워두고, 관리자가 "공지 확인서" 상세화면에서 나중에 지정하도록 한다.
+var NCF_AUTO_DEFAULT_TARGETS=['manager','leader','acting_leader'];
+async function ncfAutoCreateFromLink(opts){
+  try{
+    var res=await sb.from('notice_confirm_docs').insert({
+      title:opts.title, label1:'내용', content1:opts.content, label2:'확인방법', content2:'내용 확인 후 아래 서명란에 서명',
+      doc_date:kstDate(), due_date:null, target_roles:NCF_AUTO_DEFAULT_TARGETS,
+      linked_notice_id:opts.linkedNoticeId||null, linked_news_id:opts.linkedNewsId||null, created_by:me?me.name:''
+    });
+    if(res.error){ toast('⚠️ 공지 확인서 자동 생성 실패: '+_safeErrMsg(res.error)); return; }
+    toast('✍️ 공지 확인서도 함께 생성되었습니다 — "관리자 > 공지 확인서"에서 확인기한을 설정해주세요');
+  }catch(e){ toast('⚠️ 공지 확인서 자동 생성 오류: '+_safeErrMsg(e)); }
 }
 async function ncfSaveNewDoc(){
   if(!ncfCanManage()){ toast('⚠️ master·admin만 작성할 수 있습니다'); return; }
@@ -20321,6 +20352,7 @@ async function ncfOpenDocDetail(id){
     h+='</div>';
     if(canEdit){
       h+='<div id="ncfUnsignedWrap" style="margin-top:14px"><div style="text-align:center;padding:14px;color:var(--g3);font-size:13px">미확인자 집계 중...</div></div>';
+      h+='<button onclick="ncfOpenEditMeta('+id+',\''+lrptEsc(d.due_date||'')+'\',\''+(d.target_roles||[]).join(',')+'\')" style="width:100%;margin-top:8px;padding:10px;background:var(--teal-bg);color:var(--teal2);border:1px solid var(--teal2);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">✏️ 확인기한·대상 수정</button>';
       h+='<button onclick="ncfDeleteDoc('+id+')" style="width:100%;margin-top:8px;padding:10px;background:#FFF0F0;color:var(--danger);border:1px solid var(--danger);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">🗑️ 이 확인서 전체 삭제</button>';
     }
     body.innerHTML=h;
@@ -20376,6 +20408,27 @@ async function ncfDeleteSignature(sigId, docId){
     toast('✅ 삭제되었습니다');
     ncfOpenDocDetail(docId);
   }catch(e){ toast('⚠️ 삭제 실패: '+_safeErrMsg(e)); }
+}
+var _ncfEditMetaId=null;
+function ncfOpenEditMeta(id, dueDate, targetRolesCsv){
+  if(!ncfCanManage()) return;
+  _ncfEditMetaId=id;
+  document.getElementById('ncfEditDue').value=dueDate||'';
+  var preselected=targetRolesCsv?targetRolesCsv.split(','):['all'];
+  renderNcfTargetChecks('ncfEditTargetGrp', preselected);
+  showM('ncfEditMetaModal');
+}
+async function ncfSaveEditMeta(){
+  if(!ncfCanManage()||!_ncfEditMetaId) return;
+  var dueDate=document.getElementById('ncfEditDue').value||null;
+  var targets=getSelectedNcfTargets('ncfEditTargetGrp');
+  try{
+    var res=await sb.from('notice_confirm_docs').update({due_date:dueDate, target_roles:targets}).eq('id',_ncfEditMetaId);
+    if(res.error) throw res.error;
+    toast('✅ 수정되었습니다');
+    hideM('ncfEditMetaModal');
+    ncfOpenDocDetail(_ncfEditMetaId);
+  }catch(e){ toast('⚠️ 저장 실패: '+_safeErrMsg(e)); }
 }
 async function ncfDeleteDoc(id){
   if(!ncfCanManage()) return;
@@ -23262,6 +23315,7 @@ function newsStartNewPost(){
   clearNewsPostImage();
   _newsPostImageRemoved=false; // clearNewsPostImage가 true로 만들지만 새 글쓰기이므로 다시 false
   var popupChk=document.getElementById('newsPostPopupChk'); if(popupChk) popupChk.checked=false;
+  var ncfChk=document.getElementById('newsPostNcfChk'); if(ncfChk) ncfChk.checked=false;
   var targetWrap=document.getElementById('newsPostTargetWrap'); if(targetWrap) targetWrap.style.display='none';
   renderNewsTargetChecks();
   var title=document.getElementById('newsPostFormTitle'); if(title) title.textContent='✍️ 회사소식 작성';
@@ -23303,6 +23357,8 @@ async function submitNewsPost(){
     var popupChk=document.getElementById('newsPostPopupChk');
     var showPopup=popupChk?popupChk.checked:false;
     var popupTargets=showPopup?getSelectedNewsTargets():null;
+    var ncfChk=document.getElementById('newsPostNcfChk');
+    var wantNcf=ncfChk?ncfChk.checked:false;
     var result;
     if(_newsPostEditId){
       result=await sb.from('companynews_posts').update({title:title, content:content, image_path:imagePath, show_popup:showPopup, target_roles:popupTargets}).eq('id',_newsPostEditId);
@@ -23315,6 +23371,10 @@ async function submitNewsPost(){
       });
     }
     if(result.error){ toast('⚠️ 저장 실패: '+_safeErrMsg(result.error)); if(prog) prog.style.display='none'; if(btn){btn.disabled=false;btn.style.cursor='pointer';btn.style.opacity='1';} return; }
+    if(wantNcf&&!_newsPostEditId){
+      var newNewsId=result.data&&result.data[0]&&result.data[0].id;
+      if(newNewsId) await ncfAutoCreateFromLink({title:title, content:content, linkedNewsId:newNewsId});
+    }
     toast(_newsPostEditId?'✅ 수정되었습니다':'✅ 회사소식이 게시되었습니다');
     if(!_newsPostEditId) pushSendNotification('companynews','📰 새 회사소식', title);
     if(prog) prog.style.display='none';
