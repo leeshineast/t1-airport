@@ -1018,10 +1018,16 @@ html{overflow-x:hidden}
   <div class="menu-cat" id="menuCat_workforce">
     <div class="sec-lbl" style="padding:14px 13px 6px">📅 근무계획</div>
     <div class="menu-grid">
-      <button class="menu-btn" onclick="go('workforce')">
+      <button class="menu-btn" onclick="go('workschedule')">
         <span class="menu-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></svg></span>
-        <div class="menu-title">근무계획<span id="notifBadge_workforce"></span></div>
-        <div class="menu-desc">근무계획(더존ERP) · 특별근무 편성</div>
+        <div class="menu-title">휴무계획<span id="notifBadge_workforce"></span></div>
+        <div class="menu-desc">직원별 고정휴무요일 관리 · 더존ERP 업로드용 변환/다운로드</div>
+        <span class="menu-arrow">관리하기 →</span>
+      </button>
+      <button class="menu-btn" onclick="go('specialwork')">
+        <span class="menu-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7z"/><circle cx="12" cy="9" r="2.5"/></svg></span>
+        <div class="menu-title">특별근무</div>
+        <div class="menu-desc">성수기·명절 기간 팀/조별 근무 편성표 관리</div>
         <span class="menu-arrow">관리하기 →</span>
       </button>
       <button class="menu-btn" onclick="go('eduevent')">
@@ -3618,8 +3624,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 <!-- ══ 인력관리 > 근무계획 ══ -->
 <div id="sWorkSchedule" class="scr">
   <div class="pg-hd">
-    <div><h1>📅 근무계획</h1><small id="wfEmpCountLbl">전체 0명</small></div>
-    <button onclick="go('workforce')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 인력관리</button>
+    <div><h1>📅 휴무계획</h1><small id="wfEmpCountLbl">전체 0명</small></div>
+    <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 메인</button>
   </div>
   <div style="display:flex;border-bottom:2px solid var(--g2)">
     <div id="wfMainT0" onclick="wfMainTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:14px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">목록</div>
@@ -3769,7 +3775,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
 <div id="sSpecialWork" class="scr">
   <div class="pg-hd">
     <div><h1>📌 특별근무</h1><small>성수기·명절 기간 편성 관리</small></div>
-    <button onclick="go('workforce')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 인력관리</button>
+    <button onclick="go('main')" style="padding:6px 12px;background:var(--g2);color:var(--g5);border:none;border-radius:20px;font-size:13px;font-weight:700;cursor:pointer">← 메인</button>
   </div>
   <div id="wfSpListView" style="padding:13px">
     <button onclick="wfSpOpenCreate()" style="width:100%;padding:12px;background:var(--teal);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:700;cursor:pointer;margin-bottom:12px">＋ 특별근무 등록</button>
@@ -7402,7 +7408,8 @@ var ALL_MENU_ITEMS=[
   {key:'execdash', icon:'👑', title:'현황판', action:"go('execdash')"},
   {key:'statsdash', icon:'📊', title:'통계 대시보드', action:"goStatsDash()"},
   {key:'mp', icon:'👥', title:'인력현황', action:"go('mp')"},
-  {key:'workforce', icon:'👔', title:'인력관리', action:"go('workforce')"},
+  {key:'workschedule', icon:'📅', title:'휴무계획', action:"go('workschedule')"},
+  {key:'specialwork', icon:'📌', title:'특별근무', action:"go('specialwork')"},
   {key:'ho', icon:'🔄', title:'인수인계', action:"go('ho')"},
   {key:'jointwork', icon:'🤝', title:'공동작업', action:"go('jointwork')"},
   {key:'voc', icon:'📞', title:'민원(서비스응대)', action:"go('voc')"},
