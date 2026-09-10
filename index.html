@@ -759,7 +759,16 @@ html{overflow-x:hidden}
   </div>
 
   <!-- 폴더형 메뉴 (master·admin·manager·leader·acting_leader 전용) — 긴 목록을 카테고리 폴더로 묶어서 보여줌 -->
-  <button type="button" id="menuFolderBackBtn" onclick="closeMenuFolder()" style="display:none;margin:10px 13px 0;padding:9px 14px;background:var(--g1);border:1px solid var(--g2);border-radius:20px;font-size:13px;font-weight:700;color:var(--g6);cursor:pointer">← 폴더 목록</button>
+  <div id="menuFolderHeaderBar" style="display:none;margin:10px 13px 4px;padding:0 0 10px;border-bottom:1px solid var(--g2);align-items:center;justify-content:space-between">
+    <div>
+      <div id="menuFolderHeaderTitle" style="font-size:15px;font-weight:700;color:var(--g7)"></div>
+      <div id="menuFolderHeaderCount" style="font-size:12px;color:var(--g4);margin-top:1px"></div>
+    </div>
+    <button type="button" onclick="closeMenuFolder()" style="display:flex;align-items:center;gap:5px;padding:8px 14px 8px 10px;background:var(--teal-bg);border:none;border-radius:20px;font-size:13px;font-weight:700;color:var(--teal2);cursor:pointer;flex:none">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+      전체메뉴
+    </button>
+  </div>
   <div id="menuFolderGrid" style="display:none;padding:10px 13px 4px">
     <div class="sec-lbl" style="padding:4px 0 8px">📁 전체 메뉴</div>
     <div id="menuFolderCards" style="display:grid;grid-template-columns:1fr 1fr;gap:9px"></div>
@@ -6555,6 +6564,11 @@ function hideM(id){
 window.addEventListener('popstate', function(e){
   if(_consumeNextPop){ _consumeNextPop=false; return; }
   if(_eeConsumeNextPop){ _eeConsumeNextPop=false; return; }
+  if(typeof _folderOpen!=='undefined'&&_folderOpen){
+    _folderOpen=false;
+    closeMenuFolder();
+    return;
+  }
   if(_eeSubOpen){
     _eeSubOpen=false;
     eeTab(0);
@@ -7489,10 +7503,10 @@ function renderMenuFolders(){
   if(!me) return;
   var wantsFolder=(me.role==='master'||me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader');
   var gridEl=document.getElementById('menuFolderGrid');
-  var backBtn=document.getElementById('menuFolderBackBtn');
+  var headerBar=document.getElementById('menuFolderHeaderBar');
   if(!wantsFolder){
     if(gridEl) gridEl.style.display='none';
-    if(backBtn) backBtn.style.display='none';
+    if(headerBar) headerBar.style.display='none';
     return; // 카테고리들은 updateMenuCatVisibility가 이미 정한 상태(전체 펼침) 그대로 둔다
   }
   var cardsWrap=document.getElementById('menuFolderCards');
@@ -7520,8 +7534,9 @@ function renderMenuFolders(){
     cat.style.display='none';
   });
   gridEl.style.display='block';
-  if(backBtn) backBtn.style.display='none';
+  if(headerBar) headerBar.style.display='none';
 }
+var _folderOpen=false;
 function openMenuFolder(idx){
   var f=MENU_FOLDER_DEFS[idx]; if(!f) return;
   document.querySelectorAll('.menu-cat').forEach(function(cat){
@@ -7529,9 +7544,24 @@ function openMenuFolder(idx){
     cat.style.display = f.cats.indexOf(cat.id)!==-1 ? '' : 'none';
   });
   var gridEl=document.getElementById('menuFolderGrid'); if(gridEl) gridEl.style.display='none';
-  var backBtn=document.getElementById('menuFolderBackBtn'); if(backBtn) backBtn.style.display='block';
+  var headerBar=document.getElementById('menuFolderHeaderBar'); if(headerBar) headerBar.style.display='flex';
+  var titleEl=document.getElementById('menuFolderHeaderTitle'); if(titleEl) titleEl.textContent=f.icon+' '+f.label;
+  var countEl=document.getElementById('menuFolderHeaderCount');
+  if(countEl){
+    var n=0;
+    f.cats.forEach(function(cid){ var el=document.getElementById(cid); if(el) el.querySelectorAll('.menu-btn').forEach(function(b){ if(getComputedStyle(b).display!=='none') n++; }); });
+    countEl.textContent=n+'개 메뉴';
+  }
+  // 폴더를 "연 것"도 뒤로가기 스택에 한 단계로 기록해둔다 — 안 하면 폴더 안에서 기기 뒤로가기를 눌렀을 때
+  // 앱이 이 상태를 전혀 모르고 그 이전(로그인 등) 기록으로 바로 건너뛰어서, 폴더 목록도 안 거치고 앱이 통째로 꺼져버린다.
+  _folderOpen=true;
+  try{ history.pushState({kind:'folder'}, ''); }catch(e){}
 }
 function closeMenuFolder(){
+  if(_folderOpen&&history.state&&history.state.kind==='folder'){
+    history.back(); // popstate가 뒤이어 알아서 처리하지 않고 여기서 바로 화면도 정리하므로, 아래 로직을 그대로 이어서 실행한다
+  }
+  _folderOpen=false;
   var anyManaged=false;
   document.querySelectorAll('.menu-cat').forEach(function(cat){
     if(cat.id==='menuCat_fav'||!cat.dataset.folderManaged) return;
@@ -7540,7 +7570,7 @@ function closeMenuFolder(){
   });
   if(!anyManaged) return; // 폴더형이 아닌 계정에서는 아무 것도 하지 않음
   var gridEl=document.getElementById('menuFolderGrid'); if(gridEl) gridEl.style.display='block';
-  var backBtn=document.getElementById('menuFolderBackBtn'); if(backBtn) backBtn.style.display='none';
+  var headerBar=document.getElementById('menuFolderHeaderBar'); if(headerBar) headerBar.style.display='none';
 }
 
 async function doLogin(){
