@@ -7545,6 +7545,13 @@ var _folderOpen=false;
 var _folderConsumeNextPop=false; // closeMenuFolder가 직접 history.back()을 호출했을 때, 그로 인해 나중에 도착하는 popstate를 무시하기 위한 표시
 function openMenuFolder(idx){
   var f=MENU_FOLDER_DEFS[idx]; if(!f) return;
+  // 폴더 안에 메뉴가 1개뿐이면(예: 인력관리) 폴더를 펼치지 않고 그 메뉴로 바로 들어간다 — 같은 이름을 두 번 누르게 하지 않기 위함
+  var visibleBtns=[];
+  f.cats.forEach(function(cid){
+    var el=document.getElementById(cid); if(!el) return;
+    el.querySelectorAll('.menu-btn').forEach(function(b){ if(getComputedStyle(b).display!=='none') visibleBtns.push(b); });
+  });
+  if(visibleBtns.length===1){ visibleBtns[0].click(); return; }
   document.querySelectorAll('.menu-cat').forEach(function(cat){
     if(cat.id==='menuCat_fav'||!cat.dataset.folderManaged) return;
     cat.style.display = f.cats.indexOf(cat.id)!==-1 ? '' : 'none';
@@ -7553,11 +7560,7 @@ function openMenuFolder(idx){
   var headerBar=document.getElementById('menuFolderHeaderBar'); if(headerBar) headerBar.style.display='flex';
   var titleEl=document.getElementById('menuFolderHeaderTitle'); if(titleEl) titleEl.textContent=f.icon+' '+f.label;
   var countEl=document.getElementById('menuFolderHeaderCount');
-  if(countEl){
-    var n=0;
-    f.cats.forEach(function(cid){ var el=document.getElementById(cid); if(el) el.querySelectorAll('.menu-btn').forEach(function(b){ if(getComputedStyle(b).display!=='none') n++; }); });
-    countEl.textContent=n+'개 메뉴';
-  }
+  if(countEl){ countEl.textContent=visibleBtns.length+'개 메뉴'; }
   // 폴더를 "연 것"도 뒤로가기 스택에 한 단계로 기록해둔다 — 안 하면 폴더 안에서 기기 뒤로가기를 눌렀을 때
   // 앱이 이 상태를 전혀 모르고 그 이전(로그인 등) 기록으로 바로 건너뛰어서, 폴더 목록도 안 거치고 앱이 통째로 꺼져버린다.
   _folderOpen=true;
