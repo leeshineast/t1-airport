@@ -26687,16 +26687,22 @@ function renderMgrAttendance(){
         // 미체크 상태인데 근무계획(분기 고정휴무)상 해당 조회일이 휴무인 경우 자동으로 "휴무"로 표시 (당일·전일·조회일 공통 적용)
         var isAutoOff = !isChecked && !scheduledStatus && isSlotOffToday(team, name, mgrRosterOffCache, offCheckDate);
         var effStatus = status || scheduledStatus; // 아이콘/색상 판정용
-        var isLeaveType = effStatus && effStatus!=='출장' && effStatus!=='교육' && effStatus!=='휴무' && effStatus!=='출근'; // 연차/공가/건강검진/병가/휴직/기타 통칭
+        var isLeaveType = effStatus && effStatus!=='출장' && effStatus!=='교육' && effStatus!=='휴무' && effStatus!=='출근'; // 연차/공가/건강검진/병가/휴직/기타(및 자유입력) 통칭
+        var isPlainOff = effStatus==='휴무'; // "휴무"는 자동감지된 근무계획 휴무와 동일한 스타일로 통일
+        var offLikeStyle = isPlainOff || isAutoOff;
+        // 연차/공가 · 건강검진/병가 · 휴직/기타(자유입력 포함) 세 그룹을 서로 다른 색으로 구분
+        var leaveColor = (effStatus==='연차'||effStatus==='공가') ? {bg:'#FEF3E2',bd:'#C2751A'}
+                        : (effStatus==='건강검진'||effStatus==='병가') ? {bg:'#FDECEC',bd:'#C0392B'}
+                        : {bg:'#F3EFE7',bd:'#8A6A3B'}; // 휴직/기타/자유입력
 
         // 클릭 권한: 당일에만 가능. 관리자 전체, 해당팀 조장/팀장 (운영팀은 관리자만)
         var canCheck = isToday && me && me.role!=='acting_leader' && (isAdmin || (team!=='운영' && myTeam === team));
 
-        var statusIcon = effStatus==='출장' ? '✈' : effStatus==='교육' ? '📚' : isLeaveType ? '📝' : isAutoOff ? '🏠' : isChecked ? '✔' : '';
+        var statusIcon = effStatus==='출장' ? '✈' : effStatus==='교육' ? '📚' : isLeaveType ? '📝' : offLikeStyle ? '🏠' : isChecked ? '✔' : '';
         var bg = effStatus==='출장' ? 'background:#EBF0FF;border-color:#1B4FBE;color:#1B4FBE'
                : effStatus==='교육' ? 'background:#F3EEFC;border-color:#6B21A8;color:#6B21A8'
-               : isLeaveType ? 'background:#FEF3E2;border-color:#C2751A;color:#C2751A'
-               : isAutoOff ? 'background:#F1F5F9;border-color:#94A3B8;color:#475569'
+               : isLeaveType ? 'background:'+leaveColor.bg+';border-color:'+leaveColor.bd+';color:'+leaveColor.bd
+               : offLikeStyle ? 'background:#F1F5F9;border-color:#94A3B8;color:#475569'
                : isChecked ? 'background:var(--teal-bg);border-color:var(--teal2);color:var(--teal2)'
                : 'background:var(--g1);border-color:var(--g2);color:var(--g4)';
         var cursor = canCheck ? 'cursor:pointer' : 'cursor:default';
