@@ -27943,47 +27943,60 @@ async function wfSpOpenEditLog(eventId, title){
   showM('wfLogModal');
 }
 
-// ── 엑셀 업로드: 인원현황 시트 파싱 (사번, 한글이름, 직책/직위, 총괄, 근무팀, 근무조, 근무구역, 1분기 등 요일컬럼) ──
+// ── 엑셀 업로드: 인원현황 시트 파싱 (사번, 한글이름, 직책/직위, 총괄, 근무팀, 근무조, 근무구역, 1~4분기 요일컬럼) ──
 // 상단 "팀 전체" 필터(wfFTeam)에 특정 팀이 선택돼 있으면 그 팀의 실제 등록 인원으로 채운 양식을, 선택 안 돼있으면 기존 예시 양식을 내려받는다.
-function wfDownloadEmpTemplate(){
+// 2026-09 개편: 분기 1개짜리 파일이 아니라 '선택된 연도의 1~4분기'를 한 파일에 컬럼으로 함께 내려준다. 업로드 시에도 값이 채워진 분기만 갱신되고 빈 분기는 그대로 유지된다.
+async function wfDownloadEmpTemplate(){
   var selTeam=(document.getElementById('wfFTeam')||{}).value||'';
-  // 업로드 시 분기 자동인식 정규식(/(20\d\d)년\s*([1-4])\s*분기/)과 반드시 맞도록 4자리 연도로 제목을 만든다
-  var qm=(wfCurQuarter||wfNowQuarter()).match(/^(\d{4})-Q(\d)$/);
-  var fullQLabel=qm ? (qm[1]+'년 '+qm[2]+'분기') : (wfCurQuarter||wfNowQuarter());
+  var yearM=(wfCurQuarter||wfNowQuarter()).match(/^(\d{4})/);
+  var year=yearM?yearM[1]:String(new Date().getFullYear());
+  var quarters=[1,2,3,4].map(function(q){return year+'-Q'+q;});
   var aoa, fileName;
   if(selTeam){
     var teamEmps=wfEmployees.filter(function(e){return e.team===selTeam;})
       .slice().sort(function(a,b){return String(a.emp_no).localeCompare(String(b.emp_no));});
+    // 해당 연도 1~4분기 고정휴무 데이터를 한 번에 조회해서 사번별/분기별로 매핑
+    var offMap={};
+    if(teamEmps.length){
+      var offRes=await sb.from('wf_fixed_off').select('emp_no,quarter,off_day1,off_day2').in('quarter', quarters);
+      if(!offRes.error && offRes.data){
+        offRes.data.forEach(function(r){
+          offMap[r.emp_no]=offMap[r.emp_no]||{};
+          offMap[r.emp_no][r.quarter]=(r.off_day1||'')+(r.off_day2||'');
+        });
+      }
+    }
     aoa=[
-      [fullQLabel+' '+selTeam+' 근무계획 수정양식 — 변경후 칸만 고쳐서 업로드하세요'],
-      ['사번','성명','직책','근무팀','근무조','변경전','변경후','비고','휴직','시작일자','종료일자']
+      [year+'년 '+selTeam+' 근무계획 수정양식 — 변경할 분기 칸만 채워서 업로드하세요 (비워두면 그 분기는 그대로 유지됩니다)'],
+      ['사번','성명','직책','근무팀','근무조','1분기','2분기','3분기','4분기','휴직','시작일자','종료일자','비고']
     ];
     teamEmps.forEach(function(e){
-      var off=(e.off1&&e.off2)?(e.off1+e.off2):'';
+      var om=offMap[e.emp_no]||{};
       aoa.push([
         e.emp_no, e.name||'', e.position||'', e.team||'', e.group_name||'',
-        off, off, '', e.leave?e.leave.leave_type:'', e.leave?e.leave.start_date:'', e.leave?e.leave.end_date:''
+        om[year+'-Q1']||'', om[year+'-Q2']||'', om[year+'-Q3']||'', om[year+'-Q4']||'',
+        e.leave?e.leave.leave_type:'', e.leave?e.leave.start_date:'', e.leave?e.leave.end_date:'', ''
       ]);
     });
     if(!teamEmps.length) aoa.push(['(해당 팀 등록 인원이 없습니다)']);
     fileName=selTeam+'_근무계획_업로드양식.xlsx';
   } else {
     aoa=[
-      [fullQLabel+' 정기 휴무변경(적용일 기입)'],
-      ['사번','성명','직책','근무팀','근무조','변경전','변경후','비고','휴직','시작일자','종료일자'],
-      [140000,'홍길동','팀장','환경미화1팀','-','월화','월화','예시행 - 지우고 사용하세요','', '', ''],
-      [140001,'홍이동','조장','환경미화1팀','A조','금토','금토','','', '', ''],
-      [140002,'홍삼동','','환경미화1팀','A조','화수','수목','업무조정','', '', ''],
-      [140003,'홍사동','','행정','-','토일','토일','','휴직', new Date(2026,2,1), new Date(2027,1,28)]
+      [year+'년 정기 휴무변경 (분기별 칸에 적용할 요일 2글자 기입, 예: 월화)'],
+      ['사번','성명','직책','근무팀','근무조','1분기','2분기','3분기','4분기','휴직','시작일자','종료일자','비고'],
+      [140000,'홍길동','팀장','환경미화1팀','-','월화','월화','월화','월화','', '', '', '예시행 - 지우고 사용하세요'],
+      [140001,'홍이동','조장','환경미화1팀','A조','','','금토','금토','', '', '', '3,4분기만 변경하는 예시'],
+      [140002,'홍삼동','','환경미화1팀','A조','','','화수','수목','', '', '', '분기마다 다른 요일 예시'],
+      [140003,'홍사동','','행정','-','','','토일','토일','휴직', new Date(2026,2,1), new Date(2027,1,28), '']
     ];
     fileName='근무계획_업로드양식.xlsx';
   }
   var wb=XLSX.utils.book_new();
   var ws=XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols']=[{wch:9},{wch:9},{wch:8},{wch:14},{wch:8},{wch:8},{wch:8},{wch:22},{wch:8},{wch:12},{wch:12}];
+  ws['!cols']=[{wch:9},{wch:9},{wch:8},{wch:14},{wch:8},{wch:7},{wch:7},{wch:7},{wch:7},{wch:8},{wch:12},{wch:12},{wch:22}];
   XLSX.utils.book_append_sheet(wb, ws, '근무계획업로드양식');
   XLSX.writeFile(wb, fileName);
-  toast('📄 양식 다운로드 완료'+(selTeam?(' ('+selTeam+' '+wfEmployees.filter(function(e){return e.team===selTeam;}).length+'명)'):''));
+  toast('📄 양식 다운로드 완료'+(selTeam?(' ('+selTeam+' '+wfEmployees.filter(function(e){return e.team===selTeam;}).length+'명, '+year+'년 1~4분기)'):''));
 }
 function wfConfirmDeleteAll(){
   if(!wfEmployees.length){ toast('삭제할 데이터가 없습니다'); return; }
@@ -28020,25 +28033,25 @@ function wfEmpUpload(inputEl){
       }).filter(function(o){ return Object.values(o).some(function(v){return String(v).trim()!=='';}); });
       if(!rows.length){ toast('엑셀에 데이터가 없습니다'); inputEl.value=''; return; }
 
-      // 상단 제목에서 "20xx년 n분기" 자동 탐지 → 분기 선택값 자동 설정
+      // 상단 제목에서 "20xx년" 연도만 자동 탐지 (분기는 더 이상 제목이 아니라 컬럼별로 직접 읽음)
       var titleText=aoa.slice(0,headerRowIdx).map(function(r){return r.join(' ');}).join(' ');
-      var qMatch=titleText.match(/(20\d\d)년\s*([1-4])\s*분기/);
-      if(qMatch){
-        var detectedQ=qMatch[1]+'-Q'+qMatch[2];
-        var qs=document.getElementById('wfQuarterSel');
-        if(qs && Array.from(qs.options).some(function(o){return o.value===detectedQ;})){
-          qs.value=detectedQ; wfCurQuarter=detectedQ;
-        }
-      }
+      var yMatch=titleText.match(/(20\d\d)년/);
+      var uploadYear=yMatch?yMatch[1]:(((wfCurQuarter||wfNowQuarter()).match(/^(\d{4})/)||[])[1]||String(new Date().getFullYear()));
 
-      // 요일 패턴(2글자) 컬럼 탐지: "변경후" 우선, 없으면 "변경전", 없으면 분기 패턴 컬럼(예:"1분기") 자동탐지
-      var dayColKey=null;
-      if(headers.indexOf('변경후')!==-1) dayColKey='변경후';
-      else if(headers.indexOf('변경전')!==-1) dayColKey='변경전';
-      else{
-        dayColKey=headers.find(function(h){
-          return rows.some(function(r){ return /^[월화수목금토일]{2}$/.test(String(r[h]||'').trim()); });
-        });
+      // 분기 컬럼 탐지: 신양식("1분기"~"4분기" 동시 포함) 우선 — 값이 채워진 분기만 갱신하고 빈 분기는 손대지 않는다.
+      // 신양식 컬럼이 하나도 없으면 구양식(변경후/변경전 단일분기, 화면에서 선택된 분기 기준)으로 하위호환 처리한다.
+      var Q_COLS=[['1분기','Q1'],['2분기','Q2'],['3분기','Q3'],['4분기','Q4']];
+      var quarterColMap=Q_COLS.filter(function(qc){ return headers.indexOf(qc[0])!==-1; })
+        .map(function(qc){ return {header:qc[0], quarter:uploadYear+'-'+qc[1]}; });
+      var legacyDayColKey=null;
+      if(!quarterColMap.length){
+        if(headers.indexOf('변경후')!==-1) legacyDayColKey='변경후';
+        else if(headers.indexOf('변경전')!==-1) legacyDayColKey='변경전';
+        else{
+          legacyDayColKey=headers.find(function(h){
+            return rows.some(function(r){ return /^[월화수목금토일]{2}$/.test(String(r[h]||'').trim()); });
+          });
+        }
       }
 
       // 팀 번호별 오전/오후/야간 기본 매핑 (근무구역 정보가 없는 파일 대응)
@@ -28073,12 +28086,23 @@ function wfEmpUpload(inputEl){
           emp_no:empNo, name:name, position:pos, hq_team:hq||null, team:team||null, group_name:grp||null,
           shift_type:shift||null, work_area:area||null, updated_at:new Date().toISOString()
         });
-        if(dayColKey){
-          var dv=String(r[dayColKey]||'').trim();
-          if(/^[월화수목금토일]{2}$/.test(dv)){
+        if(quarterColMap.length){
+          // 신양식: 값이 채워진 분기만 저장(upsert)한다. 빈 분기는 아예 payload에 넣지 않으므로 기존 데이터가 그대로 유지된다.
+          quarterColMap.forEach(function(qc){
+            var dv=String(r[qc.header]||'').trim();
+            if(/^[월화수목금토일]{2}$/.test(dv)){
+              offPayload.push({
+                emp_no:empNo, quarter:qc.quarter,
+                off_day1:dv[0], off_day2:dv[1], updated_by: me?me.name:''
+              });
+            }
+          });
+        } else if(legacyDayColKey){
+          var dv2=String(r[legacyDayColKey]||'').trim();
+          if(/^[월화수목금토일]{2}$/.test(dv2)){
             offPayload.push({
               emp_no:empNo, quarter:wfCurQuarter||wfNowQuarter(),
-              off_day1:dv[0], off_day2:dv[1], updated_by: me?me.name:''
+              off_day1:dv2[0], off_day2:dv2[1], updated_by: me?me.name:''
             });
           }
         }
@@ -28131,7 +28155,8 @@ function wfEmpUpload(inputEl){
         var r3=await sb.from('wf_leave').upsert(leavePayload,{onConflict:'emp_no,start_date'});
         if(r3.error){ toast('휴직정보 저장 오류: '+_safeErrMsg(r3.error)); return; }
       }
-      toast('✓ '+empPayload.length+'명 등록/갱신 완료'+(offPayload.length?(' ('+(wfCurQuarter||wfNowQuarter())+' 휴무요일 '+offPayload.length+'건 포함)'):'')+(leavePayload.length?(' · 휴직 '+leavePayload.length+'건'):''));
+      var qSummary=quarterColMap.length ? (uploadYear+'년 1~4분기 중 '+offPayload.length+'건') : ((wfCurQuarter||wfNowQuarter())+' 휴무요일 '+offPayload.length+'건');
+      toast('✓ '+empPayload.length+'명 등록/갱신 완료'+(offPayload.length?(' ('+qSummary+' 반영)'):'')+(leavePayload.length?(' · 휴직 '+leavePayload.length+'건'):''));
       inputEl.value='';
       loadWfEmployees();
     }catch(err){ toast('엑셀 처리 오류: '+String(_safeErrMsg(err)||err)); inputEl.value=''; }
