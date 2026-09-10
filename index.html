@@ -13416,7 +13416,7 @@ async function eeOpenAdminView(eventId){
     });
 
     var h='<div class="card"><div class="cb">';
-    h+='<div style="font-size:16px;font-weight:800;color:var(--g7);margin-bottom:2px">'+eeEsc(ev.title)+'</div>';
+    h+='<div style="font-size:16px;font-weight:800;color:var(--g7);margin-bottom:2px">'+sfApplyMarkup(eeEsc(ev.title))+'</div>';
     h+='<div style="font-size:13px;color:var(--g5);margin-bottom:11px">총 신청 '+apps.length+'건 (연인원, 중복회차 포함)</div>';
     h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:13px">'
       +'<button onclick="eeOpenWishSurvey(\''+eventId+'\')" style="padding:7px 12px;background:var(--g1);color:var(--g6);border:1px solid var(--g2);border-radius:20px;font-size:12px;font-weight:700;cursor:pointer">📋 참석희망자 조사표</button>'
@@ -13701,7 +13701,7 @@ async function eeOpenScheduleReport(eventId, scheduleId, kind){
     document.getElementById('eeReportModalTitle').textContent='📄 '+title;
     document.getElementById('eeReportBigTitle').textContent=title;
     document.getElementById('eeReportMeta').innerHTML=eeReportMetaTable([
-      [catLabel+'명', eeEsc(ev.title)],
+      [catLabel+'명', sfApplyMarkup(eeEsc(ev.title))],
       [catLabel+'일시', sched.event_date+' '+(sched.start_time||'')+'~'+(sched.end_time||'')],
       ['장소', eeEsc(sched.location||'-')],
       ['참석인원', rows.length+'명']
@@ -13725,7 +13725,7 @@ async function eeOpenWishSurvey(eventId){
     var catLabel=(ev.category==='기타'?(ev.category_custom||'기타'):ev.category)||'교육';
     document.getElementById('eeReportModalTitle').textContent='📄 참석희망자 조사표';
     document.getElementById('eeReportBigTitle').textContent=catLabel+' 참석희망자 조사표';
-    var metaPairs=[[catLabel+'명', eeEsc(ev.title)]];
+    var metaPairs=[[catLabel+'명', sfApplyMarkup(eeEsc(ev.title))]];
     if(ev.apply_deadline) metaPairs.push(['신청기간', '~'+ev.apply_deadline]);
     metaPairs.push(['신청인원', rows.length+'명']);
     document.getElementById('eeReportMeta').innerHTML=eeReportMetaTable(metaPairs);
@@ -13931,7 +13931,7 @@ async function eeRenderAttendScreen(scheduleId, token){
     wrap.innerHTML=
       '<div class="card"><div class="cb">'
       +'<div style="font-size:12px;color:var(--g4)">'+eeEsc(ev.category==='기타'?(ev.category_custom||'기타'):(ev.category||''))+'</div>'
-      +'<div style="font-size:17px;font-weight:800;color:var(--g7);margin-bottom:4px">'+eeEsc(ev.title||'')+'</div>'
+      +'<div style="font-size:17px;font-weight:800;color:var(--g7);margin-bottom:4px">'+sfApplyMarkup(eeEsc(ev.title||''))+'</div>'
       +'<div style="font-size:13px;color:var(--g5);margin-bottom:13px">📅 '+sched.event_date+' '+(sched.start_time||'')+'~'+(sched.end_time||'')+(sched.location?(' · 📍 '+eeEsc(sched.location)):'')+'</div>'
       +'<div style="display:flex;gap:8px;margin-bottom:11px">'
         +'<div style="flex:1"><div class="f-lbl">팀</div><input type="text" id="eeAtTeam" class="ri" value="'+eeEsc(teamOut)+'"></div>'
@@ -29420,7 +29420,7 @@ async function cpRenderWinner(){
       '</div>';
   }).join('');
   wrap.innerHTML='<div style="margin-bottom:16px">'+
-    '<div style="text-align:center;font-size:16px;font-weight:800;color:#c2410c;margin-bottom:14px">📢 '+eeEsc(w.title)+'</div>'+
+    '<div style="text-align:center;font-size:16px;font-weight:800;color:#c2410c;margin-bottom:14px">📢 '+sfApplyMarkup(eeEsc(w.title))+'</div>'+
     cardsHtml+
     (w.body?('<div style="background:#fff7ed;border:1px dashed #fdba74;border-radius:10px;padding:12px 14px;margin-top:8px;font-size:13px;color:#7c2d12;white-space:pre-wrap;text-align:center">'+eeEsc(w.body)+'</div>'):'')+
     '</div>';
