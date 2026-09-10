@@ -13928,7 +13928,9 @@ async function eeConfirmAttendance(){
   if(!name){ toast('⚠️ 성명을 입력하세요'); return; }
   var sigDataUrl=null;
   if(eeAtRegisteredSigUrl){
-    sigDataUrl=eeAtRegisteredSigUrl; // 관리자확인사항에 등록된 서명 재사용
+    // 등록된 전자서명은 여기서 스냅샷(blob: URL 등)을 DB에 저장하지 않는다.
+    // signature_data를 비워두면 출력 시점에 eeAttachSignatures()가 그때그때 최신 등록서명을 다시 불러와 보여준다(자동으로 항상 최신·항상 유효).
+    sigDataUrl=null;
   }else{
     if(!eeAtSigHasStroke){ toast('⚠️ 서명을 해주세요'); return; }
     try{
