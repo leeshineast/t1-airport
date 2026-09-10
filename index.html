@@ -3099,7 +3099,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <input type="text" id="adcSigTargetInput" class="ri" placeholder="직원 이름 검색" oninput="adcSigTargetSearch()" style="margin-bottom:6px">
         <div id="adcSigTargetCands" style="max-height:180px;overflow-y:auto;border-radius:8px"></div>
         <div id="adcSigTargetSelected" style="display:none;font-size:13px;margin-top:4px"></div>
-        <div id="adcSigStatusToggle" style="margin-top:10px;font-size:12.5px;font-weight:700;color:var(--teal2);cursor:pointer;text-decoration:underline" onclick="adcToggleSigStatus()">📋 등록 현황 보기 (관리자·팀장·조장·조장대행)</div>
+        <button type="button" id="adcSigStatusToggle" onclick="adcToggleSigStatus()" style="margin-top:10px;width:100%;padding:11px;background:var(--teal2);color:#fff;border:none;border-radius:var(--r2);font-size:13.5px;font-weight:700;cursor:pointer">📋 등록 현황 보기 (관리자·팀장·조장·조장대행)</button>
         <div id="adcSigStatusPanel" style="display:none;margin-top:8px;max-height:280px;overflow-y:auto;background:#fff;border-radius:8px;padding:6px 4px"></div>
       </div>
       <div class="fg"><label class="f-lbl">소속</label><input type="text" id="adcMyDept" class="ri" value="T1환경미화사업부"></div>
