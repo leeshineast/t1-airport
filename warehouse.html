@@ -592,6 +592,8 @@ function roleLabel(r){ if(r==='master')return '최고관리자'; if(r==='admin')
 function canInput(){ if(!me)return false; var r=me.role; return r==='master'||r==='admin'||r==='manager'||r==='leader'||r==='acting_leader'; }
 function isAdmin(){ return me && (me.role==='master'||me.role==='admin'||me.role==='manager'); }
 function isMaster(){ return !!(me && me.role==='master'); }
+// 이력(입출고 기록) 삭제 권한: 최고관리자/관리자/팀장/조장까지 허용 (조장대행 제외)
+function canDeleteHistory(){ return !!(me && ['master','admin','manager','leader'].indexOf(me.role)!==-1); }
 function todayStr(){ var n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); }
 // ── iOS 홈화면 설치 앱(스탠드얼론 모드)에서는 window.confirm()/prompt()가 화면에 표시되지 않는 경우가 있어
 // 같은 역할을 하는 커스텀 모달로 대체한다. 기본은 확인/취소, opt.needInput을 주면 텍스트 입력까지 받는다(prompt 대체).
@@ -1503,13 +1505,13 @@ function renderItemHistory(rows){
       +'<div style="font-weight:800;font-size:13px">'+esc(r.ledger_date)+' <span style="font-weight:400;color:#8a94a6;font-size:11.5px">('+esc(r.team||'-')+' · '+esc(r.written_by||r.leader_name||'-')+')</span></div>'
       +'<div style="font-size:12.5px;color:#555;margin-top:2px">입고 '+(r.in_qty||0)+' · 출고 '+(r.out_qty||0)+' · 그날 재고 '+r.remain_qty+'</div>'
       +'</div>'
-      +(isMaster()?'<button onclick="deleteHistoryEntry(\''+r.id+'\')" style="padding:6px 10px;background:#FEECEC;color:#D94040;border:1px solid #D94040;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>':'')
+      +(canDeleteHistory()?'<button onclick="deleteHistoryEntry(\''+r.id+'\')" style="padding:6px 10px;background:#FEECEC;color:#D94040;border:1px solid #D94040;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>':'')
       +'</div>';
   });
   box.innerHTML=h;
 }
 async function deleteHistoryEntry(rowId){
-  if(!isMaster()){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
+  if(!canDeleteHistory()){ toast('⚠️ 최고관리자·관리자·팀장·조장만 삭제할 수 있습니다'); return; }
   if(!(await customConfirm('이 날짜의 기록을 삭제하시겠습니까?\n삭제 후 이 품목의 이후 날짜 재고가 자동으로 다시 계산됩니다.'))) return;
   try{
     var delRes=await sbFetch('/warehouse_ledger?id=eq.'+rowId,{method:'DELETE'});
