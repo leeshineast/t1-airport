@@ -3094,6 +3094,12 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <div class="card"><div class="cb">
       <div style="font-size:14px;font-weight:700;color:var(--g6);margin-bottom:4px">✍️ 내 서명 정보 등록</div>
       <div style="font-size:12.5px;color:var(--g4);margin-bottom:13px;line-height:1.6">한 번 등록해두면 확인서 서명 시 자동으로 채워집니다.</div>
+      <div id="adcSigTargetBox" style="display:none;margin-bottom:14px;padding:12px;background:var(--teal-bg);border-radius:var(--r2);border:1px solid var(--teal)">
+        <div style="font-size:12.5px;font-weight:700;color:var(--teal2);margin-bottom:6px">👤 서명 등록 대상 (최고관리자 전용 — 비워두면 본인)</div>
+        <input type="text" id="adcSigTargetInput" class="ri" placeholder="직원 이름 검색" oninput="adcSigTargetSearch()" style="margin-bottom:6px">
+        <div id="adcSigTargetCands" style="max-height:180px;overflow-y:auto;border-radius:8px"></div>
+        <div id="adcSigTargetSelected" style="display:none;font-size:13px;margin-top:4px"></div>
+      </div>
       <div class="fg"><label class="f-lbl">소속</label><input type="text" id="adcMyDept" class="ri" value="T1환경미화사업부"></div>
       <div class="fg"><label class="f-lbl">직책</label><input type="text" id="adcMyPosition" class="ri" placeholder="예: 과장, 팀장, 사원"></div>
       <div class="fg"><label class="f-lbl">사번</label><input type="text" id="adcMyEmpId" class="ri" placeholder="사번 입력"></div>
@@ -19630,7 +19636,7 @@ function adcTab(n){
     var uw=document.getElementById('adcPdfUploadWrap'); if(uw) uw.style.display=canAdcManage()?'block':'none';
     loadAdcPdfList();
   }
-  else if(n===2){ loadAdcMySig(); }
+  else if(n===2){ adcInitSigTargetUI(); loadAdcMySig(); }
 }
 
 // ── 확인서 목록/작성/서명/인쇄 ──
@@ -19946,6 +19952,39 @@ async function adcDeletePdf(id, path){
 // ── 내 서명 등록 ──
 var _adcMySigFile=null;
 var _adcMySigExistingPath=null;
+// master가 다른 직원 대신 서명을 등록할 때: null이면 본인, 값이 있으면 그 직원의 users.id
+var _adcSigTargetId=null;
+var _adcSigTargetLabel=null;
+function adcInitSigTargetUI(){
+  var box=document.getElementById('adcSigTargetBox');
+  if(box) box.style.display=(me&&me.role==='master')?'block':'none';
+  if(!(me&&me.role==='master')){ _adcSigTargetId=null; _adcSigTargetLabel=null; }
+}
+async function adcSigTargetSearch(){
+  var q=(document.getElementById('adcSigTargetInput').value||'').trim();
+  var box=document.getElementById('adcSigTargetCands');
+  if(!q){ box.innerHTML=''; return; }
+  var res=await sb.from('users').select('id,name,employee_id,team').eq('status','active').ilike('name','%'+q+'%').limit(15);
+  var list=res.data||[];
+  box.innerHTML = list.length ? list.map(function(u){
+    return '<div onclick="adcPickSigTarget(\''+u.id+'\',\''+String(u.name||'').replace(/'/g,"\\'")+'\')" style="padding:8px;border-bottom:1px solid var(--g1);cursor:pointer;font-size:13px;background:#fff">'+(u.name||'')+' <span style="color:var(--g4);font-size:11.5px">('+(u.team||'-')+' · '+(u.employee_id||'사번없음')+')</span></div>';
+  }).join('') : '<div style="padding:8px;color:var(--g4);font-size:12.5px">검색 결과 없음</div>';
+}
+async function adcPickSigTarget(id, name){
+  _adcSigTargetId=id; _adcSigTargetLabel=name;
+  document.getElementById('adcSigTargetInput').value='';
+  document.getElementById('adcSigTargetCands').innerHTML='';
+  var sel=document.getElementById('adcSigTargetSelected');
+  sel.style.display='block';
+  sel.innerHTML='✓ <b>'+name+'</b>님 서명을 등록/수정합니다 <button onclick="adcClearSigTarget()" style="margin-left:8px;padding:3px 9px;font-size:11.5px;border-radius:10px;border:1px solid var(--g3);background:#fff;color:var(--g4);cursor:pointer">본인으로 전환</button>';
+  await loadAdcMySig();
+}
+function adcClearSigTarget(){
+  _adcSigTargetId=null; _adcSigTargetLabel=null;
+  var sel=document.getElementById('adcSigTargetSelected');
+  if(sel) sel.style.display='none';
+  loadAdcMySig();
+}
 // 서명 이미지의 밝은 배경(종이색/얼룩)을 순백색으로 정리해서 표에 깔끔하게 들어가도록 처리
 function adcMakeSigTransparent(file, cb){
   var img=new Image();
@@ -19985,8 +20024,9 @@ function adcMakeSigTransparent(file, cb){
 }
 async function loadAdcMySig(){
   if(!me) return;
+  var targetId=_adcSigTargetId||me.id;
   try{
-    var res=await sb.from('user_signatures').select('*').eq('username',me.id);
+    var res=await sb.from('user_signatures').select('*').eq('username',targetId);
     var p=res&&res.data&&res.data[0];
     document.getElementById('adcMyDept').value=(p&&p.dept)||'T1환경미화사업부';
     document.getElementById('adcMyPosition').value=(p&&p.position)||'';
@@ -20018,6 +20058,7 @@ function adcPreviewMySig(files){
 }
 async function adcSaveMySig(){
   if(!me){ return; }
+  var targetId=_adcSigTargetId||me.id;
   var dept=document.getElementById('adcMyDept').value.trim();
   var position=document.getElementById('adcMyPosition').value.trim();
   var empId=document.getElementById('adcMyEmpId').value.trim();
@@ -20025,7 +20066,7 @@ async function adcSaveMySig(){
   var sigPath=_adcMySigExistingPath;
   try{
     if(_adcMySigFile){
-      sigPath='signatures/'+me.id+'_'+Date.now()+'.png';
+      sigPath='signatures/'+targetId+'_'+Date.now()+'.png';
       var uploadUrl=SUPABASE_URL+'/storage/v1/object/adminconfirm/'+encodeURIComponent(sigPath);
       var r=await fetch(uploadUrl,{
         method:'POST',
@@ -20042,11 +20083,11 @@ async function adcSaveMySig(){
     }
     if(!sigPath){ toast('⚠️ 서명 이미지를 선택해주세요'); return; }
     var res=await sb.from('user_signatures').upsert({
-      username:me.id, dept:dept, position:position, employee_id:empId, signature_path:sigPath, updated_at:new Date().toISOString()
+      username:targetId, dept:dept, position:position, employee_id:empId, signature_path:sigPath, updated_at:new Date().toISOString()
     },{onConflict:'username'});
     if(res.error) throw res.error;
     _adcMySigExistingPath=sigPath; _adcMySigFile=null;
-    toast('✅ 서명정보가 저장되었습니다');
+    toast('✅ '+(_adcSigTargetLabel?(_adcSigTargetLabel+'님의 '):'')+'서명정보가 저장되었습니다');
   }catch(e){ toast('⚠️ 저장 실패: '+_safeErrMsg(e)); }
 }
 
