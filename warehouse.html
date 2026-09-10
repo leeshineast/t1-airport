@@ -1503,7 +1503,7 @@ function renderItemHistory(rows){
       +'<div style="font-weight:800;font-size:13px">'+esc(r.ledger_date)+' <span style="font-weight:400;color:#8a94a6;font-size:11.5px">('+esc(r.team||'-')+' · '+esc(r.written_by||r.leader_name||'-')+')</span></div>'
       +'<div style="font-size:12.5px;color:#555;margin-top:2px">입고 '+(r.in_qty||0)+' · 출고 '+(r.out_qty||0)+' · 그날 재고 '+r.remain_qty+'</div>'
       +'</div>'
-      +(isMaster()?'<button onclick="deleteHistoryEntry('+r.id+')" style="padding:6px 10px;background:#FEECEC;color:#D94040;border:1px solid #D94040;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>':'')
+      +(isMaster()?'<button onclick="deleteHistoryEntry(\''+r.id+'\')" style="padding:6px 10px;background:#FEECEC;color:#D94040;border:1px solid #D94040;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer">삭제</button>':'')
       +'</div>';
   });
   box.innerHTML=h;
