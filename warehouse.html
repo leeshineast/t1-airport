@@ -489,6 +489,20 @@ textarea{width:100%;padding:9px 10px;border:1.5px solid var(--g2);border-radius:
   </div>
 </div>
 
+<!-- 확인/입력 모달 (iOS 홈화면 설치 앱에서는 confirm()/prompt()가 화면에 뜨지 않아 대체용으로 사용) -->
+<div class="overlay" id="customConfirmOverlay">
+  <div class="modal" style="max-width:360px">
+    <div id="ccMsg" style="font-size:14px;font-weight:600;color:#333;white-space:pre-line;line-height:1.55;margin-bottom:14px"></div>
+    <div id="ccInputWrap" style="display:none;margin-bottom:14px">
+      <input type="text" id="ccInput">
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="ghost-btn" style="flex:1;margin:0" onclick="_ccDone(false)">취소</button>
+      <button class="save-btn" style="flex:1;margin:0" id="ccOkBtn" onclick="_ccDone(true)">확인</button>
+    </div>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
@@ -579,6 +593,37 @@ function canInput(){ if(!me)return false; var r=me.role; return r==='master'||r=
 function isAdmin(){ return me && (me.role==='master'||me.role==='admin'||me.role==='manager'); }
 function isMaster(){ return !!(me && me.role==='master'); }
 function todayStr(){ var n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); }
+// ── iOS 홈화면 설치 앱(스탠드얼론 모드)에서는 window.confirm()/prompt()가 화면에 표시되지 않는 경우가 있어
+// 같은 역할을 하는 커스텀 모달로 대체한다. 기본은 확인/취소, opt.needInput을 주면 텍스트 입력까지 받는다(prompt 대체).
+var _ccResolve=null;
+function customConfirm(message, opt){
+  opt=opt||{};
+  return new Promise(function(resolve){
+    _ccResolve=resolve;
+    document.getElementById('ccMsg').textContent=message;
+    var inputWrap=document.getElementById('ccInputWrap');
+    var input=document.getElementById('ccInput');
+    if(opt.needInput){
+      inputWrap.style.display='block';
+      input.value=opt.defaultValue||'';
+      input.placeholder=opt.placeholder||'';
+    }else{
+      inputWrap.style.display='none';
+    }
+    document.getElementById('ccOkBtn').textContent=opt.okLabel||'확인';
+    document.getElementById('customConfirmOverlay').classList.add('on');
+    setTimeout(function(){ if(opt.needInput) input.focus(); }, 50);
+  });
+}
+function _ccDone(ok){
+  var inputWrap=document.getElementById('ccInputWrap');
+  var input=document.getElementById('ccInput');
+  var needInput = inputWrap.style.display!=='none';
+  var result = ok ? (needInput ? input.value : true) : (needInput ? null : false);
+  document.getElementById('customConfirmOverlay').classList.remove('on');
+  var r=_ccResolve; _ccResolve=null;
+  if(r) r(result);
+}
 function toast(m){ var t=document.getElementById('toast'); t.textContent=m; t.style.opacity='1'; t.style.transform='translateX(-50%) translateY(0)'; clearTimeout(t._t); t._t=setTimeout(function(){t.style.opacity='0';t.style.transform='translateX(-50%) translateY(8px)';},2600); }
 function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
@@ -1372,8 +1417,8 @@ async function wipeWarehouseAll(){
   if(!isMaster()){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
   if(!curWarehouse){ return; }
   var whName=(curWarehouse.room_no||'')+' '+(curWarehouse.location_desc||curWarehouse.name||('창고 #'+curWarehouse.id));
-  if(!confirm('⚠️ "'+whName+'" 창고의 모든 입출고 이력과 재고를 전부 삭제합니다.\n\n이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?')) return;
-  if(prompt('정말 삭제하려면 "삭제" 라고 입력해주세요') !== '삭제'){ toast('취소되었습니다'); return; }
+  if(!(await customConfirm('⚠️ "'+whName+'" 창고의 모든 입출고 이력과 재고를 전부 삭제합니다.\n\n이 작업은 되돌릴 수 없습니다. 계속하시겠습니까?'))) return;
+  if((await customConfirm('정말 삭제하려면 "삭제" 라고 입력해주세요', {needInput:true, placeholder:'삭제'})) !== '삭제'){ toast('취소되었습니다'); return; }
   try{
     var delLedger=await sbFetch('/warehouse_ledger?warehouse_id=eq.'+curWarehouse.id,{method:'DELETE'});
     var delDaily=await sbFetch('/warehouse_daily?warehouse_id=eq.'+curWarehouse.id,{method:'DELETE'});
@@ -1465,7 +1510,7 @@ function renderItemHistory(rows){
 }
 async function deleteHistoryEntry(rowId){
   if(!isMaster()){ toast('⚠️ 최고관리자만 삭제할 수 있습니다'); return; }
-  if(!confirm('이 날짜의 기록을 삭제하시겠습니까?\n삭제 후 이 품목의 이후 날짜 재고가 자동으로 다시 계산됩니다.')) return;
+  if(!(await customConfirm('이 날짜의 기록을 삭제하시겠습니까?\n삭제 후 이 품목의 이후 날짜 재고가 자동으로 다시 계산됩니다.'))) return;
   try{
     var delRes=await sbFetch('/warehouse_ledger?id=eq.'+rowId,{method:'DELETE'});
     if(!delRes.ok){ toast('삭제 실패'); return; }
@@ -1521,8 +1566,8 @@ function updateCurrentQty(wid,val){
   sbFetch('/warehouse_item?id=eq.'+wid,{method:'PATCH',body:{current_qty:parseInt(val||'0',10)||0},headers:{'Prefer':'return=minimal'}})
     .then(function(){ toast('✓ 현재고 반영'); loadWarehouseItemsAndLedger(); });
 }
-function removeWhItem(wid){
-  if(!confirm('이 창고에서 품목을 제거할까요?'))return;
+async function removeWhItem(wid){
+  if(!(await customConfirm('이 창고에서 품목을 제거할까요?')))return;
   sbFetch('/warehouse_item?id=eq.'+wid,{method:'DELETE'}).then(function(){ toast('✓ 제거됨'); closeSetModal(); loadWarehouseItemsAndLedger(); });
 }
 
@@ -1885,8 +1930,8 @@ function addItemMaster(){
     .then(function(){ toast('✓ 추가됨'); document.getElementById('imNewName').value=''; document.getElementById('imNewSpec').value=''; document.getElementById('imNewUnit').value=''; document.getElementById('imNewQty').value=''; reloadItemsAndRender(); })
     .catch(function(){ toast('추가 실패'); });
 }
-function deleteItemMaster(id){
-  if(!confirm('이 품목을 삭제할까요? (배정된 창고에서도 함께 제거됩니다)'))return;
+async function deleteItemMaster(id){
+  if(!(await customConfirm('이 품목을 삭제할까요? (배정된 창고에서도 함께 제거됩니다)')))return;
   sbFetch('/item_master?id=eq.'+id,{method:'DELETE'}).then(function(){ toast('✓ 삭제됨'); reloadItemsAndRender(); });
 }
 function downloadItemMasterTemplate(){
@@ -1907,7 +1952,7 @@ function downloadItemMasterTemplate(){
 function uploadItemMasterExcel(ev){
   var file=ev.target.files[0]; if(!file) return;
   var reader=new FileReader();
-  reader.onload=function(e){
+  reader.onload=async function(e){
     try{
       var wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
       var ws=wb.Sheets[wb.SheetNames[0]];
@@ -1931,7 +1976,7 @@ function uploadItemMasterExcel(ev){
         if(ex) toUpdate.push({id:ex.id, rec:p});
         else toInsert.push(p);
       });
-      if(!confirm('신규 등록 '+toInsert.length+'건, 기존 품목 수정 '+toUpdate.length+'건\n진행하시겠습니까?')){ ev.target.value=''; return; }
+      if(!(await customConfirm('신규 등록 '+toInsert.length+'건, 기존 품목 수정 '+toUpdate.length+'건\n진행하시겠습니까?'))){ ev.target.value=''; return; }
       var calls=[];
       if(toInsert.length) calls.push(sbFetch('/item_master',{method:'POST',body:toInsert,headers:{'Prefer':'return=minimal'}}));
       toUpdate.forEach(function(u){
