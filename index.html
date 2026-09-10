@@ -2932,6 +2932,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <button onclick="loadEquipmentFromDB()" style="padding:9px 13px;background:var(--g1);border:1.5px solid var(--g2);border-radius:var(--r2);font-size:14px;font-weight:600;color:var(--g5);cursor:pointer">🔄</button>
     </div>
     <button onclick="eqOpenAddModal()" style="width:100%;margin-bottom:10px;padding:10px;background:var(--teal-bg);border:1.5px dashed var(--teal);border-radius:var(--r2);font-size:14px;font-weight:700;color:var(--teal2);cursor:pointer">➕ 장비 개별 추가</button>
+    <button id="eqDownloadBtn" onclick="dlCSV('equipment')" style="display:none;width:100%;margin-bottom:10px;padding:10px;background:#fff;border:1.5px solid var(--g3);border-radius:var(--r2);font-size:14px;font-weight:700;color:var(--g6);cursor:pointer">📥 엑셀 다운로드</button>
     <!-- 업로드 정보 -->
     <div id="eqUploadInfo" style="font-size:13px;color:var(--g4);margin-bottom:8px;text-align:right"></div>
     <!-- 통계 -->
@@ -7282,6 +7283,9 @@ function applyRoleUI(){
   var tmb=document.getElementById('trainingMenuBtn');
   var canTraining=me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role);
   if(tmb) tmb.style.display=canTraining?'':'none';
+  var eqdb=document.getElementById('eqDownloadBtn');
+  var canEqDownload=me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role);
+  if(eqdb) eqdb.style.display=canEqDownload?'block':'none';
   // 즐겨찾기 메뉴 (admin·manager·leader·acting_leader 전용)
   var favCatEl=document.getElementById('menuCat_fav');
   var canFav=me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role);
