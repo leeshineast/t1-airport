@@ -28172,13 +28172,17 @@ async function wfDownloadErp(){
         d.setDate(d.getDate()+1);
       }
     });
-    var wb=XLSX.utils.book_new();
-    var ws=XLSX.utils.aoa_to_sheet(aoa);
-    ws['!cols']=[{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:10}];
-    XLSX.utils.book_append_sheet(wb, ws, '근무계획업로드(전체)');
+    var _dlQueue=[];
+    (function(){
+      var wbAll=XLSX.utils.book_new();
+      var wsAll=XLSX.utils.aoa_to_sheet(aoa);
+      wsAll['!cols']=[{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:10}];
+      XLSX.utils.book_append_sheet(wbAll, wsAll, '근무계획업로드(전체)');
+      _dlQueue.push({wb:wbAll, name:'근무계획_더존ERP_'+monthVal+'_전체.xlsx'});
+    })();
 
-    // 요일조(고정휴무요일 페어)별 ERP 업로드용 시트 추가: 월화/화수/수목/목금/금토/토일/일월
-    // 각 시트는 해당 요일조 소속 인원만 모아 1일~말일까지 동일한 더존ERP 업로드 형식으로 생성
+    // 요일조(고정휴무요일 페어)별 ERP 업로드용 파일 개별 생성: 월화/화수/수목/목금/금토/토일/일월
+    // 각 파일은 해당 요일조 소속 인원만 모아 1일~말일까지 동일한 더존ERP 업로드 형식으로 생성
     var PAIR_ORDER=['월화','화수','수목','목금','금토','토일','일월'];
     PAIR_ORDER.forEach(function(pair){
       var d1=pair[0], d2=pair[1];
@@ -28200,14 +28204,20 @@ async function wfDownloadErp(){
           d.setDate(d.getDate()+1);
         }
       });
+      var pwb=XLSX.utils.book_new();
       var pws=XLSX.utils.aoa_to_sheet(pAoa);
       pws['!cols']=[{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:10}];
-      XLSX.utils.book_append_sheet(wb, pws, pair+'조('+members.length+'명)');
+      XLSX.utils.book_append_sheet(pwb, pws, pair+'조('+members.length+'명)');
+      _dlQueue.push({wb:pwb, name:'근무계획_더존ERP_'+monthVal+'_'+pair+'조.xlsx'});
     });
 
-    XLSX.writeFile(wb, '근무계획_더존ERP_'+monthVal+'.xlsx');
+    // 브라우저가 다운로드를 한꺼번에 막지 않도록 파일마다 약간의 시차를 두고 순서대로 저장
+    for(var _qi=0; _qi<_dlQueue.length; _qi++){
+      (function(item){ XLSX.writeFile(item.wb, item.name); })(_dlQueue[_qi]);
+      await new Promise(function(res){ setTimeout(res, 400); });
+    }
     await sb.from('wf_export_log').insert({target_month:monthVal, row_count:aoa.length-1, exported_by: me?me.name:''});
-    toast('📥 다운로드 완료 ('+(aoa.length-1)+'행)');
+    toast('📥 파일 '+_dlQueue.length+'개 다운로드 완료 (전체 '+(aoa.length-1)+'행)');
   }catch(e){ toast('⚠️ 다운로드 실패: '+String(_safeErrMsg(e)||e)); }
 }
 
