@@ -23,6 +23,9 @@
   --avg-blue:#2F6FE0;--avg-blue-bg:#EAF2FE;
   --avg-red-bright:#FF9E9E;--avg-blue-bright:#8FBFFF;--avg-green-bright:#6EE7B7;
   --warn:#C57C00;--warn-bg:#FEF6E0;
+  --purple:#6B4FA0;--purple-bg:#F1ECFA;
+  --pink:#B23A6B;--pink-bg:#FCEAF1;
+  --yellow:#8A6D00;--yellow-bg:#FEF6D8;
   --r:14px;--r2:10px;
   --font:-apple-system,BlinkMacSystemFont,"Noto Sans KR",sans-serif;
 }
@@ -322,14 +325,17 @@ html{overflow-x:hidden}
 .mh-menu-title{font-size:19px;font-weight:800;color:var(--g7)}
 #mhPanelMenu .menu-grid{padding:4px 13px 16px;gap:6px}
 #mhPanelMenu .menu-btn{flex-direction:column;justify-content:center;text-align:center;padding:10px 6px;gap:4px;min-height:80px}
-#mhPanelMenu .menu-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;background:var(--teal)}
+#mhPanelMenu .menu-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:17px;background:var(--g2)}
 #mhPanelMenu .menu-desc{display:none}
 #mhPanelMenu .menu-title{font-size:13px;margin-bottom:0}
-#mhPanelMenu .menu-btn:nth-child(3) .menu-icon,#mhPanelMenu .menu-btn:nth-child(4) .menu-icon,#mhPanelMenu .menu-btn:nth-child(5) .menu-icon{background:#00A8CC}
-#mhPanelMenu .menu-btn:nth-child(6) .menu-icon,#mhPanelMenu .menu-btn:nth-child(7) .menu-icon{background:#1B4FBE}
-#mhPanelMenu .menu-btn:nth-child(8) .menu-icon,#mhPanelMenu .menu-btn:nth-child(11) .menu-icon{background:#6B7FBE}
-#mhPanelMenu .menu-btn:nth-child(9) .menu-icon,#mhPanelMenu .menu-btn:nth-child(10) .menu-icon{background:#F5A623}
-#mhPanelMenu .menu-btn:nth-child(13) .menu-icon{background:var(--g6)}
+/* 폴더(대분류)마다 고유 파스텔 톤으로 안의 아이콘 배경을 통일 — 폴더 카드 색상과 짝을 맞춤 */
+#menuCat_stat .menu-icon{background:var(--avg-blue-bg)}
+#menuCat_input .menu-icon{background:var(--teal-bg)}
+#menuCat_veh .menu-icon,#menuCat_equip .menu-icon{background:var(--warn-bg)}
+#menuCat_fac .menu-icon{background:var(--navy-bg)}
+#menuCat_ref .menu-icon{background:var(--pink-bg)}
+#menuCat_workforce .menu-icon{background:var(--yellow-bg)}
+#menuCat_admin .menu-icon{background:var(--purple-bg)}
 .mh-tabbar{position:fixed;left:0;right:0;bottom:0;height:100px;padding-bottom:env(safe-area-inset-bottom);background:white;border-top:1px solid var(--g2);display:flex;flex-direction:column;z-index:60}
 .mh-tabbar-row{display:flex;flex:1}
 .mh-tabbar-row+.mh-tabbar-row{border-top:1px solid var(--g1)}
@@ -7513,9 +7519,9 @@ var MENU_FOLDER_DEFS=[
   {icon:'✍️', label:'업무입력', cats:['menuCat_input'], bg:'var(--teal-bg)', fg:'var(--teal2)'},
   {icon:'🚗', label:'차량·장비', cats:['menuCat_veh','menuCat_equip'], bg:'var(--warn-bg)', fg:'var(--warn)'},
   {icon:'🏢', label:'시설', cats:['menuCat_fac'], bg:'var(--navy-bg)', fg:'var(--navy)'},
-  {icon:'📖', label:'열람·자료', cats:['menuCat_ref'], bg:'var(--g1)', fg:'var(--g5)'},
-  {icon:'📅', label:'근무계획', cats:['menuCat_workforce'], bg:'var(--success-bg)', fg:'var(--success)'},
-  {icon:'🔐', label:'관리자', cats:['menuCat_admin'], bg:'var(--g2)', fg:'var(--g6)'}
+  {icon:'📖', label:'열람·자료', cats:['menuCat_ref'], bg:'var(--pink-bg)', fg:'var(--pink)'},
+  {icon:'📅', label:'근무계획', cats:['menuCat_workforce'], bg:'var(--yellow-bg)', fg:'var(--yellow)'},
+  {icon:'🔐', label:'관리자', cats:['menuCat_admin'], bg:'var(--purple-bg)', fg:'var(--purple)'}
 ];
 // 폴더 안에 숨겨진 메뉴들 중 안 읽은 알림(빨간 배지)이 하나라도 있으면, 폴더 카드 자체에도 NEW로 알려준다 —
 // 안 그러면 폴더를 직접 열어보기 전까진 안에 새 알림이 있는지 전혀 알 수 없기 때문.
