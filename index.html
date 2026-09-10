@@ -5959,7 +5959,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <button type="button" onclick="mgrLeaveQuickPick('etc')" class="mgr-qp-btn" style="flex:1;padding:8px 0;border:1.5px solid var(--g2);border-radius:8px;background:var(--g0);font-size:13px;font-weight:700;cursor:pointer">기타</button>
     </div>
     <div style="display:flex;gap:8px">
-      <div style="flex:1"><label class="f-lbl">시작일</label><input type="date" id="mgrLeaveStart" class="ri" onchange="mgrLeaveUpdateDayCount()"></div>
+      <div style="flex:1"><label class="f-lbl">시작일</label><input type="date" id="mgrLeaveStart" class="ri" onchange="mgrLeaveApplyQuickDays();mgrLeaveUpdateDayCount()"></div>
       <div style="flex:1"><label class="f-lbl">종료일</label><input type="date" id="mgrLeaveEnd" class="ri" onchange="mgrLeaveUpdateDayCount()"></div>
     </div>
     <div id="mgrLeaveDayCount" style="font-size:12.5px;color:var(--g5);margin:-6px 0 10px"></div>
@@ -26307,6 +26307,7 @@ function mgrLeaveUpdateDayCount(){
   var days=Math.round((new Date(e+'T00:00:00')-new Date(s+'T00:00:00'))/86400000)+1;
   box.textContent=s+' ~ '+e+' ('+days+'일)';
 }
+var mgrLeaveQuickDays=null; // 카드로 선택해둔 일수 ('etc' 또는 1~4 또는 null=미선택)
 function mgrLeaveQuickPick(days){
   var row=document.getElementById('mgrLeaveQuickPickRow');
   if(row) Array.prototype.forEach.call(row.querySelectorAll('.mgr-qp-btn'), function(b){
@@ -26316,14 +26317,19 @@ function mgrLeaveQuickPick(days){
   var clickedBtn = row && row.querySelectorAll('.mgr-qp-btn')[clickedIdx];
   if(clickedBtn){ clickedBtn.style.background='var(--teal)'; clickedBtn.style.color='white'; clickedBtn.style.borderColor='var(--teal)'; }
 
-  var startEl=document.getElementById('mgrLeaveStart'), endEl=document.getElementById('mgrLeaveEnd');
-  if(days==='etc'){ mgrLeaveUpdateDayCount(); return; } // 기타: 시작일/종료일 직접 입력, 자동계산 없음
-
-  if(!startEl.value) startEl.value=kstDate();
-  var s=new Date(startEl.value+'T00:00:00');
-  var e=new Date(s); e.setDate(e.getDate()+(days-1));
-  endEl.value=kstDate(e);
+  mgrLeaveQuickDays=days; // 몇 일짜리인지만 기억. 날짜는 아래 시작일 선택 시점에 계산됨
+  // 이미 시작일이 채워져 있으면(달력을 먼저 고르고 카드를 누른 경우) 바로 반영
+  var startEl=document.getElementById('mgrLeaveStart');
+  if(startEl.value && days!=='etc') mgrLeaveApplyQuickDays();
   mgrLeaveUpdateDayCount();
+}
+function mgrLeaveApplyQuickDays(){
+  if(!mgrLeaveQuickDays || mgrLeaveQuickDays==='etc') return;
+  var startEl=document.getElementById('mgrLeaveStart'), endEl=document.getElementById('mgrLeaveEnd');
+  if(!startEl.value) return;
+  var s=new Date(startEl.value+'T00:00:00');
+  var e=new Date(s); e.setDate(e.getDate()+(mgrLeaveQuickDays-1));
+  endEl.value=kstDate(e);
 }
 var mgrLeaveEditId=null;
 function mgrLeaveStatusChange(){
@@ -26369,6 +26375,11 @@ function mgrLeaveOpenModal(){
   var todayStr=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
   document.getElementById('mgrLeaveStart').value=todayStr;
   document.getElementById('mgrLeaveEnd').value=todayStr;
+  mgrLeaveQuickDays=null;
+  var qpRow=document.getElementById('mgrLeaveQuickPickRow');
+  if(qpRow) Array.prototype.forEach.call(qpRow.querySelectorAll('.mgr-qp-btn'), function(b){
+    b.style.background='var(--g0)'; b.style.color=''; b.style.borderColor='var(--g2)';
+  });
   mgrLeaveUpdateDayCount();
   mgrLeaveTab(0);
   showM('mgrLeaveModal');
