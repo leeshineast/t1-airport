@@ -6565,6 +6565,7 @@ function hideM(id){
 window.addEventListener('popstate', function(e){
   if(_consumeNextPop){ _consumeNextPop=false; return; }
   if(_eeConsumeNextPop){ _eeConsumeNextPop=false; return; }
+  if(typeof _folderConsumeNextPop!=='undefined'&&_folderConsumeNextPop){ _folderConsumeNextPop=false; return; }
   if(typeof _folderOpen!=='undefined'&&_folderOpen){
     _folderOpen=false;
     closeMenuFolder();
@@ -7541,6 +7542,7 @@ function renderMenuFolders(){
   if(headerBar) headerBar.style.display='none';
 }
 var _folderOpen=false;
+var _folderConsumeNextPop=false; // closeMenuFolder가 직접 history.back()을 호출했을 때, 그로 인해 나중에 도착하는 popstate를 무시하기 위한 표시
 function openMenuFolder(idx){
   var f=MENU_FOLDER_DEFS[idx]; if(!f) return;
   document.querySelectorAll('.menu-cat').forEach(function(cat){
@@ -7561,9 +7563,14 @@ function openMenuFolder(idx){
   _folderOpen=true;
   try{ history.pushState({kind:'folder'}, ''); }catch(e){}
 }
+// 화면의 "전체메뉴" 버튼을 직접 눌렀을 때도, 기기 뒤로가기를 눌렀을 때(popstate)도 둘 다 이 함수 하나로 처리한다.
 function closeMenuFolder(){
   if(_folderOpen&&history.state&&history.state.kind==='folder'){
-    history.back(); // popstate가 뒤이어 알아서 처리하지 않고 여기서 바로 화면도 정리하므로, 아래 로직을 그대로 이어서 실행한다
+    // "전체메뉴" 버튼을 눌러서 들어온 경우: 여기서 직접 history.back()을 호출하므로, 그 결과로
+    // 나중에 도착할 popstate 이벤트는 소비 예정으로 표시해서 무시한다(안 하면 이미 _folderOpen=false가
+    // 된 뒤라 popstate 핸들러가 이걸 "진짜 루트에 도달함"으로 착각해 종료경고까지 떠버린다).
+    _folderConsumeNextPop=true;
+    history.back();
   }
   _folderOpen=false;
   var anyManaged=false;
