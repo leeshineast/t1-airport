@@ -999,17 +999,29 @@ html{overflow-x:hidden}
         <div class="menu-desc">교육자료 PDF 열람</div>
         <span class="menu-arrow">열람하기 →</span>
       </button>
-      <button class="menu-btn" onclick="go('eduevent')">
-        <span class="menu-icon">📚</span>
-        <div class="menu-title">교육·회의·출장<span id="notifBadge_eduevent"></span></div>
-        <div class="menu-desc">신청 및 참석관리</div>
-        <span class="menu-arrow">신청하기 →</span>
-      </button>
       <button class="menu-btn" onclick="go('campaign')">
         <span class="menu-icon">🏆</span>
         <div class="menu-title">사업부 행사<span id="notifBadge_campaign"></span></div>
         <div class="menu-desc">슬로건 공모 등 참여형 행사</div>
         <span class="menu-arrow">참여하기 →</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="menu-cat" id="menuCat_workforce">
+    <div class="sec-lbl" style="padding:14px 13px 6px">📅 근무계획</div>
+    <div class="menu-grid">
+      <button class="menu-btn" onclick="go('workforce')">
+        <span class="menu-icon">📅</span>
+        <div class="menu-title">근무계획<span id="notifBadge_workforce"></span></div>
+        <div class="menu-desc">근무계획(더존ERP) · 특별근무 편성</div>
+        <span class="menu-arrow">관리하기 →</span>
+      </button>
+      <button class="menu-btn" onclick="go('eduevent')">
+        <span class="menu-icon">📚</span>
+        <div class="menu-title">교육·회의·출장<span id="notifBadge_eduevent"></span></div>
+        <div class="menu-desc">신청 및 참석관리</div>
+        <span class="menu-arrow">신청하기 →</span>
       </button>
       <button class="menu-btn" id="groupChatMenuBtn" onclick="go('groupchat')" style="position:relative">
         <span id="gcTabBadge" style="display:none;position:absolute;top:8px;right:10px;min-width:18px;height:18px;padding:0 5px;background:var(--danger);color:white;border-radius:20px;font-size:10.5px;font-weight:800"></span>
@@ -1017,18 +1029,6 @@ html{overflow-x:hidden}
         <div class="menu-title">전체채팅</div>
         <div class="menu-desc">전 직원 단체 대화방</div>
         <span class="menu-arrow">대화하기 →</span>
-      </button>
-    </div>
-  </div>
-
-  <div class="menu-cat" id="menuCat_workforce">
-    <div class="sec-lbl" style="padding:14px 13px 6px">👔 인력관리</div>
-    <div class="menu-grid">
-      <button class="menu-btn" onclick="go('workforce')">
-        <span class="menu-icon">👔</span>
-        <div class="menu-title">인력관리<span id="notifBadge_workforce"></span></div>
-        <div class="menu-desc">근무계획(더존ERP) · 특별근무 편성</div>
-        <span class="menu-arrow">관리하기 →</span>
       </button>
     </div>
   </div>
@@ -7514,7 +7514,7 @@ var MENU_FOLDER_DEFS=[
   {icon:'🚗', label:'차량·장비', cats:['menuCat_veh','menuCat_equip'], bg:'var(--warn-bg)', fg:'var(--warn)'},
   {icon:'🏢', label:'시설', cats:['menuCat_fac'], bg:'var(--navy-bg)', fg:'var(--navy)'},
   {icon:'📖', label:'열람·자료', cats:['menuCat_ref'], bg:'var(--g1)', fg:'var(--g5)'},
-  {icon:'👔', label:'인력관리', cats:['menuCat_workforce'], bg:'var(--success-bg)', fg:'var(--success)'},
+  {icon:'📅', label:'근무계획', cats:['menuCat_workforce'], bg:'var(--success-bg)', fg:'var(--success)'},
   {icon:'🔐', label:'관리자', cats:['menuCat_admin'], bg:'var(--g2)', fg:'var(--g6)'}
 ];
 // 폴더 안에 숨겨진 메뉴들 중 안 읽은 알림(빨간 배지)이 하나라도 있으면, 폴더 카드 자체에도 NEW로 알려준다 —
