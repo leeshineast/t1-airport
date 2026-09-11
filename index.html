@@ -25885,7 +25885,7 @@ function checkShiftReset(){
 }
 setInterval(checkShiftReset, 60000);
 // 인력현황 30초마다 자동 갱신 + 알림 체크 + 전체채팅 안읽음 배지 체크
-setInterval(function(){ if(me){ loadMpFromDB(); checkNotifUpdates(); pollGroupChatBadge(); } }, 30000);
+setInterval(function(){ if(me){ loadMpFromDB(); checkNotifUpdates(); pollGroupChatBadge(); if(typeof mgrAutoConfirmPastDue==='function') mgrAutoConfirmPastDue(); } }, 30000);
 setInterval(function(){ if(me) checkHeatAlert(); }, 15*60000);
 checkShiftReset();
 
@@ -26040,6 +26040,54 @@ async function loadMgrAttendance(){
   updateDashMgrAtt();
   if(typeof updateStaff==='function') updateStaff(); // mgrAttData가 이제서야 채워졌으므로 홈 화면 인력현황(관리/현장 합계)도 다시 계산
   loadMgrAttendanceYesterday();
+  mgrAutoConfirmPastDue();
+}
+// 팀별 "출근 확정시간"이 지났는데도 아직 미확인인 사람 중, 예정된 일정(연차 등)이 있거나 근무계획상 오늘이 휴무일인 경우
+// 자동으로 그 상태로 확정 처리한다. 이 앱은 서버가 따로 도는 구조가 아니라서, 정각에 실행되는게 아니라
+// 확정시간이 지난 뒤 누군가 앱을 열거나(loadMgrAttendance) 30초 주기 갱신이 돌 때 그 시점에 일괄 처리된다.
+var MGR_CONFIRM_TIME={'오전':'08:30','오후':'13:30','야간':'22:30','운영팀':'10:00'};
+var _mgrAutoConfirmBusy=false;
+async function mgrAutoConfirmPastDue(){
+  if(_mgrAutoConfirmBusy) return;
+  if(!mgrRosterOffCache){ return; } // 근무계획 휴무 판정에 필요한 캐시가 아직 없으면 스킵
+  _mgrAutoConfirmBusy=true;
+  try{
+    var nowKst=new Date(Date.now()+9*3600000);
+    var todayStr=nowKst.toISOString().slice(0,10);
+    var nowHM=nowKst.toISOString().slice(11,16);
+    var toWrite=[];
+    Object.keys(MGR_STRUCTURE).forEach(function(shift){
+      var cutoff=MGR_CONFIRM_TIME[shift]; if(!cutoff || nowHM<cutoff) return;
+      var shiftData=MGR_STRUCTURE[shift];
+      Object.keys(shiftData).forEach(function(team){
+        shiftData[team].forEach(function(name){
+          var key=team+'_'+name;
+          var rec=mgrAttData[key];
+          if(rec && rec.checked) return; // 이미 뭐든 확정돼 있으면 손 안 댐
+          var scheduledEntry=mgrLeaveEntryFor(team, name, todayStr);
+          var statusToConfirm=scheduledEntry ? scheduledEntry.status
+            : (isSlotOffToday(team, name, mgrRosterOffCache, todayStr) ? '휴무' : null);
+          if(!statusToConfirm) return; // 예정도 없고 휴무일도 아니면(순수 미확인) 자동확정 대상 아님 — 그대로 둠
+          toWrite.push({team:team, name:name, status:statusToConfirm});
+        });
+      });
+    });
+    if(!toWrite.length) return;
+    var nowISO=new Date().toISOString();
+    for(var i=0;i<toWrite.length;i++){
+      var w=toWrite[i];
+      try{
+        await sb.from('mgr_attendance').upsert({
+          date:todayStr, team:w.team, name:w.name, role:(w.name.indexOf('팀장')!==-1?'팀장':'조장'),
+          checked:true, status:w.status, checked_by:'자동확정', checked_at:nowISO
+        },{onConflict:'date,team,name'});
+        mgrAttData[w.team+'_'+w.name]={team:w.team, name:w.name, checked:true, status:w.status, checked_by:'자동확정', checked_at:nowISO};
+        mgrLogStatus(w.team, w.name, 'auto', '자동확정', todayStr+' '+w.status+' (확정시간 경과 자동처리)');
+      }catch(e){}
+    }
+    renderMgrAttendance(); updateDashMgrAtt();
+    await loadMgrAttQuotaSummary();
+  }finally{ _mgrAutoConfirmBusy=false; }
 }
 var mgrAttQuotaSummaryCache={};
 async function loadMgrAttQuotaSummaryFor(dateStr, attSrc){
