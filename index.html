@@ -26895,7 +26895,10 @@ async function mgrLeaveLoadList(){
   }
   var fName=(document.getElementById('mgrLeaveFilterName')||{}).value||'';
   fName=fName.trim();
-  if(fName) rows=rows.filter(function(r){ return r.name.indexOf(fName)!==-1; });
+  if(fName) rows=rows.filter(function(r){
+    var realName=mgrLeaveRealNameSuffix(r.team, r.name).replace(/[()]/g,''); // r.name엔 "B조장" 같은 직책명이 들어있고, 실제 이름은 이걸로 따로 찾아야 함
+    return r.name.indexOf(fName)!==-1 || realName.indexOf(fName)!==-1;
+  });
   if(!rows.length){ wrap.innerHTML='<div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">조건에 맞는 일정이 없습니다</div>'; return; }
   // 현재 조회된(필터링된) 결과 기준 유형별 통계 — 연차 N개, 공가 N개 등
   var statCounts={};
