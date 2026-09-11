@@ -26900,18 +26900,21 @@ async function mgrLeaveLoadList(){
     return r.name.indexOf(fName)!==-1 || realName.indexOf(fName)!==-1;
   });
   if(!rows.length){ wrap.innerHTML='<div style="text-align:center;padding:12px;color:var(--g3);font-size:13px">조건에 맞는 일정이 없습니다</div>'; return; }
-  // 현재 조회된(필터링된) 결과 기준 유형별 통계 — 연차 N개, 공가 N개 등
+  // 현재 조회된(필터링된) 결과 기준 유형별 통계 — 건수가 아니라 실제 사용 일수(days)로 집계 (예: 3일짜리 연차 1건 = 연차 3일)
   var statCounts={};
-  rows.forEach(function(r){ statCounts[r.status]=(statCounts[r.status]||0)+1; });
+  rows.forEach(function(r){
+    var days=Math.round((new Date(r.end_date+'T00:00:00')-new Date(r.start_date+'T00:00:00'))/86400000)+1;
+    statCounts[r.status]=(statCounts[r.status]||0)+days;
+  });
   var STAT_ORDER=['연차','공가','건강검진','병가','휴직','교육','출장'];
   var statHtml='<div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">';
   STAT_ORDER.forEach(function(s){
     if(!statCounts[s]) return;
-    statHtml+='<span style="padding:5px 10px;border-radius:8px;background:var(--g1);font-size:12px;font-weight:700;color:var(--g6)">'+s+' '+statCounts[s]+'개</span>';
+    statHtml+='<span style="padding:5px 10px;border-radius:8px;background:var(--g1);font-size:12px;font-weight:700;color:var(--g6)">'+s+' '+statCounts[s]+'일</span>';
   });
   var etcCount=0;
   Object.keys(statCounts).forEach(function(k){ if(STAT_ORDER.indexOf(k)===-1) etcCount+=statCounts[k]; });
-  if(etcCount) statHtml+='<span style="padding:5px 10px;border-radius:8px;background:var(--g1);font-size:12px;font-weight:700;color:var(--g6)">기타 '+etcCount+'개</span>';
+  if(etcCount) statHtml+='<span style="padding:5px 10px;border-radius:8px;background:var(--g1);font-size:12px;font-weight:700;color:var(--g6)">기타 '+etcCount+'일</span>';
   statHtml+='</div>';
   var html=statHtml;
   var curMonthKey='';
