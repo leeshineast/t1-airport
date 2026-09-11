@@ -26036,6 +26036,7 @@ async function loadMgrAttendance(){
   await loadMgrAttQuotaSummary();
   mgrRosterOffCache=await fetchMgrRosterWithOff();
   try{ var lsRes=await sb.from('mgr_leave_schedule').select('*'); mgrLeaveScheduleCache=lsRes.data||[]; }catch(e){ mgrLeaveScheduleCache=mgrLeaveScheduleCache||[]; }
+  _mgrAttDataLoadedToday=true;
   renderMgrAttendance();
   updateDashMgrAtt();
   if(typeof updateStaff==='function') updateStaff(); // mgrAttData가 이제서야 채워졌으므로 홈 화면 인력현황(관리/현장 합계)도 다시 계산
@@ -26044,17 +26045,34 @@ async function loadMgrAttendance(){
 }
 // 팀별 "출근 확정시간"이 지났는데도 아직 미확인인 사람 중, 예정된 일정(연차 등)이 있거나 근무계획상 오늘이 휴무일인 경우
 // 자동으로 그 상태로 확정 처리한다. 이 앱은 서버가 따로 도는 구조가 아니라서, 정각에 실행되는게 아니라
-// 확정시간이 지난 뒤 누군가 앱을 열거나(loadMgrAttendance) 30초 주기 갱신이 돌 때 그 시점에 일괄 처리된다.
+// 확정시간이 지난 뒤 로그인한 "아무" 계정이든 앱을 열고 있거나(30초 주기 갱신 포함) 있으면 그 시점에 처리된다 —
+// "관리자 출근현황" 탭을 그 세션에서 한 번도 연 적이 없어도 동작하도록, 필요한 캐시가 없으면 여기서 직접 불러온다.
 var MGR_CONFIRM_TIME={'오전':'08:30','오후':'13:30','야간':'22:30','운영팀':'10:00'};
 var _mgrAutoConfirmBusy=false;
 async function mgrAutoConfirmPastDue(){
-  if(_mgrAutoConfirmBusy) return;
-  if(!mgrRosterOffCache){ return; } // 근무계획 휴무 판정에 필요한 캐시가 아직 없으면 스킵
+  if(_mgrAutoConfirmBusy || !me) return;
   _mgrAutoConfirmBusy=true;
   try{
     var nowKst=new Date(Date.now()+9*3600000);
     var todayStr=nowKst.toISOString().slice(0,10);
     var nowHM=nowKst.toISOString().slice(11,16);
+    // 이 시각까지 아무 팀도 확정시간이 안 지났으면 데이터 조회할 필요도 없이 바로 종료(불필요한 조회 방지)
+    var anyDue=Object.keys(MGR_CONFIRM_TIME).some(function(s){ return nowHM>=MGR_CONFIRM_TIME[s]; });
+    if(!anyDue) return;
+    // 필요한 캐시가 이 세션에서 아직 한 번도 안 불러와졌으면(= "관리자 출근현황" 탭을 연 적이 없으면) 직접 불러온다
+    if(!mgrRosterOffCache){
+      try{ mgrRosterOffCache=await fetchMgrRosterWithOff(); }catch(e){ return; }
+    }
+    if(!mgrLeaveScheduleCache || !mgrLeaveScheduleCache.length){
+      try{ var lsRes=await sb.from('mgr_leave_schedule').select('*'); mgrLeaveScheduleCache=lsRes.data||[]; }catch(e){}
+    }
+    // mgrAttData가 오늘자 기준으로 아직 안 채워졌으면(탭 진입 전) 오늘자만 가볍게 불러온다
+    if(!_mgrAttDataLoadedToday){
+      try{
+        var res=await sb.from('mgr_attendance').select('*').eq('date',todayStr);
+        if(!res.error){ (res.data||[]).forEach(function(r){ mgrAttData[r.team+'_'+r.name]=r; }); _mgrAttDataLoadedToday=true; }
+      }catch(e){}
+    }
     var toWrite=[];
     Object.keys(MGR_STRUCTURE).forEach(function(shift){
       var cutoff=MGR_CONFIRM_TIME[shift]; if(!cutoff || nowHM<cutoff) return;
@@ -26085,10 +26103,12 @@ async function mgrAutoConfirmPastDue(){
         mgrLogStatus(w.team, w.name, 'auto', '자동확정', todayStr+' '+w.status+' (확정시간 경과 자동처리)');
       }catch(e){}
     }
-    renderMgrAttendance(); updateDashMgrAtt();
+    if(typeof renderMgrAttendance==='function' && document.getElementById('mgrAttBody')) renderMgrAttendance();
+    updateDashMgrAtt();
     await loadMgrAttQuotaSummary();
   }finally{ _mgrAutoConfirmBusy=false; }
 }
+var _mgrAttDataLoadedToday=false;
 var mgrAttQuotaSummaryCache={};
 async function loadMgrAttQuotaSummaryFor(dateStr, attSrc){
   var out={};
