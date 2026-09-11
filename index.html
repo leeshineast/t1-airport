@@ -334,7 +334,7 @@ html{overflow-x:hidden}
 /* 폴더(대분류)마다 고유 파스텔 톤으로 안의 아이콘 배경을 통일 — 폴더 카드 색상과 짝을 맞춤 */
 #menuCat_stat .menu-icon{background:var(--g2);color:var(--g7)}
 #menuCat_input .menu-icon{background:var(--teal-bg);color:var(--teal2)}
-#menuCat_veh .menu-icon,#menuCat_equip .menu-icon,#menuCat_toolequip .menu-icon{background:var(--warn-bg);color:var(--warn)}
+#menuCat_veh .menu-icon,#menuCat_equip .menu-icon{background:var(--warn-bg);color:var(--warn)}
 #menuCat_fac .menu-icon{background:var(--navy-bg);color:var(--navy)}
 #menuCat_ref .menu-icon{background:var(--pink-bg);color:var(--pink)}
 #menuCat_workforce .menu-icon{background:var(--danger-bg);color:var(--danger)}
@@ -936,12 +936,6 @@ html{overflow-x:hidden}
         <div class="menu-desc">소각·재활용 처리량 입력 및 이력</div>
         <span class="menu-arrow">입력하기 →</span>
       </button>
-    </div>
-  </div>
-
-  <div class="menu-cat" id="menuCat_equip">
-    <div class="sec-lbl" style="padding:14px 13px 6px">📦 자재</div>
-    <div class="menu-grid">
       <button class="menu-btn" id="menuWarehouseBtn" onclick="location.href='warehouse.html'">
         <span class="menu-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 4.5l0 9l-8 4.5l-8 -4.5l0 -9l8 -4.5" /><path d="M12 12l8 -4.5" /><path d="M12 12l0 9" /><path d="M12 12l-8 -4.5" /><path d="M16 5.25l-8 4.5" /></svg></span>
         <div class="menu-title">창고 재고관리</div>
@@ -951,7 +945,7 @@ html{overflow-x:hidden}
     </div>
   </div>
 
-  <div class="menu-cat" id="menuCat_toolequip">
+  <div class="menu-cat" id="menuCat_equip">
     <div class="sec-lbl" style="padding:14px 13px 6px">🔧 장비</div>
     <div class="menu-grid">
       <button class="menu-btn" onclick="go('equipment')">
@@ -3145,8 +3139,21 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div class="fg"><label class="f-lbl">사번</label><input type="text" id="adcMyEmpId" class="ri" placeholder="사번 입력"></div>
       <div class="fg">
         <label class="f-lbl">서명 이미지</label>
-        <label for="adcMySigInput" style="display:block;width:100%;padding:14px;background:var(--teal-bg);border:2px dashed var(--teal);border-radius:var(--r2);text-align:center;cursor:pointer;font-size:13px;color:var(--teal2);font-weight:700;margin-bottom:8px">📝 서명 이미지 선택 (jpg/png)</label>
-        <input type="file" id="adcMySigInput" accept=".jpg,.jpeg,.png" style="display:none" onchange="adcPreviewMySig(this.files)">
+        <div style="display:flex;gap:6px;margin-bottom:8px">
+          <button type="button" id="adcSigModeUploadBtn" onclick="adcSigMode('upload')" style="flex:1;padding:9px;border-radius:8px;border:1.5px solid var(--teal);background:var(--teal2);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer">📁 이미지 업로드</button>
+          <button type="button" id="adcSigModeDrawBtn" onclick="adcSigMode('draw')" style="flex:1;padding:9px;border-radius:8px;border:1.5px solid var(--g2);background:#fff;color:var(--g5);font-size:12.5px;font-weight:700;cursor:pointer">✍️ 손으로 그리기</button>
+        </div>
+        <div id="adcSigUploadArea">
+          <label for="adcMySigInput" style="display:block;width:100%;padding:14px;background:var(--teal-bg);border:2px dashed var(--teal);border-radius:var(--r2);text-align:center;cursor:pointer;font-size:13px;color:var(--teal2);font-weight:700;margin-bottom:8px">📝 서명 이미지 선택 (jpg/png)</label>
+          <input type="file" id="adcMySigInput" accept=".jpg,.jpeg,.png" style="display:none" onchange="adcPreviewMySig(this.files)">
+        </div>
+        <div id="adcSigDrawArea" style="display:none;margin-bottom:8px">
+          <canvas id="adcSigCanvas" style="width:100%;height:160px;display:block;background:#fff;border:2px dashed var(--teal);border-radius:var(--r2);touch-action:none;cursor:crosshair"></canvas>
+          <div style="display:flex;gap:6px;margin-top:6px">
+            <button type="button" onclick="adcSigCanvasClear()" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--g2);background:#fff;color:var(--g5);font-size:12.5px;font-weight:700;cursor:pointer">🗑 지우기</button>
+            <button type="button" onclick="adcSigCanvasUse()" style="flex:1;padding:8px;border-radius:8px;border:none;background:var(--teal);color:#fff;font-size:12.5px;font-weight:700;cursor:pointer">✅ 이 서명 사용</button>
+          </div>
+        </div>
         <div id="adcMySigPreviewWrap" style="display:none;text-align:center;background:#fafafa;border:1px solid var(--g2);border-radius:var(--r2);padding:10px;margin-bottom:8px">
           <img id="adcMySigPreview" style="max-height:70px">
         </div>
@@ -3638,7 +3645,6 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div style="display:flex;border-bottom:2px solid var(--g2)">
     <div id="wfMainT0" onclick="wfMainTab(0)" style="flex:1;text-align:center;padding:10px 0;font-size:14px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">목록</div>
     <div id="wfMainT1" onclick="wfMainTab(1)" style="flex:1;text-align:center;padding:10px 0;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">📊 통계</div>
-    <div id="wfMainT2" onclick="wfMainTab(2)" style="flex:1;text-align:center;padding:10px 0;font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">📝 수정이력</div>
   </div>
   <div id="wfMainP0" style="padding:12px">
     <!-- 필터바 -->
@@ -3666,31 +3672,22 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <select id="wfErpMonth" style="padding:8px 10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px"></select>
       <button onclick="wfDownloadErp()" style="padding:9px 14px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📥 ERP 다운로드</button>
     </div>
+    <div style="margin-bottom:10px;padding:10px 10px 8px;background:var(--g1);border-radius:10px">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <span style="font-size:13px;font-weight:700;color:var(--g6)">🔍 수정이력 조회</span>
+        <input type="date" id="wfEditFrom" style="padding:7px 8px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
+        <span style="color:var(--g4)">~</span>
+        <input type="date" id="wfEditTo" style="padding:7px 8px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
+        <button onclick="wfSearchEditHistory()" style="padding:7px 12px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">조회</button>
+      </div>
+      <div id="wfEditHistResult"></div>
+    </div>
     <div id="wfTableWrap" style="overflow-x:auto;border:1.5px solid var(--g2);border-radius:10px">
       <div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">근무계획을 불러오는 중...</div>
     </div>
   </div>
   <div id="wfMainP1" style="display:none;padding:12px">
     <div id="wfStatsBody"><div style="text-align:center;padding:20px;color:var(--g3);font-size:14px">불러오는 중...</div></div>
-  </div>
-  <div id="wfMainP2" style="display:none;padding:12px">
-    <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-      <span style="font-size:13px;font-weight:700;color:var(--g6);white-space:nowrap">🔍 조회 기간</span>
-      <input type="date" id="wfEditFrom" style="padding:8px 9px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
-      <span style="color:var(--g4)">~</span>
-      <input type="date" id="wfEditTo" style="padding:8px 9px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
-      <button onclick="wfSearchEditHistory()" style="padding:8px 16px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">조회</button>
-    </div>
-    <div style="display:flex;border-bottom:2px solid var(--g2);margin-bottom:12px">
-      <div id="wfEhT0" onclick="wfEhTab(0)" style="flex:1;text-align:center;padding:9px 0;font-size:13.5px;font-weight:700;color:var(--teal);border-bottom:2.5px solid var(--teal);cursor:pointer;margin-bottom:-2px">📋 목록</div>
-      <div id="wfEhT1" onclick="wfEhTab(1)" style="flex:1;text-align:center;padding:9px 0;font-size:13.5px;font-weight:700;color:var(--g5);cursor:pointer">📊 통계</div>
-    </div>
-    <div id="wfEhP0">
-      <div id="wfEditHistResult"><div style="text-align:center;padding:20px;color:var(--g3);font-size:13.5px">기간을 선택하고 조회를 눌러주세요</div></div>
-    </div>
-    <div id="wfEhP1" style="display:none">
-      <div id="wfEditHistStats"><div style="text-align:center;padding:20px;color:var(--g3);font-size:13.5px">먼저 목록에서 조회해주세요</div></div>
-    </div>
   </div>
 </div>
 
@@ -7546,7 +7543,7 @@ function updateMenuCatVisibility(){
 var MENU_FOLDER_DEFS=[
   {icon:'📊', label:'통계·현황', cats:['menuCat_stat'], bg:'var(--g2)', fg:'var(--g7)'},
   {icon:'✍️', label:'업무입력', cats:['menuCat_input'], bg:'var(--teal-bg)', fg:'var(--teal2)'},
-  {icon:'🚗', label:'차량·자재·장비', cats:['menuCat_veh','menuCat_equip','menuCat_toolequip'], bg:'var(--warn-bg)', fg:'var(--warn)'},
+  {icon:'🚗', label:'차량·장비', cats:['menuCat_veh','menuCat_equip'], bg:'var(--warn-bg)', fg:'var(--warn)'},
   {icon:'🏢', label:'시설', cats:['menuCat_fac'], bg:'var(--navy-bg)', fg:'var(--navy)'},
   {icon:'📖', label:'열람·자료', cats:['menuCat_ref'], bg:'var(--pink-bg)', fg:'var(--pink)'},
   {icon:'📅', label:'근무계획', cats:['menuCat_workforce'], bg:'var(--danger-bg)', fg:'var(--danger)'},
@@ -20216,24 +20213,6 @@ function adcClearSigTarget(){
 var _adcSigStatusOpen=false;
 var ADC_SIG_STATUS_ROLES=['admin','manager','leader','acting_leader'];
 var ADC_SIG_ROLE_LABEL={admin:'관리자',manager:'팀장',leader:'조장',acting_leader:'조장대행'};
-async function adcDeleteSig(username, name){
-  if(!confirm(name+'님의 등록된 서명정보를 삭제하시겠습니까?\n(서명 이미지·소속·직책·사번 정보가 모두 삭제됩니다)')) return;
-  try{
-    var res=await sb.from('user_signatures').select('signature_path').eq('username',username).maybeSingle();
-    var path=res.data&&res.data.signature_path;
-    var delRes=await sb.from('user_signatures').delete().eq('username',username);
-    if(delRes.error) throw delRes.error;
-    if(path){
-      try{
-        var delUrl=SUPABASE_URL+'/storage/v1/object/adminconfirm/'+path.split('/').map(encodeURIComponent).join('/');
-        await fetch(delUrl,{method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+(_sbAccessToken||SUPABASE_KEY)}});
-      }catch(delErr){}
-    }
-    toast('🗑️ '+name+'님의 서명정보가 삭제되었습니다');
-    if(_adcSigTargetId===username){ adcClearSigTarget(); }
-    adcRenderSigStatusList();
-  }catch(e){ toast('⚠️ 삭제 실패: '+_safeErrMsg(e)); }
-}
 async function adcToggleSigStatus(){
   var panel=document.getElementById('adcSigStatusPanel');
   var toggle=document.getElementById('adcSigStatusToggle');
@@ -20245,10 +20224,6 @@ async function adcToggleSigStatus(){
   }
   toggle.textContent='📋 등록 현황 접기';
   panel.style.display='block';
-  await adcRenderSigStatusList();
-}
-async function adcRenderSigStatusList(){
-  var panel=document.getElementById('adcSigStatusPanel'); if(!panel) return;
   panel.innerHTML='<div style="padding:8px;color:var(--g4);font-size:12.5px">불러오는 중…</div>';
   await adcEnsureSigUsersList();
   var targets=(_adcSigUsersList||[]).filter(function(u){ return ADC_SIG_STATUS_ROLES.indexOf(u.role)!==-1; });
@@ -20257,20 +20232,19 @@ async function adcRenderSigStatusList(){
   (sigRes.data||[]).forEach(function(s){ registeredSet[s.username]=true; });
   var registered=targets.filter(function(u){ return registeredSet[u.id]; });
   var unregistered=targets.filter(function(u){ return !registeredSet[u.id]; });
-  function rowHtml(u, clickable, showDelete){
+  function rowHtml(u, clickable){
     var label=(u.team||'-')+' · '+(ADC_SIG_ROLE_LABEL[u.role]||u.role);
     var onclickAttr=clickable?(' onclick="adcPickSigTarget(\''+u.id+'\',\''+String(u.name||'').replace(/\'/g,"\\'")+'\')"'):'';
-    var delBtn=showDelete?(' <button onclick="event.stopPropagation();adcDeleteSig(\''+u.id+'\',\''+String(u.name||'').replace(/\'/g,"\\'")+'\')" style="margin-left:6px;padding:2px 8px;font-size:11px;border-radius:8px;border:1px solid var(--danger);background:#fff;color:var(--danger);cursor:pointer">삭제</button>'):'';
-    return '<div'+onclickAttr+' style="padding:7px 8px;border-bottom:1px solid var(--g1);font-size:12.5px;display:flex;align-items:center;justify-content:space-between;'+(clickable?'cursor:pointer;color:var(--g6)':'color:var(--g5)')+'"><span>'+(u.name||'')+' <span style="color:var(--g4);font-size:11px">('+label+')</span></span>'+delBtn+'</div>';
+    return '<div'+onclickAttr+' style="padding:7px 8px;border-bottom:1px solid var(--g1);font-size:12.5px;'+(clickable?'cursor:pointer;color:var(--g6)':'color:var(--g5)')+'">'+(u.name||'')+' <span style="color:var(--g4);font-size:11px">('+label+')</span></div>';
   }
-  var html='<div style="font-size:12.5px;color:var(--g5);font-weight:700;margin-bottom:6px">대상 '+targets.length+'명 중 등록 '+registered.length+'명 · 미등록 '+unregistered.length+'명 <span style="color:var(--g4);font-weight:400">(눌러서 수정, 이름 옆 삭제 버튼으로 삭제)</span></div>';
+  var html='<div style="font-size:12.5px;color:var(--g5);font-weight:700;margin-bottom:6px">대상 '+targets.length+'명 중 등록 '+registered.length+'명 · 미등록 '+unregistered.length+'명</div>';
   if(unregistered.length){
     html+='<div style="font-size:12px;font-weight:700;color:#C0392B;margin:6px 0 4px">❌ 미등록 (눌러서 바로 등록)</div>';
     html+=unregistered.map(function(u){ return rowHtml(u, true); }).join('');
   }
   if(registered.length){
     html+='<div style="font-size:12px;font-weight:700;color:var(--teal2);margin:10px 0 4px">✅ 등록완료</div>';
-    html+=registered.map(function(u){ return rowHtml(u, true, true); }).join('');
+    html+=registered.map(function(u){ return rowHtml(u, false); }).join('');
   }
   if(!targets.length){ html='<div style="padding:8px;color:var(--g4);font-size:12.5px">대상자가 없습니다</div>'; }
   panel.innerHTML=html;
@@ -20332,6 +20306,62 @@ async function loadAdcMySig(){
       wrap.style.display='block';
     }else if(wrap){ wrap.style.display='none'; }
   }catch(e){}
+}
+// ── 서명 손으로 그리기 ──
+var _adcSigCanvasCtx=null, _adcSigDrawing=false, _adcSigHasDrawn=false;
+function adcSigMode(mode){
+  var upBtn=document.getElementById('adcSigModeUploadBtn'), drBtn=document.getElementById('adcSigModeDrawBtn');
+  var upArea=document.getElementById('adcSigUploadArea'), drArea=document.getElementById('adcSigDrawArea');
+  if(mode==='draw'){
+    upBtn.style.background='#fff'; upBtn.style.color='var(--g5)'; upBtn.style.borderColor='var(--g2)';
+    drBtn.style.background='var(--teal2)'; drBtn.style.color='#fff'; drBtn.style.borderColor='var(--teal)';
+    upArea.style.display='none'; drArea.style.display='block';
+    setTimeout(adcSigCanvasInit, 30); // 레이아웃 반영 후 실제 렌더 크기를 알아야 캔버스 해상도를 맞출 수 있음
+  }else{
+    drBtn.style.background='#fff'; drBtn.style.color='var(--g5)'; drBtn.style.borderColor='var(--g2)';
+    upBtn.style.background='var(--teal2)'; upBtn.style.color='#fff'; upBtn.style.borderColor='var(--teal)';
+    drArea.style.display='none'; upArea.style.display='block';
+  }
+}
+function adcSigCanvasInit(){
+  var canvas=document.getElementById('adcSigCanvas'); if(!canvas) return;
+  var rect=canvas.getBoundingClientRect();
+  var dpr=window.devicePixelRatio||1;
+  canvas.width=rect.width*dpr; canvas.height=rect.height*dpr;
+  var ctx=canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.fillStyle='#fff'; ctx.fillRect(0,0,rect.width,rect.height);
+  ctx.lineWidth=2.5; ctx.lineCap='round'; ctx.lineJoin='round'; ctx.strokeStyle='#1a1a1a';
+  _adcSigCanvasCtx=ctx; _adcSigHasDrawn=false;
+  function pos(e){
+    var r=canvas.getBoundingClientRect();
+    return {x:(e.clientX-r.left), y:(e.clientY-r.top)};
+  }
+  canvas.onpointerdown=function(e){ _adcSigDrawing=true; _adcSigHasDrawn=true; var p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); canvas.setPointerCapture(e.pointerId); };
+  canvas.onpointermove=function(e){ if(!_adcSigDrawing) return; var p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); };
+  canvas.onpointerup=function(){ _adcSigDrawing=false; };
+  canvas.onpointerleave=function(){ _adcSigDrawing=false; };
+}
+function adcSigCanvasClear(){
+  var canvas=document.getElementById('adcSigCanvas'); if(!canvas||!_adcSigCanvasCtx) return;
+  var rect=canvas.getBoundingClientRect();
+  _adcSigCanvasCtx.fillStyle='#fff';
+  _adcSigCanvasCtx.fillRect(0,0,rect.width,rect.height);
+  _adcSigHasDrawn=false;
+}
+function adcSigCanvasUse(){
+  var canvas=document.getElementById('adcSigCanvas'); if(!canvas) return;
+  if(!_adcSigHasDrawn){ toast('⚠️ 서명을 먼저 그려주세요'); return; }
+  canvas.toBlob(function(blob){
+    if(!blob){ toast('⚠️ 변환 실패, 다시 시도해주세요'); return; }
+    _adcMySigFile=blob;
+    var url=URL.createObjectURL(blob);
+    var img=document.getElementById('adcMySigPreview');
+    var wrap=document.getElementById('adcMySigPreviewWrap');
+    if(img) img.src=url;
+    if(wrap) wrap.style.display='block';
+    toast('✅ 그린 서명이 적용되었습니다 — 아래 "저장" 버튼을 눌러 완료하세요');
+  },'image/png');
 }
 function adcPreviewMySig(files){
   if(!files||!files[0]) return;
@@ -28022,27 +28052,9 @@ function wfMainTab(n){
   document.getElementById('wfMainT0').style.borderBottom = n===0?'2.5px solid var(--teal)':'none';
   document.getElementById('wfMainT1').style.color = n===1?'var(--teal)':'var(--g5)';
   document.getElementById('wfMainT1').style.borderBottom = n===1?'2.5px solid var(--teal)':'none';
-  document.getElementById('wfMainT2').style.color = n===2?'var(--teal)':'var(--g5)';
-  document.getElementById('wfMainT2').style.borderBottom = n===2?'2.5px solid var(--teal)':'none';
   document.getElementById('wfMainP0').style.display = n===0?'block':'none';
   document.getElementById('wfMainP1').style.display = n===1?'block':'none';
-  document.getElementById('wfMainP2').style.display = n===2?'block':'none';
   if(n===1) wfRenderStatsTab();
-  if(n===2 && !document.getElementById('wfEditFrom').value){
-    // 처음 탭을 열 때는 편의상 이번 달 1일~오늘로 기본 채워준다
-    var now=new Date(); var y=now.getFullYear(), m=now.getMonth();
-    document.getElementById('wfEditFrom').value=y+'-'+String(m+1).padStart(2,'0')+'-01';
-    document.getElementById('wfEditTo').value=wfYmd(now).replace(/^(\d{4})(\d{2})(\d{2})$/,'$1-$2-$3');
-  }
-}
-function wfEhTab(n){
-  document.getElementById('wfEhT0').style.color = n===0?'var(--teal)':'var(--g5)';
-  document.getElementById('wfEhT0').style.borderBottom = n===0?'2.5px solid var(--teal)':'none';
-  document.getElementById('wfEhT1').style.color = n===1?'var(--teal)':'var(--g5)';
-  document.getElementById('wfEhT1').style.borderBottom = n===1?'2.5px solid var(--teal)':'none';
-  document.getElementById('wfEhP0').style.display = n===0?'block':'none';
-  document.getElementById('wfEhP1').style.display = n===1?'block':'none';
-  if(n===1) wfRenderEditHistStats();
 }
 function wfRenderStatsTab(){
   var body=document.getElementById('wfStatsBody');
@@ -28725,7 +28737,6 @@ function wfBaseTmCode(e){
 }
 // ── 기간 지정 수정이력 조회: 정기(분기) 변경 말고 수시로 몇 명만 고쳤을 때, 그 사람들만 걸러서 보고 ERP도 그 사람들만 다시 받게 해준다 ──
 var _wfLastChangedEmpIds=[];
-var _wfLastEditRows=[]; // 통계 탭에서 재사용
 async function wfSearchEditHistory(){
   var from=document.getElementById('wfEditFrom').value;
   var to=document.getElementById('wfEditTo').value;
@@ -28734,10 +28745,9 @@ async function wfSearchEditHistory(){
   resultEl.innerHTML='<div style="padding:10px 0;color:var(--g4);font-size:13px">조회 중...</div>';
   try{
     var fromTs=from+'T00:00:00+09:00', toTs=to+'T23:59:59+09:00';
-    var res=await msFetchAll(function(){ return sb.from('wf_employee_edit_log').select('emp_no,changed_by,changed_at,field_name').gte('changed_at',fromTs).lte('changed_at',toTs).order('changed_at',{ascending:false}); });
+    var res=await msFetchAll(function(){ return sb.from('wf_employee_edit_log').select('emp_no,changed_by,changed_at').gte('changed_at',fromTs).lte('changed_at',toTs).order('changed_at',{ascending:false}); });
     if(res.error){ resultEl.innerHTML='<div style="padding:10px 0;color:var(--danger);font-size:13px">조회 실패: '+_safeErrMsg(res.error)+'</div>'; return; }
     var rows=res.data||[];
-    _wfLastEditRows=rows;
     var byEmp={};
     rows.forEach(function(r){
       if(!byEmp[r.emp_no]) byEmp[r.emp_no]={last_at:r.changed_at, last_by:r.changed_by, count:0};
@@ -28746,79 +28756,20 @@ async function wfSearchEditHistory(){
     var empIds=Object.keys(byEmp);
     _wfLastChangedEmpIds=empIds;
     if(!empIds.length){ resultEl.innerHTML='<div style="padding:10px 0;color:var(--g4);font-size:13px">해당 기간에 수정된 사람이 없습니다</div>'; return; }
-    function wfParseSource(by){
-      by=by||'';
-      var m=by.match(/^(.*)\s\((엑셀업로드|앱수정)\)$/);
-      return m?{name:m[1],src:m[2]}:{name:by,src:null};
-    }
-    var srcColor={'엑셀업로드':'var(--warn)','앱수정':'var(--teal2)'};
-    var srcBg={'엑셀업로드':'var(--warn-bg)','앱수정':'var(--teal-bg)'};
-    var html='<div style="font-size:13px;font-weight:700;color:var(--g6);margin-bottom:8px">✏️ 수정된 사람 '+empIds.length+'명 <span style="color:var(--g4);font-weight:400">(총 '+rows.length+'건 변경)</span></div>'
-      +'<div style="max-height:340px;overflow-y:auto;border:1px solid var(--g2);border-radius:10px;background:#fff">';
+    var html='<div style="font-size:13px;font-weight:700;color:var(--g6);margin:8px 0 6px">✏️ 수정된 사람 '+empIds.length+'명</div>'
+      +'<div style="max-height:260px;overflow-y:auto;border:1px solid var(--g2);border-radius:8px;background:#fff">';
     empIds.forEach(function(id){
       var e=wfEmployees.find(function(x){ return String(x.emp_no)===String(id); });
       var info=byEmp[id];
-      var p=wfParseSource(info.last_by);
-      var badge=p.src?('<span style="padding:2px 7px;border-radius:8px;font-size:10.5px;font-weight:700;background:'+srcBg[p.src]+';color:'+srcColor[p.src]+'">'+p.src+'</span>'):'';
-      html+='<div style="padding:9px 10px;border-bottom:1px solid var(--g1);font-size:12.5px">'
-        +'<div style="display:flex;justify-content:space-between;align-items:center;gap:6px">'
-        +'<span><b>'+(e?e.name:'(퇴사·미상)')+'</b> <span style="color:var(--g4)">('+id+')'+(e?(' · '+e.team+' '+(e.group_name||'')):'')+'</span></span>'
-        +badge
-        +'</div>'
-        +'<div style="color:var(--g4);font-size:11px;margin-top:2px">'+(p.name||'')+' · '+toKSTDateTime(info.last_at)+(info.count>1?' · 총 '+info.count+'건':'')+'</div>'
+      html+='<div style="padding:7px 9px;border-bottom:1px solid var(--g1);font-size:12.5px;display:flex;justify-content:space-between;gap:8px">'
+        +'<span>'+(e?(e.name+' ('+id+')'):('(퇴사·미상) '+id))+' <span style="color:var(--g4)">'+(e?(e.team+' '+(e.group_name||'')):'')+'</span></span>'
+        +'<span style="color:var(--g4);white-space:nowrap">'+(info.last_by||'')+' · '+toKSTDateTime(info.last_at)+'</span>'
         +'</div>';
     });
     html+='</div>'
-      +'<button onclick="wfDownloadErpForChanged()" style="width:100%;margin-top:10px;padding:10px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13.5px;font-weight:700;cursor:pointer">📥 이 '+empIds.length+'명만 ERP 다운로드</button>';
+      +'<button onclick="wfDownloadErpForChanged()" style="width:100%;margin-top:8px;padding:9px;background:var(--teal);color:#fff;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer">📥 이 '+empIds.length+'명만 ERP 다운로드</button>';
     resultEl.innerHTML=html;
-    // 통계 탭이 이미 열려있는 상태에서 재조회했을 수도 있으니 같이 갱신
-    if(document.getElementById('wfEhP1')&&document.getElementById('wfEhP1').style.display!=='none') wfRenderEditHistStats();
   }catch(e){ resultEl.innerHTML='<div style="padding:10px 0;color:var(--danger);font-size:13px">조회 실패: '+_safeErrMsg(e)+'</div>'; }
-}
-function wfRenderEditHistStats(){
-  var body=document.getElementById('wfEditHistStats'); if(!body) return;
-  var rows=_wfLastEditRows||[];
-  if(!rows.length){ body.innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:13.5px">먼저 목록 탭에서 조회해주세요</div>'; return; }
-  function parseSource(by){
-    by=by||'';
-    var m=by.match(/^(.*)\s\((엑셀업로드|앱수정)\)$/);
-    return m?{name:m[1],src:m[2]}:{name:by,src:'기타(과거기록 등)'};
-  }
-  var empSet={};
-  var bySrc={}, byEditor={}, byTeam={}, byField={};
-  rows.forEach(function(r){
-    empSet[r.emp_no]=true;
-    var p=parseSource(r.changed_by);
-    bySrc[p.src]=(bySrc[p.src]||0)+1;
-    byEditor[p.name]=(byEditor[p.name]||0)+1;
-    byField[r.field_name||'기타']=(byField[r.field_name||'기타']||0)+1;
-    var e=wfEmployees.find(function(x){ return String(x.emp_no)===String(r.emp_no); });
-    var team=e?e.team:'미상';
-    byTeam[team]=(byTeam[team]||0)+1;
-  });
-  function barList(obj, colorMap){
-    var entries=Object.keys(obj).map(function(k){ return [k,obj[k]]; }).sort(function(a,b){ return b[1]-a[1]; });
-    var max=entries.length?entries[0][1]:1;
-    return entries.map(function(en){
-      var pct=Math.round(en[1]/max*100);
-      var color=(colorMap&&colorMap[en[0]])||'var(--teal2)';
-      return '<div style="margin-bottom:7px">'
-        +'<div style="display:flex;justify-content:space-between;font-size:12px;color:var(--g6);margin-bottom:2px"><span>'+en[0]+'</span><b>'+en[1]+'건</b></div>'
-        +'<div style="height:7px;background:var(--g1);border-radius:4px;overflow:hidden"><div style="height:100%;width:'+pct+'%;background:'+color+'"></div></div>'
-        +'</div>';
-    }).join('');
-  }
-  var srcColorMap={'엑셀업로드':'var(--warn)','앱수정':'var(--teal2)','기타(과거기록 등)':'var(--g4)'};
-  var html='';
-  html+='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px">'
-    +'<div style="background:var(--g1);border-radius:10px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--teal2)">'+rows.length+'</div><div style="font-size:11.5px;color:var(--g5);margin-top:2px">총 변경 건수</div></div>'
-    +'<div style="background:var(--g1);border-radius:10px;padding:12px;text-align:center"><div style="font-size:22px;font-weight:800;color:var(--teal2)">'+Object.keys(empSet).length+'</div><div style="font-size:11.5px;color:var(--g5);margin-top:2px">변경된 인원</div></div>'
-    +'</div>';
-  html+='<div style="font-size:12.5px;font-weight:700;color:var(--g6);margin-bottom:8px">🔀 출처별</div>'+barList(bySrc, srcColorMap)+'<div style="height:8px"></div>';
-  html+='<div style="font-size:12.5px;font-weight:700;color:var(--g6);margin:14px 0 8px">✏️ 수정 항목별</div>'+barList(byField)+'<div style="height:8px"></div>';
-  html+='<div style="font-size:12.5px;font-weight:700;color:var(--g6);margin:14px 0 8px">🏢 팀별 변경 건수</div>'+barList(byTeam)+'<div style="height:8px"></div>';
-  html+='<div style="font-size:12.5px;font-weight:700;color:var(--g6);margin:14px 0 8px">👤 수정자별</div>'+barList(byEditor);
-  body.innerHTML=html;
 }
 async function wfDownloadErpForChanged(){
   if(!_wfLastChangedEmpIds.length){ toast('⚠️ 먼저 수정이력을 조회해주세요'); return; }
