@@ -27094,7 +27094,12 @@ function updateDashMgrAtt(){
     var shiftData=MGR_STRUCTURE[shift];
     Object.keys(shiftData).forEach(function(team){
       var members=shiftData[team];
-      var c=members.filter(function(n){ return mgrAttData[team+'_'+n]&&mgrAttData[team+'_'+n].checked; }).length;
+      // 출근/출장/교육만 "출근"으로 집계 — 휴무·연차·공가·건강검진·병가·휴직·기타는 실제 출근이 아니므로 제외
+      var c=members.filter(function(n){
+        var rec=mgrAttData[team+'_'+n]; if(!rec||!rec.checked) return false;
+        var st=rec.status||'출근';
+        return st==='출근'||st==='출장'||st==='교육';
+      }).length;
       total+=members.length;
       checked+=c;
       teamSummary.push({team:team, checked:c, total:members.length});
