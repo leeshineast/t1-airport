@@ -27119,7 +27119,9 @@ function renderMgrAttendance(){
 
         h += '<div '+onclick+' style="padding:6px 10px;border-radius:var(--r2);border:1.5px solid;font-size:13px;font-weight:600;'+bg+';'+cursor+';min-width:60px;text-align:center">';
         h += '<div>'+(statusIcon?statusIcon+' ':'')+name+'</div>';
-        if(isChecked && checkedTime){
+        if(isChecked && checkedBy==='자동확정'){
+          h += '<div style="font-size:10px;color:inherit;margin-top:1px;opacity:.85">'+(status||'')+'</div>';
+        }else if(isChecked && checkedTime){
           h += '<div style="font-size:10px;color:inherit;margin-top:1px;opacity:.85">'+(status&&status!=='출근'?status+' · ':'')+checkedTime+(checkedBy&&checkedBy!==me.name?' ('+checkedBy+')':'')+'</div>';
         }else if(scheduledStatus){
           h += '<div style="font-size:10px;color:inherit;margin-top:1px;opacity:.85">'+scheduledStatus+' (예정)</div>';
