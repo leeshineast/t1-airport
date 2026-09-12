@@ -2792,7 +2792,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
         <table class="rpt-table" id="rptAccTable" style="display:none">
           <tr><td class="rpt-lbl" style="width:20%">구 분</td><td style="width:55%" class="rpt-lbl">내 용</td><td style="width:25%" class="rpt-lbl">비 고</td></tr>
           <tr><td class="rpt-lbl">사업부</td><td id="accDept"></td><td></td></tr>
-          <tr><td class="rpt-lbl">재해자</td><td><input type="text" class="rpt-edit" id="accVictim" placeholder="예: 환경미화직 홍길동(여, 57세)"></td><td></td></tr>
+          <tr><td class="rpt-lbl">재해자</td><td><input type="text" class="rpt-edit" id="accVictimRpt" placeholder="예: 환경미화직 홍길동(여, 57세)"></td><td></td></tr>
           <tr><td class="rpt-lbl">업무</td><td><input type="text" class="rpt-edit" id="accDuty" placeholder="예: 환경미화(화장실, 공용구역)"></td><td style="font-size:11px;line-height:1.6" id="accLeaders"></td></tr>
           <tr><td class="rpt-lbl">사고내용</td><td colspan="2" style="padding:0">
             <table style="width:100%;border-collapse:collapse">
@@ -19267,7 +19267,7 @@ async function downloadAccidentReportExcel(){
   var ambText=ambYes?'☑ 예   □ 아니오':(ambNo?'□ 예   ☑ 아니오':'□ 예   □ 아니오');
   var v={
     dept:document.getElementById('accDept').textContent,
-    victim:document.getElementById('accVictim').value,
+    victim:document.getElementById('accVictimRpt').value,
     duty:document.getElementById('accDuty').value,
     leaders:document.getElementById('accLeaders').innerText.replace(/\n+/g,' / '),
     datetime:document.getElementById('accDatetime').value,
@@ -31215,7 +31215,7 @@ async function openAccidentReport(id){
   var teamParts=teamLabel.split(/\s+/).filter(Boolean); // ["7팀","A조"] 형태 가정
   var deptStr='T1환경미화사업부'+(teamParts.length?(' ('+teamParts.map(function(t){return '환경'+t;}).join('/')+')'):'');
   document.getElementById('accDept').textContent=deptStr;
-  document.getElementById('accVictim').value=r.related_staff||'';
+  document.getElementById('accVictimRpt').value=r.related_staff||'';
   document.getElementById('accDuty').value=r.job_duty||'';
   document.getElementById('accDatetime').value=r.occurred_at?toKSTDateTime(r.occurred_at):'';
   document.getElementById('accLocation').value=r.location||'';
@@ -31251,7 +31251,7 @@ async function saveAccidentReport(){
   var ambYes=document.getElementById('accAmbYes').checked;
   var ambNo=document.getElementById('accAmbNo').checked;
   var payload={
-    related_staff:document.getElementById('accVictim').value.trim(),
+    related_staff:document.getElementById('accVictimRpt').value.trim(),
     job_duty:document.getElementById('accDuty').value.trim(),
     location:document.getElementById('accLocation').value.trim(),
     description:document.getElementById('accContent').value.trim(),
