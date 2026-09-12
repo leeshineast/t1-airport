@@ -24793,7 +24793,7 @@ function renderAccList(data){
         +'<span class="t-pill pill-am">'+teamLabel+'</span>'
         +'<span class="chip '+(isDone?'chip-ok':'chip-warn')+'"><span class="chip-dot"></span>'+(isDone?'조치완료':'대기')+'</span>'
         +'</div><div style="display:flex;align-items:center;gap:7px">'
-        +((me&&['admin','manager','leader','acting_leader'].indexOf(me.role)>=0)?'<span onclick="editAccident('+r.id+')" style="font-size:12px;color:var(--teal2);font-weight:700;cursor:pointer;padding:2px 6px;border:1px solid var(--teal);border-radius:10px">✏️ 수정</span>':'')
+        +((me&&['master','admin','manager'].indexOf(me.role)>=0)?'<span onclick="editAccident('+r.id+')" style="font-size:12px;color:var(--teal2);font-weight:700;cursor:pointer;padding:2px 6px;border:1px solid var(--teal);border-radius:10px">✏️ 수정</span>':'')
         +(canDeleteWorkItem()?'<span onclick="deleteAccident('+r.id+')" style="font-size:12px;color:var(--danger);font-weight:700;cursor:pointer;padding:2px 6px;border:1px solid var(--danger);border-radius:10px">🗑 삭제</span>':'')
         +'<span class="ho-time">'+ts+'</span></div></div>'
         +'<div class="w-row"><div class="w-av" style="background:var(--danger)">'+initial+'</div>'
@@ -24836,7 +24836,7 @@ async function deleteAccident(id){
   }catch(e){ toast('삭제 오류: '+String(_safeErrMsg(e)||e)); }
 }
 function editAccident(id){
-  if(!me||['admin','manager','leader','acting_leader'].indexOf(me.role)<0){ toast('⚠️ 조장 이상만 수정할 수 있습니다'); return; }
+  if(!me||['master','admin','manager'].indexOf(me.role)<0){ toast('⚠️ master·admin·manager만 수정할 수 있습니다'); return; }
   var r=(accidentAll||[]).filter(function(x){ return x.id===id; })[0];
   if(!r){ toast('데이터를 찾을 수 없습니다'); return; }
   accTab(1); // 등록 탭으로 (내부에서 resetAccForm 실행됨)
