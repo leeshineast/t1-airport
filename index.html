@@ -9655,7 +9655,7 @@ function updateStaff(){
   var mgrTodayCount=0;
   try{
     if(typeof mgrAttData==='object'&&mgrAttData){
-      mgrTodayCount=Object.keys(mgrAttData).filter(function(k){ return mgrAttData[k]&&mgrAttData[k].checked; }).length;
+      mgrTodayCount=Object.keys(mgrAttData).filter(function(k){ var r=mgrAttData[k]; return r&&r.checked&&(r.status==='출근'||r.status==='교육'||r.status==='출장'); }).length;
     }
   }catch(e){}
   var fieldCount=calcDayTotal(today)+getNightSpecialTotal();
@@ -9839,13 +9839,26 @@ async function loadTeamAvgAttendance(prefix){
   if(mode==='day'){ dFrom=dTo=anchorDate; periodLbl=(anchorDate===todayStr)?'오늘':anchorDate; }
   else if(mode==='month'){ dFrom=anchorDate.slice(0,7)+'-01'; dTo=anchorDate; periodLbl=anchorDate.slice(0,7)+' 일평균'; }
   else{ dFrom=anchorDate.slice(0,4)+'-01-01'; dTo=anchorDate; periodLbl=anchorDate.slice(0,4)+'년 일평균'; }
+  // 야간팀(5팀·10팀)은 전날 저녁 체크인~다음날 06:00까지가 하루 근무라서, DB에는 체크인한 전날 날짜로 저장된다.
+  // '오늘' 조회 시 자정~06시 사이라면 지금 근무 중인 야간팀 기록은 아직 전날 날짜로 남아있으므로, 그 시간대엔 야간팀만 전날 날짜로 조회한다.
+  var isNightWindow = mode==='day' && anchorDate===todayStr && nowKst.getUTCHours()<6;
+  var nightDate = isNightWindow ? new Date(nowKst.getTime()-86400000).toISOString().slice(0,10) : anchorDate;
+  var NIGHT_TEAM_CODES={'5팀A':1,'5팀B':1,'10팀A':1,'10팀B':1};
+  var NIGHT_TEAM_NAMES={'5팀':1,'10팀':1};
+  var queryFrom = isNightWindow ? nightDate : dFrom;
   if(lblEl) lblEl.textContent=periodLbl+' · 조원 + 조장 + 팀장 포함';
   grid.innerHTML='불러오는 중…';
   try{
-    var mpRes=await sb.from('mp_data').select('date,team_code,values').gte('date',dFrom).lte('date',dTo);
-    var mgrRes=await sb.from('mgr_attendance').select('date,team,name,checked,status').gte('date',dFrom).lte('date',dTo).eq('checked',true);
-    var nsRes=await sb.from('night_special_data').select('date,team_code,carpet,wax,stone,wood,restroom,pbb,etc,es,toilet_daily,common_area,collection').gte('date',dFrom).lte('date',dTo);
+    var mpRes=await sb.from('mp_data').select('date,team_code,values').gte('date',queryFrom).lte('date',dTo);
+    var mgrRes=await sb.from('mgr_attendance').select('date,team,name,checked,status').gte('date',queryFrom).lte('date',dTo).eq('checked',true);
+    var nsRes=await sb.from('night_special_data').select('date,team_code,carpet,wax,stone,wood,restroom,pbb,etc,es,toilet_daily,common_area,collection').gte('date',queryFrom).lte('date',dTo);
     var mpData=mpRes.data||[], mgrData=mgrRes.data||[], nsData=nsRes.data||[];
+    // 야간팀은 야간 기준일(nightDate), 나머지 팀은 원래 조회 기간(dFrom~dTo) 기록만 남긴다
+    if(isNightWindow){
+      mpData=mpData.filter(function(r){ return NIGHT_TEAM_CODES[r.team_code] ? r.date===nightDate : (r.date>=dFrom&&r.date<=dTo); });
+      mgrData=mgrData.filter(function(r){ return NIGHT_TEAM_NAMES[r.team] ? r.date===nightDate : (r.date>=dFrom&&r.date<=dTo); });
+      nsData=nsData.filter(function(r){ return NIGHT_TEAM_CODES[r.team_code] ? r.date===nightDate : (r.date>=dFrom&&r.date<=dTo); });
+    }
     var sumByTeam={}, daysByTeam={};
     TEAM_AVG_ORDER.forEach(function(tc){ sumByTeam[tc]=0; daysByTeam[tc]={}; });
     mpData.forEach(function(r){
@@ -11115,7 +11128,7 @@ function updateFloorChart(){
     var mgrCountFC=0;
     try{
       if(typeof mgrAttData==='object'&&mgrAttData){
-        mgrCountFC=Object.keys(mgrAttData).filter(function(k){ return mgrAttData[k]&&mgrAttData[k].checked; }).length;
+        mgrCountFC=Object.keys(mgrAttData).filter(function(k){ var r=mgrAttData[k]; return r&&r.checked&&(r.status==='출근'||r.status==='교육'||r.status==='출장'); }).length;
       }
     }catch(e){}
     curEl.textContent=grandTotal+mgrCountFC;
