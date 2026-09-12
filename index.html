@@ -9843,7 +9843,7 @@ async function loadTeamAvgAttendance(prefix){
   grid.innerHTML='불러오는 중…';
   try{
     var mpRes=await sb.from('mp_data').select('date,team_code,values').gte('date',dFrom).lte('date',dTo);
-    var mgrRes=await sb.from('mgr_attendance').select('date,team,name,checked').gte('date',dFrom).lte('date',dTo).eq('checked',true);
+    var mgrRes=await sb.from('mgr_attendance').select('date,team,name,checked,status').gte('date',dFrom).lte('date',dTo).eq('checked',true);
     var nsRes=await sb.from('night_special_data').select('date,team_code,carpet,wax,stone,wood,restroom,pbb,etc,es,toilet_daily,common_area,collection').gte('date',dFrom).lte('date',dTo);
     var mpData=mpRes.data||[], mgrData=mgrRes.data||[], nsData=nsRes.data||[];
     var sumByTeam={}, daysByTeam={};
@@ -9873,8 +9873,11 @@ async function loadTeamAvgAttendance(prefix){
       daysByTeam[r.team_code][r.date]=1;
     });
     // 조장(A조장/B조장/C조장)은 해당 조에, 팀장은 팀 단위로 별도 집계
+    // ※ 출근으로 인정하는 상태는 '출근'·'교육'·'출장'뿐 — 휴무/연차/공가/건강검진/병가/휴직 등은 미출근으로 처리
+    var ATT_OK_STATUS={'출근':1,'교육':1,'출장':1};
     var sumTeamMgr={}, daysTeamMgr={};
     mgrData.forEach(function(r){
+      if(!ATT_OK_STATUS[r.status]) return;
       var m=(r.name||'').match(/^([A-Z])조장$/);
       if(m){
         var tc=r.team+m[1];
@@ -9935,7 +9938,7 @@ async function loadTeamAvgAttendance(prefix){
     // 운영팀 행 (admin+master 계정 기준, 출근은 선택된 기간의 관리자출근 체크 평균 — 다른 팀과 동일하게 mgrData 기준)
     var sumOpsAtt=0, daysOpsAtt={};
     mgrData.forEach(function(r){
-      if(r.team==='운영'){ sumOpsAtt+=1; daysOpsAtt[r.date]=1; }
+      if(r.team==='운영' && ATT_OK_STATUS[r.status]){ sumOpsAtt+=1; daysOpsAtt[r.date]=1; }
     });
     var opsChecked;
     if(mode==='day'){
