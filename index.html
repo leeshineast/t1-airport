@@ -2793,7 +2793,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
           <tr><td class="rpt-lbl" style="width:20%">구 분</td><td style="width:55%" class="rpt-lbl">내 용</td><td style="width:25%" class="rpt-lbl">비 고</td></tr>
           <tr><td class="rpt-lbl">사업부</td><td id="accDept"></td><td></td></tr>
           <tr><td class="rpt-lbl">재해자</td><td><input type="text" class="rpt-edit" id="accVictimRpt" placeholder="예: 환경미화직 홍길동(여, 57세)"></td><td></td></tr>
-          <tr><td class="rpt-lbl">업무</td><td><input type="text" class="rpt-edit" id="accDuty" placeholder="예: 환경미화(화장실, 공용구역)"></td><td style="font-size:11px;line-height:1.6" id="accLeaders"></td></tr>
+          <tr><td class="rpt-lbl">업무</td><td><input type="text" class="rpt-edit" id="accDutyRpt" placeholder="예: 환경미화(화장실, 공용구역)"></td><td style="font-size:11px;line-height:1.6" id="accLeaders"></td></tr>
           <tr><td class="rpt-lbl">사고내용</td><td colspan="2" style="padding:0">
             <table style="width:100%;border-collapse:collapse">
               <tr><td style="border:none;padding:6px 8px;font-size:12.5px;width:76px">1. 일시</td><td style="border:none;padding:6px 8px"><input type="text" class="rpt-edit" id="accDatetime"></td></tr>
@@ -2801,11 +2801,11 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
               <tr><td style="border:none;padding:6px 8px;font-size:12.5px;vertical-align:top">3. 내용</td><td style="border:none;padding:6px 8px"><textarea class="rpt-edit" id="accContent" rows="3"></textarea></td></tr>
               <tr><td style="border:none;padding:6px 8px;font-size:12.5px">4. 상해유형</td><td style="border:none;padding:6px 8px"><input type="text" class="rpt-edit" id="accType"></td></tr>
               <tr><td style="border:none;padding:6px 8px;font-size:12.5px">5. 상해종류</td><td style="border:none;padding:6px 8px"><input type="text" class="rpt-edit" id="accInjury"></td></tr>
-              <tr><td style="border:none;padding:6px 8px;font-size:12.5px">6. 예상휴업일수</td><td style="border:none;padding:6px 8px"><input type="text" class="rpt-edit" id="accLeaveDays"></td></tr>
+              <tr><td style="border:none;padding:6px 8px;font-size:12.5px">6. 예상휴업일수</td><td style="border:none;padding:6px 8px"><input type="text" class="rpt-edit" id="accLeaveDaysRpt"></td></tr>
             </table>
           </td></tr>
           <tr><td class="rpt-lbl">조치사항</td><td colspan="2">
-            <textarea class="rpt-edit" id="accAction" rows="5" placeholder="시간순으로 조치 내역 작성"></textarea>
+            <textarea class="rpt-edit" id="accActionRpt" rows="5" placeholder="시간순으로 조치 내역 작성"></textarea>
             <div style="margin-top:8px;font-size:12.5px;display:flex;align-items:center;gap:10px">
               <span>※ 구급차 이송 여부</span>
               <label style="display:flex;align-items:center;gap:4px;cursor:pointer"><input type="radio" name="accAmb" id="accAmbYes" onchange="void(0)"> 예</label>
@@ -19284,15 +19284,15 @@ async function downloadAccidentReportExcel(){
   var v={
     dept:document.getElementById('accDept').textContent,
     victim:document.getElementById('accVictimRpt').value,
-    duty:document.getElementById('accDuty').value,
+    duty:document.getElementById('accDutyRpt').value,
     leaders:document.getElementById('accLeaders').innerText.replace(/\n+/g,' / '),
     datetime:document.getElementById('accDatetime').value,
     location:document.getElementById('accLocation').value,
     content:document.getElementById('accContent').value,
     type:document.getElementById('accType').value,
     injury:document.getElementById('accInjury').value,
-    leaveDays:document.getElementById('accLeaveDays').value,
-    action:document.getElementById('accAction').value,
+    leaveDays:document.getElementById('accLeaveDaysRpt').value,
+    action:document.getElementById('accActionRpt').value,
     prevention:document.getElementById('accPrevention').value,
     preventionPeriod:document.getElementById('accPreventionPeriod').value,
     etc:document.getElementById('accEtc').value
@@ -31232,14 +31232,14 @@ async function openAccidentReport(id){
   var deptStr='T1환경미화사업부'+(teamParts.length?(' ('+teamParts.map(function(t){return '환경'+t;}).join('/')+')'):'');
   document.getElementById('accDept').textContent=deptStr;
   document.getElementById('accVictimRpt').value=r.related_staff||'';
-  document.getElementById('accDuty').value=r.job_duty||'';
+  document.getElementById('accDutyRpt').value=r.job_duty||'';
   document.getElementById('accDatetime').value=r.occurred_at?toKSTDateTime(r.occurred_at):'';
   document.getElementById('accLocation').value=r.location||'';
   document.getElementById('accContent').value=r.description||'';
   document.getElementById('accType').value=r.accident_type||'';
   document.getElementById('accInjury').value=r.injury_type||'';
-  document.getElementById('accLeaveDays').value=(r.expected_leave_days!=null&&r.expected_leave_days!=='')?(r.expected_leave_days+'일'):'';
-  document.getElementById('accAction').value=r.action||'';
+  document.getElementById('accLeaveDaysRpt').value=(r.expected_leave_days!=null&&r.expected_leave_days!=='')?(r.expected_leave_days+'일'):'';
+  document.getElementById('accActionRpt').value=r.action||'';
   document.getElementById('accAmbYes').checked=(r.ambulance_used===true);
   document.getElementById('accAmbNo').checked=(r.ambulance_used===false);
   document.getElementById('accPrevention').value=r.prevention_plan||r.result||'';
@@ -31268,13 +31268,13 @@ async function saveAccidentReport(){
   var ambNo=document.getElementById('accAmbNo').checked;
   var payload={
     related_staff:document.getElementById('accVictimRpt').value.trim(),
-    job_duty:document.getElementById('accDuty').value.trim(),
+    job_duty:document.getElementById('accDutyRpt').value.trim(),
     location:document.getElementById('accLocation').value.trim(),
     description:document.getElementById('accContent').value.trim(),
     accident_type:document.getElementById('accType').value.trim(),
     injury_type:document.getElementById('accInjury').value.trim(),
-    expected_leave_days:parseInt(document.getElementById('accLeaveDays').value)||null,
-    action:document.getElementById('accAction').value.trim(),
+    expected_leave_days:parseInt(document.getElementById('accLeaveDaysRpt').value)||null,
+    action:document.getElementById('accActionRpt').value.trim(),
     ambulance_used: ambYes?true:(ambNo?false:null),
     prevention_plan:document.getElementById('accPrevention').value.trim(),
     result:document.getElementById('accPrevention').value.trim(),
