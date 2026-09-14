@@ -30084,6 +30084,32 @@ async function cpFetchResultRanked(){
     if(i>0 && x.count===ranked[i-1].count && x.adminScore===ranked[i-1].adminScore){ x.rank=ranked[i-1].rank; x.tied=true; }
     else{ x.rank=i+1; x.tied=false; }
   });
+  // 동점(득표·1차 점수 모두 동일) 그룹에 재투표 결과가 있으면 반영해 순위를 확정
+  await cpLoadTiebreaks();
+  var gi=0;
+  while(gi<ranked.length){
+    var runEnd=gi;
+    while(runEnd+1<ranked.length && ranked[runEnd+1].tied) runEnd++;
+    if(runEnd>gi){
+      var groupItems=ranked.slice(gi, runEnd+1);
+      var baseRank=groupItems[0].rank;
+      var tieKey='award_r'+baseRank;
+      groupItems.forEach(function(x){ x._tieKey=tieKey; });
+      var t=cpTieForKey(2, tieKey);
+      if(t && t.status==='closed' && t.resolved_by){
+        var order=cpEffectiveTieOrder(t);
+        var orderMap={}; order.forEach(function(id,idx){ orderMap[id]=idx; });
+        groupItems.sort(function(a,b){
+          var oa=orderMap[a.entry.id], ob=orderMap[b.entry.id];
+          oa=oa===undefined?99:oa; ob=ob===undefined?99:ob;
+          return oa-ob;
+        });
+        groupItems.forEach(function(x,idx){ x.rank=baseRank+idx; x.tied=false; x._tieResolved=t.resolved_by; });
+        for(var gk=0; gk<groupItems.length; gk++){ ranked[gi+gk]=groupItems[gk]; }
+      }
+    }
+    gi=runEnd+1;
+  }
   ranked._totalVotes=votes.length;
   return ranked;
 }
@@ -30452,13 +30478,22 @@ async function cpCastTiebreakVote(tiebreakId, entryId){
   await cpLoadTiebreaks();
   cpRenderAllEntries();
 }
+function cpTieStillAmbiguous(order, tally, slots){
+  // slots까지는 순서가 완전히 갈려야 함 (2차처럼 slots===전체 길이면 전 구간 검사)
+  for(var i=0; i<Math.min(slots,order.length)-1; i++){
+    if((tally[order[i]]||0)===(tally[order[i+1]]||0)) return true;
+  }
+  // 1차처럼 slots<전체 길이면 컷 경계(마지막 in / 첫 out)도 확인
+  if(slots<order.length){
+    if((tally[order[slots-1]]||0)===(tally[order[slots]]||0)) return true;
+  }
+  return false;
+}
 async function cpCloseTiebreak(tiebreakId, slots){
   var tiebreak=cpTieById(tiebreakId); if(!tiebreak) return;
   if(!cpCanSeeIdentity()){ toast('⚠️ master만 마감할 수 있습니다'); return; }
   var r=cpResolveTieOrder(tiebreak);
-  var boundaryAbove=r.tally[r.order[slots-1]]||0;
-  var boundaryBelow= slots<r.order.length ? (r.tally[r.order[slots]]||0) : -1;
-  var stillTied = boundaryAbove===boundaryBelow;
+  var stillTied = cpTieStillAmbiguous(r.order, r.tally, slots);
   var payload= stillTied
     ? { status:'closed', winner_entry_id:null, resolved_by:null, closed_at:new Date().toISOString(), entry_ids:r.order }
     : { status:'closed', winner_entry_id:r.order[0], resolved_by:'revote', closed_at:new Date().toISOString(), entry_ids:r.order };
@@ -30803,40 +30838,78 @@ async function cpSubmitPublicVote(){
 /* ── 전직원 투표 결과 (관리자) ── */
 async function cpOpenVoteResults(){
   if(!cpCanSeeIdentity()){ toast('⚠️ master만 볼 수 있습니다'); return; }
-  var fRes=await sb.from('campaign_finalists').select('*').eq('campaign_id',cpCurCampaign.id);
-  var finalists=fRes.data||[];
-  if(!finalists.length){ document.getElementById('cpResultWrap').innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">아직 최종 후보가 선정되지 않았습니다</div>'; showM('cpResultModal'); return; }
-  var entryIds=finalists.map(function(f){return f.entry_id;});
-  var eRes=await sb.from('campaign_entries').select('*').in('id',entryIds);
-  var entryMap={}; (eRes.data||[]).forEach(function(e){ entryMap[e.id]=e; });
-  var vRes=await msFetchAll(function(){ return sb.from('campaign_public_votes').select('*').eq('campaign_id',cpCurCampaign.id); });
-  var votes=vRes.data||[];
-  var countMap={};
-  votes.forEach(function(v){ countMap[v.finalist_entry_id]=(countMap[v.finalist_entry_id]||0)+1; });
-  cpResultRanked=finalists.map(function(f){ return { finalistId:f.id, entry:entryMap[f.entry_id], count:countMap[f.entry_id]||0, awardLabel:f.award_label||null }; })
-    .filter(function(x){return x.entry;})
-    .sort(function(a,b){ return b.count-a.count; });
-
-  var totalVotes=votes.length;
+  cpResultRanked=await cpFetchResultRanked();
+  if(!cpResultRanked.length){ document.getElementById('cpResultWrap').innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">아직 최종 후보가 선정되지 않았습니다</div>'; showM('cpResultModal'); return; }
+  var totalVotes=cpResultRanked._totalVotes||0;
   var h='<div style="font-size:12.5px;color:var(--g5);margin-bottom:6px;font-weight:700">총 투표수: '+totalVotes+'표</div>';
   h+='<div style="font-size:11.5px;color:var(--g4);margin-bottom:12px">각 항목의 상 이름을 직접 입력하고 저장하세요 (예: 대상, 최우수상, 우수상, 장려상 등 자유롭게).</div>';
-  cpResultRanked.forEach(function(x,i){
-    var rank=i+1;
+  var shownTieKeys={};
+  cpResultRanked.forEach(function(x){
+    var rank=x.rank;
+    if(x._tieKey && !shownTieKeys[x._tieKey]){
+      shownTieKeys[x._tieKey]=true;
+      var groupItems=cpResultRanked.filter(function(y){return y._tieKey===x._tieKey;});
+      h+=cpAwardTieBannerHtml(x._tieKey, rank, groupItems);
+    }
     var suggested = rank===1?'최우수상':(rank<=6?'우수상':'장려상');
     var val = x.awardLabel!=null ? x.awardLabel : '';
     h+='<div style="background:white;border:1.5px solid var(--g2);border-radius:10px;padding:11px;margin-bottom:8px">'+
        '<div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">'+
-       '<span style="font-size:13px;font-weight:800;color:var(--g7)">'+rank+'위 · '+eeEsc(x.entry.name||'')+' ('+eeEsc(x.entry.emp_no||'')+')'+(x.entry.team?(' · '+eeEsc(x.entry.team)):'')+'</span>'+
+       '<span style="font-size:13px;font-weight:800;color:var(--g7)">'+(x.tied?'공동 ':'')+rank+'위 · '+eeEsc(x.entry.name||'')+' ('+eeEsc(x.entry.emp_no||'')+')'+(x.entry.team?(' · '+eeEsc(x.entry.team)):'')+'</span>'+
        '<span style="display:flex;gap:5px;align-items:center">'+
        '<input id="cpAwardInput_'+x.finalistId+'" value="'+eeEsc(val)+'" placeholder="'+suggested+'" style="width:110px;padding:5px 8px;border:1.5px solid var(--g2);border-radius:6px;font-size:12px">'+
        '<button onclick="cpSaveAwardLabel(\''+x.finalistId+'\')" style="padding:5px 10px;background:#0e7490;color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">저장</button>'+
        '</span></div>'+
        '<div style="font-size:13px;color:var(--g6);white-space:pre-wrap;margin-top:6px;line-height:1.6">'+eeEsc(x.entry.content)+'</div>'+
-       '<div style="font-size:12px;color:var(--g4);margin-top:6px">득표수: <b style="color:var(--navy)">'+x.count+'표</b>'+(x.awardLabel?(' · 현재 지정: <b style="color:#c2410c">'+eeEsc(x.awardLabel)+'</b>'):'')+'</div>'+
+       '<div style="font-size:12px;color:var(--g4);margin-top:6px">득표수: <b style="color:var(--navy)">'+x.count+'표</b> · 1차 관리자 점수 '+x.adminScore+'점'+(x.awardLabel?(' · 현재 지정: <b style="color:#c2410c">'+eeEsc(x.awardLabel)+'</b>'):'')+'</div>'+
        '</div>';
   });
   document.getElementById('cpResultWrap').innerHTML=h;
   showM('cpResultModal');
+}
+function cpAwardTieBannerHtml(tieKey, baseRank, groupItems){
+  var t=cpTieForKey(2, tieKey);
+  var slots=groupItems.length;
+  var label=function(x){ return eeEsc(x.entry.name||'')+'('+eeEsc(x.entry.emp_no||'')+')'; };
+  var h='<div style="background:#fff1f2;border:1.5px solid #fda4af;border-radius:10px;padding:12px;margin-bottom:10px">';
+  h+='<div style="font-size:12.5px;font-weight:800;color:#be123c;margin-bottom:6px">⚖️ '+baseRank+'위 자리 동점 ('+slots+'명 · 득표·1차 점수 모두 동일)</div>';
+  h+='<div style="font-size:12px;color:#9f1239;margin-bottom:8px">'+groupItems.map(label).join(', ')+'</div>';
+  if(!t){
+    h+='<div style="font-size:11px;color:#9f1239;margin-bottom:6px">재투표 참여 범위를 선택해 시작하세요</div>';
+    h+='<div style="display:flex;gap:6px;flex-wrap:wrap">'+CP_TIE_ROLE_OPTS.map(function(o){
+      return '<button onclick="cpStartTiebreak(2,\''+tieKey+'\',['+groupItems.map(function(x){return '\''+x.entry.id+'\'';}).join(',')+'],\''+o.key+'\')" style="padding:6px 10px;background:#be123c;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer">'+o.label+'로 시작</button>';
+    }).join('')+'</div>';
+  }else if(t.status==='open'){
+    var myVote=cpMyTieVote(t.id);
+    var tally=cpTieTally(t.id);
+    var eligible=cpTieEligible(t.eligible_role_min);
+    h+='<div style="font-size:11px;color:#9f1239;margin-bottom:6px">🗳 재투표 진행중 ('+cpTieRoleLabel(t.eligible_role_min)+' 참여 · 1인 1표) — 라운드 '+(t.round||1)+'</div>';
+    h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+groupItems.map(function(x){
+      var e=x.entry; var active=myVote===e.id;
+      var cnt=' · '+(tally[e.id]||0)+'표';
+      return '<button '+(eligible?('onclick="cpCastTiebreakVote(\''+t.id+'\',\''+e.id+'\')"'):'disabled')+' style="padding:6px 10px;border-radius:8px;border:1.5px solid '+(active?'#be123c':'var(--g2)')+';background:'+(active?'#be123c':'white')+';color:'+(active?'white':'var(--g6)')+';font-size:11.5px;font-weight:700;cursor:'+(eligible?'pointer':'not-allowed')+'">'+label(x)+cnt+'</button>';
+    }).join('')+'</div>';
+    if(!eligible){ h+='<div style="font-size:11px;color:#9f1239;margin-bottom:6px">⚠️ 이 재투표는 '+cpTieRoleLabel(t.eligible_role_min)+'만 참여할 수 있습니다</div>'; }
+    h+='<button onclick="cpCloseTiebreak(\''+t.id+'\','+slots+')" style="padding:6px 12px;background:#0e7490;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer">🔒 재투표 마감</button>';
+  }else if(t.status==='closed' && t.resolved_by==='revote'){
+    h+='<div style="font-size:11.5px;color:#166534;font-weight:700">✓ 재투표로 확정되었습니다 (라운드 '+(t.round||1)+')</div>';
+  }else if(t.status==='closed' && t.resolved_by==='master_manual'){
+    h+='<div style="font-size:11.5px;color:#166534;font-weight:700">✓ master가 직접 순위를 지정해 확정했습니다</div>';
+  }else if(t.status==='closed' && !t.resolved_by){
+    h+='<div style="font-size:11.5px;color:#c2410c;font-weight:700;margin-bottom:6px">⚠️ 재투표에서도 동표가 나왔습니다 — 순위를 직접 지정해주세요</div>';
+    var draft=cpManualOrderDraft[t.id]||[];
+    h+='<div style="font-size:11px;color:#9f1239;margin-bottom:6px">순서대로 클릭하세요 (다시 클릭하면 취소)</div>';
+    h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">'+groupItems.map(function(x){
+      var e=x.entry; var pos=draft.indexOf(e.id);
+      return '<button onclick="cpManualOrderClick(\''+t.id+'\',\''+e.id+'\')" style="padding:6px 10px;border-radius:8px;border:1.5px solid '+(pos!==-1?'#7c3aed':'var(--g2)')+';background:'+(pos!==-1?'#7c3aed':'white')+';color:'+(pos!==-1?'white':'var(--g6)')+';font-size:11.5px;font-weight:700;cursor:pointer">'+(pos!==-1?(pos+1)+'위 ':'')+label(x)+'</button>';
+    }).join('')+'</div>';
+    h+='<div style="display:flex;gap:6px">'+
+       '<button onclick="cpManualOrderConfirm(\''+t.id+'\')" style="padding:6px 12px;background:#7c3aed;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer">✅ 순위 확정</button>'+
+       '<button onclick="cpStartTiebreak(2,\''+tieKey+'\',['+groupItems.map(function(x){return '\''+x.entry.id+'\'';}).join(',')+'],\''+t.eligible_role_min+'\')" style="padding:6px 12px;background:#be123c;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer">🔁 재투표 한 번 더</button>'+
+       '</div>';
+  }
+  h+='</div>';
+  return h;
 }
 var cpResultRanked=[];
 async function cpSaveAwardLabel(finalistId){
