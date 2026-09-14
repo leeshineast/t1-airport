@@ -30305,6 +30305,7 @@ async function cpOpenAllEntries(){
   cpVotesCache=vRes.data||[];
   var fRes=await msFetchAll(function(){ return sb.from('campaign_finalists').select('*').eq('campaign_id',cpCurCampaign.id); });
   cpFinalistsCache=fRes.data||[];
+  await cpLoadTiebreaks();
   cpRenderAllEntries();
   showM('cpAllEntriesModal');
 }
@@ -30339,6 +30340,228 @@ function cpEntryScore(entryId){
 function cpEntryVoteCount(entryId){
   return cpVotesCache.filter(function(v){return v.entry_id===entryId;}).length;
 }
+/* ══════════ 동점 재투표(Tiebreak) — 1차 관리자 점수(TOP N 커트라인) ══════════ */
+var cpTiebreaksCache=[];
+var cpTiebreakVotesCache=[];
+var cpManualOrderDraft={};
+var CP_TIE_ROLE_OPTS=[
+  {key:'leader',label:'조장 이상'},
+  {key:'manager',label:'팀장 이상'},
+  {key:'admin',label:'관리자 이상'}
+];
+function cpTieRoleLabel(key){ var f=CP_TIE_ROLE_OPTS.find(function(o){return o.key===key;}); return f?f.label:'조장 이상'; }
+function cpTieEligible(minKey){
+  if(!me) return false;
+  var r=me.role;
+  if(minKey==='admin') return r==='admin'||r==='master';
+  if(minKey==='manager') return r==='manager'||r==='admin'||r==='master';
+  return r==='leader'||r==='manager'||r==='admin'||r==='master';
+}
+async function cpLoadTiebreaks(){
+  if(!cpCurCampaign) return;
+  var tRes=await msFetchAll(function(){ return sb.from('campaign_tiebreaks').select('*').eq('campaign_id',cpCurCampaign.id); });
+  cpTiebreaksCache=tRes.data||[];
+  if(!cpTiebreaksCache.length){ cpTiebreakVotesCache=[]; return; }
+  var ids=cpTiebreaksCache.map(function(t){return t.id;});
+  var vRes=await msFetchAll(function(){ return sb.from('campaign_tiebreak_votes').select('*').in('tiebreak_id',ids); });
+  cpTiebreakVotesCache=vRes.data||[];
+}
+function cpEntriesById(ids){ return ids.map(function(id){ return cpAllEntriesCache.find(function(e){return e.id===id;}); }).filter(Boolean); }
+function cpAdminRankedList(){
+  var rows=cpAllEntriesCache.filter(function(e){return cpEntryScore(e.id)>0;});
+  var arr=rows.slice().sort(function(a,b){ return cpEntryScore(b.id)-cpEntryScore(a.id); });
+  arr.forEach(function(e,i){
+    var sc=cpEntryScore(e.id);
+    if(i>0 && sc===cpEntryScore(arr[i-1].id)){ e._tieRank=arr[i-1]._tieRank; }
+    else{ e._tieRank=i+1; }
+  });
+  return arr;
+}
+// 관리자 점수 TOP N 커트라인에서 실제로 자리를 다투는 동점 그룹(자리 안/밖에 걸쳐 있는 경우)만 반환
+function cpAdminCutoffTie(){
+  if(!cpCurCampaign) return null;
+  var limit=cpCurCampaign.finalist_limit||20;
+  var arr=cpAdminRankedList();
+  if(arr.length<=limit) return null;
+  var boundaryRank=arr[limit-1]._tieRank;
+  var startIdx=arr.findIndex(function(e){return e._tieRank===boundaryRank;});
+  var group=arr.filter(function(e){return e._tieRank===boundaryRank;});
+  if(group.length<=1) return null;
+  var endIdx=startIdx+group.length-1;
+  if(endIdx<limit) return null; // 그룹이 전부 컷 안쪽 → 실제 동점 경계 아님
+  var slots=limit-startIdx; // 이 동점 그룹에 남은 자리 수
+  return {tieKey:'cutoff_r'+boundaryRank, group:group, slots:slots, rank:boundaryRank};
+}
+function cpTieForKey(phase, tieKey){
+  var list=cpTiebreaksCache.filter(function(t){return t.phase===phase && t.tie_key===tieKey;});
+  if(!list.length) return null;
+  list.sort(function(a,b){ return (b.round||1)-(a.round||1); });
+  return list[0];
+}
+function cpTieById(id){ return cpTiebreaksCache.find(function(t){return t.id===id;}); }
+function cpTieVotes(tiebreakId){ return cpTiebreakVotesCache.filter(function(v){return v.tiebreak_id===tiebreakId;}); }
+function cpTieTally(tiebreakId){
+  var tally={};
+  cpTieVotes(tiebreakId).forEach(function(v){ tally[v.entry_id]=(tally[v.entry_id]||0)+1; });
+  return tally;
+}
+function cpMyTieVote(tiebreakId){
+  var key=cpVoterKey();
+  var v=cpTieVotes(tiebreakId).find(function(x){return x.voter_key===key;});
+  return v?v.entry_id:null;
+}
+function cpResolveTieOrder(tiebreak){
+  var tally=cpTieTally(tiebreak.id);
+  var order=tiebreak.entry_ids.slice().sort(function(a,b){ return (tally[b]||0)-(tally[a]||0); });
+  return {order:order, tally:tally};
+}
+function cpEffectiveTieOrder(tiebreak){ return tiebreak.entry_ids.slice(); }
+async function cpStartTiebreak(phase, tieKey, entryIds, roleMin){
+  if(!cpCanSeeIdentity()){ toast('⚠️ master만 재투표를 시작할 수 있습니다'); return; }
+  var existing=cpTieForKey(phase, tieKey);
+  var round=existing?(existing.round||1)+1:1;
+  var payload={ campaign_id:cpCurCampaign.id, phase:phase, tie_key:tieKey, entry_ids:entryIds, round:round, status:'open', eligible_role_min:roleMin };
+  var res=await sb.from('campaign_tiebreaks').insert(payload);
+  if(res.error){ toast('재투표 시작 오류: '+_safeErrMsg(res.error)); return; }
+  toast('✓ 재투표를 시작했습니다 ('+cpTieRoleLabel(roleMin)+' 참여)');
+  await cpLoadTiebreaks();
+  cpRenderAllEntries();
+}
+async function cpCastTiebreakVote(tiebreakId, entryId){
+  var tiebreak=cpTieById(tiebreakId); if(!tiebreak) return;
+  if(!cpTieEligible(tiebreak.eligible_role_min)){ toast('⚠️ 이 재투표는 '+cpTieRoleLabel(tiebreak.eligible_role_min)+'만 참여할 수 있습니다'); return; }
+  var key=cpVoterKey();
+  if(!key){ toast('⚠️ 계정 정보를 확인할 수 없습니다'); return; }
+  var mine=cpTieVotes(tiebreak.id).find(function(v){return v.voter_key===key;});
+  if(mine){
+    if(mine.entry_id===entryId){
+      var delRes=await sb.from('campaign_tiebreak_votes').delete().eq('id',mine.id);
+      if(delRes.error){ toast('오류: '+_safeErrMsg(delRes.error)); return; }
+      toast('투표를 취소했습니다');
+    }else{
+      var updRes=await sb.from('campaign_tiebreak_votes').update({entry_id:entryId}).eq('id',mine.id);
+      if(updRes.error){ toast('오류: '+_safeErrMsg(updRes.error)); return; }
+      toast('✓ 투표를 변경했습니다');
+    }
+  }else{
+    var body={ tiebreak_id:tiebreak.id, entry_id:entryId, voter_key:key, voter_name: me?me.name:'' };
+    var insRes=await sb.from('campaign_tiebreak_votes').insert(body);
+    if(insRes.error){ toast('투표 오류: '+_safeErrMsg(insRes.error)); return; }
+    toast('✓ 투표해주셔서 감사합니다');
+  }
+  await cpLoadTiebreaks();
+  cpRenderAllEntries();
+}
+async function cpCloseTiebreak(tiebreakId, slots){
+  var tiebreak=cpTieById(tiebreakId); if(!tiebreak) return;
+  if(!cpCanSeeIdentity()){ toast('⚠️ master만 마감할 수 있습니다'); return; }
+  var r=cpResolveTieOrder(tiebreak);
+  var boundaryAbove=r.tally[r.order[slots-1]]||0;
+  var boundaryBelow= slots<r.order.length ? (r.tally[r.order[slots]]||0) : -1;
+  var stillTied = boundaryAbove===boundaryBelow;
+  var payload= stillTied
+    ? { status:'closed', winner_entry_id:null, resolved_by:null, closed_at:new Date().toISOString(), entry_ids:r.order }
+    : { status:'closed', winner_entry_id:r.order[0], resolved_by:'revote', closed_at:new Date().toISOString(), entry_ids:r.order };
+  var res=await sb.from('campaign_tiebreaks').update(payload).eq('id',tiebreak.id);
+  if(res.error){ toast('마감 오류: '+_safeErrMsg(res.error)); return; }
+  toast(stillTied?'⚠️ 마감했지만 경계에서 동표가 남았습니다. master가 처리해주세요':'✓ 재투표가 마감되어 순위에 반영되었습니다');
+  await cpLoadTiebreaks();
+  cpRenderAllEntries();
+}
+async function cpManualResolveTie(tiebreak, orderedEntryIds){
+  if(!cpCanSeeIdentity()){ toast('⚠️ master만 가능합니다'); return; }
+  var payload={ status:'closed', winner_entry_id:orderedEntryIds[0], resolved_by:'master_manual', closed_at:new Date().toISOString(), entry_ids:orderedEntryIds };
+  var res=await sb.from('campaign_tiebreaks').update(payload).eq('id',tiebreak.id);
+  if(res.error){ toast('처리 오류: '+_safeErrMsg(res.error)); return; }
+  toast('✓ 순위를 직접 지정했습니다');
+  await cpLoadTiebreaks();
+  cpRenderAllEntries();
+}
+function cpManualOrderClick(tiebreakId, entryId){
+  var arr=cpManualOrderDraft[tiebreakId]||(cpManualOrderDraft[tiebreakId]=[]);
+  var idx=arr.indexOf(entryId);
+  if(idx!==-1){ arr.splice(idx,1); } else { arr.push(entryId); }
+  cpRenderAllEntries();
+}
+async function cpManualOrderConfirm(tiebreakId){
+  var t=cpTieById(tiebreakId); if(!t) return;
+  var picked=cpManualOrderDraft[tiebreakId]||[];
+  if(!picked.length){ toast('⚠️ 최소 1명 이상 순서를 지정해주세요'); return; }
+  var rest=t.entry_ids.filter(function(id){return picked.indexOf(id)===-1;});
+  var finalOrder=picked.concat(rest);
+  await cpManualResolveTie(t, finalOrder);
+  delete cpManualOrderDraft[tiebreakId];
+}
+function cpAdminFinalOrder(){
+  if(!cpCurCampaign) return [];
+  var limit=cpCurCampaign.finalist_limit||20;
+  var arr=cpAdminRankedList();
+  var tie=cpAdminCutoffTie();
+  if(!tie) return arr.slice(0,limit);
+  var t=cpTieForKey(1, tie.tieKey);
+  if(!t || t.status!=='closed' || !t.resolved_by) return arr.slice(0,limit);
+  var order=cpEffectiveTieOrder(t);
+  var orderMap={}; order.forEach(function(id,i){ orderMap[id]=i; });
+  var startIdx=arr.findIndex(function(e){return e.id===tie.group[0].id;});
+  var reordered=arr.slice(0,startIdx).concat(
+    tie.group.slice().sort(function(a,b){ return (orderMap[a.id]!==undefined?orderMap[a.id]:99)-(orderMap[b.id]!==undefined?orderMap[b.id]:99); })
+  ).concat(arr.slice(startIdx+tie.group.length));
+  return reordered.slice(0,limit);
+}
+function cpTieBannerHtml(tie, anonNo, canSee){
+  if(!tie) return '';
+  var t=cpTieForKey(1, tie.tieKey);
+  var groupEntries = t ? cpEntriesById(t.entry_ids) : tie.group;
+  if(!groupEntries.length) return '';
+  var label=function(e){ return canSee?(eeEsc(e.name||'')+'('+eeEsc(e.emp_no||'')+')'):('응모작 #'+(anonNo[e.id]||'?')); };
+  var h='<div style="background:#fff1f2;border:1.5px solid #fda4af;border-radius:10px;padding:12px;margin-bottom:12px">';
+  h+='<div style="font-size:12.5px;font-weight:800;color:#be123c;margin-bottom:6px">⚖️ '+tie.rank+'등 자리 동점 — '+groupEntries.length+'명이 '+tie.slots+'자리를 두고 경쟁 중입니다</div>';
+  h+='<div style="font-size:12px;color:#9f1239;margin-bottom:8px">'+groupEntries.map(label).join(', ')+'</div>';
+  if(!t){
+    if(cpCanSeeIdentity()){
+      h+='<div style="font-size:11px;color:#9f1239;margin-bottom:6px">재투표 참여 범위를 선택해 시작하세요</div>';
+      h+='<div style="display:flex;gap:6px;flex-wrap:wrap">'+CP_TIE_ROLE_OPTS.map(function(o){
+        return '<button onclick="cpStartTiebreak(1,\''+tie.tieKey+'\',['+groupEntries.map(function(e){return '\''+e.id+'\'';}).join(',')+'],\''+o.key+'\')" style="padding:6px 10px;background:#be123c;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer">'+o.label+'로 시작</button>';
+      }).join('')+'</div>';
+    }else{
+      h+='<div style="font-size:11.5px;color:#9f1239">master가 재투표를 시작하면 참여할 수 있습니다</div>';
+    }
+  }else if(t.status==='open'){
+    var myVote=cpMyTieVote(t.id);
+    var tally=cpTieTally(t.id);
+    var eligible=cpTieEligible(t.eligible_role_min);
+    h+='<div style="font-size:11px;color:#9f1239;margin-bottom:6px">🗳 재투표 진행중 ('+cpTieRoleLabel(t.eligible_role_min)+' 참여 · 1인 1표) — 라운드 '+(t.round||1)+'</div>';
+    h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+groupEntries.map(function(e){
+      var active=myVote===e.id;
+      var cnt=cpCanSeeIdentity()?(' · '+(tally[e.id]||0)+'표'):'';
+      return '<button '+(eligible?('onclick="cpCastTiebreakVote(\''+t.id+'\',\''+e.id+'\')"'):'disabled')+' style="padding:6px 10px;border-radius:8px;border:1.5px solid '+(active?'#be123c':'var(--g2)')+';background:'+(active?'#be123c':'white')+';color:'+(active?'white':'var(--g6)')+';font-size:11.5px;font-weight:700;cursor:'+(eligible?'pointer':'not-allowed')+'">'+label(e)+cnt+'</button>';
+    }).join('')+'</div>';
+    if(!eligible){ h+='<div style="font-size:11px;color:#9f1239;margin-bottom:6px">⚠️ 이 재투표는 '+cpTieRoleLabel(t.eligible_role_min)+'만 참여할 수 있습니다</div>'; }
+    if(cpCanSeeIdentity()){
+      h+='<button onclick="cpCloseTiebreak(\''+t.id+'\','+tie.slots+')" style="padding:6px 12px;background:#0e7490;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer">🔒 재투표 마감</button>';
+    }
+  }else if(t.status==='closed' && t.resolved_by==='revote'){
+    h+='<div style="font-size:11.5px;color:#166534;font-weight:700">✓ 재투표로 확정되었습니다 (라운드 '+(t.round||1)+')</div>';
+  }else if(t.status==='closed' && t.resolved_by==='master_manual'){
+    h+='<div style="font-size:11.5px;color:#166534;font-weight:700">✓ master가 직접 순위를 지정해 확정했습니다</div>';
+  }else if(t.status==='closed' && !t.resolved_by){
+    h+='<div style="font-size:11.5px;color:#c2410c;font-weight:700;margin-bottom:6px">⚠️ 재투표에서도 동표가 나왔습니다 — master가 처리해주세요</div>';
+    if(cpCanSeeIdentity()){
+      var draft=cpManualOrderDraft[t.id]||[];
+      h+='<div style="font-size:11px;color:#9f1239;margin-bottom:6px">우선순위대로 클릭하세요 (다시 클릭하면 선택 취소)</div>';
+      h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px">'+groupEntries.map(function(e){
+        var pos=draft.indexOf(e.id);
+        return '<button onclick="cpManualOrderClick(\''+t.id+'\',\''+e.id+'\')" style="padding:6px 10px;border-radius:8px;border:1.5px solid '+(pos!==-1?'#7c3aed':'var(--g2)')+';background:'+(pos!==-1?'#7c3aed':'white')+';color:'+(pos!==-1?'white':'var(--g6)')+';font-size:11.5px;font-weight:700;cursor:pointer">'+(pos!==-1?(pos+1)+'위 ':'')+label(e)+'</button>';
+      }).join('')+'</div>';
+      h+='<div style="display:flex;gap:6px">'+
+         '<button onclick="cpManualOrderConfirm(\''+t.id+'\')" style="padding:6px 12px;background:#7c3aed;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer">✅ 순위 확정</button>'+
+         '<button onclick="cpStartTiebreak(1,\''+tie.tieKey+'\',['+groupEntries.map(function(e){return '\''+e.id+'\'';}).join(',')+'],\''+t.eligible_role_min+'\')" style="padding:6px 12px;background:#be123c;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer">🔁 재투표 한 번 더</button>'+
+         '</div>';
+    }
+  }
+  h+='</div>';
+  return h;
+}
 function cpMyVoteFor(entryId){
   var key=cpVoterKey();
   var v=cpVotesCache.find(function(x){return x.entry_id===entryId && x.voter_key===key;});
@@ -30371,7 +30594,7 @@ function cpRenderAllEntries(){
   var h='';
   if(canSee){
     var _rankLimit=cpCurCampaign.finalist_limit||20;
-    var topN=rows.filter(function(e){return cpEntryScore(e.id)>0;}).slice(0,_rankLimit);
+    var topN=cpAdminFinalOrder();
     if(topN.length){
       var medals=['🥇','🥈','🥉'];
       h+='<div style="background:linear-gradient(135deg,#fff7ed,#fef3c7);border:1.5px solid #fdba74;border-radius:10px;padding:11px;margin-bottom:12px;max-height:320px;overflow-y:auto">'+
@@ -30382,6 +30605,7 @@ function cpRenderAllEntries(){
   }else{
     h+='<div style="background:#eff6ff;border:1.5px solid #93c5fd;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#1e40af">👁️ 공정한 심사를 위해 작성자 정보와 전체 점수는 master만 볼 수 있어요. 내용만 보고 투표해주세요.</div>';
   }
+  h+=cpTieBannerHtml(cpAdminCutoffTie(), anonNo, canSee);
   h+='<div style="font-size:11.5px;color:var(--g4);margin-bottom:8px">※ 관리자별로 1위(3점)/2위(2점)/3위(1점)를 각각 1건씩 투표할 수 있습니다. 아래 버튼은 내 투표만 표시됩니다.</div>';
   if(cpCurCampaign.vote_start_date||cpCurCampaign.vote_end_date){
     h+='<div style="font-size:11.5px;color:#C2751A;font-weight:700;margin-bottom:8px">🗓 관리자 투표 가능 기간: '+(cpCurCampaign.vote_start_date||'제한없음')+' ~ '+(cpCurCampaign.vote_end_date||'제한없음')+'</div>';
