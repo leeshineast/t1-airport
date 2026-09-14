@@ -3947,6 +3947,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <div id="cpMyEntries" style="margin-bottom:16px"></div>
 
     <button id="cpAdminBtns" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenAllEntries()">📋 전체 제출목록 보기 / 최종 후보 선정 (관리자)</button>
+    <button id="cpVoteStatusBtn" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenVoteStatus()">🗂️ 관리자 투표 현황 (누가 투표했는지)</button>
     <button id="cpEligibleBtn" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenEligible()">✅ 응모 가능자 명단 관리 (관리자)</button>
     <button id="cpVoteBtn" style="display:none;width:100%;padding:11px;background:#ecfeff;border:1.5px solid #67e8f9;border-radius:10px;font-size:13.5px;font-weight:700;color:#0e7490;cursor:pointer;margin-bottom:8px" onclick="cpOpenPublicVote()">🗳️ 전직원 투표 참여</button>
     <button id="cpResultBtn" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenVoteResults()">📊 전직원 투표 결과 (관리자)</button>
@@ -4136,6 +4137,14 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div class="modal" style="max-width:650px;max-height:88vh"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📊 전직원 투표 결과</h3><button class="m-x" onclick="hideM('cpResultModal')">×</button></div>
     <div style="padding:15px 17px;overflow-y:auto">
       <div id="cpResultWrap"></div>
+    </div>
+  </div>
+</div>
+
+<div id="cpVoteStatusModal" class="modal-bg">
+  <div class="modal" style="max-width:600px;max-height:88vh"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🗂️ 관리자 투표 현황</h3><button class="m-x" onclick="hideM('cpVoteStatusModal')">×</button></div>
+    <div style="padding:15px 17px;overflow-y:auto">
+      <div id="cpVoteStatusWrap"></div>
     </div>
   </div>
 </div>
@@ -29870,6 +29879,7 @@ async function cpOpenDetail(id){
   document.getElementById('cpDetTitle').innerHTML='🏆 '+sfRender(c.title);
   document.getElementById('cpDetSub').innerHTML=sfRender(c.description||'');
   document.getElementById('cpAdminBtns').style.display=cpIsAdmin()?'block':'none';
+  document.getElementById('cpVoteStatusBtn').style.display=cpIsAdmin()?'block':'none';
   document.getElementById('cpEligibleBtn').style.display=cpIsAdmin()?'block':'none';
   document.getElementById('cpWinnerBtn').style.display=cpCanSeeIdentity()?'block':'none';
   document.getElementById('cpResultBtn').style.display=cpIsAdmin()?'block':'none';
@@ -30336,6 +30346,31 @@ async function cpOpenAllEntries(){
   showM('cpAllEntriesModal');
 }
 var cpFinalistsCache=[];
+async function cpOpenVoteStatus(){
+  if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
+  var uRes=await msFetchAll(function(){ return sb.from('users').select('name,employee_id,team,role').eq('status','active').in('role',['leader','manager','admin','master']); });
+  var eligible=uRes.data||[];
+  var vRes=await msFetchAll(function(){ return sb.from('campaign_votes').select('voter_key,voter_name').eq('campaign_id',cpCurCampaign.id); });
+  var votedKeys={}; (vRes.data||[]).forEach(function(v){ votedKeys[v.voter_key]=true; });
+  var voted=[], notVoted=[];
+  eligible.forEach(function(u){
+    var key=u.employee_id||u.name;
+    (votedKeys[key] ? voted : notVoted).push(u);
+  });
+  var roleLbl=function(r){ return r==='master'?'최고관리자':r==='admin'?'관리자':r==='manager'?'팀장':r==='leader'?'조장':r; };
+  var rowHtml=function(u){ return '<div style="font-size:12.5px;color:var(--g7);padding:4px 0">'+eeEsc(u.name||'')+' <span style="color:var(--g4)">('+roleLbl(u.role)+(u.team?(' · '+eeEsc(u.team)):'')+')</span></div>'; };
+  var h='<div style="font-size:12.5px;color:var(--g5);margin-bottom:12px;font-weight:700">1차 관리자 점수 투표 대상 '+eligible.length+'명 중 '+voted.length+'명 투표 완료</div>';
+  h+='<div style="background:#ecfeff;border:1.5px solid #67e8f9;border-radius:10px;padding:11px;margin-bottom:12px">'+
+     '<div style="font-size:12.5px;font-weight:800;color:#0e7490;margin-bottom:6px">✅ 투표 완료 ('+voted.length+'명)</div>'+
+     (voted.length?voted.map(rowHtml).join(''):'<div style="font-size:12px;color:var(--g4)">아직 없습니다</div>')+
+     '</div>';
+  h+='<div style="background:#fff1f2;border:1.5px solid #fda4af;border-radius:10px;padding:11px">'+
+     '<div style="font-size:12.5px;font-weight:800;color:#be123c;margin-bottom:6px">⏳ 미투표 ('+notVoted.length+'명)</div>'+
+     (notVoted.length?notVoted.map(rowHtml).join(''):'<div style="font-size:12px;color:var(--g4)">전원 투표했습니다 🎉</div>')+
+     '</div>';
+  document.getElementById('cpVoteStatusWrap').innerHTML=h;
+  showM('cpVoteStatusModal');
+}
 function cpIsFinalist(entryId){ return cpFinalistsCache.some(function(f){return f.entry_id===entryId;}); }
 async function cpToggleFinalist(entryId){
   if(!cpCanSeeIdentity()){ toast('⚠️ master만 최종 후보를 선정할 수 있습니다'); return; }
