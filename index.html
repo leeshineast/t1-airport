@@ -1316,16 +1316,16 @@ html{overflow-x:hidden}
     <div id="flP_all">
       <div class="card"><div class="tbl-w"><table class="mp-tbl" id="dHome" style="table-layout:fixed">
         <colgroup>
-  <col style="width:11%"><!-- 구역 -->
-  <col style="width:11%"><!-- 구분 -->
-  <col style="width:9%"><!-- B2F -->
-  <col style="width:9%"><!-- B1F -->
-  <col style="width:9%"><!-- 1F -->
-  <col style="width:9%"><!-- 2F -->
-  <col style="width:9%"><!-- 3F -->
-  <col style="width:9%"><!-- 4F -->
-  <col style="width:10%"><!-- 집하장 -->
-  <col style="width:12%"><!-- 소계 -->
+  <col style="width:9%"><!-- 구역 -->
+  <col style="width:14%"><!-- 구분 -->
+  <col style="width:8%"><!-- B2F -->
+  <col style="width:8%"><!-- B1F -->
+  <col style="width:8%"><!-- 1F -->
+  <col style="width:8%"><!-- 2F -->
+  <col style="width:8%"><!-- 3F -->
+  <col style="width:8%"><!-- 4F -->
+  <col style="width:8%"><!-- 집하장 -->
+  <col style="width:21%"><!-- 소계 -->
 </colgroup>
         <thead><tr>
           <th style="text-align:left;padding-left:4px">구역</th><th style="text-align:left">구분</th>
@@ -1853,16 +1853,16 @@ html{overflow-x:hidden}
     <div style="padding:0 13px 10px"><button onclick="openListReport('mp')" style="width:100%;padding:9px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">🖨 보고서 출력</button></div>
     <div class="card"><div class="tbl-w"><table class="mp-tbl" id="mpFullTable" style="table-layout:fixed">
       <colgroup>
-  <col style="width:11%"><!-- 구역 -->
-  <col style="width:11%"><!-- 구분 -->
-  <col style="width:9%"><!-- B2F -->
-  <col style="width:9%"><!-- B1F -->
-  <col style="width:9%"><!-- 1F -->
-  <col style="width:9%"><!-- 2F -->
-  <col style="width:9%"><!-- 3F -->
-  <col style="width:9%"><!-- 4F -->
-  <col style="width:10%"><!-- 집하장 -->
-  <col style="width:12%"><!-- 소계 -->
+  <col style="width:9%"><!-- 구역 -->
+  <col style="width:14%"><!-- 구분 -->
+  <col style="width:8%"><!-- B2F -->
+  <col style="width:8%"><!-- B1F -->
+  <col style="width:8%"><!-- 1F -->
+  <col style="width:8%"><!-- 2F -->
+  <col style="width:8%"><!-- 3F -->
+  <col style="width:8%"><!-- 4F -->
+  <col style="width:8%"><!-- 집하장 -->
+  <col style="width:21%"><!-- 소계 -->
 </colgroup>
       <thead><tr><th style="text-align:left;padding-left:4px">구역</th><th style="text-align:left">구분</th><th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th><th style="background:var(--teal2)">소계</th></tr></thead>
       <tbody></tbody>
@@ -8029,8 +8029,7 @@ function mpFullSplitTableHtml(mpDataArr, splitObj, avgToilet, avgCommon){
       var v=vals[ci];
       sum+=(v===null?0:v);
       var col= (v!==null && avgRow && avgRow[ci]!==undefined) ? mpAvgColor(v, avgRow[ci]) : null;
-      var borderR= ci===5 ? ';border-right:1px solid var(--g2)' : '';
-      h+='<td style="'+(v===null?'color:var(--g4)':(col?'color:'+col+';font-weight:700':''))+borderR+'">'+(v===null?'—':v)+'</td>';
+      h+='<td style="border-right:1px solid var(--g2);'+(v===null?'color:var(--g4)':(col?'color:'+col+';font-weight:700':''))+'">'+(v===null?'—':v)+'</td>';
     }
     h+='<td style="font-weight:700">'+sum+'</td>';
     return h;
@@ -8039,9 +8038,9 @@ function mpFullSplitTableHtml(mpDataArr, splitObj, avgToilet, avgCommon){
     var toiletVals=splitObj.toilet[zi].concat([null]); // 집하장은 화장실 없음
     var commonVals=splitObj.common[zi].concat([mpDataArr[zi][6]||0]); // 집하장은 항상 공용구역
     var avgT=avgToilet?avgToilet[zi]:null, avgC=avgCommon?avgCommon[zi]:null;
-    return '<tr><td rowspan="2" style="vertical-align:middle;font-weight:700;background:var(--g1);border-right:1px solid var(--g2)">'+ZONE_LABELS[zi]+'</td>'
-      +'<td style="color:#166534;border-right:1px solid var(--g2)">화장실</td>'+rowCells(toiletVals,avgT)+'</tr>'
-      +'<tr><td style="color:#0C447C;border-right:1px solid var(--g2)">공용구역</td>'+rowCells(commonVals,avgC)+'</tr>';
+    return '<tr><td rowspan="2" style="vertical-align:middle;font-weight:700;background:var(--g1);border-right:1px solid var(--g2);white-space:nowrap">'+ZONE_LABELS[zi]+'</td>'
+      +'<td style="color:#166534;border-right:1px solid var(--g2);white-space:nowrap">화장실</td>'+rowCells(toiletVals,avgT)+'</tr>'
+      +'<tr><td style="color:#0C447C;border-right:1px solid var(--g2);white-space:nowrap">공용구역</td>'+rowCells(commonVals,avgC)+'</tr>';
   }
   var lsSub=[0,0,0,0,0,0,0], asSub=[0,0,0,0,0,0,0], colTot=[0,0,0,0,0,0,0];
   for(var ci=0;ci<7;ci++){
@@ -8050,10 +8049,10 @@ function mpFullSplitTableHtml(mpDataArr, splitObj, avgToilet, avgCommon){
     colTot[ci]=lsSub[ci]+asSub[ci];
   }
   return zoneRows(0)+zoneRows(1)
-    +'<tr style="background:var(--navy-bg)"><td colspan="2" style="font-weight:700;border-right:1px solid var(--g2)">L/S 소계</td>'+rowCells(lsSub)+'</tr>'
+    +'<tr style="background:var(--navy-bg)"><td colspan="2" style="font-weight:700;border-right:1px solid var(--g2);white-space:nowrap">L/S 소계</td>'+rowCells(lsSub)+'</tr>'
     +zoneRows(2)+zoneRows(3)
-    +'<tr style="background:var(--teal-bg)"><td colspan="2" style="font-weight:700;border-right:1px solid var(--g2)">A/S 소계</td>'+rowCells(asSub)+'</tr>'
-    +'<tr style="background:var(--g1)"><td colspan="2" style="font-weight:700;border-right:1px solid var(--g2)">전체 총계</td>'+rowCells(colTot)+'</tr>';
+    +'<tr style="background:var(--teal-bg)"><td colspan="2" style="font-weight:700;border-right:1px solid var(--g2);white-space:nowrap">A/S 소계</td>'+rowCells(asSub)+'</tr>'
+    +'<tr style="background:var(--g1)"><td colspan="2" style="font-weight:700;border-right:1px solid var(--g2);white-space:nowrap">전체 총계</td>'+rowCells(colTot)+'</tr>';
 }
 function highlightMpZone(teamCode){
   var hint=document.getElementById('mpZoneHint');
