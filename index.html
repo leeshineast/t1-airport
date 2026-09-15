@@ -25962,15 +25962,40 @@ async function deleteReg(id, path){
 var _lastCheckedDate = new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
 var _shiftResetDone = {};
 
+// 날짜 변경 "후보" 감지 시 곧바로 초기화하지 않고, 잠시 후 한 번 더 확인해서
+// 그때도 여전히 날짜가 다르면 그제서야 진짜 날짜 변경으로 인정한다.
+// (앱이 백그라운드→포그라운드로 전환되는 순간 등 일시적인 시각 계산 오차로
+//  날짜가 바뀐 것처럼 잘못 판정되어 화면이 불필요하게 초기화되는 것을 방지)
+var _pendingDayChange = null;
+function maybeHandleDayChange(candidateDate){
+  if(candidateDate===_lastCheckedDate){ _pendingDayChange=null; return; }
+  if(_pendingDayChange===candidateDate){
+    // 이전에 감지된 후보 날짜와 동일 → 재확인 완료, 실제로 날짜가 바뀐 것으로 처리
+    _pendingDayChange=null;
+    handleDayChange(candidateDate);
+    return;
+  }
+  // 처음 감지된 경우: 후보로만 기록하고, 잠시 후 재확인
+  _pendingDayChange=candidateDate;
+  setTimeout(function(){
+    var recheck=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
+    if(_pendingDayChange===candidateDate && recheck===candidateDate && recheck!==_lastCheckedDate){
+      _pendingDayChange=null;
+      handleDayChange(recheck);
+    }else{
+      _pendingDayChange=null;
+    }
+  }, 5000);
+}
+
 // 날짜 변경 처리 공통 함수
 async function handleDayChange(newDate){
   _lastCheckedDate = newDate;
-  mpDataByLeader={오전:{},오후:{},야간:{}};
-  mpSplitByLeader={오전:{},오후:{}};
-  mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-  mpSplit=mpEmptySplit();
-  updateFloorChart(); updateMpSummary(); updateStaff();
-  loadMpFromDB();
+  // 화면을 먼저 비우지 않는다 — 기존 값을 그대로 보여주다가, 새 날짜 데이터가
+  // 도착하면(loadMpFromDB 내부에서 재조회 후 한번에 렌더) 그때 한 번에 교체된다.
+  // (기존에는 여기서 mpData 등을 0으로 비우고 즉시 렌더한 뒤 재조회했기 때문에
+  //  그 사이에 0 또는 관리인원만 반영된 값이 잠깐 화면에 노출되는 문제가 있었음)
+  try{ await loadMpFromDB(); }catch(e){}
   loadMpHistory();
   toast('📅 날짜가 변경되어 인력현황이 초기화되었습니다');
 }
@@ -25979,7 +26004,7 @@ async function handleDayChange(newDate){
 document.addEventListener('visibilitychange', function(){
   if(document.visibilityState === 'visible' && me){
     var today = new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
-    if(today !== _lastCheckedDate) handleDayChange(today);
+    if(today !== _lastCheckedDate) maybeHandleDayChange(today);
   }
 });
 
@@ -26204,7 +26229,7 @@ function checkShiftReset(){
 
   // 자정 넘어가면 처리
   if(today !== _lastCheckedDate){
-    handleDayChange(today);
+    maybeHandleDayChange(today);
     return;
   }
 
