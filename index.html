@@ -30935,6 +30935,7 @@ function cpRenderAllEntries(){
     var myRank=cpMyVoteFor(e.id);
     var hasScore=score>0;
     var isFinal=cpIsFinalist(e.id);
+    var isMine=!!(me&&((me.employee_id&&e.emp_no&&me.employee_id===e.emp_no)||(!me.employee_id&&me.name&&e.name===me.name)));
     var headerLabel=canSee?(eeEsc(e.name||'')+' ('+eeEsc(e.emp_no||'')+') '+(e.team?('· '+eeEsc(e.team)):'')):('응모작 #'+anonNo[e.id]);
     h+='<div style="background:'+(isFinal?'#ecfeff':(canSee&&hasScore?'#fffbeb':'white'))+';border:1.5px solid '+(isFinal?'#67e8f9':(canSee&&hasScore?'#fde68a':'var(--g2)'))+';border-radius:10px;padding:11px;margin-bottom:8px">'+
        '<div style="display:flex;justify-content:space-between;gap:8px">'+
@@ -30952,10 +30953,10 @@ function cpRenderAllEntries(){
        '<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:8px;flex-wrap:wrap">'+
        '<span style="font-size:11px;color:var(--g4)">'+new Date(e.created_at).toLocaleString('ko-KR',{timeZone:'Asia/Seoul'})+(canSee&&hasScore?(' · <b style="color:#c2410c">'+score+'점</b> (투표 '+voteCnt+'명)'):'')+'</span>'+
        '<span style="display:flex;gap:5px">'+
-       [1,2,3].map(function(r){
+       (isMine?'<span style="font-size:11px;color:#9ca3af;font-weight:700;padding:3px 9px">본인 작성 (투표 불가)</span>':[1,2,3].map(function(r){
          var active=myRank===r;
          return '<button onclick="cpCastVote(\''+e.id+'\','+r+')" style="padding:3px 9px;border-radius:6px;border:1.5px solid '+(active?'#f97316':'var(--g2)')+';background:'+(active?'#f97316':'white')+';color:'+(active?'white':'var(--g6)')+';font-size:11px;font-weight:700;cursor:pointer">내 '+r+'위</button>';
-       }).join('')+
+       }).join(''))+
        '</span></div>'+
        '</div>';
   });
@@ -30963,6 +30964,11 @@ function cpRenderAllEntries(){
 }
 async function cpCastVote(entryId, rank){
   if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
+  var __entry=cpAllEntriesCache.find(function(e){return e.id===entryId;});
+  if(__entry && me && ((me.employee_id&&__entry.emp_no&&me.employee_id===__entry.emp_no)||(!me.employee_id&&me.name&&__entry.name===me.name))){
+    toast('⚠️ 본인이 작성한 응모작에는 투표할 수 없습니다');
+    return;
+  }
   if(cpCurCampaign.vote_start_date || cpCurCampaign.vote_end_date){
     var todayForVote=kstDate();
     if(cpCurCampaign.vote_start_date && todayForVote<cpCurCampaign.vote_start_date){ toast('⚠️ 아직 투표 기간이 아닙니다 ('+cpCurCampaign.vote_start_date+'부터)'); return; }
