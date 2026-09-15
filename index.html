@@ -804,6 +804,12 @@ html{overflow-x:hidden}
         <div class="menu-desc">일간·월간·연간 운영 통계 한눈에</div>
         <span class="menu-arrow">보기 →</span>
       </button>
+      <button class="menu-btn" onclick="goMReport()">
+        <span class="menu-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4" /><path d="M17 21h-10a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2h7l5 5v11a2 2 0 0 1 -2 2z" /><path d="M9 17h6" /><path d="M9 13h6" /></svg></span>
+        <div class="menu-title">월간·연간 리포트</div>
+        <div class="menu-desc">항목별 종합 리포트 및 분석</div>
+        <span class="menu-arrow">보기 →</span>
+      </button>
     </div>
   </div>
 
@@ -2062,6 +2068,52 @@ html{overflow-x:hidden}
       <span style="font-size:10px;color:var(--g4)">카드를 누르면 상세가 열립니다</span>
       <span style="font-size:10px;color:var(--g4)"><span style="color:var(--teal2);font-weight:800">통계 v2</span> · <span id="msUpdated"></span></span>
     </div>
+  </div>
+</div>
+<div id="sMReport" class="scr">
+  <div class="app-hd">
+    <button class="back-hd" onclick="go('main')">← 메인</button>
+    <div class="user-chip"><div class="u-av">📋</div><span>월간·연간 리포트</span></div>
+  </div>
+  <div class="pg-hd"><div><h1>월간·연간 리포트</h1><small>항목별 종합 리포트 및 분석</small></div></div>
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 13px 10px;flex-wrap:wrap;gap:8px">
+    <div style="display:flex;background:var(--g2);border-radius:20px;padding:2px">
+      <div id="mrModeM" onclick="mrSetMode('month')" style="padding:4px 13px;border-radius:16px;font-size:12px;font-weight:800;cursor:pointer;background:white;color:var(--teal2);box-shadow:0 1px 3px rgba(0,0,0,.12)">월간</div>
+      <div id="mrModeY" onclick="mrSetMode('year')" style="padding:4px 13px;border-radius:16px;font-size:12px;font-weight:800;cursor:pointer;color:var(--g4)">연간</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:5px">
+      <button onclick="mrMove(-1)" style="width:26px;height:26px;border:1px solid var(--g2);background:white;border-radius:50%;font-size:12px;color:var(--g5);cursor:pointer;line-height:1">◀</button>
+      <span id="mrPeriodLbl" style="font-size:14px;font-weight:800;color:var(--g6);min-width:82px;text-align:center;background:var(--g1);border:1px solid var(--g2);border-radius:14px;padding:3px 10px;display:inline-block">-</span>
+      <button onclick="mrMove(1)" id="mrNextBtn" style="width:26px;height:26px;border:1px solid var(--g2);background:white;border-radius:50%;font-size:12px;color:var(--g5);cursor:pointer;line-height:1">▶</button>
+    </div>
+  </div>
+  <div style="display:flex;gap:6px;padding:0 13px 10px">
+    <button id="mrTabBtn0" onclick="mrTab(0)" style="flex:1;padding:9px;border-radius:12px;border:1px solid var(--g2);background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;font-weight:800;font-size:13px;cursor:pointer">전체 리포트</button>
+    <button id="mrTabBtn1" onclick="mrTab(1)" style="flex:1;padding:9px;border-radius:12px;border:1px solid var(--g2);background:white;color:var(--g5);font-weight:800;font-size:13px;cursor:pointer">세부</button>
+  </div>
+  <div id="mrErrBanner" style="display:none;margin:0 13px 9px;padding:10px 13px;background:var(--danger-bg);border:1px solid rgba(217,64,64,.25);border-radius:var(--r2);font-size:13px;color:var(--danger);font-weight:700;align-items:center;justify-content:space-between">
+    <span>⚠️ 리포트 데이터를 불러오지 못했습니다</span>
+    <button onclick="loadMReport()" style="padding:4px 10px;background:var(--danger);color:white;border:none;border-radius:14px;font-size:12px;font-weight:800;cursor:pointer">다시시도</button>
+  </div>
+  <!-- 전체 리포트 -->
+  <div id="mrPanel0">
+    <div id="mrSummaryWrap" style="margin:0 13px 9px"></div>
+    <div style="padding:0 13px 12px">
+      <button onclick="mrPrintReport()" style="width:100%;padding:11px;border-radius:12px;border:none;background:var(--navy);color:white;font-weight:800;font-size:13px;cursor:pointer">🖨️ 전체 리포트 인쇄(PDF)</button>
+    </div>
+  </div>
+  <!-- 세부 -->
+  <div id="mrPanel1" style="display:none">
+    <div style="display:flex;gap:6px;padding:0 13px 10px;overflow-x:auto">
+      <button class="rp on" data-item="mp" onclick="mrPickItem('mp',this)" style="white-space:nowrap">인력현황</button>
+      <button class="rp" data-item="ho" onclick="mrPickItem('ho',this)" style="white-space:nowrap">인수인계</button>
+      <button class="rp" data-item="acc" onclick="mrPickItem('acc',this)" style="white-space:nowrap">안전사고</button>
+      <button class="rp" data-item="voc" onclick="mrPickItem('voc',this)" style="white-space:nowrap">민원</button>
+      <button class="rp" data-item="jw" onclick="mrPickItem('jw',this)" style="white-space:nowrap">공동작업</button>
+      <button class="rp" data-item="lost" onclick="mrPickItem('lost',this)" style="white-space:nowrap">습득물</button>
+      <button class="rp" data-item="waste" onclick="mrPickItem('waste',this)" style="white-space:nowrap">폐기물</button>
+    </div>
+    <div id="mrDetailWrap" style="margin:0 13px 20px"></div>
   </div>
 </div>
 <div id="sExecDash" class="scr">
@@ -7129,7 +7181,7 @@ function go(name){
   _curScreenName=name;
   if(FACILITY_MENU_KEYS.indexOf(name)!==-1) bumpFacilityMenuView(name);
   updateIosBackBtn();
-  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',office:'sOfficeMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs',admconfirm:'sAdc',eduevent:'sEduEvent',eduattend:'sEduAttend',workforce:'sWorkforce',workschedule:'sWorkSchedule',specialwork:'sSpecialWork',campaign:'sCampaign',campaigndetail:'sCampaignDetail',emproster:'sEmpRoster',noticeconfirm:'sNcf'};
+  const map={login:'sLogin',reg:'sReg',main:'sMain',mp:'sMp',ho:'sHo',chat:'sChat',iso9001:'sIso9001',news:'sNews',safety:'sSafety',manual:'sManual',risk:'sRisk',training:'sTraining',accident:'sAccident',groupchat:'sGroupChat',admin:'sAdmin',veh:'sVeh',kpi:'sKpi',facility:'sFacility',voc:'sVoc',lost:'sLost',equipment:'sEquipment',waste:'sWaste',notice:'sNotice',statsdash:'sStatsDash',mreport:'sMReport',execdash:'sExecDash',downloadcenter:'sDownloadCenter',workveh:'sWorkVeh',jointwork:'sJointWork',toilet:'sToiletMgmt',shower:'sShowerMgmt',smoking:'sSmokingMgmt',rest:'sRestMgmt',storage:'sStorageMgmt',baby:'sBabyMgmt',office:'sOfficeMgmt',activeUsers:'sActiveUsers',perf:'sPerf',deleteLogs:'sDeleteLogs',admconfirm:'sAdc',eduevent:'sEduEvent',eduattend:'sEduAttend',workforce:'sWorkforce',workschedule:'sWorkSchedule',specialwork:'sSpecialWork',campaign:'sCampaign',campaigndetail:'sCampaignDetail',emproster:'sEmpRoster',noticeconfirm:'sNcf'};
   const id=map[name]||name;
   SCREENS.forEach(s=>{
     const el=document.getElementById(s);
@@ -7281,6 +7333,9 @@ function go(name){
   }
   if(name==='main'||name==='statsdash'){
     if(typeof loadMonthlyStats==='function') loadMonthlyStats();
+  }
+  if(name==='mreport'){
+    if(typeof loadMReport==='function') loadMReport();
   }
   if(name==='main'){
     if(typeof loadMenuNotifBadges==='function') loadMenuNotifBadges();
@@ -31283,6 +31338,420 @@ async function loadMonthlyStats(){
     if(banner2) banner2.style.display='flex';
   }
   msLoading=false;
+}
+
+// ═══ 월간·연간 리포트 (전체 리포트 + 세부) ═══
+var mrMode='month'; // 'month' | 'year'
+var mrY=0, mrM=0;
+var mrCurTab=0; // 0=전체, 1=세부
+var mrCurItem='mp';
+var mrData=null;
+function mrNowKst(){ return new Date(Date.now()+9*3600000); }
+function mrPad(n){ return (n<10?'0':'')+n; }
+function mrInitDate(){
+  var n=mrNowKst();
+  if(!mrY){ mrY=n.getUTCFullYear(); mrM=n.getUTCMonth()+1; }
+}
+function goMReport(){ go('mreport'); }
+function mrSetMode(mode){
+  mrMode=mode;
+  var bm=document.getElementById('mrModeM'), by=document.getElementById('mrModeY');
+  var onS='background:white;color:var(--teal2);box-shadow:0 1px 3px rgba(0,0,0,.12)';
+  var offS='background:transparent;color:var(--g4);box-shadow:none';
+  var base='padding:4px 13px;border-radius:16px;font-size:12px;font-weight:800;cursor:pointer;';
+  if(bm) bm.style.cssText=base+(mode==='month'?onS:offS);
+  if(by) by.style.cssText=base+(mode==='year'?onS:offS);
+  loadMReport();
+}
+function mrMove(dir){
+  mrInitDate();
+  var n=mrNowKst(), cy=n.getUTCFullYear(), cm=n.getUTCMonth()+1;
+  if(mrMode==='month'){
+    var y=mrY, m=mrM+dir;
+    if(m<1){ m=12; y--; } if(m>12){ m=1; y++; }
+    if(y>cy||(y===cy&&m>cm)) return;
+    mrY=y; mrM=m;
+  }else{
+    var ny=mrY+dir;
+    if(ny>cy) return;
+    mrY=ny;
+  }
+  loadMReport();
+}
+function mrUpdatePeriodLbl(){
+  var lbl=document.getElementById('mrPeriodLbl');
+  if(!lbl) return;
+  var n=mrNowKst();
+  var isThisMonth=(mrY===n.getUTCFullYear()&&mrM===n.getUTCMonth()+1);
+  var isThisYear=(mrY===n.getUTCFullYear());
+  lbl.textContent=mrMode==='month'?(isThisMonth?'이번달':(mrY+'년 '+mrM+'월')):(isThisYear?'올해':(mrY+'년'));
+  var nb=document.getElementById('mrNextBtn');
+  var atMax=mrMode==='month'?isThisMonth:isThisYear;
+  if(nb) nb.style.opacity=atMax?'0.3':'1';
+}
+function mrTab(n){
+  mrCurTab=n;
+  var p0=document.getElementById('mrPanel0'), p1=document.getElementById('mrPanel1');
+  var b0=document.getElementById('mrTabBtn0'), b1=document.getElementById('mrTabBtn1');
+  var onS='background:linear-gradient(135deg,var(--teal),var(--teal2));color:white', offS='background:white;color:var(--g5)';
+  if(p0) p0.style.display=n===0?'':'none';
+  if(p1) p1.style.display=n===1?'':'none';
+  if(b0) b0.style.cssText='flex:1;padding:9px;border-radius:12px;border:1px solid var(--g2);font-weight:800;font-size:13px;cursor:pointer;'+(n===0?onS:offS);
+  if(b1) b1.style.cssText='flex:1;padding:9px;border-radius:12px;border:1px solid var(--g2);font-weight:800;font-size:13px;cursor:pointer;'+(n===1?onS:offS);
+}
+function mrPickItem(item, el){
+  mrCurItem=item;
+  document.querySelectorAll('#mrPanel1 .rp').forEach(function(c){ c.classList.remove('on'); });
+  if(el) el.classList.add('on');
+  mrRenderDetail();
+}
+async function loadMReport(){
+  mrInitDate();
+  mrUpdatePeriodLbl();
+  var curKey, prevKey, dFrom, dTo;
+  if(mrMode==='year'){
+    curKey=mrY+'-'; prevKey=(mrY-1)+'-';
+    dFrom=(mrY-1)+'-01-01'; dTo=mrY+'-12-31';
+  }else{
+    var py=mrY, pm=mrM-1; if(pm<1){ pm=12; py--; }
+    curKey=mrY+'-'+mrPad(mrM); prevKey=py+'-'+mrPad(pm);
+    dFrom=py+'-'+mrPad(pm)+'-01'; dTo=mrY+'-'+mrPad(mrM)+'-'+msLastDay(mrY,mrM);
+  }
+  var banner=document.getElementById('mrErrBanner');
+  if(banner) banner.style.display='none';
+  try{
+    var mpFloorCols=[]; MP_ZONE_PREFIX.forEach(function(p){ MP_FLOOR_SUFFIX.forEach(function(f){ mpFloorCols.push(p+'_toilet_'+f); mpFloorCols.push(p+'_common_'+f); }); });
+    var mpCols='date,shift,team_code,values,'+mpFloorCols.join(',');
+    var nsColsArr=[]; MS_NS_COLS.forEach(function(c){ nsColsArr.push(c); nsColsArr.push(c+'_land'); nsColsArr.push(c+'_air'); });
+    var nsCols='date,team_code,'+nsColsArr.join(',');
+    var tsFrom=new Date(dFrom+'T00:00:00+09:00').toISOString();
+    var tsTo=new Date(dTo+'T23:59:59+09:00').toISOString();
+    var q=await Promise.all([
+      msFetchAll(function(){ return sb.from('mp_data').select(mpCols).gte('date',dFrom).lte('date',dTo); }),
+      msFetchAll(function(){ return sb.from('night_special_data').select(nsCols).gte('date',dFrom).lte('date',dTo); }),
+      msFetchAll(function(){ return sb.from('handover').select('id,created_at,ho_date,shift,team,confirmed,facility,danger,equipment,notice').gte('created_at',tsFrom).lte('created_at',tsTo); }),
+      msFetchAll(function(){ return sb.from('lost_found').select('id,found_date,status,completed_at,location,item,receipt_route,handover_to,receiver_name').gte('found_date',tsFrom).lte('found_date',tsTo); }),
+      msFetchAll(function(){ return sb.from('safety_accidents').select('id,occurred_at,team,accident_type,location').gte('occurred_at',tsFrom).lte('occurred_at',tsTo); }),
+      Promise.resolve({data:[]}),
+      msFetchAll(function(){ return sb.from('voc_data').select('id,voc_date,status,completed_at,content,channel,category,category_etc,loc_zone,loc_side,loc_floor,created_at').gte('voc_date',dFrom).lte('voc_date',dTo); }),
+      msFetchAll(function(){ return sb.from('waste_data').select('waste_date,team_code,incineration_living,incineration_synthetic,incineration_food,incineration_wood,recycle_paper,recycle_plastic,recycle_can,recycle_glass,recycle_etc,misc_etc').gte('waste_date',dFrom).lte('waste_date',dTo); }),
+      msFetchAll(function(){ return sb.from('joint_work_data').select('id,work_date,teams,floors,headcount,items,batch_id,record_type').gte('work_date',dFrom).lte('work_date',dTo); }),
+      msFetchAll(function(){ return sb.from('work_vehicle_log').select('date,vehicle').gte('date',dFrom).lte('date',dTo); })
+    ]);
+    var anyErr=q.slice(0,9).some(function(r){ return r&&r.error; });
+    if(anyErr){ if(banner) banner.style.display='flex'; return; }
+    var cur=msCalc(q, curKey), prev=msCalc(q, prevKey);
+    var curGrid=mrAggregateMpGrid(q[0].data||[], curKey);
+    var wv={cur:mrAggregateWorkveh(q[9].data||[], curKey), prev:mrAggregateWorkveh(q[9].data||[], prevKey)};
+    mrData={cur:cur, prev:prev, curGrid:curGrid, wv:wv, curKey:curKey, prevKey:prevKey};
+    mrRenderSummary();
+    mrRenderDetail();
+  }catch(e){
+    console.log('리포트 로드 오류:', e);
+    if(banner) banner.style.display='flex';
+  }
+}
+function mrAggregateMpGrid(rows, key){
+  var mpDataArr=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  var splitObj=mpEmptySplit();
+  rows.forEach(function(r){
+    if(!r.date||r.date.indexOf(key)!==0) return;
+    if(!r.team_code||r.team_code.indexOf('_')===0) return;
+    var vals=r.values;
+    if(typeof vals==='string'){ try{ vals=JSON.parse(vals); }catch(e){ return; } }
+    if(!Array.isArray(vals)) return;
+    for(var ri=0;ri<4;ri++){
+      if(!vals[ri]||!Array.isArray(vals[ri])) continue;
+      for(var ci=0;ci<7;ci++){ mpDataArr[ri][ci]+=(Number(vals[ri][ci])||0); }
+    }
+    mpAddSplit(splitObj, mpRowToSplit(r));
+  });
+  return {mpDataArr:mpDataArr, splitObj:splitObj};
+}
+function mrAggregateWorkveh(rows, key){
+  var total=0, byVeh={};
+  rows.forEach(function(r){
+    if(!r.date||r.date.indexOf(key)!==0) return;
+    total++;
+    var v=r.vehicle||'기타';
+    byVeh[v]=(byVeh[v]||0)+1;
+  });
+  return {total:total, byVeh:byVeh};
+}
+function mrPctChange(cur, prev){
+  if(!prev) return null;
+  return Math.round(((cur-prev)/prev)*1000)/10;
+}
+function mrDiffLine(cur, prev){
+  var pct=mrPctChange(cur, prev);
+  if(pct===null) return '';
+  var arrow=pct>0?'▲':(pct<0?'▼':'—');
+  var col=pct>0?'var(--danger)':(pct<0?'var(--avg-blue)':'var(--g4)');
+  return '<span style="color:'+col+';font-weight:800">'+arrow+' '+Math.abs(pct)+'%</span> 전'+(mrMode==='year'?'년':'월')+' 대비';
+}
+function mrGenericSummaryCard(o){
+  var h='<div class="ms-card" style="background:white;border-radius:var(--r);padding:15px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);position:relative;overflow:hidden;margin-bottom:9px">';
+  h+='<div style="position:absolute;top:0;left:0;right:0;height:3px;background:'+o.bar+'"></div>';
+  h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px"><span style="width:26px;height:26px;border-radius:8px;background:'+o.iconBg+';display:flex;align-items:center;justify-content:center;font-size:15px">'+o.icon+'</span><span style="font-size:14px;font-weight:800;color:var(--g7)">'+o.title+'</span></div>';
+  h+='<div style="display:flex;align-items:baseline;gap:5px;margin-bottom:4px"><span style="font-size:28px;font-weight:900;color:'+o.numColor+'">'+o.value+'</span><span style="font-size:12px;color:var(--g4)">'+o.unit+'</span></div>';
+  var diffTxt=(o.cur!==undefined&&o.prev!==undefined)?mrDiffLine(o.cur,o.prev):'';
+  h+='<div style="font-size:11px;color:var(--g5);margin-bottom:8px">'+diffTxt+(o.extraLine?(diffTxt?' · ':'')+o.extraLine:'')+'</div>';
+  if(o.extra) h+='<div style="display:flex;gap:14px;font-size:12px;color:var(--g5);border-top:1px solid var(--g1);padding-top:8px;flex-wrap:wrap">'+o.extra+'</div>';
+  if(o.analysis) h+='<div style="margin-top:10px;background:var(--g1);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--g6);line-height:1.5">💡 '+o.analysis+'</div>';
+  h+='</div>';
+  return h;
+}
+function mrRankTableHtml(title, curObj, prevObj, unit){
+  var keys=Object.keys(curObj||{});
+  keys.sort(function(a,b){ return (curObj[b]||0)-(curObj[a]||0); });
+  var h='<div style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);margin-bottom:12px">';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--g7);margin-bottom:8px">'+title+'</div>';
+  if(!keys.length){ h+='<div style="font-size:12px;color:var(--g4);padding:4px 0">데이터 없음</div></div>'; return h; }
+  h+='<table style="width:100%;border-collapse:collapse;font-size:12px">';
+  keys.forEach(function(k){
+    var cv=curObj[k]||0, pv=(prevObj&&prevObj[k])||0;
+    h+='<tr><td style="padding:6px 4px;border-top:1px solid var(--g1)">'+k+'</td><td style="padding:6px 4px;border-top:1px solid var(--g1);text-align:right;font-weight:800">'+cv+(unit||'')+'</td><td style="padding:6px 4px;border-top:1px solid var(--g1);text-align:right;font-size:11px;white-space:nowrap">'+mrDiffLine(cv,pv)+'</td></tr>';
+  });
+  h+='</table></div>';
+  return h;
+}
+function mrShiftRowHtml(title, shiftObj){
+  var h='<div style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);margin-bottom:12px">';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--g7);margin-bottom:8px">'+title+'</div>';
+  h+='<div style="display:flex;gap:8px">';
+  ['오전','오후','야간'].forEach(function(sh){
+    h+='<div style="flex:1;text-align:center;background:var(--g1);border-radius:8px;padding:10px"><div style="font-size:11px;color:var(--g5)">'+sh+'</div><div style="font-size:20px;font-weight:900;color:var(--teal2)">'+((shiftObj&&shiftObj[sh])||0)+'</div></div>';
+  });
+  h+='</div></div>';
+  return h;
+}
+function mrTopMoverLine(curObj, prevObj, per){
+  var keys=Object.keys(curObj||{});
+  var best=null;
+  keys.forEach(function(k){
+    var cv=curObj[k]||0, pv=(prevObj&&prevObj[k])||0;
+    var pct=mrPctChange(cv,pv);
+    if(pct!==null && Math.abs(pct)>=30 && (cv>=3||pv>=3)){
+      if(!best||Math.abs(pct)>Math.abs(best.pct)) best={k:k,pct:pct};
+    }
+  });
+  if(!best) return '';
+  return '"'+best.k+'" 항목이 전'+per+' 대비 '+Math.abs(best.pct)+'% '+(best.pct>0?'증가':'감소')+'했습니다.';
+}
+function mrAnalysisMp(){
+  if(!mrData) return '';
+  var c=mrData.cur.mp, p=mrData.prev.mp;
+  var per=(mrMode==='year'?'년':'월');
+  var lines=[];
+  var lsPct=mrPctChange(c.lsSum, p.lsSum), asPct=mrPctChange(c.asSum, p.asSum);
+  if(asPct!==null && Math.abs(asPct)>=20) lines.push('에어(A/S) 구역 인원이 전'+per+' 대비 '+Math.abs(asPct)+'% '+(asPct>0?'증가':'감소')+'했습니다.');
+  else if(lsPct!==null && Math.abs(lsPct)>=20) lines.push('랜드(L/S) 구역 인원이 전'+per+' 대비 '+Math.abs(lsPct)+'% '+(lsPct>0?'증가':'감소')+'했습니다.');
+  var nsLines=[];
+  MS_NS_COLS.forEach(function(cc){
+    var cv=c.nsSum[cc]||0, pv=p.nsSum[cc]||0;
+    var pct=mrPctChange(cv, pv);
+    if(pct!==null && Math.abs(pct)>=30 && (cv>=5||pv>=5)) nsLines.push({label:MS_NS_LABELS[cc], pct:pct});
+  });
+  if(nsLines.length){
+    nsLines.sort(function(a,b){ return Math.abs(b.pct)-Math.abs(a.pct); });
+    var top=nsLines[0];
+    lines.push('야간 "'+top.label+'" 작업량이 전'+per+' 대비 '+Math.abs(top.pct)+'% '+(top.pct>0?'증가':'감소')+'했습니다.');
+  }
+  if(!lines.length) return '전'+per+' 대비 특이 변동 사항이 없습니다.';
+  return lines.join(' ');
+}
+function mrSummaryCardHtml(){
+  if(!mrData) return '';
+  var c=mrData.cur.mp, p=mrData.prev.mp;
+  var days=Object.keys(c.days).length||1;
+  var curTotal=0; Object.keys(c.days).forEach(function(d){ curTotal+=c.days[d]; });
+  var prevTotal=0; Object.keys(p.days).forEach(function(d){ prevTotal+=p.days[d]; });
+  var avgDay=Math.round(curTotal/days);
+  var toiletTotal=(c.toiletSum['오전']||0)+(c.toiletSum['오후']||0);
+  var commonTotal=(c.commonSum['오전']||0)+(c.commonSum['오후']||0);
+  var h='<div class="ms-card" style="background:white;border-radius:var(--r);padding:15px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);position:relative;overflow:hidden">';
+  h+='<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--teal2))"></div>';
+  h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px"><span style="width:26px;height:26px;border-radius:8px;background:var(--teal-bg);display:flex;align-items:center;justify-content:center;font-size:15px">👥</span><span style="font-size:14px;font-weight:800;color:var(--g7)">인력현황</span></div>';
+  h+='<div style="display:flex;align-items:baseline;gap:5px;margin-bottom:4px"><span style="font-size:28px;font-weight:900;color:var(--teal2)">'+curTotal.toLocaleString()+'</span><span style="font-size:12px;color:var(--g4)">연인원(명)</span></div>';
+  h+='<div style="font-size:11px;color:var(--g5);margin-bottom:8px">'+mrDiffLine(curTotal, prevTotal)+' · 일평균 '+avgDay+'명</div>';
+  h+='<div style="display:flex;gap:14px;font-size:12px;color:var(--g5);border-top:1px solid var(--g1);padding-top:8px;flex-wrap:wrap">';
+  h+='<span>화장실 <b style="color:#166534">'+toiletTotal.toLocaleString()+'</b></span>';
+  h+='<span>공용구역 <b style="color:#0C447C">'+commonTotal.toLocaleString()+'</b></span>';
+  h+='<span>야간 <b style="color:var(--navy)">'+Math.round(c.shiftSum['야간']||0).toLocaleString()+'</b></span>';
+  h+='</div>';
+  var analysis=mrAnalysisMp();
+  if(analysis) h+='<div style="margin-top:10px;background:var(--g1);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--g6);line-height:1.5">💡 '+analysis+'</div>';
+  h+='</div>';
+  return h;
+}
+function mrPer(){ return mrMode==='year'?'년':'월'; }
+// ── 인수인계 ──
+function mrSummaryCardHo(){
+  var c=mrData.cur.ho, p=mrData.prev.ho;
+  var rate=c.total?Math.round(c.confirmed/c.total*100):0;
+  var an=mrTopMoverLine(c.byFacLoc, p.byFacLoc, mrPer())||mrTopMoverLine(c.byFacDesc, p.byFacDesc, mrPer());
+  return mrGenericSummaryCard({bar:'linear-gradient(90deg,var(--navy),#3E6BB5)', iconBg:'var(--navy-bg)', icon:'🔄', title:'인수인계', numColor:'var(--navy)',
+    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total, extraLine:'확인율 '+rate+'%',
+    extra:'<span>시설물 <b>'+(c.byType['시설물']||0)+'</b></span><span>기타 <b>'+(c.byType['기타']||0)+'</b></span>',
+    analysis:an||('전'+mrPer()+' 대비 특이 변동 사항이 없습니다.')});
+}
+function mrDetailHoHtml(){
+  var c=mrData.cur.ho, p=mrData.prev.ho;
+  var h=mrShiftRowHtml('근무조별 인계 건수', c.byShift);
+  h+=mrRankTableHtml('팀별 인계 빈도', c.byTeam, p.byTeam, '건');
+  h+=mrRankTableHtml('시설물 위치별', c.byFacLoc, p.byFacLoc, '건');
+  h+=mrRankTableHtml('시설물 내용 유형별', c.byFacDesc, p.byFacDesc, '건');
+  return h;
+}
+// ── 안전사고 ──
+function mrSummaryCardAcc(){
+  var c=mrData.cur.acc, p=mrData.prev.acc;
+  var an=mrTopMoverLine(c.byType, p.byType, mrPer())||mrTopMoverLine(c.byTeam, p.byTeam, mrPer());
+  return mrGenericSummaryCard({bar:'linear-gradient(90deg,var(--danger),#F07B7B)', iconBg:'var(--danger-bg)', icon:'⚠️', title:'안전사고', numColor:'var(--danger)',
+    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total,
+    analysis:an||('전'+mrPer()+' 대비 특이 변동 사항이 없습니다.')});
+}
+function mrDetailAccHtml(){
+  var c=mrData.cur.acc, p=mrData.prev.acc;
+  var h=mrShiftRowHtml('근무조별 사고 건수', c.byShift);
+  h+=mrRankTableHtml('사고 유형별', c.byType, p.byType, '건');
+  h+=mrRankTableHtml('발생 팀별', c.byTeam, p.byTeam, '건');
+  h+=mrRankTableHtml('발생 위치별', c.byLoc, p.byLoc, '건');
+  return h;
+}
+// ── 민원(서비스응대) ──
+function mrSummaryCardVoc(){
+  var c=mrData.cur.voc, p=mrData.prev.voc;
+  var rate=c.total?Math.round(c.done/c.total*100):0;
+  var an=mrTopMoverLine(c.byType, p.byType, mrPer())||mrTopMoverLine(c.byLoc, p.byLoc, mrPer());
+  return mrGenericSummaryCard({bar:'linear-gradient(90deg,#6B21A8,#9D5BD2)', iconBg:'#F3E8FF', icon:'📞', title:'민원(서비스응대)', numColor:'#6B21A8',
+    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total, extraLine:'처리완료율 '+rate+'%',
+    analysis:an||('전'+mrPer()+' 대비 특이 변동 사항이 없습니다.')});
+}
+function mrDetailVocHtml(){
+  var c=mrData.cur.voc, p=mrData.prev.voc;
+  var h=mrShiftRowHtml('근무조별 접수 건수', c.byShift);
+  h+=mrRankTableHtml('접수 경로별', c.byChannel, p.byChannel, '건');
+  h+=mrRankTableHtml('민원 유형별', c.byType, p.byType, '건');
+  h+=mrRankTableHtml('위치별', c.byLoc, p.byLoc, '건');
+  return h;
+}
+// ── 공동작업 ──
+function mrSummaryCardJw(){
+  var c=mrData.cur.jw, p=mrData.prev.jw;
+  var an=mrTopMoverLine(c.byLoc, p.byLoc, mrPer())||mrTopMoverLine(c.byWork, p.byWork, mrPer());
+  return mrGenericSummaryCard({bar:'linear-gradient(90deg,var(--teal),var(--teal2))', iconBg:'var(--teal-bg)', icon:'🤝', title:'공동작업', numColor:'var(--teal2)',
+    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total, extraLine:'총 투입인원 '+(c.headSum||0)+'명',
+    analysis:an||('전'+mrPer()+' 대비 특이 변동 사항이 없습니다.')});
+}
+function mrDetailJwHtml(){
+  var c=mrData.cur.jw, p=mrData.prev.jw;
+  var h=mrRankTableHtml('참여팀별 투입인원', c.byTeam, p.byTeam, '명');
+  h+=mrRankTableHtml('층·위치별', c.byLoc, p.byLoc, '건');
+  h+=mrRankTableHtml('작업 내용별', c.byWork, p.byWork, '건');
+  return h;
+}
+// ── 습득물 관리 ──
+function mrSummaryCardLost(){
+  var c=mrData.cur.lost, p=mrData.prev.lost;
+  var rate=c.total?Math.round(c.done/c.total*100):0;
+  var an=mrTopMoverLine(c.byItem, p.byItem, mrPer())||mrTopMoverLine(c.byLoc, p.byLoc, mrPer());
+  return mrGenericSummaryCard({bar:'linear-gradient(90deg,var(--warn),#E8A83E)', iconBg:'var(--warn-bg)', icon:'🧳', title:'습득물 관리', numColor:'var(--warn)',
+    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total, extraLine:'처리완료율 '+rate+'%',
+    analysis:an||('전'+mrPer()+' 대비 특이 변동 사항이 없습니다.')});
+}
+function mrDetailLostHtml(){
+  var c=mrData.cur.lost, p=mrData.prev.lost;
+  var h=mrShiftRowHtml('근무조별 접수 건수', c.byShift);
+  h+=mrRankTableHtml('품목 분류별', c.byItem, p.byItem, '건');
+  h+=mrRankTableHtml('발견 위치별', c.byLoc, p.byLoc, '건');
+  h+=mrRankTableHtml('접수 경로별', c.byRoute, p.byRoute, '건');
+  h+=mrRankTableHtml('인계처별(완료 건)', c.byHandover, p.byHandover, '건');
+  return h;
+}
+// ── 폐기물 현황 ──
+function mrWasteTotal(w){ return (w.inc||0)+(w.rec||0)+(w.misc||0); }
+function mrSummaryCardWaste(){
+  var c=mrData.cur.waste, p=mrData.prev.waste;
+  var curTotal=mrWasteTotal(c), prevTotal=mrWasteTotal(p);
+  var recPct=curTotal?Math.round((c.rec/curTotal)*100):0;
+  var an=mrTopMoverLine(c.byItem, p.byItem, mrPer());
+  return mrGenericSummaryCard({bar:'linear-gradient(90deg,var(--success),#5BBF8A)', iconBg:'var(--success-bg)', icon:'♻️', title:'폐기물 현황', numColor:'var(--success)',
+    value:curTotal.toFixed(1), unit:'톤', cur:curTotal, prev:prevTotal, extraLine:'재활용 비중 '+recPct+'%',
+    extra:'<span>소각 <b>'+((c.inc||0)).toFixed(1)+'톤</b></span><span>재활용 <b>'+((c.rec||0)).toFixed(1)+'톤</b></span>',
+    analysis:an||('전'+mrPer()+' 대비 특이 변동 사항이 없습니다.')});
+}
+function mrDetailWasteHtml(){
+  var c=mrData.cur.waste, p=mrData.prev.waste;
+  var h=mrRankTableHtml('폐기물 종류별(톤)', c.byItem, p.byItem, '톤');
+  var curTeamTotals={}, prevTeamTotals={};
+  Object.keys(c.byTeam||{}).forEach(function(tc){ var s=0; Object.keys(c.byTeam[tc]).forEach(function(k){ s+=c.byTeam[tc][k]; }); curTeamTotals[tc]=Math.round(s*10)/10; });
+  Object.keys(p.byTeam||{}).forEach(function(tc){ var s=0; Object.keys(p.byTeam[tc]).forEach(function(k){ s+=p.byTeam[tc][k]; }); prevTeamTotals[tc]=Math.round(s*10)/10; });
+  h+=mrRankTableHtml('팀별 배출량(톤)', curTeamTotals, prevTeamTotals, '톤');
+  return h;
+}
+// ── 공사업무용차량 운행일지 (요약만) ──
+function mrSummaryCardWorkveh(){
+  var c=mrData.wv.cur, p=mrData.wv.prev;
+  var vehLine=Object.keys(c.byVeh).map(function(v){ return v+' '+c.byVeh[v]+'건'; }).join(' · ');
+  return mrGenericSummaryCard({bar:'linear-gradient(90deg,var(--g5),var(--g4))', iconBg:'var(--g1)', icon:'🚛', title:'공사업무용차량 운행일지', numColor:'var(--g7)',
+    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total,
+    extraLine:vehLine||'운행 기록 없음'});
+}
+var MR_ITEM_TITLES={mp:'인력현황',ho:'인수인계',acc:'안전사고',voc:'민원(서비스응대)',jw:'공동작업',lost:'습득물 관리',waste:'폐기물 현황'};
+var MR_SUMMARY_FNS={mp:mrSummaryCardHtml,ho:mrSummaryCardHo,acc:mrSummaryCardAcc,voc:mrSummaryCardVoc,jw:mrSummaryCardJw,lost:mrSummaryCardLost,waste:mrSummaryCardWaste,workveh:mrSummaryCardWorkveh};
+var MR_DETAIL_FNS={mp:mrDetailMpHtml,ho:mrDetailHoHtml,acc:mrDetailAccHtml,voc:mrDetailVocHtml,jw:mrDetailJwHtml,lost:mrDetailLostHtml,waste:mrDetailWasteHtml};
+function mrRenderSummary(){
+  var wrap=document.getElementById('mrSummaryWrap');
+  if(!wrap||!mrData) return;
+  var order=['mp','ho','acc','voc','jw','lost','waste','workveh'];
+  var h='';
+  order.forEach(function(k){ var fn=MR_SUMMARY_FNS[k]; if(fn) h+=fn(); });
+  wrap.innerHTML=h;
+}
+function mrRenderDetail(){
+  var wrap=document.getElementById('mrDetailWrap');
+  if(!wrap||!mrData) return;
+  var fn=MR_DETAIL_FNS[mrCurItem];
+  wrap.innerHTML=fn?fn():'<div style="font-size:12px;color:var(--g4);padding:12px">준비 중입니다.</div>';
+}
+function mrDetailMpHtml(){
+  var g=mrData.curGrid;
+  var h='<div style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);margin-bottom:12px">';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--g7);margin-bottom:8px">☀️ 주간(오전·오후) — 구역·층별 인원 합계</div>';
+  h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;text-align:center;white-space:nowrap">';
+  h+='<thead><tr style="background:var(--g1)"><th style="border-right:1px solid var(--g2);padding:6px 4px">구역</th><th style="border-right:1px solid var(--g2);padding:6px 4px">구분</th>';
+  MP_FLOOR_SUFFIX.forEach(function(f){ h+='<th style="border-right:1px solid var(--g2);padding:6px 4px">'+f.toUpperCase()+'</th>'; });
+  h+='<th style="padding:6px 4px">집하장</th><th style="padding:6px 4px;font-weight:900">소계</th></tr></thead><tbody>';
+  h+=mpFullSplitTableHtml(g.mpDataArr, g.splitObj, null, null);
+  h+='</tbody></table></div></div>';
+  h+='<div style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--g7);margin-bottom:8px">🌙 야간특별작업 — 항목별 합계 (5팀 랜드 · 10팀 에어)</div>';
+  h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center">';
+  h+='<thead><tr style="background:var(--g1)"><th style="border-right:1px solid var(--g2);padding:6px 8px;text-align:left">작업 항목</th><th style="border-right:1px solid var(--g2);padding:6px 8px">랜드(L/S)</th><th style="border-right:1px solid var(--g2);padding:6px 8px">에어(A/S)</th><th style="padding:6px 8px;font-weight:900">합계</th></tr></thead><tbody>';
+  var c=mrData.cur.mp;
+  MS_NS_COLS.forEach(function(cc){
+    var land=c.nsSumLand[cc]||0, air=c.nsSumAir[cc]||0, total=c.nsSum[cc]||0;
+    h+='<tr><td style="border-right:1px solid var(--g2);border-top:1px solid var(--g1);padding:6px 8px;text-align:left">'+MS_NS_LABELS[cc]+'</td>';
+    h+='<td style="border-right:1px solid var(--g2);border-top:1px solid var(--g1);padding:6px 8px">'+land+'</td>';
+    h+='<td style="border-right:1px solid var(--g2);border-top:1px solid var(--g1);padding:6px 8px">'+air+'</td>';
+    h+='<td style="border-top:1px solid var(--g1);padding:6px 8px;font-weight:800">'+total+'</td></tr>';
+  });
+  h+='</tbody></table></div></div>';
+  return h;
+}
+function mrPrintReport(){
+  var wrap=document.getElementById('mrSummaryWrap');
+  if(!wrap) return;
+  var lbl=document.getElementById('mrPeriodLbl');
+  var period=lbl?lbl.textContent:'';
+  var w=window.open('','_blank');
+  w.document.write('<html><head><title>T1환경미화사업부 종합 운영 리포트</title><style>body{font-family:sans-serif;padding:20px}h2{margin-bottom:4px}table{width:100%;border-collapse:collapse;margin-top:8px}th,td{border:1px solid #999;padding:6px 8px;font-size:12px;text-align:center}</style></head><body>');
+  w.document.write('<h2>T1환경미화사업부 '+period+' 종합 운영 리포트</h2>');
+  w.document.write(wrap.innerHTML);
+  w.document.write('</body></html>');
+  w.document.close();
+  setTimeout(function(){ w.print(); },300);
 }
 
 // ── 통계 자동 분류 엔진: 키워드 정확 매칭 → 오타 허용(자모 유사) 최근접 강제 배정 ──
