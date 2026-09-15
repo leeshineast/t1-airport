@@ -1314,32 +1314,25 @@ html{overflow-x:hidden}
 
     <!-- 전체 패널 -->
     <div id="flP_all">
-      <div class="card"><div class="tbl-w"><table class="mp-tbl" id="dHome">
+      <div class="card"><div class="tbl-w"><table class="mp-tbl" id="dHome" style="table-layout:fixed">
         <colgroup>
-  <col style="width:11.1%"><!-- 구역 -->
-  <col style="width:11.1%"><!-- B2F -->
-  <col style="width:11.1%"><!-- B1F -->
-  <col style="width:11.1%"><!-- 1F -->
-  <col style="width:11.1%"><!-- 2F -->
-  <col style="width:11.1%"><!-- 3F -->
-  <col style="width:11.1%"><!-- 4F -->
-  <col style="width:11.1%"><!-- 집하장 -->
-  <col style="width:11.2%"><!-- 소계 -->
+  <col style="width:11%"><!-- 구역 -->
+  <col style="width:11%"><!-- 구분 -->
+  <col style="width:9%"><!-- B2F -->
+  <col style="width:9%"><!-- B1F -->
+  <col style="width:9%"><!-- 1F -->
+  <col style="width:9%"><!-- 2F -->
+  <col style="width:9%"><!-- 3F -->
+  <col style="width:9%"><!-- 4F -->
+  <col style="width:10%"><!-- 집하장 -->
+  <col style="width:12%"><!-- 소계 -->
 </colgroup>
         <thead><tr>
-          <th style="text-align:left;padding-left:4px">구역</th>
+          <th style="text-align:left;padding-left:4px">구역</th><th style="text-align:left">구분</th>
           <th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th>
           <th style="background:var(--teal2)">소계</th>
         </tr></thead>
-        <tbody>
-          <tr><td class="lbl">L/S 동편</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
-          <tr><td class="lbl">L/S 서편</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
-          <tr class="sub"><td class="lbl">L/S 소계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
-          <tr><td class="lbl">A/S 동편</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
-          <tr><td class="lbl">A/S 서편</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
-          <tr class="sub"><td class="lbl">A/S 소계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
-          <tr class="tot"><td class="lbl">전체 총계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
-        </tbody>
+        <tbody></tbody>
       </table></div></div>
       <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:0 13px 11px" id="flAllAvgWrap">
         <div style="background:white;border-radius:var(--r2);padding:11px 13px;border:1px solid var(--g2)">
@@ -6801,6 +6794,7 @@ async function loadExecDashboard(){
         var rs=mpRowToSplit(r);
         var t=0,c=0;
         for(var zi=0;zi<4;zi++) for(var fi=0;fi<6;fi++){ t+=rs.toilet[zi][fi]; c+=rs.common[zi][fi]; }
+        c+=(Number(vals[2]&&vals[2][6])||0)+(Number(vals[3]&&vals[3][6])||0); // 집하장은 공용구역에 포함(전체현황 표와 동일 기준)
         edToiletByShift[r.shift]+=t; edCommonByShift[r.shift]+=c;
       }
       if(sum>0) daysSet[r.date]=1;
@@ -11160,36 +11154,14 @@ function updateFloorChart(){
   }
   var lsTotal=lsSub.reduce(function(a,b){return a+b;},0);
   var asTotal=asSub.reduce(function(a,b){return a+b;},0);
-  // 홈 화면 전체 탭 표 (#flP_all = #dHome) — 칸 안에 화장실·공용구역 소문구 추가 (평균비교 색상 포함)
-  var homeShiftState=mpShiftPresent('오후')?'ampm':'am';
-  var homeAvgT=homeShiftState==='ampm'?mpAvgToiletAMPM:mpAvgToiletAM;
-  var homeAvgC=homeShiftState==='ampm'?mpAvgCommonAMPM:mpAvgCommonAM;
-  var allTbl=document.querySelector('#flP_all table tbody');
-  if(allTbl){
-    var zoneIdxByRow=[0,1,null,2,3,null,null];
-    var newRows=[[ZONES[0]].concat(mpData[0]).concat([totals[0]]),[ZONES[1]].concat(mpData[1]).concat([totals[1]]),['L/S 소계'].concat(lsSub).concat([lsTotal]),[ZONES[2]].concat(mpData[2]).concat([totals[2]]),[ZONES[3]].concat(mpData[3]).concat([totals[3]]),['A/S 소계'].concat(asSub).concat([asTotal]),['전체 총계'].concat(colTot).concat([grandTotal])];
-    var trs=allTbl.querySelectorAll('tr');
-    newRows.forEach(function(rowData,ri){
-      if(!trs[ri]) return;
-      var tds=trs[ri].querySelectorAll('td');
-      var zi=zoneIdxByRow[ri];
-      rowData.forEach(function(val,ci){
-        if(!tds[ci]) return;
-        if(zi!==null && ci>=1 && ci<=6){
-          var fi=ci-1;
-          var t=mpSplit.toilet[zi][fi]||0, c=mpSplit.common[zi][fi]||0;
-          var tCol=homeAvgT?mpAvgColor(t,homeAvgT[zi][fi]):null, cCol=homeAvgC?mpAvgColor(c,homeAvgC[zi][fi]):null;
-          tds[ci].innerHTML=val+'<br><span style="font-size:9px"><span style="color:'+(tCol||'var(--g4)')+'">화'+t+'</span>·<span style="color:'+(cCol||'var(--g4)')+'">공'+c+'</span></span>';
-        } else {
-          tds[ci].textContent=val;
-        }
-      });
-    });
-  }
-  // 인력현황 탭 > 전체현황 테이블 (#mpFullTable) — 화장실/공용구역 완전 분리 표 + 평균비교 색상
+  // 오전/오후 진행상태에 맞는 평균 매트릭스 선택 (홈/전체현황 공용)
   var shiftStateForTbl=mpShiftPresent('오후')?'ampm':'am';
   var avgToiletForTbl=shiftStateForTbl==='ampm'?mpAvgToiletAMPM:mpAvgToiletAM;
   var avgCommonForTbl=shiftStateForTbl==='ampm'?mpAvgCommonAMPM:mpAvgCommonAM;
+  // 홈 화면 전체 탭 표 (#flP_all = #dHome) — 전체현황과 동일한 화장실/공용구역 분리 표
+  var homeTbl=document.querySelector('#dHome tbody');
+  if(homeTbl) homeTbl.innerHTML=mpFullSplitTableHtml(mpData, mpSplit, avgToiletForTbl, avgCommonForTbl);
+  // 인력현황 탭 > 전체현황 테이블 (#mpFullTable) — 화장실/공용구역 완전 분리 표 + 평균비교 색상
   var mpTbl=document.querySelector('#mpFullTable tbody');
   if(mpTbl) mpTbl.innerHTML=mpFullSplitTableHtml(mpData, mpSplit, avgToiletForTbl, avgCommonForTbl);
   // 층별 패널 — 현재까지 입력된 시프트(오전만 / 오전+오후)에 맞는 평균과 비교해 색상 표시
@@ -16087,32 +16059,41 @@ function openLeaderDataEdit(shift,team,name){
   var meta=(mpMeta[shift]&&mpMeta[shift][team])||null;
   var proxyNote=(meta&&meta.proxy_writer)?' (대리입력:'+meta.proxy_writer+')':'';
   if(title) title.textContent=name+' 입력값 수정 ('+shift+')'+proxyNote;
-  var zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
   // 현재 저장값 불러오기
   var cur=(mpDataByLeader[shift]&&mpDataByLeader[shift][team])||
           [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
   var curSplit=(mpSplitByLeader[shift]&&mpSplitByLeader[shift][team])||mpEmptySplit();
+  var zone=getTeamZone(team);
+  var building=getTeamBuilding(team);
+  var teamNumM3=String(team).match(/^(\d+)팀/);
+  var teamNum3=teamNumM3?teamNumM3[1]:null;
   var blockHtml='';
-  zones.forEach(function(zone,zi){
-    blockHtml+='<div style="margin-bottom:14px">';
-    blockHtml+='<div style="font-size:13px;font-weight:700;color:var(--g6);margin-bottom:6px">'+zone+'</div>';
-    blockHtml+='<table style="width:100%;border-collapse:collapse;table-layout:fixed">';
+  if(zone==='집하장'){
+    var yardRi3 = teamNum3==='1' ? 3 : teamNum3==='6' ? 2 : null;
+    var yardLabel3 = teamNum3==='1' ? 'A/S 서편 집하장' : teamNum3==='6' ? 'A/S 동편 집하장' : '집하장';
+    var yardV3=(yardRi3!==null)?(cur[yardRi3][6]||0):0;
+    blockHtml='<div style="font-size:13px;color:var(--g5);margin-bottom:8px">'+team+' 담당구역 · '+yardLabel3+'</div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 10px;background:var(--g1);border-radius:8px">'
+      +'<span style="font-size:13px;color:var(--g6)">집하장</span>'
+      +'<input type="number" id="ledit_yard_single" data-ri="'+yardRi3+'" value="'+yardV3+'" min="0" style="width:70px;padding:5px;border:1.5px solid var(--g2);border-radius:6px;font-size:14px;text-align:center" onfocus="this.select()">'
+      +'</div>';
+  }else{
+    var zi3 = zone==='동편' ? (building==='AS'?2:0) : (building==='AS'?3:1);
+    var floorCols3=getTeamFloorCols(team)||[];
+    var zoneLabel3=(building==='AS'?'A/S ':'L/S ')+zone;
+    blockHtml='<div style="font-size:13px;color:var(--g5);margin-bottom:8px">'+team+' 담당구역 · '+zoneLabel3+' '+floorCols3.map(function(ci){return MP_FLOOR_LABELS[ci];}).join('·')+'</div>';
+    blockHtml+='<table style="width:100%;border-collapse:collapse;table-layout:fixed" data-zi="'+zi3+'">';
     blockHtml+='<colgroup><col style="width:22%"><col style="width:39%"><col style="width:39%"></colgroup>';
     blockHtml+='<thead><tr><th></th><th style="font-size:11px;color:#166534;background:#EAF3DE;padding:4px;border-radius:6px">화장실</th><th style="font-size:11px;color:#0C447C;background:#E6F1FB;padding:4px;border-radius:6px">공용구역</th></tr></thead><tbody>';
-    MP_FLOOR_LABELS.forEach(function(lbl,ci){
-      var tv=curSplit.toilet[zi][ci]||0, cv=curSplit.common[zi][ci]||0;
+    floorCols3.forEach(function(ci){
+      var lbl=MP_FLOOR_LABELS[ci];
+      var tv=curSplit.toilet[zi3][ci]||0, cv=curSplit.common[zi3][ci]||0;
       blockHtml+='<tr style="border-bottom:1px solid var(--g1)"><td style="font-size:12.5px;color:var(--g6);padding:5px 2px">'+lbl+'</td>'
-        +'<td style="padding:3px"><input type="number" id="ledit_split_'+zi+'_'+ci+'_t" value="'+tv+'" min="0" style="width:100%;padding:5px 3px;border:1.5px solid var(--g2);border-radius:6px;font-size:13px;text-align:center" onfocus="this.select()"></td>'
-        +'<td style="padding:3px"><input type="number" id="ledit_split_'+zi+'_'+ci+'_c" value="'+cv+'" min="0" style="width:100%;padding:5px 3px;border:1.5px solid var(--g2);border-radius:6px;font-size:13px;text-align:center" onfocus="this.select()"></td></tr>';
+        +'<td style="padding:3px"><input type="number" class="ledit_zone_t" data-zi="'+zi3+'" data-ci="'+ci+'" value="'+tv+'" min="0" style="width:100%;padding:5px 3px;border:1.5px solid var(--g2);border-radius:6px;font-size:13px;text-align:center" onfocus="this.select()"></td>'
+        +'<td style="padding:3px"><input type="number" class="ledit_zone_c" data-zi="'+zi3+'" data-ci="'+ci+'" value="'+cv+'" min="0" style="width:100%;padding:5px 3px;border:1.5px solid var(--g2);border-radius:6px;font-size:13px;text-align:center" onfocus="this.select()"></td></tr>';
     });
     blockHtml+='</tbody></table>';
-    var yardV=cur[zi][6]||0;
-    blockHtml+='<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;padding:6px 8px;background:var(--g1);border-radius:8px">'
-      +'<span style="font-size:12px;color:var(--g5)">집하장</span>'
-      +'<input type="number" id="ledit_yard_'+zi+'" value="'+yardV+'" min="0" style="width:60px;padding:4px;border:1.5px solid var(--g2);border-radius:6px;font-size:13px;text-align:center" onfocus="this.select()">'
-      +'</div>';
-    blockHtml+='</div>';
-  });
+  }
   body.innerHTML='<tr><td style="padding:6px 2px">'+blockHtml+'</td></tr>';
   showM('leaderDataModal');
 }
@@ -16187,20 +16168,38 @@ async function saveLeaderDataEdit(){
     }catch(e){ toast('저장 오류: '+String(_safeErrMsg(e)||e)); }
     return;
   }
-  var newVals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  // ★ 기존 저장값을 베이스로 복사 — 이 조장이 담당하지 않는 구역/층은 그대로 보존
+  var baseCur=(mpDataByLeader[editShift]&&mpDataByLeader[editShift][editTeam])||
+              [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  var newVals=baseCur.map(function(row){ return row.slice(); });
   var splitColsArr=[];
-  var zonePrefixes=['ls_east','ls_west','as_east','as_west'];
-  for(var zi=0;zi<4;zi++){
-    var toiletVals={}, commonVals={};
-    MP_FLOOR_SUFFIX.forEach(function(suf,ci){
-      var ti=document.getElementById('ledit_split_'+zi+'_'+ci+'_t'), ci2=document.getElementById('ledit_split_'+zi+'_'+ci+'_c');
-      var t=ti?parseInt(ti.value)||0:0, c=ci2?parseInt(ci2.value)||0:0;
-      toiletVals[suf]=t; commonVals[suf]=c;
-      newVals[zi][ci]=t+c;
-    });
-    var yardEl=document.getElementById('ledit_yard_'+zi);
-    newVals[zi][6]=yardEl?parseInt(yardEl.value)||0:0;
-    splitColsArr.push({prefix:zonePrefixes[zi], toilet:toiletVals, common:commonVals});
+  var zoneOfTeam=getTeamZone(editTeam);
+  if(zoneOfTeam==='집하장'){
+    var yardEl=document.getElementById('ledit_yard_single');
+    if(yardEl){
+      var ri=parseInt(yardEl.dataset.ri);
+      var v=parseInt(yardEl.value)||0;
+      if(!isNaN(ri)) newVals[ri][6]=v;
+    }
+  }else{
+    var tblZi=document.querySelector('table[data-zi]');
+    if(tblZi){
+      var ziResolved=parseInt(tblZi.dataset.zi);
+      var toiletVals={}, commonVals={};
+      document.querySelectorAll('.ledit_zone_t').forEach(function(inp){
+        var ci=parseInt(inp.dataset.ci);
+        toiletVals[MP_FLOOR_SUFFIX[ci]]=parseInt(inp.value)||0;
+      });
+      document.querySelectorAll('.ledit_zone_c').forEach(function(inp){
+        var ci=parseInt(inp.dataset.ci);
+        commonVals[MP_FLOOR_SUFFIX[ci]]=parseInt(inp.value)||0;
+      });
+      Object.keys(toiletVals).forEach(function(suf){
+        var ci=MP_FLOOR_SUFFIX.indexOf(suf);
+        newVals[ziResolved][ci]=(toiletVals[suf]||0)+(commonVals[suf]||0);
+      });
+      splitColsArr.push({prefix:MP_ZONE_PREFIX[ziResolved], toilet:toiletVals, common:commonVals});
+    }
   }
   var mismatchMsg2=checkZoneMismatch(editTeam, newVals);
   if(mismatchMsg2 && !confirm(mismatchMsg2+'\n\n그래도 저장하시겠습니까?')) return;
@@ -31415,6 +31414,7 @@ function msCalc(q, key){
     if(sh){ s.mp.shiftSum[sh]+=sum; s.mp.shiftDays[sh][r.date]=1;
       var rs=mpRowToSplit(r), t=0,c=0;
       for(var zi=0;zi<4;zi++) for(var fi=0;fi<6;fi++){ t+=rs.toilet[zi][fi]; c+=rs.common[zi][fi]; }
+      c+=(Number(vals[2]&&vals[2][6])||0)+(Number(vals[3]&&vals[3][6])||0); // 집하장은 전체현황 표와 동일하게 공용구역에 포함
       s.mp.toiletSum[sh]+=t; s.mp.commonSum[sh]+=c;
     }
     if(r.proxy_writer) s.mp.proxy++;
