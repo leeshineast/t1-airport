@@ -767,6 +767,12 @@ html{overflow-x:hidden}
     <div class="menu-grid" id="favMenuGrid"></div>
   </div>
 
+  <!-- 경영진용 1페이지 신호등 요약 (조장 이상만 표시) -->
+  <div id="execSummaryStrip" style="display:none;margin:4px 13px 14px;background:white;border-radius:var(--r2);padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)">
+    <div style="font-size:12px;font-weight:800;color:var(--g4);margin-bottom:8px">📋 오늘 한눈에 보기</div>
+    <div id="execSummaryBody" style="display:flex;flex-direction:column;gap:6px"></div>
+  </div>
+
   <!-- 폴더형 메뉴 (master·admin·manager·leader·acting_leader 전용) — 긴 목록을 카테고리 폴더로 묶어서 보여줌 -->
   <div id="menuFolderHeaderBar" style="display:none;margin:10px 13px 4px;padding:0 0 10px;border-bottom:1px solid var(--g2);align-items:center;justify-content:space-between">
     <div>
@@ -1128,11 +1134,6 @@ html{overflow-x:hidden}
       <button onclick="pushOptInDismiss()" style="padding:7px 10px;background:rgba(255,255,255,.15);color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer">나중에</button>
       <button onclick="pushOptInEnable()" style="padding:7px 12px;background:#fff;color:var(--navy);border:none;border-radius:7px;font-size:12.5px;font-weight:800;cursor:pointer">허용</button>
     </div>
-  </div>
-  <!-- 경영진용 1페이지 신호등 요약 -->
-  <div id="execSummaryStrip" style="display:none;margin:10px 13px 0;background:white;border-radius:var(--r2);padding:12px 14px;box-shadow:0 1px 3px rgba(0,0,0,.06)">
-    <div style="font-size:12px;font-weight:800;color:var(--g4);margin-bottom:8px">📋 오늘 한눈에 보기</div>
-    <div id="execSummaryBody" style="display:flex;flex-direction:column;gap:6px"></div>
   </div>
   <!-- 인력현황 통합 카드 -->
   <div class="stat-row">
@@ -32613,6 +32614,7 @@ function hoAlertGo(){ hoAlertClose(); go('ho'); hoTab(0); }
 // ═══ 경영진용 1페이지 신호등 요약 (운영현황 패널 상단) ═══
 async function loadExecSummary(){
   try{
+    if(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role))) return;
     var strip=document.getElementById('execSummaryStrip');
     var body=document.getElementById('execSummaryBody');
     if(!strip||!body) return;
@@ -32652,19 +32654,19 @@ async function loadExecSummary(){
       }
     }catch(e){}
 
-    // 4) 이번달 KPI 입력 여부
+    // 4) 오늘 주요수행실적 등록 여부
     try{
-      var now=new Date(Date.now()+9*3600000);
-      var kpiRes=await sb.from('kpi_data').select('id').eq('year',now.getFullYear()).eq('month',now.getMonth()+1).limit(1);
-      var kpiOk=!!(kpiRes.data&&kpiRes.data.length);
-      items.push({level:kpiOk?'ok':'warn', text:kpiOk?'이번달 KPI 입력 완료':'이번달 KPI 미입력'});
+      var prfRes=await sb.from('performance_records').select('id,occurred_at').order('occurred_at',{ascending:false}).limit(50);
+      var prfToday=(prfRes.data||[]).filter(function(r){ return r.occurred_at&&kstDate(r.occurred_at)===today; });
+      items.push({level:prfToday.length>0?'ok':'warn', text:prfToday.length>0?('오늘 주요수행실적 '+prfToday.length+'건 등록'):'오늘 주요수행실적 미등록'});
     }catch(e){}
 
     var iconMap={ok:'🟢',warn:'🟡',danger:'🔴'};
-    body.innerHTML=items.map(function(it){
+    var execHtml=items.map(function(it){
       return '<div style="display:flex;align-items:center;gap:7px;font-size:14px;color:var(--g7)">'
         +'<span>'+(iconMap[it.level]||'⚪')+'</span><span style="opacity:'+(it.level==='ok'?'.7':'1')+'">'+it.text+'</span></div>';
     }).join('');
+    body.innerHTML=execHtml;
     strip.style.display='block';
   }catch(e){ /* 요약 오류는 다른 기능에 영향 주지 않도록 무시 */ }
 }
