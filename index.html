@@ -15362,48 +15362,48 @@ function getNightSpecialTotal(){
   });
   return t;
 }
-// 항목 x L/S·A/S 표 + 5팀/10팀 소계 + 전체총계 (홈 화면·전체현황 탭 공용)
+// 항목 카드형 요약 + 팀별 섹션 + 전체/L·A 총계 (홈 화면·전체현황 탭 공용)
+function nsItemCardHtml(it){
+  var lOn=it.l>0, aOn=it.a>0;
+  return '<div style="background:var(--g1);border-radius:var(--r2);padding:10px">'
+    +'<div style="font-size:13px;color:var(--g6);margin-bottom:8px">'+it.label+'</div>'
+    +'<div style="display:flex;gap:5px">'
+    +'<span style="flex:1;font-size:10px;font-weight:700;white-space:nowrap;text-align:center;border-radius:6px;padding:4px 2px;'
+      +(lOn?'color:var(--avg-blue);background:var(--avg-blue-bg)':'color:var(--g4);background:white')+'">L/S('+(lOn?it.l+'명':'-')+')</span>'
+    +'<span style="flex:1;font-size:10px;font-weight:700;white-space:nowrap;text-align:center;border-radius:6px;padding:4px 2px;'
+      +(aOn?'color:var(--success);background:var(--success-bg)':'color:var(--g4);background:white')+'">A/S('+(aOn?it.a+'명':'-')+')</span>'
+    +'</div></div>';
+}
 function nsSplitTableHtml(byTeam){
-  var l5=0,a5=0,l10=0,a10=0, rowsHtml='';
+  var l5=0,a5=0,l10=0,a10=0, items5=[], items10=[];
   NIGHT_SPECIAL_FIELDS.forEach(function(f){
     var r5l=0,r5a=0,r10l=0,r10a=0;
     ['5팀A','5팀B'].forEach(function(t){ var v=byTeam[t]; if(!v) return; r5l+=Number(v[f.col+'_land'])||0; r5a+=Number(v[f.col+'_air'])||0; });
     ['10팀A','10팀B'].forEach(function(t){ var v=byTeam[t]; if(!v) return; r10l+=Number(v[f.col+'_land'])||0; r10a+=Number(v[f.col+'_air'])||0; });
     l5+=r5l; a5+=r5a; l10+=r10l; a10+=r10a;
-    rowsHtml+='<tr style="border-bottom:1px solid var(--g1)">'
-      +'<td style="font-size:12px;color:var(--g6);padding:6px 2px">'+f.label+'</td>'
-      +'<td style="text-align:center;font-size:12px;padding:6px 2px">'+r5l+'</td>'
-      +'<td style="text-align:center;font-size:12px;padding:6px 2px;border-right:1.5px solid var(--g3)">'+r5a+'</td>'
-      +'<td style="text-align:center;font-size:12px;padding:6px 2px">'+r10l+'</td>'
-      +'<td style="text-align:center;font-size:12px;padding:6px 2px">'+r10a+'</td>'
-      +'</tr>';
+    if(r5l>0||r5a>0) items5.push({label:f.label,l:r5l,a:r5a});
+    if(r10l>0||r10a>0) items10.push({label:f.label,l:r10l,a:r10a});
   });
-  var team5Total=l5+a5, team10Total=l10+a10, grandTotal=team5Total+team10Total;
-  var h='<table style="width:100%;border-collapse:collapse;table-layout:fixed">'
-    +'<colgroup><col style="width:26%"><col style="width:18.5%"><col style="width:18.5%"><col style="width:18.5%"><col style="width:18.5%"></colgroup>'
-    +'<thead><tr>'
-    +'<th></th>'
-    +'<th colspan="2" style="background:#F3EEF8;color:#6B21A8;font-size:12px;font-weight:700;padding:5px 0;border-right:1.5px solid var(--g3)">5팀</th>'
-    +'<th colspan="2" style="background:#FFF1E6;color:#C2410C;font-size:12px;font-weight:700;padding:5px 0">10팀</th>'
-    +'</tr><tr>'
-    +'<th></th>'
-    +'<th style="font-size:11px;color:var(--g5);padding:4px 0;border-bottom:1px solid var(--g3)">L/S</th>'
-    +'<th style="font-size:11px;color:var(--g5);padding:4px 0;border-bottom:1px solid var(--g3);border-right:1.5px solid var(--g3)">A/S</th>'
-    +'<th style="font-size:11px;color:var(--g5);padding:4px 0;border-bottom:1px solid var(--g3)">L/S</th>'
-    +'<th style="font-size:11px;color:var(--g5);padding:4px 0;border-bottom:1px solid var(--g3)">A/S</th>'
-    +'</tr></thead><tbody>'+rowsHtml+'</tbody>'
-    +'<tfoot><tr style="border-top:1px solid var(--g3)">'
-    +'<td style="font-size:12px;font-weight:700;color:var(--g6);padding:7px 2px">소계</td>'
-    +'<td style="text-align:center;font-size:12.5px;font-weight:700;padding:7px 2px">'+l5+'</td>'
-    +'<td style="text-align:center;font-size:12.5px;font-weight:700;padding:7px 2px;border-right:1.5px solid var(--g3)">'+a5+'</td>'
-    +'<td style="text-align:center;font-size:12.5px;font-weight:700;padding:7px 2px">'+l10+'</td>'
-    +'<td style="text-align:center;font-size:12.5px;font-weight:700;padding:7px 2px">'+a10+'</td>'
-    +'</tr></tfoot></table>';
-  h+='<div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--g3);display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'
-    +'<div style="background:var(--g1);border-radius:8px;padding:8px;text-align:center"><div style="font-size:10.5px;color:var(--g5);margin-bottom:2px">5팀 계</div><div style="font-size:16px;font-weight:800;color:#6B21A8">'+team5Total+'명</div></div>'
-    +'<div style="background:var(--g1);border-radius:8px;padding:8px;text-align:center"><div style="font-size:10.5px;color:var(--g5);margin-bottom:2px">10팀 계</div><div style="font-size:16px;font-weight:800;color:#C2410C">'+team10Total+'명</div></div>'
-    +'<div style="background:#FEECEC;border-radius:8px;padding:8px;text-align:center"><div style="font-size:10.5px;color:#B91C1C;margin-bottom:2px">전체 총계</div><div style="font-size:16px;font-weight:800;color:#B91C1C">'+grandTotal+'명</div></div>'
+  var team5Total=l5+a5, team10Total=l10+a10, grandTotal=team5Total+team10Total, lTotal=l5+l10, aTotal=a5+a10;
+  var h='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px">'
+    +'<div style="background:#FEECEC;border-radius:var(--r2);padding:10px"><div style="font-size:11px;color:#B91C1C">전체</div><div style="font-size:20px;font-weight:800;color:#B91C1C">'+grandTotal+'</div></div>'
+    +'<div style="background:var(--avg-blue-bg);border-radius:var(--r2);padding:10px"><div style="font-size:11px;color:var(--avg-blue)">L/S 랜드</div><div style="font-size:20px;font-weight:800;color:var(--avg-blue)">'+lTotal+'</div></div>'
+    +'<div style="background:var(--success-bg);border-radius:var(--r2);padding:10px"><div style="font-size:11px;color:var(--success)">A/S 에어</div><div style="font-size:20px;font-weight:800;color:var(--success)">'+aTotal+'</div></div>'
     +'</div>';
+  if(team5Total>0){
+    h+='<div style="display:flex;align-items:center;gap:8px;margin:4px 0 8px">'
+      +'<span style="width:6px;height:6px;border-radius:50%;background:#6B21A8;display:inline-block"></span>'
+      +'<span style="font-size:13px;font-weight:700;color:var(--g7)">5팀</span>'
+      +'<span style="font-size:12px;color:var(--g5)">'+team5Total+'명</span></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">'+items5.map(nsItemCardHtml).join('')+'</div>';
+  }
+  if(team10Total>0){
+    h+='<div style="display:flex;align-items:center;gap:8px;margin:4px 0 8px">'
+      +'<span style="width:6px;height:6px;border-radius:50%;background:#C2410C;display:inline-block"></span>'
+      +'<span style="font-size:13px;font-weight:700;color:var(--g7)">10팀</span>'
+      +'<span style="font-size:12px;color:var(--g5)">'+team10Total+'명</span></div>'
+      +'<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'+items10.map(nsItemCardHtml).join('')+'</div>';
+  }
   return h;
 }
 function renderNightSpecialSummary(){
@@ -32614,7 +32614,7 @@ function hoAlertGo(){ hoAlertClose(); go('ho'); hoTab(0); }
 // ═══ 경영진용 1페이지 신호등 요약 (운영현황 패널 상단) ═══
 async function loadExecSummary(){
   try{
-    if(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||me.role==='acting_leader'||isExecRole(me.role))) return;
+    if(!me||!(me.role==='admin'||me.role==='manager'||me.role==='leader'||isExecRole(me.role))) return;
     var strip=document.getElementById('execSummaryStrip');
     var body=document.getElementById('execSummaryBody');
     if(!strip||!body) return;
