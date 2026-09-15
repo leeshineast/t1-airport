@@ -8029,17 +8029,19 @@ function mpFullSplitTableHtml(mpDataArr, splitObj, avgToilet, avgCommon){
       var v=vals[ci];
       sum+=(v===null?0:v);
       var col= (v!==null && avgRow && avgRow[ci]!==undefined) ? mpAvgColor(v, avgRow[ci]) : null;
-      h+='<td style="text-align:center;padding:4px 2px'+(v===null?';color:var(--g4)':(col?';color:'+col+';font-weight:700':''))+'">'+(v===null?'—':v)+'</td>';
+      var borderR= ci===5 ? ';border-right:1px solid var(--g2)' : '';
+      h+='<td style="'+(v===null?'color:var(--g4)':(col?'color:'+col+';font-weight:700':''))+borderR+'">'+(v===null?'—':v)+'</td>';
     }
-    h+='<td style="text-align:center;padding:4px 2px;font-weight:700">'+sum+'</td>';
+    h+='<td style="font-weight:700">'+sum+'</td>';
     return h;
   }
   function zoneRows(zi){
     var toiletVals=splitObj.toilet[zi].concat([null]); // 집하장은 화장실 없음
     var commonVals=splitObj.common[zi].concat([mpDataArr[zi][6]||0]); // 집하장은 항상 공용구역
     var avgT=avgToilet?avgToilet[zi]:null, avgC=avgCommon?avgCommon[zi]:null;
-    return '<tr><td style="padding:4px 6px;font-weight:600">'+ZONE_LABELS[zi]+'</td><td style="padding:4px;color:var(--g6)">화장실</td>'+rowCells(toiletVals,avgT)+'</tr>'
-      +'<tr style="border-bottom:0.5px solid var(--g2)"><td></td><td style="padding:4px;color:var(--g6)">공용구역</td>'+rowCells(commonVals,avgC)+'</tr>';
+    return '<tr><td rowspan="2" style="vertical-align:middle;font-weight:700;background:var(--g1);border-right:1px solid var(--g2)">'+ZONE_LABELS[zi]+'</td>'
+      +'<td style="color:#166534;border-right:1px solid var(--g2)">화장실</td>'+rowCells(toiletVals,avgT)+'</tr>'
+      +'<tr><td style="color:#0C447C;border-right:1px solid var(--g2)">공용구역</td>'+rowCells(commonVals,avgC)+'</tr>';
   }
   var lsSub=[0,0,0,0,0,0,0], asSub=[0,0,0,0,0,0,0], colTot=[0,0,0,0,0,0,0];
   for(var ci=0;ci<7;ci++){
@@ -8048,10 +8050,10 @@ function mpFullSplitTableHtml(mpDataArr, splitObj, avgToilet, avgCommon){
     colTot[ci]=lsSub[ci]+asSub[ci];
   }
   return zoneRows(0)+zoneRows(1)
-    +'<tr style="background:var(--navy-bg)"><td colspan="2" style="padding:5px 6px;font-weight:700">L/S 소계</td>'+rowCells(lsSub)+'</tr>'
+    +'<tr style="background:var(--navy-bg)"><td colspan="2" style="font-weight:700;border-right:1px solid var(--g2)">L/S 소계</td>'+rowCells(lsSub)+'</tr>'
     +zoneRows(2)+zoneRows(3)
-    +'<tr style="background:var(--teal-bg)"><td colspan="2" style="padding:5px 6px;font-weight:700">A/S 소계</td>'+rowCells(asSub)+'</tr>'
-    +'<tr style="background:var(--g1)"><td colspan="2" style="padding:6px;font-weight:700">전체 총계</td>'+rowCells(colTot)+'</tr>';
+    +'<tr style="background:var(--teal-bg)"><td colspan="2" style="font-weight:700;border-right:1px solid var(--g2)">A/S 소계</td>'+rowCells(asSub)+'</tr>'
+    +'<tr style="background:var(--g1)"><td colspan="2" style="font-weight:700;border-right:1px solid var(--g2)">전체 총계</td>'+rowCells(colTot)+'</tr>';
 }
 function highlightMpZone(teamCode){
   var hint=document.getElementById('mpZoneHint');
