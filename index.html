@@ -16045,6 +16045,8 @@ function openLeaderDataEdit(shift,team,name){
   var title=document.getElementById('leaderDataModalTitle');
   var body=document.getElementById('leaderDataEditBody');
   if(!body) return;
+  var outerTbl3=body.closest('table');
+  if(outerTbl3) outerTbl3.style.minWidth='0';
 
   var headRow=document.getElementById('leaderDataEditHeadRow');
   if(shift==='야간'){
