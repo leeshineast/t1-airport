@@ -26873,7 +26873,11 @@ async function loadMgrAttendanceYesterday(){
   try{
     var res = await sb.from('mgr_attendance').select('*').eq('date', yesterday).eq('checked', true);
     if(res.error) throw res.error;
-    var checkedCount = (res.data||[]).length;
+    // 출근 인원 집계 기준 통일: 출근/교육/출장만 (휴무·연차 등 제외) — 홈 화면과 동일
+    var checkedCount = (res.data||[]).filter(function(r){
+      var st=r.status||'출근';
+      return st==='출근'||st==='출장'||st==='교육';
+    }).length;
     if(yEl) yEl.textContent = '전일 '+checkedCount+'/'+totalCount+'명';
     if(dashYEl) dashYEl.textContent = '전일 '+checkedCount+'/'+totalCount+'명';
   }catch(e){
@@ -27385,8 +27389,12 @@ function renderMgrAttendance(){
 
     Object.keys(shiftData).forEach(function(team){
       var members = shiftData[team];
+      // 출근 인원 집계 기준 통일: 출근/교육/출장만 "출근"으로 침 (휴무·연차·공가 등은 제외) — 홈 화면과 동일
       var teamChecked = members.filter(function(name){
-        return dataSrc[team+'_'+name] && dataSrc[team+'_'+name].checked;
+        var rec=dataSrc[team+'_'+name];
+        if(!rec||!rec.checked) return false;
+        var st=rec.status||'출근';
+        return st==='출근'||st==='출장'||st==='교육';
       }).length;
       totalCount += members.length;
       checkedCount += teamChecked;
@@ -31529,6 +31537,9 @@ function msCalc(q, key){
   ((q[5]&&q[5].data)||[]).forEach(function(r){
     if(!r.date||r.date.indexOf(key)!==0) return;
     if(!r.checked) return;
+    // 출근 인원 집계 기준 통일: 출근/교육/출장만 (휴무·연차 등 제외) — 홈 화면·관리자출근탭과 동일
+    var mgrSt=r.status||'출근';
+    if(mgrSt!=='출근'&&mgrSt!=='출장'&&mgrSt!=='교육') return;
     s.mgr.days[r.date]=(s.mgr.days[r.date]||0)+1;
     if(r.status==='출장') s.mgr.trip++;
     if(r.status==='교육') s.mgr.edu++;
