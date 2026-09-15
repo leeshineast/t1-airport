@@ -1822,27 +1822,7 @@ html{overflow-x:hidden}
     </div></div>
     <div class="card" id="mpFloorCard">
       <div id="mpZoneHint" style="display:none;margin:0 13px 9px;padding:9px 12px;background:#FFF4D6;border:1.5px solid #F0B429;border-radius:var(--r2);font-size:14px;font-weight:700;color:#8A5A00"></div>
-      <div class="tbl-w">
-        <table class="mp-tbl">
-          <colgroup>
-  <col style="width:12.5%"><!-- 구역 -->
-  <col style="width:12.5%"><!-- B2F -->
-  <col style="width:12.5%"><!-- B1F -->
-  <col style="width:12.5%"><!-- 1F -->
-  <col style="width:12.5%"><!-- 2F -->
-  <col style="width:12.5%"><!-- 3F -->
-  <col style="width:12.5%"><!-- 4F -->
-  <col style="width:12.5%"><!-- 집하장 -->
-</colgroup>
-          <thead><tr><th style="text-align:left;padding-left:4px">구역</th><th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th></tr></thead>
-          <tbody id="mpBody">
-            <tr><td class="lbl">L/S 동편</td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td></tr>
-            <tr><td class="lbl">L/S 서편</td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td></tr>
-            <tr><td class="lbl">A/S 동편</td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td></tr>
-            <tr><td class="lbl">A/S 서편</td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td><td><input class="mp-inp" type="number" min="0" placeholder="0" oninput="calcMp()" onfocus="this.select()"></td></tr>
-          </tbody>
-        </table>
-      </div>
+      <div id="mpInputArea" style="padding:0 13px"></div>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:13px">
         <div><div style="font-size:13px;color:var(--g4);margin-bottom:3px">입력 총 인원</div><div style="font-size:30px;font-weight:900;line-height:1;color:var(--g3)" id="mpTot">0</div></div>
         <button class="btn-prim" style="width:auto;padding:12px 22px" onclick="subMp()">입력 완료</button>
@@ -1878,28 +1858,21 @@ html{overflow-x:hidden}
       <button onclick="resetFullStatusToday()" style="padding:8px 12px;background:var(--g1);border:none;border-radius:var(--r2);font-size:14px;font-weight:700;color:var(--g5);cursor:pointer">오늘</button>
     </div>
     <div style="padding:0 13px 10px"><button onclick="openListReport('mp')" style="width:100%;padding:9px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">🖨 보고서 출력</button></div>
-    <div class="card"><div class="tbl-w"><table class="mp-tbl" id="mpFullTable">
+    <div class="card"><div class="tbl-w"><table class="mp-tbl" id="mpFullTable" style="table-layout:fixed">
       <colgroup>
-  <col style="width:11.1%"><!-- 구역 -->
-  <col style="width:11.1%"><!-- B2F -->
-  <col style="width:11.1%"><!-- B1F -->
-  <col style="width:11.1%"><!-- 1F -->
-  <col style="width:11.1%"><!-- 2F -->
-  <col style="width:11.1%"><!-- 3F -->
-  <col style="width:11.1%"><!-- 4F -->
-  <col style="width:11.1%"><!-- 집하장 -->
-  <col style="width:11.2%"><!-- 소계 -->
+  <col style="width:11%"><!-- 구역 -->
+  <col style="width:11%"><!-- 구분 -->
+  <col style="width:9%"><!-- B2F -->
+  <col style="width:9%"><!-- B1F -->
+  <col style="width:9%"><!-- 1F -->
+  <col style="width:9%"><!-- 2F -->
+  <col style="width:9%"><!-- 3F -->
+  <col style="width:9%"><!-- 4F -->
+  <col style="width:10%"><!-- 집하장 -->
+  <col style="width:12%"><!-- 소계 -->
 </colgroup>
-      <thead><tr><th style="text-align:left;padding-left:4px">구역</th><th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th><th style="background:var(--teal2)">소계</th></tr></thead>
-      <tbody>
-        <tr><td class="lbl">L/S 동편</td><td style="color:var(--g5)">0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
-        <tr><td class="lbl">L/S 서편</td><td style="color:var(--g5)">0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
-        <tr class="sub"><td class="lbl">L/S 소계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
-        <tr><td class="lbl">A/S 동편</td><td style="color:var(--g5)">0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
-        <tr><td class="lbl">A/S 서편</td><td style="color:var(--g5)">0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td style="font-weight:800;color:var(--teal2)">0</td></tr>
-        <tr class="sub"><td class="lbl">A/S 소계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
-        <tr class="tot"><td class="lbl">전체 총계</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td><td>0</td></tr>
-      </tbody>
+      <thead><tr><th style="text-align:left;padding-left:4px">구역</th><th style="text-align:left">구분</th><th>B2F</th><th>B1F</th><th>1F</th><th>2F</th><th>3F</th><th>4F</th><th>집하장</th><th style="background:var(--teal2)">소계</th></tr></thead>
+      <tbody></tbody>
     </table></div></div>
     <div class="card" id="mpTeamCard">
       <div class="cb">
@@ -6798,7 +6771,7 @@ async function loadExecDashboard(){
     var tsTo=new Date(dTo+'T23:59:59+09:00').toISOString();
 
     var q=await Promise.all([
-      msFetchAll(function(){ return sb.from('mp_data').select('date,shift,team_code,values').gte('date',dFrom).lte('date',dTo); }),
+      msFetchAll(function(){ return sb.from('mp_data').select('date,shift,team_code,values,ls_east_toilet_b2f,ls_east_common_b2f,ls_east_toilet_b1f,ls_east_common_b1f,ls_east_toilet_1f,ls_east_common_1f,ls_east_toilet_2f,ls_east_common_2f,ls_east_toilet_3f,ls_east_common_3f,ls_east_toilet_4f,ls_east_common_4f,ls_west_toilet_b2f,ls_west_common_b2f,ls_west_toilet_b1f,ls_west_common_b1f,ls_west_toilet_1f,ls_west_common_1f,ls_west_toilet_2f,ls_west_common_2f,ls_west_toilet_3f,ls_west_common_3f,ls_west_toilet_4f,ls_west_common_4f,as_east_toilet_b2f,as_east_common_b2f,as_east_toilet_b1f,as_east_common_b1f,as_east_toilet_1f,as_east_common_1f,as_east_toilet_2f,as_east_common_2f,as_east_toilet_3f,as_east_common_3f,as_east_toilet_4f,as_east_common_4f,as_west_toilet_b2f,as_west_common_b2f,as_west_toilet_b1f,as_west_common_b1f,as_west_toilet_1f,as_west_common_1f,as_west_toilet_2f,as_west_common_2f,as_west_toilet_3f,as_west_common_3f,as_west_toilet_4f,as_west_common_4f').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('handover').select('id,confirmed,facility').gte('created_at',tsFrom).lte('created_at',tsTo); }),
       msFetchAll(function(){ return sb.from('voc_data').select('id,status,category,category_etc').gte('voc_date',dFrom).lte('voc_date',dTo); }),
       msFetchAll(function(){ return sb.from('lost_found').select('id,status').gte('found_date',tsFrom).lte('found_date',tsTo); }),
@@ -6813,6 +6786,7 @@ async function loadExecDashboard(){
     var floorSum=[0,0,0,0,0,0,0];
     var shiftSum={'오전':0,'오후':0,'야간':0,'관리자':0};
     var daysSet={};
+    var edToiletByShift={'오전':0,'오후':0}, edCommonByShift={'오전':0,'오후':0};
     mpRows.forEach(function(r){
       if(!r.team_code||r.team_code.indexOf('_')===0) return;
       var vals=r.values;
@@ -6822,6 +6796,12 @@ async function loadExecDashboard(){
       for(var ri=0;ri<4;ri++){
         if(!vals[ri]||!Array.isArray(vals[ri])) continue;
         for(var ci=0;ci<7;ci++){ var v=Number(vals[ri][ci])||0; sum+=v; floorSum[ci]+=v; }
+      }
+      if(r.shift==='오전'||r.shift==='오후'){
+        var rs=mpRowToSplit(r);
+        var t=0,c=0;
+        for(var zi=0;zi<4;zi++) for(var fi=0;fi<6;fi++){ t+=rs.toilet[zi][fi]; c+=rs.common[zi][fi]; }
+        edToiletByShift[r.shift]+=t; edCommonByShift[r.shift]+=c;
       }
       if(sum>0) daysSet[r.date]=1;
       var sh=(r.shift==='오전'||r.shift==='오후'||r.shift==='야간')?r.shift:null;
@@ -6847,6 +6827,11 @@ async function loadExecDashboard(){
     var floorShow=floorSum.map(function(v){ return isAvg?Math.round(v/dayCount):v; });
     var shiftShow={}; Object.keys(shiftSum).forEach(function(k){ shiftShow[k]=isAvg?Math.round(shiftSum[k]/dayCount):shiftSum[k]; });
     var nsLsShow=isAvg?Math.round(nsLsSum/dayCount):nsLsSum, nsAsShow=isAvg?Math.round(nsAsSum/dayCount):nsAsSum;
+    var edToiletShow={}, edCommonShow={};
+    ['오전','오후'].forEach(function(s){
+      edToiletShow[s]=isAvg?Math.round(edToiletByShift[s]/dayCount):edToiletByShift[s];
+      edCommonShow[s]=isAvg?Math.round(edCommonByShift[s]/dayCount):edCommonByShift[s];
+    });
     var totalStaffShow=shiftShow['오전']+shiftShow['오후']+shiftShow['야간']+shiftShow['관리자'];
     var isLiveToday=(edMode==='day'&&dFrom===today);
     var staffQuota=isLiveToday?edStaffQuota():ED_TOTAL_STAFF;
@@ -6906,9 +6891,15 @@ async function loadExecDashboard(){
     var shHtml='';
     ['오전','오후','야간','관리자'].forEach(function(s){
       var nsSub=(s==='야간')?('<div style="font-size:8.5px;color:var(--g4);margin-top:1px">L/S '+nsLsShow+' · A/S '+nsAsShow+'</div>'):'';
+      var edAvgM=(s==='오후')?mpAvgToiletAMPM:mpAvgToiletAM, edAvgMC=(s==='오후')?mpAvgCommonAMPM:mpAvgCommonAM;
+      var edAvgT=edAvgM?edAvgM.reduce(function(a,row){return a+row.reduce(function(x,y){return x+y;},0);},0):0;
+      var edAvgC=edAvgMC?edAvgMC.reduce(function(a,row){return a+row.reduce(function(x,y){return x+y;},0);},0):0;
+      var edTCol=isLiveToday&&edAvgT?mpAvgColor(edToiletShow[s],edAvgT):null;
+      var edCCol=isLiveToday&&edAvgC?mpAvgColor(edCommonShow[s],edAvgC):null;
+      var mpSub=(s==='오전'||s==='오후')?('<div style="font-size:8.5px;margin-top:1px"><span style="color:'+(edTCol||'var(--g4)')+'">화'+edToiletShow[s]+'</span> · <span style="color:'+(edCCol||'var(--g4)')+'">공'+edCommonShow[s]+'</span></div>'):'';
       shHtml+='<div style="background:white;border-radius:var(--r2);padding:8px;border:1px solid var(--g2);text-align:center">'
         +'<div style="font-size:10px;font-weight:700;color:var(--g5);margin-bottom:3px">'+(s==='관리자'?s:s+'팀')+'</div>'
-        +'<div style="font-size:19px;font-weight:900;color:'+shiftColors[s]+'">'+shiftShow[s]+'<span style="font-size:9px;font-weight:600;color:var(--g4)">명</span></div>'+nsSub+'</div>';
+        +'<div style="font-size:19px;font-weight:900;color:'+shiftColors[s]+'">'+shiftShow[s]+'<span style="font-size:9px;font-weight:600;color:var(--g4)">명</span></div>'+nsSub+mpSub+'</div>';
     });
     var sr=document.getElementById('edShiftRow'); if(sr) sr.innerHTML=shHtml;
 
@@ -7696,7 +7687,9 @@ function finishLogin(){
   try{ localStorage.setItem('t1_me', JSON.stringify(me)); }catch(e){}
   // 메모리 초기화 먼저 (어제 데이터 화면 노출 방지)
   mpDataByLeader={오전:{},오후:{},야간:{}};
+  mpSplitByLeader={오전:{},오후:{}};
   mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  mpSplit=mpEmptySplit();
   var qrParamsFl=new URLSearchParams(window.location.search);
   if(qrParamsFl.get('qrattend')){
     go('eduattend');
@@ -7972,7 +7965,7 @@ function pickShift(el){
   updateNightSpecialVisibility();
 }
 function calcMp(){
-  let s=0;document.querySelectorAll('#mpBody .mp-inp').forEach(i=>s+=parseInt(i.value)||0);
+  let s=0;document.querySelectorAll('#mpInputArea .mp-inp2').forEach(i=>s+=parseInt(i.value)||0);
   const el=document.getElementById('mpTot');el.textContent=s;el.style.color=s>0?'var(--teal)':'var(--g3)';
 }
 // 조별 담당구역: A조=동편, B조=서편, (1팀/6팀의)C조=집하장
@@ -8007,63 +8000,116 @@ function getTeamFloorCols(teamCode){
   return null;
 }
 var MP_FLOOR_LABELS=['B2F','B1F','1F','2F','3F','4F'];
+var MP_FLOOR_SUFFIX=['b2f','b1f','1f','2f','3f','4f'];
 // 입력표에서 선택된 조의 담당구역(동편/서편/집하장) 외 칸은 아예 입력 불가 처리 (대리입력 시 동/서편 혼동 방지)
-function highlightMpZone(teamCode){
-  var hint=document.getElementById('mpZoneHint');
-  var rows=document.querySelectorAll('#mpBody tr');
-  var zone=getTeamZone(teamCode);
-  var building=getTeamBuilding(teamCode);
-  if(!zone||!rows.length){
-    rows.forEach(function(row){
-      row.style.opacity=''; row.style.background='';
-      row.querySelectorAll('.mp-inp').forEach(function(inp){
-        inp.disabled=false; inp.style.background=''; inp.style.opacity='';
-      });
-    });
-    if(hint) hint.style.display='none';
-    return;
-  }
-  // L/S 동편(0), L/S 서편(1), A/S 동편(2), A/S 서편(3) / 열: 0~5=층, 6=집하장
-  var teamNumM=String(teamCode).match(/^(\d+)팀/);
-  var teamNum=teamNumM?teamNumM[1]:null;
-  var matchRows;
-  if(zone==='집하장'){
-    if(teamNum==='1') matchRows=[3];      // 1팀C: A/S 서편 집하장만
-    else if(teamNum==='6') matchRows=[2]; // 6팀C: A/S 동편 집하장만
-    else matchRows=[0,1,2,3];
-  }
-  else if(zone==='동편'){ matchRows = building==='AS' ? [2] : building==='LS' ? [0] : [0,2]; }
-  else { matchRows = building==='AS' ? [3] : building==='LS' ? [1] : [1,3]; }
-  var floorCols = zone==='집하장' ? null : getTeamFloorCols(teamCode);
-  rows.forEach(function(row,ri){
-    var rowMatch = matchRows.indexOf(ri)!==-1;
-    row.style.opacity = rowMatch?'1':'0.35';
-    row.style.background = rowMatch?'#FFF9E6':'';
-    row.querySelectorAll('.mp-inp').forEach(function(inp,ci){
-      var allowed;
-      if(zone==='집하장'){ allowed = rowMatch && ci===6; }
-      else if(floorCols){ allowed = rowMatch && floorCols.indexOf(ci)!==-1; }
-      else { allowed = rowMatch && ci!==6; }
-      if(!allowed && (parseInt(inp.value)||0)>0) inp.value=0; // 비허용 칸 기존값 초기화
-      inp.disabled=!allowed;
-      inp.style.background=allowed?'#FFEFA3':''; // 담당 칸은 더 진하게 강조
-      inp.style.fontWeight=allowed?'800':'';
-      inp.style.opacity=allowed?'1':'0.4';
+var MP_ZONE_PREFIX=['ls_east','ls_west','as_east','as_west']; // ri 0~3에 대응
+function mpZoneColPrefix(zone,building){
+  if(zone==='동편') return building==='AS'?'as_east':'ls_east';
+  if(zone==='서편') return building==='AS'?'as_west':'ls_west';
+  return null;
+}
+function mpEmptySplit(){
+  return {toilet:[[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]], common:[[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]]};
+}
+function mpRowToSplit(row){
+  var out=mpEmptySplit();
+  MP_ZONE_PREFIX.forEach(function(prefix,zi){
+    MP_FLOOR_SUFFIX.forEach(function(suf,fi){
+      out.toilet[zi][fi]=Number(row[prefix+'_toilet_'+suf])||0;
+      out.common[zi][fi]=Number(row[prefix+'_common_'+suf])||0;
     });
   });
-  calcMp();
-  if(hint){
-    if(zone==='집하장'){
-      var yardZoneLabel = teamNum==='1' ? 'A/S 서편 집하장' : teamNum==='6' ? 'A/S 동편 집하장' : '집하장';
-      hint.textContent='📍 '+teamCode+' 담당구역: '+yardZoneLabel+' — 강조된 줄의 맨 오른쪽 "집하장" 칸에만 입력 가능합니다';
-    }else if(floorCols){
-      var floorLabelTxt=floorCols.map(function(ci){return MP_FLOOR_LABELS[ci];}).join(', ');
-      hint.textContent='📍 '+teamCode+' 담당구역: '+zone+' '+floorLabelTxt+' — 진하게 강조된 칸에만 입력 가능합니다';
-    }else{
-      hint.textContent='📍 '+teamCode+' 담당구역: '+zone+' — 강조된 줄(노란 배경)에만 입력 가능합니다';
+  return out;
+}
+function mpAddSplit(target, src){
+  for(var zi=0;zi<4;zi++) for(var fi=0;fi<6;fi++){ target.toilet[zi][fi]+=src.toilet[zi][fi]; target.common[zi][fi]+=src.common[zi][fi]; }
+  return target;
+}
+var mpSplit=mpEmptySplit(); // 금일(실시간) 전체 합산 — 홈화면/현황판 등에서 사용
+// 항목(구역) x 화장실/공용구역 구분 표 HTML — 인력현황 > 전체현황/일별이력 공용
+function mpFullSplitTableHtml(mpDataArr, splitObj, avgToilet, avgCommon){
+  var ZONE_LABELS=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
+  function rowCells(vals, avgRow){
+    var h='', sum=0;
+    for(var ci=0;ci<7;ci++){
+      var v=vals[ci];
+      sum+=(v===null?0:v);
+      var col= (v!==null && avgRow && avgRow[ci]!==undefined) ? mpAvgColor(v, avgRow[ci]) : null;
+      h+='<td style="text-align:center;padding:4px 2px'+(v===null?';color:var(--g4)':(col?';color:'+col+';font-weight:700':''))+'">'+(v===null?'—':v)+'</td>';
     }
-    hint.style.display='block';
+    h+='<td style="text-align:center;padding:4px 2px;font-weight:700">'+sum+'</td>';
+    return h;
   }
+  function zoneRows(zi){
+    var toiletVals=splitObj.toilet[zi].concat([null]); // 집하장은 화장실 없음
+    var commonVals=splitObj.common[zi].concat([mpDataArr[zi][6]||0]); // 집하장은 항상 공용구역
+    var avgT=avgToilet?avgToilet[zi]:null, avgC=avgCommon?avgCommon[zi]:null;
+    return '<tr><td style="padding:4px 6px;font-weight:600">'+ZONE_LABELS[zi]+'</td><td style="padding:4px;color:var(--g6)">화장실</td>'+rowCells(toiletVals,avgT)+'</tr>'
+      +'<tr style="border-bottom:0.5px solid var(--g2)"><td></td><td style="padding:4px;color:var(--g6)">공용구역</td>'+rowCells(commonVals,avgC)+'</tr>';
+  }
+  var lsSub=[0,0,0,0,0,0,0], asSub=[0,0,0,0,0,0,0], colTot=[0,0,0,0,0,0,0];
+  for(var ci=0;ci<7;ci++){
+    lsSub[ci]=(mpDataArr[0][ci]||0)+(mpDataArr[1][ci]||0);
+    asSub[ci]=(mpDataArr[2][ci]||0)+(mpDataArr[3][ci]||0);
+    colTot[ci]=lsSub[ci]+asSub[ci];
+  }
+  return zoneRows(0)+zoneRows(1)
+    +'<tr style="background:var(--navy-bg)"><td colspan="2" style="padding:5px 6px;font-weight:700">L/S 소계</td>'+rowCells(lsSub)+'</tr>'
+    +zoneRows(2)+zoneRows(3)
+    +'<tr style="background:var(--teal-bg)"><td colspan="2" style="padding:5px 6px;font-weight:700">A/S 소계</td>'+rowCells(asSub)+'</tr>'
+    +'<tr style="background:var(--g1)"><td colspan="2" style="padding:6px;font-weight:700">전체 총계</td>'+rowCells(colTot)+'</tr>';
+}
+function highlightMpZone(teamCode){
+  var hint=document.getElementById('mpZoneHint');
+  var area=document.getElementById('mpInputArea');
+  if(!area) return;
+  // ★ 같은 팀으로 다시 호출되면(30초 자동새로고침 등) 재생성하지 않음 — 입력 중이던 값 보존
+  var teamKey=String(teamCode||'');
+  if(area.dataset.builtTeam===teamKey){ calcMp(); return; }
+  area.dataset.builtTeam=teamKey;
+  var zone=getTeamZone(teamCode);
+  if(!teamCode||!zone){
+    area.innerHTML='<div style="padding:16px 0;text-align:center;font-size:13px;color:var(--g4)">내 팀(조)을 먼저 선택해주세요</div>';
+    if(hint) hint.style.display='none';
+    calcMp();
+    return;
+  }
+  var building=getTeamBuilding(teamCode);
+  var teamNumM=String(teamCode).match(/^(\d+)팀/);
+  var teamNum=teamNumM?teamNumM[1]:null;
+
+  if(zone==='집하장'){
+    var yardZoneLabel = teamNum==='1' ? 'A/S 서편 집하장' : teamNum==='6' ? 'A/S 동편 집하장' : '집하장';
+    area.innerHTML='<div style="font-size:13px;color:var(--g4);margin-bottom:10px">'+teamCode+' 담당구역 · '+yardZoneLabel+'</div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;background:var(--g1);border-radius:var(--r2);padding:10px 14px">'
+      +'<span style="font-size:15px;font-weight:700;color:var(--g6)">집하장</span>'
+      +'<input class="mp-inp2 mp-yard-inp" type="number" min="0" placeholder="0" style="width:90px;height:42px;font-size:17px;text-align:center;border:1.5px solid var(--g2);border-radius:8px" oninput="calcMp()" onfocus="this.select()">'
+      +'</div>';
+    if(hint) hint.style.display='none';
+    calcMp();
+    return;
+  }
+
+  var floorCols=getTeamFloorCols(teamCode)||[];
+  var rowsHtml=floorCols.map(function(ci){
+    var suf=MP_FLOOR_SUFFIX[ci], lbl=MP_FLOOR_LABELS[ci];
+    return '<tr style="border-bottom:0.5px solid var(--g2)">'
+      +'<td style="font-size:14px;color:var(--g6);padding:8px 2px">'+lbl+'</td>'
+      +'<td style="padding:5px 4px"><input class="mp-inp2 mp-toilet-inp" data-floor="'+suf+'" type="number" min="0" placeholder="0" style="width:100%;height:38px;text-align:center;font-size:15px;border:1.5px solid var(--g2);border-radius:8px" oninput="calcMp()" onfocus="this.select()"></td>'
+      +'<td style="padding:5px 4px"><input class="mp-inp2 mp-common-inp" data-floor="'+suf+'" type="number" min="0" placeholder="0" style="width:100%;height:38px;text-align:center;font-size:15px;border:1.5px solid var(--g2);border-radius:8px" oninput="calcMp()" onfocus="this.select()"></td>'
+      +'</tr>';
+  }).join('');
+  var zoneLabel=(building==='AS'?'A/S ':'L/S ')+zone;
+  area.innerHTML='<div style="font-size:13px;color:var(--g4);margin-bottom:2px">'+teamCode+' 담당구역</div>'
+    +'<div style="font-size:16px;font-weight:700;color:var(--g7);margin-bottom:10px">'+zoneLabel+' · '+floorCols.map(function(ci){return MP_FLOOR_LABELS[ci];}).join(' · ')+'</div>'
+    +'<table style="width:100%;border-collapse:collapse;table-layout:fixed">'
+    +'<colgroup><col style="width:26%"><col style="width:37%"><col style="width:37%"></colgroup>'
+    +'<thead><tr><th></th>'
+    +'<th style="text-align:center;font-size:12px;font-weight:700;color:#166534;background:#EAF3DE;border-radius:6px;padding:5px 0">화장실</th>'
+    +'<th style="text-align:center;font-size:12px;font-weight:700;color:#0C447C;background:#E6F1FB;border-radius:6px;padding:5px 0">공용구역</th>'
+    +'</tr></thead><tbody>'+rowsHtml+'</tbody></table>';
+  if(hint) hint.style.display='none';
+  calcMp();
 }
 // newVals[ri][ci] 기준 담당구역 외에 값이 들어갔는지 검사 → 경고 메시지 반환 (없으면 '')
 function checkZoneMismatch(teamCode, newVals){
@@ -8126,30 +8172,53 @@ function subMp(){
   if(!myTeam){toast('⚠️ 내 팀(조)을 먼저 선택해주세요');return;}
 
   var newVals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-  document.querySelectorAll('#mpBody tr').forEach(function(row,ri){
-    row.querySelectorAll('.mp-inp').forEach(function(inp,ci){
-      newVals[ri][ci]=parseInt(inp.value)||0;
+  var splitCols=null; // 화장실/공용구역 컬럼 페이로드 (집하장 조는 null)
+  var det='';
+
+  var zone=getTeamZone(myTeam);
+  var building=getTeamBuilding(myTeam);
+  var teamNumM=String(myTeam).match(/^(\d+)팀/);
+  var teamNum=teamNumM?teamNumM[1]:null;
+
+  if(zone==='집하장'){
+    var yardRi = teamNum==='1' ? 3 : teamNum==='6' ? 2 : null;
+    var yardInp=document.querySelector('.mp-yard-inp');
+    var yv=parseInt(yardInp&&yardInp.value)||0;
+    if(yardRi!==null) newVals[yardRi][6]=yv;
+    if(yv>0) det='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--g1)"><span style="color:var(--g5)">집하장</span><span style="font-weight:700;color:var(--teal)">'+yv+'명</span></div>';
+  }else{
+    var ri = zone==='동편' ? (building==='AS'?2:0) : (building==='AS'?3:1);
+    var prefix=mpZoneColPrefix(zone,building);
+    var toiletVals={}, commonVals={};
+    document.querySelectorAll('.mp-toilet-inp').forEach(function(inp){
+      var suf=inp.dataset.floor, v=parseInt(inp.value)||0;
+      toiletVals[suf]=v;
+      var ci=MP_FLOOR_SUFFIX.indexOf(suf);
+      if(ci>-1) newVals[ri][ci]+=v;
     });
-  });
+    document.querySelectorAll('.mp-common-inp').forEach(function(inp){
+      var suf=inp.dataset.floor, v=parseInt(inp.value)||0;
+      commonVals[suf]=v;
+      var ci=MP_FLOOR_SUFFIX.indexOf(suf);
+      if(ci>-1) newVals[ri][ci]+=v;
+    });
+    splitCols={prefix:prefix, toilet:toiletVals, common:commonVals};
+    MP_FLOOR_SUFFIX.forEach(function(suf,ci){
+      var tv=toiletVals[suf]||0, cv=commonVals[suf]||0;
+      if(tv>0||cv>0) det+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--g1)"><span style="color:var(--g5)">'+MP_FLOOR_LABELS[ci]+'</span><span style="font-weight:700;color:var(--teal)">화'+tv+'·공'+cv+'</span></div>';
+    });
+  }
 
   // 전역 임시 저장 → confirmMp에서 사용
-  _mpPending={shKey:shKey, myTeam:myTeam, newVals:newVals};
-
-  // (1일 1회 제한 없음 - 재입력 허용)
+  _mpPending={shKey:shKey, myTeam:myTeam, newVals:newVals, splitCols:splitCols};
 
   document.getElementById('mpMShift').textContent=shKey+'팀';
   document.getElementById('mpMCnt').textContent=t;
-  const rows=document.querySelectorAll('#mpBody tr');let det='';
-  rows.forEach(row=>{const lb=(function(){var _e=row.querySelector('.lbl');return _e?_e.textContent:undefined;})();let sm=0;row.querySelectorAll('.mp-inp').forEach(i=>sm+=parseInt(i.value)||0);if(lb&&sm>0)det+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--g1)"><span style="color:var(--g5)">'+lb+'</span><span style="font-weight:700;color:var(--teal)">'+sm+'명</span></div>';});
   document.getElementById('mpMDet').innerHTML=det||'<div style="color:var(--g4)">입력된 구역 없음</div>';
 
-  // 담당구역 불일치 경고
-  var mismatchMsg=checkZoneMismatch(myTeam, newVals);
+  // 담당구역 외 입력이 구조적으로 불가능해졌으므로 경고 배너는 항상 숨김
   var warnEl=document.getElementById('mpZoneWarn');
-  if(warnEl){
-    if(mismatchMsg){ warnEl.textContent=mismatchMsg; warnEl.style.display='block'; }
-    else { warnEl.style.display='none'; }
-  }
+  if(warnEl) warnEl.style.display='none';
   showM('mpModal');
 }
 function closeMpM(){hideM('mpModal');}
@@ -10397,6 +10466,7 @@ function canDownloadOriginal(){
 var mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
 // 조장별 개별 저장: {오전:{1팀A:[[4][7]]}, ...}
 var mpDataByLeader={오전:{},오후:{},야간:{}};
+var mpSplitByLeader={오전:{},오후:{}}; // shift → team_code → {toilet:[[6]x4], common:[[6]x4]} (mpRowToSplit 형태)
 // subMp → confirmMp 데이터 전달용 임시 저장
 var _mpPending={shKey:'', myTeam:'', newVals:null};
 var vehData=[];
@@ -10404,6 +10474,7 @@ var indPrevYear=0;
 var ZONES=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
 // ═══ 층별/구역별 평균 근무인력 (전달 전체 데이터 기준, 오전만 입력됐는지·오전+오후까지 입력됐는지에 맞춰 비교) ═══
 var mpAvgAM=null, mpAvgAMPM=null, mpAvgLoading=false, mpAvgMonthNum=0; // 4(구역) x 7(층) 평균 매트릭스 — null이면 아직 미로드. mpAvgMonthNum=평균 기준월(예:7)
+var mpAvgToiletAM=null, mpAvgCommonAM=null, mpAvgToiletAMPM=null, mpAvgCommonAMPM=null; // 4(구역) x 6(층, 집하장 제외) 화장실/공용구역 평균
 // 특정 시프트('오전'/'오후')에 실제 입력된 데이터(팀)가 있는지 확인 — mpDataByLeader 기준
 function mpShiftPresent(shift){
   var leaderData=mpDataByLeader[shift]||{};
@@ -10433,24 +10504,40 @@ function mpShiftAvgForPeriod(rows, keyPrefix){
     if(typeof vals==='string'){ try{ vals=JSON.parse(vals); }catch(e){ return; } }
     if(!Array.isArray(vals)) return;
     if(!byDate[r.date]) byDate[r.date]={오전:null,오후:null};
-    if(!byDate[r.date][sh]) byDate[r.date][sh]=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-    var m=byDate[r.date][sh];
+    if(!byDate[r.date][sh]) byDate[r.date][sh]={total:[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]], split:mpEmptySplit()};
+    var slot=byDate[r.date][sh];
     for(var ri=0;ri<4;ri++){
       if(!vals[ri]) continue;
-      for(var ci=0;ci<7;ci++){ m[ri][ci]+=Number(vals[ri][ci])||0; }
+      for(var ci=0;ci<7;ci++){ slot.total[ri][ci]+=Number(vals[ri][ci])||0; }
     }
+    mpAddSplit(slot.split, mpRowToSplit(r));
   });
   var amSum=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]], amDays=0;
   var ampmSum=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]], ampmDays=0;
+  var amToilet=mpEmptySplit().toilet, amCommon=mpEmptySplit().common;
+  var ampmToilet=mpEmptySplit().toilet, ampmCommon=mpEmptySplit().common;
   Object.keys(byDate).forEach(function(d){
     var am=byDate[d]['오전'], pm=byDate[d]['오후'];
-    if(am){ amDays++; for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) amSum[ri][ci]+=am[ri][ci]; }
-    if(am&&pm){ ampmDays++; for(var ri2=0;ri2<4;ri2++) for(var ci2=0;ci2<7;ci2++) ampmSum[ri2][ci2]+=am[ri2][ci2]+pm[ri2][ci2]; }
+    if(am){
+      amDays++;
+      for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) amSum[ri][ci]+=am.total[ri][ci];
+      for(var zi=0;zi<4;zi++) for(var fi=0;fi<6;fi++){ amToilet[zi][fi]+=am.split.toilet[zi][fi]; amCommon[zi][fi]+=am.split.common[zi][fi]; }
+    }
+    if(am&&pm){
+      ampmDays++;
+      for(var ri2=0;ri2<4;ri2++) for(var ci2=0;ci2<7;ci2++) ampmSum[ri2][ci2]+=am.total[ri2][ci2]+pm.total[ri2][ci2];
+      for(var zi2=0;zi2<4;zi2++) for(var fi2=0;fi2<6;fi2++){
+        ampmToilet[zi2][fi2]+=am.split.toilet[zi2][fi2]+pm.split.toilet[zi2][fi2];
+        ampmCommon[zi2][fi2]+=am.split.common[zi2][fi2]+pm.split.common[zi2][fi2];
+      }
+    }
   });
   if(!amDays&&!ampmDays) return null;
+  function divM(m,days){ return m.map(function(row){ return row.map(function(v){ return days?Math.round(v/days):0; }); }); }
   return {
-    am:amSum.map(function(row){ return row.map(function(v){ return amDays?Math.round(v/amDays):0; }); }),
-    ampm:ampmSum.map(function(row){ return row.map(function(v){ return ampmDays?Math.round(v/ampmDays):0; }); })
+    am:divM(amSum,amDays), ampm:divM(ampmSum,ampmDays),
+    amToilet:divM(amToilet,amDays), amCommon:divM(amCommon,amDays),
+    ampmToilet:divM(ampmToilet,ampmDays), ampmCommon:divM(ampmCommon,ampmDays)
   };
 }
 async function loadMpAverages(){
@@ -10464,12 +10551,17 @@ async function loadMpAverages(){
     var fromStr=prevMonthKeyPrefix+'-01';
     var lastDay=new Date(Date.UTC(py, pm, 0)).getUTCDate(); // 전달의 마지막 날
     var toStr=prevMonthKeyPrefix+'-'+(lastDay<10?'0':'')+lastDay;
-    var res=await sb.from('mp_data').select('date,shift,team_code,values').gte('date',fromStr).lte('date',toStr);
+    var res=await sb.from('mp_data').select('date,shift,team_code,values,ls_east_toilet_b2f,ls_east_common_b2f,ls_east_toilet_b1f,ls_east_common_b1f,ls_east_toilet_1f,ls_east_common_1f,ls_east_toilet_2f,ls_east_common_2f,ls_east_toilet_3f,ls_east_common_3f,ls_east_toilet_4f,ls_east_common_4f,ls_west_toilet_b2f,ls_west_common_b2f,ls_west_toilet_b1f,ls_west_common_b1f,ls_west_toilet_1f,ls_west_common_1f,ls_west_toilet_2f,ls_west_common_2f,ls_west_toilet_3f,ls_west_common_3f,ls_west_toilet_4f,ls_west_common_4f,as_east_toilet_b2f,as_east_common_b2f,as_east_toilet_b1f,as_east_common_b1f,as_east_toilet_1f,as_east_common_1f,as_east_toilet_2f,as_east_common_2f,as_east_toilet_3f,as_east_common_3f,as_east_toilet_4f,as_east_common_4f,as_west_toilet_b2f,as_west_common_b2f,as_west_toilet_b1f,as_west_common_b1f,as_west_toilet_1f,as_west_common_1f,as_west_toilet_2f,as_west_common_2f,as_west_toilet_3f,as_west_common_3f,as_west_toilet_4f,as_west_common_4f').gte('date',fromStr).lte('date',toStr);
     var rows=(res&&res.data)||[];
     var avg=mpShiftAvgForPeriod(rows, prevMonthKeyPrefix);
     var zeroM=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+    var zeroM6=[[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]];
     mpAvgAM=avg?avg.am:zeroM;
     mpAvgAMPM=avg?avg.ampm:zeroM;
+    mpAvgToiletAM=avg?avg.amToilet:zeroM6;
+    mpAvgCommonAM=avg?avg.amCommon:zeroM6;
+    mpAvgToiletAMPM=avg?avg.ampmToilet:zeroM6;
+    mpAvgCommonAMPM=avg?avg.ampmCommon:zeroM6;
     mpAvgMonthNum=pm;
     updateFloorChart();
   }catch(e){ console.log('평균 근무인력 로드 오류:',e); }
@@ -10740,6 +10832,7 @@ function confirmMp(){
   var shKey=_mpPending.shKey||'';
   var myTeam=_mpPending.myTeam||'';
   var newVals=_mpPending.newVals||[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  var splitCols=_mpPending.splitCols||null;
 
   if(!shKey){toast('⚠️ 근무조를 선택해주세요');return;}
 
@@ -10747,6 +10840,10 @@ function confirmMp(){
   if(!mpDataByLeader[shKey]) mpDataByLeader[shKey]={};
   var saveKey=myTeam||('_'+shKey);
   mpDataByLeader[shKey][saveKey]=newVals;
+  if(shKey==='오전'||shKey==='오후'){
+    if(!mpSplitByLeader[shKey]) mpSplitByLeader[shKey]={};
+    mpSplitByLeader[shKey][saveKey]=mpSplitColsToFull(splitCols);
+  }
 
   // 전체 합산 재계산
   recalcMpData();
@@ -10757,7 +10854,7 @@ function confirmMp(){
   var total=0;
   for(var ri=0;ri<4;ri++) for(var ci=0;ci<7;ci++) total+=mpData[ri][ci];
 
-  document.querySelectorAll('#mpBody .mp-inp').forEach(function(i){i.value='';});
+  document.querySelectorAll('#mpInputArea .mp-inp2').forEach(function(i){i.value='';});
   var el=document.getElementById('mpTot');if(el){el.textContent='0';el.style.color='var(--g3)';}
 
   // ★ 대리입력 판단: 로그인한 사람의 팀코드와 입력 대상 팀코드가 다르면 대리입력
@@ -10773,10 +10870,10 @@ function confirmMp(){
   var teamLabel=myTeam?myTeam.replace(/^(\d+팀)([A-Z])$/,'$1 $2조'):shKey;
 
   // ★ 재시도용으로 마지막 저장 요청 내용을 기억해둠
-  _lastMpSaveArgs={shKey:shKey, saveKey:saveKey, newVals:newVals, writer:writer, proxyWriter:proxyWriter, teamLabel:teamLabel, isProxy:isProxy, total:total};
+  _lastMpSaveArgs={shKey:shKey, saveKey:saveKey, newVals:newVals, splitCols:splitCols, writer:writer, proxyWriter:proxyWriter, teamLabel:teamLabel, isProxy:isProxy, total:total};
 
   // DB 저장 후 화면 갱신 + 실제 성공/실패에 따라 다르게 표시
-  saveMpToDB(shKey, saveKey, newVals, writer, proxyWriter)
+  saveMpToDB(shKey, saveKey, newVals, writer, proxyWriter, splitCols)
     .then(function(result){
       var errBanner=document.getElementById('mpErrorBanner');
       var sucBanner=document.getElementById('mpSuccessBanner');
@@ -10811,7 +10908,7 @@ var _lastMpSaveArgs=null;
 function retryLastMpSave(){
   if(!_lastMpSaveArgs) return;
   var a=_lastMpSaveArgs;
-  saveMpToDB(a.shKey, a.saveKey, a.newVals, a.writer, a.proxyWriter).then(function(result){
+  saveMpToDB(a.shKey, a.saveKey, a.newVals, a.writer, a.proxyWriter, a.splitCols).then(function(result){
     var errBanner=document.getElementById('mpErrorBanner');
     var sucBanner=document.getElementById('mpSuccessBanner');
     if(!result||!result.ok){
@@ -10835,8 +10932,20 @@ function retryLastMpSave(){
 // ─ 관리자 인원 DB 저장/로드 ─
 
 
+function mpSplitColsToFull(splitCols){
+  var out=mpEmptySplit();
+  if(!splitCols||!splitCols.prefix) return out;
+  var zi=MP_ZONE_PREFIX.indexOf(splitCols.prefix);
+  if(zi===-1) return out;
+  MP_FLOOR_SUFFIX.forEach(function(suf,fi){
+    out.toilet[zi][fi]=splitCols.toilet[suf]||0;
+    out.common[zi][fi]=splitCols.common[suf]||0;
+  });
+  return out;
+}
 function recalcMpData(){
   mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  mpSplit=mpEmptySplit();
   ['오전','오후','야간'].forEach(function(shift){
     var leaderData=mpDataByLeader[shift]||{};
     Object.keys(leaderData).forEach(function(team){
@@ -10850,6 +10959,10 @@ function recalcMpData(){
         }
       }
     });
+    if(shift==='오전'||shift==='오후'){
+      var splitData=mpSplitByLeader[shift]||{};
+      Object.keys(splitData).forEach(function(team){ mpAddSplit(mpSplit, splitData[team]); });
+    }
   });
 }
 function saveMpData(){
@@ -10926,12 +11039,13 @@ async function loadFullStatusForDate(dateStr){
     }
     var lsTotal=lsSub.reduce(function(a,b){return a+b;},0);
     var asTotal=asSub.reduce(function(a,b){return a+b;},0);
-    var allRows=[[ZONES[0]].concat(localMp[0]).concat([totals[0]]),[ZONES[1]].concat(localMp[1]).concat([totals[1]]),['L/S 소계'].concat(lsSub).concat([lsTotal]),[ZONES[2]].concat(localMp[2]).concat([totals[2]]),[ZONES[3]].concat(localMp[3]).concat([totals[3]]),['A/S 소계'].concat(asSub).concat([asTotal]),['전체 총계'].concat(colTot).concat([grandTotal])];
+    var localSplit=mpEmptySplit();
+    var hasPm=false;
+    if(mpRes.data){ mpRes.data.forEach(function(row){ mpAddSplit(localSplit, mpRowToSplit(row)); if(row.shift==='오후') hasPm=true; }); }
+    var avgToiletForDate=hasPm?mpAvgToiletAMPM:mpAvgToiletAM;
+    var avgCommonForDate=hasPm?mpAvgCommonAMPM:mpAvgCommonAM;
     var mpTbl=document.querySelector('#mpFullTable tbody');
-    if(mpTbl){
-      var trs=mpTbl.querySelectorAll('tr');
-      allRows.forEach(function(rowData,ri2){if(!trs[ri2])return;var tds=trs[ri2].querySelectorAll('td');rowData.forEach(function(val,ci2){if(tds[ci2])tds[ci2].textContent=val;});});
-    }
+    if(mpTbl) mpTbl.innerHTML=mpFullSplitTableHtml(localMp, localSplit, avgToiletForDate, avgCommonForDate);
     // 1-1) 팀별 총원 집계 (같은 팀의 A/B/C조를 합산)
     var teamSums={}, teamOrder=[];
     if(mpRes.data){
@@ -11046,30 +11160,43 @@ function updateFloorChart(){
   }
   var lsTotal=lsSub.reduce(function(a,b){return a+b;},0);
   var asTotal=asSub.reduce(function(a,b){return a+b;},0);
-  // flP_all 테이블
+  // 홈 화면 전체 탭 표 (#flP_all = #dHome) — 칸 안에 화장실·공용구역 소문구 추가 (평균비교 색상 포함)
+  var homeShiftState=mpShiftPresent('오후')?'ampm':'am';
+  var homeAvgT=homeShiftState==='ampm'?mpAvgToiletAMPM:mpAvgToiletAM;
+  var homeAvgC=homeShiftState==='ampm'?mpAvgCommonAMPM:mpAvgCommonAM;
   var allTbl=document.querySelector('#flP_all table tbody');
   if(allTbl){
+    var zoneIdxByRow=[0,1,null,2,3,null,null];
     var newRows=[[ZONES[0]].concat(mpData[0]).concat([totals[0]]),[ZONES[1]].concat(mpData[1]).concat([totals[1]]),['L/S 소계'].concat(lsSub).concat([lsTotal]),[ZONES[2]].concat(mpData[2]).concat([totals[2]]),[ZONES[3]].concat(mpData[3]).concat([totals[3]]),['A/S 소계'].concat(asSub).concat([asTotal]),['전체 총계'].concat(colTot).concat([grandTotal])];
     var trs=allTbl.querySelectorAll('tr');
-    newRows.forEach(function(rowData,ri){if(!trs[ri])return;var tds=trs[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
+    newRows.forEach(function(rowData,ri){
+      if(!trs[ri]) return;
+      var tds=trs[ri].querySelectorAll('td');
+      var zi=zoneIdxByRow[ri];
+      rowData.forEach(function(val,ci){
+        if(!tds[ci]) return;
+        if(zi!==null && ci>=1 && ci<=6){
+          var fi=ci-1;
+          var t=mpSplit.toilet[zi][fi]||0, c=mpSplit.common[zi][fi]||0;
+          var tCol=homeAvgT?mpAvgColor(t,homeAvgT[zi][fi]):null, cCol=homeAvgC?mpAvgColor(c,homeAvgC[zi][fi]):null;
+          tds[ci].innerHTML=val+'<br><span style="font-size:9px"><span style="color:'+(tCol||'var(--g4)')+'">화'+t+'</span>·<span style="color:'+(cCol||'var(--g4)')+'">공'+c+'</span></span>';
+        } else {
+          tds[ci].textContent=val;
+        }
+      });
+    });
   }
-  // 공통 테이블 갱신 함수
-    var allRows=[[ZONES[0]].concat(mpData[0]).concat([totals[0]]),[ZONES[1]].concat(mpData[1]).concat([totals[1]]),['L/S 소계'].concat(lsSub).concat([lsTotal]),[ZONES[2]].concat(mpData[2]).concat([totals[2]]),[ZONES[3]].concat(mpData[3]).concat([totals[3]]),['A/S 소계'].concat(asSub).concat([asTotal]),['전체 총계'].concat(colTot).concat([grandTotal])];
-  // 메인 테이블 (#dHome = #flP_all 안)
-  var mainTbl=document.querySelector('#dHome tbody');
-  if(mainTbl){
-    var trs2=mainTbl.querySelectorAll('tr');
-    allRows.forEach(function(rowData,ri){if(!trs2[ri])return;var tds=trs2[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
-  }
-  // 인력현황 탭 > 전체현황 테이블 (#mpFullTable)
+  // 인력현황 탭 > 전체현황 테이블 (#mpFullTable) — 화장실/공용구역 완전 분리 표 + 평균비교 색상
+  var shiftStateForTbl=mpShiftPresent('오후')?'ampm':'am';
+  var avgToiletForTbl=shiftStateForTbl==='ampm'?mpAvgToiletAMPM:mpAvgToiletAM;
+  var avgCommonForTbl=shiftStateForTbl==='ampm'?mpAvgCommonAMPM:mpAvgCommonAM;
   var mpTbl=document.querySelector('#mpFullTable tbody');
-  if(mpTbl){
-    var trs3=mpTbl.querySelectorAll('tr');
-    allRows.forEach(function(rowData,ri){if(!trs3[ri])return;var tds=trs3[ri].querySelectorAll('td');rowData.forEach(function(val,ci){if(tds[ci])tds[ci].textContent=val;});});
-  }
+  if(mpTbl) mpTbl.innerHTML=mpFullSplitTableHtml(mpData, mpSplit, avgToiletForTbl, avgCommonForTbl);
   // 층별 패널 — 현재까지 입력된 시프트(오전만 / 오전+오후)에 맞는 평균과 비교해 색상 표시
   var shiftState=mpShiftPresent('오후')?'ampm':'am';
   var avgM=(shiftState==='ampm')?mpAvgAMPM:mpAvgAM;
+  var avgMT=(shiftState==='ampm')?mpAvgToiletAMPM:mpAvgToiletAM;
+  var avgMC=(shiftState==='ampm')?mpAvgCommonAMPM:mpAvgCommonAM;
   var avgMonthWord=mpAvgMonthNum?(mpAvgMonthNum+'월'):'전달';
   var avgWord=(shiftState==='ampm')?(avgMonthWord+' 오전+오후평균'):(avgMonthWord+' 오전평균');
   var fps=[{id:'B2F',ci:0},{id:'B1F',ci:[1,6],merged:true},{id:'1F',ci:2},{id:'2F',ci:3},{id:'3F',ci:4},{id:'4F',ci:5}];
@@ -11101,7 +11228,13 @@ function updateFloorChart(){
       var numEl=document.getElementById('flZoneNum_'+fp.id+'_'+zi);
       if(numEl){ numEl.innerHTML=v+'<span style="font-size:12px;font-weight:600">명</span>'; numEl.style.color=avgHasData?mpAvgColor(v,avgVals[zi]):(zi<2?'var(--navy)':'var(--teal2)'); }
       var avgEl=document.getElementById('flZoneAvg_'+fp.id+'_'+zi);
-      if(avgEl) avgEl.textContent=avgHasData?(avgWord+' '+avgVals[zi]+'명'):'';
+      var toiFi = fp.merged ? fp.ci[0] : fp.ci;
+      var toi = mpSplit.toilet[zi][toiFi]||0;
+      var com = fp.merged ? ((mpSplit.common[zi][fp.ci[0]]||0)+(mpData[zi][fp.ci[1]]||0)) : (mpSplit.common[zi][fp.ci]||0);
+      var tCol2=avgMT?mpAvgColor(toi,avgMT[zi][toiFi]):null;
+      var cCol2=(avgMC && !fp.merged)?mpAvgColor(com,avgMC[zi][fp.ci]):null; // merged(B1F+집하장)는 평균 기준 없어 색상 생략
+      var splitHtml=' · <span style="color:'+(tCol2||'var(--g3)')+'">화'+toi+'</span>·<span style="color:'+(cCol2||'var(--g3)')+'">공'+com+'</span>';
+      if(avgEl) avgEl.innerHTML=(avgHasData?(avgWord+' '+avgVals[zi]+'명'):'')+splitHtml;
     });
     // L/S 소계, A/S 소계 각각 정확히 찾기
     var subDivs=panel.querySelectorAll('div[style*="--navy-bg"] span[style*="23px"], div[style*="--teal-bg"] span[style*="23px"]');
@@ -15949,37 +16082,38 @@ function openLeaderDataEdit(shift,team,name){
     showM('leaderDataModal');
     return;
   }
-  if(headRow){
-    headRow.innerHTML='<th style="color:white;font-size:13px;padding:8px 6px;text-align:left;min-width:70px">구역</th>'+
-      ['B2F','B1F','1F','2F','3F','4F','집하장'].map(function(f){ return '<th style="color:white;font-size:12px;padding:8px 4px;text-align:center">'+f+'</th>'; }).join('');
-  }
+  if(headRow) headRow.innerHTML='';
 
   var meta=(mpMeta[shift]&&mpMeta[shift][team])||null;
   var proxyNote=(meta&&meta.proxy_writer)?' (대리입력:'+meta.proxy_writer+')':'';
   if(title) title.textContent=name+' 입력값 수정 ('+shift+')'+proxyNote;
   var zones=['L/S 동편','L/S 서편','A/S 동편','A/S 서편'];
-  var floors=['B2F','B1F','1F','2F','3F','4F','집하장'];
   // 현재 저장값 불러오기
   var cur=(mpDataByLeader[shift]&&mpDataByLeader[shift][team])||
           [[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-  var rows='';
-  zones.forEach(function(zone,ri){
-    rows+='<tr style="border-bottom:1px solid var(--g1)">';
-    rows+='<td style="font-size:13px;font-weight:600;color:var(--g6);padding:7px 6px">'+zone+'</td>';
-
-    floors.forEach(function(fl,ci){
-      var v=cur[ri][ci]||0;
-      var filled=v>0;
-      rows+='<td style="padding:4px 3px;text-align:center;'+(filled?'background:var(--teal-bg);border-radius:6px':'')+'">';
-      rows+='<input type="number" id="ledit_'+ri+'_'+ci+'" value="'+v+'" min="0" '+
-        'oninput="this.style.background=(Number(this.value)>0)?\'var(--teal-bg)\':\'#fff\';this.style.borderColor=(Number(this.value)>0)?\'var(--teal2)\':\'var(--g2)\';this.style.color=(Number(this.value)>0)?\'var(--teal2)\':\'var(--g6)\';this.style.fontWeight=(Number(this.value)>0)?\'800\':\'400\';" '+
-        'style="width:36px;padding:5px 3px;border:1.5px solid '+(filled?'var(--teal2)':'var(--g2)')+';border-radius:6px;font-size:14px;text-align:center;outline:none;background:'+(filled?'var(--teal-bg)':'#fff')+';color:'+(filled?'var(--teal2)':'var(--g6)')+';font-weight:'+(filled?'800':'400')+'" '+
-        'onfocus="this.select()">';
-      rows+='</td>';
+  var curSplit=(mpSplitByLeader[shift]&&mpSplitByLeader[shift][team])||mpEmptySplit();
+  var blockHtml='';
+  zones.forEach(function(zone,zi){
+    blockHtml+='<div style="margin-bottom:14px">';
+    blockHtml+='<div style="font-size:13px;font-weight:700;color:var(--g6);margin-bottom:6px">'+zone+'</div>';
+    blockHtml+='<table style="width:100%;border-collapse:collapse;table-layout:fixed">';
+    blockHtml+='<colgroup><col style="width:22%"><col style="width:39%"><col style="width:39%"></colgroup>';
+    blockHtml+='<thead><tr><th></th><th style="font-size:11px;color:#166534;background:#EAF3DE;padding:4px;border-radius:6px">화장실</th><th style="font-size:11px;color:#0C447C;background:#E6F1FB;padding:4px;border-radius:6px">공용구역</th></tr></thead><tbody>';
+    MP_FLOOR_LABELS.forEach(function(lbl,ci){
+      var tv=curSplit.toilet[zi][ci]||0, cv=curSplit.common[zi][ci]||0;
+      blockHtml+='<tr style="border-bottom:1px solid var(--g1)"><td style="font-size:12.5px;color:var(--g6);padding:5px 2px">'+lbl+'</td>'
+        +'<td style="padding:3px"><input type="number" id="ledit_split_'+zi+'_'+ci+'_t" value="'+tv+'" min="0" style="width:100%;padding:5px 3px;border:1.5px solid var(--g2);border-radius:6px;font-size:13px;text-align:center" onfocus="this.select()"></td>'
+        +'<td style="padding:3px"><input type="number" id="ledit_split_'+zi+'_'+ci+'_c" value="'+cv+'" min="0" style="width:100%;padding:5px 3px;border:1.5px solid var(--g2);border-radius:6px;font-size:13px;text-align:center" onfocus="this.select()"></td></tr>';
     });
-    rows+='</tr>';
+    blockHtml+='</tbody></table>';
+    var yardV=cur[zi][6]||0;
+    blockHtml+='<div style="display:flex;align-items:center;justify-content:space-between;margin-top:6px;padding:6px 8px;background:var(--g1);border-radius:8px">'
+      +'<span style="font-size:12px;color:var(--g5)">집하장</span>'
+      +'<input type="number" id="ledit_yard_'+zi+'" value="'+yardV+'" min="0" style="width:60px;padding:4px;border:1.5px solid var(--g2);border-radius:6px;font-size:13px;text-align:center" onfocus="this.select()">'
+      +'</div>';
+    blockHtml+='</div>';
   });
-  body.innerHTML=rows;
+  body.innerHTML='<tr><td style="padding:6px 2px">'+blockHtml+'</td></tr>';
   showM('leaderDataModal');
 }
 
@@ -16004,6 +16138,7 @@ async function resetLeaderDataToday(){
     }
     // 로컬 상태 정리
     if(mpDataByLeader[editShift]) delete mpDataByLeader[editShift][editTeam];
+    if(mpSplitByLeader[editShift]) delete mpSplitByLeader[editShift][editTeam];
     if(mpMeta[editShift]) delete mpMeta[editShift][editTeam];
     // 완료표시(입력로그)에서도 제거
     if(mpInputLog[today]&&mpInputLog[today][editShift]){
@@ -16053,11 +16188,19 @@ async function saveLeaderDataEdit(){
     return;
   }
   var newVals=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
-  for(var ri=0;ri<4;ri++){
-    for(var ci=0;ci<7;ci++){
-      var el=document.getElementById('ledit_'+ri+'_'+ci);
-      newVals[ri][ci]=el?parseInt(el.value)||0:0;
-    }
+  var splitColsArr=[];
+  var zonePrefixes=['ls_east','ls_west','as_east','as_west'];
+  for(var zi=0;zi<4;zi++){
+    var toiletVals={}, commonVals={};
+    MP_FLOOR_SUFFIX.forEach(function(suf,ci){
+      var ti=document.getElementById('ledit_split_'+zi+'_'+ci+'_t'), ci2=document.getElementById('ledit_split_'+zi+'_'+ci+'_c');
+      var t=ti?parseInt(ti.value)||0:0, c=ci2?parseInt(ci2.value)||0:0;
+      toiletVals[suf]=t; commonVals[suf]=c;
+      newVals[zi][ci]=t+c;
+    });
+    var yardEl=document.getElementById('ledit_yard_'+zi);
+    newVals[zi][6]=yardEl?parseInt(yardEl.value)||0:0;
+    splitColsArr.push({prefix:zonePrefixes[zi], toilet:toiletVals, common:commonVals});
   }
   var mismatchMsg2=checkZoneMismatch(editTeam, newVals);
   if(mismatchMsg2 && !confirm(mismatchMsg2+'\n\n그래도 저장하시겠습니까?')) return;
@@ -16071,7 +16214,7 @@ async function saveLeaderDataEdit(){
   // ★ 저장 결과를 먼저 확인한 뒤에만 모달을 닫고 완료 표시 — 실패 시 모달 유지 + 재시도 가능
   var saveBtn=document.querySelector('#leaderDataModal button[onclick="saveLeaderDataEdit()"]');
   if(saveBtn){ saveBtn.disabled=true; saveBtn.textContent='저장 중...'; }
-  saveMpToDB(editShift, editTeam, newVals, writer2, proxyWriter2).then(function(result){
+  saveMpToDB(editShift, editTeam, newVals, writer2, proxyWriter2, splitColsArr).then(function(result){
     if(saveBtn){ saveBtn.disabled=false; saveBtn.textContent='수정 저장'; }
     if(!result||!result.ok){
       toast('⚠️ 저장 실패 — 반영되지 않았습니다. 다시 시도해주세요 ('+(result&&result.error?result.error:'알 수 없는 오류')+')');
@@ -16079,6 +16222,12 @@ async function saveLeaderDataEdit(){
     }
     if(!mpDataByLeader[editShift]) mpDataByLeader[editShift]={};
     mpDataByLeader[editShift][editTeam]=newVals;
+    if(editShift==='오전'||editShift==='오후'){
+      if(!mpSplitByLeader[editShift]) mpSplitByLeader[editShift]={};
+      var mergedSplit=mpEmptySplit();
+      splitColsArr.forEach(function(sc){ mpAddSplit(mergedSplit, mpSplitColsToFull(sc)); });
+      mpSplitByLeader[editShift][editTeam]=mergedSplit;
+    }
     recalcMpData();
     updateFloorChart();
     updateMpSummary();
@@ -16186,7 +16335,9 @@ async function executeDataReset(){
       await sb.from('night_special_data').delete().eq('date',todayKst);
     }catch(e){}
     mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+    mpSplit=mpEmptySplit();
     mpDataByLeader={오전:{},오후:{},야간:{}};
+    mpSplitByLeader={오전:{},오후:{}};
     mpInputLog={};
     nightSpecialByLeader={};
     try{
@@ -22901,12 +23052,22 @@ async function loadFacilityFromDB(){
 }
 
 // 인력현황 - DB 저장 (일별 누적)
-async function saveMpToDB(shift, teamCode, values, writer, proxyWriter){
+async function saveMpToDB(shift, teamCode, values, writer, proxyWriter, splitCols){
   // ★ 성공/실패 여부를 호출부에 그대로 반환 — 여기서 "완료" 토스트를 먼저 띄우지 않음
   //   (호출부가 실제 결과를 보고 완료/실패 메시지를 결정하도록 함)
   try{
     var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10); // KST
     var payload={date:today, shift:shift, team_code:teamCode, values:values, writer:writer||null, proxy_writer:proxyWriter||null};
+    if(splitCols){
+      var splitArr=Array.isArray(splitCols)?splitCols:[splitCols];
+      splitArr.forEach(function(sc){
+        if(!sc||!sc.prefix) return;
+        MP_FLOOR_SUFFIX.forEach(function(suf){
+          payload[sc.prefix+'_toilet_'+suf]=sc.toilet[suf]||0;
+          payload[sc.prefix+'_common_'+suf]=sc.common[suf]||0;
+        });
+      });
+    }
     var res=await sb.from('mp_data').upsert(
       payload,
       {onConflict:'date,shift,team_code'}
@@ -22929,6 +23090,8 @@ async function loadMpFromDB(){
     mpDataByLeader={오전:{},오후:{},야간:{}};
     mpMeta={오전:{},오후:{},야간:{}};
     nightSpecialByLeader={};
+    mpSplit=mpEmptySplit();
+    mpSplitByLeader={오전:{},오후:{}};
     if(!res.error&&res.data&&res.data.length){
       res.data.forEach(function(row){
         if(!row.shift||!row.team_code||!row.values) return;
@@ -22942,6 +23105,10 @@ async function loadMpFromDB(){
         if(typeof vals==='string') try{ vals=JSON.parse(vals); }catch(e){}
         if(Array.isArray(vals) && Array.isArray(vals[0])){
           mpDataByLeader[row.shift][row.team_code]=vals; // ri=0~3: 층별, ri=4: 관리자
+        }
+        if(row.shift==='오전'||row.shift==='오후'){
+          mpAddSplit(mpSplit, mpRowToSplit(row));
+          mpSplitByLeader[row.shift][row.team_code]=mpRowToSplit(row);
         }
         if(!mpMeta[row.shift]) mpMeta[row.shift]={};
         mpMeta[row.shift][row.team_code]={writer:row.writer||'', proxy_writer:row.proxy_writer||''};
@@ -22978,6 +23145,8 @@ async function refreshMpDataLight(){
     mpDataByLeader={오전:{},오후:{},야간:{}};
     mpMeta={오전:{},오후:{},야간:{}};
     nightSpecialByLeader={};
+    mpSplit=mpEmptySplit();
+    mpSplitByLeader={오전:{},오후:{}};
     if(!mpRes.error&&mpRes.data&&mpRes.data.length){
       mpRes.data.forEach(function(row){
         if(!row.shift||!row.team_code||!row.values) return;
@@ -22986,6 +23155,10 @@ async function refreshMpDataLight(){
         var vals=row.values;
         if(typeof vals==='string') try{ vals=JSON.parse(vals); }catch(e){}
         if(Array.isArray(vals) && Array.isArray(vals[0])) mpDataByLeader[row.shift][row.team_code]=vals;
+        if(row.shift==='오전'||row.shift==='오후'){
+          mpAddSplit(mpSplit, mpRowToSplit(row));
+          mpSplitByLeader[row.shift][row.team_code]=mpRowToSplit(row);
+        }
         if(!mpMeta[row.shift]) mpMeta[row.shift]={};
         mpMeta[row.shift][row.team_code]={writer:row.writer||'', proxy_writer:row.proxy_writer||''};
       });
@@ -23065,7 +23238,9 @@ async function refreshMpDataLight(){
       var gt0=document.getElementById('globalTabbar'); if(gt0) gt0.style.display='flex';
       // 메모리 초기화 먼저 (어제 데이터 화면 노출 방지)
       mpDataByLeader={오전:{},오후:{},야간:{}};
+      mpSplitByLeader={오전:{},오후:{}};
       mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+      mpSplit=mpEmptySplit();
       // QR 스캔으로 들어온 경우(?qrattend=...) 홈 대신 참석확인 화면으로 바로 연결
       var qrParams=new URLSearchParams(window.location.search);
       if(qrParams.get('qrattend')){
@@ -25780,7 +25955,9 @@ var _shiftResetDone = {};
 async function handleDayChange(newDate){
   _lastCheckedDate = newDate;
   mpDataByLeader={오전:{},오후:{},야간:{}};
+  mpSplitByLeader={오전:{},오후:{}};
   mpData=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  mpSplit=mpEmptySplit();
   updateFloorChart(); updateMpSummary(); updateStaff();
   loadMpFromDB();
   loadMpHistory();
@@ -31036,7 +31213,7 @@ async function loadMonthlyStats(){
     var tsFrom=new Date(dFrom+'T00:00:00+09:00').toISOString();
     var tsTo=new Date(dTo+'T23:59:59+09:00').toISOString();
     var q=await Promise.all([
-      msFetchAll(function(){ return sb.from('mp_data').select('date,shift,team_code,values,proxy_writer').gte('date',dFrom).lte('date',dTo); }),
+      msFetchAll(function(){ return sb.from('mp_data').select('date,shift,team_code,values,proxy_writer,ls_east_toilet_b2f,ls_east_common_b2f,ls_east_toilet_b1f,ls_east_common_b1f,ls_east_toilet_1f,ls_east_common_1f,ls_east_toilet_2f,ls_east_common_2f,ls_east_toilet_3f,ls_east_common_3f,ls_east_toilet_4f,ls_east_common_4f,ls_west_toilet_b2f,ls_west_common_b2f,ls_west_toilet_b1f,ls_west_common_b1f,ls_west_toilet_1f,ls_west_common_1f,ls_west_toilet_2f,ls_west_common_2f,ls_west_toilet_3f,ls_west_common_3f,ls_west_toilet_4f,ls_west_common_4f,as_east_toilet_b2f,as_east_common_b2f,as_east_toilet_b1f,as_east_common_b1f,as_east_toilet_1f,as_east_common_1f,as_east_toilet_2f,as_east_common_2f,as_east_toilet_3f,as_east_common_3f,as_east_toilet_4f,as_east_common_4f,as_west_toilet_b2f,as_west_common_b2f,as_west_toilet_b1f,as_west_common_b1f,as_west_toilet_1f,as_west_common_1f,as_west_toilet_2f,as_west_common_2f,as_west_toilet_3f,as_west_common_3f,as_west_toilet_4f,as_west_common_4f').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('night_special_data').select('*').gte('date',dFrom).lte('date',dTo); }),
       msFetchAll(function(){ return sb.from('handover').select('id,created_at,ho_date,shift,team,confirmed,facility,danger,equipment,notice').gte('created_at',tsFrom).lte('created_at',tsTo); }),
       msFetchAll(function(){ return sb.from('lost_found').select('id,found_date,status,completed_at,location,item,receipt_route,handover_to,receiver_name').gte('found_date',tsFrom).lte('found_date',tsTo); }),
@@ -31202,7 +31379,7 @@ function msClassifyVocTop3ForForm(text){
 }
 
 function msCalc(q, key){
-  var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorDays:{},nsSum:{},nsSumLand:{},nsSumAir:{},lsSum:0,asSum:0,byTeamSum:{},byTeamDays:{},byTeamMgrSum:{},byTeamMgrDays:{},hourly:new Array(24).fill(0),hourlyDays:new Array(24).fill(0),hourlyByShift:{오전:new Array(24).fill(0),오후:new Array(24).fill(0),야간:new Array(24).fill(0)}},
+  var s={ mp:{days:{},proxy:0,shiftSum:{오전:0,오후:0,야간:0},shiftDays:{오전:{},오후:{},야간:{}},floorSum:[0,0,0,0,0,0,0],floorDays:{},nsSum:{},nsSumLand:{},nsSumAir:{},lsSum:0,asSum:0,toiletSum:{오전:0,오후:0},commonSum:{오전:0,오후:0},byTeamSum:{},byTeamDays:{},byTeamMgrSum:{},byTeamMgrDays:{},hourly:new Array(24).fill(0),hourlyDays:new Array(24).fill(0),hourlyByShift:{오전:new Array(24).fill(0),오후:new Array(24).fill(0),야간:new Array(24).fill(0)}},
           mgr:{days:{},trip:0,edu:0},
           ho:{total:0,confirmed:0,byTeam:{},byType:{시설물:0,기타:0},byFacLoc:{},byFacDesc:{},byFacType:{},byShift:{오전:0,오후:0,야간:0}},
           lost:{total:0,done:0,doneDaysSum:0,doneDaysCnt:0,byLoc:{},byItem:{},byHour:[0,0,0,0],hourUnknown:0,itemEtc:[],locEtc:[],byRoute:{},routeEtc:[],byHandover:{},handoverEtc:[],byShift:{오전:0,오후:0,야간:0}},
@@ -31235,7 +31412,11 @@ function msCalc(q, key){
     s.mp.days[r.date]=(s.mp.days[r.date]||0)+sum;
     s.mp.floorDays[r.date]=1;
     var sh=(r.shift==='오전'||r.shift==='오후')?r.shift:null;
-    if(sh){ s.mp.shiftSum[sh]+=sum; s.mp.shiftDays[sh][r.date]=1; }
+    if(sh){ s.mp.shiftSum[sh]+=sum; s.mp.shiftDays[sh][r.date]=1;
+      var rs=mpRowToSplit(r), t=0,c=0;
+      for(var zi=0;zi<4;zi++) for(var fi=0;fi<6;fi++){ t+=rs.toilet[zi][fi]; c+=rs.common[zi][fi]; }
+      s.mp.toiletSum[sh]+=t; s.mp.commonSum[sh]+=c;
+    }
     if(r.proxy_writer) s.mp.proxy++;
     // 시간대별: 오전 07~16, 오후 12~21
     var hrRanges={오전:[7,16],오후:[12,21]};
@@ -32186,6 +32367,17 @@ function msRenderDetail(key){
       +'<span style="font-size:13px;font-weight:700;color:rgba(255,255,255,.85)">전체 시간대 합계</span>'
       +'<span style="font-size:21px;font-weight:900;color:white">'+grandAvg+'<span style="font-size:12px;font-weight:400;margin-left:2px">명</span></span>'
       +'</div>';
+    // 화장실·공용구역 일평균 (오전/오후/전체)
+    h+=msSub('화장실·공용구역 일평균 · '+pl);
+    var mpDays=Object.keys(c.mp.floorDays||{}).length||1;
+    var toiletAM=Math.round(c.mp.toiletSum['오전']/mpDays), toiletPM=Math.round(c.mp.toiletSum['오후']/mpDays);
+    var commonAM=Math.round(c.mp.commonSum['오전']/mpDays), commonPM=Math.round(c.mp.commonSum['오후']/mpDays);
+    h+='<table style="width:100%;border-collapse:collapse;font-size:12.5px">'
+      +'<thead><tr><th></th><th style="padding:5px 0;color:var(--g4);font-weight:600">오전</th><th style="padding:5px 0;color:var(--g4);font-weight:600">오후</th><th style="padding:5px 0;color:var(--g4);font-weight:600">전체</th></tr></thead>'
+      +'<tbody>'
+      +'<tr style="border-top:1px solid var(--g2)"><td style="padding:7px 0;color:#166534">화장실</td><td style="text-align:center;padding:7px 0;font-weight:700">'+toiletAM+'</td><td style="text-align:center;padding:7px 0;font-weight:700">'+toiletPM+'</td><td style="text-align:center;padding:7px 0;font-weight:700">'+(toiletAM+toiletPM)+'</td></tr>'
+      +'<tr style="border-top:1px solid var(--g2)"><td style="padding:7px 0;color:#0C447C">공용구역</td><td style="text-align:center;padding:7px 0;font-weight:700">'+commonAM+'</td><td style="text-align:center;padding:7px 0;font-weight:700">'+commonPM+'</td><td style="text-align:center;padding:7px 0;font-weight:700">'+(commonAM+commonPM)+'</td></tr>'
+      +'</tbody></table>';
     // 야간 작업별 (일평균) - 층별과 동일하게 날짜 수로 나눔
     var nsDays=Object.keys(c.mp.shiftDays['야간']||{}).length||1;
     h+=msSub('야간 작업별 투입 일평균 · '+pl);
