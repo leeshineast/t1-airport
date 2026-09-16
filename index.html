@@ -166,7 +166,6 @@ html{overflow-x:hidden}
 
 /* ─ 메인 메뉴 버튼 ─ */
 .menu-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding:4px 13px 13px}
-.menu-grid>.mg-last-odd{grid-column:1 / -1;max-width:calc(50% - 4px);margin:0 auto}
 .fac-badge{display:inline-flex;align-items:center;font-size:13px;font-weight:800;padding:5px 12px;border-radius:8px;white-space:nowrap}
 .fac-badge-sm{font-size:10.5px!important;padding:3px 7px!important;border-radius:6px!important}
 .fac-b-zone-as{background:#E0F2FE;color:#0369A1}
@@ -7421,7 +7420,6 @@ function applyRoleUI(){
   }
   updateMenuCatVisibility();
   renderMenuFolders();
-  mgFixOddRow();
 }
 // ══ 즐겨찾기 메뉴 ══
 var FAV_MAX=6;
@@ -7460,15 +7458,6 @@ var ALL_MENU_ITEMS=[
   {key:'downloadcenter', icon:'📥', title:'전체 다운로드', action:"go('downloadcenter')"},
   {key:'admin', icon:'⚙️', title:'관리자', action:"go('admin')"}
 ];
-// 메뉴 그리드(2열)에서 마지막 항목이 홀수 번째로 혼자 남으면 가운데 정렬
-function mgFixOddRow(){
-  document.querySelectorAll('.menu-grid').forEach(function(grid){
-    var kids=Array.prototype.slice.call(grid.children);
-    kids.forEach(function(el){ el.classList.remove('mg-last-odd'); });
-    var visibles=kids.filter(function(el){ return el.style.display!=='none'; });
-    if(visibles.length%2===1){ visibles[visibles.length-1].classList.add('mg-last-odd'); }
-  });
-}
 function renderFavMenus(){
   var grid=document.getElementById('favMenuGrid'); if(!grid) return;
   var favs=(me&&Array.isArray(me.favorite_menus))?me.favorite_menus:[];
