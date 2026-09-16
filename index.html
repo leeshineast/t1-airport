@@ -30996,6 +30996,7 @@ function cpTieBannerHtml(tie, anonNo, canSee){
     }).join('')+'</div>';
     if(!eligible){ h+='<div style="font-size:11px;color:#9f1239;margin-bottom:6px">⚠️ 이 재투표는 '+cpTieRoleLabel(t.eligible_role_min)+'만 참여할 수 있습니다</div>'; }
     if(cpCanSeeIdentity()){
+      h+='<div id="cpTieParticipWrap_'+t.id+'" style="margin-bottom:8px;font-size:11.5px;color:var(--g4)">참여 현황 확인 중...</div>';
       h+='<button onclick="cpCloseTiebreak(\''+t.id+'\','+tie.slots+')" style="padding:6px 12px;background:#0e7490;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer">🔒 재투표 마감</button>';
     }
   }else if(t.status==='closed' && t.resolved_by==='revote'){
@@ -31124,6 +31125,33 @@ function cpRenderAllEntries(){
        '</div>';
   });
   wrap.innerHTML=h;
+  cpRenderTieParticipation();
+}
+// 재투표 참여 현황(참여/미참여 명단) — master만 조회, 재투표가 열려있을 때만 표시
+function cpTieRoleList(minKey){
+  if(minKey==='admin') return ['admin','master'];
+  if(minKey==='manager') return ['manager','admin','master'];
+  return ['leader','manager','admin','master'];
+}
+async function cpRenderTieParticipation(){
+  var tie=cpAdminCutoffTie(); if(!tie) return;
+  var t=cpTieForKey(1, tie.tieKey); if(!t||t.status!=='open') return;
+  var wrap=document.getElementById('cpTieParticipWrap_'+t.id); if(!wrap) return;
+  try{
+    var ures=await sb.from('users').select('name,role,team,employee_id').eq('status','active').in('role',cpTieRoleList(t.eligible_role_min));
+    if(ures.error||!ures.data){ wrap.innerHTML=''; return; }
+    var votedKeys={}; cpTieVotes(t.id).forEach(function(v){ if(v.voter_key) votedKeys[v.voter_key]=true; });
+    var target=ures.data;
+    var voted=target.filter(function(u){ return votedKeys[u.employee_id||u.name]; });
+    var notVoted=target.filter(function(u){ return !votedKeys[u.employee_id||u.name]; });
+    var h='<div style="font-size:11.5px;font-weight:700;color:var(--g6);margin-bottom:5px">📋 '+cpTieRoleLabel(t.eligible_role_min)+' 대상 '+target.length+'명 중 참여 '+voted.length+'명 · 미참여 '+notVoted.length+'명</div>';
+    if(notVoted.length){
+      h+='<div style="background:var(--g1);border-radius:8px;padding:8px 10px;font-size:11.5px;color:var(--g5);line-height:1.8;max-height:140px;overflow-y:auto">'
+        +notVoted.map(function(u){ return eeEsc(u.name)+'('+eeEsc(u.team||'-')+')'; }).join(', ')
+        +'</div>';
+    }
+    wrap.innerHTML=h;
+  }catch(e){ wrap.innerHTML=''; }
 }
 async function cpToggleJudging(close){
   if(!cpCanSeeIdentity()){ toast('⚠️ master만 마감할 수 있습니다'); return; }
