@@ -30807,9 +30807,12 @@ async function cpLoadTiebreaks(){
 }
 function cpEntriesById(ids){ return ids.map(function(id){ return cpAllEntriesCache.find(function(e){return e.id===id;}); }).filter(Boolean); }
 function cpFindResolvedTie(groupIds){
-  var setKey=groupIds.slice().sort().join(',');
   var candidates=cpTiebreaksCache.filter(function(t){
-    return t.phase===1 && t.status==='closed' && t.resolved_by && t.entry_ids && t.entry_ids.slice().sort().join(',')===setKey;
+    if(t.phase!==1 || t.status!=='closed' || !t.resolved_by || !t.entry_ids) return false;
+    var tieSet={}; t.entry_ids.forEach(function(id){ tieSet[id]=true; });
+    // 현재 동점 그룹의 응모작이 전부 이 재투표 대상에 포함되면 매칭
+    // (재투표 이후 누군가 점수가 바뀌어 동점 그룹에서 빠졌더라도, 나머지 인원의 확정 순위는 그대로 인정)
+    return groupIds.every(function(id){ return tieSet[id]; });
   });
   if(!candidates.length) return null;
   candidates.sort(function(a,b){ return (b.round||1)-(a.round||1); });
