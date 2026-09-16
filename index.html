@@ -31653,14 +31653,15 @@ async function loadMReport(){
       msFetchAll(function(){ return sb.from('voc_data').select('id,voc_date,status,completed_at,content,channel,category,category_etc,loc_zone,loc_side,loc_floor,created_at').gte('voc_date',dFrom).lte('voc_date',dTo); }),
       msFetchAll(function(){ return sb.from('waste_data').select('waste_date,team_code,incineration_living,incineration_synthetic,incineration_food,incineration_wood,recycle_paper,recycle_plastic,recycle_can,recycle_glass,recycle_etc,misc_etc').gte('waste_date',dFrom).lte('waste_date',dTo); }),
       msFetchAll(function(){ return sb.from('joint_work_data').select('id,work_date,teams,floors,headcount,items,batch_id,record_type').gte('work_date',dFrom).lte('work_date',dTo); }),
-      msFetchAll(function(){ return sb.from('work_vehicle_log').select('date,vehicle').gte('date',dFrom).lte('date',dTo); })
+      msFetchAll(function(){ return sb.from('work_vehicle_log').select('date,vehicle,purpose').gte('date',dFrom).lte('date',dTo); })
     ]);
     var anyErr=q.slice(0,9).some(function(r){ return r&&r.error; });
     if(anyErr){ if(banner) banner.style.display='flex'; return; }
     var cur=msCalc(q, curKey), prev=msCalc(q, prevKey);
     var curGrid=mrAggregateMpGrid(q[0].data||[], curKey);
+    var mpAvgGrid=mpShiftAvgForPeriod(q[0].data||[], curKey);
     var wv={cur:mrAggregateWorkveh(q[9].data||[], curKey), prev:mrAggregateWorkveh(q[9].data||[], prevKey)};
-    mrData={cur:cur, prev:prev, curGrid:curGrid, wv:wv, curKey:curKey, prevKey:prevKey};
+    mrData={cur:cur, prev:prev, curGrid:curGrid, mpAvgGrid:mpAvgGrid, wv:wv, curKey:curKey, prevKey:prevKey};
     mrRenderSummary();
     mrRenderDetail();
   }catch(e){
@@ -31685,15 +31686,24 @@ function mrAggregateMpGrid(rows, key){
   });
   return {mpDataArr:mpDataArr, splitObj:splitObj};
 }
+function mrIsWasteTrip(purpose){
+  if(!purpose) return false;
+  return purpose.indexOf('폐')>=0 || purpose.indexOf('쓰레기')>=0 || purpose.indexOf('소각')>=0;
+}
 function mrAggregateWorkveh(rows, key){
-  var total=0, byVeh={};
+  var total=0, byVeh={}, wasteTrips=0;
   rows.forEach(function(r){
     if(!r.date||r.date.indexOf(key)!==0) return;
     total++;
     var v=r.vehicle||'기타';
     byVeh[v]=(byVeh[v]||0)+1;
+    if(mrIsWasteTrip(r.purpose)) wasteTrips++;
   });
-  return {total:total, byVeh:byVeh};
+  return {total:total, byVeh:byVeh, wasteTrips:wasteTrips};
+}
+function mrPeriodDays(){
+  if(mrMode==='year'){ var y=mrY; return ((y%4===0&&y%100!==0)||y%400===0)?366:365; }
+  return msLastDay(mrY,mrM);
 }
 function mrPctChange(cur, prev){
   if(!prev) return null;
@@ -31718,6 +31728,10 @@ function mrGenericSummaryCard(o){
   h+='</div>';
   return h;
 }
+function mrRoundForUnit(v, unit){
+  if(unit==='톤') return Math.round((v||0)*100)/100;
+  return Math.round(v||0);
+}
 function mrRankTableHtml(title, curObj, prevObj, unit){
   var keys=Object.keys(curObj||{});
   keys.sort(function(a,b){ return (curObj[b]||0)-(curObj[a]||0); });
@@ -31726,7 +31740,7 @@ function mrRankTableHtml(title, curObj, prevObj, unit){
   if(!keys.length){ h+='<div style="font-size:12px;color:var(--g4);padding:4px 0">데이터 없음</div></div>'; return h; }
   h+='<table style="width:100%;border-collapse:collapse;font-size:12px">';
   keys.forEach(function(k){
-    var cv=curObj[k]||0, pv=(prevObj&&prevObj[k])||0;
+    var cv=mrRoundForUnit(curObj[k], unit), pv=mrRoundForUnit((prevObj&&prevObj[k]), unit);
     h+='<tr><td style="padding:6px 4px;border-top:1px solid var(--g1)">'+k+'</td><td style="padding:6px 4px;border-top:1px solid var(--g1);text-align:right;font-weight:800">'+cv+(unit||'')+'</td><td style="padding:6px 4px;border-top:1px solid var(--g1);text-align:right;font-size:11px;white-space:nowrap">'+mrDiffLine(cv,pv)+'</td></tr>';
   });
   h+='</table></div>';
@@ -31780,23 +31794,28 @@ function mrAnalysisMp(){
 function mrSummaryCardHtml(){
   if(!mrData) return '';
   var c=mrData.cur.mp, p=mrData.prev.mp;
-  var days=Object.keys(c.days).length||1;
+  var days=Object.keys(c.days).length||1, prevDays=Object.keys(p.days).length||1;
   var curTotal=0; Object.keys(c.days).forEach(function(d){ curTotal+=c.days[d]; });
   var prevTotal=0; Object.keys(p.days).forEach(function(d){ prevTotal+=p.days[d]; });
-  var avgDay=Math.round(curTotal/days);
-  var toiletTotal=(c.toiletSum['오전']||0)+(c.toiletSum['오후']||0);
-  var bothTotal=(c.bothSum['오전']||0)+(c.bothSum['오후']||0);
-  var commonTotal=(c.commonSum['오전']||0)+(c.commonSum['오후']||0);
+  var avgDay=Math.round(curTotal/days), prevAvgDay=Math.round(prevTotal/prevDays);
+  var toiletAvg=Math.round(((c.toiletSum['오전']||0)+(c.toiletSum['오후']||0))/days);
+  var bothAvg=Math.round(((c.bothSum['오전']||0)+(c.bothSum['오후']||0))/days);
+  var commonAvg=Math.round(((c.commonSum['오전']||0)+(c.commonSum['오후']||0))/days);
+  var amAvg=msShiftAvg(c,'오전'), pmAvg=msShiftAvg(c,'오후'), ntAvg=msShiftAvg(c,'야간');
   var h='<div class="ms-card" style="background:white;border-radius:var(--r);padding:15px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);position:relative;overflow:hidden">';
   h+='<div style="position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--teal),var(--teal2))"></div>';
   h+='<div style="display:flex;align-items:center;gap:6px;margin-bottom:10px"><span style="width:26px;height:26px;border-radius:8px;background:var(--teal-bg);display:flex;align-items:center;justify-content:center;font-size:15px">👥</span><span style="font-size:14px;font-weight:800;color:var(--g7)">인력현황</span></div>';
-  h+='<div style="display:flex;align-items:baseline;gap:5px;margin-bottom:4px"><span style="font-size:28px;font-weight:900;color:var(--teal2)">'+curTotal.toLocaleString()+'</span><span style="font-size:12px;color:var(--g4)">연인원(명)</span></div>';
-  h+='<div style="font-size:11px;color:var(--g5);margin-bottom:8px">'+mrDiffLine(curTotal, prevTotal)+' · 일평균 '+avgDay+'명</div>';
+  h+='<div style="display:flex;align-items:baseline;gap:5px;margin-bottom:4px"><span style="font-size:28px;font-weight:900;color:var(--teal2)">'+avgDay.toLocaleString()+'</span><span style="font-size:12px;color:var(--g4)">명 (일평균)</span></div>';
+  h+='<div style="font-size:11px;color:var(--g5);margin-bottom:8px">'+mrDiffLine(avgDay, prevAvgDay)+' · 월 누적 '+curTotal.toLocaleString()+'명</div>';
   h+='<div style="display:flex;gap:14px;font-size:12px;color:var(--g5);border-top:1px solid var(--g1);padding-top:8px;flex-wrap:wrap">';
-  h+='<span>화장실 <b style="color:#166534">'+toiletTotal.toLocaleString()+'</b></span>';
-  h+='<span>겸용 <b style="color:#92400E">'+bothTotal.toLocaleString()+'</b></span>';
-  h+='<span>공용구역 <b style="color:#0C447C">'+commonTotal.toLocaleString()+'</b></span>';
-  h+='<span>야간 <b style="color:var(--navy)">'+Math.round(c.shiftSum['야간']||0).toLocaleString()+'</b></span>';
+  h+='<span>오전 <b style="color:var(--g7)">'+amAvg+'</b></span>';
+  h+='<span>오후 <b style="color:var(--g7)">'+pmAvg+'</b></span>';
+  h+='<span>야간 <b style="color:var(--navy)">'+ntAvg+'</b></span>';
+  h+='</div>';
+  h+='<div style="display:flex;gap:14px;font-size:12px;color:var(--g5);border-top:1px solid var(--g1);padding-top:8px;margin-top:8px;flex-wrap:wrap">';
+  h+='<span>화장실 일평균 <b style="color:#166534">'+toiletAvg+'</b></span>';
+  h+='<span>겸용 일평균 <b style="color:#92400E">'+bothAvg+'</b></span>';
+  h+='<span>공용구역 일평균 <b style="color:#0C447C">'+commonAvg+'</b></span>';
   h+='</div>';
   var analysis=mrAnalysisMp();
   if(analysis) h+='<div style="margin-top:10px;background:var(--g1);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--g6);line-height:1.5">💡 '+analysis+'</div>';
@@ -31807,16 +31826,21 @@ function mrPer(){ return mrMode==='year'?'년':'월'; }
 // ── 인수인계 ──
 function mrSummaryCardHo(){
   var c=mrData.cur.ho, p=mrData.prev.ho;
+  var days=mrPeriodDays();
   var rate=c.total?Math.round(c.confirmed/c.total*100):0;
   var an=mrTopMoverLine(c.byFacLoc, p.byFacLoc, mrPer())||mrTopMoverLine(c.byFacDesc, p.byFacDesc, mrPer());
   return mrGenericSummaryCard({bar:'linear-gradient(90deg,var(--navy),#3E6BB5)', iconBg:'var(--navy-bg)', icon:'🔄', title:'인수인계', numColor:'var(--navy)',
-    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total, extraLine:'확인율 '+rate+'%',
+    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total, extraLine:'일평균 '+(Math.round(c.total/days*10)/10)+'건 · 확인율 '+rate+'%',
     extra:'<span>시설물 <b>'+(c.byType['시설물']||0)+'</b></span><span>기타 <b>'+(c.byType['기타']||0)+'</b></span>',
     analysis:an||('전'+mrPer()+' 대비 특이 변동 사항이 없습니다.')});
 }
 function mrDetailHoHtml(){
   var c=mrData.cur.ho, p=mrData.prev.ho;
-  var h=mrShiftRowHtml('근무조별 인계 건수', c.byShift);
+  var days=mrPeriodDays();
+  var h='<div style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);margin-bottom:12px;font-size:12px;color:var(--g5)">';
+  h+='<span>일평균 인계 <b style="color:var(--navy)">'+(Math.round(c.total/days*10)/10)+'건</b></span>';
+  h+='</div>';
+  h+=mrShiftRowHtml('근무조별 인계 건수', c.byShift);
   h+=mrRankTableHtml('팀별 인계 빈도', c.byTeam, p.byTeam, '건');
   h+=mrRankTableHtml('시설물 위치별', c.byFacLoc, p.byFacLoc, '건');
   h+=mrRankTableHtml('시설물 내용 유형별', c.byFacDesc, p.byFacDesc, '건');
@@ -31825,14 +31849,19 @@ function mrDetailHoHtml(){
 // ── 안전사고 ──
 function mrSummaryCardAcc(){
   var c=mrData.cur.acc, p=mrData.prev.acc;
+  var days=mrPeriodDays();
   var an=mrTopMoverLine(c.byType, p.byType, mrPer())||mrTopMoverLine(c.byTeam, p.byTeam, mrPer());
   return mrGenericSummaryCard({bar:'linear-gradient(90deg,var(--danger),#F07B7B)', iconBg:'var(--danger-bg)', icon:'⚠️', title:'안전사고', numColor:'var(--danger)',
-    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total,
+    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total, extraLine:'일평균 '+(Math.round(c.total/days*100)/100)+'건',
     analysis:an||('전'+mrPer()+' 대비 특이 변동 사항이 없습니다.')});
 }
 function mrDetailAccHtml(){
   var c=mrData.cur.acc, p=mrData.prev.acc;
-  var h=mrShiftRowHtml('근무조별 사고 건수', c.byShift);
+  var h='<div style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);margin-bottom:12px">';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--g7);margin-bottom:8px">⏰ 시간대별 발생 분포</div>';
+  h+=mrHourBucketBarsHtml(c.byHour);
+  h+='</div>';
+  h+=mrShiftRowHtml('근무조별 사고 건수', c.byShift);
   h+=mrRankTableHtml('사고 유형별', c.byType, p.byType, '건');
   h+=mrRankTableHtml('발생 팀별', c.byTeam, p.byTeam, '건');
   h+=mrRankTableHtml('발생 위치별', c.byLoc, p.byLoc, '건');
@@ -31841,47 +31870,90 @@ function mrDetailAccHtml(){
 // ── 민원(서비스응대) ──
 function mrSummaryCardVoc(){
   var c=mrData.cur.voc, p=mrData.prev.voc;
+  var days=mrPeriodDays();
   var rate=c.total?Math.round(c.done/c.total*100):0;
+  var avgDone=c.doneDaysCnt?(Math.round(c.doneDaysSum/c.doneDaysCnt*10)/10):null;
   var an=mrTopMoverLine(c.byType, p.byType, mrPer())||mrTopMoverLine(c.byLoc, p.byLoc, mrPer());
   return mrGenericSummaryCard({bar:'linear-gradient(90deg,#6B21A8,#9D5BD2)', iconBg:'#F3E8FF', icon:'📞', title:'민원(서비스응대)', numColor:'#6B21A8',
-    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total, extraLine:'처리완료율 '+rate+'%',
+    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total, extraLine:'일평균 '+(Math.round(c.total/days*10)/10)+'건 · 처리완료율 '+rate+'%'+(avgDone!==null?(' · 평균 처리기간 '+avgDone+'일'):''),
     analysis:an||('전'+mrPer()+' 대비 특이 변동 사항이 없습니다.')});
 }
 function mrDetailVocHtml(){
   var c=mrData.cur.voc, p=mrData.prev.voc;
-  var h=mrShiftRowHtml('근무조별 접수 건수', c.byShift);
+  var days=mrPeriodDays();
+  var avgDone=c.doneDaysCnt?(Math.round(c.doneDaysSum/c.doneDaysCnt*10)/10):null;
+  var h='<div style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);margin-bottom:12px;display:flex;gap:14px;font-size:12px;color:var(--g5);flex-wrap:wrap">';
+  h+='<span>일평균 접수 <b style="color:#6B21A8">'+(Math.round(c.total/days*10)/10)+'건</b></span>';
+  h+='<span>평균 처리기간 <b style="color:#6B21A8">'+(avgDone!==null?avgDone+'일':'-')+'</b></span>';
+  h+='</div>';
+  h+=mrShiftRowHtml('근무조별 접수 건수', c.byShift);
   h+=mrRankTableHtml('접수 경로별', c.byChannel, p.byChannel, '건');
   h+=mrRankTableHtml('민원 유형별', c.byType, p.byType, '건');
   h+=mrRankTableHtml('위치별', c.byLoc, p.byLoc, '건');
   return h;
 }
 // ── 공동작업 ──
+function mrJwConcentrationLine(byTeam, headSum){
+  var keys=Object.keys(byTeam||{});
+  if(!keys.length||!headSum) return '';
+  var top=keys.reduce(function(a,b){ return (byTeam[b]||0)>(byTeam[a]||0)?b:a; });
+  var pct=Math.round((byTeam[top]||0)/headSum*100);
+  if(pct>=40) return top+'팀 투입 비중이 '+pct+'%로 편중돼 있습니다.';
+  return '';
+}
 function mrSummaryCardJw(){
   var c=mrData.cur.jw, p=mrData.prev.jw;
-  var an=mrTopMoverLine(c.byLoc, p.byLoc, mrPer())||mrTopMoverLine(c.byWork, p.byWork, mrPer());
+  var days=mrPeriodDays();
+  var an=mrTopMoverLine(c.byLoc, p.byLoc, mrPer())||mrTopMoverLine(c.byWork, p.byWork, mrPer())||mrJwConcentrationLine(c.byTeam,c.headSum);
   return mrGenericSummaryCard({bar:'linear-gradient(90deg,var(--teal),var(--teal2))', iconBg:'var(--teal-bg)', icon:'🤝', title:'공동작업', numColor:'var(--teal2)',
-    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total, extraLine:'총 투입인원 '+(c.headSum||0)+'명',
+    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total, extraLine:'일평균 '+(Math.round((c.headSum||0)/days*10)/10)+'명 투입 · 총 '+(c.headSum||0)+'명',
     analysis:an||('전'+mrPer()+' 대비 특이 변동 사항이 없습니다.')});
 }
 function mrDetailJwHtml(){
   var c=mrData.cur.jw, p=mrData.prev.jw;
-  var h=mrRankTableHtml('참여팀별 투입인원', c.byTeam, p.byTeam, '명');
+  var days=mrPeriodDays();
+  var h='<div style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);margin-bottom:12px;font-size:12px;color:var(--g5)">';
+  h+='<span>일평균 투입인원 <b style="color:var(--teal2)">'+(Math.round((c.headSum||0)/days*10)/10)+'명</b></span>';
+  var conc=mrJwConcentrationLine(c.byTeam,c.headSum);
+  if(conc) h+='<div style="margin-top:8px;background:var(--g1);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--g6)">💡 '+conc+'</div>';
+  h+='</div>';
+  h+=mrRankTableHtml('참여팀별 투입인원', c.byTeam, p.byTeam, '명');
   h+=mrRankTableHtml('층·위치별', c.byLoc, p.byLoc, '건');
   h+=mrRankTableHtml('작업 내용별', c.byWork, p.byWork, '건');
   return h;
 }
 // ── 습득물 관리 ──
+function mrHourBucketBarsHtml(arr){
+  var labels=['새벽(00~06시)','오전(06~12시)','오후(12~18시)','야간(18~24시)'];
+  var colors=['#1E3A5F','#1D9E75','#1A6B8A','#6B21A8'];
+  var mx=Math.max(arr[0]||0,arr[1]||0,arr[2]||0,arr[3]||0,1);
+  var h='';
+  for(var i=0;i<4;i++){ h+=msBar(labels[i], arr[i]||0, mx, colors[i], '건'); }
+  return h;
+}
 function mrSummaryCardLost(){
   var c=mrData.cur.lost, p=mrData.prev.lost;
+  var days=mrPeriodDays();
   var rate=c.total?Math.round(c.done/c.total*100):0;
+  var avgDone=c.doneDaysCnt?(Math.round(c.doneDaysSum/c.doneDaysCnt*10)/10):null;
   var an=mrTopMoverLine(c.byItem, p.byItem, mrPer())||mrTopMoverLine(c.byLoc, p.byLoc, mrPer());
   return mrGenericSummaryCard({bar:'linear-gradient(90deg,var(--warn),#E8A83E)', iconBg:'var(--warn-bg)', icon:'🧳', title:'습득물 관리', numColor:'var(--warn)',
-    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total, extraLine:'처리완료율 '+rate+'%',
+    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total, extraLine:'일평균 '+(Math.round(c.total/days*10)/10)+'건 · 처리완료율 '+rate+'%'+(avgDone!==null?(' · 평균 처리기간 '+avgDone+'일'):''),
     analysis:an||('전'+mrPer()+' 대비 특이 변동 사항이 없습니다.')});
 }
 function mrDetailLostHtml(){
   var c=mrData.cur.lost, p=mrData.prev.lost;
-  var h=mrShiftRowHtml('근무조별 접수 건수', c.byShift);
+  var days=mrPeriodDays();
+  var avgDone=c.doneDaysCnt?(Math.round(c.doneDaysSum/c.doneDaysCnt*10)/10):null;
+  var h='<div style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);margin-bottom:12px;display:flex;gap:14px;font-size:12px;color:var(--g5);flex-wrap:wrap">';
+  h+='<span>일평균 접수 <b style="color:var(--warn)">'+(Math.round(c.total/days*10)/10)+'건</b></span>';
+  h+='<span>평균 처리기간 <b style="color:var(--warn)">'+(avgDone!==null?avgDone+'일':'-')+'</b></span>';
+  h+='</div>';
+  h+='<div style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);margin-bottom:12px">';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--g7);margin-bottom:8px">⏰ 시간대별 접수 분포</div>';
+  h+=mrHourBucketBarsHtml(c.byHour);
+  h+='</div>';
+  h+=mrShiftRowHtml('근무조별 접수 건수', c.byShift);
   h+=mrRankTableHtml('품목 분류별', c.byItem, p.byItem, '건');
   h+=mrRankTableHtml('발견 위치별', c.byLoc, p.byLoc, '건');
   h+=mrRankTableHtml('접수 경로별', c.byRoute, p.byRoute, '건');
@@ -31892,20 +31964,37 @@ function mrDetailLostHtml(){
 function mrWasteTotal(w){ return (w.inc||0)+(w.rec||0)+(w.misc||0); }
 function mrSummaryCardWaste(){
   var c=mrData.cur.waste, p=mrData.prev.waste;
+  var days=mrPeriodDays();
   var curTotal=mrWasteTotal(c), prevTotal=mrWasteTotal(p);
   var recPct=curTotal?Math.round((c.rec/curTotal)*100):0;
+  var avgDay=Math.round(curTotal/days*100)/100;
   var an=mrTopMoverLine(c.byItem, p.byItem, mrPer());
   return mrGenericSummaryCard({bar:'linear-gradient(90deg,var(--success),#5BBF8A)', iconBg:'var(--success-bg)', icon:'♻️', title:'폐기물 현황', numColor:'var(--success)',
-    value:curTotal.toFixed(1), unit:'톤', cur:curTotal, prev:prevTotal, extraLine:'재활용 비중 '+recPct+'%',
+    value:curTotal.toFixed(1), unit:'톤', cur:curTotal, prev:prevTotal, extraLine:'일평균 '+avgDay+'톤 · 재활용 비중 '+recPct+'%',
     extra:'<span>소각 <b>'+((c.inc||0)).toFixed(1)+'톤</b></span><span>재활용 <b>'+((c.rec||0)).toFixed(1)+'톤</b></span>',
     analysis:an||('전'+mrPer()+' 대비 특이 변동 사항이 없습니다.')});
 }
 function mrDetailWasteHtml(){
   var c=mrData.cur.waste, p=mrData.prev.waste;
-  var h=mrRankTableHtml('폐기물 종류별(톤)', c.byItem, p.byItem, '톤');
+  var days=mrPeriodDays();
+  var curTotal=mrWasteTotal(c);
+  var wv=mrData.wv.cur||{total:0,wasteTrips:0};
+  var perTrip=wv.wasteTrips?Math.round(curTotal/wv.wasteTrips*100)/100:null;
+  var h='<div style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);margin-bottom:12px">';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--g7);margin-bottom:8px">🚛 공사차량 운행 교차 분석</div>';
+  h+='<div style="display:flex;gap:14px;font-size:12px;color:var(--g5);flex-wrap:wrap">';
+  h+='<span>일평균 배출 <b style="color:var(--success)">'+(Math.round(curTotal/days*100)/100)+'톤</b></span>';
+  h+='<span>공사차량 총 운행 <b style="color:var(--g7)">'+(wv.total||0)+'건</b></span>';
+  h+='<span>이 중 폐기물 관련 운행 <b style="color:var(--g7)">'+(wv.wasteTrips||0)+'건</b></span>';
+  h+='</div>';
+  if(perTrip!==null){
+    h+='<div style="margin-top:10px;background:var(--g1);border-radius:8px;padding:8px 10px;font-size:12px;color:var(--g6);line-height:1.5">💡 폐기물 관련 차량 운행 1건당 평균 '+perTrip+'톤을 배출했습니다.</div>';
+  }
+  h+='</div>';
+  h+=mrRankTableHtml('폐기물 종류별(톤)', c.byItem, p.byItem, '톤');
   var curTeamTotals={}, prevTeamTotals={};
-  Object.keys(c.byTeam||{}).forEach(function(tc){ var s=0; Object.keys(c.byTeam[tc]).forEach(function(k){ s+=c.byTeam[tc][k]; }); curTeamTotals[tc]=Math.round(s*10)/10; });
-  Object.keys(p.byTeam||{}).forEach(function(tc){ var s=0; Object.keys(p.byTeam[tc]).forEach(function(k){ s+=p.byTeam[tc][k]; }); prevTeamTotals[tc]=Math.round(s*10)/10; });
+  Object.keys(c.byTeam||{}).forEach(function(tc){ var s=0; Object.keys(c.byTeam[tc]).forEach(function(k){ s+=c.byTeam[tc][k]; }); curTeamTotals[tc]=Math.round(s*100)/100; });
+  Object.keys(p.byTeam||{}).forEach(function(tc){ var s=0; Object.keys(p.byTeam[tc]).forEach(function(k){ s+=p.byTeam[tc][k]; }); prevTeamTotals[tc]=Math.round(s*100)/100; });
   h+=mrRankTableHtml('팀별 배출량(톤)', curTeamTotals, prevTeamTotals, '톤');
   return h;
 }
@@ -31914,8 +32003,8 @@ function mrSummaryCardWorkveh(){
   var c=mrData.wv.cur, p=mrData.wv.prev;
   var vehLine=Object.keys(c.byVeh).map(function(v){ return v+' '+c.byVeh[v]+'건'; }).join(' · ');
   return mrGenericSummaryCard({bar:'linear-gradient(90deg,var(--g5),var(--g4))', iconBg:'var(--g1)', icon:'🚛', title:'공사업무용차량 운행일지', numColor:'var(--g7)',
-    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total,
-    extraLine:vehLine||'운행 기록 없음'});
+    value:c.total.toLocaleString(), unit:'건', cur:c.total, prev:p.total, extraLine:'폐기물 관련 운행 '+(c.wasteTrips||0)+'건',
+    extra:vehLine?('<span>'+vehLine+'</span>'):''});
 }
 var MR_ITEM_TITLES={mp:'인력현황',ho:'인수인계',acc:'안전사고',voc:'민원(서비스응대)',jw:'공동작업',lost:'습득물 관리',waste:'폐기물 현황'};
 var MR_SUMMARY_FNS={mp:mrSummaryCardHtml,ho:mrSummaryCardHo,acc:mrSummaryCardAcc,voc:mrSummaryCardVoc,jw:mrSummaryCardJw,lost:mrSummaryCardLost,waste:mrSummaryCardWaste,workveh:mrSummaryCardWorkveh};
@@ -31934,23 +32023,52 @@ function mrRenderDetail(){
   var fn=MR_DETAIL_FNS[mrCurItem];
   wrap.innerHTML=fn?fn():'<div style="font-size:12px;color:var(--g4);padding:12px">준비 중입니다.</div>';
 }
+function mrGridHasData(m){ return !!(m&&m.some(function(row){ return row.some(function(v){ return v>0; }); })); }
 function mrDetailMpHtml(){
-  var g=mrData.curGrid;
+  var c=mrData.cur.mp;
+  var days=Object.keys(c.days).length||1;
+  var avgG=mrData.mpAvgGrid;
+  var zeroM=[[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0],[0,0,0,0,0,0,0]];
+  var zeroM6=[[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]];
+  var useAmpm=avgG&&mrGridHasData(avgG.ampm);
+  var mpDataArrAvg=useAmpm?avgG.ampm:((avgG&&avgG.am)||zeroM);
+  var splitAvg={toilet:(useAmpm?avgG.ampmToilet:(avgG&&avgG.amToilet))||zeroM6, both:(useAmpm?avgG.ampmBoth:(avgG&&avgG.amBoth))||zeroM6, common:(useAmpm?avgG.ampmCommon:(avgG&&avgG.amCommon))||zeroM6};
   var h='<div style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);margin-bottom:12px">';
-  h+='<div style="font-size:13px;font-weight:800;color:var(--g7);margin-bottom:8px">☀️ 주간(오전·오후) — 구역·층별 인원 합계</div>';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--g7);margin-bottom:2px">☀️ 주간(오전·오후) — 구역·층별 일평균 인원</div>';
+  h+='<div style="font-size:11px;color:var(--g4);margin-bottom:8px">해당 기간 '+days+'일 입력 기준 하루 평균(반올림)</div>';
   h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11px;text-align:center;white-space:nowrap">';
   h+='<thead><tr style="background:var(--g1)"><th style="border-right:1px solid var(--g2);padding:6px 4px">구역</th><th style="border-right:1px solid var(--g2);padding:6px 4px">구분</th>';
   MP_FLOOR_SUFFIX.forEach(function(f){ h+='<th style="border-right:1px solid var(--g2);padding:6px 4px">'+f.toUpperCase()+'</th>'; });
   h+='<th style="padding:6px 4px">집하장</th><th style="padding:6px 4px;font-weight:900">소계</th></tr></thead><tbody>';
-  h+=mpFullSplitTableHtml(g.mpDataArr, g.splitObj, null, null);
+  h+=mpFullSplitTableHtml(mpDataArrAvg, splitAvg, null, null);
   h+='</tbody></table></div></div>';
+  // 시간대별 인원 일평균
+  var amDays=Object.keys(c.shiftDays['오전']||{}).length||1, pmDays=Object.keys(c.shiftDays['오후']||{}).length||1, ntDays=Object.keys(c.shiftDays['야간']||{}).length||1;
+  var amAvg=Math.round(c.shiftSum['오전']/amDays), pmAvg=Math.round(c.shiftSum['오후']/pmDays), ntAvg=Math.round(c.shiftSum['야간']/ntDays);
+  var slotMax=Math.max(amAvg, amAvg+pmAvg, pmAvg, pmAvg+ntAvg, ntAvg, 1);
+  h+='<div style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);margin-bottom:12px">';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--g7);margin-bottom:8px">⏰ 시간대별 인원 일평균</div>';
+  h+=msBar('07:00~12:00 (오전전용)', amAvg, slotMax, '#1D9E75', '명');
+  h+=msBar('12:00~16:30 (오전+오후 겹침)', amAvg+pmAvg, slotMax, '#C9962A', '명');
+  h+=msBar('16:30~21:30 (오후전용)', pmAvg, slotMax, '#1A6B8A', '명');
+  h+=msBar('21:30~22:00 (오후+야간 겹침)', pmAvg+ntAvg, slotMax, '#C9962A', '명');
+  h+=msBar('22:00~07:00 (야간전용)', ntAvg, slotMax, '#1E3A5F', '명');
+  h+='</div>';
+  // 층별 일평균
+  var floorDays=Object.keys(c.floorDays||{}).length||1;
+  var flMax=1; for(var fi=0;fi<7;fi++){ flMax=Math.max(flMax, Math.round(c.floorSum[fi]/floorDays)); }
+  h+='<div style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05);margin-bottom:12px">';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--g7);margin-bottom:8px">🏢 층별 일평균 인원</div>';
+  var flLabels=MP_FLOOR_LABELS.concat(['집하장']);
+  for(var fj=0;fj<7;fj++){ h+=msBar(flLabels[fj], Math.round(c.floorSum[fj]/floorDays), flMax, 'var(--teal2)', '명'); }
+  h+='</div>';
   h+='<div style="background:white;border-radius:var(--r);padding:13px;border:1px solid var(--g2);box-shadow:0 2px 6px rgba(0,0,0,.05)">';
-  h+='<div style="font-size:13px;font-weight:800;color:var(--g7);margin-bottom:8px">🌙 야간특별작업 — 항목별 합계 (5팀 랜드 · 10팀 에어)</div>';
+  h+='<div style="font-size:13px;font-weight:800;color:var(--g7);margin-bottom:8px">🌙 야간특별작업 — 항목별 일평균 (5팀 랜드 · 10팀 에어)</div>';
+  h+='<div style="font-size:11px;color:var(--g4);margin-bottom:8px">야간 입력일 '+ntDays+'일 기준</div>';
   h+='<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px;text-align:center">';
   h+='<thead><tr style="background:var(--g1)"><th style="border-right:1px solid var(--g2);padding:6px 8px;text-align:left">작업 항목</th><th style="border-right:1px solid var(--g2);padding:6px 8px">랜드(L/S)</th><th style="border-right:1px solid var(--g2);padding:6px 8px">에어(A/S)</th><th style="padding:6px 8px;font-weight:900">합계</th></tr></thead><tbody>';
-  var c=mrData.cur.mp;
   MS_NS_COLS.forEach(function(cc){
-    var land=c.nsSumLand[cc]||0, air=c.nsSumAir[cc]||0, total=c.nsSum[cc]||0;
+    var land=Math.round((c.nsSumLand[cc]||0)/ntDays), air=Math.round((c.nsSumAir[cc]||0)/ntDays), total=Math.round((c.nsSum[cc]||0)/ntDays);
     h+='<tr><td style="border-right:1px solid var(--g2);border-top:1px solid var(--g1);padding:6px 8px;text-align:left">'+MS_NS_LABELS[cc]+'</td>';
     h+='<td style="border-right:1px solid var(--g2);border-top:1px solid var(--g1);padding:6px 8px">'+land+'</td>';
     h+='<td style="border-right:1px solid var(--g2);border-top:1px solid var(--g1);padding:6px 8px">'+air+'</td>';
