@@ -31059,6 +31059,21 @@ function cpRenderAllEntries(){
     h+='<div style="font-size:11.5px;color:#C2751A;font-weight:700;margin-bottom:8px">🗓 관리자 투표 가능 기간: '+(cpCurCampaign.vote_start_date||'제한없음')+' ~ '+(cpCurCampaign.vote_end_date||'제한없음')+'</div>';
   }
   if(canSee){
+    if(cpCurCampaign.judging_closed){
+      h+='<div style="display:flex;align-items:center;justify-content:space-between;background:#f1f5f9;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px 12px;margin-bottom:12px">'
+        +'<span style="font-size:12.5px;font-weight:700;color:#475569">🔒 심사가 마감되었습니다</span>'
+        +'<button onclick="cpToggleJudging(false)" style="padding:6px 12px;background:white;color:#475569;border:1.5px solid #cbd5e1;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer">다시 열기</button>'
+        +'</div>';
+    }else{
+      h+='<div style="display:flex;align-items:center;justify-content:space-between;background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;padding:10px 12px;margin-bottom:12px">'
+        +'<span style="font-size:12.5px;font-weight:700;color:#c2410c">심사가 진행 중입니다</span>'
+        +'<button onclick="cpToggleJudging(true)" style="padding:6px 12px;background:#c2410c;color:white;border:none;border-radius:8px;font-size:11.5px;font-weight:700;cursor:pointer">🔒 심사 마감</button>'
+        +'</div>';
+    }
+  }else if(cpCurCampaign.judging_closed){
+    h+='<div style="background:#f1f5f9;border:1.5px solid #cbd5e1;border-radius:10px;padding:10px;margin-bottom:12px;font-size:12px;color:#475569;font-weight:700">🔒 심사가 마감되어 더 이상 투표를 반영할 수 없습니다</div>';
+  }
+  if(canSee){
     var _limit=cpCurCampaign.finalist_limit||16, _minMult=cpCurCampaign.min_multiplier||0;
     h+='<div style="font-size:11.5px;color:#0e7490;margin-bottom:8px">🏆 최종 후보 선정: '+cpFinalistsCache.length+' / '+_limit+' — 각 항목의 "선정" 버튼으로 최종 후보를 선정하세요. 선정 후 [전직원 투표] 버튼이 활성화됩니다.</div>';
     if(_minMult>0){
@@ -31100,8 +31115,18 @@ function cpRenderAllEntries(){
   });
   wrap.innerHTML=h;
 }
+async function cpToggleJudging(close){
+  if(!cpCanSeeIdentity()){ toast('⚠️ master만 마감할 수 있습니다'); return; }
+  if(close && !confirm('심사를 마감할까요? 마감하면 관리자(조장 이상)가 더 이상 순위 투표를 넣거나 바꿀 수 없습니다.')) return;
+  var res=await sb.from('campaigns').update({judging_closed:close}).eq('id',cpCurCampaign.id);
+  if(res.error){ toast('오류: '+_safeErrMsg(res.error)); return; }
+  cpCurCampaign.judging_closed=close;
+  toast(close?'🔒 심사가 마감되었습니다':'✓ 심사가 다시 열렸습니다');
+  cpRenderAllEntries();
+}
 async function cpCastVote(entryId, rank){
   if(!cpIsAdmin()){ toast('⚠️ 조장 이상만 가능합니다'); return; }
+  if(cpCurCampaign.judging_closed){ toast('⚠️ 심사가 마감되어 투표를 반영할 수 없습니다'); return; }
   var __entry=cpAllEntriesCache.find(function(e){return e.id===entryId;});
   if(__entry && me && ((me.employee_id&&__entry.emp_no&&me.employee_id===__entry.emp_no)||(!me.employee_id&&me.name&&__entry.name===me.name))){
     toast('⚠️ 본인이 작성한 응모작에는 투표할 수 없습니다');
