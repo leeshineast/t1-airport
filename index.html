@@ -30806,14 +30806,40 @@ async function cpLoadTiebreaks(){
   cpTiebreakVotesCache=vRes.data||[];
 }
 function cpEntriesById(ids){ return ids.map(function(id){ return cpAllEntriesCache.find(function(e){return e.id===id;}); }).filter(Boolean); }
+function cpFindResolvedTie(groupIds){
+  var setKey=groupIds.slice().sort().join(',');
+  var candidates=cpTiebreaksCache.filter(function(t){
+    return t.phase===1 && t.status==='closed' && t.resolved_by && t.entry_ids && t.entry_ids.slice().sort().join(',')===setKey;
+  });
+  if(!candidates.length) return null;
+  candidates.sort(function(a,b){ return (b.round||1)-(a.round||1); });
+  return candidates[0];
+}
 function cpAdminRankedList(){
   var rows=cpAllEntriesCache.filter(function(e){return cpEntryScore(e.id)>0;});
   var arr=rows.slice().sort(function(a,b){ return cpEntryScore(b.id)-cpEntryScore(a.id); });
-  arr.forEach(function(e,i){
-    var sc=cpEntryScore(e.id);
-    if(i>0 && sc===cpEntryScore(arr[i-1].id)){ e._tieRank=arr[i-1]._tieRank; }
-    else{ e._tieRank=i+1; }
-  });
+  var i=0;
+  while(i<arr.length){
+    var j=i;
+    while(j+1<arr.length && cpEntryScore(arr[j+1].id)===cpEntryScore(arr[i].id)) j++;
+    if(j>i){
+      var groupIds=arr.slice(i,j+1).map(function(e){return e.id;});
+      var resolved=cpFindResolvedTie(groupIds);
+      if(resolved){
+        var orderMap={}; resolved.entry_ids.forEach(function(id,idx){ orderMap[id]=idx; });
+        var groupArr=arr.slice(i,j+1).sort(function(a,b){
+          var oa=orderMap[a.id], ob=orderMap[b.id];
+          return (oa===undefined?999:oa)-(ob===undefined?999:ob);
+        });
+        for(var k=0;k<groupArr.length;k++){ arr[i+k]=groupArr[k]; arr[i+k]._tieRank=i+k+1; arr[i+k]._tieResolved=true; }
+      }else{
+        for(var k2=i;k2<=j;k2++){ arr[k2]._tieRank=i+1; arr[k2]._tieResolved=false; }
+      }
+    }else{
+      arr[i]._tieRank=i+1; arr[i]._tieResolved=false;
+    }
+    i=j+1;
+  }
   return arr;
 }
 // 관리자 점수 TOP N 커트라인에서 실제로 자리를 다투는 동점 그룹(자리 안/밖에 걸쳐 있는 경우)만 반환
@@ -31094,16 +31120,32 @@ function cpRenderAllEntries(){
     }
   }
   h+='<div style="font-size:12.5px;color:var(--g5);margin-bottom:8px;font-weight:700">전체 '+rows.length+'건</div>';
+  var _ranked=cpAdminRankedList();
+  var _rankInfo={}; _ranked.forEach(function(e){ _rankInfo[e.id]={rank:e._tieRank, resolved:!!e._tieResolved}; });
+  var _tieCounts={}; _ranked.forEach(function(e){ if(!e._tieResolved){ _tieCounts[e._tieRank]=(_tieCounts[e._tieRank]||0)+1; } });
+  if(canSee){
+    var _rankedIds={}; _ranked.forEach(function(e){ _rankedIds[e.id]=true; });
+    var _scoredRows=rows.filter(function(e){ return _rankedIds[e.id]; }).sort(function(a,b){ return _rankInfo[a.id].rank-_rankInfo[b.id].rank; });
+    var _unscoredRows=rows.filter(function(e){ return !_rankedIds[e.id]; });
+    rows=_scoredRows.concat(_unscoredRows);
+  }
   rows.forEach(function(e){
     var score=cpEntryScore(e.id), voteCnt=cpEntryVoteCount(e.id);
     var myRank=cpMyVoteFor(e.id);
     var hasScore=score>0;
+    var rInfo=_rankInfo[e.id];
+    var rankBadge='';
+    if(canSee && rInfo){
+      if(rInfo.resolved) rankBadge='<span style="font-size:11px;font-weight:800;color:#0e7490;background:#ecfeff;border-radius:6px;padding:2px 7px;margin-right:6px">'+rInfo.rank+'위 · 재투표 확정</span>';
+      else if(_tieCounts[rInfo.rank]>1) rankBadge='<span style="font-size:11px;font-weight:800;color:#be123c;background:#fff1f2;border-radius:6px;padding:2px 7px;margin-right:6px">공동 '+rInfo.rank+'위</span>';
+      else rankBadge='<span style="font-size:11px;font-weight:800;color:var(--g6);background:var(--g1);border-radius:6px;padding:2px 7px;margin-right:6px">'+rInfo.rank+'위</span>';
+    }
     var isFinal=cpIsFinalist(e.id);
     var isMine=!!(me&&((me.employee_id&&e.emp_no&&me.employee_id===e.emp_no)||(!me.employee_id&&me.name&&e.name===me.name)));
     var headerLabel=canSee?(eeEsc(e.name||'')+' ('+eeEsc(e.emp_no||'')+') '+(e.team?('· '+eeEsc(e.team)):'')):('응모작 #'+anonNo[e.id]);
     h+='<div style="background:'+(isFinal?'#ecfeff':(canSee&&hasScore?'#fffbeb':'white'))+';border:1.5px solid '+(isFinal?'#67e8f9':(canSee&&hasScore?'#fde68a':'var(--g2)'))+';border-radius:10px;padding:11px;margin-bottom:8px">'+
        '<div style="display:flex;justify-content:space-between;gap:8px">'+
-       '<span style="font-size:13px;font-weight:700;color:var(--g7)">'+(isFinal?'🏆 ':'')+headerLabel+'</span>'+
+       '<span style="font-size:13px;font-weight:700;color:var(--g7)">'+(isFinal?'🏆 ':'')+rankBadge+headerLabel+'</span>'+
        (canSee?('<span style="display:flex;gap:5px;flex-shrink:0"><button onclick="cpToggleFinalist(\''+e.id+'\')" style="padding:3px 9px;border-radius:6px;border:1.5px solid '+(isFinal?'#0e7490':'var(--g2)')+';background:'+(isFinal?'#0e7490':'white')+';color:'+(isFinal?'white':'var(--g6)')+';font-size:11px;font-weight:700;cursor:pointer">'+(isFinal?'선정 해제':'최종 후보 선정')+'</button><button onclick="cpAdminDeleteEntry(\''+e.id+'\')" style="padding:3px 9px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer">삭제</button></span>'):'')+
        '</div>'+
        '<div style="font-size:13px;color:var(--g6);white-space:pre-wrap;margin-top:6px;line-height:1.6">'+eeEsc(e.content)+'</div>'+
