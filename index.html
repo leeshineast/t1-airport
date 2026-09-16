@@ -30828,7 +30828,9 @@ function cpAdminRankedList(){
     while(j+1<arr.length && cpEntryScore(arr[j+1].id)===cpEntryScore(arr[i].id)) j++;
     if(j>i){
       var groupIds=arr.slice(i,j+1).map(function(e){return e.id;});
-      var resolved=cpFindResolvedTie(groupIds);
+      var tieKey='cutoff_r'+(i+1);
+      var resolved=cpTieForKey(1, tieKey);
+      if(!resolved || resolved.status!=='closed' || !resolved.resolved_by) resolved=null;
       // 이 동점 그룹이 커트라인에 걸쳐있을 때만("공동 N위" 안/밖으로) 분할, 아니면 슬롯 개념 없음
       var slots=(i<limit && limit<=j) ? (limit-i) : 0;
       if(resolved && slots>0 && slots<groupIds.length){
@@ -30839,7 +30841,7 @@ function cpAdminRankedList(){
         });
         for(var k=0;k<groupArr.length;k++){
           arr[i+k]=groupArr[k];
-          arr[i+k]._tieRank = (k<slots) ? (i+1) : (i+2);
+          arr[i+k]._tieRank = (k<slots) ? (i+1) : (i+1+slots);
           arr[i+k]._tieResolved = true;
         }
       }else{
