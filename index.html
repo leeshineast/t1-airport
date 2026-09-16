@@ -3963,7 +3963,8 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <button id="cpAdminBtns" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenAllEntries()">📋 전체 제출목록 보기 / 최종 후보 선정 (관리자)</button>
     <button id="cpVoteStatusBtn" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenVoteStatus()">🗂️ 관리자 투표 현황 (누가 투표했는지)</button>
     <button id="cpEligibleBtn" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenEligible()">✅ 응모 가능자 명단 관리 (관리자)</button>
-    <button id="cpVoteBtn" style="display:none;width:100%;padding:11px;background:#ecfeff;border:1.5px solid #67e8f9;border-radius:10px;font-size:13.5px;font-weight:700;color:#0e7490;cursor:pointer;margin-bottom:8px" onclick="cpOpenPublicVote()">🗳️ 전직원 투표 참여</button>
+    <button id="cpVoteBtn" style="display:none;width:100%;padding:11px;background:#ecfeff;border:1.5px solid #67e8f9;border-radius:10px;font-size:13.5px;font-weight:700;color:#0e7490;cursor:pointer;margin-bottom:2px" onclick="cpOpenPublicVote()">🗳️ 전직원 투표 참여</button>
+    <div id="cpVoteBtnPeriod" style="display:none;font-size:11px;color:var(--g4);text-align:center;margin-bottom:8px"></div>
     <button id="cpResultBtn" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenVoteResults()">📊 전직원 투표 결과 (관리자)</button>
     <button id="cpWinnerBtn" style="display:none;width:100%;padding:11px;background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;font-size:13.5px;font-weight:700;color:#c2410c;cursor:pointer" onclick="cpOpenWinnerEdit()">📢 당선작 공지 작성/수정</button>
   </div>
@@ -4014,6 +4015,11 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
       <div style="display:flex;gap:6px;margin:6px 0 0">
         <input type="date" id="cpNewVoteStart" style="flex:1;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
         <input type="date" id="cpNewVoteEnd" style="flex:1;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
+      </div>
+      <label style="font-size:12.5px;font-weight:700;color:var(--g6);display:block;margin-top:12px">전직원 투표 가능 기간 (비워두면 제한 없음)</label>
+      <div style="display:flex;gap:6px;margin:6px 0 0">
+        <input type="date" id="cpNewPubVoteStart" style="flex:1;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
+        <input type="date" id="cpNewPubVoteEnd" style="flex:1;padding:10px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px">
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-top:16px">
@@ -30166,6 +30172,8 @@ function cpOpenCreate(){
   document.getElementById('cpNewMaxLength').value='';
   document.getElementById('cpNewVoteStart').value='';
   document.getElementById('cpNewVoteEnd').value='';
+  document.getElementById('cpNewPubVoteStart').value='';
+  document.getElementById('cpNewPubVoteEnd').value='';
   cpSetTargetRolesUI([]);
   showM('cpCreateModal');
 }
@@ -30189,6 +30197,8 @@ function cpOpenEditCampaign(id){
   document.getElementById('cpNewMaxLength').value=c.max_length||'';
   document.getElementById('cpNewVoteStart').value=c.vote_start_date||'';
   document.getElementById('cpNewVoteEnd').value=c.vote_end_date||'';
+  document.getElementById('cpNewPubVoteStart').value=c.public_vote_start_date||'';
+  document.getElementById('cpNewPubVoteEnd').value=c.public_vote_end_date||'';
   cpSetTargetRolesUI(c.target_roles===undefined?[]:c.target_roles);
   showM('cpCreateModal');
 }
@@ -30217,6 +30227,8 @@ async function cpCreateCampaign(){
     payload.max_length = maxLen>0 ? maxLen : null;
     payload.vote_start_date = document.getElementById('cpNewVoteStart').value||null;
     payload.vote_end_date = document.getElementById('cpNewVoteEnd').value||null;
+    payload.public_vote_start_date = document.getElementById('cpNewPubVoteStart').value||null;
+    payload.public_vote_end_date = document.getElementById('cpNewPubVoteEnd').value||null;
   }
   var res;
   var campaignId;
@@ -30254,6 +30266,13 @@ async function cpOpenDetail(id){
   // 최종 후보(TOP16)가 하나라도 선정돼 있으면 전직원 투표 버튼 노출
   var finRes=await sb.from('campaign_finalists').select('id').eq('campaign_id',c.id).limit(1);
   document.getElementById('cpVoteBtn').style.display=(finRes.data&&finRes.data.length)?'block':'none';
+  var pvPeriodEl=document.getElementById('cpVoteBtnPeriod');
+  if((finRes.data&&finRes.data.length) && (c.public_vote_start_date||c.public_vote_end_date)){
+    pvPeriodEl.style.display='block';
+    pvPeriodEl.textContent='🗓 전직원 투표 가능 기간: '+(c.public_vote_start_date||'제한없음')+' ~ '+(c.public_vote_end_date||'제한없음');
+  }else{
+    pvPeriodEl.style.display='none';
+  }
 
   // 사업부 행사 상세 정보(기간/대상/조건/일정) 카드
   var infoWrap=document.getElementById('cpInfoWrap');
@@ -31301,6 +31320,9 @@ var cpPublicFinalistsCache=[]; // [{finalist, entry}]
 var cpPublicVotesCache=[];
 var cpMySelectedFinalistId=null;
 async function cpOpenPublicVote(){
+  var todayForPubVote=kstDate();
+  if(cpCurCampaign.public_vote_start_date && todayForPubVote<cpCurCampaign.public_vote_start_date){ toast('⚠️ 아직 전직원 투표 기간이 아닙니다 ('+cpCurCampaign.public_vote_start_date+'부터)'); return; }
+  if(cpCurCampaign.public_vote_end_date && todayForPubVote>cpCurCampaign.public_vote_end_date){ toast('⚠️ 전직원 투표 기간이 종료되었습니다 ('+cpCurCampaign.public_vote_end_date+'까지)'); return; }
   var fRes=await sb.from('campaign_finalists').select('*').eq('campaign_id',cpCurCampaign.id).order('seed_rank',{ascending:true});
   var finalists=fRes.data||[];
   if(!finalists.length){ toast('아직 최종 후보가 선정되지 않았습니다'); return; }
@@ -31359,6 +31381,9 @@ function cpSelectFinalist(entryId){
   cpRenderPublicVoteList();
 }
 async function cpSubmitPublicVote(){
+  var todayForPubVote2=kstDate();
+  if(cpCurCampaign.public_vote_start_date && todayForPubVote2<cpCurCampaign.public_vote_start_date){ toast('⚠️ 아직 전직원 투표 기간이 아닙니다 ('+cpCurCampaign.public_vote_start_date+'부터)'); return; }
+  if(cpCurCampaign.public_vote_end_date && todayForPubVote2>cpCurCampaign.public_vote_end_date){ toast('⚠️ 전직원 투표 기간이 종료되었습니다 ('+cpCurCampaign.public_vote_end_date+'까지)'); return; }
   var empNo=(document.getElementById('cpVoteEmpNo').value||'').trim();
   var name=(document.getElementById('cpVoteName').value||'').trim();
   if(!empNo||!name){ toast('⚠️ 사번과 이름을 입력해주세요'); return; }
