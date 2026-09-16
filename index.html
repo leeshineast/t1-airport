@@ -30956,6 +30956,11 @@ function cpAdminFinalOrder(){
   ).concat(arr.slice(startIdx+tie.group.length));
   return reordered.slice(0,limit);
 }
+function cpTieContentSnippet(e, maxLen){
+  var c=(e.content||'').replace(/\s+/g,' ').trim();
+  if(c.length>maxLen) c=c.slice(0,maxLen)+'…';
+  return eeEsc(c);
+}
 function cpTieBannerHtml(tie, anonNo, canSee){
   if(!tie) return '';
   var t=cpTieForKey(1, tie.tieKey);
@@ -30964,7 +30969,9 @@ function cpTieBannerHtml(tie, anonNo, canSee){
   var label=function(e){ return canSee?(eeEsc(e.name||'')+'('+eeEsc(e.emp_no||'')+')'):('응모작 #'+(anonNo[e.id]||'?')); };
   var h='<div style="background:#fff1f2;border:1.5px solid #fda4af;border-radius:10px;padding:12px;margin-bottom:12px">';
   h+='<div style="font-size:12.5px;font-weight:800;color:#be123c;margin-bottom:6px">⚖️ '+tie.rank+'등 자리 동점 — '+groupEntries.length+'명이 '+tie.slots+'자리를 두고 경쟁 중입니다</div>';
-  h+='<div style="font-size:12px;color:#9f1239;margin-bottom:8px">'+groupEntries.map(label).join(', ')+'</div>';
+  h+='<div style="margin-bottom:8px">'+groupEntries.map(function(e){
+    return '<div style="font-size:12px;color:#9f1239;padding:2px 0"><b>'+label(e)+'</b> — '+cpTieContentSnippet(e,40)+'</div>';
+  }).join('')+'</div>';
   if(!t){
     if(cpCanSeeIdentity()){
       h+='<div style="font-size:11px;color:#9f1239;margin-bottom:6px">재투표 참여 범위를 선택해 시작하세요</div>';
@@ -30979,10 +30986,13 @@ function cpTieBannerHtml(tie, anonNo, canSee){
     var tally=cpTieTally(t.id);
     var eligible=cpTieEligible(t.eligible_role_min);
     h+='<div style="font-size:11px;color:#9f1239;margin-bottom:6px">🗳 재투표 진행중 ('+cpTieRoleLabel(t.eligible_role_min)+' 참여 · 1인 1표) — 라운드 '+(t.round||1)+'</div>';
-    h+='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">'+groupEntries.map(function(e){
+    h+='<div style="margin-bottom:8px">'+groupEntries.map(function(e){
       var active=myVote===e.id;
       var cnt=cpCanSeeIdentity()?(' · '+(tally[e.id]||0)+'표'):'';
-      return '<button '+(eligible?('onclick="cpCastTiebreakVote(\''+t.id+'\',\''+e.id+'\')"'):'disabled')+' style="padding:6px 10px;border-radius:8px;border:1.5px solid '+(active?'#be123c':'var(--g2)')+';background:'+(active?'#be123c':'white')+';color:'+(active?'white':'var(--g6)')+';font-size:11.5px;font-weight:700;cursor:'+(eligible?'pointer':'not-allowed')+'">'+label(e)+cnt+'</button>';
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 10px;margin-bottom:6px;border-radius:8px;border:1.5px solid '+(active?'#be123c':'var(--g2)')+';background:'+(active?'#fff1f2':'white')+'">'
+        +'<div style="min-width:0;flex:1"><div style="font-size:11.5px;font-weight:700;color:'+(active?'#be123c':'var(--g6)')+'">'+label(e)+cnt+'</div><div style="font-size:12px;color:var(--g6);margin-top:2px;line-height:1.5">'+cpTieContentSnippet(e,60)+'</div></div>'
+        +'<button '+(eligible?('onclick="cpCastTiebreakVote(\''+t.id+'\',\''+e.id+'\')"'):'disabled')+' style="flex-shrink:0;padding:6px 12px;border-radius:8px;border:none;background:'+(active?'#be123c':'var(--g1)')+';color:'+(active?'white':'var(--g6)')+';font-size:11.5px;font-weight:700;cursor:'+(eligible?'pointer':'not-allowed')+'">'+(active?'✓ 투표함':'투표')+'</button>'
+        +'</div>';
     }).join('')+'</div>';
     if(!eligible){ h+='<div style="font-size:11px;color:#9f1239;margin-bottom:6px">⚠️ 이 재투표는 '+cpTieRoleLabel(t.eligible_role_min)+'만 참여할 수 있습니다</div>'; }
     if(cpCanSeeIdentity()){
