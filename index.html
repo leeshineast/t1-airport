@@ -6372,6 +6372,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
           <tbody id="leaderDataEditBody"></tbody>
         </table>
       </div>
+      <div id="leaderDataSupportCard" style="display:none;margin-bottom:12px"></div>
       <button id="leaderDataResetBtn" onclick="resetLeaderDataToday()" style="display:none;width:100%;margin-bottom:8px;padding:10px;background:var(--danger-bg);color:var(--danger);border:1.5px solid rgba(217,64,64,.35);border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🗑️ 당일 입력 초기화 (이 조만 삭제)</button>
       <div style="display:flex;gap:7px">
         <button onclick="closeLeaderDataEdit()" style="flex:1;padding:11px;background:var(--g1);border:none;border-radius:var(--r2);font-size:15px;font-weight:700;color:var(--g5);cursor:pointer">취소</button>
@@ -16276,6 +16277,7 @@ function openLeaderDataEdit(shift,team,name){
         +'</tr>';
     }).join('');
     body.innerHTML=rows2;
+    loadLeaderDataSupportCard(shift,team);
     showM('leaderDataModal');
     return;
   }
@@ -16321,10 +16323,32 @@ function openLeaderDataEdit(shift,team,name){
     blockHtml+='</tbody></table>';
   }
   body.innerHTML='<tr><td style="padding:6px 2px">'+blockHtml+'</td></tr>';
+  loadLeaderDataSupportCard(shift,team);
   showM('leaderDataModal');
 }
 
 function closeLeaderDataEdit(){hideM('leaderDataModal');}
+async function loadLeaderDataSupportCard(shift,team){
+  var card=document.getElementById('leaderDataSupportCard');
+  if(!card) return;
+  card.style.display='none'; card.innerHTML='';
+  try{
+    var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+    var res=await sb.from('mp_support').select('to_team_code,values').eq('date',today).eq('shift',shift).eq('from_team_code',team);
+    var rows=res.data||[];
+    if(!rows.length) return;
+    var itemsHtml=rows.map(function(r){
+      var vals=r.values||{};
+      var sum=0; Object.keys(vals).forEach(function(f){ sum+=(Number(vals[f].toilet)||0)+(Number(vals[f].both)||0)+(Number(vals[f].common)||0); });
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-top:1px solid rgba(255,255,255,.4)"><span style="font-size:13px;color:#0F6E56;font-weight:700">→ '+r.to_team_code+'</span><span style="font-size:13px;font-weight:800;color:#0F6E56">'+sum+'명</span></div>';
+    }).join('');
+    card.innerHTML='<div style="background:var(--teal-bg);border:1.5px solid var(--teal2);border-radius:var(--r2);padding:10px 13px">'
+      +'<div style="font-size:13px;font-weight:800;color:#0F6E56">🔀 오늘 이 조가 다른 조에 지원 보낸 내역</div>'
+      +itemsHtml
+      +'</div>';
+    card.style.display='block';
+  }catch(e){ console.error(e); }
+}
 
 // ─ 당일 입력 초기화 (조별, 최고관리자 전용) ─
 async function resetLeaderDataToday(){
