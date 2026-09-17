@@ -7084,7 +7084,19 @@ function goHomeMain(){
 }
 var _isAndroidDevice=/Android/i.test(navigator.userAgent);
 var _isIOSDevice=/iPad|iPhone|iPod/.test(navigator.userAgent);
-// 플로팅 뒤로가기 버튼(iosBackBtn) 제거됨 — 그에 맞춰 걸어뒀던 엣지 스와이프 억제도 같이 해제 (원래 이 버튼과 안 겹치게 하려고 걸어둔 것)
+// 플로팅 뒤로가기 버튼(iosBackBtn) 제거하면서 엣지 스와이프를 다 풀어줬더니, 팝업을 열어둔 채로
+// 화면 가장자리를 스와이프하면(또는 ×버튼 탭과 겹치면) "팝업 닫기(history.back 1번)"와
+// "스와이프 뒤로가기(history.back 1번)"가 동시에 발생해 뒤로 두 칸 가버려서 화면 자체가 새로고침되고
+// 입력하던 값이 초기화되는 문제가 있었음. 그래서 팝업이 떠 있는 동안만 엣지 스와이프를 다시 막음
+// (팝업 없는 일반 화면에서는 여전히 스와이프 뒤로가기 그대로 사용 가능).
+if(_isIOSDevice){
+  document.addEventListener('touchstart', function(e){
+    if(!_modalStack.length) return;
+    if(!e.touches || !e.touches[0]) return;
+    if(e.touches[0].clientX>=24) return;
+    e.preventDefault();
+  }, {passive:false});
+}
 // iOS/PC 플로팅 뒤로가기 버튼 제거됨 — 함수는 호출부 호환을 위해 남겨두되 아무 동작도 하지 않음.
 function updateIosBackBtn(){}
 // 헤더 로고 클릭 → 홈(운영현황) 패널로 이동
@@ -15275,6 +15287,9 @@ function saveLeaderEdit(){
 function updateMyTeamGrp(){
   var grp=document.getElementById('myTeamGrp');
   if(!grp) return;
+  // ★ 재렌더 전에 지금 선택돼 있던 조를 기억해둠 — 30초 자동새로고침 때마다 선택이 풀리고
+  // 입력 중이던 값까지 초기화되던 문제 수정 (기존엔 무조건 autoTeam으로만 되돌아갔음)
+  var prevSelectedTeam=getSelectedTeam();
   var sel=document.querySelector('#shiftGrp .rp.on');
   var shift=sel?sel.textContent.trim():'';
   var leaders=LEADERS[shift]||[];
@@ -15348,7 +15363,16 @@ function updateMyTeamGrp(){
     h+='</div></div>';
   });
   grp.innerHTML=h;
-  highlightMpZone(autoTeam||'');
+  // 리렌더 전에 선택돼 있던 조가 있으면(마스터/관리자의 수동 선택 등) 그 상태를 그대로 복원
+  if(prevSelectedTeam){
+    var reBtn=document.querySelector('.myteam-btn[data-team="'+prevSelectedTeam+'"]');
+    if(reBtn && !reBtn.classList.contains('done')){
+      reBtn.classList.add('on');
+      reBtn.style.background=bg; reBtn.style.color=color; reBtn.style.borderColor=color; reBtn.style.fontWeight='700';
+    }
+  }
+  highlightMpZone(prevSelectedTeam||autoTeam||'');
+  if(prevSelectedTeam) updateNightSpecialVisibility();
 }
 
 // 로그인한 사람 근무조/팀 자동 선택
