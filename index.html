@@ -3894,6 +3894,7 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <button id="cpVoteBtn" style="display:none;width:100%;padding:11px;background:#ecfeff;border:1.5px solid #67e8f9;border-radius:10px;font-size:13.5px;font-weight:700;color:#0e7490;cursor:pointer;margin-bottom:2px" onclick="cpOpenPublicVote()">🗳️ 전직원 투표 참여</button>
     <div id="cpVoteBtnPeriod" style="display:none;font-size:11px;color:var(--g4);text-align:center;margin-bottom:8px"></div>
     <button id="cpResultBtn" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenVoteResults()">📊 전직원 투표 결과 (관리자)</button>
+    <button id="cpVoterListBtn" style="display:none;width:100%;padding:11px;background:white;border:1.5px solid var(--g2);border-radius:10px;font-size:13.5px;font-weight:700;color:var(--g6);cursor:pointer;margin-bottom:8px" onclick="cpOpenVoterList()">🧾 전직원 투표자 명단 (master 전용)</button>
     <button id="cpWinnerBtn" style="display:none;width:100%;padding:11px;background:#fff7ed;border:1.5px solid #fdba74;border-radius:10px;font-size:13.5px;font-weight:700;color:#c2410c;cursor:pointer" onclick="cpOpenWinnerEdit()">📢 당선작 공지 작성/수정</button>
   </div>
 </div>
@@ -4085,6 +4086,15 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div class="modal" style="max-width:650px;max-height:88vh"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📊 전직원 투표 결과</h3><button class="m-x" onclick="hideM('cpResultModal')">×</button></div>
     <div style="padding:15px 17px;overflow-y:auto">
       <div id="cpResultWrap"></div>
+    </div>
+  </div>
+</div>
+
+<div id="cpVoterListModal" class="modal-bg">
+  <div class="modal" style="max-width:650px;max-height:88vh"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🧾 전직원 투표자 명단</h3><button class="m-x" onclick="hideM('cpVoterListModal')">×</button></div>
+    <div style="padding:15px 17px;overflow-y:auto">
+      <input id="cpVoterListSearch" oninput="cpRenderVoterList()" placeholder="🔍 이름·사번·응모작 내용 검색" style="width:100%;padding:9px 12px;border:1.5px solid var(--g2);border-radius:8px;font-size:13px;margin-bottom:12px;box-sizing:border-box">
+      <div id="cpVoterListWrap"></div>
     </div>
   </div>
 </div>
@@ -30208,6 +30218,7 @@ async function cpOpenDetail(id){
   document.getElementById('cpEligibleBtn').style.display=cpIsAdmin()?'block':'none';
   document.getElementById('cpWinnerBtn').style.display=cpCanSeeIdentity()?'block':'none';
   document.getElementById('cpResultBtn').style.display=cpIsAdmin()?'block':'none';
+  document.getElementById('cpVoterListBtn').style.display=cpCanSeeIdentity()?'block':'none';
   // 최종 후보(TOP16)가 하나라도 선정돼 있으면 전직원 투표 버튼 노출
   var finRes=await sb.from('campaign_finalists').select('id').eq('campaign_id',c.id).limit(1);
   document.getElementById('cpVoteBtn').style.display=(finRes.data&&finRes.data.length)?'block':'none';
@@ -31349,6 +31360,61 @@ async function cpSubmitPublicVote(){
   if(res.error){ toast('투표 오류: '+_safeErrMsg(res.error)); return; }
   toast(existing.data?'✓ 투표가 변경되었습니다':'✓ 투표해주셔서 감사합니다');
   hideM('cpVoteModal');
+}
+
+/* ── 전직원 투표자 명단 (master 전용 — 누가 무엇을 투표했는지) ── */
+var cpVoterListCache=[];
+async function cpOpenVoterList(){
+  if(!cpCanSeeIdentity()){ toast('⚠️ master만 볼 수 있습니다'); return; }
+  var vRes=await msFetchAll(function(){ return sb.from('campaign_public_votes').select('*').eq('campaign_id',cpCurCampaign.id); });
+  var votes=vRes.data||[];
+  var entryMap={};
+  cpAllEntriesCache.forEach(function(e){ entryMap[e.id]=e; });
+  if(!cpAllEntriesCache.length){
+    var eRes=await msFetchAll(function(){ return sb.from('campaign_entries').select('*').eq('campaign_id',cpCurCampaign.id); });
+    (eRes.data||[]).forEach(function(e){ entryMap[e.id]=e; });
+  }
+  cpVoterListCache = votes.map(function(v){
+    var e=entryMap[v.finalist_entry_id];
+    return {
+      voter_name: v.voter_name, voter_emp_no: v.voter_emp_no, updated_at: v.updated_at,
+      entry_name: e?e.name:'', entry_emp_no: e?e.emp_no:'', entry_team: e?e.team:'',
+      entry_content: e?e.content:'(삭제된 응모작)'
+    };
+  }).sort(function(a,b){ return (b.updated_at||'').localeCompare(a.updated_at||''); });
+  var searchEl=document.getElementById('cpVoterListSearch');
+  if(searchEl) searchEl.value='';
+  cpRenderVoterList();
+  showM('cpVoterListModal');
+}
+function cpRenderVoterList(){
+  var q=(document.getElementById('cpVoterListSearch').value||'').trim().toLowerCase();
+  var list=cpVoterListCache;
+  if(q){
+    list=list.filter(function(v){
+      return (v.voter_name||'').toLowerCase().indexOf(q)>=0 ||
+             (v.voter_emp_no||'').toLowerCase().indexOf(q)>=0 ||
+             (v.entry_name||'').toLowerCase().indexOf(q)>=0 ||
+             (v.entry_content||'').toLowerCase().indexOf(q)>=0;
+    });
+  }
+  var h='<div style="font-size:12.5px;color:var(--g5);margin-bottom:10px;font-weight:700">총 '+cpVoterListCache.length+'명 투표'+(q?(' · 검색결과 '+list.length+'명'):'')+'</div>';
+  if(!list.length){
+    h+='<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">'+(cpVoterListCache.length?'검색 결과가 없습니다':'아직 투표한 사람이 없습니다')+'</div>';
+  }else{
+    h+=list.map(function(v){
+      var when=v.updated_at?new Date(v.updated_at).toLocaleString('ko-KR',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}):'';
+      return '<div style="background:white;border:1.5px solid var(--g2);border-radius:10px;padding:11px;margin-bottom:8px">'+
+        '<div style="display:flex;justify-content:space-between;gap:8px;align-items:baseline">'+
+        '<span style="font-size:13px;font-weight:800;color:var(--g7)">'+eeEsc(v.voter_name||'')+' ('+eeEsc(v.voter_emp_no||'')+')</span>'+
+        '<span style="font-size:11px;color:var(--g4)">'+when+'</span>'+
+        '</div>'+
+        '<div style="font-size:12.5px;color:#0e7490;font-weight:700;margin-top:6px">→ '+eeEsc(v.entry_name||'')+' ('+eeEsc(v.entry_emp_no||'')+')'+(v.entry_team?(' · '+eeEsc(v.entry_team)):'')+'</div>'+
+        '<div style="font-size:12.5px;color:var(--g6);white-space:pre-wrap;margin-top:4px;line-height:1.5">'+eeEsc(v.entry_content||'')+'</div>'+
+        '</div>';
+    }).join('');
+  }
+  document.getElementById('cpVoterListWrap').innerHTML=h;
 }
 
 /* ── 전직원 투표 결과 (관리자) ── */
