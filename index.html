@@ -1768,6 +1768,7 @@ html{overflow-x:hidden}
         <button class="btn-prim" style="width:auto;padding:12px 22px" onclick="subMp()">입력 완료</button>
       </div>
     </div>
+    <button onclick="openSupportModal()" style="width:calc(100% - 26px);margin:0 13px 13px;padding:13px;background:white;border:1.5px dashed var(--teal2);border-radius:var(--r2);color:var(--teal2);font-size:14px;font-weight:800;cursor:pointer">🔀 다른 조 지원 입력</button>
     <div id="mpNightNotice" style="display:none;margin:0 13px 11px;padding:11px 13px;background:#F3EEF8;border-radius:var(--r2);font-size:14px;color:#6B21A8;font-weight:600">🌙 야간조는 층별 인원입력 없이, 아래 야간특별작업만 입력합니다.</div>
     <div id="nightSpecialCard" class="card" style="display:none">
       <div class="cb">
@@ -6173,6 +6174,25 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
     <button onclick="closeMissingLeaderModal(false)" style="flex:1;padding:13px;background:linear-gradient(135deg,var(--teal),var(--teal2));color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">확인</button>
   </div>
 </div></div>
+<div id="supportEntryModal" class="modal-bg"><div class="modal" style="max-width:440px">
+  <div class="m-hd" style="background:linear-gradient(135deg,var(--teal),var(--teal2))"><h3>🔀 다른 조 지원 입력</h3><button class="m-x" onclick="hideM('supportEntryModal')">×</button></div>
+  <div style="padding:15px 17px;max-height:74vh;overflow-y:auto">
+    <div style="font-size:12px;color:var(--g4);margin-bottom:12px;line-height:1.6">우리 조 인원이 다른 조 구역을 도와줄 때 입력합니다. <b>이 입력은 우리 조 실적에는 영향 없고</b>, 지원받은 조의 층별 인력현황에만 반영됩니다.</div>
+    <div class="fg">
+      <label class="f-lbl">보내는 조 (우리 조)</label>
+      <select id="supFromTeam" class="ri"></select>
+    </div>
+    <div class="fg">
+      <label class="f-lbl">받는 조 (지원 나가는 곳)</label>
+      <select id="supToTeam" class="ri" onchange="renderSupportInputArea()"><option value="">선택해주세요</option></select>
+    </div>
+    <div id="supInputArea" style="margin-top:10px"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:14px;border-top:1px solid var(--g2)">
+      <div><div style="font-size:12px;color:var(--g4);margin-bottom:2px">지원 총 인원</div><div style="font-size:24px;font-weight:900;color:var(--teal2)" id="supTot">0</div></div>
+      <button class="btn-prim" style="width:auto;padding:12px 22px" onclick="saveSupportEntry()">지원 입력 완료</button>
+    </div>
+  </div>
+</div></div>
 <div id="noticeW" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📢 공지사항 작성</h3><button class="m-x" onclick="closeNW()">×</button></div><div style="padding:15px 17px"><div class="fg"><label class="f-lbl">제목</label><input type="text" id="nT" class="ri" placeholder="공지사항 제목" style="margin-bottom:6px"><div id="sfTb_nT"></div></div><div class="fg"><label class="f-lbl">내용</label><div id="sfTb_nB"></div><textarea id="nB" class="f-ta show" rows="5" placeholder="공지사항 내용"></textarea></div><div class="fg"><label class="f-lbl">공지 대상</label><div id="nTargetGrp" style="display:flex;flex-wrap:wrap;gap:7px"></div></div><div class="fg"><label style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--g6);font-weight:700;cursor:pointer"><input type="checkbox" id="nPopupChk" checked style="accent-color:var(--teal)"> 🔔 로그인 시 팝업으로 표시</label></div><div class="fg"><label style="display:flex;align-items:center;gap:6px;font-size:14px;color:var(--g6);font-weight:700;cursor:pointer"><input type="checkbox" id="nNcfChk" style="accent-color:var(--teal)"> ✍️ 공지 확인서 자동 생성 (대상·기한은 "공지 확인서"에서 직접 지정)</label></div><button onclick="pubNotice()" class="btn-prim">전체 발송</button></div></div></div>
 <div id="lostAccModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>🟢 습득물 무사고 관리</h3><button class="m-x" onclick="hideM('lostAccModal')">×</button></div><div style="padding:17px"><div id="lostAccStatus" style="text-align:center;padding:14px;background:#EAF6EC;border-radius:12px;color:#1D4ED8;font-weight:800;margin-bottom:14px"></div><div id="lostAccEditWrap" style="display:none"><label class="f-lbl">사고일자</label><input type="date" id="lostAccDateInput" class="ri" style="margin-bottom:11px"><button onclick="saveLostAccDate()" class="btn-prim">저장</button></div></div></div></div>
 <div id="lostNoteModal" class="modal-bg"><div class="modal"><div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📝 습득물 메모</h3><button class="m-x" onclick="hideM('lostNoteModal')">×</button></div><div style="padding:17px"><textarea id="lostNoteInput" class="f-ta show" rows="4" placeholder="자유롭게 입력 (예: 유의사항, 안내문 등)"></textarea><button onclick="saveLostNote()" class="btn-prim" style="margin-top:11px">저장</button></div></div></div>
@@ -7752,6 +7772,7 @@ function finishLogin(){
   loadVehicleFromDB();
   loadKpiFromDB();
   loadMgrAttendance(); // 홈 화면 "관리자 출근 현황" 카드 — 기존엔 인력관리 탭4를 직접 열어야만 로드되던 문제 수정
+  loadMpSupportToday(); // 다른 조 지원 입력분을 층별 전체 인력현황에 반영
 }
 function showInfo(){
   if(!me) return;
@@ -8020,6 +8041,108 @@ function mpZoneColPrefix(zone,building){
   if(zone==='동편') return building==='AS'?'as_east':'ls_east';
   if(zone==='서편') return building==='AS'?'as_west':'ls_west';
   return null;
+}
+// ═══ 다른 조 지원 입력 ═══
+function allTeamCodes(){
+  var out=[];
+  for(var n=1;n<=10;n++){
+    ['A','B'].forEach(function(l){ out.push(n+'팀'+l); });
+    if(n===1||n===6) out.push(n+'팀C');
+  }
+  return out;
+}
+function openSupportModal(){
+  var fromSel=document.getElementById('supFromTeam');
+  var myCode=(document.getElementById('mpInputArea')&&document.getElementById('mpInputArea').dataset.builtTeam)||'';
+  fromSel.innerHTML=allTeamCodes().map(function(t){ return '<option value="'+t+'"'+(t===myCode?' selected':'')+'>'+t+'</option>'; }).join('');
+  var toSel=document.getElementById('supToTeam');
+  toSel.innerHTML='<option value="">선택해주세요</option>'+allTeamCodes().filter(function(t){return t!==myCode;}).map(function(t){ return '<option value="'+t+'">'+t+'</option>'; }).join('');
+  document.getElementById('supInputArea').innerHTML='';
+  document.getElementById('supTot').textContent='0';
+  showM('supportEntryModal');
+}
+function calcSupTot(){
+  var s=0; document.querySelectorAll('#supInputArea .sup-inp').forEach(function(i){ s+=parseInt(i.value)||0; });
+  document.getElementById('supTot').textContent=s;
+}
+function renderSupportInputArea(){
+  var teamCode=document.getElementById('supToTeam').value;
+  var area=document.getElementById('supInputArea');
+  if(!teamCode){ area.innerHTML=''; calcSupTot(); return; }
+  var zone=getTeamZone(teamCode), building=getTeamBuilding(teamCode);
+  if(!zone||zone==='집하장'){
+    area.innerHTML='<div style="font-size:12px;color:var(--danger,#E53E3E);padding:8px 0">이 조는 지원 입력을 지원하지 않습니다 (집하장 담당 조)</div>';
+    calcSupTot();
+    return;
+  }
+  var floorCols=getTeamFloorCols(teamCode)||[];
+  var rowsHtml=floorCols.map(function(ci){
+    var suf=MP_FLOOR_SUFFIX[ci], lbl=MP_FLOOR_LABELS[ci];
+    return '<tr style="border-bottom:0.5px solid var(--g2)">'
+      +'<td style="font-size:13px;color:var(--g6);padding:8px 1px">'+lbl+'</td>'
+      +'<td style="padding:4px 2px"><input class="sup-inp sup-toilet-inp" data-floor="'+suf+'" type="number" min="0" placeholder="0" style="width:100%;height:38px;text-align:center;font-size:14px;border:1.5px solid var(--g2);border-radius:8px" oninput="calcSupTot()" onfocus="this.select()"></td>'
+      +'<td style="padding:4px 2px"><input class="sup-inp sup-both-inp" data-floor="'+suf+'" type="number" min="0" placeholder="0" style="width:100%;height:38px;text-align:center;font-size:14px;border:1.5px solid var(--g2);border-radius:8px" oninput="calcSupTot()" onfocus="this.select()"></td>'
+      +'<td style="padding:4px 2px"><input class="sup-inp sup-common-inp" data-floor="'+suf+'" type="number" min="0" placeholder="0" style="width:100%;height:38px;text-align:center;font-size:14px;border:1.5px solid var(--g2);border-radius:8px" oninput="calcSupTot()" onfocus="this.select()"></td>'
+      +'</tr>';
+  }).join('');
+  var zoneLabel=(building==='AS'?'A/S ':'L/S ')+zone;
+  area.innerHTML='<div style="font-size:13px;font-weight:700;color:var(--g7);margin-bottom:8px">'+teamCode+' 담당구역 · '+zoneLabel+'</div>'
+    +'<table style="width:100%;border-collapse:collapse;table-layout:fixed">'
+    +'<colgroup><col style="width:18%"><col style="width:27%"><col style="width:27%"><col style="width:28%"></colgroup>'
+    +'<thead><tr><th></th>'
+    +'<th style="text-align:center;font-size:11px;font-weight:700;color:#166534;background:#EAF3DE;border-radius:6px;padding:5px 0">화장실</th>'
+    +'<th style="text-align:center;font-size:11px;font-weight:700;color:#92400E;background:#FDF0DA;border-radius:6px;padding:5px 0">겸용</th>'
+    +'<th style="text-align:center;font-size:11px;font-weight:700;color:#0C447C;background:#E6F1FB;border-radius:6px;padding:5px 0">공용구역</th>'
+    +'</tr></thead><tbody>'+rowsHtml+'</tbody></table>';
+  calcSupTot();
+}
+async function saveSupportEntry(){
+  var fromTeam=document.getElementById('supFromTeam').value;
+  var toTeam=document.getElementById('supToTeam').value;
+  if(!toTeam){ toast('⚠️ 받는 조를 선택해주세요'); return; }
+  var zone=getTeamZone(toTeam), building=getTeamBuilding(toTeam);
+  if(!zone||zone==='집하장'){ toast('⚠️ 이 조는 지원 입력을 지원하지 않습니다'); return; }
+  var zonePrefix=mpZoneColPrefix(zone,building);
+  var vals={};
+  var any=false;
+  document.querySelectorAll('#supInputArea .sup-inp').forEach(function(i){
+    var floor=i.dataset.floor;
+    if(!vals[floor]) vals[floor]={toilet:0,both:0,common:0};
+    var n=parseInt(i.value)||0;
+    if(n>0) any=true;
+    if(i.classList.contains('sup-toilet-inp')) vals[floor].toilet=n;
+    else if(i.classList.contains('sup-both-inp')) vals[floor].both=n;
+    else if(i.classList.contains('sup-common-inp')) vals[floor].common=n;
+  });
+  if(!any){ toast('⚠️ 지원 인원을 1명 이상 입력해주세요'); return; }
+  var shift=(document.querySelector('#shiftGrp .rp.on')||{}).textContent||'오전';
+  var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+  var payload={date:today, shift:shift, from_team_code:fromTeam, to_team_code:toTeam, zone_prefix:zonePrefix, values:vals, writer:me?me.name:''};
+  var res=await sb.from('mp_support').insert(payload);
+  if(res.error){ toast('저장 오류: '+_safeErrMsg(res.error)); return; }
+  toast('✓ 지원 입력이 저장되었습니다');
+  hideM('supportEntryModal');
+  loadMpSupportToday();
+}
+var mpSupportByKey={}; // zonePrefix_floorSuf → {toilet,both,common}
+async function loadMpSupportToday(){
+  var today=new Date(Date.now()+9*3600000).toISOString().slice(0,10);
+  try{
+    var res=await sb.from('mp_support').select('zone_prefix,values').eq('date',today);
+    var byKey={};
+    (res.data||[]).forEach(function(r){
+      var vals=r.values||{};
+      Object.keys(vals).forEach(function(floor){
+        var key=r.zone_prefix+'_'+floor;
+        if(!byKey[key]) byKey[key]={toilet:0,both:0,common:0};
+        byKey[key].toilet+=Number(vals[floor].toilet)||0;
+        byKey[key].both+=Number(vals[floor].both)||0;
+        byKey[key].common+=Number(vals[floor].common)||0;
+      });
+    });
+    mpSupportByKey=byKey;
+  }catch(e){ console.error(e); }
+  if(typeof updateFloorChart==='function') updateFloorChart();
 }
 function mpEmptySplit(){
   return {toilet:[[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]], both:[[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]], common:[[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0],[0,0,0,0,0,0]]};
@@ -11270,14 +11393,20 @@ function updateFloorChart(){
     var avgLbl=document.getElementById('flAvgLbl_'+fp.id);
     if(avgLbl) avgLbl.textContent=avgHasData?(avgWord+' '+flAvgTot+'명'):'';
     vals.forEach(function(v,zi){
-      var numEl=document.getElementById('flZoneNum_'+fp.id+'_'+zi);
-      if(numEl){ numEl.innerHTML=v+'<span style="font-size:12px;font-weight:600">명</span>'; numEl.style.color=avgHasData?mpAvgColor(v,avgVals[zi]):(zi<2?'var(--navy)':'var(--teal2)'); }
       var avgEl=document.getElementById('flZoneAvg_'+fp.id+'_'+zi);
       if(avgEl) avgEl.textContent=avgHasData?(avgWord+' '+avgVals[zi]+'명'):'';
       var toiFi = fp.merged ? fp.ci[0] : fp.ci;
       var toi = mpSplit.toilet[zi][toiFi]||0;
       var bot = fp.merged ? (mpSplit.both[zi][fp.ci[0]]||0) : (mpSplit.both[zi][fp.ci]||0);
       var com = fp.merged ? ((mpSplit.common[zi][fp.ci[0]]||0)+(mpData[zi][fp.ci[1]]||0)) : (mpSplit.common[zi][fp.ci]||0);
+      // 다른 조 지원 입력분 반영 (층별 전체 인력현황 화면에만 — 조별 실적 통계는 건드리지 않음)
+      var supKey=MP_ZONE_PREFIX[zi]+'_'+(fp.merged?MP_FLOOR_SUFFIX[fp.ci[0]]:MP_FLOOR_SUFFIX[fp.ci]);
+      var supV=mpSupportByKey[supKey];
+      var supAdd=0;
+      if(supV){ toi+=supV.toilet; bot+=supV.both; com+=supV.common; supAdd=supV.toilet+supV.both+supV.common; }
+      if(supAdd) v=v+supAdd;
+      var numEl=document.getElementById('flZoneNum_'+fp.id+'_'+zi);
+      if(numEl){ numEl.innerHTML=v+'<span style="font-size:12px;font-weight:600">명</span>'; numEl.style.color=avgHasData?mpAvgColor(v,avgVals[zi]):(zi<2?'var(--navy)':'var(--teal2)'); }
       var tCol2=avgMT?mpAvgColor(toi,avgMT[zi][toiFi]):null;
       var bCol2=(avgMB && !fp.merged)?mpAvgColor(bot,avgMB[zi][fp.ci]):null;
       var cCol2=(avgMC && !fp.merged)?mpAvgColor(com,avgMC[zi][fp.ci]):null; // merged(B1F+집하장)는 평균 기준 없어 색상 생략
