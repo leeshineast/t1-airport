@@ -8051,15 +8051,38 @@ function allTeamCodes(){
   }
   return out;
 }
+function mySupportTeamCode(){
+  return (me&&me.team)?me.team.trim().replace(/\s+/g,'').replace(/조$/,''):'';
+}
 function openSupportModal(){
   var fromSel=document.getElementById('supFromTeam');
-  var myCode=(document.getElementById('mpInputArea')&&document.getElementById('mpInputArea').dataset.builtTeam)||'';
-  fromSel.innerHTML=allTeamCodes().map(function(t){ return '<option value="'+t+'"'+(t===myCode?' selected':'')+'>'+t+'</option>'; }).join('');
-  var toSel=document.getElementById('supToTeam');
-  toSel.innerHTML='<option value="">선택해주세요</option>'+allTeamCodes().filter(function(t){return t!==myCode;}).map(function(t){ return '<option value="'+t+'">'+t+'</option>'; }).join('');
+  var builtTeam=(document.getElementById('mpInputArea')&&document.getElementById('mpInputArea').dataset.builtTeam)||'';
+  var role=me?me.role:'';
+  var fromOptions;
+  if(role==='admin'||role==='master'){
+    fromOptions=allTeamCodes();
+  }else if(role==='manager'||isExecRole(role)){
+    var teamNum=(builtTeam.match(/^(\d+)팀/)||mySupportTeamCode().match(/^(\d+)팀/)||[])[1];
+    fromOptions=teamNum?allTeamCodes().filter(function(t){ return t.indexOf(teamNum+'팀')===0; }):allTeamCodes();
+  }else{
+    // 조장/액팅리더 등 — 지금 입력 중인 우리 조로 고정
+    fromOptions=builtTeam?[builtTeam]:allTeamCodes();
+  }
+  var myCode=(fromOptions.indexOf(builtTeam)!==-1)?builtTeam:fromOptions[0];
+  fromSel.innerHTML=fromOptions.map(function(t){ return '<option value="'+t+'"'+(t===myCode?' selected':'')+'>'+t+'</option>'; }).join('');
+  fromSel.disabled=fromOptions.length<=1;
+  fromSel.onchange=function(){ rebuildSupToTeamOptions(); };
+  rebuildSupToTeamOptions();
   document.getElementById('supInputArea').innerHTML='';
   document.getElementById('supTot').textContent='0';
   showM('supportEntryModal');
+}
+function rebuildSupToTeamOptions(){
+  var fromCode=document.getElementById('supFromTeam').value;
+  var toSel=document.getElementById('supToTeam');
+  var cur=toSel.value;
+  toSel.innerHTML='<option value="">선택해주세요</option>'+allTeamCodes().filter(function(t){return t!==fromCode;}).map(function(t){ return '<option value="'+t+'"'+(t===cur?' selected':'')+'>'+t+'</option>'; }).join('');
+  renderSupportInputArea();
 }
 function calcSupTot(){
   var s=0; document.querySelectorAll('#supInputArea .sup-inp').forEach(function(i){ s+=parseInt(i.value)||0; });
@@ -11373,6 +11396,14 @@ function updateFloorChart(){
     var panel=document.getElementById('flP_'+fp.id);if(!panel)return;
     var vals=fp.merged?[mpData[0][fp.ci[0]]+mpData[0][fp.ci[1]],mpData[1][fp.ci[0]]+mpData[1][fp.ci[1]],mpData[2][fp.ci[0]]+mpData[2][fp.ci[1]],mpData[3][fp.ci[0]]+mpData[3][fp.ci[1]]]:[mpData[0][fp.ci],mpData[1][fp.ci],mpData[2][fp.ci],mpData[3][fp.ci]];
     var flTot=vals.reduce(function(a,b){return a+b;},0);
+    // 다른 조 지원 입력분을 층 합계에도 반영
+    var flSupSum=0;
+    for(var szi=0;szi<4;szi++){
+      var sKey=MP_ZONE_PREFIX[szi]+'_'+(fp.merged?MP_FLOOR_SUFFIX[fp.ci[0]]:MP_FLOOR_SUFFIX[fp.ci]);
+      var sV=mpSupportByKey[sKey];
+      if(sV) flSupSum+=(sV.toilet+sV.both+sV.common);
+    }
+    flTot+=flSupSum;
     var lsS=vals[0]+vals[1],asS=vals[2]+vals[3];
     var avgVals=[0,0,0,0], avgHasData=false;
     if(avgM){
