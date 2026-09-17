@@ -10089,12 +10089,14 @@ async function loadTeamAvgAttendance(prefix){
     var mpRes=await sb.from('mp_data').select('date,team_code,values').gte('date',queryFrom).lte('date',dTo);
     var mgrRes=await sb.from('mgr_attendance').select('date,team,name,checked,status').gte('date',queryFrom).lte('date',dTo).eq('checked',true);
     var nsRes=await sb.from('night_special_data').select('date,team_code,carpet,wax,stone,wood,restroom,pbb,etc,es,toilet_daily,common_area,collection').gte('date',queryFrom).lte('date',dTo);
-    var mpData=mpRes.data||[], mgrData=mgrRes.data||[], nsData=nsRes.data||[];
+    var supRes=await sb.from('mp_support').select('date,from_team_code,values').gte('date',queryFrom).lte('date',dTo);
+    var mpData=mpRes.data||[], mgrData=mgrRes.data||[], nsData=nsRes.data||[], supData=supRes.data||[];
     // 야간팀은 야간 기준일(nightDate), 나머지 팀은 원래 조회 기간(dFrom~dTo) 기록만 남긴다
     if(isNightWindow){
       mpData=mpData.filter(function(r){ return NIGHT_TEAM_CODES[r.team_code] ? r.date===nightDate : (r.date>=dFrom&&r.date<=dTo); });
       mgrData=mgrData.filter(function(r){ return NIGHT_TEAM_NAMES[r.team] ? r.date===nightDate : (r.date>=dFrom&&r.date<=dTo); });
       nsData=nsData.filter(function(r){ return NIGHT_TEAM_CODES[r.team_code] ? r.date===nightDate : (r.date>=dFrom&&r.date<=dTo); });
+      supData=supData.filter(function(r){ return NIGHT_TEAM_CODES[r.from_team_code] ? r.date===nightDate : (r.date>=dFrom&&r.date<=dTo); });
     }
     var sumByTeam={}, daysByTeam={};
     TEAM_AVG_ORDER.forEach(function(tc){ sumByTeam[tc]=0; daysByTeam[tc]={}; });
@@ -10121,6 +10123,18 @@ async function loadTeamAvgAttendance(prefix){
       if(sum<=0) return;
       sumByTeam[r.team_code]+=sum;
       daysByTeam[r.team_code][r.date]=1;
+    });
+    // ★ 다른 조 지원 입력분 — 보낸 조(from_team_code) 쪽 "조 출근 인원"에 다시 더해줌.
+    // 보낸 조는 층별 입력 화면엔 이미 지원 나간 인원을 뺀 숫자를 직접 입력해두므로(예: 7명 중 6명만),
+    // 출근 인원 집계는 "층별 입력값 + 지원 보낸 인원"으로 원래 출근한 전체 인원(7명)이 되게 함.
+    supData.forEach(function(r){
+      if(!r.from_team_code || sumByTeam[r.from_team_code]===undefined) return;
+      var vals=r.values||{};
+      var sum=0;
+      Object.keys(vals).forEach(function(f){ sum+=(Number(vals[f].toilet)||0)+(Number(vals[f].both)||0)+(Number(vals[f].common)||0); });
+      if(sum<=0) return;
+      sumByTeam[r.from_team_code]+=sum;
+      daysByTeam[r.from_team_code][r.date]=1;
     });
     // 조장(A조장/B조장/C조장)은 해당 조에, 팀장은 팀 단위로 별도 집계
     // ※ 출근으로 인정하는 상태는 '출근'·'교육'·'출장'뿐 — 휴무/연차/공가/건강검진/병가/휴직 등은 미출근으로 처리
