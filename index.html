@@ -30642,16 +30642,21 @@ async function cpOpenWinnerEdit(){
     statsBox.innerHTML='투표 결과가 아직 없습니다. 최종 후보 선정과 전직원 투표를 먼저 진행해주세요.';
   }else{
     var total=cpWinResultCache._totalVotes||0;
-    var lines='📊 총 투표수: <b>'+total+'표</b> (최종 후보 '+cpWinResultCache.length+'명) · 1위 기준: 전직원 투표수 → 동점 시 1차 관리자 점수<br><br>'+
-      cpWinResultCache.map(function(x,i){
+    var ac2=cpCurCampaign.award_count;
+    var shownList=ac2?cpWinResultCache.filter(function(x){return x.rank<=ac2;}):cpWinResultCache;
+    var hiddenN=cpWinResultCache.length-shownList.length;
+    var lines='📊 총 투표수: <b>'+total+'표</b> (최종 후보 '+cpWinResultCache.length+'명'+(ac2?(' · 포상 '+ac2+'위까지만 표시'):'')+') · 1위 기준: 전직원 투표수 → 동점 시 1차 관리자 점수<br><br>'+
+      shownList.map(function(x,i){
+        var prev=cpWinResultCache[cpWinResultCache.indexOf(x)-1];
         var basis;
-        if(i===0) basis='';
-        else if(x.count!==cpWinResultCache[i-1].count) basis=' <span style="color:var(--g4)">(투표수로 결정)</span>';
-        else if(x.adminScore!==cpWinResultCache[i-1].adminScore) basis=' <span style="color:var(--g4)">(투표 동점 · 관리자 점수로 결정)</span>';
+        if(!prev) basis='';
+        else if(x.count!==prev.count) basis=' <span style="color:var(--g4)">(투표수로 결정)</span>';
+        else if(x.adminScore!==prev.adminScore) basis=' <span style="color:var(--g4)">(투표 동점 · 관리자 점수로 결정)</span>';
         else basis=' <span style="color:#c2410c">(투표·관리자 점수 모두 동점)</span>';
         return '<b>'+(x.tied?'공동 ':'')+x.rank+'위</b> · '+eeEsc(x.entry.name||'')+'('+eeEsc(x.entry.emp_no||'')+') · '+(x.awardLabel?eeEsc(x.awardLabel):'<span style="color:var(--g4)">상 미지정</span>')+'<br>'
           +'&nbsp;&nbsp;전직원 투표 '+x.count+'표 · 1차 관리자 점수 '+x.adminScore+'점'+basis;
       }).join('<br><br>');
+    if(hiddenN>0) lines+='<br><br><span style="color:var(--g4)">'+ac2+'위 밖 '+hiddenN+'명은 숨김 처리됨</span>';
     statsBox.innerHTML=lines;
   }
   showM('cpWinnerModal');
@@ -31610,11 +31615,20 @@ async function cpOpenVoteResults(){
   cpResultRanked=await cpFetchResultRanked();
   if(!cpResultRanked.length){ document.getElementById('cpResultWrap').innerHTML='<div style="text-align:center;padding:20px;color:var(--g3);font-size:13px">아직 최종 후보가 선정되지 않았습니다</div>'; showM('cpResultModal'); return; }
   var totalVotes=cpResultRanked._totalVotes||0;
+  var ac=cpCurCampaign.award_count;
   var h='<div style="font-size:12.5px;color:var(--g5);margin-bottom:6px;font-weight:700">총 투표수: '+totalVotes+'표</div>';
+  h+='<div style="display:flex;align-items:center;gap:7px;background:var(--g1);border-radius:8px;padding:8px 10px;margin-bottom:10px">'
+    +'<span style="font-size:12.5px;font-weight:700;color:var(--g6);white-space:nowrap">포상 인원수(등수)</span>'
+    +'<input id="cpAwardCountInput" type="number" min="1" value="'+(ac||'')+'" placeholder="전체 표시" style="width:70px;padding:5px 8px;border:1.5px solid var(--g2);border-radius:6px;font-size:12px">'
+    +'<button onclick="cpSaveAwardCount()" style="padding:5px 10px;background:#0e7490;color:white;border:none;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer">저장</button>'
+    +'<span style="font-size:11px;color:var(--g4)">비워두면 전체 표시</span>'
+    +'</div>';
   h+='<div style="font-size:11.5px;color:var(--g4);margin-bottom:12px">각 항목의 상 이름을 직접 입력하고 저장하세요 (예: 대상, 최우수상, 우수상, 장려상 등 자유롭게).</div>';
   var shownTieKeys={};
+  var hiddenCount=0;
   cpResultRanked.forEach(function(x){
     var rank=x.rank;
+    if(ac && rank>ac){ hiddenCount++; return; }
     if(x._tieKey && !shownTieKeys[x._tieKey]){
       shownTieKeys[x._tieKey]=true;
       var groupItems=cpResultRanked.filter(function(y){return y._tieKey===x._tieKey;});
@@ -31633,8 +31647,20 @@ async function cpOpenVoteResults(){
        '<div style="font-size:12px;color:var(--g4);margin-top:6px">득표수: <b style="color:var(--navy)">'+x.count+'표</b> · 1차 관리자 점수 '+x.adminScore+'점'+(x.awardLabel?(' · 현재 지정: <b style="color:#c2410c">'+eeEsc(x.awardLabel)+'</b>'):'')+'</div>'+
        '</div>';
   });
+  if(hiddenCount>0) h+='<div style="text-align:center;font-size:12px;color:var(--g4);padding:8px 0">'+ac+'위 밖 '+hiddenCount+'명은 숨김 처리됨</div>';
   document.getElementById('cpResultWrap').innerHTML=h;
   showM('cpResultModal');
+}
+async function cpSaveAwardCount(){
+  var v=document.getElementById('cpAwardCountInput').value.trim();
+  var n=v?parseInt(v):null;
+  var res=await sb.from('campaigns').update({award_count:n}).eq('id',cpCurCampaign.id);
+  if(res.error){ toast('저장 오류: '+_safeErrMsg(res.error)); return; }
+  cpCurCampaign.award_count=n;
+  var idx=cpCampaigns.findIndex(function(c){return c.id===cpCurCampaign.id;});
+  if(idx!==-1) cpCampaigns[idx].award_count=n;
+  toast('✓ 저장되었습니다');
+  cpOpenVoteResults();
 }
 function cpAwardTieBannerHtml(tieKey, baseRank, groupItems){
   var t=cpTieForKey(2, tieKey);
