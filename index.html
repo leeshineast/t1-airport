@@ -3834,6 +3834,10 @@ textarea.rpt-edit{resize:vertical;min-height:36px}
   <div class="modal" style="max-width:820px;max-height:92vh;overflow-y:auto">
     <div class="m-hd" style="background:linear-gradient(135deg,var(--navy),var(--teal2))"><h3>📄 특별근무 보고서</h3><button class="m-x" onclick="hideM('wfSpReportModal')">×</button></div>
     <div style="padding:15px 17px">
+      <div class="no-print" style="display:flex;gap:6px;margin-bottom:12px">
+        <button id="wfSpRepModePlanBtn" onclick="wfSpOpenReportPreview('plan')" style="flex:1;padding:9px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">계획 기준</button>
+        <button id="wfSpRepModeActualBtn" onclick="wfSpOpenReportPreview('actual')" style="flex:1;padding:9px;border:1.5px solid var(--g2);border-radius:var(--r2);font-size:13px;font-weight:700;cursor:pointer">실적 기준</button>
+      </div>
       <div id="wfSpReportPrintArea" style="background:white;padding:14px;border:1px solid #ccc;overflow-x:auto"></div>
       <div class="no-print" style="display:flex;gap:8px;margin-top:14px">
         <button onclick="window.print()" style="flex:1;padding:12px;background:var(--navy);color:white;border:none;border-radius:var(--r2);font-size:14px;font-weight:700;cursor:pointer">🖨️ 인쇄 / PDF저장</button>
@@ -29638,6 +29642,7 @@ var WF_SP_ROW_DEFS=[
 ];
 var wfSpEvents=[], wfSpCurEvent=null, wfSpAssignments=[];
 var wfSpCellCtx=null;
+var wfSpReportMode='plan'; // 'plan' | 'actual' — 보고서 미리보기/엑셀 다운로드 기준
 
 async function wfSpLoadEvents(){
   document.getElementById('wfSpListView').style.display='block';
@@ -29778,6 +29783,7 @@ async function wfSpOpenEvent(id){
   if(!ev){ var r=await sb.from('wf_special_events').select('*').eq('id',id).maybeSingle(); ev=r.data; }
   if(!ev) return;
   wfSpCurEvent=ev;
+  wfSpReportMode='plan';
   document.getElementById('wfSpListView').style.display='none';
   document.getElementById('wfSpDetailView').style.display='block';
   document.getElementById('wfSpDetailHead').innerHTML=
@@ -30156,12 +30162,64 @@ function wfSpCellReportSummary(row, a){
   var others=total-1;
   return rep+(others>0?(' 외 '+others+'명'):'')+' ('+total+'명)';
 }
-function wfSpOpenReportPreview(){
+function wfSpRepNameActual(act){
+  if(!act) return null;
+  if(act.leader) return act.leader;
+  if(act.subs&&act.subs.length) return act.subs[0];
+  return null;
+}
+function wfSpCellReportSummaryActual(row, act){
+  if(row.type==='names') return null; // 행정/총괄팀은 출퇴근 연동 대상 아님 → 계획값으로 표시
+  if(!act) return null;
+  var total=wfSpActualHeadcount(act);
+  if(!total) return null;
+  var rep=wfSpRepNameActual(act);
+  if(!rep) return total+'명';
+  var others=total-1;
+  return rep+(others>0?(' 외 '+others+'명'):'')+' ('+total+'명)';
+}
+// 보고서 전용: 모드(계획/실적)에 맞는 셀 텍스트. null이면 호출부에서 '-'/'미확인' 처리
+function wfSpReportCellText(row, dt, mode){
+  if(row.type==='names') return wfSpCellReportSummary(row, wfSpFindAssign(row.code, dt));
+  if(mode==='actual') return wfSpCellReportSummaryActual(row, wfSpActualFor(row.code, dt));
+  return wfSpCellReportSummary(row, wfSpFindAssign(row.code, dt));
+}
+// 보고서 전용: 모드에 맞는 소계/총계 인원수. names 타입 멤버(행정/총괄팀)는 실적 연동 대상이 아니라 항상 계획값 사용
+function wfSpReportSum(members, dt, mode){
+  var sum=0;
+  members.forEach(function(mc){
+    var rowDef=WF_SP_ROW_DEFS.find(function(r){ return r.code===mc; });
+    if(mode==='actual' && rowDef && rowDef.type==='team'){
+      sum+=wfSpActualHeadcount(wfSpActualFor(mc,dt));
+    }else{
+      sum+=wfSpTeamHeadcount(wfSpFindAssign(mc,dt));
+    }
+  });
+  return sum;
+}
+function wfSpSetReportModeBtns(mode){
+  var pB=document.getElementById('wfSpRepModePlanBtn'), aB=document.getElementById('wfSpRepModeActualBtn');
+  if(!pB||!aB) return;
+  var on='background:var(--navy);color:#fff;border-color:var(--navy)';
+  var off='background:white;color:var(--navy);border-color:var(--g2)';
+  pB.style.cssText+=';'+(mode==='plan'?on:off);
+  aB.style.cssText+=';'+(mode==='actual'?on:off);
+}
+async function wfSpOpenReportPreview(mode){
   var ev=wfSpCurEvent; if(!ev) return;
+  mode = mode || wfSpReportMode || 'plan';
+  wfSpReportMode = mode;
+  showM('wfSpReportModal');
+  wfSpSetReportModeBtns(mode);
+  if(mode==='actual'){
+    document.getElementById('wfSpReportPrintArea').innerHTML='<div style="text-align:center;padding:30px;color:var(--g3);font-size:14px">🔄 실적 불러오는 중...</div>';
+    await wfSpFetchActuals();
+  }
   var dates=wfSpDateRange(ev);
   var weekMap=['일','월','화','수','목','금','토'];
   var h='<div style="text-align:center;font-size:19px;font-weight:800;letter-spacing:4px;margin-bottom:4px">특 별 근 무 편 성 표</div>';
-  h+='<div style="text-align:center;font-size:13px;color:#555;margin-bottom:14px">'+ev.title+' · 기간: '+ev.start_date+' ~ '+ev.end_date+'</div>';
+  h+='<div style="text-align:center;font-size:13px;color:#555;margin-bottom:2px">'+ev.title+' · 기간: '+ev.start_date+' ~ '+ev.end_date+'</div>';
+  h+='<div style="text-align:center;font-size:12px;font-weight:700;color:'+(mode==='actual'?'#b45309':'#185fa5')+';margin-bottom:14px">('+(mode==='actual'?'실적 기준 — 실제 출근/인력현황':'계획 기준 — 편성 계획')+')</div>';
   h+='<table class="spr-table"><thead><tr><th style="width:70px">구분</th><th style="width:90px">팀/조</th>';
   dates.forEach(function(dt){
     var d=new Date(dt+'T00:00:00');
@@ -30184,10 +30242,11 @@ function wfSpOpenReportPreview(){
     h+='<td style="font-weight:700">'+row.label+'</td>';
     dates.forEach(function(dt){
       if(isSum){
-        var sum=0; row.members.forEach(function(mc){ sum+=wfSpTeamHeadcount(wfSpFindAssign(mc,dt)); });
+        var sum=wfSpReportSum(row.members, dt, mode);
         h+='<td class="'+(row.code==='SUM_ALL'?'spr-total':'spr-sum')+'">'+sum+'명</td>';
       }else{
-        h+='<td>'+(wfSpCellReportSummary(row, wfSpFindAssign(row.code, dt))||'-')+'</td>';
+        var txt=wfSpReportCellText(row, dt, mode);
+        h+='<td>'+(txt||(mode==='actual'?'미확인':'-'))+'</td>';
       }
     });
     h+='</tr>';
@@ -30195,23 +30254,28 @@ function wfSpOpenReportPreview(){
   h+='</tbody></table>';
   h+='<div style="margin-top:16px;font-size:12px;color:#666">작성일: '+new Date().toISOString().slice(0,10)+(me?('  ·  작성자: '+eeEsc(me.name)):'')+'</div>';
   document.getElementById('wfSpReportPrintArea').innerHTML=h;
-  showM('wfSpReportModal');
 }
-function wfSpDownloadReport(){
+async function wfSpDownloadReport(){
   var ev=wfSpCurEvent; if(!ev) return;
+  var mode=wfSpReportMode||'plan';
+  if(mode==='actual'){
+    toast('🔄 실적 불러오는 중...');
+    await wfSpFetchActuals();
+  }
   var dates=wfSpDateRange(ev);
   var weekMap=['일','월','화','수','목','금','토'];
-  var aoa=[[ev.title], ['기간: '+ev.start_date+' ~ '+ev.end_date], [], ['구분','팀/조'].concat(dates.map(function(dt){
+  var aoa=[[ev.title+' ('+(mode==='actual'?'실적 기준':'계획 기준')+')'], ['기간: '+ev.start_date+' ~ '+ev.end_date], [], ['구분','팀/조'].concat(dates.map(function(dt){
     var d=new Date(dt+'T00:00:00'); return (d.getMonth()+1)+'/'+d.getDate()+'('+weekMap[d.getDay()]+')';
   }))];
   WF_SP_ROW_DEFS.forEach(function(row){
     var rowArr=[row.grp, row.label];
     dates.forEach(function(dt){
       if(row.type==='sum'){
-        var sum=0; row.members.forEach(function(mc){ sum+=wfSpTeamHeadcount(wfSpFindAssign(mc,dt)); });
+        var sum=wfSpReportSum(row.members, dt, mode);
         rowArr.push(sum+'명');
       }else{
-        rowArr.push(wfSpCellReportSummary(row, wfSpFindAssign(row.code, dt)));
+        var txt=wfSpReportCellText(row, dt, mode);
+        rowArr.push(txt||(mode==='actual'?'미확인':''));
       }
     });
     aoa.push(rowArr);
@@ -30219,7 +30283,7 @@ function wfSpDownloadReport(){
   var wb=XLSX.utils.book_new();
   var ws=XLSX.utils.aoa_to_sheet(aoa);
   XLSX.utils.book_append_sheet(wb, ws, '특별근무편성');
-  XLSX.writeFile(wb, '특별근무_'+ev.title.replace(/[\\/:*?"<>|]/g,'')+'.xlsx');
+  XLSX.writeFile(wb, '특별근무_'+ev.title.replace(/[\\/:*?"<>|]/g,'')+(mode==='actual'?'_실적':'_계획')+'.xlsx');
   toast('📥 다운로드 완료');
 }
 
